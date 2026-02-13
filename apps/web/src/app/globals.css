@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
 @theme {
   --animate-pulse-slow: pulse-slow var(--duration-pulse) ease-in-out infinite;
   --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
@@ -69,6 +75,11 @@
   /* Card transitions */
   --card-hover-scale: 1.015;
   --card-hover-y: -2px;
+
+  /* Rotating gradient border */
+  --duration-rotate: 4s;
+  --border-glow-opacity: 0.25;
+  --border-glow-opacity-hover: 0.4;
 }
 
 body {
@@ -99,6 +110,47 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Rotating gradient border on cluster cards */
+@keyframes rotate-border {
+  to { --gradient-angle: 360deg; }
+}
+
+.cluster-card {
+  position: relative;
+  isolation: isolate;
+}
+
+.cluster-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--gradient-angle, 0deg),
+    transparent 0%,
+    var(--status-color) 10%,
+    transparent 20%,
+    transparent 100%
+  );
+  opacity: var(--border-glow-opacity);
+  animation: rotate-border var(--duration-rotate) linear infinite;
+  z-index: -1;
+  transition: opacity var(--duration-normal) ease;
+}
+
+.cluster-card::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: var(--color-bg-card);
+  z-index: -1;
+}
+
+.cluster-card:hover::before {
+  opacity: var(--border-glow-opacity-hover);
 }
 
 /* Background dot grid pattern */

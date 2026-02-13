@@ -68,13 +68,14 @@ export default function DashboardPage() {
           {clusterList.map((cluster, index) => (
             <Link key={cluster.id} href={`/clusters/${cluster.id}`}>
               <div
-                className="relative group rounded-2xl p-4 cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up"
+                className="cluster-card relative group rounded-2xl p-4 cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up"
                 style={{
+                  '--status-color': getStatusColor(cluster.status ?? 'unknown'),
                   boxShadow: getStatusGlow(cluster.status ?? 'unknown'),
                   transition: `all var(--duration-normal) ease`,
                   animationDelay: `${index * 50}ms`,
                   animationFillMode: 'both',
-                }}
+                } as React.CSSProperties}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = getStatusGlowHover(cluster.status ?? 'unknown')
                   e.currentTarget.style.transform = `scale(var(--card-hover-scale)) translateY(var(--card-hover-y))`
