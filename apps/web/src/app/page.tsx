@@ -13,32 +13,70 @@ import { trpc } from '@/lib/trpc'
 import { AlertTriangle, Box, CheckCircle, Database, Layers, Server } from 'lucide-react'
 import Link from 'next/link'
 
+interface ClusterCardData {
+  id: string
+  name: string
+  provider: string
+  version: string | null
+  status: string | null
+  nodeCount: number
+  source: 'live' | 'db'
+}
+
 export default function DashboardPage() {
   const liveQuery = trpc.clusters.live.useQuery(undefined, {
     refetchInterval: 30000,
   })
 
+  const listQuery = trpc.clusters.list.useQuery(undefined, {
+    refetchInterval: 60000,
+  })
+
   const liveData = liveQuery.data
-  const isLoading = liveQuery.isLoading
+  const dbClusters = listQuery.data ?? []
+  const isLoading = liveQuery.isLoading && listQuery.isLoading
 
-  // Map live data to a cluster list format for the grid
-  const clusterList = liveData
-    ? [
-        {
-          id: 'live-minikube',
-          name: liveData.name,
-          provider: liveData.provider,
-          version: liveData.version,
-          status: liveData.status,
-          nodeCount: liveData.nodes.length,
-        },
-      ]
-    : []
+  // Build combined cluster list: live minikube + all DB clusters (deduplicated)
+  const clusterList: ClusterCardData[] = []
 
-  const totalNodes = liveData?.nodes.length ?? 0
+  // Add live minikube cluster first
+  if (liveData) {
+    clusterList.push({
+      id: 'live-minikube',
+      name: liveData.name,
+      provider: liveData.provider,
+      version: liveData.version,
+      status: liveData.status,
+      nodeCount: liveData.nodes.length,
+      source: 'live',
+    })
+  }
+
+  // Add DB clusters, skipping any that duplicate the live minikube
+  for (const c of dbClusters) {
+    const isLiveMinikube =
+      liveData && (c.name === liveData.name || c.name === 'minikube-dev')
+    if (!isLiveMinikube) {
+      clusterList.push({
+        id: c.id,
+        name: c.name,
+        provider: c.provider,
+        version: c.version,
+        status: c.status,
+        nodeCount: c.nodeCount,
+        source: 'db',
+      })
+    }
+  }
+
+  // Combined stats
+  const totalNodes =
+    (liveData?.nodes.length ?? 0) +
+    dbClusters
+      .filter((c) => !(liveData && (c.name === liveData.name || c.name === 'minikube-dev')))
+      .reduce((sum, c) => sum + c.nodeCount, 0)
   const runningPods = liveData?.runningPods ?? 0
   const namespacesCount = liveData?.namespaces.length ?? 0
-  const deploymentsCount = liveData?.deployments.length ?? 0
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
 
   return (
@@ -62,10 +100,10 @@ export default function DashboardPage() {
           isLoading={isLoading}
         />
         <SummaryCard
-          icon={<Layers className="h-4 w-4" />}
-          label="Namespaces"
-          value={String(namespacesCount)}
-          color="var(--color-text-secondary)"
+          icon={<Database className="h-4 w-4" />}
+          label="Clusters"
+          value={String(clusterList.length)}
+          color="var(--color-accent)"
           gradient="var(--gradient-text-default)"
           isLoading={isLoading}
         />
@@ -85,24 +123,29 @@ export default function DashboardPage() {
           Clusters
         </h2>
         <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-0.5">
-          {clusterList.length} live
+          {clusterList.filter((c) => c.source === 'live').length} live · {clusterList.filter((c) => c.source === 'db').length} registered
         </p>
       </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </div>
-      ) : liveQuery.error ? (
+      ) : liveQuery.error && listQuery.error ? (
         <p className="text-[var(--color-status-error)]">
-          Failed to connect to K8s API: {liveQuery.error.message}
+          Failed to load clusters: {liveQuery.error?.message ?? listQuery.error?.message}
         </p>
       ) : clusterList.length === 0 ? (
         <p className="text-[var(--color-text-muted)]">No clusters found.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {clusterList.map((cluster, index) => (
-            <Link key={cluster.id} href={`/clusters/${cluster.id}`}>
+            <Link
+              key={cluster.id}
+              href={cluster.source === 'live' ? `/clusters/${cluster.id}` : `/clusters/${cluster.id}`}
+            >
               <div
                 className="cluster-card relative group rounded-xl p-4 min-h-[80px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex items-start gap-3"
                 style={
@@ -146,8 +189,12 @@ export default function DashboardPage() {
                     <span>K8s {cluster.version ?? '—'}</span>
                     <span>·</span>
                     <span>Nodes: {cluster.nodeCount}</span>
-                    <span>·</span>
-                    <span>Pods: {runningPods}/{liveData?.totalPods ?? 0}</span>
+                    {cluster.source === 'live' && (
+                      <>
+                        <span>·</span>
+                        <span>Pods: {runningPods}/{liveData?.totalPods ?? 0}</span>
+                      </>
+                    )}
                   </div>
                 </div>
 
