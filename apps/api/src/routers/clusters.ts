@@ -3,6 +3,7 @@ import { clusters, nodes } from '@voyager/db'
 import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { coreV1Api, appsV1Api, versionApi } from '../lib/k8s'
+import { normalizeProvider } from '../lib/providers'
 import { publicProcedure, router } from '../trpc'
 
 export const clustersRouter = router({
@@ -182,7 +183,10 @@ export const clustersRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [created] = await ctx.db.insert(clusters).values(input).returning()
+      const [created] = await ctx.db.insert(clusters).values({
+        ...input,
+        provider: normalizeProvider(input.provider),
+      }).returning()
       return created
     }),
 

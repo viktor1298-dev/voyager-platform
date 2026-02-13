@@ -15,7 +15,7 @@ async function seed() {
   await db.delete(clusters)
 
   // Insert clusters
-  const [minikube, eks, productionEks, stagingAks, analyticsGke, devK3s] = await db
+  const [minikube, productionEks, stagingAks, analyticsGke, devK3s] = await db
     .insert(clusters)
     .values([
       {
@@ -24,14 +24,6 @@ async function seed() {
         endpoint: 'https://192.168.49.2:8443',
         status: 'healthy',
         version: 'v1.33.0',
-        nodesCount: 3,
-      },
-      {
-        name: 'eks-production',
-        provider: 'eks',
-        endpoint: 'https://eks.us-east-1.amazonaws.com/prod',
-        status: 'degraded',
-        version: 'v1.31.2',
         nodesCount: 3,
       },
       {
@@ -69,7 +61,7 @@ async function seed() {
     ])
     .returning()
 
-  console.log('✅ Inserted 6 clusters')
+  console.log('✅ Inserted 5 clusters')
 
   // Insert nodes
   const nodeData = [
@@ -109,43 +101,6 @@ async function seed() {
       memoryAllocatable: 7_500_000_000,
       podsCount: 5,
       k8sVersion: 'v1.33.0',
-    },
-    // eks-production nodes
-    {
-      clusterId: eks.id,
-      name: 'ip-10-0-1-101.ec2',
-      status: 'Ready',
-      role: 'worker',
-      cpuCapacity: 8000,
-      cpuAllocatable: 7500,
-      memoryCapacity: 16_000_000_000,
-      memoryAllocatable: 15_000_000_000,
-      podsCount: 25,
-      k8sVersion: 'v1.31.2',
-    },
-    {
-      clusterId: eks.id,
-      name: 'ip-10-0-1-102.ec2',
-      status: 'Ready',
-      role: 'worker',
-      cpuCapacity: 8000,
-      cpuAllocatable: 7500,
-      memoryCapacity: 16_000_000_000,
-      memoryAllocatable: 15_000_000_000,
-      podsCount: 30,
-      k8sVersion: 'v1.31.2',
-    },
-    {
-      clusterId: eks.id,
-      name: 'ip-10-0-1-103.ec2',
-      status: 'NotReady',
-      role: 'worker',
-      cpuCapacity: 8000,
-      cpuAllocatable: 7500,
-      memoryCapacity: 16_000_000_000,
-      memoryAllocatable: 15_000_000_000,
-      podsCount: 0,
-      k8sVersion: 'v1.31.2',
     },
     // production-eks (AWS) nodes
     ...Array.from({ length: 12 }, (_, i) => ({
@@ -226,7 +181,7 @@ async function seed() {
     ],
   }
 
-  const allClusterIds = [minikube.id, eks.id, productionEks.id, stagingAks.id, analyticsGke.id, devK3s.id]
+  const allClusterIds = [minikube.id, productionEks.id, stagingAks.id, analyticsGke.id, devK3s.id]
   const eventValues = []
   for (let i = 0; i < 30; i++) {
     const kind = eventKinds[i % 2]
