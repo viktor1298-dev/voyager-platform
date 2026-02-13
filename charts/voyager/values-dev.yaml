@@ -1,0 +1,13 @@
+# Minikube development overrides
+web:
+  image:
+    pullPolicy: Never
+
+api:
+  image:
+    pullPolicy: Never
+
+config:
+  apiUrl: "http://voyager-api:4000"
+  databaseUrl: "postgresql://voyager:voyager-secret@host.minikube.internal:5432/voyager"
+  redisUrl: "redis://host.minikube.internal:6379"

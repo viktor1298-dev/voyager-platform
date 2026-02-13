@@ -1,0 +1,30 @@
+namespace: voyager
+
+web:
+  replicaCount: 1
+  image:
+    repository: voyager-web
+    tag: dev
+    pullPolicy: IfNotPresent
+  port: 3000
+
+api:
+  replicaCount: 1
+  image:
+    repository: voyager-api
+    tag: dev
+    pullPolicy: IfNotPresent
+  port: 4000
+
+ingress:
+  enabled: true
+  className: nginx
+  host: voyager.local
+
+config:
+  apiUrl: "http://voyager-api:4000"
+  databaseUrl: "postgresql://voyager:voyager-secret@postgres:5432/voyager"
+  redisUrl: "redis://redis:6379"
+
+secret:
+  dbPassword: dm95YWdlci1zZWNyZXQ=  # voyager-secret

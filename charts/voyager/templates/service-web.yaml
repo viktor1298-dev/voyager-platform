@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: voyager-web
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "voyager.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.web.port }}
+      targetPort: {{ .Values.web.port }}
+      protocol: TCP
+  selector:
+    {{- include "voyager.selectorLabels.web" . | nindent 4 }}
