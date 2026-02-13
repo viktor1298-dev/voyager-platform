@@ -13,9 +13,9 @@
 - [ ] Sub-task 8: Redis + BullMQ setup (cache layer, job queue)
 
 ## Phase 3: Frontend Dashboard
-- [ ] Sub-task 9: Layout + navigation (sidebar, header, shadcn setup)
-- [ ] Sub-task 10: Cluster list page (TanStack Table + tRPC)
-- [ ] Sub-task 11: Cluster detail page (health cards, metrics charts)
+- [x] Sub-task 9: tRPC client + providers + shadcn/ui setup + Dashboard page with summary cards & clusters grid ✅ validated
+- [ ] Sub-task 10: Cluster detail page (health cards, metrics charts, events table)
+- [ ] Sub-task 11: Layout + navigation (sidebar, header)
 - [ ] Sub-task 12: Real-time updates (WebSocket / TanStack Query refetch)
 
 ## Phase 4: Infrastructure
