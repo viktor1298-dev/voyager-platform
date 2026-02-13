@@ -108,7 +108,7 @@
   --border-glow-opacity-hover: 0.4;
 
   /* Watermark */
-  --watermark-opacity: 0.05;
+  --watermark-opacity: 0.15;
 
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.03);
