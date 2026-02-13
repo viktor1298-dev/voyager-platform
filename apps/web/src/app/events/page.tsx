@@ -54,7 +54,7 @@ export default function EventsPage() {
           e.namespace.toLowerCase().includes(q),
       )
     }
-    result.sort((a, b) => new Date(b.lastTimestamp).getTime() - new Date(a.lastTimestamp).getTime())
+    result.sort((a, b) => new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime())
     return result
   }, [events, filter, search])
 
