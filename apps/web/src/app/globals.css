@@ -114,39 +114,52 @@ body {
 
 /* Rotating gradient border on cluster cards */
 @keyframes rotate-border {
-  to { --gradient-angle: 360deg; }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .cluster-card {
   position: relative;
   isolation: isolate;
+  overflow: hidden;
+  border-radius: 0.75rem;
 }
 
 .cluster-card::before {
   content: '';
   position: absolute;
-  inset: -2px;
-  border-radius: inherit;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  transform-origin: center;
   background: conic-gradient(
-    from var(--gradient-angle, 0deg),
+    from 0deg,
     transparent 0%,
-    var(--status-color) 10%,
-    transparent 20%,
+    var(--status-color) 8%,
+    transparent 16%,
     transparent 100%
   );
   opacity: var(--border-glow-opacity);
   animation: rotate-border var(--duration-rotate) linear infinite;
-  z-index: -1;
+  z-index: 1;
+  translate: -50% -50%;
   transition: opacity var(--duration-normal) ease;
+  will-change: transform;
 }
 
 .cluster-card::after {
   content: '';
   position: absolute;
-  inset: 1px;
-  border-radius: inherit;
-  background: var(--color-bg-card);
-  z-index: -1;
+  inset: 2px;
+  border-radius: calc(0.75rem - 2px);
+  background: var(--color-bg-card, #141625);
+  z-index: 1;
+}
+
+.cluster-card > * {
+  position: relative;
+  z-index: 2;
 }
 
 .cluster-card:hover::before {
