@@ -10,57 +10,72 @@ import {
   getStatusGlowHover,
 } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
-import { AlertTriangle, CheckCircle, Database, Server } from 'lucide-react'
+import { AlertTriangle, Box, CheckCircle, Database, Layers, Server } from 'lucide-react'
 import Link from 'next/link'
 
 export default function DashboardPage() {
-  const clusters = trpc.clusters.list.useQuery()
+  const liveQuery = trpc.clusters.live.useQuery(undefined, {
+    refetchInterval: 30000,
+  })
 
-  const clusterList = clusters.data ?? []
-  const totalNodes = clusterList.reduce((sum, c) => sum + (c.nodeCount ?? 0), 0)
-  const healthyCount = clusterList.filter((c) => c.status === 'healthy').length
-  const isLoading = clusters.isLoading
+  const liveData = liveQuery.data
+  const isLoading = liveQuery.isLoading
+
+  // Map live data to a cluster list format for the grid
+  const clusterList = liveData
+    ? [
+        {
+          id: 'live-minikube',
+          name: liveData.name,
+          provider: liveData.provider,
+          version: liveData.version,
+          status: liveData.status,
+          nodeCount: liveData.nodes.length,
+        },
+      ]
+    : []
+
+  const totalNodes = liveData?.nodes.length ?? 0
+  const runningPods = liveData?.runningPods ?? 0
+  const namespacesCount = liveData?.namespaces.length ?? 0
+  const deploymentsCount = liveData?.deployments.length ?? 0
+  const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
 
   return (
     <AppLayout>
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <SummaryCard
-          icon={<Database className="h-4 w-4" />}
-          label="Total Clusters"
-          value={String(clusterList.length)}
+          icon={<Server className="h-4 w-4" />}
+          label="Total Nodes"
+          value={String(totalNodes)}
           color="var(--color-accent)"
           gradient="var(--gradient-text-default)"
           isLoading={isLoading}
         />
         <SummaryCard
-          icon={<Server className="h-4 w-4" />}
-          label="Total Nodes"
-          value={String(totalNodes)}
-          color="var(--color-text-secondary)"
-          gradient="var(--gradient-text-default)"
-          isLoading={isLoading}
-        />
-        <SummaryCard
-          icon={<CheckCircle className="h-4 w-4" />}
-          label="Healthy Clusters"
-          value={String(healthyCount)}
+          icon={<Box className="h-4 w-4" />}
+          label="Running Pods"
+          value={`${runningPods}/${liveData?.totalPods ?? 0}`}
           color="var(--color-status-active)"
           gradient="var(--gradient-text-healthy)"
           isLoading={isLoading}
         />
         <SummaryCard
-          icon={<AlertTriangle className="h-4 w-4" />}
-          label="Warning Events 24h"
-          value="—"
-          color="var(--color-status-warning)"
-          gradient="var(--gradient-text-warning)"
+          icon={<Layers className="h-4 w-4" />}
+          label="Namespaces"
+          value={String(namespacesCount)}
+          color="var(--color-text-secondary)"
+          gradient="var(--gradient-text-default)"
           isLoading={isLoading}
-          extra={
-            !isLoading && clusterList.length > 0 ? (
-              <WarningEventsCount clusterIds={clusterList.map((c) => c.id)} />
-            ) : undefined
-          }
+        />
+        <SummaryCard
+          icon={<AlertTriangle className="h-4 w-4" />}
+          label="Warning Events"
+          value={String(warningEvents)}
+          color="var(--color-status-warning)"
+          gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'var(--gradient-text-default)'}
+          isLoading={isLoading}
         />
       </div>
 
@@ -70,15 +85,18 @@ export default function DashboardPage() {
           Clusters
         </h2>
         <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-0.5">
-          {clusterList.length} registered
+          {clusterList.length} live
         </p>
       </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           <SkeletonCard />
-          <SkeletonCard />
         </div>
+      ) : liveQuery.error ? (
+        <p className="text-[var(--color-status-error)]">
+          Failed to connect to K8s API: {liveQuery.error.message}
+        </p>
       ) : clusterList.length === 0 ? (
         <p className="text-[var(--color-text-muted)]">No clusters found.</p>
       ) : (
@@ -129,7 +147,7 @@ export default function DashboardPage() {
                     <span>·</span>
                     <span>Nodes: {cluster.nodeCount}</span>
                     <span>·</span>
-                    <span>Region: {'—'}</span>
+                    <span>Pods: {runningPods}/{liveData?.totalPods ?? 0}</span>
                   </div>
                 </div>
 
@@ -156,7 +174,6 @@ function SummaryCard({
   color,
   gradient,
   isLoading,
-  extra,
 }: {
   icon: React.ReactNode
   label: string
@@ -164,7 +181,6 @@ function SummaryCard({
   color: string
   gradient: string
   isLoading?: boolean
-  extra?: React.ReactNode
 }) {
   return (
     <div
@@ -192,44 +208,13 @@ function SummaryCard({
       {isLoading ? (
         <SkeletonText width="3rem" height="2rem" />
       ) : (
-        extra || (
-          <div
-            className="text-2xl font-extrabold tracking-tight animate-count-up gradient-text"
-            style={{ backgroundImage: gradient }}
-          >
-            {value}
-          </div>
-        )
+        <div
+          className="text-2xl font-extrabold tracking-tight animate-count-up gradient-text"
+          style={{ backgroundImage: gradient }}
+        >
+          {value}
+        </div>
       )}
-    </div>
-  )
-}
-
-const MAX_CLUSTERS = 20
-
-function WarningEventsCount({ clusterIds }: { clusterIds: string[] }) {
-  const queries = Array.from({ length: MAX_CLUSTERS }, (_, i) => {
-    const clusterId = clusterIds[i] ?? 'unused'
-    return trpc.events.stats.useQuery({ clusterId }, { enabled: i < clusterIds.length })
-  })
-
-  const active = queries.slice(0, clusterIds.length)
-  const total = active.reduce((sum, r) => sum + (r.data?.Warning ?? 0), 0)
-  const loading = active.some((r) => r.isLoading)
-
-  if (loading) {
-    return <SkeletonText width="3rem" height="2rem" />
-  }
-
-  return (
-    <div
-      className="text-2xl font-extrabold tracking-tight gradient-text"
-      style={{
-        backgroundImage:
-          total > 0 ? 'var(--gradient-text-warning)' : 'var(--gradient-text-default)',
-      }}
-    >
-      {total}
     </div>
   )
 }

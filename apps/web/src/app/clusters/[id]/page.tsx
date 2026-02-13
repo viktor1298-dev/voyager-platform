@@ -2,20 +2,42 @@
 
 import { AppLayout } from '@/components/AppLayout'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCPU, formatMemory, formatTimestamp } from '@/lib/formatters'
+import { formatTimestamp } from '@/lib/formatters'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
+const LIVE_CLUSTER_ID = 'live-minikube'
+
 export default function ClusterDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const cluster = trpc.clusters.get.useQuery({ id })
-  const nodesQuery = trpc.nodes.list.useQuery({ clusterId: id })
-  const eventsQuery = trpc.events.list.useQuery({ clusterId: id, limit: 20 })
+  const isLive = id === LIVE_CLUSTER_ID
 
-  if (cluster.isLoading) {
+  // Live queries (only enabled for live cluster)
+  const liveQuery = trpc.clusters.live.useQuery(undefined, {
+    enabled: isLive,
+    refetchInterval: 30000,
+  })
+  const liveNodesQuery = trpc.clusters.liveNodes.useQuery(undefined, {
+    enabled: isLive,
+    refetchInterval: 30000,
+  })
+  const liveEventsQuery = trpc.clusters.liveEvents.useQuery(undefined, {
+    enabled: isLive,
+    refetchInterval: 30000,
+  })
+
+  // DB queries (only enabled for non-live clusters)
+  const dbCluster = trpc.clusters.get.useQuery({ id }, { enabled: !isLive })
+  const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !isLive })
+  const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !isLive })
+
+  const isLoading = isLive ? liveQuery.isLoading : dbCluster.isLoading
+  const error = isLive ? liveQuery.error : dbCluster.error
+
+  if (isLoading) {
     return (
       <AppLayout>
         <Skeleton className="h-6 w-40 mb-4" />
@@ -26,21 +48,75 @@ export default function ClusterDetailPage() {
     )
   }
 
-  if (cluster.error) {
+  if (error) {
     return (
       <AppLayout>
         <Link href="/" className="text-[var(--color-accent)] hover:underline text-sm">
           ← Back
         </Link>
-        <p className="text-[var(--color-status-error)] mt-4">Error: {cluster.error.message}</p>
+        <p className="text-[var(--color-status-error)] mt-4">Error: {error.message}</p>
       </AppLayout>
     )
   }
 
-  // biome-ignore lint/style/noNonNullAssertion: guarded by early returns above
-  const data = cluster.data!
-  const nodeList = nodesQuery.data ?? []
-  const eventList = eventsQuery.data ?? []
+  // Build unified data from live or DB source
+  const clusterData = isLive
+    ? {
+        name: liveQuery.data?.name ?? 'minikube',
+        provider: liveQuery.data?.provider ?? 'minikube',
+        version: liveQuery.data?.version,
+        status: liveQuery.data?.status ?? 'unknown',
+      }
+    : {
+        name: dbCluster.data?.name ?? '',
+        provider: dbCluster.data?.provider ?? '',
+        version: dbCluster.data?.version,
+        status: dbCluster.data?.status ?? 'unknown',
+      }
+
+  // Nodes
+  const nodeList = isLive
+    ? (liveNodesQuery.data ?? []).map((n) => ({
+        id: n.name ?? '',
+        name: n.name ?? '',
+        status: n.status ?? 'Unknown',
+        role: n.roles?.join(', ') || 'worker',
+        cpu: n.cpu ?? '—',
+        memory: n.memory ?? '—',
+        pods: n.pods ?? '—',
+        k8sVersion: n.version,
+      }))
+    : (dbNodes.data ?? []).map((n) => ({
+        id: n.id,
+        name: n.name,
+        status: n.status,
+        role: n.role,
+        cpu: `${n.cpuAllocatable ?? '—'} / ${n.cpuCapacity ?? '—'}`,
+        memory: `${n.memoryAllocatable ?? '—'} / ${n.memoryCapacity ?? '—'}`,
+        pods: String(n.podsCount ?? '—'),
+        k8sVersion: n.k8sVersion,
+      }))
+  const nodesLoading = isLive ? liveNodesQuery.isLoading : dbNodes.isLoading
+
+  // Events
+  const eventList = isLive
+    ? (liveEventsQuery.data ?? []).map((e, i) => ({
+        id: `live-event-${i}`,
+        kind: e.type ?? 'Normal',
+        reason: e.reason,
+        message: e.message,
+        namespace: e.namespace,
+        timestamp: e.lastSeen as string | null | undefined,
+      }))
+    : (dbEvents.data ?? []).map((e) => ({
+        id: e.id,
+        kind: e.kind,
+        reason: e.reason,
+        message: e.message,
+        namespace: e.namespace,
+        timestamp: e.timestamp as string | null | undefined,
+      }))
+  const eventsLoading = isLive ? liveEventsQuery.isLoading : dbEvents.isLoading
 
   return (
     <AppLayout>
@@ -54,23 +130,28 @@ export default function ClusterDetailPage() {
           Clusters
         </Link>
         <ChevronRight className="h-3 w-3" />
-        <span className="text-[var(--color-text-secondary)]">{data.name}</span>
+        <span className="text-[var(--color-text-secondary)]">{clusterData.name}</span>
       </div>
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-1">
         <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
-          {data.name}
+          {clusterData.name}
         </h1>
         <span
-          className={`h-2.5 w-2.5 rounded-full ${data.status === 'healthy' ? 'bg-[var(--color-status-active)]' : data.status === 'warning' ? 'bg-[var(--color-status-warning)]' : 'bg-[var(--color-status-error)]'}`}
+          className={`h-2.5 w-2.5 rounded-full ${clusterData.status === 'healthy' ? 'bg-[var(--color-status-active)]' : clusterData.status === 'warning' || clusterData.status === 'degraded' ? 'bg-[var(--color-status-warning)]' : 'bg-[var(--color-status-error)]'}`}
         />
         <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
-          {data.provider}
+          {clusterData.provider}
         </span>
+        {isLive && (
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-status-active)]/10 text-[var(--color-status-active)] border border-[var(--color-status-active)]/20">
+            LIVE
+          </span>
+        )}
       </div>
       <p className="text-[11px] text-[var(--color-text-dim)] font-mono mb-8">
-        Kubernetes {data.version ?? '—'}
+        Kubernetes {clusterData.version ?? '—'}
       </p>
 
       {/* Nodes Table */}
@@ -81,7 +162,7 @@ export default function ClusterDetailPage() {
           </h2>
         </div>
 
-        {nodesQuery.isLoading ? (
+        {nodesLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders
@@ -128,13 +209,13 @@ export default function ClusterDetailPage() {
                       {node.role}
                     </td>
                     <td className="py-2.5 px-3 text-[var(--color-text-secondary)] font-mono text-[12px]">
-                      {formatCPU(node.cpuAllocatable)} / {formatCPU(node.cpuCapacity)}
+                      {node.cpu}
                     </td>
                     <td className="py-2.5 px-3 text-[var(--color-text-secondary)] font-mono text-[12px]">
-                      {formatMemory(node.memoryAllocatable)} / {formatMemory(node.memoryCapacity)}
+                      {node.memory}
                     </td>
                     <td className="py-2.5 px-3 text-[var(--color-text-primary)] font-bold text-[13px]">
-                      {node.podsCount}
+                      {node.pods}
                     </td>
                     <td className="py-2.5 px-3 text-[var(--color-text-muted)] font-mono text-[12px]">
                       {node.k8sVersion ?? '—'}
@@ -153,7 +234,7 @@ export default function ClusterDetailPage() {
           Recent Events
         </h2>
 
-        {eventsQuery.isLoading ? (
+        {eventsLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders
@@ -197,7 +278,7 @@ export default function ClusterDetailPage() {
                   </p>
                 </div>
                 <span className="text-[10px] text-[var(--color-text-dim)] font-mono shrink-0">
-                  {formatTimestamp(event.timestamp)}
+                  {event.timestamp ? formatTimestamp(event.timestamp) : '—'}
                 </span>
               </div>
             ))}
