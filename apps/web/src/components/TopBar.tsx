@@ -32,15 +32,23 @@ export function TopBar() {
       <div className="flex gap-6 items-center">
         <Stat label="Total Pods" value={totalPods} color="var(--color-accent)" />
         <Stat label="CPU Usage" value="—" color="var(--color-text-muted)" />
-        <Stat label="Alerts" value={liveQuery.isLoading ? '…' : String(alerts)} color={alerts > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
+        <Stat label="Alerts" value={alerts === null ? '—' : String(alerts)} color={alerts !== null && alerts > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
       </div>
 
-      <ConnectionStatus dataUpdatedAt={liveQuery.dataUpdatedAt} />
+      <ConnectionStatus
+        dataUpdatedAt={liveQuery.dataUpdatedAt}
+        isDisconnected={isDisconnected}
+        isReconnecting={isReconnecting}
+      />
     </header>
   )
 }
 
-function ConnectionStatus({ dataUpdatedAt }: { dataUpdatedAt?: number }) {
+function ConnectionStatus({ dataUpdatedAt, isDisconnected, isReconnecting }: {
+  dataUpdatedAt?: number
+  isDisconnected: boolean
+  isReconnecting: boolean
+}) {
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -49,16 +57,41 @@ function ConnectionStatus({ dataUpdatedAt }: { dataUpdatedAt?: number }) {
   }, [])
 
   const secondsAgo = dataUpdatedAt ? Math.floor((now - dataUpdatedAt) / 1000) : 0
-  const label = secondsAgo < 5 ? 'just now' : secondsAgo + 's ago'
+  const syncLabel = secondsAgo < 5 ? 'just now' : secondsAgo + 's ago'
+
+  const dotColor = isDisconnected
+    ? 'var(--color-status-error, #ef4444)'
+    : isReconnecting
+      ? 'var(--color-status-warning)'
+      : 'var(--color-status-active)'
+
+  const statusText = isDisconnected
+    ? 'Disconnected'
+    : isReconnecting
+      ? 'Reconnecting…'
+      : 'Connected'
+
+  const borderColor = isDisconnected ? 'rgba(239, 68, 68, 0.3)' : 'var(--color-border)'
+  const bgColor = isDisconnected ? 'rgba(239, 68, 68, 0.05)' : 'rgba(255, 255, 255, 0.02)'
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-white/[0.02]">
-      <span className="h-2 w-2 rounded-full bg-[var(--color-status-active)] animate-pulse-slow" />
-      <span className="text-[11px] font-mono font-medium" style={{ color: 'var(--color-status-active)' }}>
-        Connected
+    <div
+      className="flex items-center gap-2 px-3 py-1.5 rounded-lg border"
+      style={{ borderColor, backgroundColor: bgColor }}
+    >
+      <span
+        className={`h-2 w-2 rounded-full ${isDisconnected ? '' : 'animate-pulse-slow'}`}
+        style={{ backgroundColor: dotColor }}
+      />
+      <span className="text-[11px] font-mono font-medium" style={{ color: dotColor }}>
+        {statusText}
       </span>
-      <span className="text-[10px] text-[var(--color-text-dim)]">·</span>
-      <span className="text-[10px] text-[var(--color-text-muted)] font-mono">Synced {label}</span>
+      {!isDisconnected && (
+        <>
+          <span className="text-[10px] text-[var(--color-text-dim)]">·</span>
+          <span className="text-[10px] text-[var(--color-text-muted)] font-mono">Synced {syncLabel}</span>
+        </>
+      )}
     </div>
   )
 }
