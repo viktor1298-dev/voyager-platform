@@ -24,7 +24,7 @@ async function seed() {
         endpoint: 'https://192.168.49.2:8443',
         status: 'healthy',
         version: 'v1.33.0',
-        nodesCount: 3,
+        nodesCount: 1,
       },
       {
         name: 'production-eks',
@@ -65,7 +65,7 @@ async function seed() {
 
   // Insert nodes
   const nodeData = [
-    // minikube-dev nodes
+    // minikube-dev node (single node cluster)
     {
       clusterId: minikube.id,
       name: 'minikube-node-1',
@@ -76,30 +76,6 @@ async function seed() {
       memoryCapacity: 8_000_000_000,
       memoryAllocatable: 7_000_000_000,
       podsCount: 12,
-      k8sVersion: 'v1.33.0',
-    },
-    {
-      clusterId: minikube.id,
-      name: 'minikube-node-2',
-      status: 'Ready',
-      role: 'worker',
-      cpuCapacity: 4000,
-      cpuAllocatable: 3800,
-      memoryCapacity: 8_000_000_000,
-      memoryAllocatable: 7_500_000_000,
-      podsCount: 8,
-      k8sVersion: 'v1.33.0',
-    },
-    {
-      clusterId: minikube.id,
-      name: 'minikube-node-3',
-      status: 'Ready',
-      role: 'worker',
-      cpuCapacity: 4000,
-      cpuAllocatable: 3800,
-      memoryCapacity: 8_000_000_000,
-      memoryAllocatable: 7_500_000_000,
-      podsCount: 5,
       k8sVersion: 'v1.33.0',
     },
     // production-eks (AWS) nodes

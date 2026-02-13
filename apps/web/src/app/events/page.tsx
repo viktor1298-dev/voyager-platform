@@ -58,13 +58,25 @@ export default function EventsPage() {
     return result
   }, [events, filter, search])
 
+  const searchFiltered = useMemo(() => {
+    if (!search) return events
+    const q = search.toLowerCase()
+    return events.filter(
+      (e) =>
+        e.message.toLowerCase().includes(q) ||
+        e.reason.toLowerCase().includes(q) ||
+        e.object.toLowerCase().includes(q) ||
+        e.namespace.toLowerCase().includes(q),
+    )
+  }, [events, search])
+
   const counts = useMemo(
     () => ({
-      all: events.length,
-      Normal: events.filter((e) => e.type === 'Normal').length,
-      Warning: events.filter((e) => e.type === 'Warning').length,
+      all: searchFiltered.length,
+      Normal: searchFiltered.filter((e) => e.type === 'Normal').length,
+      Warning: searchFiltered.filter((e) => e.type === 'Warning').length,
     }),
-    [events],
+    [searchFiltered],
   )
 
   return (
