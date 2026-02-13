@@ -6,6 +6,8 @@ services:
       POSTGRES_USER: voyager
       POSTGRES_PASSWORD: voyager_dev
       POSTGRES_DB: voyager_dev
+      POSTGRES_HOST_AUTH_METHOD: trust
+    command: ["-c", "listen_addresses=*"]
     ports:
       - "5432:5432"
     volumes:
