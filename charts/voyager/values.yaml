@@ -19,7 +19,7 @@ api:
 ingress:
   enabled: true
   className: nginx
-  host: voyager.local
+  host: voyager-platform.voyagerlabs.co
 
 config:
   apiUrl: "http://voyager-api:4000"
@@ -45,6 +45,9 @@ redis:
     enabled: true
     size: 1Gi
     storageClass: ""
+
+rbac:
+  create: true
 
 secret:
   dbPassword: ""  # Override per environment

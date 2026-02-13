@@ -28,6 +28,18 @@ spec:
                 name: voyager-config
             - secretRef:
                 name: voyager-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.api.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.api.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
           resources:
             requests:
               cpu: 100m

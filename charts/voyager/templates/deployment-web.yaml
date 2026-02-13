@@ -25,6 +25,18 @@ spec:
           envFrom:
             - configMapRef:
                 name: voyager-config
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.web.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.web.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
           resources:
             requests:
               cpu: 100m
