@@ -31,9 +31,15 @@ export const clustersRouter = router({
 
   live: publicProcedure.query(async () => {
     try {
-      const versionInfo = await versionApi.getCode()
+      const [versionInfo, nodesResponse, podsResponse, nsResponse, eventsResponse, deploymentsResponse] = await Promise.all([
+        versionApi.getCode(),
+        coreV1Api.listNode(),
+        coreV1Api.listPodForAllNamespaces(),
+        coreV1Api.listNamespace(),
+        coreV1Api.listEventForAllNamespaces(),
+        appsV1Api.listDeploymentForAllNamespaces(),
+      ])
 
-      const nodesResponse = await coreV1Api.listNode()
       const k8sNodes = nodesResponse.items.map((node) => ({
         name: node.metadata?.name,
         status:
@@ -51,14 +57,11 @@ export const clustersRouter = router({
         pods: node.status?.capacity?.pods,
       }))
 
-      const podsResponse = await coreV1Api.listPodForAllNamespaces()
       const totalPods = podsResponse.items.length
       const runningPods = podsResponse.items.filter((p) => p.status?.phase === 'Running').length
 
-      const nsResponse = await coreV1Api.listNamespace()
       const namespaces = nsResponse.items.map((ns) => ns.metadata?.name).filter(Boolean)
 
-      const eventsResponse = await coreV1Api.listEventForAllNamespaces()
       const events = eventsResponse.items
         .sort((a, b) => {
           const aTime = (a.lastTimestamp || a.metadata?.creationTimestamp) as unknown as string | undefined
@@ -75,8 +78,6 @@ export const clustersRouter = router({
           count: event.count,
           lastTimestamp: event.lastTimestamp || event.metadata?.creationTimestamp,
         }))
-
-      const deploymentsResponse = await appsV1Api.listDeploymentForAllNamespaces()
       const deployments = deploymentsResponse.items.map((d) => ({
         name: d.metadata?.name,
         namespace: d.metadata?.namespace,
