@@ -13,7 +13,11 @@
   "dependencies": {
     "fastify": "^5.2.0",
     "@trpc/server": "^11.0.0",
-    "@voyager/types": "workspace:*"
+    "@fastify/cors": "^10.0.0",
+    "drizzle-orm": "^0.38.0",
+    "@voyager/db": "workspace:*",
+    "@voyager/types": "workspace:*",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
