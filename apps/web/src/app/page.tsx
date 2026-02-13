@@ -75,18 +75,18 @@ export default function DashboardPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           <SkeletonCard />
           <SkeletonCard />
         </div>
       ) : clusterList.length === 0 ? (
         <p className="text-[var(--color-text-muted)]">No clusters found.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {clusterList.map((cluster, index) => (
             <Link key={cluster.id} href={`/clusters/${cluster.id}`}>
               <div
-                className="cluster-card relative group rounded-2xl p-4 cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up"
+                className="cluster-card relative group rounded-xl p-3 cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up"
                 style={
                   {
                     '--status-color': getStatusColor(cluster.status ?? 'unknown'),
@@ -106,13 +106,19 @@ export default function DashboardPage() {
                   e.currentTarget.style.transform = 'none'
                 }}
               >
-                <div className="flex items-center justify-between mb-3">
+                {/* Row 1: Status + Name + Badge */}
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span
                       className={`h-2 w-2 rounded-full animate-pulse-slow ${getStatusDotClass(cluster.status ?? 'unknown')}`}
                     />
-                    <span className="text-[11px] font-mono text-[var(--color-text-muted)] uppercase tracking-wider">
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wider ${getStatusColor(cluster.status ?? 'unknown') === 'var(--color-status-active)' ? 'text-[var(--color-status-active)]' : 'text-[var(--color-status-warning)]'}`}
+                    >
                       {cluster.status ?? 'unknown'}
+                    </span>
+                    <span className="text-sm font-bold text-[var(--color-text-primary)]">
+                      {cluster.name}
                     </span>
                   </div>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
@@ -120,36 +126,15 @@ export default function DashboardPage() {
                   </span>
                 </div>
 
-                <div className="mb-3">
-                  <span className="text-[15px] font-bold text-[var(--color-text-primary)] tracking-tight">
-                    {cluster.name}
-                  </span>
-                  <div className="text-[11px] text-[var(--color-text-dim)] font-mono mt-0.5">
-                    K8s {cluster.version ?? '—'}
-                  </div>
+                {/* Row 2: Details */}
+                <div className="flex items-center gap-4 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono">
+                  <span>K8s {cluster.version ?? '—'}</span>
+                  <span>·</span>
+                  <span>Nodes: {cluster.nodeCount}</span>
+                  <span>·</span>
+                  <span>Region: {'—'}</span>
                 </div>
 
-                <div className="flex items-center gap-3 pt-3 border-t border-white/[0.04]">
-                  <div className="flex-1">
-                    <div className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
-                      Nodes
-                    </div>
-                    <div
-                      className="text-sm font-bold mt-0.5 gradient-text"
-                      style={{ backgroundImage: 'var(--gradient-text-default)' }}
-                    >
-                      {cluster.nodeCount}
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
-                      Region
-                    </div>
-                    <div className="text-sm font-bold text-[var(--color-text-primary)] mt-0.5">
-                      {'—'}
-                    </div>
-                  </div>
-                </div>
                 <ProviderLogo provider={cluster.provider ?? 'default'} />
               </div>
             </Link>
