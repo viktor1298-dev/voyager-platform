@@ -2,41 +2,85 @@ const LOGO_SIZE = 80
 
 function KubernetesLogo() {
   return (
-    <svg viewBox="0 0 100 100" width={LOGO_SIZE} height={LOGO_SIZE} aria-hidden role="img">
+    <svg viewBox="0 0 256 249" width={LOGO_SIZE} height={LOGO_SIZE} aria-hidden role="img">
       <title>Kubernetes</title>
-      <path d="M50 10L15 30v40l35 20 35-20V30L50 10zm0 8l28 16v32L50 82 22 66V34l28-16zm0 10a2 2 0 00-1 .3L35 36v20l14 7.7a2 2 0 002 0L65 56V36L51 28.3A2 2 0 0050 28z" fill="#326CE5" />
+      {/* Kubernetes wheel - 7 spokes */}
+      <g transform="translate(128,124)">
+        <circle cx="0" cy="0" r="112" fill="#326CE5" />
+        <circle cx="0" cy="0" r="95" fill="none" stroke="#fff" strokeWidth="5" />
+        {/* Center hub */}
+        <circle cx="0" cy="0" r="18" fill="#fff" />
+        {/* 7 spokes */}
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+          const angle = (i * 360) / 7 - 90
+          const rad = (angle * Math.PI) / 180
+          const x1 = Math.cos(rad) * 22
+          const y1 = Math.sin(rad) * 22
+          const x2 = Math.cos(rad) * 72
+          const y2 = Math.sin(rad) * 72
+          const tipX = Math.cos(rad) * 88
+          const tipY = Math.sin(rad) * 88
+          return (
+            <g key={i}>
+              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="8" strokeLinecap="round" />
+              <circle cx={tipX} cy={tipY} r="12" fill="#fff" />
+            </g>
+          )
+        })}
+      </g>
     </svg>
   )
 }
 
 function MinikubeLogo() {
-  return (
-    <svg viewBox="0 0 100 100" width={LOGO_SIZE} height={LOGO_SIZE} aria-hidden role="img">
-      <title>Minikube</title>
-      <circle cx="50" cy="50" r="35" strokeWidth="4" stroke="#4AB8E8" fill="none" />
-      <path d="M35 40l15-10 15 10v20L50 70 35 60V40z" fill="#326CE5" />
-    </svg>
-  )
+  return <KubernetesLogo />
 }
 
 function EksLogo() {
   return (
-    <svg viewBox="0 0 100 100" width={LOGO_SIZE} height={LOGO_SIZE} aria-hidden role="img">
-      <title>AWS EKS</title>
-      <path d="M50 15L20 30v40l30 15 30-15V30L50 15z" fill="#FF9900" />
-      <path d="M50 35l-15 8v16l15 8 15-8V43L50 35z" fill="none" stroke="#232F3E" strokeWidth="2.5" />
+    <svg viewBox="0 0 100 60" width={LOGO_SIZE} height={LOGO_SIZE * 0.6} aria-hidden role="img">
+      <title>AWS</title>
+      {/* AWS smile/arrow */}
+      <path
+        d="M12 38 Q50 52 88 38"
+        fill="none"
+        stroke="#FF9900"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M72 34 L88 38 L78 48"
+        fill="none"
+        stroke="#FF9900"
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* AWS text */}
+      <text x="50" y="28" textAnchor="middle" fontFamily="Arial,sans-serif" fontWeight="bold" fontSize="26" fill="#232F3E">
+        AWS
+      </text>
     </svg>
   )
 }
 
 function GkeLogo() {
   return (
-    <svg viewBox="0 0 100 100" width={LOGO_SIZE} height={LOGO_SIZE} aria-hidden role="img">
-      <title>Google GKE</title>
-      <path d="M50 10L15 30v40l35 20 35-20V30L50 10z" fill="#4285F4" fillOpacity="0.6" />
-      <polygon points="50,25 65,45 50,55 35,45" fill="#EA4335" />
-      <polygon points="50,55 65,45 65,65 50,75" fill="#34A853" />
-      <polygon points="50,55 35,45 35,65 50,75" fill="#FBBC05" />
+    <svg viewBox="0 0 100 80" width={LOGO_SIZE} height={LOGO_SIZE * 0.8} aria-hidden role="img">
+      <title>Google Cloud</title>
+      {/* Simplified Google Cloud logo - cloud shape with Google colors */}
+      <path
+        d="M72 56H28a20 20 0 01-3.5-39.7A16 16 0 0154 14a24 24 0 0143.5 10A16 16 0 0188 56h-16"
+        fill="none"
+        stroke="#4285F4"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      {/* Google 4-color dots inside the cloud */}
+      <circle cx="35" cy="42" r="5" fill="#EA4335" />
+      <circle cx="50" cy="35" r="5" fill="#4285F4" />
+      <circle cx="65" cy="42" r="5" fill="#FBBC05" />
+      <circle cx="50" cy="50" r="5" fill="#34A853" />
     </svg>
   )
 }
@@ -44,9 +88,10 @@ function GkeLogo() {
 function AksLogo() {
   return (
     <svg viewBox="0 0 100 100" width={LOGO_SIZE} height={LOGO_SIZE} aria-hidden role="img">
-      <title>Azure AKS</title>
-      <rect x="20" y="20" width="60" height="60" rx="8" fill="#0078D4" fillOpacity="0.5" />
-      <path d="M35 50h30M50 35v30M38 38l24 24M62 38L38 62" stroke="#50E6FF" strokeWidth="3" fill="none" />
+      <title>Microsoft Azure</title>
+      {/* Azure logo - two triangles */}
+      <path d="M28 76L52 18l14 34H40l22 24H28z" fill="#0078D4" />
+      <path d="M58 36l18 40H48l10-16 0-24z" fill="#0078D4" opacity="0.7" />
     </svg>
   )
 }
@@ -62,10 +107,9 @@ export function ProviderLogo({ provider }: { provider: string }) {
   const Logo = PROVIDER_LOGOS[provider.toLowerCase()] ?? KubernetesLogo
   return (
     <div
-      className="absolute right-2 bottom-2 pointer-events-none"
+      className="absolute right-3 bottom-3 pointer-events-none"
       style={{
         opacity: 'var(--watermark-opacity)',
-        filter: 'blur(0.5px)',
         zIndex: 2,
       }}
     >
