@@ -130,14 +130,14 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 150%;
-  height: 150%;
+  width: 200%;
+  height: 200%;
   transform-origin: center;
   background: conic-gradient(
     from 0deg,
     transparent 0%,
-    var(--status-color) 8%,
-    transparent 16%,
+    var(--status-color) 3%,
+    transparent 6%,
     transparent 100%
   );
   opacity: var(--border-glow-opacity);
@@ -151,8 +151,8 @@ body {
 .cluster-card::after {
   content: '';
   position: absolute;
-  inset: 2px;
-  border-radius: calc(0.75rem - 2px);
+  inset: 1.5px;
+  border-radius: calc(0.75rem - 1.5px);
   background: var(--color-bg-card, #141625);
   z-index: 1;
 }
