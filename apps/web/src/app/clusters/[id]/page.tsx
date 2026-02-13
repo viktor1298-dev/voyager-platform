@@ -3,29 +3,20 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { AppLayout } from "@/components/AppLayout";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
-
-function statusColor(status: string) {
-  if (status === "healthy") return "bg-emerald-500";
-  if (status === "warning") return "bg-amber-500";
-  return "bg-red-500";
-}
+import { ChevronRight } from "lucide-react";
 
 function nodeStatusColor(status: string) {
-  if (status === "Ready") return "bg-emerald-500";
-  if (status === "NotReady") return "bg-red-500";
-  return "bg-zinc-500";
+  if (status === "Ready") return "bg-[var(--color-status-active)]";
+  if (status === "NotReady") return "bg-[var(--color-status-error)]";
+  return "bg-[var(--color-status-idle)]";
+}
+
+function severityColor(kind: string) {
+  if (kind === "Warning") return "var(--color-status-warning)";
+  if (kind === "Error") return "var(--color-status-error)";
+  return "var(--color-accent)";
 }
 
 function formatCPU(millicores: number | null | undefined): string {
@@ -38,19 +29,12 @@ function formatMemory(bytes: number | null | undefined): string {
   if (bytes == null) return "—";
   const gb = bytes / (1024 * 1024 * 1024);
   if (gb >= 1) return `${gb.toFixed(1)} GB`;
-  const mb = bytes / (1024 * 1024);
-  return `${mb.toFixed(0)} MB`;
+  return `${(bytes / (1024 * 1024)).toFixed(0)} MB`;
 }
 
 function formatTimestamp(ts: string | Date): string {
   const d = new Date(ts);
-  return d.toLocaleString("en-IL", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+  return d.toLocaleString("en-IL", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 export default function ClusterDetailPage() {
@@ -61,24 +45,21 @@ export default function ClusterDetailPage() {
 
   if (cluster.isLoading) {
     return (
-      <div className="min-h-screen p-8 max-w-7xl mx-auto">
+      <AppLayout>
         <Skeleton className="h-6 w-40 mb-4" />
         <Skeleton className="h-10 w-72 mb-2" />
-        <Skeleton className="h-5 w-48 mb-8" />
         <Skeleton className="h-64 w-full mb-6" />
         <Skeleton className="h-64 w-full" />
-      </div>
+      </AppLayout>
     );
   }
 
   if (cluster.error) {
     return (
-      <div className="min-h-screen p-8 max-w-7xl mx-auto">
-        <Link href="/" className="text-blue-400 hover:underline text-sm flex items-center gap-1">
-          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
-        </Link>
-        <p className="text-red-400 mt-4">Error: {cluster.error.message}</p>
-      </div>
+      <AppLayout>
+        <Link href="/" className="text-[var(--color-accent)] hover:underline text-sm">← Back</Link>
+        <p className="text-[var(--color-status-error)] mt-4">Error: {cluster.error.message}</p>
+      </AppLayout>
     );
   }
 
@@ -87,128 +68,130 @@ export default function ClusterDetailPage() {
   const eventList = eventsQuery.data ?? [];
 
   return (
-    <div className="min-h-screen p-8 max-w-7xl mx-auto">
-      {/* Back button */}
-      <Link href="/" className="text-blue-400 hover:underline text-sm flex items-center gap-1 mb-6">
-        <ArrowLeft className="h-4 w-4" /> Back to Dashboard
-      </Link>
+    <AppLayout>
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-1.5 text-[11px] font-mono text-[var(--color-text-dim)] mb-6">
+        <Link href="/" className="hover:text-[var(--color-text-muted)] transition-colors">Home</Link>
+        <ChevronRight className="h-3 w-3" />
+        <Link href="/" className="hover:text-[var(--color-text-muted)] transition-colors">Clusters</Link>
+        <ChevronRight className="h-3 w-3" />
+        <span className="text-[var(--color-text-secondary)]">{data.name}</span>
+      </div>
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-3xl font-bold text-white">{data.name}</h1>
-        <Badge variant={data.status === "healthy" ? "default" : "destructive"}>
-          <span className={`inline-block h-2 w-2 rounded-full mr-1.5 ${statusColor(data.status ?? "unknown")}`} />
-          {data.status ?? "unknown"}
-        </Badge>
-        <Badge variant="secondary">{data.provider}</Badge>
+        <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">{data.name}</h1>
+        <span className={`h-2.5 w-2.5 rounded-full ${data.status === "healthy" ? "bg-[var(--color-status-active)]" : data.status === "warning" ? "bg-[var(--color-status-warning)]" : "bg-[var(--color-status-error)]"}`} />
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
+          {data.provider}
+        </span>
       </div>
-      <p className="text-zinc-400 mb-8">Kubernetes {data.version ?? "—"}</p>
+      <p className="text-[11px] text-[var(--color-text-dim)] font-mono mb-8">Kubernetes {data.version ?? "—"}</p>
 
       {/* Nodes Table */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Nodes ({nodeList.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {nodesQuery.isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : nodeList.length === 0 ? (
-            <p className="text-zinc-500">No nodes found.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>CPU</TableHead>
-                  <TableHead>Memory</TableHead>
-                  <TableHead>Pods</TableHead>
-                  <TableHead>K8s Version</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {nodeList.map((node) => (
-                  <TableRow key={node.id}>
-                    <TableCell className="font-medium">{node.name}</TableCell>
-                    <TableCell>
+      <div className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-5 mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-extrabold tracking-tight text-[var(--color-text-primary)]">
+            Nodes ({nodeList.length})
+          </h2>
+        </div>
+
+        {nodesQuery.isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+          </div>
+        ) : nodeList.length === 0 ? (
+          <p className="text-[var(--color-text-muted)] text-sm">No nodes found.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/[0.06]">
+                  {["Name", "Status", "Role", "CPU", "Memory", "Pods", "K8s Version"].map((h) => (
+                    <th key={h} className="text-left py-2 px-3 text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono font-normal">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {nodeList.map((node, i) => (
+                  <tr
+                    key={node.id}
+                    className={`border-b border-white/[0.03] transition-colors hover:bg-white/[0.03] ${i % 2 === 1 ? "bg-white/[0.015]" : ""}`}
+                  >
+                    <td className="py-2.5 px-3 font-medium text-[var(--color-text-primary)] text-[13px]">{node.name}</td>
+                    <td className="py-2.5 px-3">
                       <span className="flex items-center gap-1.5">
-                        <span className={`h-2 w-2 rounded-full ${nodeStatusColor(node.status)}`} />
-                        {node.status}
+                        <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
+                        <span className="text-[var(--color-text-secondary)] text-[13px]">{node.status}</span>
                       </span>
-                    </TableCell>
-                    <TableCell>{node.role}</TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="py-2.5 px-3 text-[var(--color-text-muted)] text-[13px]">{node.role}</td>
+                    <td className="py-2.5 px-3 text-[var(--color-text-secondary)] font-mono text-[12px]">
                       {formatCPU(node.cpuAllocatable)} / {formatCPU(node.cpuCapacity)}
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="py-2.5 px-3 text-[var(--color-text-secondary)] font-mono text-[12px]">
                       {formatMemory(node.memoryAllocatable)} / {formatMemory(node.memoryCapacity)}
-                    </TableCell>
-                    <TableCell>{node.podsCount}</TableCell>
-                    <TableCell>{node.k8sVersion ?? "—"}</TableCell>
-                  </TableRow>
+                    </td>
+                    <td className="py-2.5 px-3 text-[var(--color-text-primary)] font-bold text-[13px]">{node.podsCount}</td>
+                    <td className="py-2.5 px-3 text-[var(--color-text-muted)] font-mono text-[12px]">{node.k8sVersion ?? "—"}</td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Events Timeline */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Events</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {eventsQuery.isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : eventList.length === 0 ? (
-            <p className="text-zinc-500">No events found.</p>
-          ) : (
-            <div className="space-y-3">
-              {eventList.map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-start gap-3 border-l-2 pl-4 py-2 border-zinc-700"
-                >
-                  <div className="flex-shrink-0 pt-0.5">
-                    <Badge
-                      variant={event.kind === "Warning" ? "destructive" : "secondary"}
-                      className={
-                        event.kind === "Warning"
-                          ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
-                          : "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                      }
-                    >
-                      {event.kind}
-                    </Badge>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-medium text-zinc-200">{event.reason ?? "—"}</span>
-                      {event.namespace && (
-                        <span className="text-zinc-500 text-xs">ns/{event.namespace}</span>
-                      )}
-                    </div>
-                    <p className="text-sm text-zinc-400 mt-0.5 break-words">{event.message ?? ""}</p>
-                  </div>
-                  <span className="text-xs text-zinc-500 flex-shrink-0">
-                    {formatTimestamp(event.timestamp)}
+      <div className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+        <h2 className="text-base font-extrabold tracking-tight text-[var(--color-text-primary)] mb-4">
+          Recent Events
+        </h2>
+
+        {eventsQuery.isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+          </div>
+        ) : eventList.length === 0 ? (
+          <p className="text-[var(--color-text-muted)] text-sm">No events found.</p>
+        ) : (
+          <div className="space-y-1">
+            {eventList.map((event) => (
+              <div
+                key={event.id}
+                className="flex items-start gap-3 py-2.5 px-3 rounded-lg hover:bg-white/[0.03] transition-colors border-l-2"
+                style={{ borderLeftColor: severityColor(event.kind) }}
+              >
+                <div className="shrink-0">
+                  <span
+                    className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+                    style={{
+                      color: severityColor(event.kind),
+                      background: `color-mix(in srgb, ${severityColor(event.kind)} 15%, transparent)`,
+                    }}
+                  >
+                    {event.kind}
                   </span>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-[13px]">
+                    <span className="font-medium text-[var(--color-text-primary)]">{event.reason ?? "—"}</span>
+                    {event.namespace && (
+                      <span className="text-[10px] text-[var(--color-text-dim)] font-mono">ns/{event.namespace}</span>
+                    )}
+                  </div>
+                  <p className="text-[12px] text-[var(--color-text-muted)] mt-0.5 break-words">{event.message ?? ""}</p>
+                </div>
+                <span className="text-[10px] text-[var(--color-text-dim)] font-mono shrink-0">
+                  {formatTimestamp(event.timestamp)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </AppLayout>
   );
 }

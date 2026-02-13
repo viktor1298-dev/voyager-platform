@@ -2,20 +2,19 @@
 
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { AppLayout } from "@/components/AppLayout";
 import { Server, Database, CheckCircle, AlertTriangle } from "lucide-react";
 
 function statusColor(status: string) {
-  if (status === "healthy") return "bg-emerald-500";
-  if (status === "warning") return "bg-amber-500";
-  return "bg-red-500";
+  if (status === "healthy") return "var(--color-status-active)";
+  if (status === "warning") return "var(--color-status-warning)";
+  return "var(--color-status-error)";
 }
 
-function providerVariant(provider: string) {
-  if (provider.toLowerCase().includes("eks")) return "secondary" as const;
-  if (provider.toLowerCase().includes("aks")) return "outline" as const;
-  return "default" as const;
+function statusDotClass(status: string) {
+  if (status === "healthy") return "bg-[var(--color-status-active)]";
+  if (status === "warning") return "bg-[var(--color-status-warning)]";
+  return "bg-[var(--color-status-error)]";
 }
 
 export default function DashboardPage() {
@@ -24,111 +23,135 @@ export default function DashboardPage() {
   const clusterList = clusters.data ?? [];
   const totalNodes = clusterList.reduce((sum, c) => sum + (c.nodeCount ?? 0), 0);
   const healthyCount = clusterList.filter((c) => c.status === "healthy").length;
-
   const isLoading = clusters.isLoading;
 
   return (
-    <div className="min-h-screen p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">🚀 Voyager Platform</h1>
-        <p className="text-zinc-400 mt-1">Kubernetes Operations Dashboard</p>
-      </div>
-
+    <AppLayout>
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardDescription>Total Clusters</CardDescription>
-            <Database className="h-4 w-4 text-zinc-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? "…" : clusterList.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardDescription>Total Nodes</CardDescription>
-            <Server className="h-4 w-4 text-zinc-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? "…" : totalNodes}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardDescription>Healthy Clusters</CardDescription>
-            <CheckCircle className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-400">{isLoading ? "…" : healthyCount}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardDescription>Warning Events 24h</CardDescription>
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <WarningEventsCount clusters={clusterList} isLoading={isLoading} />
-          </CardContent>
-        </Card>
+        <SummaryCard
+          icon={<Database className="h-4 w-4" />}
+          label="Total Clusters"
+          value={isLoading ? "…" : String(clusterList.length)}
+          color="var(--color-accent)"
+        />
+        <SummaryCard
+          icon={<Server className="h-4 w-4" />}
+          label="Total Nodes"
+          value={isLoading ? "…" : String(totalNodes)}
+          color="var(--color-text-secondary)"
+        />
+        <SummaryCard
+          icon={<CheckCircle className="h-4 w-4" />}
+          label="Healthy Clusters"
+          value={isLoading ? "…" : String(healthyCount)}
+          color="var(--color-status-active)"
+        />
+        <SummaryCard
+          icon={<AlertTriangle className="h-4 w-4" />}
+          label="Warning Events 24h"
+          value={isLoading ? "…" : "—"}
+          color="var(--color-status-warning)"
+          extra={!isLoading && clusterList.length > 0 ? <WarningEventsCount clusterIds={clusterList.map(c => c.id)} /> : undefined}
+        />
       </div>
 
       {/* Clusters Grid */}
-      <h2 className="text-xl font-semibold mb-4">Clusters</h2>
+      <div className="mb-4">
+        <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
+        <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-0.5">
+          {clusterList.length} registered
+        </p>
+      </div>
+
       {isLoading ? (
-        <p className="text-zinc-400">Loading clusters…</p>
+        <p className="text-[var(--color-text-muted)]">Loading clusters…</p>
       ) : clusterList.length === 0 ? (
-        <p className="text-zinc-500">No clusters found.</p>
+        <p className="text-[var(--color-text-muted)]">No clusters found.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {clusterList.map((cluster) => (
             <Link key={cluster.id} href={`/clusters/${cluster.id}`}>
-              <Card className="hover:border-zinc-600 transition-colors cursor-pointer">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{cluster.name}</CardTitle>
-                    <Badge variant={providerVariant(cluster.provider)}>
-                      {cluster.provider}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 text-sm text-zinc-400">
-                    <span className="flex items-center gap-1.5">
-                      <span className={`h-2 w-2 rounded-full ${statusColor(cluster.status ?? "unknown")}`} />
+              <div className="relative group rounded-2xl p-4 cursor-pointer transition-all duration-200 bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+                {/* Top accent line */}
+                <div
+                  className="absolute top-0 left-5 right-5 h-0.5 rounded-b-sm opacity-60"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${statusColor(cluster.status ?? "unknown")}, transparent)`,
+                  }}
+                />
+
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${statusDotClass(cluster.status ?? "unknown")}`} />
+                    <span className="text-[11px] font-mono text-[var(--color-text-muted)] uppercase tracking-wider">
                       {cluster.status ?? "unknown"}
                     </span>
-                    <span>K8s {cluster.version ?? "—"}</span>
-                    <span>{cluster.nodeCount} nodes</span>
                   </div>
-                </CardContent>
-              </Card>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
+                    {cluster.provider}
+                  </span>
+                </div>
+
+                <div className="mb-3">
+                  <span className="text-[15px] font-bold text-[var(--color-text-primary)] tracking-tight">
+                    {cluster.name}
+                  </span>
+                  <div className="text-[11px] text-[var(--color-text-dim)] font-mono mt-0.5">
+                    K8s {cluster.version ?? "—"}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 pt-3 border-t border-white/[0.04]">
+                  <div className="flex-1">
+                    <div className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">Nodes</div>
+                    <div className="text-sm font-bold text-[var(--color-text-primary)] mt-0.5">{cluster.nodeCount}</div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">Region</div>
+                    <div className="text-sm font-bold text-[var(--color-text-primary)] mt-0.5">{cluster.region ?? "—"}</div>
+                  </div>
+                </div>
+              </div>
             </Link>
           ))}
+        </div>
+      )}
+    </AppLayout>
+  );
+}
+
+function SummaryCard({
+  icon,
+  label,
+  value,
+  color,
+  extra,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  color: string;
+  extra?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl p-4 bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-all duration-200 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
+          {label}
+        </span>
+        <span className="text-[var(--color-text-dim)]">{icon}</span>
+      </div>
+      {extra || (
+        <div className="text-2xl font-extrabold tracking-tight" style={{ color }}>
+          {value}
         </div>
       )}
     </div>
   );
 }
 
-function WarningEventsCount({ clusters, isLoading }: { clusters: { id: string }[]; isLoading: boolean }) {
-  // Aggregate warning events from all clusters
-  const queries = clusters.map((c) => c.id);
-  // For simplicity, just show total from first few clusters
-  // A proper implementation would use a dedicated endpoint
-  if (isLoading || clusters.length === 0) {
-    return <div className="text-2xl font-bold text-amber-400">{isLoading ? "…" : 0}</div>;
-  }
-  return <WarningEventsAggregator clusterIds={queries} />;
-}
-
-function WarningEventsAggregator({ clusterIds }: { clusterIds: string[] }) {
-  // Query stats for each cluster
+function WarningEventsCount({ clusterIds }: { clusterIds: string[] }) {
   const results = clusterIds.map((id) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     return trpc.events.stats.useQuery({ clusterId: id });
@@ -138,7 +161,7 @@ function WarningEventsAggregator({ clusterIds }: { clusterIds: string[] }) {
   const loading = results.some((r) => r.isLoading);
 
   return (
-    <div className={`text-2xl font-bold ${total > 0 ? "text-amber-400" : "text-zinc-400"}`}>
+    <div className="text-2xl font-extrabold tracking-tight" style={{ color: total > 0 ? "var(--color-status-warning)" : "var(--color-text-muted)" }}>
       {loading ? "…" : total}
     </div>
   );
