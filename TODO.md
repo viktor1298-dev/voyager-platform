@@ -2,8 +2,8 @@
 
 ## Phase 1: Foundation
 - [x] Sub-task 1: Initialize monorepo (pnpm + Turborepo + Biome)
-- [ ] Sub-task 2: Set up PostgreSQL + TimescaleDB (docker-compose for dev)
-- [ ] Sub-task 3: Drizzle ORM schemas (clusters, nodes, metrics tables)
+- [x] Sub-task 2: Set up PostgreSQL + TimescaleDB (docker-compose for dev)
+- [x] Sub-task 3: Drizzle ORM schemas (clusters, nodes, events tables)
 - [ ] Sub-task 4: tRPC router setup (Fastify adapter, context, base routers)
 - [ ] Sub-task 5: Auth setup (Clerk integration, middleware)
 
