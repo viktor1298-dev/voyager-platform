@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Server, Activity, Settings, ChevronLeft, ChevronRight } from "lucide-react";
@@ -12,8 +11,7 @@ const navItems = [
   { id: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCollapsed: (v: boolean) => void }) {
   const pathname = usePathname();
 
   const isActive = (path: string) => {

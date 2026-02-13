@@ -8,8 +8,6 @@ export function TopBar() {
   const totalNodes = clusterList.reduce((sum, c) => sum + (c.nodeCount ?? 0), 0);
   const healthyCount = clusterList.filter((c) => c.status === "healthy").length;
   const healthyPct = clusterList.length > 0 ? ((healthyCount / clusterList.length) * 100).toFixed(0) : "—";
-  const k8sVersion = clusterList[0]?.version ?? "—";
-
   return (
     <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">
       {/* Left: Logo */}
@@ -38,7 +36,7 @@ export function TopBar() {
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-white/[0.02]">
         <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-status-active)] animate-pulse" />
         <span className="text-[11px] text-[var(--color-text-muted)] font-mono">
-          K8s {k8sVersion}
+          Voyager v0.1.0
         </span>
       </div>
     </header>
