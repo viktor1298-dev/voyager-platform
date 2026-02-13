@@ -140,74 +140,121 @@ export default function DashboardPage() {
       ) : clusterList.length === 0 ? (
         <p className="text-[var(--color-text-muted)]">No clusters found.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {clusterList.map((cluster, index) => (
-            <Link
-              key={cluster.id}
-              href={cluster.source === 'live' ? `/clusters/${cluster.id}` : `/clusters/${cluster.id}`}
-            >
-              <div
-                className="cluster-card relative group rounded-xl p-4 min-h-[80px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex items-start gap-3"
-                style={
-                  {
-                    '--status-color': getStatusColor(cluster.status ?? 'unknown'),
-                    boxShadow: getStatusGlow(cluster.status ?? 'unknown'),
-                    transition: 'all var(--duration-normal) ease',
-                    animationDelay: `${index * 50}ms`,
-                    animationFillMode: 'both',
-                  } as React.CSSProperties
-                }
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = getStatusGlowHover(cluster.status ?? 'unknown')
-                  e.currentTarget.style.transform =
-                    'scale(var(--card-hover-scale)) translateY(var(--card-hover-y))'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = getStatusGlow(cluster.status ?? 'unknown')
-                  e.currentTarget.style.transform = 'none'
-                }}
-              >
-                {/* Left: Content */}
-                <div className="flex-1 min-w-0">
-                  {/* Row 1: Status + Name */}
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`h-2 w-2 rounded-full animate-pulse-slow ${getStatusDotClass(cluster.status ?? 'unknown')}`}
-                    />
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-wider ${getStatusColor(cluster.status ?? 'unknown') === 'var(--color-status-active)' ? 'text-[var(--color-status-active)]' : 'text-[var(--color-status-warning)]'}`}
-                    >
-                      {cluster.status ?? 'unknown'}
-                    </span>
-                    <span className="text-sm font-bold text-[var(--color-text-primary)]">
-                      {cluster.name}
-                    </span>
-                  </div>
-
-                  {/* Row 2: Details */}
-                  <div className="flex items-center gap-4 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono">
-                    <span>K8s {cluster.version ?? '—'}</span>
-                    <span>·</span>
-                    <span>Nodes: {cluster.nodeCount}</span>
-                    {cluster.source === 'live' && (
-                      <>
-                        <span>·</span>
-                        <span>Pods: {runningPods}/{liveData?.totalPods ?? 0}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right: Badge + Logo stacked */}
-                <div className="flex flex-col items-end justify-between gap-1 shrink-0">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
-                    {cluster.provider}
+        <div className="space-y-6">
+          {(
+            [
+              { key: 'degraded', label: 'Degraded', icon: '🔴', color: 'var(--color-status-error)' },
+              { key: 'warning', label: 'Warning', icon: '⚠️', color: 'var(--color-status-warning)' },
+              { key: 'healthy', label: 'Healthy', icon: '✅', color: 'var(--color-status-active)' },
+            ] as const
+          )
+            .map((section) => {
+              const clusters = clusterList.filter((c) => {
+                const s = c.status ?? 'unknown'
+                if (section.key === 'degraded') return s !== 'healthy' && s !== 'warning'
+                return s === section.key
+              })
+              return { ...section, clusters }
+            })
+            .filter((section) => section.clusters.length > 0)
+            .map((section) => (
+              <div key={section.key}>
+                {/* Section Header */}
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-base">{section.icon}</span>
+                  <span
+                    className="text-sm font-bold uppercase tracking-wider"
+                    style={{ color: section.color }}
+                  >
+                    {section.label}
                   </span>
-                  <ProviderLogo provider={cluster.provider ?? 'default'} />
+                  <span
+                    className="text-xs font-mono px-1.5 py-0.5 rounded-md"
+                    style={{
+                      color: section.color,
+                      background: 'var(--color-bg-secondary)',
+                      border: '1px solid var(--color-border)',
+                    }}
+                  >
+                    {section.clusters.length}
+                  </span>
+                  <div
+                    className="flex-1 h-px ml-2"
+                    style={{ background: `linear-gradient(to right, ${section.color}33, transparent)` }}
+                  />
+                </div>
+                {/* Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {section.clusters.map((cluster, index) => (
+                    <Link
+                      key={cluster.id}
+                      href={`/clusters/${cluster.id}`}
+                    >
+                      <div
+                        className="cluster-card relative group rounded-xl p-4 min-h-[80px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex items-start gap-3"
+                        style={
+                          {
+                            '--status-color': getStatusColor(cluster.status ?? 'unknown'),
+                            boxShadow: getStatusGlow(cluster.status ?? 'unknown'),
+                            transition: 'all var(--duration-normal) ease',
+                            animationDelay: `${index * 50}ms`,
+                            animationFillMode: 'both',
+                          } as React.CSSProperties
+                        }
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.boxShadow = getStatusGlowHover(cluster.status ?? 'unknown')
+                          e.currentTarget.style.transform =
+                            'scale(var(--card-hover-scale)) translateY(var(--card-hover-y))'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.boxShadow = getStatusGlow(cluster.status ?? 'unknown')
+                          e.currentTarget.style.transform = 'none'
+                        }}
+                      >
+                        {/* Left: Content */}
+                        <div className="flex-1 min-w-0">
+                          {/* Row 1: Status + Name */}
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`h-2 w-2 rounded-full animate-pulse-slow ${getStatusDotClass(cluster.status ?? 'unknown')}`}
+                            />
+                            <span
+                              className={`text-[10px] font-bold uppercase tracking-wider ${getStatusColor(cluster.status ?? 'unknown') === 'var(--color-status-active)' ? 'text-[var(--color-status-active)]' : 'text-[var(--color-status-warning)]'}`}
+                            >
+                              {cluster.status ?? 'unknown'}
+                            </span>
+                            <span className="text-sm font-bold text-[var(--color-text-primary)]">
+                              {cluster.name}
+                            </span>
+                          </div>
+
+                          {/* Row 2: Details */}
+                          <div className="flex items-center gap-4 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono">
+                            <span>K8s {cluster.version ?? '—'}</span>
+                            <span>·</span>
+                            <span>Nodes: {cluster.nodeCount}</span>
+                            {cluster.source === 'live' && (
+                              <>
+                                <span>·</span>
+                                <span>Pods: {runningPods}/{liveData?.totalPods ?? 0}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Right: Badge + Logo stacked */}
+                        <div className="flex flex-col items-end justify-between gap-1 shrink-0">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
+                            {cluster.provider}
+                          </span>
+                          <ProviderLogo provider={cluster.provider ?? 'default'} />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
-            </Link>
-          ))}
+            ))}
         </div>
       )}
     </AppLayout>
