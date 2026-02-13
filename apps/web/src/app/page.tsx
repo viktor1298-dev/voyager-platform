@@ -86,7 +86,7 @@ export default function DashboardPage() {
           {clusterList.map((cluster, index) => (
             <Link key={cluster.id} href={`/clusters/${cluster.id}`}>
               <div
-                className="cluster-card relative group rounded-xl p-4 min-h-[80px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up"
+                className="cluster-card relative group rounded-xl p-4 min-h-[80px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex items-start gap-3"
                 style={
                   {
                     '--status-color': getStatusColor(cluster.status ?? 'unknown'),
@@ -106,8 +106,9 @@ export default function DashboardPage() {
                   e.currentTarget.style.transform = 'none'
                 }}
               >
-                {/* Row 1: Status + Name + Badge */}
-                <div className="flex items-center justify-between pr-12">
+                {/* Left: Content */}
+                <div className="flex-1 min-w-0">
+                  {/* Row 1: Status + Name */}
                   <div className="flex items-center gap-2">
                     <span
                       className={`h-2 w-2 rounded-full animate-pulse-slow ${getStatusDotClass(cluster.status ?? 'unknown')}`}
@@ -121,21 +122,24 @@ export default function DashboardPage() {
                       {cluster.name}
                     </span>
                   </div>
+
+                  {/* Row 2: Details */}
+                  <div className="flex items-center gap-4 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono">
+                    <span>K8s {cluster.version ?? '—'}</span>
+                    <span>·</span>
+                    <span>Nodes: {cluster.nodeCount}</span>
+                    <span>·</span>
+                    <span>Region: {'—'}</span>
+                  </div>
+                </div>
+
+                {/* Right: Badge + Logo stacked */}
+                <div className="flex flex-col items-end justify-between gap-1 shrink-0">
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
                     {cluster.provider}
                   </span>
+                  <ProviderLogo provider={cluster.provider ?? 'default'} />
                 </div>
-
-                {/* Row 2: Details */}
-                <div className="flex items-center gap-4 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono pr-12">
-                  <span>K8s {cluster.version ?? '—'}</span>
-                  <span>·</span>
-                  <span>Nodes: {cluster.nodeCount}</span>
-                  <span>·</span>
-                  <span>Region: {'—'}</span>
-                </div>
-
-                <ProviderLogo provider={cluster.provider ?? 'default'} />
               </div>
             </Link>
           ))}

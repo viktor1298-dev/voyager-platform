@@ -256,7 +256,7 @@ body {
   z-index: 1;
 }
 
-.cluster-card > *:not(.provider-logo) {
+.cluster-card > * {
   position: relative;
   z-index: 2;
 }
