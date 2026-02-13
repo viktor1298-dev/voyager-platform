@@ -26,9 +26,9 @@ COPY --from=builder /app/apps/api/package.json apps/api/
 COPY --from=builder /app/apps/api/dist apps/api/dist
 COPY --from=builder /app/packages/ packages/
 
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile
 
 USER appuser
 EXPOSE 4000
 
-CMD ["node", "apps/api/dist/server.js"]
+CMD ["pnpm", "--filter", "@voyager/api", "exec", "tsx", "src/server.ts"]

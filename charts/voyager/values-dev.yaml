@@ -9,5 +9,5 @@ api:
 
 config:
   apiUrl: "http://voyager-api:4000"
-  databaseUrl: "postgresql://voyager:voyager-secret@host.minikube.internal:5432/voyager"
+  databaseUrl: "postgresql://voyager:voyager_dev@host.minikube.internal:5432/voyager_dev"
   redisUrl: "redis://host.minikube.internal:6379"
