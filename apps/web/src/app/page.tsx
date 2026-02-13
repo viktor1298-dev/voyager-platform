@@ -1,7 +1,14 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
-import { getStatusColor, getStatusDotClass, getStatusGlow, getStatusGlowHover } from '@/lib/status-utils'
+import { ProviderLogo } from '@/components/ProviderLogo'
+import { SkeletonCard, SkeletonText } from '@/components/Skeleton'
+import {
+  getStatusColor,
+  getStatusDotClass,
+  getStatusGlow,
+  getStatusGlowHover,
+} from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { AlertTriangle, CheckCircle, Database, Server } from 'lucide-react'
 import Link from 'next/link'
@@ -21,26 +28,34 @@ export default function DashboardPage() {
         <SummaryCard
           icon={<Database className="h-4 w-4" />}
           label="Total Clusters"
-          value={isLoading ? '…' : String(clusterList.length)}
+          value={String(clusterList.length)}
           color="var(--color-accent)"
+          gradient="var(--gradient-text-default)"
+          isLoading={isLoading}
         />
         <SummaryCard
           icon={<Server className="h-4 w-4" />}
           label="Total Nodes"
-          value={isLoading ? '…' : String(totalNodes)}
+          value={String(totalNodes)}
           color="var(--color-text-secondary)"
+          gradient="var(--gradient-text-default)"
+          isLoading={isLoading}
         />
         <SummaryCard
           icon={<CheckCircle className="h-4 w-4" />}
           label="Healthy Clusters"
-          value={isLoading ? '…' : String(healthyCount)}
+          value={String(healthyCount)}
           color="var(--color-status-active)"
+          gradient="var(--gradient-text-healthy)"
+          isLoading={isLoading}
         />
         <SummaryCard
           icon={<AlertTriangle className="h-4 w-4" />}
           label="Warning Events 24h"
-          value={isLoading ? '…' : '—'}
+          value="—"
           color="var(--color-status-warning)"
+          gradient="var(--gradient-text-warning)"
+          isLoading={isLoading}
           extra={
             !isLoading && clusterList.length > 0 ? (
               <WarningEventsCount clusterIds={clusterList.map((c) => c.id)} />
@@ -60,7 +75,10 @@ export default function DashboardPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-[var(--color-text-muted)]">Loading clusters…</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       ) : clusterList.length === 0 ? (
         <p className="text-[var(--color-text-muted)]">No clusters found.</p>
       ) : (
@@ -69,16 +87,19 @@ export default function DashboardPage() {
             <Link key={cluster.id} href={`/clusters/${cluster.id}`}>
               <div
                 className="cluster-card relative group rounded-2xl p-4 cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up"
-                style={{
-                  '--status-color': getStatusColor(cluster.status ?? 'unknown'),
-                  boxShadow: getStatusGlow(cluster.status ?? 'unknown'),
-                  transition: `all var(--duration-normal) ease`,
-                  animationDelay: `${index * 50}ms`,
-                  animationFillMode: 'both',
-                } as React.CSSProperties}
+                style={
+                  {
+                    '--status-color': getStatusColor(cluster.status ?? 'unknown'),
+                    boxShadow: getStatusGlow(cluster.status ?? 'unknown'),
+                    transition: 'all var(--duration-normal) ease',
+                    animationDelay: `${index * 50}ms`,
+                    animationFillMode: 'both',
+                  } as React.CSSProperties
+                }
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = getStatusGlowHover(cluster.status ?? 'unknown')
-                  e.currentTarget.style.transform = `scale(var(--card-hover-scale)) translateY(var(--card-hover-y))`
+                  e.currentTarget.style.transform =
+                    'scale(var(--card-hover-scale)) translateY(var(--card-hover-y))'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.boxShadow = getStatusGlow(cluster.status ?? 'unknown')
@@ -113,7 +134,10 @@ export default function DashboardPage() {
                     <div className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
                       Nodes
                     </div>
-                    <div className="text-sm font-bold text-[var(--color-text-primary)] mt-0.5">
+                    <div
+                      className="text-sm font-bold mt-0.5 gradient-text"
+                      style={{ backgroundImage: 'var(--gradient-text-default)' }}
+                    >
                       {cluster.nodeCount}
                     </div>
                   </div>
@@ -126,6 +150,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
+                <ProviderLogo provider={cluster.provider ?? 'default'} />
               </div>
             </Link>
           ))}
@@ -140,20 +165,34 @@ function SummaryCard({
   label,
   value,
   color,
+  gradient,
+  isLoading,
   extra,
 }: {
   icon: React.ReactNode
   label: string
   value: string
   color: string
+  gradient: string
+  isLoading?: boolean
   extra?: React.ReactNode
 }) {
   return (
     <div
-      className="rounded-2xl p-4 bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)]"
-      style={{ transition: `all var(--duration-normal) ease`, boxShadow: `0 8px 32px rgba(0,0,0,0.3)` }}
-      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)' }}
-      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)' }}
+      className="rounded-2xl p-4 border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)]"
+      style={{
+        background: 'var(--glass-bg)',
+        backdropFilter: 'blur(var(--glass-blur))',
+        WebkitBackdropFilter: 'blur(var(--glass-blur))',
+        transition: 'all var(--duration-normal) ease',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'
+      }}
     >
       <div className="flex items-center justify-between mb-2">
         <span className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
@@ -161,10 +200,17 @@ function SummaryCard({
         </span>
         <span style={{ color }}>{icon}</span>
       </div>
-      {extra || (
-        <div className="text-2xl font-extrabold tracking-tight animate-count-up" style={{ color }}>
-          {value}
-        </div>
+      {isLoading ? (
+        <SkeletonText width="3rem" height="2rem" />
+      ) : (
+        extra || (
+          <div
+            className="text-2xl font-extrabold tracking-tight animate-count-up gradient-text"
+            style={{ backgroundImage: gradient }}
+          >
+            {value}
+          </div>
+        )
       )}
     </div>
   )
@@ -182,12 +228,19 @@ function WarningEventsCount({ clusterIds }: { clusterIds: string[] }) {
   const total = active.reduce((sum, r) => sum + (r.data?.Warning ?? 0), 0)
   const loading = active.some((r) => r.isLoading)
 
+  if (loading) {
+    return <SkeletonText width="3rem" height="2rem" />
+  }
+
   return (
     <div
-      className="text-2xl font-extrabold tracking-tight"
-      style={{ color: total > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)' }}
+      className="text-2xl font-extrabold tracking-tight gradient-text"
+      style={{
+        backgroundImage:
+          total > 0 ? 'var(--gradient-text-warning)' : 'var(--gradient-text-default)',
+      }}
     >
-      {loading ? '…' : total}
+      {total}
     </div>
   )
 }
