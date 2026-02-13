@@ -23,8 +23,19 @@ app.get('/health', async () => ({ status: 'ok' }))
 
 const start = async () => {
   try {
-    await app.listen({ port: 4000, host: '0.0.0.0' })
-    console.log('🚀 API server running on http://localhost:4000')
+    const PORT = Number.parseInt(process.env.PORT || '4000', 10)
+    const HOST = process.env.HOST || '0.0.0.0'
+    await app.listen({ port: PORT, host: HOST })
+    console.log(`🚀 API server running on http://${HOST}:${PORT}`)
+
+    const signals = ['SIGTERM', 'SIGINT'] as const
+    for (const signal of signals) {
+      process.on(signal, async () => {
+        app.log.info(`${signal} received, shutting down gracefully`)
+        await app.close()
+        process.exit(0)
+      })
+    }
   } catch (err) {
     app.log.error(err)
     process.exit(1)

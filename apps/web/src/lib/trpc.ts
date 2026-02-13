@@ -12,7 +12,7 @@ export function getTRPCClient() {
         url:
           typeof window !== 'undefined'
             ? '/trpc'
-            : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/trpc',
+            : process.env.API_URL || 'http://localhost:4000/trpc',
       }),
     ],
   })
