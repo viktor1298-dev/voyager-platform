@@ -13,9 +13,9 @@ interface KubeEvent {
   reason: string
   message: string
   namespace: string
-  involvedObject: string
+  object: string
   count: number
-  lastTimestamp: string
+  lastSeen: string
 }
 
 function timeAgo(ts: string): string {
@@ -34,13 +34,12 @@ export default function EventsPage() {
   const [filter, setFilter] = useState<EventFilter>('all')
   const [search, setSearch] = useState('')
 
-  const liveQuery = trpc.clusters.live.useQuery(undefined, {
+  const eventsQuery = trpc.clusters.liveEvents.useQuery(undefined, {
     refetchInterval: 30000,
   })
 
-  const data = liveQuery.data as Record<string, unknown> | undefined
-  const events: KubeEvent[] = (data?.events as KubeEvent[] | undefined) ?? []
-  const isLoading = liveQuery.isLoading
+  const events: KubeEvent[] = (eventsQuery.data as KubeEvent[] | undefined) ?? []
+  const isLoading = eventsQuery.isLoading
 
   const filtered = useMemo(() => {
     let result = [...events]
@@ -51,7 +50,7 @@ export default function EventsPage() {
         (e) =>
           e.message.toLowerCase().includes(q) ||
           e.reason.toLowerCase().includes(q) ||
-          e.involvedObject.toLowerCase().includes(q) ||
+          e.object.toLowerCase().includes(q) ||
           e.namespace.toLowerCase().includes(q),
       )
     }
@@ -174,7 +173,7 @@ export default function EventsPage() {
               const isWarning = event.type === 'Warning'
               return (
                 <div
-                  key={`${event.involvedObject}-${event.reason}-${event.lastTimestamp}-${i}`}
+                  key={`${event.object}-${event.reason}-${event.lastSeen}-${i}`}
                   className={`
                     grid grid-cols-[80px_70px_100px_140px_100px_1fr_50px] gap-2 px-4 py-2.5 text-[12px] border-b border-[var(--color-border)]/20
                     hover:bg-white/[0.02] transition-colors relative
@@ -187,7 +186,7 @@ export default function EventsPage() {
                   )}
 
                   <span className="text-[var(--color-text-muted)] font-mono tabular-nums truncate">
-                    {timeAgo(event.lastTimestamp)}
+                    {timeAgo(event.lastSeen)}
                   </span>
 
                   <span>
@@ -208,8 +207,8 @@ export default function EventsPage() {
                     {event.reason}
                   </span>
 
-                  <span className="text-[var(--color-text-muted)] font-mono text-[11px] truncate" title={event.involvedObject}>
-                    {event.involvedObject}
+                  <span className="text-[var(--color-text-muted)] font-mono text-[11px] truncate" title={event.object}>
+                    {event.object}
                   </span>
 
                   <span className="text-[var(--color-accent)] font-mono text-[11px] truncate">

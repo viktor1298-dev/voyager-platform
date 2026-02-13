@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { clusters, nodes } from '@voyager/db'
 import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { coreV1Api, appsV1Api, versionApi } from '../lib/k8s'
+import { getCoreV1Api, getAppsV1Api, getVersionApi } from '../lib/k8s'
 import { normalizeProvider } from '../lib/providers'
 import { publicProcedure, router } from '../trpc'
 
@@ -33,12 +33,12 @@ export const clustersRouter = router({
   live: publicProcedure.query(async () => {
     try {
       const [versionInfo, nodesResponse, podsResponse, nsResponse, eventsResponse, deploymentsResponse] = await Promise.all([
-        versionApi.getCode(),
-        coreV1Api.listNode(),
-        coreV1Api.listPodForAllNamespaces(),
-        coreV1Api.listNamespace(),
-        coreV1Api.listEventForAllNamespaces(),
-        appsV1Api.listDeploymentForAllNamespaces(),
+        getVersionApi().getCode(),
+        getCoreV1Api().listNode(),
+        getCoreV1Api().listPodForAllNamespaces(),
+        getCoreV1Api().listNamespace(),
+        getCoreV1Api().listEventForAllNamespaces(),
+        getAppsV1Api().listDeploymentForAllNamespaces(),
       ])
 
       const k8sNodes = nodesResponse.items.map((node) => ({
@@ -113,7 +113,7 @@ export const clustersRouter = router({
 
   liveNodes: publicProcedure.query(async () => {
     try {
-      const nodesResponse = await coreV1Api.listNode()
+      const nodesResponse = await getCoreV1Api().listNode()
       return nodesResponse.items.map((node) => {
         const conditions = node.status?.conditions || []
         const ready = conditions.find((c) => c.type === 'Ready')
@@ -145,7 +145,7 @@ export const clustersRouter = router({
     .query(async ({ input }) => {
       try {
         const limit = input?.limit ?? 50
-        const eventsResponse = await coreV1Api.listEventForAllNamespaces()
+        const eventsResponse = await getCoreV1Api().listEventForAllNamespaces()
         return eventsResponse.items
           .sort(
             (a, b) =>
