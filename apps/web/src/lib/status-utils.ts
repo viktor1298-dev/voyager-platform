@@ -19,6 +19,20 @@ export function nodeStatusColor(status: string): string {
   return 'bg-[var(--color-status-idle)]'
 }
 
+/** Returns CSS glow variable for cluster status */
+export function getStatusGlow(status: string): string {
+  if (status === 'healthy') return 'var(--glow-healthy)'
+  if (status === 'warning') return 'var(--glow-warning)'
+  return 'var(--glow-degraded)'
+}
+
+/** Returns CSS glow-hover variable for cluster status */
+export function getStatusGlowHover(status: string): string {
+  if (status === 'healthy') return 'var(--glow-healthy-hover)'
+  if (status === 'warning') return 'var(--glow-warning-hover)'
+  return 'var(--glow-degraded-hover)'
+}
+
 /** Returns a CSS color variable string for event severity */
 export function severityColor(kind: string): string {
   if (kind === 'Warning') return 'var(--color-status-warning)'

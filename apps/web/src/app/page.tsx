@@ -1,7 +1,7 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
-import { getStatusColor, getStatusDotClass } from '@/lib/status-utils'
+import { getStatusColor, getStatusDotClass, getStatusGlow, getStatusGlowHover } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { AlertTriangle, CheckCircle, Database, Server } from 'lucide-react'
 import Link from 'next/link'
@@ -65,9 +65,25 @@ export default function DashboardPage() {
         <p className="text-[var(--color-text-muted)]">No clusters found.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {clusterList.map((cluster) => (
+          {clusterList.map((cluster, index) => (
             <Link key={cluster.id} href={`/clusters/${cluster.id}`}>
-              <div className="relative group rounded-2xl p-4 cursor-pointer transition-all duration-200 bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+              <div
+                className="relative group rounded-2xl p-4 cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up"
+                style={{
+                  boxShadow: getStatusGlow(cluster.status ?? 'unknown'),
+                  transition: `all var(--duration-normal) ease`,
+                  animationDelay: `${index * 50}ms`,
+                  animationFillMode: 'both',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = getStatusGlowHover(cluster.status ?? 'unknown')
+                  e.currentTarget.style.transform = `scale(var(--card-hover-scale)) translateY(var(--card-hover-y))`
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = getStatusGlow(cluster.status ?? 'unknown')
+                  e.currentTarget.style.transform = 'none'
+                }}
+              >
                 {/* Top accent line */}
                 <div
                   className="absolute top-0 left-5 right-5 h-0.5 rounded-b-sm opacity-60"
@@ -79,7 +95,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`h-2 w-2 rounded-full ${getStatusDotClass(cluster.status ?? 'unknown')}`}
+                      className={`h-2 w-2 rounded-full animate-pulse-slow ${getStatusDotClass(cluster.status ?? 'unknown')}`}
                     />
                     <span className="text-[11px] font-mono text-[var(--color-text-muted)] uppercase tracking-wider">
                       {cluster.status ?? 'unknown'}
@@ -140,15 +156,20 @@ function SummaryCard({
   extra?: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl p-4 bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-all duration-200 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+    <div
+      className="rounded-2xl p-4 bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)]"
+      style={{ transition: `all var(--duration-normal) ease`, boxShadow: `0 8px 32px rgba(0,0,0,0.3)` }}
+      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)' }}
+      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)' }}
+    >
       <div className="flex items-center justify-between mb-2">
         <span className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
           {label}
         </span>
-        <span className="text-[var(--color-text-dim)]">{icon}</span>
+        <span style={{ color }}>{icon}</span>
       </div>
       {extra || (
-        <div className="text-2xl font-extrabold tracking-tight" style={{ color }}>
+        <div className="text-2xl font-extrabold tracking-tight animate-count-up" style={{ color }}>
           {value}
         </div>
       )}

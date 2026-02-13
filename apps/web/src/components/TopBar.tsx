@@ -55,8 +55,8 @@ function ConnectionStatus({ dataUpdatedAt }: { dataUpdatedAt?: number }) {
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-white/[0.02]">
-      <span className="h-2 w-2 rounded-full bg-[var(--color-status-active)] animate-pulse" />
-      <span className="text-[11px] text-[var(--color-text-primary)] font-mono font-medium">
+      <span className="h-2 w-2 rounded-full bg-[var(--color-status-active)] animate-pulse-slow" />
+      <span className="text-[11px] font-mono font-medium" style={{ color: 'var(--color-status-active)' }}>
         Connected
       </span>
       <span className="text-[10px] text-[var(--color-text-dim)]">·</span>

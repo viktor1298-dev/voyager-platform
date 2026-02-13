@@ -30,13 +30,14 @@ export function Sidebar({
               key={item.id}
               href={item.id}
               className={`
-                flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
+                flex items-center gap-3 px-3 py-2.5 rounded-lg
                 ${
                   active
-                    ? 'bg-white/[0.08] text-[var(--color-text-primary)]'
-                    : 'text-[var(--color-text-muted)] hover:bg-white/[0.04] hover:text-[var(--color-text-secondary)]'
+                    ? 'bg-white/[0.08] text-[var(--color-text-primary)] sidebar-active-bar'
+                    : 'text-[var(--color-text-muted)] hover:bg-white/[0.04] hover:text-[var(--color-text-secondary)] sidebar-hover-bar'
                 }
               `}
+              style={{ transition: `all var(--duration-fast) ease` }}
             >
               <Icon className="h-4 w-4 shrink-0" />
               {!collapsed && <span className="text-[13px] font-medium">{item.label}</span>}
