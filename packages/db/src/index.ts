@@ -1,2 +1,1 @@
-// Drizzle ORM schemas for Voyager Platform
-export {}
+export * from "./schema";
