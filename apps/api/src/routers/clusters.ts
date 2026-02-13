@@ -25,7 +25,7 @@ export const clustersRouter = router({
 
   get: publicProcedure.input(z.object({ id: z.string().uuid() })).query(async ({ ctx, input }) => {
     const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.id))
-    if (!cluster) throw new Error('Cluster not found')
+    if (!cluster) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
     const clusterNodes = await ctx.db.select().from(nodes).where(eq(nodes.clusterId, input.id))
     return { ...cluster, nodes: clusterNodes }
   }),
@@ -210,7 +210,7 @@ export const clustersRouter = router({
         .set(updates)
         .where(eq(clusters.id, id))
         .returning()
-      if (!updated) throw new Error('Cluster not found')
+      if (!updated) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
       return updated
     }),
 
@@ -218,7 +218,7 @@ export const clustersRouter = router({
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [deleted] = await ctx.db.delete(clusters).where(eq(clusters.id, input.id)).returning()
-      if (!deleted) throw new Error('Cluster not found')
+      if (!deleted) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
       return deleted
     }),
 })

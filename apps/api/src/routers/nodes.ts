@@ -1,3 +1,4 @@
+import { TRPCError } from '@trpc/server'
 import { nodes } from '@voyager/db'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
@@ -12,7 +13,7 @@ export const nodesRouter = router({
 
   get: publicProcedure.input(z.object({ id: z.string().uuid() })).query(async ({ ctx, input }) => {
     const [node] = await ctx.db.select().from(nodes).where(eq(nodes.id, input.id))
-    if (!node) throw new Error('Node not found')
+    if (!node) throw new TRPCError({ code: 'NOT_FOUND', message: 'Node not found' })
     return node
   }),
 
