@@ -3,9 +3,9 @@ services:
     image: timescale/timescaledb:latest-pg17
     container_name: voyager-postgres
     environment:
-      POSTGRES_USER: voyager
-      POSTGRES_PASSWORD: voyager_dev
-      POSTGRES_DB: voyager_dev
+      POSTGRES_USER: ${POSTGRES_USER:-voyager}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-voyager_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-voyager_dev}
       POSTGRES_HOST_AUTH_METHOD: trust
     command: ["-c", "listen_addresses=*"]
     ports:
@@ -15,7 +15,7 @@ services:
     networks:
       - voyager-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U voyager -d voyager_dev"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-voyager} -d ${POSTGRES_DB:-voyager_dev}"]
       interval: 5s
       timeout: 5s
       retries: 5

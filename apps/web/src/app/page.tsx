@@ -1,21 +1,10 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { getStatusColor, getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { AlertTriangle, CheckCircle, Database, Server } from 'lucide-react'
 import Link from 'next/link'
-
-function statusColor(status: string) {
-  if (status === 'healthy') return 'var(--color-status-active)'
-  if (status === 'warning') return 'var(--color-status-warning)'
-  return 'var(--color-status-error)'
-}
-
-function statusDotClass(status: string) {
-  if (status === 'healthy') return 'bg-[var(--color-status-active)]'
-  if (status === 'warning') return 'bg-[var(--color-status-warning)]'
-  return 'bg-[var(--color-status-error)]'
-}
 
 export default function DashboardPage() {
   const clusters = trpc.clusters.list.useQuery()
@@ -83,14 +72,14 @@ export default function DashboardPage() {
                 <div
                   className="absolute top-0 left-5 right-5 h-0.5 rounded-b-sm opacity-60"
                   style={{
-                    background: `linear-gradient(90deg, transparent, ${statusColor(cluster.status ?? 'unknown')}, transparent)`,
+                    background: `linear-gradient(90deg, transparent, ${getStatusColor(cluster.status ?? 'unknown')}, transparent)`,
                   }}
                 />
 
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`h-2 w-2 rounded-full ${statusDotClass(cluster.status ?? 'unknown')}`}
+                      className={`h-2 w-2 rounded-full ${getStatusDotClass(cluster.status ?? 'unknown')}`}
                     />
                     <span className="text-[11px] font-mono text-[var(--color-text-muted)] uppercase tracking-wider">
                       {cluster.status ?? 'unknown'}
@@ -167,14 +156,17 @@ function SummaryCard({
   )
 }
 
+const MAX_CLUSTERS = 20
+
 function WarningEventsCount({ clusterIds }: { clusterIds: string[] }) {
-  const results = clusterIds.map((id) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return trpc.events.stats.useQuery({ clusterId: id })
+  const queries = Array.from({ length: MAX_CLUSTERS }, (_, i) => {
+    const clusterId = clusterIds[i] ?? 'unused'
+    return trpc.events.stats.useQuery({ clusterId }, { enabled: i < clusterIds.length })
   })
 
-  const total = results.reduce((sum, r) => sum + (r.data?.Warning ?? 0), 0)
-  const loading = results.some((r) => r.isLoading)
+  const active = queries.slice(0, clusterIds.length)
+  const total = active.reduce((sum, r) => sum + (r.data?.Warning ?? 0), 0)
+  const loading = active.some((r) => r.isLoading)
 
   return (
     <div

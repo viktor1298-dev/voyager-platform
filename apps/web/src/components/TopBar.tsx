@@ -1,7 +1,10 @@
 'use client'
 
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 import { useEffect, useState } from 'react'
+
+const MAX_CLUSTERS = 20
 
 export function TopBar() {
   const clusters = trpc.clusters.list.useQuery()
@@ -24,30 +27,31 @@ export function TopBar() {
         </div>
       </div>
 
-      {/* Center: Quick stats — non-overlapping with dashboard cards */}
+      {/* Center: Quick stats */}
       <div className="flex gap-6 items-center">
-        <TotalPodsstat clusterIds={clusterList.map((c) => c.id)} loading={clusters.isLoading} />
+        <TotalPodsStat clusterIds={clusterList.map((c) => c.id)} loading={clusters.isLoading} />
         <Stat label="CPU Usage" value="—" color="var(--color-text-muted)" />
         <AlertsStat clusterIds={clusterList.map((c) => c.id)} loading={clusters.isLoading} />
       </div>
 
       {/* Right: Connection status */}
-      <ConnectionStatus />
+      <ConnectionStatus dataUpdatedAt={clusters.dataUpdatedAt} />
     </header>
   )
 }
 
-function ConnectionStatus() {
-  const [secondsAgo, setSecondsAgo] = useState(0)
+function ConnectionStatus({ dataUpdatedAt }: { dataUpdatedAt?: number }) {
+  const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setSecondsAgo((prev) => prev + 30)
-    }, 30_000)
+      setNow(Date.now())
+    }, SYNC_INTERVAL_MS)
     return () => clearInterval(interval)
   }, [])
 
-  const label = secondsAgo === 0 ? 'just now' : `${secondsAgo}s ago`
+  const secondsAgo = dataUpdatedAt ? Math.floor((now - dataUpdatedAt) / 1000) : 0
+  const label = secondsAgo < 5 ? 'just now' : `${secondsAgo}s ago`
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-white/[0.02]">
@@ -61,15 +65,19 @@ function ConnectionStatus() {
   )
 }
 
-function TotalPodsstat({ clusterIds, loading }: { clusterIds: string[]; loading: boolean }) {
-  // Query nodes for each cluster to sum pods
-  const results = clusterIds.map((id) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return trpc.nodes.list.useQuery({ clusterId: id })
+/**
+ * Calls a fixed number of hooks (MAX_CLUSTERS) unconditionally to satisfy
+ * React's rules of hooks. Unused slots are disabled via `enabled: false`.
+ */
+function TotalPodsStat({ clusterIds, loading }: { clusterIds: string[]; loading: boolean }) {
+  const queries = Array.from({ length: MAX_CLUSTERS }, (_, i) => {
+    const clusterId = clusterIds[i] ?? 'unused'
+    return trpc.nodes.list.useQuery({ clusterId }, { enabled: i < clusterIds.length })
   })
 
-  const anyLoading = loading || results.some((r) => r.isLoading)
-  const totalPods = results.reduce((sum, r) => {
+  const active = queries.slice(0, clusterIds.length)
+  const anyLoading = loading || active.some((r) => r.isLoading)
+  const totalPods = active.reduce((sum, r) => {
     const nodes = r.data ?? []
     return sum + nodes.reduce((s, n) => s + (n.podsCount ?? 0), 0)
   }, 0)
@@ -84,13 +92,14 @@ function TotalPodsstat({ clusterIds, loading }: { clusterIds: string[]; loading:
 }
 
 function AlertsStat({ clusterIds, loading }: { clusterIds: string[]; loading: boolean }) {
-  const results = clusterIds.map((id) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return trpc.events.stats.useQuery({ clusterId: id })
+  const queries = Array.from({ length: MAX_CLUSTERS }, (_, i) => {
+    const clusterId = clusterIds[i] ?? 'unused'
+    return trpc.events.stats.useQuery({ clusterId }, { enabled: i < clusterIds.length })
   })
 
-  const anyLoading = loading || results.some((r) => r.isLoading)
-  const total = results.reduce((sum, r) => sum + (r.data?.Warning ?? 0), 0)
+  const active = queries.slice(0, clusterIds.length)
+  const anyLoading = loading || active.some((r) => r.isLoading)
+  const total = active.reduce((sum, r) => sum + (r.data?.Warning ?? 0), 0)
 
   return (
     <Stat

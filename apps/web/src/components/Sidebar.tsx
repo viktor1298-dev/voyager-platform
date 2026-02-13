@@ -1,22 +1,10 @@
 'use client'
 
-import {
-  Activity,
-  ChevronLeft,
-  ChevronRight,
-  LayoutDashboard,
-  Server,
-  Settings,
-} from 'lucide-react'
+import { APP_VERSION } from '@/config/constants'
+import { navItems } from '@/config/navigation'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-const navItems = [
-  { id: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { id: '/clusters', label: 'Clusters', icon: Server },
-  { id: '/events', label: 'Events', icon: Activity },
-  { id: '/settings', label: 'Settings', icon: Settings },
-]
 
 export function Sidebar({
   collapsed,
@@ -69,7 +57,7 @@ export function Sidebar({
       {!collapsed && (
         <div className="px-3 py-2">
           <div className="text-[9px] text-[var(--color-text-dim)] font-mono text-left">
-            Voyager v0.1.0
+            Voyager {APP_VERSION}
           </div>
         </div>
       )}

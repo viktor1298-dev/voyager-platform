@@ -17,5 +17,7 @@ export const events = pgTable(
     timestamp: timestamp('timestamp', { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
+  // Composite PK (id + timestamp) is required by TimescaleDB: the partitioning
+  // column (timestamp) must be part of every unique index/constraint.
   (table) => [primaryKey({ columns: [table.id, table.timestamp] })],
 )

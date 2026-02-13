@@ -2,46 +2,12 @@
 
 import { AppLayout } from '@/components/AppLayout'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatCPU, formatMemory, formatTimestamp } from '@/lib/formatters'
+import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-
-function nodeStatusColor(status: string) {
-  if (status === 'Ready') return 'bg-[var(--color-status-active)]'
-  if (status === 'NotReady') return 'bg-[var(--color-status-error)]'
-  return 'bg-[var(--color-status-idle)]'
-}
-
-function severityColor(kind: string) {
-  if (kind === 'Warning') return 'var(--color-status-warning)'
-  if (kind === 'Error') return 'var(--color-status-error)'
-  return 'var(--color-accent)'
-}
-
-function formatCPU(millicores: number | null | undefined): string {
-  if (millicores == null) return '—'
-  if (millicores >= 1000) return `${(millicores / 1000).toFixed(1)} cores`
-  return `${millicores}m`
-}
-
-function formatMemory(bytes: number | null | undefined): string {
-  if (bytes == null) return '—'
-  const gb = bytes / (1024 * 1024 * 1024)
-  if (gb >= 1) return `${gb.toFixed(1)} GB`
-  return `${(bytes / (1024 * 1024)).toFixed(0)} MB`
-}
-
-function formatTimestamp(ts: string | Date): string {
-  const d = new Date(ts)
-  return d.toLocaleString('en-IL', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
 
 export default function ClusterDetailPage() {
   const { id } = useParams<{ id: string }>()
