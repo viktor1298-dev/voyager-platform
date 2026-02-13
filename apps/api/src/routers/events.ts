@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { eq, and, gte, sql, desc } from "drizzle-orm";
-import { events } from "@voyager/db";
-import { router, publicProcedure } from "../trpc";
+import { events } from '@voyager/db'
+import { and, desc, eq, gte, sql } from 'drizzle-orm'
+import { z } from 'zod'
+import { publicProcedure, router } from '../trpc'
 
 export const eventsRouter = router({
   list: publicProcedure
@@ -10,7 +10,7 @@ export const eventsRouter = router({
         clusterId: z.string().uuid(),
         limit: z.number().int().min(1).max(200).default(50),
         offset: z.number().int().min(0).default(0),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const rows = await ctx.db
@@ -19,8 +19,8 @@ export const eventsRouter = router({
         .where(eq(events.clusterId, input.clusterId))
         .orderBy(desc(events.timestamp))
         .limit(input.limit)
-        .offset(input.offset);
-      return rows;
+        .offset(input.offset)
+      return rows
     }),
 
   create: publicProcedure
@@ -28,44 +28,39 @@ export const eventsRouter = router({
       z.object({
         clusterId: z.string().uuid(),
         namespace: z.string().max(255).optional(),
-        kind: z.enum(["Warning", "Normal"]),
+        kind: z.enum(['Warning', 'Normal']),
         reason: z.string().max(255).optional(),
         message: z.string().optional(),
         source: z.string().max(255).optional(),
         involvedObject: z.record(z.unknown()).optional(),
         timestamp: z.string().datetime().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const values = {
         ...input,
         timestamp: input.timestamp ? new Date(input.timestamp) : new Date(),
-      };
-      const [created] = await ctx.db.insert(events).values(values).returning();
-      return created;
+      }
+      const [created] = await ctx.db.insert(events).values(values).returning()
+      return created
     }),
 
   stats: publicProcedure
     .input(z.object({ clusterId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
       const rows = await ctx.db
         .select({
           kind: events.kind,
           count: sql<number>`count(*)::int`,
         })
         .from(events)
-        .where(
-          and(
-            eq(events.clusterId, input.clusterId),
-            gte(events.timestamp, since)
-          )
-        )
-        .groupBy(events.kind);
-      const result: Record<string, number> = { Normal: 0, Warning: 0 };
+        .where(and(eq(events.clusterId, input.clusterId), gte(events.timestamp, since)))
+        .groupBy(events.kind)
+      const result: Record<string, number> = { Normal: 0, Warning: 0 }
       for (const row of rows) {
-        result[row.kind] = row.count;
+        result[row.kind] = row.count
       }
-      return result;
+      return result
     }),
-});
+})

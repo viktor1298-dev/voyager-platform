@@ -23,8 +23,8 @@ ingress:
 
 config:
   apiUrl: "http://voyager-api:4000"
-  databaseUrl: "postgresql://voyager:voyager-secret@postgres:5432/voyager"
   redisUrl: "redis://redis:6379"
+  databaseUrl: "postgresql://voyager:changeme@postgres:5432/voyager"
 
 secret:
-  dbPassword: dm95YWdlci1zZWNyZXQ=  # voyager-secret
+  dbPassword: ""  # Override per environment

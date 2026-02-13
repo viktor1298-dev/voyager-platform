@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { trpc } from "@/lib/trpc";
+import { trpc } from '@/lib/trpc'
+import { useEffect, useState } from 'react'
 
 export function TopBar() {
-  const clusters = trpc.clusters.list.useQuery();
-  const clusterList = clusters.data ?? [];
+  const clusters = trpc.clusters.list.useQuery()
+  const clusterList = clusters.data ?? []
 
   return (
     <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">
@@ -34,20 +34,20 @@ export function TopBar() {
       {/* Right: Connection status */}
       <ConnectionStatus />
     </header>
-  );
+  )
 }
 
 function ConnectionStatus() {
-  const [secondsAgo, setSecondsAgo] = useState(0);
+  const [secondsAgo, setSecondsAgo] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setSecondsAgo((prev) => prev + 30);
-    }, 30_000);
-    return () => clearInterval(interval);
-  }, []);
+      setSecondsAgo((prev) => prev + 30)
+    }, 30_000)
+    return () => clearInterval(interval)
+  }, [])
 
-  const label = secondsAgo === 0 ? "just now" : `${secondsAgo}s ago`;
+  const label = secondsAgo === 0 ? 'just now' : `${secondsAgo}s ago`
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-white/[0.02]">
@@ -56,45 +56,49 @@ function ConnectionStatus() {
         Connected
       </span>
       <span className="text-[10px] text-[var(--color-text-dim)]">·</span>
-      <span className="text-[10px] text-[var(--color-text-muted)] font-mono">
-        Synced {label}
-      </span>
+      <span className="text-[10px] text-[var(--color-text-muted)] font-mono">Synced {label}</span>
     </div>
-  );
+  )
 }
 
 function TotalPodsstat({ clusterIds, loading }: { clusterIds: string[]; loading: boolean }) {
   // Query nodes for each cluster to sum pods
   const results = clusterIds.map((id) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    return trpc.nodes.list.useQuery({ clusterId: id });
-  });
+    return trpc.nodes.list.useQuery({ clusterId: id })
+  })
 
-  const anyLoading = loading || results.some((r) => r.isLoading);
+  const anyLoading = loading || results.some((r) => r.isLoading)
   const totalPods = results.reduce((sum, r) => {
-    const nodes = r.data ?? [];
-    return sum + nodes.reduce((s, n) => s + (n.podsCount ?? 0), 0);
-  }, 0);
+    const nodes = r.data ?? []
+    return sum + nodes.reduce((s, n) => s + (n.podsCount ?? 0), 0)
+  }, 0)
 
-  return <Stat label="Total Pods" value={anyLoading ? "…" : String(totalPods)} color="var(--color-accent)" />;
+  return (
+    <Stat
+      label="Total Pods"
+      value={anyLoading ? '…' : String(totalPods)}
+      color="var(--color-accent)"
+    />
+  )
 }
 
 function AlertsStat({ clusterIds, loading }: { clusterIds: string[]; loading: boolean }) {
   const results = clusterIds.map((id) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    return trpc.events.stats.useQuery({ clusterId: id });
-  });
+    return trpc.events.stats.useQuery({ clusterId: id })
+  })
 
-  const anyLoading = loading || results.some((r) => r.isLoading);
-  const total = results.reduce((sum, r) => sum + (r.data?.Warning ?? 0), 0);
+  const anyLoading = loading || results.some((r) => r.isLoading)
+  const total = results.reduce((sum, r) => sum + (r.data?.Warning ?? 0), 0)
 
   return (
     <Stat
       label="Alerts"
-      value={anyLoading ? "…" : String(total)}
-      color={total > 0 ? "var(--color-status-warning)" : "var(--color-text-muted)"}
+      value={anyLoading ? '…' : String(total)}
+      color={total > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'}
     />
-  );
+  )
 }
 
 function Stat({ label, value, color }: { label: string; value: string; color: string }) {
@@ -107,5 +111,5 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
         {label}
       </div>
     </div>
-  );
+  )
 }

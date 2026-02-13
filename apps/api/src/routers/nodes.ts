@@ -1,28 +1,20 @@
-import { z } from "zod";
-import { eq, and } from "drizzle-orm";
-import { nodes } from "@voyager/db";
-import { router, publicProcedure } from "../trpc";
+import { nodes } from '@voyager/db'
+import { and, eq } from 'drizzle-orm'
+import { z } from 'zod'
+import { publicProcedure, router } from '../trpc'
 
 export const nodesRouter = router({
   list: publicProcedure
     .input(z.object({ clusterId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      return ctx.db
-        .select()
-        .from(nodes)
-        .where(eq(nodes.clusterId, input.clusterId));
+      return ctx.db.select().from(nodes).where(eq(nodes.clusterId, input.clusterId))
     }),
 
-  get: publicProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ ctx, input }) => {
-      const [node] = await ctx.db
-        .select()
-        .from(nodes)
-        .where(eq(nodes.id, input.id));
-      if (!node) throw new Error("Node not found");
-      return node;
-    }),
+  get: publicProcedure.input(z.object({ id: z.string().uuid() })).query(async ({ ctx, input }) => {
+    const [node] = await ctx.db.select().from(nodes).where(eq(nodes.id, input.id))
+    if (!node) throw new Error('Node not found')
+    return node
+  }),
 
   upsert: publicProcedure
     .input(
@@ -37,24 +29,22 @@ export const nodesRouter = router({
         memoryAllocatable: z.number().optional(),
         podsCount: z.number().int().optional(),
         k8sVersion: z.string().max(50).optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const existing = await ctx.db
         .select()
         .from(nodes)
-        .where(
-          and(eq(nodes.clusterId, input.clusterId), eq(nodes.name, input.name))
-        );
+        .where(and(eq(nodes.clusterId, input.clusterId), eq(nodes.name, input.name)))
       if (existing.length > 0) {
         const [updated] = await ctx.db
           .update(nodes)
           .set(input)
           .where(eq(nodes.id, existing[0].id))
-          .returning();
-        return updated;
+          .returning()
+        return updated
       }
-      const [created] = await ctx.db.insert(nodes).values(input).returning();
-      return created;
+      const [created] = await ctx.db.insert(nodes).values(input).returning()
+      return created
     }),
-});
+})

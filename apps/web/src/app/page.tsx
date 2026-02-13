@@ -1,29 +1,29 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { trpc } from "@/lib/trpc";
-import { AppLayout } from "@/components/AppLayout";
-import { Server, Database, CheckCircle, AlertTriangle } from "lucide-react";
+import { AppLayout } from '@/components/AppLayout'
+import { trpc } from '@/lib/trpc'
+import { AlertTriangle, CheckCircle, Database, Server } from 'lucide-react'
+import Link from 'next/link'
 
 function statusColor(status: string) {
-  if (status === "healthy") return "var(--color-status-active)";
-  if (status === "warning") return "var(--color-status-warning)";
-  return "var(--color-status-error)";
+  if (status === 'healthy') return 'var(--color-status-active)'
+  if (status === 'warning') return 'var(--color-status-warning)'
+  return 'var(--color-status-error)'
 }
 
 function statusDotClass(status: string) {
-  if (status === "healthy") return "bg-[var(--color-status-active)]";
-  if (status === "warning") return "bg-[var(--color-status-warning)]";
-  return "bg-[var(--color-status-error)]";
+  if (status === 'healthy') return 'bg-[var(--color-status-active)]'
+  if (status === 'warning') return 'bg-[var(--color-status-warning)]'
+  return 'bg-[var(--color-status-error)]'
 }
 
 export default function DashboardPage() {
-  const clusters = trpc.clusters.list.useQuery();
+  const clusters = trpc.clusters.list.useQuery()
 
-  const clusterList = clusters.data ?? [];
-  const totalNodes = clusterList.reduce((sum, c) => sum + (c.nodeCount ?? 0), 0);
-  const healthyCount = clusterList.filter((c) => c.status === "healthy").length;
-  const isLoading = clusters.isLoading;
+  const clusterList = clusters.data ?? []
+  const totalNodes = clusterList.reduce((sum, c) => sum + (c.nodeCount ?? 0), 0)
+  const healthyCount = clusterList.filter((c) => c.status === 'healthy').length
+  const isLoading = clusters.isLoading
 
   return (
     <AppLayout>
@@ -32,33 +32,39 @@ export default function DashboardPage() {
         <SummaryCard
           icon={<Database className="h-4 w-4" />}
           label="Total Clusters"
-          value={isLoading ? "…" : String(clusterList.length)}
+          value={isLoading ? '…' : String(clusterList.length)}
           color="var(--color-accent)"
         />
         <SummaryCard
           icon={<Server className="h-4 w-4" />}
           label="Total Nodes"
-          value={isLoading ? "…" : String(totalNodes)}
+          value={isLoading ? '…' : String(totalNodes)}
           color="var(--color-text-secondary)"
         />
         <SummaryCard
           icon={<CheckCircle className="h-4 w-4" />}
           label="Healthy Clusters"
-          value={isLoading ? "…" : String(healthyCount)}
+          value={isLoading ? '…' : String(healthyCount)}
           color="var(--color-status-active)"
         />
         <SummaryCard
           icon={<AlertTriangle className="h-4 w-4" />}
           label="Warning Events 24h"
-          value={isLoading ? "…" : "—"}
+          value={isLoading ? '…' : '—'}
           color="var(--color-status-warning)"
-          extra={!isLoading && clusterList.length > 0 ? <WarningEventsCount clusterIds={clusterList.map(c => c.id)} /> : undefined}
+          extra={
+            !isLoading && clusterList.length > 0 ? (
+              <WarningEventsCount clusterIds={clusterList.map((c) => c.id)} />
+            ) : undefined
+          }
         />
       </div>
 
       {/* Clusters Grid */}
       <div className="mb-4">
-        <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
+        <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">
+          Clusters
+        </h2>
         <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-0.5">
           {clusterList.length} registered
         </p>
@@ -77,15 +83,17 @@ export default function DashboardPage() {
                 <div
                   className="absolute top-0 left-5 right-5 h-0.5 rounded-b-sm opacity-60"
                   style={{
-                    background: `linear-gradient(90deg, transparent, ${statusColor(cluster.status ?? "unknown")}, transparent)`,
+                    background: `linear-gradient(90deg, transparent, ${statusColor(cluster.status ?? 'unknown')}, transparent)`,
                   }}
                 />
 
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${statusDotClass(cluster.status ?? "unknown")}`} />
+                    <span
+                      className={`h-2 w-2 rounded-full ${statusDotClass(cluster.status ?? 'unknown')}`}
+                    />
                     <span className="text-[11px] font-mono text-[var(--color-text-muted)] uppercase tracking-wider">
-                      {cluster.status ?? "unknown"}
+                      {cluster.status ?? 'unknown'}
                     </span>
                   </div>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
@@ -98,18 +106,26 @@ export default function DashboardPage() {
                     {cluster.name}
                   </span>
                   <div className="text-[11px] text-[var(--color-text-dim)] font-mono mt-0.5">
-                    K8s {cluster.version ?? "—"}
+                    K8s {cluster.version ?? '—'}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 pt-3 border-t border-white/[0.04]">
                   <div className="flex-1">
-                    <div className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">Nodes</div>
-                    <div className="text-sm font-bold text-[var(--color-text-primary)] mt-0.5">{cluster.nodeCount}</div>
+                    <div className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
+                      Nodes
+                    </div>
+                    <div className="text-sm font-bold text-[var(--color-text-primary)] mt-0.5">
+                      {cluster.nodeCount}
+                    </div>
                   </div>
                   <div className="flex-1">
-                    <div className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">Region</div>
-                    <div className="text-sm font-bold text-[var(--color-text-primary)] mt-0.5">{cluster.region ?? "—"}</div>
+                    <div className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
+                      Region
+                    </div>
+                    <div className="text-sm font-bold text-[var(--color-text-primary)] mt-0.5">
+                      {'—'}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -118,7 +134,7 @@ export default function DashboardPage() {
         </div>
       )}
     </AppLayout>
-  );
+  )
 }
 
 function SummaryCard({
@@ -128,11 +144,11 @@ function SummaryCard({
   color,
   extra,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  color: string;
-  extra?: React.ReactNode;
+  icon: React.ReactNode
+  label: string
+  value: string
+  color: string
+  extra?: React.ReactNode
 }) {
   return (
     <div className="rounded-2xl p-4 bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-all duration-200 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
@@ -148,21 +164,24 @@ function SummaryCard({
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function WarningEventsCount({ clusterIds }: { clusterIds: string[] }) {
   const results = clusterIds.map((id) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    return trpc.events.stats.useQuery({ clusterId: id });
-  });
+    return trpc.events.stats.useQuery({ clusterId: id })
+  })
 
-  const total = results.reduce((sum, r) => sum + (r.data?.Warning ?? 0), 0);
-  const loading = results.some((r) => r.isLoading);
+  const total = results.reduce((sum, r) => sum + (r.data?.Warning ?? 0), 0)
+  const loading = results.some((r) => r.isLoading)
 
   return (
-    <div className="text-2xl font-extrabold tracking-tight" style={{ color: total > 0 ? "var(--color-status-warning)" : "var(--color-text-muted)" }}>
-      {loading ? "…" : total}
+    <div
+      className="text-2xl font-extrabold tracking-tight"
+      style={{ color: total > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)' }}
+    >
+      {loading ? '…' : total}
     </div>
-  );
+  )
 }
