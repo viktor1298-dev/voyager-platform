@@ -85,14 +85,6 @@ export default function DashboardPage() {
                   e.currentTarget.style.transform = 'none'
                 }}
               >
-                {/* Top accent line */}
-                <div
-                  className="absolute top-0 left-5 right-5 h-0.5 rounded-b-sm opacity-60"
-                  style={{
-                    background: `linear-gradient(90deg, transparent, ${getStatusColor(cluster.status ?? 'unknown')}, transparent)`,
-                  }}
-                />
-
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span
