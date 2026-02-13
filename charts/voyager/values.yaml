@@ -26,5 +26,25 @@ config:
   redisUrl: "redis://redis:6379"
   databaseUrl: "postgresql://voyager:changeme@postgres:5432/voyager"
 
+db:
+  image:
+    repository: postgres
+    tag: "17-alpine"
+  port: 5432
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+
+redis:
+  image:
+    repository: redis
+    tag: "7-alpine"
+  port: 6379
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: ""
+
 secret:
   dbPassword: ""  # Override per environment
