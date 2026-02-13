@@ -9,7 +9,9 @@ export function getTRPCClient() {
   return trpc.createClient({
     links: [
       httpBatchLink({
-        url: "http://localhost:4000/trpc",
+        url: typeof window !== "undefined"
+          ? "/trpc"
+          : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/trpc"),
       }),
     ],
   });
