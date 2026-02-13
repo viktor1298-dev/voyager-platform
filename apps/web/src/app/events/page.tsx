@@ -38,7 +38,8 @@ export default function EventsPage() {
     refetchInterval: 30000,
   })
 
-  const events: KubeEvent[] = liveQuery.data?.events ?? []
+  const data = liveQuery.data as Record<string, unknown> | undefined
+  const events: KubeEvent[] = (data?.events as KubeEvent[] | undefined) ?? []
   const isLoading = liveQuery.isLoading
 
   const filtered = useMemo(() => {
