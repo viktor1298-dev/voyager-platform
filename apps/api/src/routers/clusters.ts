@@ -1,6 +1,8 @@
+import { TRPCError } from '@trpc/server'
 import { clusters, nodes } from '@voyager/db'
-import { count, eq, sql } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
+import { coreV1Api, appsV1Api, versionApi } from '../lib/k8s'
 import { publicProcedure, router } from '../trpc'
 
 export const clustersRouter = router({
@@ -26,6 +28,149 @@ export const clustersRouter = router({
     const clusterNodes = await ctx.db.select().from(nodes).where(eq(nodes.clusterId, input.id))
     return { ...cluster, nodes: clusterNodes }
   }),
+
+  live: publicProcedure.query(async () => {
+    try {
+      const versionInfo = await versionApi.getCode()
+
+      const nodesResponse = await coreV1Api.listNode()
+      const k8sNodes = nodesResponse.items.map((node) => ({
+        name: node.metadata?.name,
+        status:
+          node.status?.conditions?.find((c) => c.type === 'Ready')?.status === 'True'
+            ? 'ready'
+            : 'not-ready',
+        role:
+          node.metadata?.labels?.['node-role.kubernetes.io/control-plane'] !== undefined
+            ? 'control-plane'
+            : 'worker',
+        kubeletVersion: node.status?.nodeInfo?.kubeletVersion,
+        os: node.status?.nodeInfo?.osImage,
+        cpu: node.status?.capacity?.cpu,
+        memory: node.status?.capacity?.memory,
+        pods: node.status?.capacity?.pods,
+      }))
+
+      const podsResponse = await coreV1Api.listPodForAllNamespaces()
+      const totalPods = podsResponse.items.length
+      const runningPods = podsResponse.items.filter((p) => p.status?.phase === 'Running').length
+
+      const nsResponse = await coreV1Api.listNamespace()
+      const namespaces = nsResponse.items.map((ns) => ns.metadata?.name).filter(Boolean)
+
+      const eventsResponse = await coreV1Api.listEventForAllNamespaces()
+      const events = eventsResponse.items
+        .sort((a, b) => {
+          const aTime = (a.lastTimestamp || a.metadata?.creationTimestamp) as unknown as string | undefined
+          const bTime = (b.lastTimestamp || b.metadata?.creationTimestamp) as unknown as string | undefined
+          return new Date(bTime ?? 0).getTime() - new Date(aTime ?? 0).getTime()
+        })
+        .slice(0, 50)
+        .map((event) => ({
+          type: event.type,
+          reason: event.reason,
+          message: event.message,
+          namespace: event.metadata?.namespace,
+          involvedObject: `${event.involvedObject?.kind}/${event.involvedObject?.name}`,
+          count: event.count,
+          lastTimestamp: event.lastTimestamp || event.metadata?.creationTimestamp,
+        }))
+
+      const deploymentsResponse = await appsV1Api.listDeploymentForAllNamespaces()
+      const deployments = deploymentsResponse.items.map((d) => ({
+        name: d.metadata?.name,
+        namespace: d.metadata?.namespace,
+        replicas: d.spec?.replicas,
+        readyReplicas: d.status?.readyReplicas ?? 0,
+        availableReplicas: d.status?.availableReplicas ?? 0,
+      }))
+
+      const allNodesReady = k8sNodes.every((n) => n.status === 'ready')
+      const status = allNodesReady ? 'healthy' : 'degraded'
+
+      return {
+        name: 'minikube',
+        provider: 'minikube',
+        version: `v${versionInfo.major}.${versionInfo.minor}`,
+        status,
+        nodes: k8sNodes,
+        totalPods,
+        runningPods,
+        namespaces,
+        events,
+        deployments,
+        endpoint: 'https://192.168.49.2:8443',
+      }
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Failed to fetch from K8s API: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      })
+    }
+  }),
+
+  liveNodes: publicProcedure.query(async () => {
+    try {
+      const nodesResponse = await coreV1Api.listNode()
+      return nodesResponse.items.map((node) => {
+        const conditions = node.status?.conditions || []
+        const ready = conditions.find((c) => c.type === 'Ready')
+        return {
+          name: node.metadata?.name,
+          status: ready?.status === 'True' ? 'Ready' : 'NotReady',
+          roles: Object.keys(node.metadata?.labels || {})
+            .filter((l) => l.startsWith('node-role.kubernetes.io/'))
+            .map((l) => l.replace('node-role.kubernetes.io/', '')),
+          version: node.status?.nodeInfo?.kubeletVersion,
+          os: node.status?.nodeInfo?.osImage,
+          arch: node.status?.nodeInfo?.architecture,
+          cpu: node.status?.capacity?.cpu,
+          memory: node.status?.capacity?.memory,
+          pods: `${node.status?.allocatable?.pods}`,
+          createdAt: node.metadata?.creationTimestamp,
+        }
+      })
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Failed to fetch nodes from K8s API: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      })
+    }
+  }),
+
+  liveEvents: publicProcedure
+    .input(z.object({ limit: z.number().default(50) }).optional())
+    .query(async ({ input }) => {
+      try {
+        const limit = input?.limit ?? 50
+        const eventsResponse = await coreV1Api.listEventForAllNamespaces()
+        return eventsResponse.items
+          .sort(
+            (a, b) =>
+              new Date(
+                ((b.lastTimestamp || b.metadata?.creationTimestamp) as unknown as string) ?? 0,
+              ).getTime() -
+              new Date(
+                ((a.lastTimestamp || a.metadata?.creationTimestamp) as unknown as string) ?? 0,
+              ).getTime(),
+          )
+          .slice(0, limit)
+          .map((e) => ({
+            type: e.type,
+            reason: e.reason,
+            message: e.message,
+            namespace: e.metadata?.namespace,
+            object: `${e.involvedObject?.kind}/${e.involvedObject?.name}`,
+            count: e.count,
+            lastSeen: e.lastTimestamp || e.metadata?.creationTimestamp,
+          }))
+      } catch (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to fetch events from K8s API: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        })
+      }
+    }),
 
   create: publicProcedure
     .input(

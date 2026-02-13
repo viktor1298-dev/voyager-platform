@@ -16,6 +16,7 @@ spec:
       labels:
         {{- include "voyager.selectorLabels.api" . | nindent 8 }}
     spec:
+      serviceAccountName: voyager-api
       containers:
         - name: api
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"

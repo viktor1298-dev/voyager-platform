@@ -11,17 +11,18 @@
     "test": "echo \"no tests yet\""
   },
   "dependencies": {
-    "fastify": "^5.2.0",
-    "@trpc/server": "^11.0.0",
     "@fastify/cors": "^10.0.0",
-    "drizzle-orm": "^0.38.0",
+    "@kubernetes/client-node": "^1.4.0",
+    "@trpc/server": "^11.0.0",
     "@voyager/db": "workspace:*",
     "@voyager/types": "workspace:*",
+    "drizzle-orm": "^0.38.0",
+    "fastify": "^5.2.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
+    "@biomejs/biome": "^1.9.4",
     "tsx": "^4.19.0",
-    "@biomejs/biome": "^1.9.4"
+    "typescript": "^5.7.0"
   }
 }
