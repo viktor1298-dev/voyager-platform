@@ -4,11 +4,11 @@
 - [x] Sub-task 1: Initialize monorepo (pnpm + Turborepo + Biome)
 - [x] Sub-task 2: Set up PostgreSQL + TimescaleDB (docker-compose for dev)
 - [x] Sub-task 3: Drizzle ORM schemas (clusters, nodes, events tables)
-- [ ] Sub-task 4: tRPC router setup (Fastify adapter, context, base routers)
+- [x] Sub-task 4: tRPC router setup (Fastify adapter, context, base routers) ✅ validated
 - [ ] Sub-task 5: Auth setup (Clerk integration, middleware)
 
 ## Phase 2: Core API
-- [ ] Sub-task 6: Cluster CRUD tRPC router (clusters.list, clusters.get, clusters.create)
+- [x] Sub-task 6: Cluster CRUD tRPC router (clusters.list, clusters.get, clusters.create) ✅ validated
 - [ ] Sub-task 7: Metrics ingestion endpoint (REST for agent data)
 - [ ] Sub-task 8: Redis + BullMQ setup (cache layer, job queue)
 
