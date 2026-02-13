@@ -1,0 +1,23 @@
+{
+  "name": "@voyager/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check src/",
+    "test": "echo \"no tests yet\""
+  },
+  "dependencies": {
+    "fastify": "^5.2.0",
+    "@trpc/server": "^11.0.0",
+    "@voyager/types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "@biomejs/biome": "^1.9.4"
+  }
+}
