@@ -14,7 +14,7 @@
 
 ## Phase 3: Frontend Dashboard
 - [x] Sub-task 9: tRPC client + providers + shadcn/ui setup + Dashboard page with summary cards & clusters grid ✅ validated
-- [ ] Sub-task 10: Cluster detail page (health cards, metrics charts, events table)
+- [x] Sub-task 10: Cluster detail page (nodes table, events timeline, navigation) ✅ validated
 - [ ] Sub-task 11: Layout + navigation (sidebar, header)
 - [ ] Sub-task 12: Real-time updates (WebSocket / TanStack Query refetch)
 
