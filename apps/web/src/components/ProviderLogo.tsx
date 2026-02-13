@@ -15,13 +15,13 @@ export function ProviderLogo({ provider }: { provider: string }) {
   const { icon, color } = PROVIDER_ICONS[provider.toLowerCase()] ?? DEFAULT_ICON
   return (
     <div
-      className="provider-logo absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none select-none"
+      className="provider-logo absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none select-none"
       style={{
         opacity: 'var(--watermark-opacity)',
         zIndex: 2,
       }}
     >
-      <Icon icon={icon} width={28} height={28} color={color} />
+      <Icon icon={icon} width={36} height={36} color={color} />
     </div>
   )
 }

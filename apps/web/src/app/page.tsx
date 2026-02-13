@@ -86,7 +86,7 @@ export default function DashboardPage() {
           {clusterList.map((cluster, index) => (
             <Link key={cluster.id} href={`/clusters/${cluster.id}`}>
               <div
-                className="cluster-card relative group rounded-xl p-3 cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up"
+                className="cluster-card relative group rounded-xl p-4 min-h-[80px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up"
                 style={
                   {
                     '--status-color': getStatusColor(cluster.status ?? 'unknown'),
@@ -107,7 +107,7 @@ export default function DashboardPage() {
                 }}
               >
                 {/* Row 1: Status + Name + Badge */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pr-12">
                   <div className="flex items-center gap-2">
                     <span
                       className={`h-2 w-2 rounded-full animate-pulse-slow ${getStatusDotClass(cluster.status ?? 'unknown')}`}
@@ -127,7 +127,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Row 2: Details */}
-                <div className="flex items-center gap-4 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono">
+                <div className="flex items-center gap-4 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono pr-12">
                   <span>K8s {cluster.version ?? '—'}</span>
                   <span>·</span>
                   <span>Nodes: {cluster.nodeCount}</span>
