@@ -11,3 +11,5 @@ data:
   DATABASE_URL: {{ .Values.config.databaseUrl | quote }}
   REDIS_URL: {{ .Values.config.redisUrl | quote }}
   ALLOWED_ORIGINS: {{ .Values.config.allowedOrigins | quote }}
+  SENTRY_DSN: {{ .Values.config.sentryDsn | default "" | quote }}
+  NEXT_PUBLIC_SENTRY_DSN: {{ .Values.config.sentryDsnWeb | default "" | quote }}

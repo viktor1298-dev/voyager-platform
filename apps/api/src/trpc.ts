@@ -2,6 +2,7 @@ import { TRPCError, initTRPC } from '@trpc/server'
 import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
 import { type Database, db } from '@voyager/db'
 import { auth } from './lib/auth'
+import { captureException } from './lib/sentry'
 
 export interface Context {
   db: Database
@@ -37,8 +38,15 @@ export async function createContext({ req, res }: CreateFastifyContextOptions): 
   }
 }
 
+/** tRPC error codes that are client errors — don't report to Sentry */
+const CLIENT_ERROR_CODES = new Set(['UNAUTHORIZED', 'NOT_FOUND', 'BAD_REQUEST'])
+
 const t = initTRPC.context<Context>().create({
   errorFormatter({ shape, error }) {
+    // Report non-client errors to Sentry
+    if (!CLIENT_ERROR_CODES.has(error.code)) {
+      captureException(error)
+    }
     return {
       ...shape,
       data: {

@@ -1,4 +1,3 @@
-import { shutdownTelemetry } from './lib/telemetry'
 import compress from '@fastify/compress'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
@@ -6,8 +5,13 @@ import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/a
 import Fastify from 'fastify'
 import { auth } from './lib/auth'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers'
+import { captureException, flushSentry, initSentry } from './lib/sentry'
+import { shutdownTelemetry } from './lib/telemetry'
 import { type AppRouter, appRouter } from './routers'
 import { createContext } from './trpc'
+
+// Initialize Sentry early
+initSentry()
 
 const app = Fastify({ logger: true })
 
@@ -43,8 +47,7 @@ app.route({
   url: '/api/auth/*',
   config: {
     rateLimit: {
-      max: (req: { url: string }) =>
-        req.url.includes('/sign-in/') ? AUTH_SIGN_IN_MAX : 100,
+      max: (req: { url: string }) => (req.url.includes('/sign-in/') ? AUTH_SIGN_IN_MAX : 100),
       timeWindow: '1 minute',
       keyGenerator: (req: { ip: string }) => req.ip,
     },
@@ -74,6 +77,15 @@ app.route({
   },
 })
 
+// Capture unhandled Fastify errors to Sentry
+app.setErrorHandler((error, _request, reply) => {
+  captureException(error)
+  reply.status(error.statusCode ?? 500).send({
+    error: error.message || 'Internal Server Error',
+    statusCode: error.statusCode ?? 500,
+  })
+})
+
 app.get('/health', async () => ({ status: 'ok' }))
 
 const start = async () => {
@@ -97,6 +109,7 @@ const start = async () => {
       process.on(signal, async () => {
         app.log.info(`${signal} received, shutting down gracefully`)
         stopAllWatchers()
+        await flushSentry()
         await shutdownTelemetry()
         await app.close()
         process.exit(0)

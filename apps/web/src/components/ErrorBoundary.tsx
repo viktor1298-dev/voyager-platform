@@ -1,5 +1,6 @@
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
 import { Component, type ReactNode } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { motion } from 'motion/react'
@@ -25,7 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log for debugging (Sentry integration later)
+    Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } })
     console.error('[ErrorBoundary] Caught error:', error, errorInfo)
   }
 
