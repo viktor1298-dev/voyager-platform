@@ -17,7 +17,8 @@ import {
   getSortingRowModel,
 } from '@tanstack/react-table'
 import { ShieldAlert, ChevronDown, ChevronRight, ClipboardList, Search, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
+import { keepPreviousData } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'motion/react'
 
 type AuditEntry = {
@@ -62,14 +63,14 @@ export default function AuditPage() {
 
   const query = trpc.audit.list.useQuery(
     {
+      page: page + 1,
       limit: PAGE_SIZE,
-      offset: page * PAGE_SIZE,
       ...(actionFilter && { action: actionFilter }),
       ...(emailSearch && { userId: emailSearch }),
       ...(dateFrom && { from: dateFrom }),
       ...(dateTo && { to: dateTo }),
     },
-    { enabled: isAdmin, keepPreviousData: true },
+    { enabled: isAdmin, placeholderData: keepPreviousData },
   )
 
   const data: AuditEntry[] = query.data?.items ?? []
@@ -283,9 +284,8 @@ export default function AuditPage() {
                   </tr>
                 ) : (
                   table.getRowModel().rows.map((row) => (
-                    <>
+                    <Fragment key={row.id}>
                       <tr
-                        key={row.id}
                         className="border-b border-[var(--color-border)]/50 hover:bg-white/[0.02] transition-colors"
                       >
                         {row.getVisibleCells().map((cell) => (
@@ -313,7 +313,7 @@ export default function AuditPage() {
                           </tr>
                         )}
                       </AnimatePresence>
-                    </>
+                    </Fragment>
                   ))
                 )}
               </tbody>
