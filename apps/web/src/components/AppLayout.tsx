@@ -2,6 +2,7 @@
 
 import { Menu } from 'lucide-react'
 import { useState } from 'react'
+import { AuthGuard } from './AuthGuard'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 

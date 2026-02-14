@@ -3,6 +3,7 @@
 import { trpc } from '@/lib/trpc'
 import { useEffect, useState } from 'react'
 import { NotificationsPanel } from './NotificationsPanel'
+import { ThemeToggle } from './ThemeToggle'
 
 export function TopBar() {
   const liveQuery = trpc.clusters.live.useQuery(undefined, {
@@ -41,6 +42,7 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-3">
+        <ThemeToggle />
         <NotificationsPanel />
         <ConnectionStatus
           dataUpdatedAt={liveQuery.dataUpdatedAt}
