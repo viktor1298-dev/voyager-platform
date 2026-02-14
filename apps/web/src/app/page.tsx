@@ -19,6 +19,7 @@ import {
   getStatusGlowHover,
 } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
+import { cn } from '@/lib/utils'
 import { AlertTriangle, Box, Database, Server } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -492,6 +493,3 @@ function SummaryCard({
   )
 }
 
-function cn(...classes: Array<string | false>) {
-  return classes.filter(Boolean).join(' ')
-}

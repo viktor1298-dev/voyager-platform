@@ -33,8 +33,18 @@ export const ENV_META: Record<
   },
 }
 
+/**
+ * Derives the cluster environment from naming/provider conventions.
+ *
+ * Heuristic:
+ * - `prod` when the combined cluster name/provider contains production-like keywords
+ *   (`prod`, `production`, `live`)
+ * - `staging` for pre-production keywords (`stage`, `staging`, `qa`, `uat`, `preprod`)
+ * - defaults to `dev` when no known keyword is detected
+ */
 export function getClusterEnvironment(name: string, provider?: string | null): ClusterEnvironment {
   const text = `${name} ${provider ?? ''}`.toLowerCase()
+  // TODO: Replace with DB-backed environment field when cluster model supports it
   if (/(prod|production|live)/.test(text)) return 'prod'
   if (/(stage|staging|qa|uat|preprod)/.test(text)) return 'staging'
   return 'dev'
