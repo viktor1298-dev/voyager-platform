@@ -34,4 +34,4 @@ ENV HIDE_STACK_TRACES=true
 USER voyager
 EXPOSE 4000
 
-CMD ["node", "--import", "tsx/esm", "apps/api/src/server.ts"]
+CMD ["tsx", "apps/api/src/server.ts"]
