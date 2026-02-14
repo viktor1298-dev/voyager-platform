@@ -1,51 +1,46 @@
-import { describe, it, expect } from 'vitest'
-import { signToken, verifyToken, extractBearerToken, type UserPayload } from '../lib/auth'
+import { describe, it, expect, vi } from 'vitest'
 
-const testUser: UserPayload = { id: 'user-1', email: 'test@test.com', role: 'admin' }
+// Mock better-auth to avoid DB dependency in unit tests
+vi.mock('../lib/auth', () => ({
+  auth: {
+    api: {
+      getSession: vi.fn().mockResolvedValue(null),
+    },
+    handler: vi.fn(),
+  },
+}))
 
-describe('signToken', () => {
-  it('returns a string', () => {
-    const token = signToken(testUser)
-    expect(typeof token).toBe('string')
-    expect(token.split('.')).toHaveLength(3)
+vi.mock('@voyager/db', () => ({
+  db: {},
+  Database: {},
+}))
+
+import { authRouter } from '../routers/auth'
+import { router, type Context } from '../trpc'
+
+const appRouter = router({ auth: authRouter })
+
+function createTestCaller(user: Context['user'] = null, session: Context['session'] = null) {
+  return appRouter.createCaller({
+    db: {} as any,
+    user,
+    session,
+    res: { header: vi.fn() } as any,
   })
-})
+}
 
-describe('verifyToken', () => {
-  it('returns payload for valid token', () => {
-    const token = signToken(testUser)
-    const payload = verifyToken(token)
-    expect(payload).not.toBeNull()
-    expect(payload!.id).toBe(testUser.id)
-    expect(payload!.email).toBe(testUser.email)
-    expect(payload!.role).toBe(testUser.role)
-  })
-
-  it('returns null for invalid token', () => {
-    expect(verifyToken('invalid.token.here')).toBeNull()
-  })
-
-  it('returns null for tampered token', () => {
-    const token = signToken(testUser)
-    const tampered = token.slice(0, -5) + 'XXXXX'
-    expect(verifyToken(tampered)).toBeNull()
-  })
-})
-
-describe('extractBearerToken', () => {
-  it('extracts token from valid Bearer header', () => {
-    expect(extractBearerToken('Bearer abc123')).toBe('abc123')
-  })
-
-  it('returns null for undefined header', () => {
-    expect(extractBearerToken(undefined)).toBeNull()
+describe('auth router - me', () => {
+  it('me with valid session returns user', async () => {
+    const user = { id: 'admin-001', email: 'admin@voyager.local', name: 'Admin', role: 'admin' }
+    const session = { userId: 'admin-001', expiresAt: new Date(Date.now() + 86400000) }
+    const caller = createTestCaller(user, session)
+    const result = await caller.auth.me()
+    expect(result.email).toBe('admin@voyager.local')
+    expect(result.role).toBe('admin')
   })
 
-  it('returns null for missing Bearer prefix', () => {
-    expect(extractBearerToken('abc123')).toBeNull()
-  })
-
-  it('returns null for empty string', () => {
-    expect(extractBearerToken('')).toBeNull()
+  it('me without session throws UNAUTHORIZED', async () => {
+    const caller = createTestCaller(null, null)
+    await expect(caller.auth.me()).rejects.toThrow('Authentication required')
   })
 })

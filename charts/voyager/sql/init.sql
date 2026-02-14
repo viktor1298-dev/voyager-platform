@@ -1,4 +1,75 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Better-Auth tables
+CREATE TABLE IF NOT EXISTS "user" (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+  image TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  role TEXT DEFAULT 'viewer',
+  banned BOOLEAN DEFAULT FALSE,
+  ban_reason TEXT,
+  ban_expires TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS "session" (
+  id TEXT PRIMARY KEY,
+  expires_at TIMESTAMPTZ NOT NULL,
+  token TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ip_address TEXT,
+  user_agent TEXT,
+  user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  impersonated_by TEXT
+);
+
+CREATE TABLE IF NOT EXISTS "account" (
+  id TEXT PRIMARY KEY,
+  account_id TEXT NOT NULL,
+  provider_id TEXT NOT NULL,
+  user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  access_token TEXT,
+  refresh_token TEXT,
+  id_token TEXT,
+  access_token_expires_at TIMESTAMPTZ,
+  refresh_token_expires_at TIMESTAMPTZ,
+  scope TEXT,
+  password TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS "verification" (
+  id TEXT PRIMARY KEY,
+  identifier TEXT NOT NULL,
+  value TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Seed admin user (password: admin123, bcrypt hash)
+INSERT INTO "user" (id, name, email, email_verified, role, created_at, updated_at)
+VALUES ('admin-001', 'Admin', 'admin@voyager.local', true, 'admin', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO "account" (id, account_id, provider_id, user_id, password, created_at, updated_at)
+VALUES (
+  'admin-account-001',
+  'admin-001',
+  'credential',
+  'admin-001',
+  -- bcrypt hash of 'admin123'
+  crypt('admin123', gen_salt('bf', 10)),
+  NOW(),
+  NOW()
+)
+ON CONFLICT (id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS clusters (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

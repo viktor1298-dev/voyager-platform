@@ -1,22 +1,33 @@
 import { TRPCError, initTRPC } from '@trpc/server'
 import { type Database, db } from '@voyager/db'
 import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
-import { type UserPayload, extractBearerToken, verifyToken } from './lib/auth'
+import { auth } from './lib/auth'
 
 export interface Context {
   db: Database
-  user: UserPayload | null
+  session: { userId: string; expiresAt: Date } | null
+  user: { id: string; email: string; name: string; role: string | null } | null
   res: CreateFastifyContextOptions['res']
 }
 
-export function createContext({ req, res }: CreateFastifyContextOptions): Context {
-  const cookieToken = req.headers.cookie
-    ?.split(';')
-    .map(c => c.trim().split('='))
-    .find(([k]) => k === 'voyager-token')?.[1]
-  const token = extractBearerToken(req.headers.authorization) ?? cookieToken
-  const user = token ? verifyToken(token) : null
-  return { db, user, res }
+export async function createContext({ req, res }: CreateFastifyContextOptions): Promise<Context> {
+  const headers = new Headers()
+  Object.entries(req.headers).forEach(([key, value]) => {
+    if (value) headers.append(key, String(value))
+  })
+
+  const result = await auth.api.getSession({ headers }).catch(() => null)
+
+  const user = result?.user
+    ? { id: result.user.id, email: result.user.email, name: result.user.name, role: result.user.role ?? null }
+    : null
+
+  return {
+    db,
+    session: result?.session ?? null,
+    user,
+    res,
+  }
 }
 
 const t = initTRPC.context<Context>().create({
@@ -45,8 +56,15 @@ export const publicProcedure = t.procedure.use(async ({ next }) => {
 })
 
 export const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
-  if (!ctx.user) {
+  if (!ctx.session || !ctx.user) {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Authentication required' })
   }
-  return next({ ctx: { ...ctx, user: ctx.user } })
+  return next({ ctx: { ...ctx, session: ctx.session, user: ctx.user } })
+})
+
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  if (ctx.user.role !== 'admin') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' })
+  }
+  return next({ ctx })
 })

@@ -19,13 +19,19 @@ vi.mock('../lib/cache', () => ({
   invalidateK8sCache: vi.fn().mockResolvedValue(3),
 }))
 
+vi.mock('../lib/auth', () => ({
+  auth: {
+    api: { getSession: vi.fn().mockResolvedValue(null) },
+    handler: vi.fn(),
+  },
+}))
+
 import { clustersRouter } from '../routers/clusters'
 import { router, type Context } from '../trpc'
-import type { UserPayload } from '../lib/auth'
 
 const appRouter = router({ clusters: clustersRouter })
 
-function createCaller(user: UserPayload | null = null) {
+function createCaller(user: Context['user'] = null) {
   const mockDb = {
     select: vi.fn().mockReturnValue({
       from: vi.fn().mockImplementation(() => {
@@ -58,13 +64,14 @@ function createCaller(user: UserPayload | null = null) {
   return appRouter.createCaller({
     db: mockDb as unknown as Context['db'],
     user,
+    session: user ? { userId: user.id, expiresAt: new Date(Date.now() + 86400000) } : null,
     res: { header: vi.fn() } as any,
   })
 }
 
 describe('clusters.list', () => {
   it('returns clusters with node counts', async () => {
-    const caller = createCaller()
+    const caller = createCaller({ id: 'u1', email: 'a@b.com', name: 'Admin', role: 'admin' })
     const result = await caller.clusters.list()
     expect(result).toEqual([{ id: '1', name: 'test', provider: 'minikube', nodeCount: 2 }])
   })
@@ -77,7 +84,7 @@ describe('clusters.invalidateCache requires auth', () => {
   })
 
   it('works with authenticated user', async () => {
-    const caller = createCaller({ id: 'u1', email: 'a@b.com', role: 'admin' })
+    const caller = createCaller({ id: 'u1', email: 'a@b.com', name: 'Admin', role: 'admin' })
     const result = await caller.clusters.invalidateCache()
     expect(result).toEqual({ invalidated: 3 })
   })

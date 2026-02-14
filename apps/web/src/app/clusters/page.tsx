@@ -17,9 +17,11 @@ import {
 } from '@/components/ui/table'
 import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
+import { useForm } from '@tanstack/react-form'
 import { Database, Plus, Search, Trash2, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useMemo, useState } from 'react'
+import { z } from 'zod'
 
 const STATUS_OPTIONS = ['healthy', 'warning', 'degraded', 'unreachable'] as const
 const PROVIDER_OPTIONS = ['minikube', 'eks', 'gke', 'aks', 'k3s', 'rancher'] as const
@@ -50,13 +52,11 @@ function formatLastSeen(date: Date | string | null | undefined) {
   return `${Math.floor(diffMs / 86_400_000)}d ago`
 }
 
-interface AddClusterFormData {
-  name: string
-  provider: string
-  endpoint: string
-}
-
-const INITIAL_FORM: AddClusterFormData = { name: '', provider: 'aws', endpoint: '' }
+const addClusterSchema = z.object({
+  name: z.string().min(1, 'Cluster name is required'),
+  provider: z.string().min(1),
+  endpoint: z.string().url('Must be a valid URL'),
+})
 
 export default function ClustersPage() {
   const router = useRouter()
@@ -66,7 +66,6 @@ export default function ClustersPage() {
     onSuccess: () => {
       utils.clusters.list.invalidate()
       setShowAddModal(false)
-      setForm(INITIAL_FORM)
     },
   })
   const deleteCluster = trpc.clusters.delete.useMutation({
@@ -80,8 +79,19 @@ export default function ClustersPage() {
   const [filterProvider, setFilterProvider] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
-  const [form, setForm] = useState<AddClusterFormData>(INITIAL_FORM)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+
+  const addForm = useForm({
+    defaultValues: { name: '', provider: 'aws', endpoint: '' },
+    validators: { onChange: addClusterSchema },
+    onSubmit: async ({ value }) => {
+      createCluster.mutate({
+        name: value.name,
+        provider: value.provider,
+        endpoint: value.endpoint,
+      })
+    },
+  })
 
   const clusterList = clusters.data ?? []
 
@@ -95,19 +105,6 @@ export default function ClustersPage() {
   }, [clusterList, search, filterProvider, filterStatus])
 
   const hasActiveFilters = search || filterProvider || filterStatus
-
-  const handleAddSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault()
-      if (!form.name || !form.endpoint) return
-      createCluster.mutate({
-        name: form.name,
-        provider: form.provider,
-        endpoint: form.endpoint,
-      })
-    },
-    [form, createCluster],
-  )
 
   const handleDeleteClick = useCallback(
     (e: React.MouseEvent, cluster: { id: string; name: string }) => {
@@ -388,49 +385,77 @@ export default function ClustersPage() {
 
       {/* Add Cluster Modal */}
       <Dialog open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Cluster">
-        <form onSubmit={handleAddSubmit} className="space-y-4">
-          <label className="block">
-            <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
-              Cluster Name
-            </span>
-            <input
-              type="text"
-              required
-              placeholder="production-us-east"
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className={inputClass}
-            />
-          </label>
-          <label className="block">
-            <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
-              Provider
-            </span>
-            <select
-              value={form.provider}
-              onChange={(e) => setForm((f) => ({ ...f, provider: e.target.value }))}
-              className={inputClass}
-            >
-              {ADD_PROVIDER_OPTIONS.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
-              Endpoint URL
-            </span>
-            <input
-              type="url"
-              required
-              placeholder="https://k8s-api.example.com:6443"
-              value={form.endpoint}
-              onChange={(e) => setForm((f) => ({ ...f, endpoint: e.target.value }))}
-              className={inputClass}
-            />
-          </label>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            addForm.handleSubmit()
+          }}
+          className="space-y-4"
+        >
+          <addForm.Field name="name">
+            {(field) => (
+              <label className="block">
+                <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
+                  Cluster Name
+                </span>
+                <input
+                  type="text"
+                  placeholder="production-us-east"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
+                  className={inputClass}
+                />
+                {field.state.meta.errors?.length > 0 && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {field.state.meta.errors.map((e) => String(e)).join(', ')}
+                  </p>
+                )}
+              </label>
+            )}
+          </addForm.Field>
+          <addForm.Field name="provider">
+            {(field) => (
+              <label className="block">
+                <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
+                  Provider
+                </span>
+                <select
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  className={inputClass}
+                >
+                  {ADD_PROVIDER_OPTIONS.map((p) => (
+                    <option key={p.value} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </addForm.Field>
+          <addForm.Field name="endpoint">
+            {(field) => (
+              <label className="block">
+                <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
+                  Endpoint URL
+                </span>
+                <input
+                  type="url"
+                  placeholder="https://k8s-api.example.com:6443"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
+                  className={inputClass}
+                />
+                {field.state.meta.errors?.length > 0 && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {field.state.meta.errors.map((e) => String(e)).join(', ')}
+                  </p>
+                )}
+              </label>
+            )}
+          </addForm.Field>
           {createCluster.error && (
             <p className="text-xs text-red-400">{createCluster.error.message}</p>
           )}
@@ -438,9 +463,13 @@ export default function ClustersPage() {
             <button type="button" className={btnSecondary} onClick={() => setShowAddModal(false)}>
               Cancel
             </button>
-            <button type="submit" className={btnPrimary} disabled={createCluster.isPending}>
-              {createCluster.isPending ? 'Adding…' : 'Add Cluster'}
-            </button>
+            <addForm.Subscribe selector={(s) => s.isSubmitting}>
+              {(isSubmitting) => (
+                <button type="submit" className={btnPrimary} disabled={isSubmitting || createCluster.isPending}>
+                  {createCluster.isPending ? 'Adding…' : 'Add Cluster'}
+                </button>
+              )}
+            </addForm.Subscribe>
           </div>
         </form>
       </Dialog>

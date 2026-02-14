@@ -1,29 +1,21 @@
-import jwt from 'jsonwebtoken'
+import { betterAuth } from 'better-auth'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { admin } from 'better-auth/plugins'
+import { db } from '@voyager/db'
 
-export interface UserPayload {
-  id: string
-  email: string
-  role: 'admin' | 'viewer'
-}
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:3000']
+const SESSION_EXPIRY_SECONDS = 60 * 60 * 24 // 24 hours
 
-const JWT_SECRET = process.env.JWT_SECRET ?? (process.env.NODE_ENV === 'production'
-  ? (() => { throw new Error('JWT_SECRET required in production') })()
-  : 'voyager-dev-jwt-secret-change-in-production')
-const TOKEN_EXPIRY = '24h'
-
-export function signToken(payload: UserPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY })
-}
-
-export function verifyToken(token: string): UserPayload | null {
-  try {
-    return jwt.verify(token, JWT_SECRET) as UserPayload
-  } catch {
-    return null
-  }
-}
-
-export function extractBearerToken(authHeader: string | undefined): string | null {
-  if (!authHeader?.startsWith('Bearer ')) return null
-  return authHeader.slice(7)
-}
+export const auth = betterAuth({
+  database: drizzleAdapter(db, { provider: 'pg' }),
+  emailAndPassword: { enabled: true },
+  plugins: [admin()],
+  session: {
+    expiresIn: SESSION_EXPIRY_SECONDS,
+  },
+  trustedOrigins: ALLOWED_ORIGINS,
+  basePath: '/api/auth',
+  secret: process.env.BETTER_AUTH_SECRET ?? (process.env.NODE_ENV === 'production'
+    ? (() => { throw new Error('BETTER_AUTH_SECRET required in production') })()
+    : 'voyager-dev-better-auth-secret-change-in-prod'),
+})

@@ -1,64 +1,46 @@
 import { describe, it, expect, vi } from 'vitest'
 
-// Mock @voyager/db to avoid real DB connection
+// Mock @voyager/db and better-auth
 vi.mock('@voyager/db', () => ({
   db: {},
   Database: {},
 }))
 
-import { signToken, type UserPayload } from '../lib/auth'
+vi.mock('../lib/auth', () => ({
+  auth: {
+    api: {
+      getSession: vi.fn().mockResolvedValue(null),
+    },
+    handler: vi.fn(),
+  },
+}))
+
 import { authRouter } from '../routers/auth'
 import { router, type Context } from '../trpc'
 
 const appRouter = router({ auth: authRouter })
 
-function createTestCaller(user: UserPayload | null = null) {
+function createTestCaller(user: Context['user'] = null, session: Context['session'] = null) {
   return appRouter.createCaller({
     db: {} as any,
     user,
+    session,
     res: { header: vi.fn() } as any,
   })
 }
 
-describe('auth router - login', () => {
-  it('login with correct credentials returns token', async () => {
-    const caller = createTestCaller()
-    const result = await caller.auth.login({
-      email: 'admin@voyager.local',
-      password: 'test-pass',
-    })
-    expect(result.token).toBeDefined()
-    expect(typeof result.token).toBe('string')
-    expect(result.user.email).toBe('admin@voyager.local')
-    expect(result.user.role).toBe('admin')
-  })
-
-  it('login with wrong password throws UNAUTHORIZED', async () => {
-    const caller = createTestCaller()
-    await expect(
-      caller.auth.login({ email: 'admin@voyager.local', password: 'wrong-pass' })
-    ).rejects.toThrow('Invalid credentials')
-  })
-
-  it('login with wrong email throws UNAUTHORIZED', async () => {
-    const caller = createTestCaller()
-    await expect(
-      caller.auth.login({ email: 'wrong@voyager.local', password: 'test-pass' })
-    ).rejects.toThrow('Invalid credentials')
-  })
-})
-
 describe('auth router - me', () => {
-  it('me with valid token returns user', async () => {
-    const user: UserPayload = { id: 'admin-001', email: 'admin@voyager.local', role: 'admin' }
-    const caller = createTestCaller(user)
+  it('me with valid session returns user', async () => {
+    const user = { id: 'admin-001', email: 'admin@voyager.local', name: 'Admin', role: 'admin' }
+    const session = { userId: 'admin-001', expiresAt: new Date(Date.now() + 86400000) }
+    const caller = createTestCaller(user, session)
     const result = await caller.auth.me()
     expect(result.email).toBe('admin@voyager.local')
     expect(result.role).toBe('admin')
   })
 
-  it('me without token throws UNAUTHORIZED', async () => {
-    const caller = createTestCaller(null)
+  it('me without session throws UNAUTHORIZED', async () => {
+    const caller = createTestCaller(null, null)
     await expect(caller.auth.me()).rejects.toThrow('Authentication required')
   })
 })

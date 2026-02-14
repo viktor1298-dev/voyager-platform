@@ -1,6 +1,7 @@
 'use client'
 
 import { trpc } from '@/lib/trpc'
+import { useNotificationsStore } from '@/stores/notifications'
 import { Bell, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
@@ -19,8 +20,6 @@ interface KubeEvent {
   cluster?: string
 }
 
-const LAST_READ_KEY = 'voyager-notifications-last-read'
-
 function relativeTime(date: string | Date): string {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
   if (seconds < 60) return `${seconds}s ago`
@@ -33,13 +32,8 @@ function relativeTime(date: string | Date): string {
 
 export function NotificationsPanel() {
   const [open, setOpen] = useState(false)
-  const [lastReadTimestamp, setLastReadTimestamp] = useState<string | null>(null)
+  const { lastReadAt: lastReadTimestamp, setLastRead } = useNotificationsStore()
   const panelRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const stored = localStorage.getItem(LAST_READ_KEY)
-    if (stored) setLastReadTimestamp(stored)
-  }, [])
 
   const eventsQuery = trpc.events.list.useQuery(
     { limit: 50 },
@@ -95,11 +89,7 @@ export function NotificationsPanel() {
               {unreadCount > 0 && (
                 <button
                   type="button"
-                  onClick={() => {
-                    const now = new Date().toISOString()
-                    setLastReadTimestamp(now)
-                    localStorage.setItem(LAST_READ_KEY, now)
-                  }}
+                  onClick={() => setLastRead()}
                   className="text-[10px] text-[var(--color-accent)] hover:underline font-medium"
                 >
                   Mark all read

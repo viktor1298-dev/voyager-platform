@@ -15,11 +15,12 @@
 
 ### 🟡 עובד אבל יש יותר טוב
 
-#### 1. Auth — JWT ידני → Better-Auth / Lucia v4
+#### 1. Auth — JWT ידני → Better-Auth
 - **מצב נוכחי:** JWT ידני + bcrypt + cookie management
-- **2026:** Better-Auth או Lucia v4 — auth library קלת משקל, self-hosted
-- **למה:** פחות באגים (Secure flag, cookie sync, middleware), sessions/CSRF/OAuth/magic links מובנים
-- **עדיפות:** גבוהה — לטפל ב-Phase 3.5 (Auth & User Management)
+- **2026:** Better-Auth — הבחירה המובילה. Lucia deprecated (הפך ל-guidelines בלבד)
+- **יתרונות:** Drizzle adapter מובנה, Fastify plugin רשמי (`fastify-better-auth`), RBAC plugin, sessions DB, CSRF, OAuth, 2FA — הכל built-in
+- **למה:** פחות באגים, zero boilerplate, DB-backed sessions במקום stateless JWT
+- **עדיפות:** גבוהה — Phase 3.5
 
 #### 2. State Management — localStorage → Zustand/Jotai
 - **מצב נוכחי:** token ב-localStorage, no global state
@@ -39,11 +40,12 @@
 - **למה:** מקצועי, performant, לא צריך לכתוב sort/filter logic בעצמנו
 - **עדיפות:** גבוהה — משפיע על כל הדפים
 
-#### 5. Forms — Manual useState → React Hook Form + Zod
+#### 5. Forms — Manual useState → TanStack Form v1 + Zod
 - **מצב נוכחי:** useState לכל field
-- **2026:** React Hook Form + Zod — validation shared עם tRPC, zero re-renders
-- **למה:** Add Cluster form, Login form — הכל פשוט יותר ו-type-safe
-- **עדיפות:** בינונית
+- **2026:** TanStack Form v1 — חדש ומודרני יותר מ-RHF, type-safe מובנה, framework agnostic, async validation, תואם TanStack ecosystem
+- **Zod:** נשאר לschema validation (shared עם tRPC input)
+- **למה:** Add Cluster form, Login form, User management — type-safe ומקצועי
+- **עדיפות:** בינונית — Phase 3.5
 
 #### 6. Animations — CSS בסיסי → Motion (Framer Motion)
 - **מצב נוכחי:** CSS transitions בסיסיים
@@ -81,12 +83,39 @@
 
 ## Implementation Plan
 
-### שלב 1 — יוטמע עם Phase 3.5 (Auth & User Management)
-- [ ] Better-Auth / Lucia v4 (במקום JWT ידני)
-- [ ] React Hook Form + Zod (login + user forms)
-- [ ] Zustand (auth state + theme + notifications)
+### שלב 1 — Phase 3.5: Auth & User Management (CURRENT)
 
-### שלב 2 — שדרוג UI (מיד אחרי)
+**Backend (דימה):**
+- [ ] Better-Auth setup (Fastify plugin + Drizzle adapter)
+- [ ] Auth tables auto-generated (user, session, account, verification)
+- [ ] RBAC plugin (`@better-auth/rbac`) — admin + viewer roles
+- [ ] tRPC context with Better-Auth session
+- [ ] Seed admin user
+- [ ] Remove: jsonwebtoken, bcryptjs, jose
+
+**Frontend (רון):**
+- [ ] Zustand stores (auth, theme, notifications)
+- [ ] TanStack Form v1 + Zod (login, add cluster, user management)
+- [ ] Better-Auth client SDK (`createAuthClient`)
+- [ ] AuthGuard rewrite (Zustand-based)
+- [ ] Login page rewrite (TanStack Form)
+- [ ] Middleware rewrite (Better-Auth session check)
+- [ ] Logout button (full flow)
+- [ ] User management page (admin only)
+- [ ] Hide admin actions from viewer role
+
+**Packages to add:**
+```
+better-auth, @better-auth/rbac, fastify-better-auth  (API)
+better-auth/client, zustand, @tanstack/react-form     (Web)
+```
+
+**Packages to remove:**
+```
+jsonwebtoken, bcryptjs, jose  (replaced by Better-Auth)
+```
+
+### שלב 2 — שדרוג UI
 - [ ] TanStack Table v9 (כל הטבלאות)
 - [ ] Sonner toast notifications
 - [ ] next-themes (שדרוג theme system)

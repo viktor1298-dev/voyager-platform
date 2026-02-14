@@ -1,6 +1,8 @@
 'use client'
 
+import { authClient } from '@/lib/auth-client'
 import { trpc } from '@/lib/trpc'
+import { useAuthStore } from '@/stores/auth'
 import { LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -9,9 +11,11 @@ import { ThemeToggle } from './ThemeToggle'
 
 export function TopBar() {
   const router = useRouter()
+  const user = useAuthStore((s) => s.user)
 
-  const handleLogout = () => {
-    document.cookie = 'voyager-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+  const handleLogout = async () => {
+    await authClient.signOut()
+    useAuthStore.getState().logout()
     router.push('/login')
   }
 
@@ -51,6 +55,11 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-3">
+        {user && (
+          <span className="hidden sm:inline text-[11px] text-[var(--color-text-muted)] font-mono truncate max-w-[150px]">
+            {user.name ?? user.email}
+          </span>
+        )}
         <ThemeToggle />
         <NotificationsPanel />
         <button

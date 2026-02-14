@@ -1,15 +1,12 @@
 'use client'
 
 import { createTRPCReact, httpBatchLink } from '@trpc/react-query'
-import { TRPCClientError } from '@trpc/client'
 import type { AppRouter } from '@voyager/api/types'
 
 export const trpc = createTRPCReact<AppRouter>()
 
 function clearAuthAndRedirect() {
   if (typeof window === 'undefined') return
-  localStorage.removeItem('voyager-token')
-  // Cookie cleanup is handled server-side (HttpOnly cookie cannot be cleared from JS)
   if (!window.location.pathname.startsWith('/login')) {
     window.location.href = '/login'
   }
@@ -23,10 +20,9 @@ export function getTRPCClient() {
           typeof window !== 'undefined'
             ? '/trpc'
             : process.env.API_URL || 'http://localhost:4000/trpc',
-        headers() {
-          if (typeof window === 'undefined') return {}
-          const token = localStorage.getItem('voyager-token')
-          return token ? { Authorization: `Bearer ${token}` } : {}
+        // Better-Auth uses cookies automatically — no manual token headers needed
+        fetch(url, options) {
+          return fetch(url, { ...options, credentials: 'include' })
         },
       }),
     ],
@@ -35,7 +31,12 @@ export function getTRPCClient() {
 
 // Global error handler: redirect to login on UNAUTHORIZED
 export function handleTRPCError(error: unknown) {
-  if (error instanceof TRPCClientError && error.data?.code === 'UNAUTHORIZED') {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'data' in error &&
+    (error as { data?: { code?: string } }).data?.code === 'UNAUTHORIZED'
+  ) {
     clearAuthAndRedirect()
   }
 }

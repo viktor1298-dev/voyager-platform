@@ -1,38 +1,42 @@
 'use client'
-import { useEffect, useState } from 'react'
+
+import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { useAuthStore } from '@/stores/auth'
+import { authClient } from '@/lib/auth-client'
 
 const PUBLIC_PATHS = ['/login']
-
-function isTokenValid(): boolean {
-  if (typeof window === 'undefined') return false
-  const token = localStorage.getItem('voyager-token')
-  if (!token) return false
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.exp * 1000 > Date.now()
-  } catch {
-    return false
-  }
-}
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [checked, setChecked] = useState(false)
+  const { isAuthenticated, isLoading, setUser, logout } = useAuthStore()
+  const { data: session, isPending } = authClient.useSession()
 
   useEffect(() => {
-    if (PUBLIC_PATHS.includes(pathname)) {
-      setChecked(true)
-      return
-    }
-    if (!isTokenValid()) {
-      router.replace('/login')
+    if (isPending) return
+    if (session?.user) {
+      setUser({
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name ?? session.user.email,
+        role: (session.user as { role?: string }).role === 'admin' ? 'admin' : 'viewer',
+      })
     } else {
-      setChecked(true)
+      logout()
     }
-  }, [router, pathname])
+  }, [session, isPending, setUser, logout])
 
-  if (!checked) return null
+  useEffect(() => {
+    if (PUBLIC_PATHS.includes(pathname)) return
+    if (!isPending && !isLoading && !isAuthenticated) {
+      router.replace('/login')
+    }
+  }, [isAuthenticated, isLoading, isPending, pathname, router])
+
+  if (PUBLIC_PATHS.includes(pathname)) return <>{children}</>
+  if (isPending || isLoading) return null
+  if (!isAuthenticated) return null
+
   return <>{children}</>
 }
