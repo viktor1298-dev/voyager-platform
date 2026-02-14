@@ -2,16 +2,17 @@
 
 import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { DataTable } from '@/components/DataTable'
 import { LoadingState } from '@/components/LoadingState'
 import { QueryError } from '@/components/ErrorBoundary'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatTimestamp } from '@/lib/formatters'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { Icon } from '@iconify/react'
-import { ArrowLeft, ChevronRight, Server, Box, Globe, Cpu, HardDrive } from 'lucide-react'
-import Link from 'next/link'
+import type { ColumnDef } from '@tanstack/react-table'
+import { ArrowLeft, Server, Box, Globe, Cpu } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
+import { useMemo } from 'react'
 
 const LIVE_CLUSTER_ID = 'live-minikube'
 
@@ -48,9 +49,138 @@ function timeAgo(ts: string): string {
   return `${days}d ago`
 }
 
+interface NodeRow {
+  id: string
+  name: string
+  status: string
+  role: string
+  kubeletVersion: string
+  os: string
+  cpu: string
+  memory: string
+}
+
+interface EventRow {
+  id: string
+  type: string
+  reason: string
+  message: string
+  namespace: string
+  timestamp: string | null
+}
+
+const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
+  {
+    accessorKey: 'name',
+    header: 'Name',
+    cell: ({ getValue }) => (
+      <span className="font-medium text-[var(--color-text-primary)] text-[13px]">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ getValue }) => {
+      const status = getValue<string>()
+      return (
+        <span className="inline-flex items-center gap-1.5">
+          <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(status)}`} />
+          <span className="text-[var(--color-text-secondary)] text-[13px]">{status}</span>
+        </span>
+      )
+    },
+  },
+  {
+    accessorKey: 'role',
+    header: 'Role',
+    cell: ({ getValue }) => (
+      <span className="text-[var(--color-text-muted)] text-[13px]">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: 'kubeletVersion',
+    header: 'Kubelet',
+    cell: ({ getValue }) => (
+      <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: 'os',
+    header: 'OS',
+    cell: ({ getValue }) => (
+      <span className="text-[var(--color-text-muted)] text-[12px]">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: 'cpu',
+    header: 'CPU',
+    cell: ({ getValue }) => (
+      <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: 'memory',
+    header: 'Memory',
+    cell: ({ getValue }) => (
+      <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">{getValue<string>()}</span>
+    ),
+  },
+]
+
+const eventColumns: ColumnDef<EventRow, unknown>[] = [
+  {
+    accessorKey: 'timestamp',
+    header: 'Time',
+    cell: ({ getValue }) => {
+      const ts = getValue<string | null>()
+      return (
+        <span className="text-[var(--color-text-dim)] font-mono text-[11px] whitespace-nowrap">
+          {ts ? timeAgo(ts) : '—'}
+        </span>
+      )
+    },
+  },
+  {
+    accessorKey: 'type',
+    header: 'Type',
+    cell: ({ getValue }) => {
+      const type = getValue<string>()
+      return (
+        <span
+          className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+          style={{
+            color: severityColor(type),
+            background: `color-mix(in srgb, ${severityColor(type)} 15%, transparent)`,
+          }}
+        >
+          {type}
+        </span>
+      )
+    },
+  },
+  {
+    accessorKey: 'reason',
+    header: 'Reason',
+    cell: ({ getValue }) => (
+      <span className="text-[var(--color-text-primary)] text-[13px] font-medium whitespace-nowrap">
+        {getValue<string>()}
+      </span>
+    ),
+  },
+  {
+    accessorKey: 'message',
+    header: 'Message',
+    cell: ({ getValue }) => (
+      <span className="text-[var(--color-text-muted)] text-[12px] max-w-[400px] truncate block">
+        {getValue<string>()}
+      </span>
+    ),
+  },
+]
+
 function HeaderSkeleton() {
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+    <div className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 mb-6" style={{ boxShadow: 'var(--shadow-card)' }}>
       <div className="flex items-center gap-4 mb-4">
         <Skeleton className="h-10 w-10 rounded-xl" />
         <div>
@@ -67,35 +197,22 @@ function HeaderSkeleton() {
   )
 }
 
-function TableSkeleton({ rows = 3 }: { rows?: number }) {
-  return (
-    <div className="space-y-3">
-      {Array.from({ length: rows }).map((_, i) => (
-        <Skeleton key={`tbl-sk-${i}`} className="h-10 w-full" />
-      ))}
-    </div>
-  )
-}
-
 export default function ClusterDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const isLive = id === LIVE_CLUSTER_ID
 
-  // Live cluster — single query has everything
   const liveQuery = trpc.clusters.live.useQuery(undefined, {
     enabled: isLive,
     refetchInterval: 30000,
   })
 
-  // DB cluster — separate queries
   const dbCluster = trpc.clusters.get.useQuery({ id }, { enabled: !isLive })
   const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !isLive })
   const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !isLive })
 
   const isLoading = isLive ? liveQuery.isLoading : dbCluster.isLoading
 
-  // Error / not found
   const error = isLive ? liveQuery.error : dbCluster.error
   if (!isLoading && error) {
     return (
@@ -115,7 +232,6 @@ export default function ClusterDetailPage() {
     )
   }
 
-  // Build unified data
   const liveData = liveQuery.data
   const cluster = isLive
     ? {
@@ -141,8 +257,7 @@ export default function ClusterDetailPage() {
         namespaceCount: 0,
       }
 
-  // Nodes
-  const nodes = isLive
+  const nodes: NodeRow[] = isLive
     ? (liveData?.nodes ?? []).map((n: Record<string, string>, i: number) => ({
         id: `node-${i}`,
         name: n.name ?? '',
@@ -164,8 +279,7 @@ export default function ClusterDetailPage() {
         memory: `${n.memoryAllocatable ?? '—'} / ${n.memoryCapacity ?? '—'}`,
       }))
 
-  // Events (last 20)
-  const events = isLive
+  const events: EventRow[] = isLive
     ? (liveData?.events ?? []).slice(0, 20).map((e: Record<string, unknown>, i: number) => ({
         id: `ev-${i}`,
         type: (e.type as string) ?? 'Normal',
@@ -195,231 +309,135 @@ export default function ClusterDetailPage() {
     <AppLayout>
       <Breadcrumbs />
 
-      {/* Back button */}
       <button type="button" onClick={() => router.back()} className="flex items-center gap-1.5 text-[var(--color-accent)] hover:underline text-xs font-mono mb-5">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
 
       {/* Header Card */}
-      {isLoading ? (
-        <HeaderSkeleton />
-      ) : (
-        <div className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-          <div className="flex items-start gap-4 mb-5">
-            <div className="h-11 w-11 rounded-xl bg-white/[0.05] border border-[var(--color-border)] flex items-center justify-center">
-              <Icon icon={providerIcon(cluster.provider)} className="h-6 w-6 text-[var(--color-accent)]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
-                  {cluster.name}
-                </h1>
-                <span className={`h-2.5 w-2.5 rounded-full ${statusDotClass} animate-pulse`} />
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
-                  {statusLabel}
-                </span>
-                {isLive && (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-status-active)]/10 text-[var(--color-status-active)] border border-[var(--color-status-active)]/20">
-                    LIVE
-                  </span>
-                )}
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20">
-                  {cluster.provider}
-                </span>
-              </div>
-              <p className="text-[12px] text-[var(--color-text-dim)] font-mono mt-1 break-all">
-                Kubernetes {cluster.version} • {cluster.endpoint}
-              </p>
-            </div>
+      <div className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 mb-6" style={{ boxShadow: 'var(--shadow-card)' }}>
+        <div className="flex items-start gap-4 mb-5">
+          <div className="h-11 w-11 rounded-xl bg-white/[0.05] border border-[var(--color-border)] flex items-center justify-center">
+            <Icon icon={providerIcon(cluster.provider)} className="h-6 w-6 text-[var(--color-accent)]" />
           </div>
-
-          {/* Stats row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { icon: Server, label: 'Nodes', value: String(cluster.nodeCount) },
-              { icon: Box, label: 'Pods', value: isLive ? `${cluster.runningPods} / ${cluster.podCount}` : String(cluster.podCount || '—') },
-              { icon: Globe, label: 'Namespaces', value: String(cluster.namespaceCount || '—') },
-              { icon: Cpu, label: 'Version', value: cluster.version },
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-xl bg-white/[0.03] border border-[var(--color-border)] p-3.5">
-                <div className="flex items-center gap-2 mb-1">
-                  <stat.icon className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
-                  <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{stat.label}</span>
-                </div>
-                <p className="text-lg font-bold text-[var(--color-text-primary)]">{stat.value}</p>
-              </div>
-            ))}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+                {cluster.name}
+              </h1>
+              <span className={`h-2.5 w-2.5 rounded-full ${statusDotClass} animate-pulse`} />
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
+                {statusLabel}
+              </span>
+              {isLive && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-status-active)]/10 text-[var(--color-status-active)] border border-[var(--color-status-active)]/20">
+                  LIVE
+                </span>
+              )}
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20">
+                {cluster.provider}
+              </span>
+            </div>
+            <p className="text-[12px] text-[var(--color-text-dim)] font-mono mt-1 break-all">
+              Kubernetes {cluster.version} • {cluster.endpoint}
+            </p>
           </div>
         </div>
-      )}
 
-      {/* Nodes Table */}
-      <div className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-5 mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-        <div className="flex items-center justify-between mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { icon: Server, label: 'Nodes', value: String(cluster.nodeCount) },
+            { icon: Box, label: 'Pods', value: isLive ? `${cluster.runningPods} / ${cluster.podCount}` : String(cluster.podCount || '—') },
+            { icon: Globe, label: 'Namespaces', value: String(cluster.namespaceCount || '—') },
+            { icon: Cpu, label: 'Version', value: cluster.version },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-xl bg-white/[0.03] border border-[var(--color-border)] p-3.5">
+              <div className="flex items-center gap-2 mb-1">
+                <stat.icon className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
+                <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{stat.label}</span>
+              </div>
+              <p className="text-lg font-bold text-[var(--color-text-primary)]">{stat.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Nodes Table — DataTable */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Server className="h-4 w-4 text-[var(--color-text-dim)]" />
           <h2 className="text-base font-extrabold tracking-tight text-[var(--color-text-primary)]">
-            <Server className="h-4 w-4 inline-block mr-2 opacity-50" />
             Nodes ({nodes.length})
           </h2>
         </div>
-
-        {isLoading ? (
-          <TableSkeleton rows={3} />
-        ) : nodes.length === 0 ? (
-          <p className="text-[var(--color-text-muted)] text-sm py-4 text-center">No nodes found.</p>
-        ) : (
-          <>
-          {/* Desktop Table */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/[0.06]">
-                  {['Name', 'Status', 'Role', 'Kubelet Version', 'OS', 'CPU', 'Memory'].map((h) => (
-                    <th key={h} className="text-left py-2 px-3 text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono font-normal">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {nodes.map((node, i) => (
-                  <tr key={node.id} className={`border-b border-white/[0.03] transition-colors hover:bg-white/[0.03] ${i % 2 === 1 ? 'bg-white/[0.015]' : ''}`}>
-                    <td className="py-2.5 px-3 font-medium text-[var(--color-text-primary)] text-[13px]">{node.name}</td>
-                    <td className="py-2.5 px-3">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
-                        <span className="text-[var(--color-text-secondary)] text-[13px]">{node.status}</span>
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-[var(--color-text-muted)] text-[13px]">{node.role}</td>
-                    <td className="py-2.5 px-3 text-[var(--color-text-secondary)] font-mono text-[12px]">{node.kubeletVersion}</td>
-                    <td className="py-2.5 px-3 text-[var(--color-text-muted)] text-[12px]">{node.os}</td>
-                    <td className="py-2.5 px-3 text-[var(--color-text-secondary)] font-mono text-[12px]">{node.cpu}</td>
-                    <td className="py-2.5 px-3 text-[var(--color-text-secondary)] font-mono text-[12px]">{node.memory}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="md:hidden space-y-3">
-            {nodes.map((node) => (
-              <div key={node.id} className="rounded-lg border border-[var(--color-border)] bg-white/[0.02] p-3 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium text-[var(--color-text-primary)] text-sm">{node.name}</span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
-                    <span className="text-[var(--color-text-secondary)] text-xs">{node.status}</span>
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                  <span className="text-[var(--color-text-muted)]">Role</span>
-                  <span className="text-[var(--color-text-primary)]">{node.role}</span>
-                  <span className="text-[var(--color-text-muted)]">Kubelet</span>
-                  <span className="text-[var(--color-text-primary)] font-mono">{node.kubeletVersion}</span>
-                  <span className="text-[var(--color-text-muted)]">OS</span>
-                  <span className="text-[var(--color-text-primary)]">{node.os}</span>
-                  <span className="text-[var(--color-text-muted)]">CPU</span>
-                  <span className="text-[var(--color-text-primary)] font-mono">{node.cpu}</span>
-                  <span className="text-[var(--color-text-muted)]">Memory</span>
-                  <span className="text-[var(--color-text-primary)] font-mono">{node.memory}</span>
-                </div>
+        <DataTable
+          data={nodes}
+          columns={nodeColumns}
+          loading={isLive ? liveQuery.isLoading : dbNodes.isLoading}
+          emptyTitle="No nodes found"
+          mobileCard={(node) => (
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-medium text-[var(--color-text-primary)] text-sm">{node.name}</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
+                  <span className="text-[var(--color-text-secondary)] text-xs">{node.status}</span>
+                </span>
               </div>
-            ))}
-          </div>
-          </>
-        )}
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                <span className="text-[var(--color-text-muted)]">Role</span>
+                <span className="text-[var(--color-text-primary)]">{node.role}</span>
+                <span className="text-[var(--color-text-muted)]">Kubelet</span>
+                <span className="text-[var(--color-text-primary)] font-mono">{node.kubeletVersion}</span>
+                <span className="text-[var(--color-text-muted)]">OS</span>
+                <span className="text-[var(--color-text-primary)]">{node.os}</span>
+                <span className="text-[var(--color-text-muted)]">CPU</span>
+                <span className="text-[var(--color-text-primary)] font-mono">{node.cpu}</span>
+                <span className="text-[var(--color-text-muted)]">Memory</span>
+                <span className="text-[var(--color-text-primary)] font-mono">{node.memory}</span>
+              </div>
+            </div>
+          )}
+        />
       </div>
 
-      {/* Recent Events Table */}
-      <div className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-        <h2 className="text-base font-extrabold tracking-tight text-[var(--color-text-primary)] mb-4">
+      {/* Recent Events — DataTable */}
+      <div>
+        <h2 className="text-base font-extrabold tracking-tight text-[var(--color-text-primary)] mb-3">
           Recent Events
         </h2>
-
-        {isLoading ? (
-          <TableSkeleton rows={5} />
-        ) : events.length === 0 ? (
-          <p className="text-[var(--color-text-muted)] text-sm py-4 text-center">No events found.</p>
-        ) : (
-          <>
-          {/* Desktop Table */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/[0.06]">
-                  {['Time', 'Type', 'Reason', 'Message'].map((h) => (
-                    <th key={h} className="text-left py-2 px-3 text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono font-normal">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {events.map((event, i) => {
-                  const isWarning = event.type === 'Warning'
-                  return (
-                    <tr
-                      key={event.id}
-                      className={`border-b border-white/[0.03] transition-colors hover:bg-white/[0.03] ${isWarning ? 'bg-[var(--color-status-warning)]/[0.04]' : i % 2 === 1 ? 'bg-white/[0.015]' : ''}`}
+        <DataTable
+          data={events}
+          columns={eventColumns}
+          loading={isLive ? liveQuery.isLoading : dbEvents.isLoading}
+          emptyTitle="No events found"
+          searchable
+          searchPlaceholder="Search events…"
+          mobileCard={(event) => {
+            const isWarning = event.type === 'Warning'
+            return (
+              <div className={`p-3 rounded-lg border border-[var(--color-border)] ${isWarning ? 'bg-[var(--color-status-warning)]/[0.04]' : 'bg-[var(--color-bg-card)]'}`}>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+                      style={{
+                        color: severityColor(event.type),
+                        background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)`,
+                      }}
                     >
-                      <td className="py-2 px-3 text-[var(--color-text-dim)] font-mono text-[11px] whitespace-nowrap">
-                        {event.timestamp ? timeAgo(event.timestamp) : '—'}
-                      </td>
-                      <td className="py-2 px-3">
-                        <span
-                          className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
-                          style={{
-                            color: severityColor(event.type),
-                            background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)`,
-                          }}
-                        >
-                          {event.type}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 text-[var(--color-text-primary)] text-[13px] font-medium whitespace-nowrap">
-                        {event.reason}
-                      </td>
-                      <td className="py-2 px-3 text-[var(--color-text-muted)] text-[12px] max-w-[400px] truncate">
-                        {event.message}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="md:hidden space-y-0">
-            {events.map((event) => {
-              const isWarning = event.type === 'Warning'
-              return (
-                <div key={event.id} className={`p-3 border-b border-white/[0.03] ${isWarning ? 'bg-[var(--color-status-warning)]/[0.04]' : ''}`}>
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
-                        style={{
-                          color: severityColor(event.type),
-                          background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)`,
-                        }}
-                      >
-                        {event.type}
-                      </span>
-                      <span className="text-[var(--color-text-primary)] text-xs font-medium">{event.reason}</span>
-                    </div>
-                    <span className="text-[var(--color-text-dim)] font-mono text-[10px] shrink-0">
-                      {event.timestamp ? timeAgo(event.timestamp) : '—'}
+                      {event.type}
                     </span>
+                    <span className="text-[var(--color-text-primary)] text-xs font-medium">{event.reason}</span>
                   </div>
-                  <p className="text-[var(--color-text-muted)] text-xs line-clamp-2">{event.message}</p>
+                  <span className="text-[var(--color-text-dim)] font-mono text-[10px] shrink-0">
+                    {event.timestamp ? timeAgo(event.timestamp) : '—'}
+                  </span>
                 </div>
-              )
-            })}
-          </div>
-          </>
-        )}
+                <p className="text-[var(--color-text-muted)] text-xs line-clamp-2">{event.message}</p>
+              </div>
+            )
+          }}
+        />
       </div>
     </AppLayout>
   )

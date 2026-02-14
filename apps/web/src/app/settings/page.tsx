@@ -4,7 +4,60 @@ import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { APP_VERSION } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
+import { DataTable } from '@/components/DataTable'
+import type { ColumnDef } from '@tanstack/react-table'
 import { ExternalLink, Globe, Info, Layers, Server, Wifi } from 'lucide-react'
+import { useMemo } from 'react'
+
+interface ClusterRow {
+  id: string
+  name: string
+  provider: string
+  endpoint: string
+  status: string
+}
+
+const clusterColumns: ColumnDef<ClusterRow, unknown>[] = [
+  {
+    accessorKey: 'name',
+    header: 'Name',
+    cell: ({ getValue }) => (
+      <span className="text-[var(--color-text-primary)] font-medium text-[12px]">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: 'provider',
+    header: 'Provider',
+    cell: ({ getValue }) => (
+      <span className="text-[var(--color-text-secondary)] text-[12px]">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: 'endpoint',
+    header: 'Endpoint',
+    cell: ({ getValue }) => (
+      <span className="text-[var(--color-text-muted)] font-mono text-[11px]">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ getValue }) => {
+      const status = getValue<string>()
+      const color =
+        status === 'active' || status === 'healthy' || status === 'Connected'
+          ? 'var(--color-status-active)'
+          : status === 'warning'
+            ? 'var(--color-status-warning)'
+            : 'var(--color-status-error)'
+      return (
+        <span className="text-[11px] font-semibold" style={{ color }}>
+          {status}
+        </span>
+      )
+    },
+  },
+]
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -35,7 +88,7 @@ function SectionCard({
         background: 'var(--glass-bg)',
         backdropFilter: 'blur(var(--glass-blur))',
         WebkitBackdropFilter: 'blur(var(--glass-blur))',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        boxShadow: 'var(--shadow-card)',
         transition: 'border-color var(--duration-normal) ease',
       }}
     >
@@ -157,74 +210,7 @@ export default function SettingsPage() {
 
         {/* Section 3: Registered Clusters */}
         <SectionCard icon={<Layers className="h-4 w-4" />} title="Registered Clusters">
-          {clusters.length === 0 && !live ? (
-            <p className="text-[12px] text-[var(--color-text-muted)] py-4">
-              No clusters registered.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-[12px]">
-                <thead>
-                  <tr className="text-[var(--color-text-dim)] font-mono uppercase tracking-wider text-[10px]">
-                    <th className="text-left pb-3 pr-4">Name</th>
-                    <th className="text-left pb-3 pr-4">Provider</th>
-                    <th className="text-left pb-3 pr-4">Endpoint</th>
-                    <th className="text-left pb-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {live && (
-                    <tr className="border-t border-[var(--color-border)]/50">
-                      <td className="py-2.5 pr-4 text-[var(--color-text-primary)] font-medium">
-                        {live.name}
-                      </td>
-                      <td className="py-2.5 pr-4 text-[var(--color-text-secondary)]">
-                        {live.provider}
-                      </td>
-                      <td className="py-2.5 pr-4 text-[var(--color-text-muted)] font-mono text-[11px]">
-                        {live.endpoint ?? 'in-cluster'}
-                      </td>
-                      <td className="py-2.5">
-                        <StatusDot connected={true} />
-                      </td>
-                    </tr>
-                  )}
-                  {clusters
-                    .filter(
-                      (c) => !(live && (c.name === live.name || c.name === 'minikube-dev'))
-                    )
-                    .map((c) => (
-                      <tr key={c.id} className="border-t border-[var(--color-border)]/50">
-                        <td className="py-2.5 pr-4 text-[var(--color-text-primary)] font-medium">
-                          {c.name}
-                        </td>
-                        <td className="py-2.5 pr-4 text-[var(--color-text-secondary)]">
-                          {c.provider}
-                        </td>
-                        <td className="py-2.5 pr-4 text-[var(--color-text-muted)] font-mono text-[11px]">
-                          {c.endpoint ?? '—'}
-                        </td>
-                        <td className="py-2.5">
-                          <span
-                            className="text-[11px] font-semibold"
-                            style={{
-                              color:
-                                c.status === 'active' || c.status === 'healthy'
-                                  ? 'var(--color-status-active)'
-                                  : c.status === 'warning'
-                                    ? 'var(--color-status-warning)'
-                                    : 'var(--color-status-error)',
-                            }}
-                          >
-                            {c.status ?? 'Unknown'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <ClusterTable live={live} clusters={clusters} />
         </SectionCard>
 
         {/* Section 4: About */}
@@ -258,4 +244,46 @@ export default function SettingsPage() {
       </div>
     </AppLayout>
   )
+}
+
+function ClusterTable({
+  live,
+  clusters,
+}: {
+  live: Record<string, unknown> | null | undefined
+  clusters: Array<Record<string, unknown>>
+}) {
+  const rows: ClusterRow[] = useMemo(() => {
+    const result: ClusterRow[] = []
+    if (live) {
+      result.push({
+        id: 'live',
+        name: (live.name as string) ?? '',
+        provider: (live.provider as string) ?? '',
+        endpoint: (live.endpoint as string) ?? 'in-cluster',
+        status: 'Connected',
+      })
+    }
+    for (const c of clusters) {
+      if (live && ((c.name as string) === (live.name as string) || (c.name as string) === 'minikube-dev')) continue
+      result.push({
+        id: (c.id as string) ?? '',
+        name: (c.name as string) ?? '',
+        provider: (c.provider as string) ?? '',
+        endpoint: (c.endpoint as string) ?? '—',
+        status: (c.status as string) ?? 'Unknown',
+      })
+    }
+    return result
+  }, [live, clusters])
+
+  if (rows.length === 0) {
+    return (
+      <p className="text-[12px] text-[var(--color-text-muted)] py-4">
+        No clusters registered.
+      </p>
+    )
+  }
+
+  return <DataTable data={rows} columns={clusterColumns} />
 }

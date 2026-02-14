@@ -393,7 +393,7 @@ function SummaryCard({
         backdropFilter: 'blur(var(--glass-blur))',
         WebkitBackdropFilter: 'blur(var(--glass-blur))',
         transition: 'all var(--duration-normal) ease',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        boxShadow: 'var(--shadow-card)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)'

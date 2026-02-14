@@ -115,6 +115,12 @@
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-border-hover: rgba(255, 255, 255, 0.12);
   --glass-blur: 12px;
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --color-log-bg: #0d1117;
+  --color-log-header: #161b22;
+  --color-log-text: #d1d5db;
+  --color-log-line-number: #4b5563;
+  --color-log-dim: #6b7280;
 
   /* Sidebar micro-interactions */
   --sidebar-hover-shift: 2px;
@@ -142,6 +148,12 @@ html.light {
   --glass-bg: rgba(255, 255, 255, 0.6);
   --glass-border: rgba(0, 0, 0, 0.06);
   --glass-border-hover: rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --color-log-bg: #f8fafc;
+  --color-log-header: #f1f5f9;
+  --color-log-text: #334155;
+  --color-log-line-number: #94a3b8;
+  --color-log-dim: #64748b;
 
   --glow-healthy: 0 0 20px rgba(16, 185, 129, 0.1);
   --glow-healthy-hover: 0 0 30px rgba(16, 185, 129, 0.18);
