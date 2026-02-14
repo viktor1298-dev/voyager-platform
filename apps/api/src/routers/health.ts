@@ -113,9 +113,9 @@ export const healthRouter = router({
     if (allClusters.length === 0) return []
 
     const allLatest = await ctx.db
-      .select()
+      .selectDistinctOn([healthHistory.clusterId])
       .from(healthHistory)
-      .orderBy(desc(healthHistory.checkedAt))
+      .orderBy(healthHistory.clusterId, desc(healthHistory.checkedAt))
 
     // Build a map of clusterId -> latest entry
     const latestMap = new Map<string, typeof allLatest[0]>()

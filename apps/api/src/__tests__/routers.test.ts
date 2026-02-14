@@ -16,6 +16,7 @@ function createTestCaller(user: UserPayload | null = null) {
   return appRouter.createCaller({
     db: {} as any,
     user,
+    res: { header: vi.fn() } as any,
   })
 }
 

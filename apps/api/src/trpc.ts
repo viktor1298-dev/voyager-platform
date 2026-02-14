@@ -6,12 +6,17 @@ import { type UserPayload, extractBearerToken, verifyToken } from './lib/auth'
 export interface Context {
   db: Database
   user: UserPayload | null
+  res: CreateFastifyContextOptions['res']
 }
 
-export function createContext({ req }: CreateFastifyContextOptions): Context {
-  const token = extractBearerToken(req.headers.authorization)
+export function createContext({ req, res }: CreateFastifyContextOptions): Context {
+  const cookieToken = req.headers.cookie
+    ?.split(';')
+    .map(c => c.trim().split('='))
+    .find(([k]) => k === 'voyager-token')?.[1]
+  const token = extractBearerToken(req.headers.authorization) ?? cookieToken
   const user = token ? verifyToken(token) : null
-  return { db, user }
+  return { db, user, res }
 }
 
 const t = initTRPC.context<Context>().create()

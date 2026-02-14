@@ -14,11 +14,12 @@ const ADMIN_USER = { id: 'admin-001', email: ADMIN_EMAIL, role: 'admin' as const
 export const authRouter = router({
   login: publicProcedure
     .input(z.object({ email: z.string().email(), password: z.string().min(1) }))
-    .mutation(({ input }) => {
+    .mutation(({ input, ctx }) => {
       if (input.email !== ADMIN_EMAIL || !bcrypt.compareSync(input.password, ADMIN_PASSWORD_HASH)) {
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' })
       }
       const token = signToken(ADMIN_USER)
+      ctx.res.header('Set-Cookie', `voyager-token=${token}; HttpOnly; Path=/; Max-Age=86400; SameSite=Lax`)
       return { token, user: ADMIN_USER }
     }),
 

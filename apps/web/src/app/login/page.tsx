@@ -29,7 +29,7 @@ export default function LoginPage() {
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {
       localStorage.setItem('voyager-token', data.token)
-      document.cookie = `voyager-token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+      // Cookie is set server-side via HttpOnly Set-Cookie header
       router.push('/')
     },
     onError: (err) => {

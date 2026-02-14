@@ -16,16 +16,34 @@ app.register(rateLimit, {
   keyGenerator: (req) => req.ip,
 })
 
+// In-memory fallback for login rate limiting when Redis is unavailable
+const loginAttempts = new Map<string, { count: number; resetAt: number }>()
+const LOGIN_RATE_LIMIT_MAX = 5
+const LOGIN_RATE_LIMIT_WINDOW_MS = 60_000
+
 // Stricter rate limit for auth.login: max 5 attempts per minute to prevent brute-force
 app.addHook('onRequest', async (request, reply) => {
   if (request.url === '/trpc/auth.login' && request.method === 'POST') {
     const key = `login:${request.ip}`
-    const redis = await import('./lib/cache').then(m => m.getRedisClient())
+    const redis = await import('./lib/cache').then(m => m.getRedisClient()).catch(() => null)
     if (redis) {
       const attempts = await redis.incr(key)
       if (attempts === 1) await redis.expire(key, 60)
-      if (attempts > 5) {
+      if (attempts > LOGIN_RATE_LIMIT_MAX) {
         reply.code(429).send({ error: 'Too many login attempts. Try again in 1 minute.' })
+      }
+    } else {
+      // Fallback: in-memory rate limiting
+      app.log.warn('Redis unavailable — using in-memory login rate limit fallback')
+      const now = Date.now()
+      const entry = loginAttempts.get(key)
+      if (!entry || now > entry.resetAt) {
+        loginAttempts.set(key, { count: 1, resetAt: now + LOGIN_RATE_LIMIT_WINDOW_MS })
+      } else {
+        entry.count++
+        if (entry.count > LOGIN_RATE_LIMIT_MAX) {
+          reply.code(429).send({ error: 'Too many login attempts. Try again in 1 minute.' })
+        }
       }
     }
   }

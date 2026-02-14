@@ -58,6 +58,7 @@ function createCaller(user: UserPayload | null = null) {
   return appRouter.createCaller({
     db: mockDb as unknown as Context['db'],
     user,
+    res: { header: vi.fn() } as any,
   })
 }
 
