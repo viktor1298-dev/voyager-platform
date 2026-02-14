@@ -14,6 +14,8 @@ import { toast } from 'sonner'
 
 type StatusFilter = 'all' | 'on' | 'off'
 
+const MAX_VISIBLE_ACTIVITIES = 3
+
 function formatDate(date: string) {
   return new Date(date).toLocaleString('en-US', {
     month: 'short',
@@ -77,19 +79,35 @@ export default function FeatureFlagsPage() {
   }, [isAdmin])
 
   const handleToggle = useCallback(async (flagId: string, nextEnabled: boolean) => {
+    let previousFlag: FeatureFlag | null = null
+    const now = new Date().toISOString()
+    const optimisticActivity = {
+      id: crypto.randomUUID(),
+      actor: 'You',
+      action: nextEnabled ? 'enabled' : 'disabled',
+      at: now,
+    } as const
+
     setFlags((prev) =>
-      prev.map((flag) => (flag.id === flagId ? { ...flag, enabled: nextEnabled } : flag)),
+      prev.map((flag) => {
+        if (flag.id !== flagId) return flag
+        previousFlag = flag
+        return {
+          ...flag,
+          enabled: nextEnabled,
+          updatedAt: now,
+          activity: [optimisticActivity, ...flag.activity],
+        }
+      }),
     )
 
     try {
       await mockAdminApi.features.update({ id: flagId, enabled: nextEnabled })
-      const data = await mockAdminApi.features.listWithMeta()
-      setFlags(data)
       toast.success(`Feature flag ${nextEnabled ? 'enabled' : 'disabled'}`)
     } catch {
-      setFlags((prev) =>
-        prev.map((flag) => (flag.id === flagId ? { ...flag, enabled: !nextEnabled } : flag)),
-      )
+      if (previousFlag) {
+        setFlags((prev) => prev.map((flag) => (flag.id === flagId ? previousFlag : flag)))
+      }
       toast.error('Failed to update feature flag')
       throw new Error('Failed to update feature flag')
     }
@@ -144,8 +162,8 @@ export default function FeatureFlagsPage() {
             </p>
           </div>
 
-          <div className="grid gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 md:grid-cols-4">
-            <label className="relative md:col-span-2">
+          <div className="grid gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 sm:grid-cols-2 xl:grid-cols-4">
+            <label className="relative sm:col-span-2 xl:col-span-2">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-dim)]" />
               <input
                 value={query}
@@ -165,33 +183,31 @@ export default function FeatureFlagsPage() {
               <option value="off">Off</option>
             </select>
 
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-1 md:gap-3">
-              <select
-                value={environmentFilter}
-                onChange={(event) => setEnvironmentFilter(event.target.value)}
-                className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
-              >
-                <option value="all">All envs</option>
-                {environments.map((environment) => (
-                  <option key={environment} value={environment}>
-                    {environment}
-                  </option>
-                ))}
-              </select>
+            <select
+              value={environmentFilter}
+              onChange={(event) => setEnvironmentFilter(event.target.value)}
+              className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
+            >
+              <option value="all">All envs</option>
+              {environments.map((environment) => (
+                <option key={environment} value={environment}>
+                  {environment}
+                </option>
+              ))}
+            </select>
 
-              <select
-                value={tagFilter}
-                onChange={(event) => setTagFilter(event.target.value)}
-                className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
-              >
-                <option value="all">All tags</option>
-                {tags.map((tag) => (
-                  <option key={tag} value={tag}>
-                    {tag}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={tagFilter}
+              onChange={(event) => setTagFilter(event.target.value)}
+              className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
+            >
+              <option value="all">All tags</option>
+              {tags.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -272,12 +288,20 @@ export default function FeatureFlagsPage() {
                             Env: {environment}
                           </span>
                         ))}
-                        {[...segments, ...roles].map((segment) => (
+                        {segments.map((segment) => (
                           <span
-                            key={segment}
+                            key={`seg-${segment}`}
                             className="rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-[var(--color-text-primary)]"
                           >
                             Segment: {segment}
+                          </span>
+                        ))}
+                        {roles.map((role) => (
+                          <span
+                            key={`role-${role}`}
+                            className="rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-[var(--color-text-primary)]"
+                          >
+                            Role: {role}
                           </span>
                         ))}
                         {(flag.tags ?? []).map((tag) => (
@@ -305,7 +329,7 @@ export default function FeatureFlagsPage() {
                           Activity log
                         </p>
                         <ul className="space-y-1.5">
-                          {flag.activity.slice(0, 3).map((entry) => (
+                          {flag.activity.slice(0, MAX_VISIBLE_ACTIVITIES).map((entry) => (
                             <li
                               key={entry.id}
                               className="flex items-center justify-between rounded-md border border-[var(--color-border)]/60 px-2 py-1.5 text-xs"
