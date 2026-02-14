@@ -3,6 +3,7 @@ import { authRouter } from './auth'
 import { clustersRouter } from './clusters'
 import { deploymentsRouter } from './deployments'
 import { eventsRouter } from './events'
+import { logsRouter } from './logs'
 import { nodesRouter } from './nodes'
 
 export const appRouter = router({
@@ -11,6 +12,7 @@ export const appRouter = router({
   deployments: deploymentsRouter,
   nodes: nodesRouter,
   events: eventsRouter,
+  logs: logsRouter,
 })
 
 export type AppRouter = typeof appRouter

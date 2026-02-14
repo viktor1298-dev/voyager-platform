@@ -1,9 +1,10 @@
-import { Activity, Box, LayoutDashboard, Server, Settings } from 'lucide-react'
+import { Activity, Box, FileText, LayoutDashboard, Server, Settings } from 'lucide-react'
 
 export const navItems = [
   { id: '/', label: 'Dashboard', icon: LayoutDashboard },
   { id: '/clusters', label: 'Clusters', icon: Server },
   { id: '/deployments', label: 'Deployments', icon: Box },
   { id: '/events', label: 'Events', icon: Activity },
+  { id: '/logs', label: 'Logs', icon: FileText },
   { id: '/settings', label: 'Settings', icon: Settings },
 ] as const
