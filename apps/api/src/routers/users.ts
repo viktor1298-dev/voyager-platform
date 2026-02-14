@@ -45,6 +45,8 @@ export const usersRouter = router({
           })
         }
 
+        await logAudit(ctx, 'user.create', 'user', result?.user?.id, { email: input.email, role: input.role })
+
         return { success: true, userId: result?.user?.id }
       } catch (error) {
         throw new TRPCError({

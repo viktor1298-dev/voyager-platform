@@ -11,7 +11,7 @@ export function initSentry(): void {
     environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development',
     release: `voyager-api@${process.env.npm_package_version || '0.0.0'}`,
     tracesSampleRate: Number.parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0.1'),
-    profilesSampleRate: 0.1,
+    profilesSampleRate: Number.parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE || '0.1'),
     integrations: [nodeProfilingIntegration()],
   })
 }

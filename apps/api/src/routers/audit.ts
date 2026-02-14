@@ -1,5 +1,5 @@
 import { auditLog } from '@voyager/db'
-import { and, desc, eq, gte, lte } from 'drizzle-orm'
+import { and, count, desc, eq, gte, lte } from 'drizzle-orm'
 import { z } from 'zod'
 import { adminProcedure, protectedProcedure, router } from '../trpc'
 
@@ -30,15 +30,23 @@ export const auditRouter = router({
 
       const where = conditions.length > 0 ? and(...conditions) : undefined
 
-      const rows = await ctx.db
-        .select()
-        .from(auditLog)
-        .where(where)
-        .orderBy(desc(auditLog.timestamp))
-        .limit(limit)
-        .offset(offset)
+      const [rows, totalResult] = await Promise.all([
+        ctx.db
+          .select()
+          .from(auditLog)
+          .where(where)
+          .orderBy(desc(auditLog.timestamp))
+          .limit(limit)
+          .offset(offset),
+        ctx.db
+          .select({ count: count() })
+          .from(auditLog)
+          .where(where),
+      ])
 
-      return { items: rows, page, limit }
+      const total = totalResult[0]?.count ?? 0
+
+      return { items: rows, page, limit, total }
     }),
 
   getByResource: protectedProcedure

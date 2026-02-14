@@ -26,6 +26,9 @@ config:
   redisUrl: "redis://redis:6379"
   databaseUrl: "postgresql://voyager:voyager_dev@postgres:5432/voyager"
   allowedOrigins: "http://localhost:3000,http://localhost:9000,http://100.90.102.90:9000,http://voyager-platform.voyagerlabs.co"
+  sentryEnvironment: "production"
+  sentryTracesSampleRate: "0.1"
+  otelExporterOtlpEndpoint: ""
 
 db:
   image:
@@ -52,5 +55,5 @@ rbac:
 
 secret:
   dbPassword: ""  # Override per environment
-  jwtSecret: ""   # Override per environment
+  betterAuthSecret: ""   # Override per environment
   adminPassword: ""  # Override per environment
