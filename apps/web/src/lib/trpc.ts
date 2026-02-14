@@ -9,7 +9,7 @@ export const trpc = createTRPCReact<AppRouter>()
 function clearAuthAndRedirect() {
   if (typeof window === 'undefined') return
   localStorage.removeItem('voyager-token')
-  document.cookie = 'voyager-token=; path=/; max-age=0'
+  // Cookie cleanup is handled server-side (HttpOnly cookie cannot be cleared from JS)
   if (!window.location.pathname.startsWith('/login')) {
     window.location.href = '/login'
   }

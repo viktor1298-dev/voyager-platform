@@ -21,6 +21,15 @@ const loginAttempts = new Map<string, { count: number; resetAt: number }>()
 const LOGIN_RATE_LIMIT_MAX = 5
 const LOGIN_RATE_LIMIT_WINDOW_MS = 60_000
 
+// Cleanup expired entries from in-memory loginAttempts map every 5 minutes
+const LOGIN_CLEANUP_INTERVAL_MS = 300_000
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, entry] of loginAttempts) {
+    if (now > entry.resetAt) loginAttempts.delete(key)
+  }
+}, LOGIN_CLEANUP_INTERVAL_MS).unref()
+
 // Stricter rate limit for auth.login: max 5 attempts per minute to prevent brute-force
 app.addHook('onRequest', async (request, reply) => {
   if (request.url === '/trpc/auth.login' && request.method === 'POST') {
