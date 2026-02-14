@@ -8,6 +8,17 @@ import { protectedProcedure, router } from '../trpc'
 const HEALTH_STATUS = ['healthy', 'degraded', 'critical', 'unknown'] as const
 type HealthStatus = (typeof HEALTH_STATUS)[number]
 
+const healthHistorySchema = z
+  .object({
+    id: z.string(),
+    clusterId: z.string(),
+    status: z.string(),
+    responseTimeMs: z.number().int().nullable(),
+    details: z.unknown().nullable().optional(),
+    checkedAt: z.union([z.string(), z.date()]),
+  })
+  .passthrough()
+
 async function performK8sHealthCheck(): Promise<{
   status: HealthStatus
   responseTimeMs: number
@@ -16,10 +27,7 @@ async function performK8sHealthCheck(): Promise<{
   const start = Date.now()
   try {
     const coreApi = getCoreV1Api()
-    const [nodesRes, podsRes] = await Promise.all([
-      coreApi.listNode(),
-      coreApi.listPodForAllNamespaces(),
-    ])
+    const [nodesRes, podsRes] = await Promise.all([coreApi.listNode(), coreApi.listPodForAllNamespaces()])
 
     const responseTimeMs = Date.now() - start
 
@@ -64,7 +72,9 @@ async function performK8sHealthCheck(): Promise<{
 
 export const healthRouter = router({
   check: protectedProcedure
+    .meta({ openapi: { method: 'GET', path: '/api/health/check/{clusterId}', protect: true, tags: ['health'] } })
     .input(z.object({ clusterId: z.string().uuid() }))
+    .output(healthHistorySchema)
     .query(async ({ ctx, input }) => {
       const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.clusterId))
       if (!cluster) {
@@ -94,50 +104,63 @@ export const healthRouter = router({
     }),
 
   history: protectedProcedure
-    .input(
-      z.object({ clusterId: z.string().uuid(), limit: z.number().min(1).max(200).default(50) }),
-    )
+    .meta({ openapi: { method: 'GET', path: '/api/health/history/{clusterId}', protect: true, tags: ['health'] } })
+    .input(z.object({ clusterId: z.string().uuid(), limit: z.number().int().min(1).max(200).optional() }))
+    .output(z.array(healthHistorySchema))
     .query(async ({ ctx, input }) => {
       const rows = await ctx.db
         .select()
         .from(healthHistory)
         .where(eq(healthHistory.clusterId, input.clusterId))
         .orderBy(desc(healthHistory.checkedAt))
-        .limit(input.limit)
+        .limit(input.limit ?? 50)
       return rows.map((r) => ({
         ...r,
         details: r.details ? JSON.parse(r.details) : null,
       }))
     }),
 
-  status: protectedProcedure.query(async ({ ctx }) => {
-    // Single query: get all clusters with their latest health entry via lateral join
-    const allClusters = await ctx.db.select().from(clusters)
-    if (allClusters.length === 0) return []
+  status: protectedProcedure
+    .meta({ openapi: { method: 'GET', path: '/api/health/status', protect: true, tags: ['health'] } })
+    .input(z.object({}))
+    .output(
+      z.array(
+        z.object({
+          clusterId: z.string(),
+          clusterName: z.string(),
+          provider: z.string(),
+          status: z.string(),
+          checkedAt: z.union([z.string(), z.date()]).nullable(),
+          responseTimeMs: z.number().int().nullable(),
+        }),
+      ),
+    )
+    .query(async ({ ctx }) => {
+      const allClusters = await ctx.db.select().from(clusters)
+      if (allClusters.length === 0) return []
 
-    const allLatest = await ctx.db
-      .selectDistinctOn([healthHistory.clusterId])
-      .from(healthHistory)
-      .orderBy(healthHistory.clusterId, desc(healthHistory.checkedAt))
+      const allLatest = await ctx.db
+        .selectDistinctOn([healthHistory.clusterId])
+        .from(healthHistory)
+        .orderBy(healthHistory.clusterId, desc(healthHistory.checkedAt))
 
-    // Build a map of clusterId -> latest entry
-    const latestMap = new Map<string, (typeof allLatest)[0]>()
-    for (const entry of allLatest) {
-      if (!latestMap.has(entry.clusterId)) {
-        latestMap.set(entry.clusterId, entry)
+      const latestMap = new Map<string, (typeof allLatest)[0]>()
+      for (const entry of allLatest) {
+        if (!latestMap.has(entry.clusterId)) {
+          latestMap.set(entry.clusterId, entry)
+        }
       }
-    }
 
-    return allClusters.map((cluster) => {
-      const latest = latestMap.get(cluster.id)
-      return {
-        clusterId: cluster.id,
-        clusterName: cluster.name,
-        provider: cluster.provider,
-        status: latest?.status ?? 'unknown',
-        checkedAt: latest?.checkedAt ?? null,
-        responseTimeMs: latest?.responseTimeMs ?? null,
-      }
-    })
-  }),
+      return allClusters.map((cluster) => {
+        const latest = latestMap.get(cluster.id)
+        return {
+          clusterId: cluster.id,
+          clusterName: cluster.name,
+          provider: cluster.provider,
+          status: (latest?.status ?? 'unknown') as HealthStatus,
+          checkedAt: latest?.checkedAt ?? null,
+          responseTimeMs: latest?.responseTimeMs ?? null,
+        }
+      })
+    }),
 })

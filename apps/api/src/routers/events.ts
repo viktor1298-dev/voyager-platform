@@ -3,27 +3,44 @@ import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { adminProcedure, protectedProcedure, router } from '../trpc'
 
+const eventSchema = z
+  .object({
+    id: z.string(),
+    clusterId: z.string(),
+    namespace: z.string().nullable().optional(),
+    kind: z.string(),
+    reason: z.string().nullable().optional(),
+    message: z.string().nullable().optional(),
+    source: z.string().nullable().optional(),
+    involvedObject: z.unknown().nullable().optional(),
+    timestamp: z.union([z.string(), z.date()]),
+  })
+  .passthrough()
+
 export const eventsRouter = router({
   list: protectedProcedure
+    .meta({ openapi: { method: 'GET', path: '/api/events', protect: true, tags: ['events'] } })
     .input(
       z.object({
         clusterId: z.string().uuid().optional(),
-        limit: z.number().int().min(1).max(200).default(50),
-        offset: z.number().int().min(0).default(0),
+        limit: z.number().int().min(1).max(200).optional(),
+        offset: z.number().int().min(0).optional(),
       }),
     )
+    .output(z.array(eventSchema))
     .query(async ({ ctx, input }) => {
       const rows = await ctx.db
         .select()
         .from(events)
         .where(input.clusterId ? eq(events.clusterId, input.clusterId) : undefined)
         .orderBy(desc(events.timestamp))
-        .limit(input.limit)
-        .offset(input.offset)
+        .limit(input.limit ?? 50)
+        .offset(input.offset ?? 0)
       return rows
     }),
 
   create: adminProcedure
+    .meta({ openapi: { method: 'POST', path: '/api/events', protect: true, tags: ['events'] } })
     .input(
       z.object({
         clusterId: z.string().uuid(),
@@ -36,6 +53,7 @@ export const eventsRouter = router({
         timestamp: z.string().datetime().optional(),
       }),
     )
+    .output(eventSchema)
     .mutation(async ({ ctx, input }) => {
       const values = {
         ...input,
@@ -46,7 +64,11 @@ export const eventsRouter = router({
     }),
 
   stats: protectedProcedure
+    .meta({
+      openapi: { method: 'GET', path: '/api/events/stats/{clusterId}', protect: true, tags: ['events'] },
+    })
     .input(z.object({ clusterId: z.string().uuid() }))
+    .output(z.object({ Normal: z.number().int(), Warning: z.number().int() }))
     .query(async ({ ctx, input }) => {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
       const rows = await ctx.db
@@ -61,6 +83,6 @@ export const eventsRouter = router({
       for (const row of rows) {
         result[row.kind] = row.count
       }
-      return result
+      return { Normal: result.Normal, Warning: result.Warning }
     }),
 })

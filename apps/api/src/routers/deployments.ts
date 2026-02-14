@@ -1,8 +1,8 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
+import { logAudit } from '../lib/audit'
 import { cached, getRedisClient } from '../lib/cache'
 import { getAppsV1Api } from '../lib/k8s'
-import { logAudit } from '../lib/audit'
 import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 const K8S_DEPLOYMENTS_CACHE_TTL = 30
@@ -16,6 +16,16 @@ interface DeploymentInfo {
   age: string
   status: string
 }
+
+const deploymentInfoSchema = z.object({
+  name: z.string(),
+  namespace: z.string(),
+  replicas: z.number().int(),
+  ready: z.number().int(),
+  image: z.string(),
+  age: z.string(),
+  status: z.string(),
+})
 
 function computeAge(creationTimestamp: Date | string | undefined): string {
   if (!creationTimestamp) return 'unknown'
@@ -38,29 +48,39 @@ function deriveStatus(ready: number, replicas: number): string {
 }
 
 export const deploymentsRouter = router({
-  list: protectedProcedure.query(async (): Promise<DeploymentInfo[]> => {
-    return cached('k8s:deployments:list', K8S_DEPLOYMENTS_CACHE_TTL, async () => {
-      const api = getAppsV1Api()
-      const res = await api.listDeploymentForAllNamespaces()
-      return (res.items ?? []).map((d) => {
-        const replicas = d.spec?.replicas ?? 0
-        const ready = d.status?.readyReplicas ?? 0
-        const image = d.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
-        return {
-          name: d.metadata?.name ?? 'unknown',
-          namespace: d.metadata?.namespace ?? 'default',
-          replicas,
-          ready,
-          image,
-          age: computeAge(d.metadata?.creationTimestamp),
-          status: deriveStatus(ready, replicas),
-        }
-      })
+  list: protectedProcedure
+    .meta({
+      openapi: { method: 'GET', path: '/api/deployments', protect: true, tags: ['deployments'] },
     })
-  }),
+    .input(z.void())
+    .output(z.array(deploymentInfoSchema))
+    .query(async (): Promise<DeploymentInfo[]> => {
+      return cached('k8s:deployments:list', K8S_DEPLOYMENTS_CACHE_TTL, async () => {
+        const api = getAppsV1Api()
+        const res = await api.listDeploymentForAllNamespaces()
+        return (res.items ?? []).map((d) => {
+          const replicas = d.spec?.replicas ?? 0
+          const ready = d.status?.readyReplicas ?? 0
+          const image = d.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
+          return {
+            name: d.metadata?.name ?? 'unknown',
+            namespace: d.metadata?.namespace ?? 'default',
+            replicas,
+            ready,
+            image,
+            age: computeAge(d.metadata?.creationTimestamp),
+            status: deriveStatus(ready, replicas),
+          }
+        })
+      })
+    }),
 
   restart: adminProcedure
+    .meta({
+      openapi: { method: 'POST', path: '/api/deployments/restart', protect: true, tags: ['deployments'] },
+    })
     .input(z.object({ name: z.string(), namespace: z.string() }))
+    .output(z.object({ success: z.boolean(), restartedAt: z.string() }))
     .mutation(async ({ ctx, input }) => {
       try {
         const api = getAppsV1Api()
@@ -80,7 +100,9 @@ export const deploymentsRouter = router({
         })
         const redis = await getRedisClient()
         if (redis) await redis.del('k8s:deployments:list')
-        await logAudit(ctx, 'deployment.restart', 'deployment', `${input.namespace}/${input.name}`, { namespace: input.namespace })
+        await logAudit(ctx, 'deployment.restart', 'deployment', `${input.namespace}/${input.name}`, {
+          namespace: input.namespace,
+        })
         return { success: true, restartedAt: now }
       } catch (err) {
         throw new TRPCError({
@@ -91,6 +113,9 @@ export const deploymentsRouter = router({
     }),
 
   scale: adminProcedure
+    .meta({
+      openapi: { method: 'POST', path: '/api/deployments/scale', protect: true, tags: ['deployments'] },
+    })
     .input(
       z.object({
         name: z.string(),
@@ -98,6 +123,7 @@ export const deploymentsRouter = router({
         replicas: z.number().int().min(0).max(50),
       }),
     )
+    .output(z.object({ success: z.boolean(), replicas: z.number().int() }))
     .mutation(async ({ ctx, input }) => {
       try {
         const api = getAppsV1Api()
@@ -108,7 +134,9 @@ export const deploymentsRouter = router({
         })
         const redis = await getRedisClient()
         if (redis) await redis.del('k8s:deployments:list')
-        await logAudit(ctx, 'deployment.scale', 'deployment', `${input.namespace}/${input.name}`, { replicas: input.replicas })
+        await logAudit(ctx, 'deployment.scale', 'deployment', `${input.namespace}/${input.name}`, {
+          replicas: input.replicas,
+        })
         return { success: true, replicas: input.replicas }
       } catch (err) {
         throw new TRPCError({

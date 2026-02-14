@@ -49,28 +49,19 @@ app.register(fastifyTRPCOpenApiPlugin, {
   createContext,
 })
 
-// Swagger + SwaggerUI wrapped in isolated plugin to prevent crash on missing static assets
-app.register(async (instance) => {
-  try {
-    await instance.register(swagger, {
-      mode: 'static',
-      specification: {
-        document: generateOpenApiSpec() as never,
-      },
-    })
-    await instance.register(swaggerUi, {
-      routePrefix: '/docs',
-      uiConfig: {
-        docExpansion: 'list',
-        deepLinking: true,
-      },
-    })
-  } catch (error) {
-    instance.log.warn(
-      { err: error },
-      'Swagger/SwaggerUI registration failed; continuing without /docs endpoint',
-    )
-  }
+app.register(swagger, {
+  mode: 'static',
+  specification: {
+    document: generateOpenApiSpec() as never,
+  },
+})
+
+app.register(swaggerUi, {
+  routePrefix: '/docs',
+  uiConfig: {
+    docExpansion: 'list',
+    deepLinking: true,
+  },
 })
 
 app.get('/openapi.json', async (_request, reply) => {
