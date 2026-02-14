@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { auth } from '../lib/auth'
+import { logAudit } from '../lib/audit'
 
 export const usersRouter = router({
   list: adminProcedure.query(async ({ ctx }) => {
@@ -66,6 +67,7 @@ export const usersRouter = router({
       await ctx.db.update(userTable)
         .set({ role: input.role })
         .where(eq(userTable.id, input.userId))
+      await logAudit(ctx, 'user.role_change', 'user', input.userId, { newRole: input.role })
       return { success: true }
     }),
 
@@ -81,6 +83,7 @@ export const usersRouter = router({
         await tx.delete(accountTable).where(eq(accountTable.userId, input.userId))
         await tx.delete(userTable).where(eq(userTable.id, input.userId))
       })
+      await logAudit(ctx, 'user.delete', 'user', input.userId)
       return { success: true }
     }),
 })

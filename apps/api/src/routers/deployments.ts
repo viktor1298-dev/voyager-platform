@@ -98,7 +98,7 @@ export const deploymentsRouter = router({
         replicas: z.number().int().min(0).max(50),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
         const api = getAppsV1Api()
         await api.patchNamespacedDeployment({

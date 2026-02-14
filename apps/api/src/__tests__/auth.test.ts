@@ -25,6 +25,7 @@ function createTestCaller(user: Context['user'] = null, session: Context['sessio
     db: {} as any,
     user,
     session,
+    ipAddress: "127.0.0.1",
     res: { header: vi.fn() } as any,
   })
 }

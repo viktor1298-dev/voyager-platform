@@ -1,6 +1,7 @@
 import { alertHistory, alerts } from '@voyager/db'
 import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
+import { logAudit } from '../lib/audit'
 import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 const METRIC_VALUES = ['cpu', 'memory', 'pods', 'restarts'] as const
@@ -40,6 +41,7 @@ export const alertsRouter = router({
         clusterFilter: input.clusterFilter ?? null,
       })
       .returning()
+    await logAudit(ctx, 'alert.create', 'alert', created.id, { name: input.name })
     return created
   }),
 
@@ -58,6 +60,7 @@ export const alertsRouter = router({
       .set(updateData)
       .where(eq(alerts.id, id))
       .returning()
+    await logAudit(ctx, 'alert.update', 'alert', id, fields)
     return updated
   }),
 
@@ -65,6 +68,7 @@ export const alertsRouter = router({
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.delete(alerts).where(eq(alerts.id, input.id))
+      await logAudit(ctx, 'alert.delete', 'alert', input.id)
       return { success: true }
     }),
 

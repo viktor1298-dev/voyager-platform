@@ -65,6 +65,7 @@ function createCaller(user: Context['user'] = null) {
     db: mockDb as unknown as Context['db'],
     user,
     session: user ? { userId: user.id, expiresAt: new Date(Date.now() + 86400000) } : null,
+    ipAddress: "127.0.0.1",
     res: { header: vi.fn() } as any,
   })
 }
