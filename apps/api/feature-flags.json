@@ -1,0 +1,6 @@
+{
+  "audit_log_enabled": true,
+  "sse_subscriptions": true,
+  "new_dashboard_layout": false,
+  "advanced_metrics": false
+}

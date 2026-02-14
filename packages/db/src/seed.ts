@@ -1,5 +1,5 @@
 import { db } from './client'
-import { events, clusters, nodes } from './schema'
+import { events, clusters, featureFlags, nodes } from './schema'
 
 async function seed() {
   if (process.env.NODE_ENV === 'production') {
@@ -12,6 +12,7 @@ async function seed() {
   // Clean existing data
   await db.delete(events)
   await db.delete(nodes)
+  await db.delete(featureFlags)
   await db.delete(clusters)
 
   // Insert clusters
@@ -181,6 +182,30 @@ async function seed() {
   }
   await db.insert(events).values(eventValues)
   console.log('✅ Inserted 30 events')
+
+  await db.insert(featureFlags).values([
+    {
+      name: 'audit_log_enabled',
+      description: 'Enable audit log write operations',
+      enabled: true,
+    },
+    {
+      name: 'sse_subscriptions',
+      description: 'Enable real-time SSE subscriptions',
+      enabled: true,
+    },
+    {
+      name: 'new_dashboard_layout',
+      description: 'Enable the new dashboard layout experience',
+      enabled: false,
+    },
+    {
+      name: 'advanced_metrics',
+      description: 'Enable advanced metrics aggregation and charts',
+      enabled: false,
+    },
+  ])
+  console.log('✅ Inserted 4 feature flags')
 
   console.log('🎉 Seed complete!')
   process.exit(0)

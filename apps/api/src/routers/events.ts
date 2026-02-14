@@ -5,6 +5,7 @@ import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 export const eventsRouter = router({
   list: protectedProcedure
+    .meta({ openapi: { method: 'GET', path: '/api/events', protect: true, tags: ['events'] } })
     .input(
       z.object({
         clusterId: z.string().uuid().optional(),

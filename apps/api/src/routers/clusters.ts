@@ -11,7 +11,9 @@ import { logAudit } from '../lib/audit'
 import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 export const clustersRouter = router({
-  list: protectedProcedure.query(async ({ ctx }) => {
+  list: protectedProcedure
+    .meta({ openapi: { method: 'GET', path: '/api/clusters', protect: true, tags: ['clusters'] } })
+    .query(async ({ ctx }) => {
     const allClusters = await ctx.db.select().from(clusters)
     const nodeCounts = await ctx.db
       .select({

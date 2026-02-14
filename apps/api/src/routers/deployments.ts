@@ -38,7 +38,9 @@ function deriveStatus(ready: number, replicas: number): string {
 }
 
 export const deploymentsRouter = router({
-  list: protectedProcedure.query(async (): Promise<DeploymentInfo[]> => {
+  list: protectedProcedure
+    .meta({ openapi: { method: 'GET', path: '/api/deployments', protect: true, tags: ['deployments'] } })
+    .query(async (): Promise<DeploymentInfo[]> => {
     return cached('k8s:deployments:list', K8S_DEPLOYMENTS_CACHE_TTL, async () => {
       const api = getAppsV1Api()
       const res = await api.listDeploymentForAllNamespaces()
