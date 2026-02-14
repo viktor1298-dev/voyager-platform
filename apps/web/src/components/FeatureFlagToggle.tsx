@@ -7,12 +7,20 @@ import { useEffect, useState } from 'react'
 interface FeatureFlagToggleProps {
   name: string
   enabled: boolean
-  targeting: string
+  targeting: Record<string, unknown>
   critical?: boolean
   onToggle: (nextEnabled: boolean) => Promise<void>
 }
 
-export function FeatureFlagToggle({ name, enabled, targeting, critical = false, onToggle }: FeatureFlagToggleProps) {
+const formatTargeting = (targeting: Record<string, unknown>) => JSON.stringify(targeting)
+
+export function FeatureFlagToggle({
+  name,
+  enabled,
+  targeting,
+  critical = false,
+  onToggle,
+}: FeatureFlagToggleProps) {
   const [localEnabled, setLocalEnabled] = useState(enabled)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -29,7 +37,6 @@ export function FeatureFlagToggle({ name, enabled, targeting, critical = false, 
       await onToggle(nextEnabled)
     } catch {
       setLocalEnabled(previous)
-      throw new Error('Failed to update feature flag')
     } finally {
       setIsSaving(false)
     }
@@ -47,7 +54,10 @@ export function FeatureFlagToggle({ name, enabled, targeting, critical = false, 
   return (
     <>
       <div className="flex items-center justify-end gap-2">
-        <span title={targeting} className="inline-flex items-center gap-1 text-[10px] font-mono text-[var(--color-text-dim)]">
+        <span
+          title={formatTargeting(targeting)}
+          className="inline-flex items-center gap-1 text-[10px] font-mono text-[var(--color-text-dim)]"
+        >
           <CircleHelp className="h-3 w-3" />
           targeting
         </span>

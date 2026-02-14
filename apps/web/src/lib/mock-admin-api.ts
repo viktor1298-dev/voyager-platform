@@ -3,7 +3,7 @@ export type FeatureFlag = {
   name: string
   description: string
   enabled: boolean
-  targeting: string
+  targeting: Record<string, unknown>
   updatedAt: string
   critical?: boolean
 }
@@ -34,28 +34,28 @@ export type WebhookRow = {
 
 let featureFlags: FeatureFlag[] = [
   {
-    id: 'ff-rollouts',
-    name: 'canary-rollouts',
-    description: 'Progressive deployment rollout controls',
+    id: '34c08986-0e09-4eec-b4db-76cd90da53b1',
+    name: 'audit_log_enabled',
+    description: 'Enable persisted audit logging for admin actions',
     enabled: true,
-    targeting: 'clusters: production-*',
+    targeting: { environments: ['production', 'staging'] },
     updatedAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
     critical: true,
   },
   {
-    id: 'ff-alert-routing',
-    name: 'intelligent-alert-routing',
-    description: 'Routes alerts by team ownership and severity',
+    id: '5254ac8c-9746-4a2d-a20c-6e17bb444f52',
+    name: 'sse_subscriptions',
+    description: 'Enable server-sent events subscriptions for live dashboard updates',
     enabled: true,
-    targeting: 'roles: oncall, sre',
+    targeting: { roles: ['admin', 'operator'], rollout: { percent: 100 } },
     updatedAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
   },
   {
-    id: 'ff-ai-summary',
-    name: 'ai-incident-summary',
-    description: 'Generates post-incident summary from event timeline',
+    id: 'ad0f82e0-f136-49f5-b15b-043f73e4fda9',
+    name: 'webhook_deliveries_ui',
+    description: 'Show webhook delivery history and diagnostics in admin UI',
     enabled: false,
-    targeting: 'beta users only',
+    targeting: { tenants: ['beta'], clusters: ['sandbox-*'] },
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
   },
 ]
@@ -69,9 +69,24 @@ let webhooks: WebhookRow[] = [
     lastTriggeredAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
     successRate: 98,
     deliveries: [
-      { id: 'd-1', statusCode: 200, timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(), retryCount: 0 },
-      { id: 'd-2', statusCode: 200, timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(), retryCount: 0 },
-      { id: 'd-3', statusCode: 500, timestamp: new Date(Date.now() - 1000 * 60 * 88).toISOString(), retryCount: 2 },
+      {
+        id: 'd-1',
+        statusCode: 200,
+        timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+        retryCount: 0,
+      },
+      {
+        id: 'd-2',
+        statusCode: 200,
+        timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+        retryCount: 0,
+      },
+      {
+        id: 'd-3',
+        statusCode: 500,
+        timestamp: new Date(Date.now() - 1000 * 60 * 88).toISOString(),
+        retryCount: 2,
+      },
     ],
   },
   {
@@ -82,8 +97,18 @@ let webhooks: WebhookRow[] = [
     lastTriggeredAt: new Date(Date.now() - 1000 * 60 * 60 * 11).toISOString(),
     successRate: 84,
     deliveries: [
-      { id: 'd-4', statusCode: 202, timestamp: new Date(Date.now() - 1000 * 60 * 60 * 11).toISOString(), retryCount: 0 },
-      { id: 'd-5', statusCode: 429, timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(), retryCount: 3 },
+      {
+        id: 'd-4',
+        statusCode: 202,
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 11).toISOString(),
+        retryCount: 0,
+      },
+      {
+        id: 'd-5',
+        statusCode: 429,
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(),
+        retryCount: 3,
+      },
     ],
   },
 ]
@@ -98,7 +123,11 @@ export const mockAdminApi = {
     },
     async update(input: { id: string; enabled: boolean }) {
       await sleep(250)
-      featureFlags = featureFlags.map((f) => (f.id === input.id ? { ...f, enabled: input.enabled, updatedAt: new Date().toISOString() } : f))
+      featureFlags = featureFlags.map((f) =>
+        f.id === input.id
+          ? { ...f, enabled: input.enabled, updatedAt: new Date().toISOString() }
+          : f,
+      )
       return input
     },
     async listWithMeta() {
