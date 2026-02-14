@@ -28,7 +28,6 @@ COPY . .
 # Install tsx globally for the runner
 RUN npm i -g tsx
 
-ENV NODE_ENV=production
 ENV HIDE_STACK_TRACES=true
 
 USER voyager
