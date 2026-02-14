@@ -1,3 +1,4 @@
+import compress from '@fastify/compress'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
 import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
@@ -6,6 +7,8 @@ import { type AppRouter, appRouter } from './routers'
 import { createContext } from './trpc'
 
 const app = Fastify({ logger: true })
+
+app.register(compress, { global: true })
 
 app.register(rateLimit, {
   max: 100,

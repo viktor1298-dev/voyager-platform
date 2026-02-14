@@ -11,6 +11,7 @@ const PATH_LABELS: Record<string, string> = {
   logs: 'Logs',
   alerts: 'Alerts',
   settings: 'Settings',
+  health: 'Health',
 }
 
 export function Breadcrumbs() {

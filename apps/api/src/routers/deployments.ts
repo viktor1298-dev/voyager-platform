@@ -1,5 +1,6 @@
+import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { cached } from '../lib/cache'
+import { cached, getRedisClient } from '../lib/cache'
 import { getAppsV1Api } from '../lib/k8s'
 import { publicProcedure, protectedProcedure, router } from '../trpc'
 
@@ -60,33 +61,51 @@ export const deploymentsRouter = router({
   restart: protectedProcedure
     .input(z.object({ name: z.string(), namespace: z.string() }))
     .mutation(async ({ input }) => {
-      const api = getAppsV1Api()
-      const now = new Date().toISOString()
-      await api.patchNamespacedDeployment({
-        name: input.name,
-        namespace: input.namespace,
-        body: {
-          spec: {
-            template: {
-              metadata: {
-                annotations: { 'kubectl.kubernetes.io/restartedAt': now },
+      try {
+        const api = getAppsV1Api()
+        const now = new Date().toISOString()
+        await api.patchNamespacedDeployment({
+          name: input.name,
+          namespace: input.namespace,
+          body: {
+            spec: {
+              template: {
+                metadata: {
+                  annotations: { 'kubectl.kubernetes.io/restartedAt': now },
+                },
               },
             },
           },
-        },
-      })
-      return { success: true, restartedAt: now }
+        })
+        const redis = await getRedisClient()
+        if (redis) await redis.del('k8s:deployments:list')
+        return { success: true, restartedAt: now }
+      } catch (err) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to restart deployment ${input.name}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        })
+      }
     }),
 
   scale: protectedProcedure
     .input(z.object({ name: z.string(), namespace: z.string(), replicas: z.number().int().min(0).max(50) }))
     .mutation(async ({ input }) => {
-      const api = getAppsV1Api()
-      await api.patchNamespacedDeployment({
-        name: input.name,
-        namespace: input.namespace,
-        body: { spec: { replicas: input.replicas } },
-      })
-      return { success: true, replicas: input.replicas }
+      try {
+        const api = getAppsV1Api()
+        await api.patchNamespacedDeployment({
+          name: input.name,
+          namespace: input.namespace,
+          body: { spec: { replicas: input.replicas } },
+        })
+        const redis = await getRedisClient()
+        if (redis) await redis.del('k8s:deployments:list')
+        return { success: true, replicas: input.replicas }
+      } catch (err) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to scale deployment ${input.name}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        })
+      }
     }),
 })

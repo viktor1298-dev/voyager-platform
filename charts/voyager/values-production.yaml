@@ -1,0 +1,135 @@
+# Production values for Voyager Platform
+namespace: voyager
+
+web:
+  replicaCount: 2
+  image:
+    repository: voyager-web
+    tag: latest
+    pullPolicy: Always
+  port: 3000
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "250m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
+  probes:
+    liveness:
+      path: /
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 5
+    readiness:
+      path: /
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 3
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - voyager-web
+            topologyKey: kubernetes.io/hostname
+  env:
+    NODE_ENV: production
+
+api:
+  replicaCount: 2
+  image:
+    repository: voyager-api
+    tag: latest
+    pullPolicy: Always
+  port: 4000
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "250m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 5
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 3
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - voyager-api
+            topologyKey: kubernetes.io/hostname
+  env:
+    NODE_ENV: production
+
+ingress:
+  enabled: true
+  className: nginx
+  host: voyager-platform.voyagerlabs.co
+  tls:
+    enabled: true
+    secretName: voyager-tls
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+
+config:
+  apiUrl: "http://voyager-api:4000"
+  redisUrl: "redis://redis:6379"
+  databaseUrl: "postgresql://voyager:changeme@postgres:5432/voyager"
+
+db:
+  image:
+    repository: postgres
+    tag: "17-alpine"
+  port: 5432
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+
+redis:
+  image:
+    repository: redis
+    tag: "7-alpine"
+  port: 6379
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: ""
+
+rbac:
+  create: true
+
+secret:
+  dbPassword: ""
+  jwtSecret: ""
+  adminPassword: ""
+
+nodeAffinity:
+  preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 50
+      preference:
+        matchExpressions:
+          - key: node-role.kubernetes.io/worker
+            operator: Exists
