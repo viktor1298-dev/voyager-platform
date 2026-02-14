@@ -7,6 +7,7 @@ import { eventsRouter } from './events'
 import { healthRouter } from './health'
 import { logsRouter } from './logs'
 import { nodesRouter } from './nodes'
+import { usersRouter } from './users'
 
 export const appRouter = router({
   alerts: alertsRouter,
@@ -17,6 +18,7 @@ export const appRouter = router({
   nodes: nodesRouter,
   events: eventsRouter,
   logs: logsRouter,
+  users: usersRouter,
 })
 
 export type AppRouter = typeof appRouter

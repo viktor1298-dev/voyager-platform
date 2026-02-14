@@ -1,6 +1,5 @@
 'use client'
 
-import { authClient } from '@/lib/auth-client'
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
 import { LogOut } from 'lucide-react'
@@ -14,8 +13,7 @@ export function TopBar() {
   const user = useAuthStore((s) => s.user)
 
   const handleLogout = async () => {
-    await authClient.signOut()
-    useAuthStore.getState().logout()
+    await useAuthStore.getState().logout()
     router.push('/login')
   }
 
