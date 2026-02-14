@@ -35,6 +35,7 @@ function timeAgo(ts: string | Date | null): string {
 
 export default function HealthPage() {
   const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null)
+  const [checkingClusterId, setCheckingClusterId] = useState<string | null>(null)
 
   const statusQuery = trpc.health.status.useQuery(undefined, {
     refetchInterval: 60_000,
@@ -46,20 +47,19 @@ export default function HealthPage() {
   )
 
   const utils = trpc.useUtils()
-  const checkMutation = trpc.health.check.useMutation({
-    onSuccess: () => {
-      utils.health.status.invalidate()
-      if (selectedClusterId) {
-        utils.health.history.invalidate({ clusterId: selectedClusterId })
-      }
-    },
-  })
 
   const handleCheck = useCallback(
-    (clusterId: string) => {
-      checkMutation.mutate({ clusterId })
+    async (clusterId: string) => {
+      setCheckingClusterId(clusterId)
+      try {
+        await utils.health.check.fetch({ clusterId })
+        utils.health.status.invalidate()
+        utils.health.history.invalidate({ clusterId })
+      } finally {
+        setCheckingClusterId(null)
+      }
     },
-    [checkMutation],
+    [utils],
   )
 
   const statuses = statusQuery.data ?? []
@@ -82,7 +82,7 @@ export default function HealthPage() {
           isLoading={historyQuery.isLoading}
           onBack={() => setSelectedClusterId(null)}
           onCheck={() => handleCheck(selectedClusterId)}
-          isChecking={checkMutation.isPending}
+          isChecking={checkingClusterId !== null}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -103,7 +103,7 @@ export default function HealthPage() {
                 cluster={s}
                 onClick={() => setSelectedClusterId(s.clusterId)}
                 onCheck={() => handleCheck(s.clusterId)}
-                isChecking={checkMutation.isPending && checkMutation.variables?.clusterId === s.clusterId}
+                isChecking={checkingClusterId === s.clusterId}
               />
             ))
           )}
