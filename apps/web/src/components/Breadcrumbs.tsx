@@ -9,6 +9,7 @@ const PATH_LABELS: Record<string, string> = {
   clusters: 'Clusters',
   events: 'Events',
   logs: 'Logs',
+  alerts: 'Alerts',
   settings: 'Settings',
 }
 

@@ -1,4 +1,5 @@
 import { router } from '../trpc'
+import { alertsRouter } from './alerts'
 import { authRouter } from './auth'
 import { clustersRouter } from './clusters'
 import { deploymentsRouter } from './deployments'
@@ -7,6 +8,7 @@ import { logsRouter } from './logs'
 import { nodesRouter } from './nodes'
 
 export const appRouter = router({
+  alerts: alertsRouter,
   auth: authRouter,
   clusters: clustersRouter,
   deployments: deploymentsRouter,
