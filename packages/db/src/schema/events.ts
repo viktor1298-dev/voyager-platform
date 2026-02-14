@@ -1,5 +1,5 @@
 import { jsonb, pgTable, primaryKey, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
-import { clusters } from './clusters'
+import { clusters } from './clusters.js'
 
 export const events = pgTable(
   'events',

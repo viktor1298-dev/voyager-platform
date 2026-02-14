@@ -2,8 +2,8 @@ import { TRPCError } from '@trpc/server'
 import { clusters, healthHistory } from '@voyager/db'
 import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { getCoreV1Api } from '../lib/k8s'
-import { protectedProcedure, router } from '../trpc'
+import { getCoreV1Api } from '../lib/k8s.js'
+import { protectedProcedure, router } from '../trpc.js'
 
 const HEALTH_STATUS = ['healthy', 'degraded', 'critical', 'unknown'] as const
 type HealthStatus = (typeof HEALTH_STATUS)[number]

@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { nodes } from '@voyager/db'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { adminProcedure, protectedProcedure, router } from '../trpc'
+import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 export const nodesRouter = router({
   list: protectedProcedure

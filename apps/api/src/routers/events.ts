@@ -1,7 +1,7 @@
 import { events } from '@voyager/db'
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { adminProcedure, protectedProcedure, router } from '../trpc'
+import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const eventSchema = z
   .object({

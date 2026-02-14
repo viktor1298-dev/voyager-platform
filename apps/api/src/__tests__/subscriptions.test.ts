@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { voyagerEmitter } from '../lib/event-emitter'
+import { voyagerEmitter } from '../lib/event-emitter.js'
 import type { PodEvent, MetricsEvent, AlertEvent, LogLineEvent } from '@voyager/types'
 
 describe('SSE Subscriptions — Event Emitter', () => {

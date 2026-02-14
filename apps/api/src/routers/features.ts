@@ -2,9 +2,9 @@ import { TRPCError } from '@trpc/server'
 import { featureFlags } from '@voyager/db'
 import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { logAudit } from '../lib/audit'
-import { getConfiguredFeatureFlags, getFeatureFlag } from '../lib/feature-flags'
-import { adminProcedure, protectedProcedure, router } from '../trpc'
+import { logAudit } from '../lib/audit.js'
+import { getConfiguredFeatureFlags, getFeatureFlag } from '../lib/feature-flags.js'
+import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const featureGetSchema = z.object({
   name: z.string().min(1).max(100),

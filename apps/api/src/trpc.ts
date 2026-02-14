@@ -2,8 +2,8 @@ import { TRPCError, initTRPC } from '@trpc/server'
 import type { OpenApiMeta } from 'trpc-to-openapi'
 import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
 import { type Database, db } from '@voyager/db'
-import { auth } from './lib/auth'
-import { captureException } from './lib/sentry'
+import { auth } from './lib/auth.js'
+import { captureException } from './lib/sentry.js'
 
 export interface Context {
   db: Database

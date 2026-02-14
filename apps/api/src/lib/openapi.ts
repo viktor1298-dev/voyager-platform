@@ -1,6 +1,6 @@
 import { generateOpenApiDocument } from 'trpc-to-openapi'
-import type { AppRouter } from '../routers'
-import { appRouter } from '../routers'
+import type { AppRouter } from '../routers/index.js'
+import { appRouter } from '../routers/index.js'
 
 export function getOpenApiBaseUrl(): string {
   if (process.env.OPENAPI_BASE_URL) return process.env.OPENAPI_BASE_URL

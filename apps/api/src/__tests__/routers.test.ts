@@ -15,8 +15,8 @@ vi.mock('../lib/auth', () => ({
   },
 }))
 
-import { authRouter } from '../routers/auth'
-import { type Context, router } from '../trpc'
+import { authRouter } from '../routers/auth.js'
+import { type Context, router } from '../trpc.js'
 
 const appRouter = router({ auth: authRouter })
 

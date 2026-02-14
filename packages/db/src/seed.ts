@@ -1,5 +1,5 @@
-import { db } from './client'
-import { events, clusters, featureFlags, nodes } from './schema'
+import { db } from './client.js'
+import { events, clusters, featureFlags, nodes } from './schema/index.js'
 
 async function seed() {
   if (process.env.NODE_ENV === 'production') {

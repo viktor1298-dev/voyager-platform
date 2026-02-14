@@ -14,7 +14,7 @@ vi.mock('redis', () => ({
   }),
 }))
 
-import { cached, invalidateK8sCache } from '../lib/cache'
+import { cached, invalidateK8sCache } from '../lib/cache.js'
 
 describe('cached()', () => {
   beforeEach(() => {

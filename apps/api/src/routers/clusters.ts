@@ -2,11 +2,11 @@ import { TRPCError } from '@trpc/server'
 import { clusters, nodes } from '@voyager/db'
 import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { logAudit } from '../lib/audit'
-import { cached, invalidateK8sCache } from '../lib/cache'
-import { getAppsV1Api, getCoreV1Api, getVersionApi } from '../lib/k8s'
-import { normalizeProvider } from '../lib/providers'
-import { adminProcedure, protectedProcedure, router } from '../trpc'
+import { logAudit } from '../lib/audit.js'
+import { cached, invalidateK8sCache } from '../lib/cache.js'
+import { getAppsV1Api, getCoreV1Api, getVersionApi } from '../lib/k8s.js'
+import { normalizeProvider } from '../lib/providers.js'
+import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_CACHE_TTL = 30 // seconds
 

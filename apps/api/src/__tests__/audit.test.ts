@@ -52,9 +52,9 @@ vi.mock('../lib/auth', () => ({
   auth: { api: { getSession: vi.fn().mockResolvedValue(null) } },
 }))
 
-import { logAudit } from '../lib/audit'
-import { auditRouter } from '../routers/audit'
-import { type Context, router } from '../trpc'
+import { logAudit } from '../lib/audit.js'
+import { auditRouter } from '../routers/audit.js'
+import { type Context, router } from '../trpc.js'
 
 describe('logAudit', () => {
   it('inserts audit record with correct values', async () => {

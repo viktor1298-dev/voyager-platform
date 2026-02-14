@@ -1,5 +1,5 @@
 import { integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
-import { clusters } from './clusters'
+import { clusters } from './clusters.js'
 
 export const healthHistory = pgTable('health_history', {
   id: uuid('id').defaultRandom().primaryKey(),

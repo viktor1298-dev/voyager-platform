@@ -7,9 +7,9 @@ import type {
   PodEvent,
 } from '@voyager/types'
 import { z } from 'zod'
-import { voyagerEmitter } from '../lib/event-emitter'
-import { streamLogs, watchDeploymentProgress } from '../lib/k8s-watchers'
-import { protectedProcedure, router } from '../trpc'
+import { voyagerEmitter } from '../lib/event-emitter.js'
+import { streamLogs, watchDeploymentProgress } from '../lib/k8s-watchers.js'
+import { protectedProcedure, router } from '../trpc.js'
 
 /**
  * Helper: create an async generator that listens to EventEmitter events.

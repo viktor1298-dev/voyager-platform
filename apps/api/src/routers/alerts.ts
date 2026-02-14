@@ -1,8 +1,8 @@
 import { alertHistory, alerts } from '@voyager/db'
 import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { logAudit } from '../lib/audit'
-import { adminProcedure, protectedProcedure, router } from '../trpc'
+import { logAudit } from '../lib/audit.js'
+import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const METRIC_VALUES = ['cpu', 'memory', 'pods', 'restarts'] as const
 const OPERATOR_VALUES = ['gt', 'lt', 'eq'] as const

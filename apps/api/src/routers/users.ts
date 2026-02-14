@@ -1,10 +1,10 @@
-import { adminProcedure, router } from '../trpc'
+import { adminProcedure, router } from '../trpc.js'
 import { user as userTable, account as accountTable, session as sessionTable } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
-import { auth } from '../lib/auth'
-import { logAudit } from '../lib/audit'
+import { auth } from '../lib/auth.js'
+import { logAudit } from '../lib/audit.js'
 
 export const usersRouter = router({
   list: adminProcedure.query(async ({ ctx }) => {

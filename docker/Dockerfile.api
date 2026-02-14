@@ -2,24 +2,21 @@
 FROM node:22-alpine AS builder
 RUN corepack enable
 WORKDIR /app
-
 COPY . .
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @voyager/api build
+# Prune to production deps only
+RUN pnpm --filter @voyager/api deploy --prod /app/pruned
 
-# Stage 2 — production (tiny image)
+# Stage 2 — production
 FROM node:22-alpine AS runner
 RUN addgroup -g 1001 -S nodejs && adduser -S voyager -u 1001
 WORKDIR /app
-
+COPY --from=builder /app/pruned/node_modules ./node_modules
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package.json ./
-COPY --from=builder /app/apps/api/node_modules ./node_modules
 COPY --from=builder /app/charts/voyager/sql ./sql
-
 ENV HIDE_STACK_TRACES=true
-
 USER voyager
 EXPOSE 4000
-
-CMD ["node", "dist/server.cjs"]
+CMD ["node", "dist/server.js"]

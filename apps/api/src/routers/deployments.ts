@@ -1,9 +1,9 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { logAudit } from '../lib/audit'
-import { cached, getRedisClient } from '../lib/cache'
-import { getAppsV1Api } from '../lib/k8s'
-import { adminProcedure, protectedProcedure, router } from '../trpc'
+import { logAudit } from '../lib/audit.js'
+import { cached, getRedisClient } from '../lib/cache.js'
+import { getAppsV1Api } from '../lib/k8s.js'
+import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_DEPLOYMENTS_CACHE_TTL = 30
 

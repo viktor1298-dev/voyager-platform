@@ -5,7 +5,7 @@
  * Creates admin@voyager.local with role=admin using Better-Auth's
  * server-side API (no HTTP server required).
  */
-import { auth } from '../lib/auth'
+import { auth } from '../lib/auth.js'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'admin@voyager.local'
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'admin123'

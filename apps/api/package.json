@@ -9,10 +9,10 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsup",
+    "build": "rm -rf dist && pnpm --filter @voyager/db build && tsc --project tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src/",
-    "start": "node dist/server.cjs",
+    "start": "node dist/server.js",
     "test": "vitest run",
     "seed:admin": "tsx src/scripts/seed-admin.ts"
   },
@@ -46,7 +46,6 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "esbuild": "^0.27.3",
-    "tsup": "^8.5.1",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.18"

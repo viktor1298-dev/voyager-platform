@@ -20,8 +20,8 @@ import type {
   PodEventType,
   PodPhase,
 } from '@voyager/types'
-import { voyagerEmitter } from './event-emitter'
-import { getKubeConfig } from './k8s'
+import { voyagerEmitter } from './event-emitter.js'
+import { getKubeConfig } from './k8s.js'
 
 // ── Backoff Helper ──────────────────────────────────────────
 

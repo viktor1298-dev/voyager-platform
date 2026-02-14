@@ -1,7 +1,7 @@
 import { auditLog } from '@voyager/db'
 import { and, count, desc, eq, gte, lte } from 'drizzle-orm'
 import { z } from 'zod'
-import { adminProcedure, protectedProcedure, router } from '../trpc'
+import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const auditLogItemSchema = z
   .object({
