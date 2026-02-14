@@ -1,7 +1,6 @@
 'use client'
 
 import { Dialog } from '@/components/ui/dialog'
-import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 
 const shortcuts = [
@@ -14,7 +13,6 @@ const shortcuts = [
 
 export function KeyboardShortcuts() {
   const [showHelp, setShowHelp] = useState(false)
-  const router = useRouter()
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {

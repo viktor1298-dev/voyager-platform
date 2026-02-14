@@ -48,7 +48,7 @@ interface CreateFormData {
 }
 const INITIAL_FORM: CreateFormData = { name: '', metric: 'cpu', operator: 'gt', threshold: '', clusterFilter: '' }
 
-type AlertRow = { id: string; name: string; metric: string; operator: string; threshold: number; clusterFilter: string | null; enabled: boolean }
+type AlertRow = { id: string; name: string; metric: string; operator: string; threshold: string | number; clusterFilter: string | null; enabled: boolean }
 
 export default function AlertsPage() {
   const [showCreate, setShowCreate] = useState(false)
@@ -98,6 +98,7 @@ export default function AlertsPage() {
       accessorKey: 'enabled', header: 'Status',
       cell: ({ row }) => (
         <button type="button" onClick={() => updateMut.mutate({ id: row.original.id, enabled: !row.original.enabled })}
+          aria-label={`${row.original.enabled ? 'Disable' : 'Enable'} alert ${row.original.name}`}
           className={`rounded-full px-2 py-0.5 text-xs font-medium cursor-pointer ${row.original.enabled ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}>
           {row.original.enabled ? 'ON' : 'OFF'}
         </button>
@@ -106,7 +107,7 @@ export default function AlertsPage() {
     {
       id: 'actions', header: '', enableSorting: false,
       cell: ({ row }) => (
-        <button type="button" onClick={() => setDeleteId(row.original.id)} className="text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer">
+        <button type="button" onClick={() => setDeleteId(row.original.id)} aria-label={`Delete alert ${row.original.name}`} className="text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer">
           <Trash2 className="h-4 w-4" />
         </button>
       ),
@@ -130,15 +131,15 @@ export default function AlertsPage() {
         {/* Create Modal */}
         <Dialog open={showCreate} onClose={() => { setShowCreate(false); setForm(INITIAL_FORM) }} title="Create Alert Rule">
           <div className="space-y-3">
-            <input type="text" placeholder="Alert name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputClass} />
-            <select value={form.metric} onChange={(e) => setForm((f) => ({ ...f, metric: e.target.value as Metric }))} className={inputClass}>
+            <input type="text" placeholder="Alert name" aria-label="Alert name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputClass} />
+            <select value={form.metric} aria-label="Metric" onChange={(e) => setForm((f) => ({ ...f, metric: e.target.value as Metric }))} className={inputClass}>
               {METRICS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
             </select>
-            <select value={form.operator} onChange={(e) => setForm((f) => ({ ...f, operator: e.target.value as Operator }))} className={inputClass}>
+            <select value={form.operator} aria-label="Operator" onChange={(e) => setForm((f) => ({ ...f, operator: e.target.value as Operator }))} className={inputClass}>
               {OPERATORS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-            <input type="number" placeholder="Threshold value" value={form.threshold} onChange={(e) => setForm((f) => ({ ...f, threshold: e.target.value }))} className={inputClass} />
-            <input type="text" placeholder="Cluster filter (optional)" value={form.clusterFilter} onChange={(e) => setForm((f) => ({ ...f, clusterFilter: e.target.value }))} className={inputClass} />
+            <input type="number" placeholder="Threshold value" aria-label="Threshold value" value={form.threshold} onChange={(e) => setForm((f) => ({ ...f, threshold: e.target.value }))} className={inputClass} />
+            <input type="text" placeholder="Cluster filter (optional)" aria-label="Cluster filter" value={form.clusterFilter} onChange={(e) => setForm((f) => ({ ...f, clusterFilter: e.target.value }))} className={inputClass} />
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <button type="button" onClick={() => { setShowCreate(false); setForm(INITIAL_FORM) }} className={btnSecondary}>Cancel</button>
@@ -167,6 +168,7 @@ export default function AlertsPage() {
                   <div className="flex justify-between items-center gap-2">
                     <span className="font-medium text-[var(--color-text-primary)] text-sm">{alert.name}</span>
                     <button type="button" onClick={() => updateMut.mutate({ id: alert.id, enabled: !alert.enabled })}
+                      aria-label={`${alert.enabled ? 'Disable' : 'Enable'} alert ${alert.name}`}
                       className={`rounded-full px-2 py-0.5 text-xs font-medium cursor-pointer ${alert.enabled ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}>
                       {alert.enabled ? 'ON' : 'OFF'}
                     </button>
@@ -180,7 +182,7 @@ export default function AlertsPage() {
                     <span className="text-[var(--color-text-primary)]">{alert.clusterFilter ?? 'All'}</span>
                   </div>
                   <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">
-                    <button type="button" onClick={() => setDeleteId(alert.id)} className="text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer"><Trash2 className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => setDeleteId(alert.id)} aria-label={`Delete alert ${alert.name}`} className="text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
               )}

@@ -14,7 +14,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from 'lucide-react'
-import { type ReactNode, useState, useMemo } from 'react'
+import { type ReactNode, useState } from 'react'
 
 interface DataTableProps<TData> {
   data: TData[]
@@ -107,6 +107,7 @@ export function DataTable<TData>({
                 placeholder={searchPlaceholder}
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
+                aria-label={searchPlaceholder}
                 className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
               />
             </div>
@@ -227,19 +228,19 @@ export function DataTable<TData>({
             of {table.getFilteredRowModel().rows.length}
           </span>
           <div className="flex items-center gap-1">
-            <PaginationBtn onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
+            <PaginationBtn onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()} aria-label="First page">
               <ChevronsLeft className="h-3.5 w-3.5" />
             </PaginationBtn>
-            <PaginationBtn onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+            <PaginationBtn onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} aria-label="Previous page">
               <ChevronLeft className="h-3.5 w-3.5" />
             </PaginationBtn>
             <span className="px-2 font-mono tabular-nums">
               {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
             </span>
-            <PaginationBtn onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+            <PaginationBtn onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} aria-label="Next page">
               <ChevronRight className="h-3.5 w-3.5" />
             </PaginationBtn>
-            <PaginationBtn onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
+            <PaginationBtn onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()} aria-label="Last page">
               <ChevronsRight className="h-3.5 w-3.5" />
             </PaginationBtn>
           </div>
@@ -249,12 +250,13 @@ export function DataTable<TData>({
   )
 }
 
-function PaginationBtn({ children, onClick, disabled }: { children: ReactNode; onClick: () => void; disabled: boolean }) {
+function PaginationBtn({ children, onClick, disabled, 'aria-label': ariaLabel }: { children: ReactNode; onClick: () => void; disabled: boolean; 'aria-label'?: string }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
+      aria-label={ariaLabel}
       className="p-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
     >
       {children}
@@ -262,20 +264,3 @@ function PaginationBtn({ children, onClick, disabled }: { children: ReactNode; o
   )
 }
 
-/** Helper to create a sortable column def quickly */
-export function createColumnHelper<TData>() {
-  return {
-    accessor: <TValue>(
-      accessorKey: keyof TData & string,
-      opts: Partial<ColumnDef<TData, TValue>> & { header: string },
-    ): ColumnDef<TData, TValue> => ({
-      accessorKey,
-      enableSorting: true,
-      ...opts,
-    } as ColumnDef<TData, TValue>),
-    display: (opts: Partial<ColumnDef<TData, unknown>> & { id: string }): ColumnDef<TData, unknown> => ({
-      enableSorting: false,
-      ...opts,
-    } as ColumnDef<TData, unknown>),
-  }
-}

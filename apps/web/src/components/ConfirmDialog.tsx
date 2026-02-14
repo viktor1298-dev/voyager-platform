@@ -18,7 +18,7 @@ interface ConfirmDialogProps {
 }
 
 const variantStyles = {
-  danger: 'bg-red-600 text-white hover:bg-red-700',
+  danger: 'bg-[var(--color-status-error)] text-white hover:opacity-90',
   warning: 'bg-[var(--color-status-warning)] text-white hover:opacity-90',
   default: 'bg-[var(--color-accent)] text-white hover:opacity-90',
 }
@@ -39,13 +39,13 @@ export function ConfirmDialog({
     <Dialog open={open} onClose={onClose} title={title}>
       <div className="flex items-start gap-3 mb-4">
         {variant === 'danger' && (
-          <div className="shrink-0 mt-0.5 p-2 rounded-lg bg-red-500/10">
-            <AlertTriangle className="h-5 w-5 text-red-400" />
+          <div className="shrink-0 mt-0.5 p-2 rounded-lg bg-[var(--color-status-error)]/10">
+            <AlertTriangle className="h-5 w-5 text-[var(--color-status-error)]" />
           </div>
         )}
         <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{description}</p>
       </div>
-      {error && <p className="text-xs text-red-400 mb-4">{error}</p>}
+      {error && <p className="text-xs text-[var(--color-status-error)] mb-4" role="alert">{error}</p>}
       <div className="flex justify-end gap-3">
         <button
           type="button"
