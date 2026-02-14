@@ -15,6 +15,10 @@ const AUTO_REFRESH_INTERVAL = 5000
 
 type LogLevel = (typeof LOG_LEVELS)[number]
 
+function podKey(namespace: string, podName: string) {
+  return `${namespace}/${podName}`
+}
+
 function SelectField({
   label,
   value,
@@ -46,7 +50,6 @@ export default function LogsPage() {
   const [selectedNamespace, setSelectedNamespace] = useState<string>('')
   const [selectedPods, setSelectedPods] = useState<string[]>([]) // keys: namespace/pod
 
-  const podKey = useCallback((namespace: string, podName: string) => `${namespace}/${podName}`, [])
   const [tailLines, setTailLines] = useState(200)
   const [liveTail, setLiveTail] = useState(true)
   const [isPaused, setIsPaused] = useState(false)
@@ -77,7 +80,7 @@ export default function LogsPage() {
       filteredPods
         .filter((pod) => selectedPods.includes(podKey(pod.namespace, pod.name)))
         .map((pod) => ({ namespace: pod.namespace, podName: pod.name })),
-    [filteredPods, selectedPods, podKey],
+    [filteredPods, selectedPods],
   )
 
   const logsQuery = trpc.logs.tail.useQuery(
@@ -104,11 +107,11 @@ export default function LogsPage() {
     setSelectedPods((current) =>
       current.filter((key) => filteredPods.some((p) => podKey(p.namespace, p.name) === key)),
     )
-  }, [filteredPods, podKey])
+  }, [filteredPods])
 
-  const togglePod = useCallback((podKey: string) => {
+  const togglePod = useCallback((key: string) => {
     setSelectedPods((current) =>
-      current.includes(podKey) ? current.filter((p) => p !== podKey) : [...current, podKey],
+      current.includes(key) ? current.filter((p) => p !== key) : [...current, key],
     )
   }, [])
 
@@ -302,9 +305,14 @@ export default function LogsPage() {
                 ))}
               </div>
 
-              <div className="inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1 text-xs">
+              <div
+                role="group"
+                aria-label="Log view mode"
+                className="inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1 text-xs"
+              >
                 <button
                   type="button"
+                  aria-pressed={viewMode === 'merged'}
                   className={`rounded-md px-2 py-1 ${viewMode === 'merged' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-text-secondary)]'}`}
                   onClick={() => setViewMode('merged')}
                 >
@@ -312,6 +320,7 @@ export default function LogsPage() {
                 </button>
                 <button
                   type="button"
+                  aria-pressed={viewMode === 'split'}
                   className={`rounded-md px-2 py-1 ${viewMode === 'split' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-text-secondary)]'}`}
                   onClick={() => setViewMode('split')}
                 >
