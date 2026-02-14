@@ -1,11 +1,20 @@
 'use client'
 
 import { trpc } from '@/lib/trpc'
+import { LogOut } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { NotificationsPanel } from './NotificationsPanel'
 import { ThemeToggle } from './ThemeToggle'
 
 export function TopBar() {
+  const router = useRouter()
+
+  const handleLogout = () => {
+    document.cookie = 'voyager-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+    router.push('/login')
+  }
+
   const liveQuery = trpc.clusters.live.useQuery(undefined, {
     refetchInterval: 30000,
     retry: 2,
@@ -44,6 +53,15 @@ export function TopBar() {
       <div className="flex items-center gap-3">
         <ThemeToggle />
         <NotificationsPanel />
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-status-error)] hover:bg-[var(--color-status-error)]/10 transition-colors"
+          title="Logout"
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="hidden sm:inline text-[11px] font-medium">Logout</span>
+        </button>
         <ConnectionStatus
           dataUpdatedAt={liveQuery.dataUpdatedAt}
           isDisconnected={isDisconnected}
