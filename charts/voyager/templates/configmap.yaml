@@ -6,6 +6,7 @@ metadata:
   labels:
     {{- include "voyager.labels" . | nindent 4 }}
 data:
+  NODE_ENV: {{ .Values.config.nodeEnv | default "production" | quote }}
   API_URL: {{ .Values.config.apiUrl | quote }}
   DATABASE_URL: {{ .Values.config.databaseUrl | quote }}
   REDIS_URL: {{ .Values.config.redisUrl | quote }}
