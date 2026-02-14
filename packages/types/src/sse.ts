@@ -47,8 +47,8 @@ export interface DeploymentConditionSummary {
 
 // ── Metrics Stream ──────────────────────────────────────────
 export interface MetricsEvent {
-  cpuPercent: number
-  memoryPercent: number
+  cpuPercent: number | null
+  memoryPercent: number | null
   memoryBytes: number
   cpuCores: number
   podCount: number

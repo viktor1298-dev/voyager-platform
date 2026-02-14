@@ -2,10 +2,13 @@ import * as k8s from '@kubernetes/client-node'
 import {
   SSE_ALERT_CHECK_INTERVAL_MS,
   SSE_DEPLOYMENT_PROGRESS_INTERVAL_MS,
+  SSE_INITIAL_RECONNECT_DELAY_MS,
   SSE_LOG_POLL_INTERVAL_MS,
   SSE_LOG_TAIL_LINES,
+  SSE_MAX_RECONNECT_DELAY_MS,
   SSE_METRICS_INTERVAL_MS,
   SSE_POD_WATCH_RECONNECT_DELAY_MS,
+  SSE_RECONNECT_BACKOFF_MULTIPLIER,
 } from '@voyager/config/sse'
 import type {
   AlertEvent,
@@ -19,6 +22,13 @@ import type {
 } from '@voyager/types'
 import { voyagerEmitter } from './event-emitter'
 import { getKubeConfig } from './k8s'
+
+// ── Backoff Helper ──────────────────────────────────────────
+
+function getBackoffDelay(attempt: number): number {
+  const delay = SSE_INITIAL_RECONNECT_DELAY_MS * SSE_RECONNECT_BACKOFF_MULTIPLIER ** attempt
+  return Math.min(delay, SSE_MAX_RECONNECT_DELAY_MS)
+}
 
 // ── Pod Watcher ─────────────────────────────────────────────
 
@@ -51,12 +61,15 @@ export async function startPodWatcher(): Promise<void> {
   const kc = getKubeConfig()
   const watch = new k8s.Watch(kc)
 
+  let attempt = 0
+
   const doWatch = () => {
     watch
       .watch(
         '/api/v1/pods',
         {},
         (type: string, pod: k8s.V1Pod) => {
+          attempt = 0 // Reset backoff on successful event
           const event: PodEvent = {
             type: type.toLowerCase() as PodEventType,
             name: pod.metadata?.name ?? 'unknown',
@@ -75,8 +88,10 @@ export async function startPodWatcher(): Promise<void> {
         },
         (err) => {
           if (err) {
-            console.error('Pod watch error, reconnecting...', err.message)
-            setTimeout(doWatch, SSE_POD_WATCH_RECONNECT_DELAY_MS)
+            const delay = getBackoffDelay(attempt)
+            console.error(`Pod watch error, reconnecting in ${delay}ms...`, err.message)
+            attempt++
+            setTimeout(doWatch, delay)
           }
         },
       )
@@ -84,8 +99,10 @@ export async function startPodWatcher(): Promise<void> {
         podWatchAbort = () => req.abort()
       })
       .catch((err) => {
-        console.error('Failed to start pod watch:', err.message)
-        setTimeout(doWatch, SSE_POD_WATCH_RECONNECT_DELAY_MS)
+        const delay = getBackoffDelay(attempt)
+        console.error(`Failed to start pod watch, retrying in ${delay}ms:`, err.message)
+        attempt++
+        setTimeout(doWatch, delay)
       })
   }
   doWatch()
@@ -113,9 +130,9 @@ export function startMetricsPoller(): void {
 
       const event: MetricsEvent = {
         cpuCores: totalCpuNano / 1e9,
-        cpuPercent: 0, // Would need capacity info for percentage
+        cpuPercent: null, // Requires node capacity info for real percentage
         memoryBytes: totalMemBytes,
-        memoryPercent: 0,
+        memoryPercent: null,
         podCount: 0, // Filled below
         timestamp: new Date().toISOString(),
       }
