@@ -224,7 +224,7 @@ export const clustersRouter = router({
       return created
     }),
 
-  update: protectedProcedure
+  update: adminProcedure
     .input(
       z.object({
         id: z.string().uuid(),
@@ -254,7 +254,7 @@ export const clustersRouter = router({
       return updated
     }),
 
-  delete: protectedProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [deleted] = await ctx.db.delete(clusters).where(eq(clusters.id, input.id)).returning()

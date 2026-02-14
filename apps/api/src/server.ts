@@ -17,9 +17,6 @@ app.register(rateLimit, {
   keyGenerator: (req) => req.ip,
 })
 
-// Login rate limiting is handled by Better-Auth's built-in rate limiter
-// Auth routes are served via /api/auth/* (see below)
-
 // ALLOWED_ORIGINS: comma-separated list of allowed origins for CORS.
 // Falls back to localhost:3000 for local development.
 // In production, set to the actual frontend domain(s).
@@ -37,9 +34,19 @@ app.register(fastifyTRPCPlugin, {
 })
 
 // Better-Auth handler — all auth routes via /api/auth/*
+// Stricter rate limiting on sign-in (5 req/min per IP)
+const AUTH_SIGN_IN_MAX = Number.parseInt(process.env.AUTH_SIGN_IN_RATE_LIMIT || '5', 10)
 app.route({
   method: ['GET', 'POST'],
   url: '/api/auth/*',
+  config: {
+    rateLimit: {
+      max: (req: { url: string }) =>
+        req.url.includes('/sign-in/') ? AUTH_SIGN_IN_MAX : 100,
+      timeWindow: '1 minute',
+      keyGenerator: (req: { ip: string }) => req.ip,
+    },
+  },
   async handler(request, reply) {
     try {
       const url = new URL(request.url, `http://${request.headers.host}`)

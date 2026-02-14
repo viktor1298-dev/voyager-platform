@@ -1,7 +1,7 @@
 import { alertHistory, alerts } from '@voyager/db'
 import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../trpc'
+import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 const METRIC_VALUES = ['cpu', 'memory', 'pods', 'restarts'] as const
 const OPERATOR_VALUES = ['gt', 'lt', 'eq'] as const
@@ -29,7 +29,7 @@ export const alertsRouter = router({
     return ctx.db.select().from(alerts).orderBy(desc(alerts.createdAt))
   }),
 
-  create: protectedProcedure.input(createAlertSchema).mutation(async ({ ctx, input }) => {
+  create: adminProcedure.input(createAlertSchema).mutation(async ({ ctx, input }) => {
     const [created] = await ctx.db
       .insert(alerts)
       .values({
@@ -43,7 +43,7 @@ export const alertsRouter = router({
     return created
   }),
 
-  update: protectedProcedure.input(updateAlertSchema).mutation(async ({ ctx, input }) => {
+  update: adminProcedure.input(updateAlertSchema).mutation(async ({ ctx, input }) => {
     const { id, ...fields } = input
     const updateData: Record<string, unknown> = {}
     if (fields.name !== undefined) updateData.name = fields.name
@@ -61,7 +61,7 @@ export const alertsRouter = router({
     return updated
   }),
 
-  delete: protectedProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.delete(alerts).where(eq(alerts.id, input.id))

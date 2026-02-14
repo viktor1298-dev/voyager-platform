@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { cached, getRedisClient } from '../lib/cache'
 import { getAppsV1Api } from '../lib/k8s'
-import { protectedProcedure, router } from '../trpc'
+import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 const K8S_DEPLOYMENTS_CACHE_TTL = 30
 
@@ -58,7 +58,7 @@ export const deploymentsRouter = router({
     })
   }),
 
-  restart: protectedProcedure
+  restart: adminProcedure
     .input(z.object({ name: z.string(), namespace: z.string() }))
     .mutation(async ({ input }) => {
       try {
@@ -88,7 +88,7 @@ export const deploymentsRouter = router({
       }
     }),
 
-  scale: protectedProcedure
+  scale: adminProcedure
     .input(
       z.object({
         name: z.string(),

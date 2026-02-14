@@ -4,7 +4,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { admin } from 'better-auth/plugins'
 
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:3000']
-const SESSION_EXPIRY_SECONDS = 60 * 60 * 24 // 24 hours
+const SESSION_EXPIRY_SECONDS = Number.parseInt(process.env.SESSION_EXPIRY_SECONDS || '86400', 10)
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: 'pg' }),
