@@ -25,7 +25,7 @@ const t = initTRPC.context<Context>().create({
       ...shape,
       data: {
         ...shape.data,
-        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack,
+        stack: process.env.HIDE_STACK_TRACES === 'true' ? undefined : error.stack,
       },
     }
   },

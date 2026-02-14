@@ -19,7 +19,7 @@ export const authRouter = router({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' })
       }
       const token = signToken(ADMIN_USER)
-      const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+      const secure = process.env.USE_SECURE_COOKIES === 'true' ? '; Secure' : ''
       ctx.res.header('Set-Cookie', `voyager-token=${token}; HttpOnly; Path=/; Max-Age=86400; SameSite=Lax${secure}`)
       return { token, user: ADMIN_USER }
     }),
