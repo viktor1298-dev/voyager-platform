@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { authClient } from '@/lib/auth-client'
 
 interface User {
   id: string
@@ -12,7 +13,7 @@ interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   setUser: (user: User | null) => void
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -20,5 +21,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: true,
   setUser: (user) => set({ user, isAuthenticated: !!user, isLoading: false }),
-  logout: () => set({ user: null, isAuthenticated: false, isLoading: false }),
+  logout: async () => {
+    try {
+      await authClient.signOut()
+    } catch {
+      // ignore errors on signout
+    }
+    set({ user: null, isAuthenticated: false, isLoading: false })
+  },
 }))

@@ -7,7 +7,7 @@ import { getAppsV1Api, getCoreV1Api, getVersionApi } from '../lib/k8s'
 import { normalizeProvider } from '../lib/providers'
 
 const K8S_CACHE_TTL = 30 // seconds
-import { protectedProcedure, router } from '../trpc'
+import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 export const clustersRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
@@ -196,12 +196,12 @@ export const clustersRouter = router({
       }
     }),
 
-  invalidateCache: protectedProcedure.mutation(async () => {
+  invalidateCache: adminProcedure.mutation(async () => {
     const count = await invalidateK8sCache()
     return { invalidated: count }
   }),
 
-  create: protectedProcedure
+  create: adminProcedure
     .input(
       z.object({
         name: z.string().min(1).max(255),
