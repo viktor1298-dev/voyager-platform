@@ -1,9 +1,13 @@
 import compress from '@fastify/compress'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
+import swagger from '@fastify/swagger'
+import swaggerUi from '@fastify/swagger-ui'
 import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
 import Fastify from 'fastify'
+import { fastifyTRPCOpenApiPlugin } from 'trpc-to-openapi'
 import { auth } from './lib/auth'
+import { generateOpenApiSpec } from './lib/openapi'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers'
 import { captureException, flushSentry, initSentry } from './lib/sentry'
 import { shutdownTelemetry } from './lib/telemetry'
@@ -37,6 +41,31 @@ app.register(fastifyTRPCPlugin, {
     router: appRouter,
     createContext,
   } satisfies FastifyTRPCPluginOptions<AppRouter>['trpcOptions'],
+})
+
+app.register(fastifyTRPCOpenApiPlugin, {
+  basePath: '/api',
+  router: appRouter,
+  createContext,
+})
+
+app.register(swagger, {
+  mode: 'static',
+  specification: {
+    document: generateOpenApiSpec() as never,
+  },
+})
+
+app.register(swaggerUi, {
+  routePrefix: '/docs',
+  uiConfig: {
+    docExpansion: 'list',
+    deepLinking: true,
+  },
+})
+
+app.get('/openapi.json', async (_request, reply) => {
+  reply.send(generateOpenApiSpec())
 })
 
 // Better-Auth handler — all auth routes via /api/auth/*
@@ -80,9 +109,10 @@ app.route({
 // Capture unhandled Fastify errors to Sentry
 app.setErrorHandler((error, _request, reply) => {
   captureException(error)
-  reply.status(error.statusCode ?? 500).send({
-    error: error.message || 'Internal Server Error',
-    statusCode: error.statusCode ?? 500,
+  const errorWithStatus = error as { message?: string; statusCode?: number }
+  reply.status(errorWithStatus.statusCode ?? 500).send({
+    error: errorWithStatus.message || 'Internal Server Error',
+    statusCode: errorWithStatus.statusCode ?? 500,
   })
 })
 

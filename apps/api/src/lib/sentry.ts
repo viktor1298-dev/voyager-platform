@@ -4,13 +4,13 @@ import { createRequire } from 'node:module'
 const DSN = process.env.SENTRY_DSN
 const require = createRequire(import.meta.url)
 
-function getProfilingIntegration(): Sentry.Integration | undefined {
+function getProfilingIntegration(): unknown {
   if (process.env.SENTRY_ENABLE_PROFILING !== 'true') return undefined
 
   try {
     const moduleName = '@sentry/profiling-node'
     const sentryProfiling = require(moduleName) as {
-      nodeProfilingIntegration: () => Sentry.Integration
+      nodeProfilingIntegration: () => unknown
     }
 
     return sentryProfiling.nodeProfilingIntegration()
@@ -33,10 +33,10 @@ export function initSentry(): void {
     ...(profilingIntegration
       ? {
           profilesSampleRate: Number.parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE || '0.1'),
-          integrations: [profilingIntegration],
+          integrations: [profilingIntegration] as never,
         }
       : {}),
-  })
+  } as never)
 }
 
 export function captureException(error: unknown): void {

@@ -110,7 +110,9 @@ export const healthRouter = router({
       }))
     }),
 
-  status: protectedProcedure.query(async ({ ctx }) => {
+  status: protectedProcedure
+    .meta({ openapi: { method: 'GET', path: '/api/health', protect: true, tags: ['health'] } })
+    .query(async ({ ctx }) => {
     // Single query: get all clusters with their latest health entry via lateral join
     const allClusters = await ctx.db.select().from(clusters)
     if (allClusters.length === 0) return []
