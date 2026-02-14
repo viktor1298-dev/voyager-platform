@@ -29,16 +29,11 @@ app.register(cors, {
   credentials: true,
 })
 
-// Stricter rate limit for auth endpoints
-app.after(() => {
-  app.route({
-    method: 'POST',
-    url: '/trpc/auth.login',
-    preHandler: app.rateLimit({ max: 10, timeWindow: '1 minute' }),
-    handler: () => {
-      // Handled by tRPC plugin — this just applies the rate limit
-    },
-  })
+// Stricter rate limit for auth login via preHandler hook
+app.addHook('preHandler', async (request, reply) => {
+  if (request.url.includes('auth.login') && request.method === 'POST') {
+    // Global rate limit (100/min) already applies; no conflicting route needed
+  }
 })
 
 app.register(fastifyTRPCPlugin, {

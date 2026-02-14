@@ -1,14 +1,30 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
+
+function isTokenValid(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.exp * 1000 > Date.now()
+  } catch {
+    return false
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const token = localStorage.getItem('voyager-token')
+    if (token && isTokenValid(token)) {
+      router.push('/')
+    }
+  }, [router])
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {

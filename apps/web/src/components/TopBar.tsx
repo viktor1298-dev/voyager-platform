@@ -16,7 +16,7 @@ export function TopBar() {
 
   const data = isConnected ? liveQuery.data : undefined
   const totalPods = data ? `${data.runningPods}/${data.totalPods}` : '—'
-  const alerts = data ? data.events.filter((e: any) => e.type === 'Warning').length : null
+  const alerts = data ? data.events.filter((e: { type?: string; kind?: string }) => e.type === 'Warning' || e.kind === 'Warning').length : null
 
   return (
     <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">

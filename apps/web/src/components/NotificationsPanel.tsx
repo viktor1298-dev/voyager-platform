@@ -4,6 +4,23 @@ import { trpc } from '@/lib/trpc'
 import { Bell, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
+interface KubeEvent {
+  id: string
+  clusterId: string
+  namespace: string | null
+  kind: string
+  reason: string | null
+  message: string | null
+  source: string | null
+  involvedObject?: unknown
+  timestamp: string
+  createdAt: string
+  clusterName?: string
+  cluster?: string
+}
+
+const LAST_READ_KEY = 'voyager-notifications-last-read'
+
 function relativeTime(date: string | Date): string {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
   if (seconds < 60) return `${seconds}s ago`
@@ -16,8 +33,13 @@ function relativeTime(date: string | Date): string {
 
 export function NotificationsPanel() {
   const [open, setOpen] = useState(false)
-  const [readCount, setReadCount] = useState(0)
+  const [lastReadTimestamp, setLastReadTimestamp] = useState<string | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(LAST_READ_KEY)
+    if (stored) setLastReadTimestamp(stored)
+  }, [])
 
   const eventsQuery = trpc.events.list.useQuery(
     { limit: 50 },
@@ -25,9 +47,11 @@ export function NotificationsPanel() {
   )
 
   const alerts = (eventsQuery.data ?? []).filter(
-    (e: any) => e.kind === 'Warning'
+    (e: KubeEvent) => e.kind === 'Warning'
   )
-  const unreadCount = Math.max(0, alerts.length - readCount)
+  const unreadCount = lastReadTimestamp
+    ? alerts.filter((e: KubeEvent) => new Date(e.timestamp) > new Date(lastReadTimestamp)).length
+    : alerts.length
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -71,7 +95,11 @@ export function NotificationsPanel() {
               {unreadCount > 0 && (
                 <button
                   type="button"
-                  onClick={() => setReadCount(alerts.length)}
+                  onClick={() => {
+                    const now = new Date().toISOString()
+                    setLastReadTimestamp(now)
+                    localStorage.setItem(LAST_READ_KEY, now)
+                  }}
                   className="text-[10px] text-[var(--color-accent)] hover:underline font-medium"
                 >
                   Mark all read
@@ -89,7 +117,7 @@ export function NotificationsPanel() {
             </div>
           ) : (
             <div className="py-1">
-              {alerts.map((event: any, i: number) => (
+              {alerts.map((event: KubeEvent, i: number) => (
                 <div
                   key={event.id ?? i}
                   className="flex items-start gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors"

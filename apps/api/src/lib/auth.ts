@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken'
-import crypto from 'node:crypto'
 
 export interface UserPayload {
   id: string
@@ -7,7 +6,7 @@ export interface UserPayload {
   role: 'admin' | 'viewer'
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex')
+const JWT_SECRET = process.env.JWT_SECRET ?? (() => { throw new Error('JWT_SECRET environment variable is required') })()
 const TOKEN_EXPIRY = '24h'
 
 export function signToken(payload: UserPayload): string {
