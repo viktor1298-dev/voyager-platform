@@ -56,12 +56,21 @@ app.register(swagger, {
   },
 })
 
-app.register(swaggerUi, {
-  routePrefix: '/docs',
-  uiConfig: {
-    docExpansion: 'list',
-    deepLinking: true,
-  },
+app.register(async (instance) => {
+  try {
+    await instance.register(swaggerUi, {
+      routePrefix: '/docs',
+      uiConfig: {
+        docExpansion: 'list',
+        deepLinking: true,
+      },
+    })
+  } catch (error) {
+    instance.log.warn(
+      { err: error },
+      'Swagger UI registration failed; continuing without /docs endpoint',
+    )
+  }
 })
 
 app.get('/openapi.json', async (_request, reply) => {
