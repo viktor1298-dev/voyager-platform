@@ -7,22 +7,10 @@ import { createContext } from './trpc'
 
 const app = Fastify({ logger: true })
 
-const REDIS_URL = process.env.REDIS_URL
-
-const rateLimitConfig: Parameters<typeof rateLimit>[1] = {
+app.register(rateLimit, {
   max: 100,
   timeWindow: '1 minute',
-  ...(REDIS_URL
-    ? {
-        redis: {
-          host: new URL(REDIS_URL).hostname,
-          port: Number(new URL(REDIS_URL).port) || 6379,
-        },
-      }
-    : {}),
-}
-
-app.register(rateLimit, rateLimitConfig)
+})
 
 app.register(cors, {
   origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
