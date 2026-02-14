@@ -66,10 +66,6 @@ function createEventStream<T>(
     [Symbol.asyncIterator]() {
       return this
     },
-    async [Symbol.asyncDispose]() {
-      done = true
-      voyagerEmitter.off(eventName, handler)
-    },
   }
 }
 

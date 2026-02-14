@@ -86,7 +86,7 @@ export const featuresRouter = router({
         name: z.string().min(1).max(100),
         enabled: z.boolean(),
         description: z.string().max(500).optional(),
-        targeting: z.record(z.unknown()).optional(),
+        targeting: z.record(z.string(), z.unknown()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

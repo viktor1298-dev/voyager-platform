@@ -5,7 +5,6 @@ import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 export const eventsRouter = router({
   list: protectedProcedure
-    .meta({ openapi: { method: 'GET', path: '/api/events', protect: true, tags: ['events'] } })
     .input(
       z.object({
         clusterId: z.string().uuid().optional(),
@@ -33,7 +32,7 @@ export const eventsRouter = router({
         reason: z.string().max(255).optional(),
         message: z.string().optional(),
         source: z.string().max(255).optional(),
-        involvedObject: z.record(z.unknown()).optional(),
+        involvedObject: z.record(z.string(), z.unknown()).optional(),
         timestamp: z.string().datetime().optional(),
       }),
     )

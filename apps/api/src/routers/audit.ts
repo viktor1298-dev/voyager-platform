@@ -5,7 +5,6 @@ import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 export const auditRouter = router({
   list: adminProcedure
-    .meta({ openapi: { method: 'GET', path: '/api/audit', protect: true, tags: ['audit'] } })
     .input(
       z.object({
         page: z.number().int().min(1).default(1),
