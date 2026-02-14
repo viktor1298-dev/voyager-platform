@@ -1,7 +1,7 @@
 import { events } from '@voyager/db'
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../trpc'
+import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 export const eventsRouter = router({
   list: protectedProcedure
@@ -23,7 +23,7 @@ export const eventsRouter = router({
       return rows
     }),
 
-  create: protectedProcedure
+  create: adminProcedure
     .input(
       z.object({
         clusterId: z.string().uuid(),
