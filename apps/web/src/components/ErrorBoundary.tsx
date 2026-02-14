@@ -2,6 +2,7 @@
 
 import { Component, type ReactNode } from 'react'
 import { AlertTriangle } from 'lucide-react'
+import { motion } from 'motion/react'
 
 interface Props {
   children: ReactNode
@@ -23,11 +24,21 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error }
   }
 
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Log for debugging (Sentry integration later)
+    console.error('[ErrorBoundary] Caught error:', error, errorInfo)
+  }
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback
       return (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className="flex flex-col items-center justify-center py-24 text-center"
+        >
           <AlertTriangle className="h-10 w-10 text-[var(--color-status-error)] mb-4" />
           <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">
             Something went wrong
@@ -42,7 +53,7 @@ export class ErrorBoundary extends Component<Props, State> {
           >
             Try Again
           </button>
-        </div>
+        </motion.div>
       )
     }
     return this.props.children
@@ -51,7 +62,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
 export function QueryError({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      className="flex flex-col items-center justify-center py-24 text-center"
+    >
       <AlertTriangle className="h-10 w-10 text-[var(--color-status-error)] mb-4" />
       <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">
         Failed to load data
@@ -66,6 +82,6 @@ export function QueryError({ message, onRetry }: { message: string; onRetry?: ()
           Try Again
         </button>
       )}
-    </div>
+    </motion.div>
   )
 }

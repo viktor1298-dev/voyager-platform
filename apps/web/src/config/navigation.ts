@@ -1,4 +1,4 @@
-import { Activity, Bell, Box, FileText, HeartPulse, LayoutDashboard, Server, Settings, Users } from 'lucide-react'
+import { Activity, Bell, Box, ClipboardList, FileText, HeartPulse, LayoutDashboard, Server, Settings, Users } from 'lucide-react'
 
 export const navItems = [
   { id: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -9,5 +9,6 @@ export const navItems = [
   { id: '/alerts', label: 'Alerts', icon: Bell },
   { id: '/logs', label: 'Logs', icon: FileText },
   { id: '/users', label: 'Users', icon: Users, adminOnly: true },
+  { id: '/audit', label: 'Audit Log', icon: ClipboardList, adminOnly: true },
   { id: '/settings', label: 'Settings', icon: Settings },
 ] as const

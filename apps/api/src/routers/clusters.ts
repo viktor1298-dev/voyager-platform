@@ -7,6 +7,7 @@ import { getAppsV1Api, getCoreV1Api, getVersionApi } from '../lib/k8s'
 import { normalizeProvider } from '../lib/providers'
 
 const K8S_CACHE_TTL = 30 // seconds
+import { logAudit } from '../lib/audit'
 import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 export const clustersRouter = router({
@@ -221,6 +222,7 @@ export const clustersRouter = router({
           nodesCount: input.nodesCount ?? 0,
         })
         .returning()
+      await logAudit(ctx, 'cluster.create', 'cluster', created.id, { name: input.name, provider: input.provider })
       return created
     }),
 
@@ -251,6 +253,7 @@ export const clustersRouter = router({
         .where(eq(clusters.id, id))
         .returning()
       if (!updated) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
+      await logAudit(ctx, 'cluster.update', 'cluster', id, data)
       return updated
     }),
 
@@ -259,6 +262,7 @@ export const clustersRouter = router({
     .mutation(async ({ ctx, input }) => {
       const [deleted] = await ctx.db.delete(clusters).where(eq(clusters.id, input.id)).returning()
       if (!deleted) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
+      await logAudit(ctx, 'cluster.delete', 'cluster', input.id, { name: deleted.name })
       return deleted
     }),
 })

@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { cached, getRedisClient } from '../lib/cache'
 import { getAppsV1Api } from '../lib/k8s'
+import { logAudit } from '../lib/audit'
 import { adminProcedure, protectedProcedure, router } from '../trpc'
 
 const K8S_DEPLOYMENTS_CACHE_TTL = 30
@@ -60,7 +61,7 @@ export const deploymentsRouter = router({
 
   restart: adminProcedure
     .input(z.object({ name: z.string(), namespace: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
         const api = getAppsV1Api()
         const now = new Date().toISOString()
@@ -79,6 +80,7 @@ export const deploymentsRouter = router({
         })
         const redis = await getRedisClient()
         if (redis) await redis.del('k8s:deployments:list')
+        await logAudit(ctx, 'deployment.restart', 'deployment', `${input.namespace}/${input.name}`, { namespace: input.namespace })
         return { success: true, restartedAt: now }
       } catch (err) {
         throw new TRPCError({
@@ -106,6 +108,7 @@ export const deploymentsRouter = router({
         })
         const redis = await getRedisClient()
         if (redis) await redis.del('k8s:deployments:list')
+        await logAudit(ctx, 'deployment.scale', 'deployment', `${input.namespace}/${input.name}`, { replicas: input.replicas })
         return { success: true, replicas: input.replicas }
       } catch (err) {
         throw new TRPCError({

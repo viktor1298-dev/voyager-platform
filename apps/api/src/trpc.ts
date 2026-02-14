@@ -7,6 +7,7 @@ export interface Context {
   db: Database
   session: { userId: string; expiresAt: Date } | null
   user: { id: string; email: string; name: string; role: string | null } | null
+  ipAddress: string | undefined
   res: CreateFastifyContextOptions['res']
 }
 
@@ -31,6 +32,7 @@ export async function createContext({ req, res }: CreateFastifyContextOptions): 
     db,
     session: result?.session ?? null,
     user,
+    ipAddress: req.ip,
     res,
   }
 }

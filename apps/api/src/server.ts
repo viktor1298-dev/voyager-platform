@@ -1,3 +1,4 @@
+import { shutdownTelemetry } from './lib/telemetry'
 import compress from '@fastify/compress'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
@@ -96,6 +97,7 @@ const start = async () => {
       process.on(signal, async () => {
         app.log.info(`${signal} received, shutting down gracefully`)
         stopAllWatchers()
+        await shutdownTelemetry()
         await app.close()
         process.exit(0)
       })
