@@ -9,9 +9,10 @@ export default defineConfig({
   platform: 'node',
   bundle: true,
   splitting: false,
-  sourcemap: false,
+  sourcemap: 'hidden',
   clean: true,
   treeshake: true,
   minify: false,
   noExternal: [/.*/],
+  external: ['@sentry/profiling-node'],
 })
