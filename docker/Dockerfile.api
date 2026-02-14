@@ -22,8 +22,13 @@ WORKDIR /app
 
 # Copy entire installed workspace from deps (includes node_modules everywhere)
 COPY --from=deps /app/ ./
-# Now overlay all source code
-COPY . .
+# Now overlay source code WITHOUT overwriting node_modules
+COPY apps/api/src apps/api/src
+COPY apps/api/tsconfig.json apps/api/tsconfig.json
+COPY packages/config/src packages/config/src
+COPY packages/db/src packages/db/src
+COPY packages/types/src packages/types/src
+COPY tsconfig.json turbo.json ./
 
 # Install tsx globally for the runner
 RUN npm i -g tsx

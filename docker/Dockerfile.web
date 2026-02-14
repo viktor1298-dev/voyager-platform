@@ -21,8 +21,16 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS builder
 WORKDIR /app
 
-COPY apps/web/ apps/web/
-COPY apps/api/ apps/api/
+# Copy source files WITHOUT overwriting node_modules from deps stage
+COPY apps/web/src apps/web/src
+COPY apps/web/public apps/web/public
+COPY apps/web/next.config.ts apps/web/next.config.ts
+COPY apps/web/tsconfig.json apps/web/tsconfig.json
+COPY apps/web/postcss.config.mjs apps/web/postcss.config.mjs
+COPY apps/web/sentry.client.config.ts apps/web/sentry.client.config.ts
+COPY apps/web/sentry.server.config.ts apps/web/sentry.server.config.ts
+COPY apps/api/src apps/api/src
+COPY apps/api/tsconfig.json apps/api/tsconfig.json
 COPY packages/ packages/
 
 RUN pnpm --filter @voyager/web build
