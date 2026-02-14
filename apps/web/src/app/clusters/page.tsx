@@ -5,11 +5,13 @@ import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { DataTable } from '@/components/DataTable'
+import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { QueryError } from '@/components/ErrorBoundary'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { Badge } from '@/components/ui/badge'
 import { Dialog } from '@/components/ui/dialog'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
+import { getClusterEnvironment, getClusterTags, normalizeHealth } from '@/lib/cluster-meta'
 import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
@@ -296,7 +298,61 @@ export default function ClustersPage() {
     },
   })
 
+  const [filters, setFilters] = useState<FilterValue>({
+    environment: 'all',
+    status: 'all',
+    provider: 'all',
+    health: 'all',
+    tags: [],
+    q: '',
+  })
+
   const clusterList: ClusterRow[] = clusters.data ?? []
+
+  const filterOptions = useMemo(() => {
+    const statuses = new Set<string>()
+    const providers = new Set<string>()
+    const health = new Set<string>()
+    const tags = new Set<string>()
+
+    for (const cluster of clusterList) {
+      statuses.add((cluster.status ?? 'unknown').toLowerCase())
+      providers.add(cluster.provider ?? 'unknown')
+      health.add(normalizeHealth(cluster.status))
+      for (const tag of getClusterTags({ name: cluster.name, provider: cluster.provider ?? undefined, source: 'db' })) {
+        tags.add(tag)
+      }
+    }
+
+    return {
+      environments: ['prod', 'staging', 'dev'],
+      statuses: Array.from(statuses).sort(),
+      providers: Array.from(providers).sort(),
+      health: Array.from(health),
+      tags: Array.from(tags).sort(),
+    }
+  }, [clusterList])
+
+  const filteredClusters = useMemo(() => {
+    const q = filters.q.trim().toLowerCase()
+    return clusterList.filter((cluster) => {
+      const env = getClusterEnvironment(cluster.name, cluster.provider)
+      if (filters.environment !== 'all' && env !== filters.environment) return false
+      const statusValue = (cluster.status ?? 'unknown').toLowerCase()
+      if (filters.status !== 'all' && statusValue !== filters.status) return false
+      if (filters.provider !== 'all' && (cluster.provider ?? 'unknown') !== filters.provider) return false
+      const healthValue = normalizeHealth(cluster.status)
+      if (filters.health !== 'all' && healthValue !== filters.health) return false
+      const clusterTags = getClusterTags({ name: cluster.name, provider: cluster.provider ?? undefined, source: 'db' })
+      if (filters.tags.length > 0 && !filters.tags.every((tag) => clusterTags.includes(tag))) return false
+      if (q && !`${cluster.name} ${cluster.provider ?? ''} ${clusterTags.join(' ')}`.toLowerCase().includes(q)) {
+        return false
+      }
+      return true
+    })
+  }, [clusterList, filters])
+
+  const onFiltersChange = useCallback((next: FilterValue) => setFilters(next), [])
 
   const columns = useMemo<ColumnDef<ClusterRow, unknown>[]>(
     () => [
@@ -411,7 +467,7 @@ export default function ClustersPage() {
             Clusters
           </h1>
           <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
-            {clusterList.length} registered
+            {filteredClusters.length}/{clusterList.length} visible
           </p>
         </div>
         {isAdmin && (
@@ -424,8 +480,10 @@ export default function ClustersPage() {
         )}
       </div>
 
+      <FilterBar options={filterOptions} onChange={onFiltersChange} className="mb-4" />
+
       <DataTable
-        data={clusterList}
+        data={filteredClusters}
         columns={columns}
         searchable
         searchPlaceholder="Search clusters…"

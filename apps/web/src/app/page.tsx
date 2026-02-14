@@ -1,9 +1,17 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { PageTransition } from '@/components/animations'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { SkeletonCard, SkeletonText } from '@/components/Skeleton'
+import {
+  ENV_META,
+  getClusterEnvironment,
+  getClusterTags,
+  normalizeHealth,
+  type ClusterEnvironment,
+} from '@/lib/cluster-meta'
 import {
   getStatusColor,
   getStatusDotClass,
@@ -11,11 +19,11 @@ import {
   getStatusGlowHover,
 } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
+import { cn } from '@/lib/utils'
 import { AlertTriangle, Box, Database, Server } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
-
-type StatusFilter = 'all' | 'degraded' | 'warning' | 'healthy'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 interface ClusterCardData {
   id: string
@@ -25,16 +33,11 @@ interface ClusterCardData {
   status: string | null
   nodeCount: number
   source: 'live' | 'db'
+  environment: ClusterEnvironment
+  tags: string[]
 }
 
-const STATUS_ORDER: string[] = ['degraded', 'warning', 'healthy']
-
-function normalizeStatus(status: string | null): string {
-  const s = (status ?? 'unknown').toLowerCase()
-  if (s === 'healthy' || s === 'active' || s === 'ready') return 'healthy'
-  if (s === 'warning') return 'warning'
-  return 'degraded'
-}
+const ENV_ORDER: ClusterEnvironment[] = ['prod', 'staging', 'dev']
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   degraded: { label: 'Degraded', color: 'var(--color-status-error)' },
@@ -43,7 +46,36 @@ const STATUS_META: Record<string, { label: string; color: string }> = {
 }
 
 export default function DashboardPage() {
-  const [activeFilter, setActiveFilter] = useState<StatusFilter>('all')
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const [filters, setFilters] = useState<FilterValue>({
+    environment: 'all',
+    status: 'all',
+    provider: 'all',
+    health: 'all',
+    tags: [],
+    q: '',
+  })
+
+  useEffect(() => {
+    const env = searchParams.get('environment')
+    if (env === 'prod' || env === 'staging' || env === 'dev' || env === 'all') {
+      setFilters((prev) => ({ ...prev, environment: env }))
+    } else if (!env) {
+      setFilters((prev) => ({ ...prev, environment: 'all' }))
+    }
+  }, [searchParams])
+
+  const setEnvironmentFilter = (environment: FilterValue['environment']) => {
+    const next = new URLSearchParams(searchParams.toString())
+    if (environment === 'all') next.delete('environment')
+    else next.set('environment', environment)
+    const query = next.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname)
+    setFilters((prev) => ({ ...prev, environment }))
+  }
 
   const liveQuery = trpc.clusters.live.useQuery(undefined, {
     refetchInterval: 30000,
@@ -57,7 +89,6 @@ export default function DashboardPage() {
   const dbClusters = listQuery.data ?? []
   const isLoading = liveQuery.isLoading && listQuery.isLoading
 
-  // Build combined cluster list
   const clusterList: ClusterCardData[] = []
 
   if (liveData) {
@@ -69,6 +100,8 @@ export default function DashboardPage() {
       status: liveData.status,
       nodeCount: liveData.nodes.length,
       source: 'live',
+      environment: getClusterEnvironment(liveData.name, liveData.provider),
+      tags: getClusterTags({ name: liveData.name, provider: liveData.provider, source: 'live' }),
     })
   }
 
@@ -79,16 +112,17 @@ export default function DashboardPage() {
       clusterList.push({
         id: c.id,
         name: c.name,
-        provider: c.provider,
-        version: c.version,
-        status: c.status,
+        provider: typeof c.provider === 'string' ? c.provider : 'unknown',
+        version: typeof c.version === 'string' ? c.version : null,
+        status: typeof c.status === 'string' ? c.status : null,
         nodeCount: c.nodeCount,
         source: 'db',
+        environment: getClusterEnvironment(c.name, c.provider),
+        tags: getClusterTags({ name: c.name, provider: c.provider, source: 'db' }),
       })
     }
   }
 
-  // Stats
   const totalNodes =
     (liveData?.nodes.length ?? 0) +
     dbClusters
@@ -97,178 +131,204 @@ export default function DashboardPage() {
   const runningPods = liveData?.runningPods ?? 0
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
 
-  // Group clusters by normalized status
-  const grouped: Record<string, ClusterCardData[]> = { degraded: [], warning: [], healthy: [] }
-  for (const c of clusterList) {
-    const ns = normalizeStatus(c.status)
-    grouped[ns]?.push(c)
-  }
+  const filterOptions = useMemo(() => {
+    const statuses = new Set<string>()
+    const providers = new Set<string>()
+    const health = new Set<string>()
+    const tags = new Set<string>()
 
-  // Count per status
-  const counts: Record<string, number> = {
+    for (const cluster of clusterList) {
+      statuses.add((cluster.status ?? 'unknown').toLowerCase())
+      providers.add(cluster.provider)
+      health.add(normalizeHealth(cluster.status))
+      for (const tag of cluster.tags) tags.add(tag)
+    }
+
+    return {
+      environments: ['prod', 'staging', 'dev'],
+      statuses: Array.from(statuses).sort(),
+      providers: Array.from(providers).sort(),
+      health: Array.from(health),
+      tags: Array.from(tags).sort(),
+    }
+  }, [clusterList])
+
+  const visibleClusters = useMemo(() => {
+    const q = filters.q.trim().toLowerCase()
+    return clusterList.filter((cluster) => {
+      if (filters.environment !== 'all' && cluster.environment !== filters.environment) return false
+      const statusValue = (cluster.status ?? 'unknown').toLowerCase()
+      if (filters.status !== 'all' && statusValue !== filters.status) return false
+      if (filters.provider !== 'all' && cluster.provider !== filters.provider) return false
+      const healthValue = normalizeHealth(cluster.status)
+      if (filters.health !== 'all' && healthValue !== filters.health) return false
+      if (filters.tags.length > 0 && !filters.tags.every((tag) => cluster.tags.includes(tag))) return false
+      if (
+        q &&
+        !`${cluster.name} ${cluster.provider} ${cluster.tags.join(' ')}`
+          .toLowerCase()
+          .includes(q)
+      )
+        return false
+      return true
+    })
+  }, [clusterList, filters])
+
+  const groupedByEnvironment = useMemo(() => {
+    const grouped: Record<ClusterEnvironment, ClusterCardData[]> = { prod: [], staging: [], dev: [] }
+    for (const cluster of visibleClusters) grouped[cluster.environment].push(cluster)
+    return grouped
+  }, [visibleClusters])
+
+  const envCounts = {
     all: clusterList.length,
-    degraded: grouped.degraded.length,
-    warning: grouped.warning.length,
-    healthy: grouped.healthy.length,
+    prod: clusterList.filter((c) => c.environment === 'prod').length,
+    staging: clusterList.filter((c) => c.environment === 'staging').length,
+    dev: clusterList.filter((c) => c.environment === 'dev').length,
   }
 
-  // Filtered list
-  const visibleStatuses = activeFilter === 'all' ? STATUS_ORDER : [activeFilter]
+  const onFiltersChange = useCallback((next: FilterValue) => {
+    setFilters(next)
+  }, [])
 
-  // Track global card index for stagger animation
   let cardIndex = 0
 
   return (
     <AppLayout>
       <PageTransition>
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-        <SummaryCard
-          icon={<Server className="h-4 w-4" />}
-          label="Total Nodes"
-          value={String(totalNodes)}
-          color="var(--color-accent)"
-          gradient="var(--gradient-text-default)"
-          isLoading={isLoading}
-        />
-        <SummaryCard
-          icon={<Box className="h-4 w-4" />}
-          label="Running Pods"
-          value={`${runningPods}/${liveData?.totalPods ?? 0}`}
-          color="var(--color-status-active)"
-          gradient="var(--gradient-text-healthy)"
-          isLoading={isLoading}
-        />
-        <SummaryCard
-          icon={<Database className="h-4 w-4" />}
-          label="Clusters"
-          value={String(clusterList.length)}
-          color="var(--color-accent)"
-          gradient="var(--gradient-text-default)"
-          isLoading={isLoading}
-        />
-        <SummaryCard
-          icon={<AlertTriangle className="h-4 w-4" />}
-          label="Warning Events"
-          value={String(warningEvents)}
-          color="var(--color-status-warning)"
-          gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'var(--gradient-text-default)'}
-          isLoading={isLoading}
-        />
-      </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+          <SummaryCard
+            icon={<Server className="h-4 w-4" />}
+            label="Total Nodes"
+            value={String(totalNodes)}
+            color="var(--color-accent)"
+            gradient="var(--gradient-text-default)"
+            isLoading={isLoading}
+          />
+          <SummaryCard
+            icon={<Box className="h-4 w-4" />}
+            label="Running Pods"
+            value={`${runningPods}/${liveData?.totalPods ?? 0}`}
+            color="var(--color-status-active)"
+            gradient="var(--gradient-text-healthy)"
+            isLoading={isLoading}
+          />
+          <SummaryCard
+            icon={<Database className="h-4 w-4" />}
+            label="Clusters"
+            value={String(clusterList.length)}
+            color="var(--color-accent)"
+            gradient="var(--gradient-text-default)"
+            isLoading={isLoading}
+          />
+          <SummaryCard
+            icon={<AlertTriangle className="h-4 w-4" />}
+            label="Warning Events"
+            value={String(warningEvents)}
+            color="var(--color-status-warning)"
+            gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'var(--gradient-text-default)'}
+            isLoading={isLoading}
+          />
+        </div>
 
-      {/* Clusters Header + Filter Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
-        <div>
-          <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">
-            Clusters
-          </h2>
-          <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-0.5">
-            {clusterList.filter((c) => c.source === 'live').length} live · {clusterList.filter((c) => c.source === 'db').length} registered
+        <div className="flex flex-col gap-4 mb-5">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
+              <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-0.5">
+                {clusterList.filter((c) => c.source === 'live').length} live ·{' '}
+                {clusterList.filter((c) => c.source === 'db').length} registered
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)]">
+              {(['all', 'prod', 'staging', 'dev'] as const).map((filter) => {
+                const isActive = filters.environment === filter || (filter === 'all' && filters.environment === 'all')
+                const color = filter === 'all' ? 'var(--color-accent)' : ENV_META[filter].color
+                return (
+                  <button
+                    key={filter}
+                    type="button"
+                    onClick={() => setEnvironmentFilter(filter)}
+                    className={cn(
+                      'flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 cursor-pointer',
+                      isActive
+                        ? 'bg-white/[0.08] text-[var(--color-text-primary)] shadow-sm'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]',
+                    )}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                    <span className="capitalize">{filter}</span>
+                    <span className="tabular-nums text-[var(--color-text-dim)]">{envCounts[filter]}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <FilterBar options={filterOptions} onChange={onFiltersChange} />
+        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        ) : liveQuery.error && listQuery.error ? (
+          <p className="text-[var(--color-status-error)]">
+            Failed to load clusters: {liveQuery.error?.message ?? listQuery.error?.message}
           </p>
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)]">
-          {(['all', 'degraded', 'warning', 'healthy'] as StatusFilter[]).map((filter) => {
-            const isActive = activeFilter === filter
-            const meta = filter === 'all' ? null : STATUS_META[filter]
-            return (
-              <button
-                key={filter}
-                type="button"
-                onClick={() => setActiveFilter(filter)}
-                className={`
-                  flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-medium tracking-wide
-                  transition-all duration-200 cursor-pointer select-none
-                  ${isActive
-                    ? 'bg-white/[0.08] text-[var(--color-text-primary)] shadow-sm'
-                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]'
-                  }
-                `}
-              >
-                {meta && (
-                  <span
-                    className="h-1.5 w-1.5 rounded-full shrink-0"
-                    style={{ backgroundColor: meta.color }}
-                  />
-                )}
-                <span className="capitalize">{filter}</span>
-                <span className={`tabular-nums ${isActive ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-text-dim)]'}`}>
-                  {counts[filter]}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </div>
-      ) : liveQuery.error && listQuery.error ? (
-        <p className="text-[var(--color-status-error)]">
-          Failed to load clusters: {liveQuery.error?.message ?? listQuery.error?.message}
-        </p>
-      ) : clusterList.length === 0 ? (
-        <p className="text-[var(--color-text-muted)]">No clusters found.</p>
-      ) : (
-        <div className="space-y-6">
-          {visibleStatuses.map((status) => {
-            const clusters = grouped[status]
-            if (!clusters || clusters.length === 0) return null
-            const meta = STATUS_META[status]
-            return (
-              <div key={status}>
-                {/* Subtle section label — only when showing all */}
-                {activeFilter === 'all' && (
+        ) : visibleClusters.length === 0 ? (
+          <p className="text-[var(--color-text-muted)]">No clusters match the current filters.</p>
+        ) : (
+          <div className="space-y-6">
+            {ENV_ORDER.map((environment) => {
+              const clusters = groupedByEnvironment[environment]
+              if (!clusters || clusters.length === 0) return null
+              const meta = ENV_META[environment]
+              return (
+                <section
+                  key={environment}
+                  className="rounded-xl border p-4"
+                  style={{
+                    borderColor: meta.ring,
+                    background: meta.softBg,
+                  }}
+                >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{ backgroundColor: meta.color }}
-                      />
-                      <span className="text-[11px] uppercase tracking-widest font-medium text-[var(--color-text-dim)]">
-                        {meta.label}
-                      </span>
-                      <span className="text-[11px] tabular-nums text-[var(--color-text-dim)]/60">
-                        {clusters.length}
-                      </span>
-                    </div>
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.color }} />
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{meta.sectionLabel}</h3>
+                    <span className="text-[11px] text-[var(--color-text-dim)] tabular-nums">{clusters.length}</span>
                     <div className="flex-1 h-px bg-[var(--color-border)]/40" />
                   </div>
-                )}
 
-                {/* Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                  {clusters.map((cluster) => {
-                    const idx = cardIndex++
-                    return (
-                      <ClusterCard
-                        key={cluster.id}
-                        cluster={cluster}
-                        index={idx}
-                        runningPods={runningPods}
-                        totalPods={liveData?.totalPods ?? 0}
-                      />
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-          </PageTransition>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {clusters.map((cluster) => {
+                      const idx = cardIndex++
+                      return (
+                        <ClusterCard
+                          key={cluster.id}
+                          cluster={cluster}
+                          index={idx}
+                          runningPods={runningPods}
+                          totalPods={liveData?.totalPods ?? 0}
+                        />
+                      )
+                    })}
+                  </div>
+                </section>
+              )
+            })}
+          </div>
+        )}
+      </PageTransition>
     </AppLayout>
   )
 }
 
 function HealthDot({ clusterId }: { clusterId: string }) {
-  const statusQuery = trpc.health.status.useQuery(undefined, {
+  const statusQuery = trpc.health.status.useQuery({}, {
     refetchInterval: 60_000,
   })
   const entry = statusQuery.data?.find((s) => s.clusterId === clusterId)
@@ -304,12 +364,13 @@ function ClusterCard({
   totalPods: number
 }) {
   const status = cluster.status ?? 'unknown'
-  const meta = STATUS_META[normalizeStatus(status)]
+  const statusMeta = STATUS_META[normalizeHealth(status)]
+  const envMeta = ENV_META[cluster.environment]
 
   return (
     <Link href={`/clusters/${cluster.id}`}>
       <div
-        className="cluster-card relative group rounded-xl min-h-[80px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex items-start gap-3 overflow-hidden"
+        className="cluster-card relative group rounded-xl min-h-[90px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex items-start gap-3 overflow-hidden"
         style={
           {
             '--status-color': getStatusColor(status),
@@ -329,25 +390,20 @@ function ClusterCard({
           e.currentTarget.style.transform = 'none'
         }}
       >
-        {/* Status left accent bar */}
         <div
           className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
-          style={{ backgroundColor: meta.color, opacity: 0.7 }}
+          style={{ backgroundColor: envMeta.color, opacity: 0.9 }}
         />
 
         <div className="flex-1 min-w-0 p-4 pl-5">
-          {/* Row 1: Name */}
           <div className="flex items-center gap-2">
             <span
               className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(status)}`}
             />
-            <span className="text-sm font-bold text-[var(--color-text-primary)] truncate">
-              {cluster.name}
-            </span>
+            <span className="text-sm font-bold text-[var(--color-text-primary)] truncate">{cluster.name}</span>
             {cluster.source === 'db' && <HealthDot clusterId={cluster.id} />}
           </div>
 
-          {/* Row 2: Details */}
           <div className="flex items-center gap-4 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono">
             <span>K8s {cluster.version ?? '—'}</span>
             <span>·</span>
@@ -361,12 +417,24 @@ function ClusterCard({
           </div>
         </div>
 
-        {/* Right: Badge + Logo */}
         <div className="flex flex-col items-end justify-between gap-1 shrink-0 p-4 pl-0">
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
-            {cluster.provider}
+          <span
+            className="text-[10px] font-mono px-2 py-0.5 rounded-md border"
+            style={{
+              borderColor: envMeta.ring,
+              color: envMeta.color,
+              background: envMeta.softBg,
+            }}
+          >
+            {ENV_META[cluster.environment].label}
           </span>
-          <ProviderLogo provider={cluster.provider ?? 'default'} />
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
+              {cluster.provider}
+            </span>
+            <ProviderLogo provider={cluster.provider ?? 'default'} />
+          </div>
+          <span className="text-[9px] text-[var(--color-text-dim)]">{statusMeta.label}</span>
         </div>
       </div>
     </Link>
@@ -424,3 +492,4 @@ function SummaryCard({
     </div>
   )
 }
+

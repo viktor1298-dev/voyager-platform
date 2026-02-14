@@ -3,6 +3,8 @@
 import { APP_VERSION } from '@/config/constants'
 import { navItems } from '@/config/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
+import { trpc } from '@/lib/trpc'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -20,6 +22,8 @@ export function Sidebar({
 }) {
   const pathname = usePathname()
   const isAdmin = useIsAdmin()
+  const clustersQuery = trpc.clusters.list.useQuery(undefined, { refetchInterval: 60000 })
+  const sidebarClusters = (clustersQuery.data ?? []).slice(0, 6)
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/'
@@ -52,6 +56,7 @@ export function Sidebar({
           isActive={isActive}
           isAdmin={isAdmin}
           onLinkClick={() => {}}
+          clusters={sidebarClusters}
         />
         <button
           type="button"
@@ -82,6 +87,7 @@ export function Sidebar({
           isActive={isActive}
           isAdmin={isAdmin}
           onLinkClick={() => setMobileOpen(false)}
+          clusters={sidebarClusters}
         />
         <div className="px-3 py-2 mt-auto">
           <div className="text-[9px] text-[var(--color-text-dim)] font-mono text-left">
@@ -99,41 +105,70 @@ function SidebarContent({
   isActive,
   isAdmin,
   onLinkClick,
+  clusters,
 }: {
   collapsed: boolean
   showLabels: boolean
   isActive: (path: string) => boolean
   isAdmin: boolean
   onLinkClick: () => void
+  clusters: Array<{ id: string; name: string; provider: string | null }>
 }) {
   const filteredItems = navItems.filter((item) => !('adminOnly' in item && item.adminOnly) || isAdmin)
   return (
-    <nav className="flex flex-col gap-1 px-2">
-      {filteredItems.map((item) => {
-        const active = isActive(item.id)
-        const Icon = item.icon
-        return (
-          <Link
-            key={item.id}
-            href={item.id}
-            onClick={onLinkClick}
-            className={`
-              sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg
-              ${
-                active
-                  ? 'bg-white/[0.08] text-[var(--color-text-primary)] sidebar-active-bar'
-                  : 'text-[var(--color-text-muted)] hover:bg-white/[0.04] hover:text-[var(--color-text-secondary)] sidebar-hover-bar'
-              }
-            `}
-            style={{ transition: 'all var(--duration-fast) ease' }}
-          >
-            <Icon className="sidebar-icon h-4 w-4 shrink-0" />
-            {showLabels && (
-              <span className="sidebar-label text-[13px] font-medium">{item.label}</span>
-            )}
-          </Link>
-        )
-      })}
-    </nav>
+    <div className="flex flex-col gap-2 px-2">
+      <nav className="flex flex-col gap-1">
+        {filteredItems.map((item) => {
+          const active = isActive(item.id)
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.id}
+              href={item.id}
+              onClick={onLinkClick}
+              className={`
+                sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg
+                ${
+                  active
+                    ? 'bg-white/[0.08] text-[var(--color-text-primary)] sidebar-active-bar'
+                    : 'text-[var(--color-text-muted)] hover:bg-white/[0.04] hover:text-[var(--color-text-secondary)] sidebar-hover-bar'
+                }
+              `}
+              style={{ transition: 'all var(--duration-fast) ease' }}
+            >
+              <Icon className="sidebar-icon h-4 w-4 shrink-0" />
+              {showLabels && (
+                <span className="sidebar-label text-[13px] font-medium">{item.label}</span>
+              )}
+            </Link>
+          )
+        })}
+      </nav>
+
+      {showLabels && clusters.length > 0 && (
+        <div className="mt-2 border-t border-[var(--color-border)]/60 pt-2">
+          <p className="px-2 mb-1 text-[9px] uppercase tracking-widest font-mono text-[var(--color-text-dim)]">
+            Clusters
+          </p>
+          <div className="space-y-1">
+            {clusters.map((cluster) => {
+              const env = getClusterEnvironment(cluster.name, cluster.provider)
+              const color = ENV_META[env].color
+              return (
+                <Link
+                  key={cluster.id}
+                  href="/clusters"
+                  onClick={onLinkClick}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                  <span className="truncate">{cluster.name}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
