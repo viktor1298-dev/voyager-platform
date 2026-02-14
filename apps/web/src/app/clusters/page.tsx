@@ -246,6 +246,7 @@ export default function ClustersPage() {
             )}
           </div>
         ) : (
+          <>
           {/* Mobile Cards */}
           <div className="md:hidden space-y-3 p-3">
             {filtered.map((cluster, index) => (
@@ -381,6 +382,7 @@ export default function ClustersPage() {
               ))}
             </TableBody>
           </Table>
+          </>
         )}
       </div>
 

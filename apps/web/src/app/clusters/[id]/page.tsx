@@ -267,6 +267,7 @@ export default function ClusterDetailPage() {
         ) : nodes.length === 0 ? (
           <p className="text-[var(--color-text-muted)] text-sm py-4 text-center">No nodes found.</p>
         ) : (
+          <>
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
@@ -326,6 +327,7 @@ export default function ClusterDetailPage() {
               </div>
             ))}
           </div>
+          </>
         )}
       </div>
 
@@ -340,6 +342,7 @@ export default function ClusterDetailPage() {
         ) : events.length === 0 ? (
           <p className="text-[var(--color-text-muted)] text-sm py-4 text-center">No events found.</p>
         ) : (
+          <>
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
@@ -415,6 +418,7 @@ export default function ClusterDetailPage() {
               )
             })}
           </div>
+          </>
         )}
       </div>
     </AppLayout>
