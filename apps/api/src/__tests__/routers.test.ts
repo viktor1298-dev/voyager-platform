@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 // Mock @voyager/db and better-auth
 vi.mock('@voyager/db', () => ({
@@ -16,7 +16,7 @@ vi.mock('../lib/auth', () => ({
 }))
 
 import { authRouter } from '../routers/auth'
-import { router, type Context } from '../trpc'
+import { type Context, router } from '../trpc'
 
 const appRouter = router({ auth: authRouter })
 

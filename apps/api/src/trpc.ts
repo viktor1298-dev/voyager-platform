@@ -1,6 +1,6 @@
 import { TRPCError, initTRPC } from '@trpc/server'
-import { type Database, db } from '@voyager/db'
 import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
+import { type Database, db } from '@voyager/db'
 import { auth } from './lib/auth'
 
 export interface Context {
@@ -12,14 +12,19 @@ export interface Context {
 
 export async function createContext({ req, res }: CreateFastifyContextOptions): Promise<Context> {
   const headers = new Headers()
-  Object.entries(req.headers).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(req.headers)) {
     if (value) headers.append(key, String(value))
-  })
+  }
 
   const result = await auth.api.getSession({ headers }).catch(() => null)
 
   const user = result?.user
-    ? { id: result.user.id, email: result.user.email, name: result.user.name, role: result.user.role ?? null }
+    ? {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        role: result.user.role ?? null,
+      }
     : null
 
   return {

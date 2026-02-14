@@ -3,9 +3,9 @@ import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
 import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
 import Fastify from 'fastify'
+import { auth } from './lib/auth'
 import { type AppRouter, appRouter } from './routers'
 import { createContext } from './trpc'
-import { auth } from './lib/auth'
 
 const app = Fastify({ logger: true })
 
@@ -44,9 +44,9 @@ app.route({
     try {
       const url = new URL(request.url, `http://${request.headers.host}`)
       const headers = new Headers()
-      Object.entries(request.headers).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(request.headers)) {
         if (value) headers.append(key, value.toString())
-      })
+      }
       const req = new Request(url.toString(), {
         method: request.method,
         headers,
@@ -54,10 +54,12 @@ app.route({
       })
       const response = await auth.handler(req)
       reply.status(response.status)
-      response.headers.forEach((value, key) => reply.header(key, value))
+      for (const [key, value] of response.headers.entries()) {
+        reply.header(key, value)
+      }
       reply.send(response.body ? await response.text() : null)
     } catch (error) {
-      app.log.error('Authentication Error:', error)
+      app.log.error(error, 'Authentication Error')
       reply.status(500).send({ error: 'Internal authentication error', code: 'AUTH_FAILURE' })
     }
   },

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock DB - vi.mock factory cannot reference external variables
 vi.mock('@voyager/db', () => ({
@@ -27,7 +27,7 @@ vi.mock('../lib/auth', () => ({
 }))
 
 import { clustersRouter } from '../routers/clusters'
-import { router, type Context } from '../trpc'
+import { type Context, router } from '../trpc'
 
 const appRouter = router({ clusters: clustersRouter })
 
@@ -94,21 +94,21 @@ describe('clusters CUD routes require auth', () => {
   it('create throws UNAUTHORIZED without user', async () => {
     const caller = createCaller(null)
     await expect(
-      caller.clusters.create({ name: 'test', provider: 'aws', endpoint: 'https://example.com' })
+      caller.clusters.create({ name: 'test', provider: 'aws', endpoint: 'https://example.com' }),
     ).rejects.toThrow('Authentication required')
   })
 
   it('update throws UNAUTHORIZED without user', async () => {
     const caller = createCaller(null)
     await expect(
-      caller.clusters.update({ id: '00000000-0000-0000-0000-000000000000', status: 'healthy' })
+      caller.clusters.update({ id: '00000000-0000-0000-0000-000000000000', status: 'healthy' }),
     ).rejects.toThrow('Authentication required')
   })
 
   it('delete throws UNAUTHORIZED without user', async () => {
     const caller = createCaller(null)
     await expect(
-      caller.clusters.delete({ id: '00000000-0000-0000-0000-000000000000' })
+      caller.clusters.delete({ id: '00000000-0000-0000-0000-000000000000' }),
     ).rejects.toThrow('Authentication required')
   })
 })

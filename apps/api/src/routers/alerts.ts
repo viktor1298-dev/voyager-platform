@@ -1,4 +1,4 @@
-import { alerts, alertHistory } from '@voyager/db'
+import { alertHistory, alerts } from '@voyager/db'
 import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../trpc'
@@ -53,14 +53,20 @@ export const alertsRouter = router({
     if (fields.clusterFilter !== undefined) updateData.clusterFilter = fields.clusterFilter
     if (fields.enabled !== undefined) updateData.enabled = fields.enabled
 
-    const [updated] = await ctx.db.update(alerts).set(updateData).where(eq(alerts.id, id)).returning()
+    const [updated] = await ctx.db
+      .update(alerts)
+      .set(updateData)
+      .where(eq(alerts.id, id))
+      .returning()
     return updated
   }),
 
-  delete: protectedProcedure.input(z.object({ id: z.string().uuid() })).mutation(async ({ ctx, input }) => {
-    await ctx.db.delete(alerts).where(eq(alerts.id, input.id))
-    return { success: true }
-  }),
+  delete: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.delete(alerts).where(eq(alerts.id, input.id))
+      return { success: true }
+    }),
 
   history: protectedProcedure
     .input(z.object({ limit: z.number().min(1).max(100).default(50) }).optional())

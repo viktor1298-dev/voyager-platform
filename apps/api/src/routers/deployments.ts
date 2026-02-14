@@ -89,7 +89,13 @@ export const deploymentsRouter = router({
     }),
 
   scale: protectedProcedure
-    .input(z.object({ name: z.string(), namespace: z.string(), replicas: z.number().int().min(0).max(50) }))
+    .input(
+      z.object({
+        name: z.string(),
+        namespace: z.string(),
+        replicas: z.number().int().min(0).max(50),
+      }),
+    )
     .mutation(async ({ input }) => {
       try {
         const api = getAppsV1Api()

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockGet = vi.fn()
 const mockSetEx = vi.fn()
@@ -17,7 +17,9 @@ vi.mock('redis', () => ({
 import { cached, invalidateK8sCache } from '../lib/cache'
 
 describe('cached()', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('returns cached value on cache hit', async () => {
     mockGet.mockResolvedValue(JSON.stringify({ data: 'cached' }))
@@ -48,7 +50,9 @@ describe('cached()', () => {
 })
 
 describe('invalidateK8sCache()', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('deletes all known k8s cache keys', async () => {
     mockDel.mockResolvedValue(1)

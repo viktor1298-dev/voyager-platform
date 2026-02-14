@@ -66,10 +66,7 @@ export const healthRouter = router({
   check: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const [cluster] = await ctx.db
-        .select()
-        .from(clusters)
-        .where(eq(clusters.id, input.clusterId))
+      const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.clusterId))
       if (!cluster) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
       }
@@ -77,7 +74,11 @@ export const healthRouter = router({
       const isMinikube = cluster.provider === 'minikube'
       const result = isMinikube
         ? await performK8sHealthCheck()
-        : { status: 'unknown' as HealthStatus, responseTimeMs: 0, details: { reason: 'No live connection for DB-only clusters' } }
+        : {
+            status: 'unknown' as HealthStatus,
+            responseTimeMs: 0,
+            details: { reason: 'No live connection for DB-only clusters' },
+          }
 
       const [entry] = await ctx.db
         .insert(healthHistory)
@@ -93,7 +94,9 @@ export const healthRouter = router({
     }),
 
   history: protectedProcedure
-    .input(z.object({ clusterId: z.string().uuid(), limit: z.number().min(1).max(200).default(50) }))
+    .input(
+      z.object({ clusterId: z.string().uuid(), limit: z.number().min(1).max(200).default(50) }),
+    )
     .query(async ({ ctx, input }) => {
       const rows = await ctx.db
         .select()
@@ -118,7 +121,7 @@ export const healthRouter = router({
       .orderBy(healthHistory.clusterId, desc(healthHistory.checkedAt))
 
     // Build a map of clusterId -> latest entry
-    const latestMap = new Map<string, typeof allLatest[0]>()
+    const latestMap = new Map<string, (typeof allLatest)[0]>()
     for (const entry of allLatest) {
       if (!latestMap.has(entry.clusterId)) {
         latestMap.set(entry.clusterId, entry)

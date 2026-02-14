@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { protectedProcedure, router } from '../trpc'
 import { getCoreV1Api } from '../lib/k8s'
+import { protectedProcedure, router } from '../trpc'
 
 export const logsRouter = router({
   pods: protectedProcedure

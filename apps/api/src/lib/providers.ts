@@ -6,7 +6,17 @@ const PROVIDER_ALIASES: Record<string, string> = {
   'docker-desktop': 'docker',
 }
 
-export const VALID_PROVIDERS = ['aws', 'azure', 'gcp', 'minikube', 'k3s', 'kind', 'docker', 'do', 'onprem'] as const
+export const VALID_PROVIDERS = [
+  'aws',
+  'azure',
+  'gcp',
+  'minikube',
+  'k3s',
+  'kind',
+  'docker',
+  'do',
+  'onprem',
+] as const
 
 export type Provider = (typeof VALID_PROVIDERS)[number]
 

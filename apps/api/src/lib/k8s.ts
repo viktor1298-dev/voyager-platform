@@ -1,5 +1,5 @@
-import { TRPCError } from '@trpc/server'
 import * as k8s from '@kubernetes/client-node'
+import { TRPCError } from '@trpc/server'
 
 let _kc: k8s.KubeConfig | null = null
 let _k8sDisabled = false
