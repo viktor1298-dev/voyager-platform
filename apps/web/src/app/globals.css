@@ -293,8 +293,9 @@ h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 200%;
-  height: 200%;
+  /* Must be square and large enough to cover the card diagonal, even for wide/short cards */
+  width: 150vmax;
+  height: 150vmax;
   transform-origin: center;
   background: conic-gradient(
     from 0deg,

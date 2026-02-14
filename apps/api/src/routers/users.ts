@@ -40,7 +40,7 @@ export const usersRouter = router({
         if (result?.user?.id) {
           await auth.api.setRole({
             headers: new Headers(),
-            body: { userId: result.user.id, role: input.role },
+            body: { userId: result.user.id, role: input.role === 'viewer' ? 'user' : input.role },
           })
         }
 
