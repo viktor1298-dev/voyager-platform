@@ -1,3 +1,10 @@
+export type FeatureFlagActivity = {
+  id: string
+  actor: string
+  action: 'enabled' | 'disabled'
+  at: string
+}
+
 export type FeatureFlag = {
   id: string
   name: string
@@ -6,6 +13,8 @@ export type FeatureFlag = {
   targeting: Record<string, unknown>
   updatedAt: string
   critical?: boolean
+  tags?: string[]
+  activity: FeatureFlagActivity[]
 }
 
 export type WebhookDelivery = {
@@ -38,25 +47,68 @@ let featureFlags: FeatureFlag[] = [
     name: 'audit_log_enabled',
     description: 'Enable persisted audit logging for admin actions',
     enabled: true,
-    targeting: { environments: ['production', 'staging'] },
+    targeting: { environments: ['production', 'staging'], rollout: { percent: 100 } },
     updatedAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
     critical: true,
+    tags: ['security', 'compliance'],
+    activity: [
+      {
+        id: 'act-1',
+        actor: 'Morpheus',
+        action: 'enabled',
+        at: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
+      },
+      {
+        id: 'act-2',
+        actor: 'Lior',
+        action: 'disabled',
+        at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
+      },
+    ],
   },
   {
     id: '5254ac8c-9746-4a2d-a20c-6e17bb444f52',
     name: 'sse_subscriptions',
     description: 'Enable server-sent events subscriptions for live dashboard updates',
     enabled: true,
-    targeting: { roles: ['admin', 'operator'], rollout: { percent: 100 } },
+    targeting: {
+      roles: ['admin', 'operator'],
+      environments: ['production', 'staging'],
+      rollout: { percent: 100 },
+    },
     updatedAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+    tags: ['realtime', 'dashboard'],
+    activity: [
+      {
+        id: 'act-3',
+        actor: 'Ron',
+        action: 'enabled',
+        at: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+      },
+    ],
   },
   {
     id: 'ad0f82e0-f136-49f5-b15b-043f73e4fda9',
     name: 'webhook_deliveries_ui',
     description: 'Show webhook delivery history and diagnostics in admin UI',
     enabled: false,
-    targeting: { tenants: ['beta'], clusters: ['sandbox-*'] },
+    targeting: { environments: ['staging'], segments: ['beta'], rollout: { percent: 35 } },
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
+    tags: ['beta', 'integrations'],
+    activity: [
+      {
+        id: 'act-4',
+        actor: 'Mai',
+        action: 'disabled',
+        at: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
+      },
+      {
+        id: 'act-5',
+        actor: 'Dima',
+        action: 'enabled',
+        at: new Date(Date.now() - 1000 * 60 * 60 * 30).toISOString(),
+      },
+    ],
   },
 ]
 
@@ -119,13 +171,27 @@ export const mockAdminApi = {
   features: {
     async list() {
       await sleep(350)
-      return featureFlags.map(({ critical: _critical, ...item }) => item)
+      return featureFlags.map(({ critical: _critical, activity: _activity, tags: _tags, ...item }) => item)
     },
     async update(input: { id: string; enabled: boolean }) {
       await sleep(250)
+      const now = new Date().toISOString()
       featureFlags = featureFlags.map((f) =>
         f.id === input.id
-          ? { ...f, enabled: input.enabled, updatedAt: new Date().toISOString() }
+          ? {
+              ...f,
+              enabled: input.enabled,
+              updatedAt: now,
+              activity: [
+                {
+                  id: `act-${Date.now()}`,
+                  actor: 'You',
+                  action: input.enabled ? 'enabled' : 'disabled',
+                  at: now,
+                },
+                ...f.activity,
+              ],
+            }
           : f,
       )
       return input
