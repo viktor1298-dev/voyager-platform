@@ -10,10 +10,12 @@
     "db:generate": "pnpm --filter @voyager/db db:generate",
     "db:push": "pnpm --filter @voyager/db db:push",
     "db:migrate": "pnpm --filter @voyager/db db:migrate",
-    "db:seed": "pnpm --filter @voyager/db db:seed"
+    "db:seed": "pnpm --filter @voyager/db db:seed",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@playwright/test": "^1.58.2",
     "turbo": "^2.4.0",
     "typescript": "^5.7.0"
   },
