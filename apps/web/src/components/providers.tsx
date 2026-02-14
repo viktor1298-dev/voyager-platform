@@ -14,7 +14,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       queries: {
         retry: (failureCount, error) => {
           handleTRPCError(error)
-          return failureCount < 3
+          const MAX_RETRIES = 3
+          return failureCount < MAX_RETRIES
         },
       },
       mutations: {
