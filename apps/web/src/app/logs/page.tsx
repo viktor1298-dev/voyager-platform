@@ -53,6 +53,7 @@ export default function LogsPage() {
   const [autoScroll, setAutoScroll] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLevels, setSelectedLevels] = useState<LogLevel[]>([...LOG_LEVELS])
+  const [viewMode, setViewMode] = useState<'merged' | 'split'>('merged')
   const logEndRef = useRef<HTMLDivElement>(null)
 
   const podsQuery = trpc.logs.pods.useQuery(
@@ -101,9 +102,9 @@ export default function LogsPage() {
 
   useEffect(() => {
     setSelectedPods((current) =>
-      current.filter((podKey) => filteredPods.some((p) => `${p.namespace}/${p.name}` === podKey)),
+      current.filter((key) => filteredPods.some((p) => podKey(p.namespace, p.name) === key)),
     )
-  }, [filteredPods])
+  }, [filteredPods, podKey])
 
   const togglePod = useCallback((podKey: string) => {
     setSelectedPods((current) =>
@@ -138,6 +139,21 @@ export default function LogsPage() {
   }, [logsQuery.data?.lines])
 
   const targetsWithErrors = logsQuery.data?.targets.filter((target) => target.error) ?? []
+
+  const groupedLines = useMemo(() => {
+    const groups = new Map<string, NonNullable<typeof logsQuery.data>['lines']>()
+    for (const line of logsQuery.data?.lines ?? []) {
+      const key = `${line.namespace}/${line.podName}/${line.container}`
+      const existing = groups.get(key)
+      if (existing) {
+        existing.push(line)
+      } else {
+        groups.set(key, [line])
+      }
+    }
+
+    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b))
+  }, [logsQuery.data?.lines])
 
   return (
     <AppLayout>
@@ -238,13 +254,13 @@ export default function LogsPage() {
               <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">Pods</p>
               <div className="max-h-[260px] overflow-auto space-y-2 pr-1">
                 {filteredPods.map((pod) => {
-                  const podKey = `${pod.namespace}/${pod.name}`
+                  const targetKey = podKey(pod.namespace, pod.name)
                   return (
-                    <label key={podKey} className="flex items-start gap-2 text-sm">
+                    <label key={targetKey} className="flex items-start gap-2 text-sm">
                       <input
                         type="checkbox"
-                        checked={selectedPods.includes(podKey)}
-                        onChange={() => togglePod(podKey)}
+                        checked={selectedPods.includes(targetKey)}
+                        onChange={() => togglePod(targetKey)}
                         className="mt-0.5 rounded border-[var(--color-border)] accent-[var(--color-accent)]"
                       />
                       <span className="text-[var(--color-text-primary)] break-all">
@@ -285,6 +301,23 @@ export default function LogsPage() {
                   </label>
                 ))}
               </div>
+
+              <div className="inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1 text-xs">
+                <button
+                  type="button"
+                  className={`rounded-md px-2 py-1 ${viewMode === 'merged' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-text-secondary)]'}`}
+                  onClick={() => setViewMode('merged')}
+                >
+                  Merged
+                </button>
+                <button
+                  type="button"
+                  className={`rounded-md px-2 py-1 ${viewMode === 'split' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-text-secondary)]'}`}
+                  onClick={() => setViewMode('split')}
+                >
+                  Split by pod
+                </button>
+              </div>
             </div>
           </div>
 
@@ -310,36 +343,64 @@ export default function LogsPage() {
           )}
 
           {selectedTargets.length > 0 && logsQuery.data && (
-            <div
-              className="relative rounded-xl border border-[var(--color-border)] overflow-hidden"
-              style={{ boxShadow: 'var(--shadow-card)' }}
-            >
-              <div className="flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-log-header)] px-4 py-2">
-                <span className="text-xs text-[var(--color-log-dim)] font-mono">
-                  {selectedTargets.length} pod(s) • {selectedLevels.join(', ')}
-                </span>
-                <span className="text-xs text-[var(--color-log-dim)]">{logsQuery.data.lines.length} lines</span>
-              </div>
-              <pre className="overflow-auto max-h-[600px] p-4 text-xs leading-5 text-[var(--color-log-text)] font-mono whitespace-pre-wrap bg-[var(--color-log-bg)]">
-                {logsQuery.data.lines.length === 0 ? (
-                  <span className="text-[var(--color-log-dim)] italic">No matching log lines</span>
+            <div className="space-y-3">
+              <div
+                className="relative rounded-xl border border-[var(--color-border)] overflow-hidden"
+                style={{ boxShadow: 'var(--shadow-card)' }}
+              >
+                <div className="flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-log-header)] px-4 py-2">
+                  <span className="text-xs text-[var(--color-log-dim)] font-mono">
+                    {selectedTargets.length} pod(s) • {selectedLevels.join(', ')}
+                  </span>
+                  <span className="text-xs text-[var(--color-log-dim)]">{logsQuery.data.lines.length} lines</span>
+                </div>
+                {viewMode === 'merged' ? (
+                  <pre className="overflow-auto max-h-[600px] p-4 text-xs leading-5 text-[var(--color-log-text)] font-mono whitespace-pre-wrap bg-[var(--color-log-bg)]">
+                    {logsQuery.data.lines.length === 0 ? (
+                      <span className="text-[var(--color-log-dim)] italic">No matching log lines</span>
+                    ) : (
+                      logsQuery.data.lines.map((line, index) => (
+                        <div key={`${line.timestamp}-${line.podName}-${index}`} className="hover:bg-white/5">
+                          <span className="inline-block w-8 text-right text-[var(--color-log-line-number)] select-none mr-3">
+                            {index + 1}
+                          </span>
+                          <span className="text-[var(--color-log-dim)] mr-2">{line.timestamp}</span>
+                          <span className="mr-2">[{line.level}]</span>
+                          <span className="text-cyan-300 mr-2">
+                            {line.namespace}/{line.podName}/{line.container}
+                          </span>
+                          {line.message}
+                        </div>
+                      ))
+                    )}
+                    <div ref={logEndRef} />
+                  </pre>
                 ) : (
-                  logsQuery.data.lines.map((line, index) => (
-                    <div key={`${line.timestamp}-${line.podName}-${index}`} className="hover:bg-white/5">
-                      <span className="inline-block w-8 text-right text-[var(--color-log-line-number)] select-none mr-3">
-                        {index + 1}
-                      </span>
-                      <span className="text-[var(--color-log-dim)] mr-2">{line.timestamp}</span>
-                      <span className="mr-2">[{line.level}]</span>
-                      <span className="text-cyan-300 mr-2">
-                        {line.namespace}/{line.podName}/{line.container}
-                      </span>
-                      {line.message}
-                    </div>
-                  ))
+                  <div className="max-h-[600px] overflow-auto bg-[var(--color-log-bg)] p-3 space-y-3">
+                    {groupedLines.length === 0 ? (
+                      <div className="text-xs italic text-[var(--color-log-dim)]">No matching log lines</div>
+                    ) : (
+                      groupedLines.map(([groupKey, lines]) => (
+                        <div key={groupKey} className="rounded-lg border border-[var(--color-border)] overflow-hidden">
+                          <div className="bg-[var(--color-log-header)] px-3 py-1 text-xs text-cyan-300 font-mono">
+                            {groupKey} ({lines.length})
+                          </div>
+                          <pre className="p-3 text-xs leading-5 text-[var(--color-log-text)] font-mono whitespace-pre-wrap">
+                            {lines.map((line, index) => (
+                              <div key={`${line.timestamp}-${index}`}>
+                                <span className="text-[var(--color-log-dim)] mr-2">{line.timestamp}</span>
+                                <span className="mr-2">[{line.level}]</span>
+                                {line.message}
+                              </div>
+                            ))}
+                          </pre>
+                        </div>
+                      ))
+                    )}
+                    <div ref={logEndRef} />
+                  </div>
                 )}
-                <div ref={logEndRef} />
-              </pre>
+              </div>
             </div>
           )}
         </div>
