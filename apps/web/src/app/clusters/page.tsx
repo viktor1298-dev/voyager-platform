@@ -156,8 +156,8 @@ export default function ClustersPage() {
       </div>
 
       {/* Search & Filters */}
-      <div className="flex flex-wrap items-center gap-3 mb-5">
-        <div className="relative flex-1 min-w-[200px] max-w-[360px]">
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 mb-5">
+        <div className="relative flex-1 min-w-0 sm:min-w-[200px] sm:max-w-[360px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--color-text-muted)]" />
           <input
             type="text"
@@ -246,7 +246,55 @@ export default function ClustersPage() {
             )}
           </div>
         ) : (
-          <Table>
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3 p-3">
+            {filtered.map((cluster, index) => (
+              <div
+                key={cluster.id}
+                onClick={() => router.push(`/clusters/${cluster.id}`)}
+                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2 cursor-pointer active:bg-white/[0.03] animate-slide-up"
+                style={{ animationDelay: `${index * 30}ms`, animationFillMode: 'both' }}
+              >
+                <div className="flex justify-between items-center gap-2">
+                  <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm">
+                    {cluster.name}
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(cluster.status ?? 'unknown')}`} />
+                    <Badge variant={statusBadgeVariant(cluster.status ?? 'unknown')}>
+                      {cluster.status ?? 'unknown'}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                  <span className="text-[var(--color-text-muted)]">Provider</span>
+                  <span className="text-[var(--color-text-primary)] flex items-center gap-1.5">
+                    <ProviderLogo provider={cluster.provider ?? 'default'} />
+                    <span className="font-mono uppercase">{cluster.provider}</span>
+                  </span>
+                  <span className="text-[var(--color-text-muted)]">Version</span>
+                  <span className="text-[var(--color-text-primary)] font-mono">{cluster.version ?? '—'}</span>
+                  <span className="text-[var(--color-text-muted)]">Nodes</span>
+                  <span className="text-[var(--color-text-primary)] font-mono tabular-nums">{cluster.nodeCount}</span>
+                  <span className="text-[var(--color-text-muted)]">Last Seen</span>
+                  <span className="text-[var(--color-text-primary)]">{formatLastSeen(cluster.updatedAt)}</span>
+                </div>
+                <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteClick(e, { id: cluster.id, name: cluster.name })}
+                    className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                    title="Delete cluster"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table */}
+          <Table className="hidden md:table">
             <TableHeader>
               <TableRow className="border-b border-[var(--color-border)] hover:bg-transparent">
                 <TableHead className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">

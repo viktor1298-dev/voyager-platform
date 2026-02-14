@@ -120,7 +120,7 @@ export default function DashboardPage() {
   return (
     <AppLayout>
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
         <SummaryCard
           icon={<Server className="h-4 w-4" />}
           label="Total Nodes"
@@ -156,7 +156,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Clusters Header + Filter Bar */}
-      <div className="flex items-end justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
         <div>
           <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">
             Clusters

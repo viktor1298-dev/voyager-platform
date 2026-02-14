@@ -100,7 +100,7 @@ export default function EventsPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex items-center gap-3 mb-5 flex-wrap">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-5">
         <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)]">
           {(['all', 'Normal', 'Warning'] as EventFilter[]).map((f) => {
             const isActive = filter === f
@@ -176,8 +176,8 @@ export default function EventsPage() {
         </div>
       ) : (
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-          {/* Table Header */}
-          <div className="grid grid-cols-[80px_70px_100px_140px_100px_1fr_50px] gap-2 px-4 py-2.5 border-b border-[var(--color-border)] text-[10px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">
+          {/* Desktop Table Header */}
+          <div className="hidden md:grid grid-cols-[80px_70px_100px_140px_100px_1fr_50px] gap-2 px-4 py-2.5 border-b border-[var(--color-border)] text-[10px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">
             <span>Time</span>
             <span>Type</span>
             <span>Reason</span>
@@ -187,28 +187,23 @@ export default function EventsPage() {
             <span className="text-right">Count</span>
           </div>
 
-          {/* Rows */}
-          <div className="max-h-[calc(100vh-320px)] overflow-y-auto">
+          {/* Desktop Rows */}
+          <div className="hidden md:block max-h-[calc(100vh-320px)] overflow-y-auto">
             {filtered.map((event, i) => {
               const isWarning = event.type === 'Warning'
               return (
                 <div
-                  key={`${event.object}-${event.reason}-${event.lastSeen}-${i}`}
+                  key={`d-${event.object}-${event.reason}-${event.lastSeen}-${i}`}
                   className={`
                     grid grid-cols-[80px_70px_100px_140px_100px_1fr_50px] gap-2 px-4 py-2.5 text-[12px] border-b border-[var(--color-border)]/20
                     hover:bg-white/[0.02] transition-colors relative
                     ${isWarning ? 'bg-[var(--color-status-warning)]/[0.03]' : ''}
                   `}
                 >
-                  {/* Warning left accent */}
                   {isWarning && (
                     <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--color-status-warning)]/60" />
                   )}
-
-                  <span className="text-[var(--color-text-muted)] font-mono tabular-nums truncate">
-                    {timeAgo(event.lastSeen)}
-                  </span>
-
+                  <span className="text-[var(--color-text-muted)] font-mono tabular-nums truncate">{timeAgo(event.lastSeen)}</span>
                   <span>
                     {isWarning ? (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)] border border-[var(--color-status-warning)]/20">
@@ -222,26 +217,51 @@ export default function EventsPage() {
                       </span>
                     )}
                   </span>
+                  <span className="text-[var(--color-text-secondary)] font-medium truncate">{event.reason}</span>
+                  <span className="text-[var(--color-text-muted)] font-mono text-[11px] truncate" title={event.object}>{event.object}</span>
+                  <span className="text-[var(--color-accent)] font-mono text-[11px] truncate">{event.namespace}</span>
+                  <span className="text-[var(--color-text-muted)] truncate" title={event.message}>{event.message}</span>
+                  <span className="text-[var(--color-text-dim)] font-mono tabular-nums text-right">{event.count}</span>
+                </div>
+              )
+            })}
+          </div>
 
-                  <span className="text-[var(--color-text-secondary)] font-medium truncate">
-                    {event.reason}
-                  </span>
-
-                  <span className="text-[var(--color-text-muted)] font-mono text-[11px] truncate" title={event.object}>
-                    {event.object}
-                  </span>
-
-                  <span className="text-[var(--color-accent)] font-mono text-[11px] truncate">
-                    {event.namespace}
-                  </span>
-
-                  <span className="text-[var(--color-text-muted)] truncate" title={event.message}>
-                    {event.message}
-                  </span>
-
-                  <span className="text-[var(--color-text-dim)] font-mono tabular-nums text-right">
-                    {event.count}
-                  </span>
+          {/* Mobile Cards */}
+          <div className="md:hidden max-h-[calc(100vh-320px)] overflow-y-auto space-y-0">
+            {filtered.map((event, i) => {
+              const isWarning = event.type === 'Warning'
+              return (
+                <div
+                  key={`m-${event.object}-${event.reason}-${event.lastSeen}-${i}`}
+                  className={`p-3 border-b border-[var(--color-border)]/20 relative ${isWarning ? 'bg-[var(--color-status-warning)]/[0.03]' : ''}`}
+                >
+                  {isWarning && (
+                    <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--color-status-warning)]/60" />
+                  )}
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <div className="flex items-center gap-2">
+                      {isWarning ? (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)] border border-[var(--color-status-warning)]/20">
+                          <AlertTriangle className="h-2.5 w-2.5" />
+                          Warn
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--color-status-active)]/10 text-[var(--color-status-active)] border border-[var(--color-status-active)]/20">
+                          <Shield className="h-2.5 w-2.5" />
+                          OK
+                        </span>
+                      )}
+                      <span className="text-[var(--color-text-secondary)] font-medium text-xs">{event.reason}</span>
+                    </div>
+                    <span className="text-[var(--color-text-dim)] font-mono text-[10px] tabular-nums shrink-0">{timeAgo(event.lastSeen)}</span>
+                  </div>
+                  <p className="text-[var(--color-text-muted)] text-xs leading-relaxed line-clamp-2">{event.message}</p>
+                  <div className="flex items-center gap-3 mt-1.5 text-[10px]">
+                    <span className="text-[var(--color-text-muted)] font-mono truncate">{event.object}</span>
+                    <span className="text-[var(--color-accent)] font-mono">{event.namespace}</span>
+                    {event.count > 1 && <span className="text-[var(--color-text-dim)] font-mono">×{event.count}</span>}
+                  </div>
                 </div>
               )
             })}

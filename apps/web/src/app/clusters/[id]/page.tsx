@@ -227,7 +227,7 @@ export default function ClusterDetailPage() {
                   {cluster.provider}
                 </span>
               </div>
-              <p className="text-[12px] text-[var(--color-text-dim)] font-mono mt-1">
+              <p className="text-[12px] text-[var(--color-text-dim)] font-mono mt-1 break-all">
                 Kubernetes {cluster.version} • {cluster.endpoint}
               </p>
             </div>
@@ -267,7 +267,8 @@ export default function ClusterDetailPage() {
         ) : nodes.length === 0 ? (
           <p className="text-[var(--color-text-muted)] text-sm py-4 text-center">No nodes found.</p>
         ) : (
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06]">
@@ -298,6 +299,33 @@ export default function ClusterDetailPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3">
+            {nodes.map((node) => (
+              <div key={node.id} className="rounded-lg border border-[var(--color-border)] bg-white/[0.02] p-3 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-[var(--color-text-primary)] text-sm">{node.name}</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
+                    <span className="text-[var(--color-text-secondary)] text-xs">{node.status}</span>
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                  <span className="text-[var(--color-text-muted)]">Role</span>
+                  <span className="text-[var(--color-text-primary)]">{node.role}</span>
+                  <span className="text-[var(--color-text-muted)]">Kubelet</span>
+                  <span className="text-[var(--color-text-primary)] font-mono">{node.kubeletVersion}</span>
+                  <span className="text-[var(--color-text-muted)]">OS</span>
+                  <span className="text-[var(--color-text-primary)]">{node.os}</span>
+                  <span className="text-[var(--color-text-muted)]">CPU</span>
+                  <span className="text-[var(--color-text-primary)] font-mono">{node.cpu}</span>
+                  <span className="text-[var(--color-text-muted)]">Memory</span>
+                  <span className="text-[var(--color-text-primary)] font-mono">{node.memory}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -312,7 +340,8 @@ export default function ClusterDetailPage() {
         ) : events.length === 0 ? (
           <p className="text-[var(--color-text-muted)] text-sm py-4 text-center">No events found.</p>
         ) : (
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06]">
@@ -356,6 +385,35 @@ export default function ClusterDetailPage() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-0">
+            {events.map((event) => {
+              const isWarning = event.type === 'Warning'
+              return (
+                <div key={event.id} className={`p-3 border-b border-white/[0.03] ${isWarning ? 'bg-[var(--color-status-warning)]/[0.04]' : ''}`}>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+                        style={{
+                          color: severityColor(event.type),
+                          background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)`,
+                        }}
+                      >
+                        {event.type}
+                      </span>
+                      <span className="text-[var(--color-text-primary)] text-xs font-medium">{event.reason}</span>
+                    </div>
+                    <span className="text-[var(--color-text-dim)] font-mono text-[10px] shrink-0">
+                      {event.timestamp ? timeAgo(event.timestamp) : '—'}
+                    </span>
+                  </div>
+                  <p className="text-[var(--color-text-muted)] text-xs line-clamp-2">{event.message}</p>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

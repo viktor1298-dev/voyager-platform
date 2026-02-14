@@ -32,7 +32,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <main
         className={`pt-14 min-h-screen transition-all duration-200 ${collapsed ? 'md:ml-12' : 'md:ml-48'}`}
       >
-        <div className="p-6 max-w-[1400px] bg-dot-grid min-h-full">{children}</div>
+        <div className="p-3 sm:p-6 max-w-[1400px] w-full max-w-[100vw] overflow-x-hidden bg-dot-grid min-h-full">{children}</div>
       </main>
     </AuthGuard>
   )

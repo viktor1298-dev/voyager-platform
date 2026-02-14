@@ -34,7 +34,7 @@ export function Dialog({ open, onClose, children, title }: DialogProps) {
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-lg mx-4 rounded-xl border border-[var(--color-border)] p-6 shadow-2xl animate-slide-up"
+        className="relative w-full max-w-lg max-w-[calc(100vw-2rem)] mx-4 rounded-xl border border-[var(--color-border)] p-4 sm:p-6 shadow-2xl animate-slide-up"
         style={{
           background: 'var(--color-bg-card)',
         }}

@@ -59,7 +59,7 @@ function ScaleDialog({
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={onClose} role="presentation">
       <div
-        className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-5 w-80 shadow-xl"
+        className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-5 w-80 max-w-[calc(100vw-2rem)] shadow-xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label={`Scale ${deployment.name}`}
@@ -175,8 +175,8 @@ export default function DeploymentsPage() {
         </div>
       ) : (
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-          {/* Table Header */}
-          <div className="grid grid-cols-[1fr_100px_90px_1fr_70px_70px_120px] gap-2 px-4 py-2.5 border-b border-[var(--color-border)] text-[10px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">
+          {/* Desktop Table Header */}
+          <div className="hidden md:grid grid-cols-[1fr_100px_90px_1fr_70px_70px_120px] gap-2 px-4 py-2.5 border-b border-[var(--color-border)] text-[10px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">
             <span>Name</span>
             <span>Namespace</span>
             <span>Replicas</span>
@@ -186,41 +186,58 @@ export default function DeploymentsPage() {
             <span className="text-right">Actions</span>
           </div>
 
-          {/* Rows */}
-          <div className="max-h-[calc(100vh-320px)] overflow-y-auto">
+          {/* Desktop Rows */}
+          <div className="hidden md:block max-h-[calc(100vh-320px)] overflow-y-auto">
             {deployments.map((d) => (
               <div
-                key={`${d.namespace}/${d.name}`}
+                key={`d-${d.namespace}/${d.name}`}
                 className="grid grid-cols-[1fr_100px_90px_1fr_70px_70px_120px] gap-2 px-4 py-2.5 text-[12px] border-b border-[var(--color-border)]/20 hover:bg-white/[0.02] transition-colors items-center"
               >
                 <span className="text-[var(--color-text-primary)] font-medium truncate">{d.name}</span>
                 <span className="text-[var(--color-accent)] font-mono text-[11px] truncate">{d.namespace}</span>
-                <span className="text-[var(--color-text-muted)] font-mono tabular-nums">
-                  {d.ready}/{d.replicas}
-                </span>
-                <span className="text-[var(--color-text-muted)] font-mono text-[11px] truncate" title={d.image}>
-                  {d.image}
-                </span>
+                <span className="text-[var(--color-text-muted)] font-mono tabular-nums">{d.ready}/{d.replicas}</span>
+                <span className="text-[var(--color-text-muted)] font-mono text-[11px] truncate" title={d.image}>{d.image}</span>
                 <span className="text-[var(--color-text-dim)] font-mono tabular-nums">{d.age}</span>
                 <StatusBadge status={d.status} />
                 <div className="flex gap-1 justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setConfirmRestart(d)}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors"
-                    title="Restart"
-                  >
-                    <RefreshCw className="h-3 w-3" />
-                    Restart
+                  <button type="button" onClick={() => setConfirmRestart(d)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Restart">
+                    <RefreshCw className="h-3 w-3" />Restart
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setScaleTarget(d)}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors"
-                    title="Scale"
-                  >
-                    <Scale className="h-3 w-3" />
-                    Scale
+                  <button type="button" onClick={() => setScaleTarget(d)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Scale">
+                    <Scale className="h-3 w-3" />Scale
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden max-h-[calc(100vh-320px)] overflow-y-auto space-y-0">
+            {deployments.map((d) => (
+              <div
+                key={`m-${d.namespace}/${d.name}`}
+                className="p-3 border-b border-[var(--color-border)]/20 space-y-2"
+              >
+                <div className="flex justify-between items-center gap-2">
+                  <span className="text-[var(--color-text-primary)] font-medium text-sm truncate">{d.name}</span>
+                  <StatusBadge status={d.status} />
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                  <span className="text-[var(--color-text-muted)]">Namespace</span>
+                  <span className="text-[var(--color-accent)] font-mono truncate">{d.namespace}</span>
+                  <span className="text-[var(--color-text-muted)]">Replicas</span>
+                  <span className="text-[var(--color-text-primary)] font-mono tabular-nums">{d.ready}/{d.replicas}</span>
+                  <span className="text-[var(--color-text-muted)]">Age</span>
+                  <span className="text-[var(--color-text-primary)] font-mono">{d.age}</span>
+                  <span className="text-[var(--color-text-muted)]">Image</span>
+                  <span className="text-[var(--color-text-primary)] font-mono text-[10px] truncate">{d.image}</span>
+                </div>
+                <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
+                  <button type="button" onClick={() => setConfirmRestart(d)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
+                    <RefreshCw className="h-3 w-3" />Restart
+                  </button>
+                  <button type="button" onClick={() => setScaleTarget(d)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
+                    <Scale className="h-3 w-3" />Scale
                   </button>
                 </div>
               </div>
@@ -238,7 +255,7 @@ export default function DeploymentsPage() {
       {confirmRestart && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={() => setConfirmRestart(null)} role="presentation">
           <div
-            className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-5 w-80 shadow-xl"
+            className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-5 w-80 max-w-[calc(100vw-2rem)] shadow-xl"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-label={`Restart ${confirmRestart.name}`}
