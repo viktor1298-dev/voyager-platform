@@ -5,7 +5,9 @@ import { signToken } from '../lib/auth'
 import { publicProcedure, protectedProcedure, router } from '../trpc'
 
 const ADMIN_EMAIL = 'admin@voyager.local'
-const ADMIN_PASSWORD_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || 'admin123', 10)
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+if (!ADMIN_PASSWORD) throw new Error('ADMIN_PASSWORD environment variable is required')
+const ADMIN_PASSWORD_HASH = bcrypt.hashSync(ADMIN_PASSWORD, 10)
 const ADMIN_USER = { id: 'admin-001', email: ADMIN_EMAIL, role: 'admin' as const }
 
 export const authRouter = router({
