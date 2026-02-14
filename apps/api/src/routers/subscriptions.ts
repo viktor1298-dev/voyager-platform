@@ -18,7 +18,7 @@ import { protectedProcedure, router } from '../trpc.js'
 function createEventStream<T>(
   eventName: string,
   signal: AbortSignal | undefined,
-): AsyncGenerator<T, void, unknown> {
+): AsyncIterableIterator<T> {
   const queue: T[] = []
   let resolve: (() => void) | null = null
   let done = false
