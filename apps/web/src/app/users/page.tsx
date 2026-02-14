@@ -2,6 +2,8 @@
 
 import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { Badge } from '@/components/ui/badge'
 import { Dialog } from '@/components/ui/dialog'
@@ -9,9 +11,11 @@ import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useAuthStore } from '@/stores/auth'
 import { trpc } from '@/lib/trpc'
 import { useForm } from '@tanstack/react-form'
+import type { ColumnDef } from '@tanstack/react-table'
 import { Plus, Shield, ShieldAlert, Trash2, UserCog, Users } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { z } from 'zod'
 
 const createUserSchema = z.object({
@@ -23,9 +27,15 @@ const createUserSchema = z.object({
 
 function formatDate(date: string | Date | null) {
   if (!date) return '—'
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'short', day: 'numeric',
-  })
+  return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+type UserRow = {
+  id: string
+  name: string
+  email: string
+  role: string
+  createdAt: string | Date | null
 }
 
 export default function UsersPage() {
@@ -33,7 +43,6 @@ export default function UsersPage() {
   const isAdmin = useIsAdmin()
   const currentUserId = useAuthStore((s) => s.user?.id)
 
-  // Redirect non-admins
   useEffect(() => {
     if (isAdmin === false) router.replace('/')
   }, [isAdmin, router])
@@ -41,198 +50,170 @@ export default function UsersPage() {
   const utils = trpc.useUtils()
   const usersQuery = trpc.users.list.useQuery(undefined, { enabled: isAdmin })
   const createUser = trpc.users.create.useMutation({
-    onSuccess: () => { utils.users.list.invalidate(); setShowAdd(false) },
+    onSuccess: () => {
+      utils.users.list.invalidate()
+      setShowAdd(false)
+      toast.success('User created')
+    },
+    onError: (err) => toast.error('Failed to create user', { description: err.message }),
   })
   const updateRole = trpc.users.updateRole.useMutation({
-    onSuccess: () => utils.users.list.invalidate(),
+    onSuccess: (_, vars) => {
+      utils.users.list.invalidate()
+      toast.success(`Role updated to ${vars.role}`)
+    },
+    onError: (err) => toast.error('Failed to update role', { description: err.message }),
   })
   const deleteUser = trpc.users.delete.useMutation({
-    onSuccess: () => { utils.users.list.invalidate(); setDeleteTarget(null) },
+    onSuccess: () => {
+      utils.users.list.invalidate()
+      setDeleteTarget(null)
+      toast.success('User deleted')
+    },
+    onError: (err) => toast.error('Failed to delete user', { description: err.message }),
   })
 
   const [showAdd, setShowAdd] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
+  useEffect(() => {
+    const onRefresh = () => usersQuery.refetch()
+    const onNew = () => { addForm.reset(); setShowAdd(true) }
+    document.addEventListener('voyager:refresh', onRefresh)
+    document.addEventListener('voyager:new', onNew)
+    return () => {
+      document.removeEventListener('voyager:refresh', onRefresh)
+      document.removeEventListener('voyager:new', onNew)
+    }
+  }, [usersQuery])
+
   const addForm = useForm({
     defaultValues: { name: '', email: '', password: '', role: 'viewer' as 'admin' | 'viewer' },
     validators: { onChange: createUserSchema },
-    onSubmit: async ({ value }) => {
-      createUser.mutate(value)
-    },
+    onSubmit: async ({ value }) => { createUser.mutate(value) },
   })
 
-  const users = usersQuery.data ?? []
-
+  const users: UserRow[] = usersQuery.data ?? []
   if (!isAdmin) return null
 
-  const inputClass =
-    'w-full px-3 py-2 text-sm rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
-  const btnPrimary =
-    'px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer'
-  const btnSecondary =
-    'px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer'
+  const columns = useMemo<ColumnDef<UserRow, unknown>[]>(() => [
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      cell: ({ row }) => <span className="font-medium text-[var(--color-text-primary)]">{row.original.name}</span>,
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+      cell: ({ row }) => <span className="text-[var(--color-text-muted)] font-mono text-[12px]">{row.original.email}</span>,
+    },
+    {
+      accessorKey: 'role',
+      header: 'Role',
+      cell: ({ row }) => (
+        <Badge variant={row.original.role === 'admin' ? 'warning' : 'outline'}>
+          {row.original.role === 'admin' ? (
+            <span className="flex items-center gap-1"><ShieldAlert className="h-3 w-3" />Admin</span>
+          ) : (
+            <span className="flex items-center gap-1"><Shield className="h-3 w-3" />Viewer</span>
+          )}
+        </Badge>
+      ),
+    },
+    {
+      id: 'created',
+      header: 'Created',
+      accessorFn: (row) => row.createdAt,
+      cell: ({ row }) => <span className="text-[var(--color-text-muted)] text-[12px]">{formatDate(row.original.createdAt)}</span>,
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      enableSorting: false,
+      cell: ({ row }) => {
+        const u = row.original
+        if (u.id === currentUserId) return <span className="text-[10px] text-[var(--color-text-dim)] font-mono">You</span>
+        return (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => updateRole.mutate({ userId: u.id, role: u.role === 'admin' ? 'viewer' : 'admin' })}
+              disabled={updateRole.isPending}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
+            >
+              <UserCog className="h-3 w-3" />{u.role === 'admin' ? 'Demote' : 'Promote'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteTarget({ id: u.id, name: u.name })}
+              className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )
+      },
+    },
+  ], [currentUserId, updateRole])
+
+  const inputClass = 'w-full px-3 py-2 text-sm rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
+  const btnPrimary = 'px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer'
+  const btnSecondary = 'px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer'
 
   return (
     <AppLayout>
       <Breadcrumbs />
+      {usersQuery.error && <QueryError message={usersQuery.error.message} onRetry={() => usersQuery.refetch()} />}
 
-      {usersQuery.error && (
-        <QueryError message={usersQuery.error.message} onRetry={() => usersQuery.refetch()} />
-      )}
-
-      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
-            User Management
-          </h1>
-          <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
-            {users.length} users
-          </p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">User Management</h1>
+          <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">{users.length} users</p>
         </div>
         <button type="button" className={btnPrimary} onClick={() => { addForm.reset(); setShowAdd(true) }}>
-          <span className="flex items-center gap-1.5">
-            <Plus className="h-4 w-4" />
-            Add User
-          </span>
+          <span className="flex items-center gap-1.5"><Plus className="h-4 w-4" />Add User</span>
         </button>
       </div>
 
-      {/* Users Table */}
-      <div
-        className="rounded-xl border border-[var(--color-border)] overflow-hidden"
-        style={{
-          background: 'var(--glass-bg)',
-          backdropFilter: 'blur(var(--glass-blur))',
-          WebkitBackdropFilter: 'blur(var(--glass-blur))',
-        }}
-      >
-        {usersQuery.isLoading ? (
-          <div className="p-6 space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-12 rounded-lg bg-white/[0.03] animate-pulse" />
-            ))}
-          </div>
-        ) : users.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-muted)]">
-            <Users className="h-10 w-10 mb-3 opacity-30" />
-            <p className="text-sm font-medium">No users found</p>
-          </div>
-        ) : (
-          <>
-            {/* Mobile Cards */}
-            <div className="md:hidden space-y-3 p-3">
-              {users.map((u) => (
-                <div key={u.id} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm">
-                      {u.name}
-                    </span>
-                    <Badge variant={u.role === 'admin' ? 'warning' : 'outline'}>
-                      {u.role === 'admin' ? (
-                        <span className="flex items-center gap-1"><ShieldAlert className="h-3 w-3" />Admin</span>
-                      ) : (
-                        <span className="flex items-center gap-1"><Shield className="h-3 w-3" />Viewer</span>
-                      )}
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-                    <span className="text-[var(--color-text-muted)]">Email</span>
-                    <span className="text-[var(--color-text-primary)] font-mono truncate">{u.email}</span>
-                    <span className="text-[var(--color-text-muted)]">Created</span>
-                    <span className="text-[var(--color-text-primary)]">{formatDate(u.createdAt)}</span>
-                  </div>
-                  {u.id !== currentUserId && (
-                    <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => updateRole.mutate({ userId: u.id, role: u.role === 'admin' ? 'viewer' : 'admin' })}
-                        disabled={updateRole.isPending}
-                        className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors cursor-pointer"
-                      >
-                        <UserCog className="h-3 w-3" />
-                        {u.role === 'admin' ? 'Demote' : 'Promote'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteTarget({ id: u.id, name: u.name })}
-                        className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+      <DataTable
+        data={users}
+        columns={columns}
+        searchable
+        searchPlaceholder="Search users…"
+        loading={usersQuery.isLoading}
+        emptyIcon={<Users className="h-10 w-10" />}
+        emptyTitle="No users found"
+        mobileCard={(u) => (
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
+            <div className="flex justify-between items-center gap-2">
+              <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm">{u.name}</span>
+              <Badge variant={u.role === 'admin' ? 'warning' : 'outline'}>
+                {u.role === 'admin' ? <span className="flex items-center gap-1"><ShieldAlert className="h-3 w-3" />Admin</span> : <span className="flex items-center gap-1"><Shield className="h-3 w-3" />Viewer</span>}
+              </Badge>
             </div>
-
-            {/* Desktop Table */}
-            <table className="hidden md:table w-full text-sm">
-              <thead>
-                <tr className="border-b border-[var(--color-border)]">
-                  {['Name', 'Email', 'Role', 'Created', 'Actions'].map((h) => (
-                    <th key={h} className="text-left py-3 px-4 text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider font-normal">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u, i) => (
-                  <tr
-                    key={u.id}
-                    className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.03] ${i % 2 === 1 ? 'bg-white/[0.015]' : ''}`}
-                  >
-                    <td className="py-3 px-4 font-medium text-[var(--color-text-primary)]">{u.name}</td>
-                    <td className="py-3 px-4 text-[var(--color-text-muted)] font-mono text-[12px]">{u.email}</td>
-                    <td className="py-3 px-4">
-                      <Badge variant={u.role === 'admin' ? 'warning' : 'outline'}>
-                        {u.role === 'admin' ? (
-                          <span className="flex items-center gap-1"><ShieldAlert className="h-3 w-3" />Admin</span>
-                        ) : (
-                          <span className="flex items-center gap-1"><Shield className="h-3 w-3" />Viewer</span>
-                        )}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4 text-[var(--color-text-muted)] text-[12px]">{formatDate(u.createdAt)}</td>
-                    <td className="py-3 px-4">
-                      {u.id !== currentUserId ? (
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => updateRole.mutate({ userId: u.id, role: u.role === 'admin' ? 'viewer' : 'admin' })}
-                            disabled={updateRole.isPending}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
-                          >
-                            <UserCog className="h-3 w-3" />
-                            {u.role === 'admin' ? 'Demote' : 'Promote'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget({ id: u.id, name: u.name })}
-                            className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-[10px] text-[var(--color-text-dim)] font-mono">You</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+              <span className="text-[var(--color-text-muted)]">Email</span>
+              <span className="text-[var(--color-text-primary)] font-mono truncate">{u.email}</span>
+              <span className="text-[var(--color-text-muted)]">Created</span>
+              <span className="text-[var(--color-text-primary)]">{formatDate(u.createdAt)}</span>
+            </div>
+            {u.id !== currentUserId && (
+              <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
+                <button type="button" onClick={() => updateRole.mutate({ userId: u.id, role: u.role === 'admin' ? 'viewer' : 'admin' })} disabled={updateRole.isPending} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors cursor-pointer">
+                  <UserCog className="h-3 w-3" />{u.role === 'admin' ? 'Demote' : 'Promote'}
+                </button>
+                <button type="button" onClick={() => setDeleteTarget({ id: u.id, name: u.name })} className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
         )}
-      </div>
+      />
 
       {/* Add User Modal */}
       <Dialog open={showAdd} onClose={() => setShowAdd(false)} title="Add User">
-        <form
-          onSubmit={(e) => { e.preventDefault(); addForm.handleSubmit() }}
-          className="space-y-4"
-        >
+        <form onSubmit={(e) => { e.preventDefault(); addForm.handleSubmit() }} className="space-y-4">
           <addForm.Field name="name">
             {(field) => (
               <label className="block">
@@ -271,7 +252,6 @@ export default function UsersPage() {
               </label>
             )}
           </addForm.Field>
-          {createUser.error && <p className="text-xs text-red-400">{createUser.error.message}</p>}
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" className={btnSecondary} onClick={() => setShowAdd(false)}>Cancel</button>
             <addForm.Subscribe selector={(s) => s.isSubmitting}>
@@ -285,26 +265,17 @@ export default function UsersPage() {
         </form>
       </Dialog>
 
-      {/* Delete Confirmation */}
-      <Dialog open={deleteTarget !== null} onClose={() => setDeleteTarget(null)} title="Delete User">
-        <p className="text-sm text-[var(--color-text-secondary)] mb-6">
-          Are you sure you want to delete{' '}
-          <span className="font-semibold text-[var(--color-text-primary)]">{deleteTarget?.name}</span>?
-          This action cannot be undone.
-        </p>
-        {deleteUser.error && <p className="text-xs text-red-400 mb-4">{deleteUser.error.message}</p>}
-        <div className="flex justify-end gap-3">
-          <button type="button" className={btnSecondary} onClick={() => setDeleteTarget(null)}>Cancel</button>
-          <button
-            type="button"
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 cursor-pointer"
-            onClick={() => deleteTarget && deleteUser.mutate({ userId: deleteTarget.id })}
-            disabled={deleteUser.isPending}
-          >
-            {deleteUser.isPending ? 'Deleting…' : 'Delete'}
-          </button>
-        </div>
-      </Dialog>
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && deleteUser.mutate({ userId: deleteTarget.id })}
+        title="Delete User"
+        description={<>Are you sure you want to delete <span className="font-semibold text-[var(--color-text-primary)]">{deleteTarget?.name}</span>? This action cannot be undone.</>}
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleteUser.isPending}
+        error={deleteUser.error?.message}
+      />
     </AppLayout>
   )
 }

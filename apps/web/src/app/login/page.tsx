@@ -6,6 +6,7 @@ import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
 import { authClient } from '@/lib/auth-client'
 import { useAuthStore } from '@/stores/auth'
+import { toast } from 'sonner'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -15,7 +16,6 @@ const loginSchema = z.object({
 export default function LoginPage() {
   const router = useRouter()
   const { isAuthenticated } = useAuthStore()
-  const [serverError, setServerError] = useState('')
 
   useEffect(() => {
     if (isAuthenticated) router.push('/')
@@ -27,13 +27,12 @@ export default function LoginPage() {
       onChange: loginSchema,
     },
     onSubmit: async ({ value }) => {
-      setServerError('')
       const { data, error } = await authClient.signIn.email({
         email: value.email,
         password: value.password,
       })
       if (error) {
-        setServerError(error.message ?? 'Login failed')
+        toast.error('Login failed', { description: error.message ?? 'Invalid credentials' })
         return
       }
       if (data?.user) {
@@ -43,15 +42,16 @@ export default function LoginPage() {
           name: data.user.name ?? data.user.email,
           role: (data.user as { role?: string }).role === 'admin' ? 'admin' : 'viewer',
         })
+        toast.success('Welcome back!', { description: `Signed in as ${data.user.email}` })
       }
       router.push('/')
     },
   })
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-      <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl">
-        <h1 className="mb-6 text-center text-2xl font-bold text-white">Voyager Platform</h1>
+    <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-primary)]">
+      <div className="w-full max-w-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-8 shadow-xl">
+        <h1 className="mb-6 text-center text-2xl font-bold text-[var(--color-text-primary)]">Voyager Platform</h1>
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -59,13 +59,8 @@ export default function LoginPage() {
           }}
           className="space-y-4"
         >
-          {serverError && (
-            <div className="rounded-lg bg-red-900/30 border border-red-800 px-4 py-2 text-sm text-red-400">
-              {serverError}
-            </div>
-          )}
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-zinc-400">
+            <label htmlFor="email" className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]">
               Email
             </label>
             <form.Field name="email">
@@ -77,7 +72,7 @@ export default function LoginPage() {
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
                     placeholder="admin@voyager.local"
                   />
                   {field.state.meta.errors?.length > 0 && (
@@ -90,7 +85,7 @@ export default function LoginPage() {
             </form.Field>
           </div>
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-zinc-400">
+            <label htmlFor="password" className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]">
               Password
             </label>
             <form.Field name="password">
@@ -102,7 +97,7 @@ export default function LoginPage() {
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
                     placeholder="••••••••"
                   />
                   {field.state.meta.errors?.length > 0 && (
@@ -119,7 +114,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-lg bg-blue-600 py-2 font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
+                className="w-full rounded-lg bg-[var(--color-accent)] py-2 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
               >
                 {isSubmitting ? 'Signing in...' : 'Sign In'}
               </button>

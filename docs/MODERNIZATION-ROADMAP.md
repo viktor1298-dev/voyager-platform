@@ -115,10 +115,22 @@ better-auth/client, zustand, @tanstack/react-form     (Web)
 jsonwebtoken, bcryptjs, jose  (replaced by Better-Auth)
 ```
 
-### שלב 2 — שדרוג UI
-- [ ] TanStack Table v9 (כל הטבלאות)
-- [ ] Sonner toast notifications
-- [ ] next-themes (שדרוג theme system)
+### שלב 2 — שדרוג UI + Enterprise Features (CURRENT)
+
+**Frontend — רון:**
+- [ ] TanStack Table v9 — כל הטבלאות (clusters, deployments, events, users, alerts) עם sorting, filtering, pagination, column resize
+- [ ] Sonner toast notifications — החלפת כל ה-error/success messages ב-toasts מקצועיים
+- [ ] next-themes — שדרוג theme system (system preference detection, zero flash)
+- [ ] cmdk — Command Palette (Ctrl+K) — חיפוש גלובלי + ניווט מהיר לכל הדפים/clusters/deployments
+- [ ] Skeleton loading — החלפת loading spinners ב-skeleton screens
+- [ ] Confirmation dialogs — AlertDialog לפעולות הרסניות (delete, restart)
+- [ ] Keyboard shortcuts — R=refresh, N=new, /=search, ?=show shortcuts
+
+**Backend — דימה:**
+- [ ] Recharts — גרפים: CPU/memory trends, request rates, cluster health over time, uptime history
+- [ ] TanStack Query integration — verify tRPC+TanStack Query caching, background refetch, optimistic updates
+- [ ] API endpoints for metrics/charts data — time-series data for dashboard graphs
+- [ ] Prefetching + stale-while-revalidate patterns
 
 ### שלב 3 — Real-time & Performance
 - [ ] tRPC SSE subscriptions (live K8s data)

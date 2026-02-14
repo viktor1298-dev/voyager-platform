@@ -2,11 +2,16 @@
 
 import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { Shimmer } from '@/components/Skeleton'
+import { Dialog } from '@/components/ui/dialog'
 import { trpc } from '@/lib/trpc'
-import { Bell, Plus, Trash2, History, AlertTriangle } from 'lucide-react'
-import { useState, useCallback } from 'react'
+import type { ColumnDef } from '@tanstack/react-table'
+import { AlertTriangle, Bell, History, Plus, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 type Metric = 'cpu' | 'memory' | 'pods' | 'restarts'
 type Operator = 'gt' | 'lt' | 'eq'
@@ -24,13 +29,8 @@ const OPERATORS: { value: Operator; label: string }[] = [
   { value: 'eq', label: '=' },
 ]
 
-function operatorLabel(op: string): string {
-  return OPERATORS.find((o) => o.value === op)?.label ?? op
-}
-
-function metricLabel(m: string): string {
-  return METRICS.find((mt) => mt.value === m)?.label ?? m
-}
+function operatorLabel(op: string) { return OPERATORS.find((o) => o.value === op)?.label ?? op }
+function metricLabel(m: string) { return METRICS.find((mt) => mt.value === m)?.label ?? m }
 
 function timeAgo(ts: string): string {
   const diff = Date.now() - new Date(ts).getTime()
@@ -40,25 +40,15 @@ function timeAgo(ts: string): string {
   if (minutes < 60) return `${minutes}m ago`
   const hours = Math.floor(minutes / 60)
   if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
+  return `${Math.floor(hours / 24)}d ago`
 }
 
 interface CreateFormData {
-  name: string
-  metric: Metric
-  operator: Operator
-  threshold: string
-  clusterFilter: string
+  name: string; metric: Metric; operator: Operator; threshold: string; clusterFilter: string
 }
+const INITIAL_FORM: CreateFormData = { name: '', metric: 'cpu', operator: 'gt', threshold: '', clusterFilter: '' }
 
-const INITIAL_FORM: CreateFormData = {
-  name: '',
-  metric: 'cpu',
-  operator: 'gt',
-  threshold: '',
-  clusterFilter: '',
-}
+type AlertRow = { id: string; name: string; metric: string; operator: string; threshold: number; clusterFilter: string | null; enabled: boolean }
 
 export default function AlertsPage() {
   const [showCreate, setShowCreate] = useState(false)
@@ -70,263 +60,152 @@ export default function AlertsPage() {
   const historyQuery = trpc.alerts.history.useQuery({ limit: 20 })
 
   const createMut = trpc.alerts.create.useMutation({
-    onSuccess: () => {
-      utils.alerts.list.invalidate()
-      setShowCreate(false)
-      setForm(INITIAL_FORM)
-    },
+    onSuccess: () => { utils.alerts.list.invalidate(); setShowCreate(false); setForm(INITIAL_FORM); toast.success('Alert rule created') },
+    onError: (err) => toast.error('Failed to create alert', { description: err.message }),
   })
-
   const updateMut = trpc.alerts.update.useMutation({
-    onSuccess: () => utils.alerts.list.invalidate(),
+    onSuccess: () => { utils.alerts.list.invalidate(); toast.success('Alert updated') },
+    onError: (err) => toast.error('Failed to update alert', { description: err.message }),
+  })
+  const deleteMut = trpc.alerts.delete.useMutation({
+    onSuccess: () => { utils.alerts.list.invalidate(); utils.alerts.history.invalidate(); setDeleteId(null); toast.success('Alert deleted') },
+    onError: (err) => toast.error('Failed to delete alert', { description: err.message }),
   })
 
-  const deleteMut = trpc.alerts.delete.useMutation({
-    onSuccess: () => {
-      utils.alerts.list.invalidate()
-      utils.alerts.history.invalidate()
-      setDeleteId(null)
-    },
-  })
+  useEffect(() => {
+    const onRefresh = () => { alertsQuery.refetch(); historyQuery.refetch() }
+    const onNew = () => setShowCreate(true)
+    document.addEventListener('voyager:refresh', onRefresh)
+    document.addEventListener('voyager:new', onNew)
+    return () => { document.removeEventListener('voyager:refresh', onRefresh); document.removeEventListener('voyager:new', onNew) }
+  }, [alertsQuery, historyQuery])
 
   const handleCreate = useCallback(() => {
     const threshold = Number(form.threshold)
     if (!form.name || Number.isNaN(threshold)) return
-    createMut.mutate({
-      name: form.name,
-      metric: form.metric,
-      operator: form.operator,
-      threshold,
-      clusterFilter: form.clusterFilter || undefined,
-    })
+    createMut.mutate({ name: form.name, metric: form.metric, operator: form.operator, threshold, clusterFilter: form.clusterFilter || undefined })
   }, [form, createMut])
 
-  const toggleEnabled = useCallback(
-    (id: string, currentEnabled: boolean) => {
-      updateMut.mutate({ id, enabled: !currentEnabled })
-    },
-    [updateMut],
-  )
-
-  const alerts = alertsQuery.data ?? []
+  const alerts: AlertRow[] = alertsQuery.data ?? []
   const history = historyQuery.data ?? []
+
+  const alertColumns = useMemo<ColumnDef<AlertRow, unknown>[]>(() => [
+    { accessorKey: 'name', header: 'Name', cell: ({ row }) => <span className="text-[var(--color-text-primary)]">{row.original.name}</span> },
+    { accessorKey: 'metric', header: 'Metric', cell: ({ row }) => <span className="text-[var(--color-text-secondary)]">{metricLabel(row.original.metric)}</span> },
+    { id: 'condition', header: 'Condition', cell: ({ row }) => <span className="text-[var(--color-text-secondary)]">{operatorLabel(row.original.operator)} {row.original.threshold}</span>, enableSorting: false },
+    { id: 'cluster', header: 'Cluster', accessorFn: (r) => r.clusterFilter, cell: ({ row }) => <span className="text-[var(--color-text-muted)]">{row.original.clusterFilter ?? 'All'}</span> },
+    {
+      accessorKey: 'enabled', header: 'Status',
+      cell: ({ row }) => (
+        <button type="button" onClick={() => updateMut.mutate({ id: row.original.id, enabled: !row.original.enabled })}
+          className={`rounded-full px-2 py-0.5 text-xs font-medium cursor-pointer ${row.original.enabled ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}>
+          {row.original.enabled ? 'ON' : 'OFF'}
+        </button>
+      ),
+    },
+    {
+      id: 'actions', header: '', enableSorting: false,
+      cell: ({ row }) => (
+        <button type="button" onClick={() => setDeleteId(row.original.id)} className="text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer">
+          <Trash2 className="h-4 w-4" />
+        </button>
+      ),
+    },
+  ], [updateMut])
+
+  const inputClass = 'w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)]'
+  const btnPrimary = 'rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer'
+  const btnSecondary = 'rounded-lg border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer'
 
   return (
     <AppLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Breadcrumbs />
-          <button
-            type="button"
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Create Alert
+          <button type="button" onClick={() => setShowCreate(true)} className={`flex items-center gap-2 ${btnPrimary}`}>
+            <Plus className="h-4 w-4" />Create Alert
           </button>
         </div>
 
         {/* Create Modal */}
-        {showCreate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-md rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-xl">
-              <h2 className="mb-4 text-lg font-semibold text-white">Create Alert Rule</h2>
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Alert name"
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500"
-                />
-                <select
-                  value={form.metric}
-                  onChange={(e) => setForm((f) => ({ ...f, metric: e.target.value as Metric }))}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white"
-                >
-                  {METRICS.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={form.operator}
-                  onChange={(e) => setForm((f) => ({ ...f, operator: e.target.value as Operator }))}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white"
-                >
-                  {OPERATORS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  placeholder="Threshold value"
-                  value={form.threshold}
-                  onChange={(e) => setForm((f) => ({ ...f, threshold: e.target.value }))}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Cluster filter (optional)"
-                  value={form.clusterFilter}
-                  onChange={(e) => setForm((f) => ({ ...f, clusterFilter: e.target.value }))}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500"
-                />
-              </div>
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreate(false)
-                    setForm(INITIAL_FORM)
-                  }}
-                  className="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCreate}
-                  disabled={createMut.isPending}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {createMut.isPending ? 'Creating...' : 'Create'}
-                </button>
-              </div>
-            </div>
+        <Dialog open={showCreate} onClose={() => { setShowCreate(false); setForm(INITIAL_FORM) }} title="Create Alert Rule">
+          <div className="space-y-3">
+            <input type="text" placeholder="Alert name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputClass} />
+            <select value={form.metric} onChange={(e) => setForm((f) => ({ ...f, metric: e.target.value as Metric }))} className={inputClass}>
+              {METRICS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
+            <select value={form.operator} onChange={(e) => setForm((f) => ({ ...f, operator: e.target.value as Operator }))} className={inputClass}>
+              {OPERATORS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <input type="number" placeholder="Threshold value" value={form.threshold} onChange={(e) => setForm((f) => ({ ...f, threshold: e.target.value }))} className={inputClass} />
+            <input type="text" placeholder="Cluster filter (optional)" value={form.clusterFilter} onChange={(e) => setForm((f) => ({ ...f, clusterFilter: e.target.value }))} className={inputClass} />
           </div>
-        )}
-
-        {/* Delete Confirmation */}
-        {deleteId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-sm rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-xl">
-              <h2 className="mb-2 text-lg font-semibold text-white">Delete Alert</h2>
-              <p className="mb-4 text-sm text-zinc-400">Are you sure? This action cannot be undone.</p>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setDeleteId(null)}
-                  className="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => deleteMut.mutate({ id: deleteId })}
-                  disabled={deleteMut.isPending}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-                >
-                  {deleteMut.isPending ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
-            </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button type="button" onClick={() => { setShowCreate(false); setForm(INITIAL_FORM) }} className={btnSecondary}>Cancel</button>
+            <button type="button" onClick={handleCreate} disabled={createMut.isPending} className={btnPrimary}>{createMut.isPending ? 'Creating...' : 'Create'}</button>
           </div>
-        )}
+        </Dialog>
 
         {/* Alerts Table */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
-          <div className="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
-            <Bell className="h-4 w-4 text-blue-400" />
-            <h2 className="text-sm font-semibold text-white">Alert Rules</h2>
-            <span className="ml-auto text-xs text-zinc-500">{alerts.length} rules</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-[var(--color-accent)]" />
+            <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Alert Rules</h2>
+            <span className="ml-auto text-xs text-[var(--color-text-dim)]">{alerts.length} rules</span>
           </div>
-          {alertsQuery.isLoading ? (
-            <div className="p-4">
-              <Shimmer className="h-20 w-full rounded-lg" />
-            </div>
-          ) : alertsQuery.isError ? (
-            <div className="p-4">
-              <QueryError message={alertsQuery.error?.message ?? 'Failed to load alerts'} />
-            </div>
-          ) : alerts.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 p-8 text-zinc-500">
-              <AlertTriangle className="h-8 w-8" />
-              <p className="text-sm">No alert rules configured</p>
-            </div>
+          {alertsQuery.isError ? (
+            <QueryError message={alertsQuery.error?.message ?? 'Failed to load alerts'} />
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">
-                  <th className="px-4 py-2">Name</th>
-                  <th className="px-4 py-2">Metric</th>
-                  <th className="px-4 py-2">Condition</th>
-                  <th className="px-4 py-2">Cluster</th>
-                  <th className="px-4 py-2">Status</th>
-                  <th className="px-4 py-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {alerts.map((alert) => (
-                  <tr key={alert.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
-                    <td className="px-4 py-3 text-white">{alert.name}</td>
-                    <td className="px-4 py-3 text-zinc-300">{metricLabel(alert.metric)}</td>
-                    <td className="px-4 py-3 text-zinc-300">
-                      {operatorLabel(alert.operator)} {alert.threshold}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-400">{alert.clusterFilter ?? 'All'}</td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => toggleEnabled(alert.id, alert.enabled)}
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          alert.enabled
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'bg-zinc-700/50 text-zinc-500'
-                        }`}
-                      >
-                        {alert.enabled ? 'ON' : 'OFF'}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => setDeleteId(alert.id)}
-                        className="text-zinc-500 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataTable
+              data={alerts}
+              columns={alertColumns}
+              loading={alertsQuery.isLoading}
+              emptyIcon={<AlertTriangle className="h-8 w-8" />}
+              emptyTitle="No alert rules configured"
+              mobileCard={(alert) => (
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="font-medium text-[var(--color-text-primary)] text-sm">{alert.name}</span>
+                    <button type="button" onClick={() => updateMut.mutate({ id: alert.id, enabled: !alert.enabled })}
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium cursor-pointer ${alert.enabled ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}>
+                      {alert.enabled ? 'ON' : 'OFF'}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                    <span className="text-[var(--color-text-muted)]">Metric</span>
+                    <span className="text-[var(--color-text-primary)]">{metricLabel(alert.metric)}</span>
+                    <span className="text-[var(--color-text-muted)]">Condition</span>
+                    <span className="text-[var(--color-text-primary)]">{operatorLabel(alert.operator)} {alert.threshold}</span>
+                    <span className="text-[var(--color-text-muted)]">Cluster</span>
+                    <span className="text-[var(--color-text-primary)]">{alert.clusterFilter ?? 'All'}</span>
+                  </div>
+                  <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">
+                    <button type="button" onClick={() => setDeleteId(alert.id)} className="text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer"><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                </div>
+              )}
+            />
           )}
         </div>
 
-        {/* History Section */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
-          <div className="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
-            <History className="h-4 w-4 text-amber-400" />
-            <h2 className="text-sm font-semibold text-white">Recent Triggers</h2>
+        {/* History */}
+        <div className="rounded-xl border border-[var(--color-border)] overflow-hidden" style={{ background: 'var(--glass-bg)' }}>
+          <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-4 py-3">
+            <History className="h-4 w-4 text-[var(--color-status-warning)]" />
+            <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Recent Triggers</h2>
           </div>
           {historyQuery.isLoading ? (
-            <div className="p-4">
-              <Shimmer className="h-16 w-full rounded-lg" />
-            </div>
-          ) : historyQuery.isError ? (
-            <div className="p-4">
-              <QueryError message={historyQuery.error?.message ?? 'Failed to load history'} />
-            </div>
+            <div className="p-4"><Shimmer className="h-16 w-full rounded-lg" /></div>
           ) : history.length === 0 ? (
-            <div className="p-8 text-center text-sm text-zinc-500">No alert triggers yet</div>
+            <div className="p-8 text-center text-sm text-[var(--color-text-muted)]">No alert triggers yet</div>
           ) : (
-            <div className="divide-y divide-zinc-800/50">
+            <div className="divide-y divide-[var(--color-border)]/50">
               {history.map((h) => (
                 <div key={h.id} className="flex items-center gap-3 px-4 py-3">
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
-                  <span className="flex-1 text-sm text-zinc-300">{h.message}</span>
-                  <span className="text-xs text-zinc-500">{timeAgo(h.triggeredAt as unknown as string)}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs ${
-                      h.acknowledged
-                        ? 'bg-zinc-700/50 text-zinc-500'
-                        : 'bg-amber-500/20 text-amber-400'
-                    }`}
-                  >
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--color-status-warning)]" />
+                  <span className="flex-1 text-sm text-[var(--color-text-secondary)]">{h.message}</span>
+                  <span className="text-xs text-[var(--color-text-dim)]">{timeAgo(h.triggeredAt as unknown as string)}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs ${h.acknowledged ? 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]' : 'bg-[var(--color-status-warning)]/20 text-[var(--color-status-warning)]'}`}>
                     {h.acknowledged ? 'ACK' : 'NEW'}
                   </span>
                 </div>
@@ -334,6 +213,17 @@ export default function AlertsPage() {
             </div>
           )}
         </div>
+
+        <ConfirmDialog
+          open={deleteId !== null}
+          onClose={() => setDeleteId(null)}
+          onConfirm={() => deleteId && deleteMut.mutate({ id: deleteId })}
+          title="Delete Alert"
+          description="Are you sure? This action cannot be undone."
+          confirmLabel="Delete"
+          variant="danger"
+          loading={deleteMut.isPending}
+        />
       </div>
     </AppLayout>
   )
