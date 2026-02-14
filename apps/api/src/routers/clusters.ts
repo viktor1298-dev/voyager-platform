@@ -187,13 +187,19 @@ export const clustersRouter = router({
       z.object({
         name: z.string().min(1).max(255),
         provider: z.string().min(1).max(50),
+        region: z.string().max(100).optional(),
         endpoint: z.string().url().max(500),
+        status: z.string().max(50).optional(),
+        nodesCount: z.number().int().min(0).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const { region: _region, ...dbFields } = input
       const [created] = await ctx.db.insert(clusters).values({
-        ...input,
+        ...dbFields,
         provider: normalizeProvider(input.provider),
+        status: input.status ?? 'unreachable',
+        nodesCount: input.nodesCount ?? 0,
       }).returning()
       return created
     }),
@@ -202,6 +208,9 @@ export const clustersRouter = router({
     .input(
       z.object({
         id: z.string().uuid(),
+        name: z.string().min(1).max(255).optional(),
+        provider: z.string().min(1).max(50).optional(),
+        endpoint: z.string().url().max(500).optional(),
         status: z.string().max(50).optional(),
         version: z.string().max(50).optional(),
         nodesCount: z.number().int().min(0).optional(),
@@ -210,6 +219,9 @@ export const clustersRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input
       const updates: Record<string, unknown> = {}
+      if (data.name !== undefined) updates.name = data.name
+      if (data.provider !== undefined) updates.provider = normalizeProvider(data.provider)
+      if (data.endpoint !== undefined) updates.endpoint = data.endpoint
       if (data.status !== undefined) updates.status = data.status
       if (data.version !== undefined) updates.version = data.version
       if (data.nodesCount !== undefined) updates.nodesCount = data.nodesCount

@@ -6,6 +6,7 @@ import { QueryError } from '@/components/ErrorBoundary'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { SkeletonRow } from '@/components/Skeleton'
 import { Badge } from '@/components/ui/badge'
+import { Dialog } from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -14,14 +15,22 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { getStatusColor, getStatusDotClass } from '@/lib/status-utils'
+import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
-import { Database, Search, X } from 'lucide-react'
+import { Database, Plus, Search, Trash2, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 const STATUS_OPTIONS = ['healthy', 'warning', 'degraded', 'unreachable'] as const
 const PROVIDER_OPTIONS = ['minikube', 'eks', 'gke', 'aks', 'k3s', 'rancher'] as const
+
+const ADD_PROVIDER_OPTIONS = [
+  { value: 'aws', label: 'AWS (EKS)' },
+  { value: 'azure', label: 'Azure (AKS)' },
+  { value: 'gcp', label: 'GCP (GKE)' },
+  { value: 'on-prem', label: 'On-Prem' },
+  { value: 'minikube', label: 'Minikube' },
+] as const
 
 function statusBadgeVariant(status: string) {
   if (status === 'healthy') return 'success' as const
@@ -41,12 +50,39 @@ function formatLastSeen(date: Date | string | null | undefined) {
   return `${Math.floor(diffMs / 86_400_000)}d ago`
 }
 
+interface AddClusterFormData {
+  name: string
+  provider: string
+  region: string
+  endpoint: string
+}
+
+const INITIAL_FORM: AddClusterFormData = { name: '', provider: 'aws', region: '', endpoint: '' }
+
 export default function ClustersPage() {
   const router = useRouter()
+  const utils = trpc.useUtils()
   const clusters = trpc.clusters.list.useQuery()
+  const createCluster = trpc.clusters.create.useMutation({
+    onSuccess: () => {
+      utils.clusters.list.invalidate()
+      setShowAddModal(false)
+      setForm(INITIAL_FORM)
+    },
+  })
+  const deleteCluster = trpc.clusters.delete.useMutation({
+    onSuccess: () => {
+      utils.clusters.list.invalidate()
+      setDeleteTarget(null)
+    },
+  })
+
   const [search, setSearch] = useState('')
   const [filterProvider, setFilterProvider] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [form, setForm] = useState<AddClusterFormData>(INITIAL_FORM)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
   const clusterList = clusters.data ?? []
 
@@ -61,6 +97,40 @@ export default function ClustersPage() {
 
   const hasActiveFilters = search || filterProvider || filterStatus
 
+  const handleAddSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      if (!form.name || !form.endpoint) return
+      createCluster.mutate({
+        name: form.name,
+        provider: form.provider,
+        region: form.region || undefined,
+        endpoint: form.endpoint,
+      })
+    },
+    [form, createCluster],
+  )
+
+  const handleDeleteClick = useCallback(
+    (e: React.MouseEvent, cluster: { id: string; name: string }) => {
+      e.stopPropagation()
+      setDeleteTarget(cluster)
+    },
+    [],
+  )
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteTarget) return
+    deleteCluster.mutate({ id: deleteTarget.id })
+  }, [deleteTarget, deleteCluster])
+
+  const inputClass =
+    'w-full px-3 py-2 text-sm rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
+  const btnPrimary =
+    'px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer'
+  const btnSecondary =
+    'px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer'
+
   return (
     <AppLayout>
       <Breadcrumbs />
@@ -70,13 +140,21 @@ export default function ClustersPage() {
       )}
 
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
-          Clusters
-        </h1>
-        <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
-          {clusterList.length} registered · {filtered.length} shown
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+            Clusters
+          </h1>
+          <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
+            {clusterList.length} registered · {filtered.length} shown
+          </p>
+        </div>
+        <button type="button" className={btnPrimary} onClick={() => setShowAddModal(true)}>
+          <span className="flex items-center gap-1.5">
+            <Plus className="h-4 w-4" />
+            Add Cluster
+          </span>
+        </button>
       </div>
 
       {/* Search & Filters */}
@@ -194,6 +272,9 @@ export default function ClustersPage() {
                 <TableHead className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
                   Last Seen
                 </TableHead>
+                <TableHead className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider w-[60px]">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -240,12 +321,124 @@ export default function ClustersPage() {
                   <TableCell className="text-xs text-[var(--color-text-muted)]">
                     {formatLastSeen(cluster.updatedAt)}
                   </TableCell>
+                  <TableCell>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteClick(e, { id: cluster.id, name: cluster.name })}
+                      className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                      title="Delete cluster"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         )}
       </div>
+
+      {/* Add Cluster Modal */}
+      <Dialog open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Cluster">
+        <form onSubmit={handleAddSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
+              Cluster Name
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="production-us-east"
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
+              Provider
+            </label>
+            <select
+              value={form.provider}
+              onChange={(e) => setForm((f) => ({ ...f, provider: e.target.value }))}
+              className={inputClass}
+            >
+              {ADD_PROVIDER_OPTIONS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
+              Region
+            </label>
+            <input
+              type="text"
+              placeholder="us-east-1"
+              value={form.region}
+              onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
+              Endpoint URL
+            </label>
+            <input
+              type="url"
+              required
+              placeholder="https://k8s-api.example.com:6443"
+              value={form.endpoint}
+              onChange={(e) => setForm((f) => ({ ...f, endpoint: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+          {createCluster.error && (
+            <p className="text-xs text-red-400">{createCluster.error.message}</p>
+          )}
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" className={btnSecondary} onClick={() => setShowAddModal(false)}>
+              Cancel
+            </button>
+            <button type="submit" className={btnPrimary} disabled={createCluster.isPending}>
+              {createCluster.isPending ? 'Adding…' : 'Add Cluster'}
+            </button>
+          </div>
+        </form>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete Cluster"
+      >
+        <p className="text-sm text-[var(--color-text-secondary)] mb-6">
+          Are you sure you want to delete{' '}
+          <span className="font-semibold text-[var(--color-text-primary)]">
+            {deleteTarget?.name}
+          </span>
+          ? This action cannot be undone.
+        </p>
+        {deleteCluster.error && (
+          <p className="text-xs text-red-400 mb-4">{deleteCluster.error.message}</p>
+        )}
+        <div className="flex justify-end gap-3">
+          <button type="button" className={btnSecondary} onClick={() => setDeleteTarget(null)}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 cursor-pointer"
+            onClick={handleDeleteConfirm}
+            disabled={deleteCluster.isPending}
+          >
+            {deleteCluster.isPending ? 'Deleting…' : 'Delete'}
+          </button>
+        </div>
+      </Dialog>
     </AppLayout>
   )
 }
