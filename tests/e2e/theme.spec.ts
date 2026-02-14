@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { login } from './helpers';
 
-test.describe('Theme — Dark/Light Toggle', () => {
+test.describe('Theme — Dark/Light/System Toggle', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
   });
@@ -47,5 +47,50 @@ test.describe('Theme — Dark/Light Toggle', () => {
     if (wasDark) {
       expect(finalClass).toContain('dark');
     }
+  });
+
+  test('System theme option follows prefers-color-scheme', async ({ page }) => {
+    // Look for a theme dropdown/select with System option
+    const themeDropdown = page.locator('[data-testid="theme-dropdown"]')
+      .or(page.getByRole('button', { name: /theme/i }))
+      .first();
+
+    const hasDropdown = await themeDropdown.isVisible().catch(() => false);
+    if (!hasDropdown) {
+      test.skip();
+      return;
+    }
+
+    await themeDropdown.click();
+
+    // Select "System" option
+    const systemOption = page.getByRole('menuitem', { name: /system/i })
+      .or(page.getByRole('option', { name: /system/i }))
+      .or(page.locator('[data-testid="theme-system"]'))
+      .first();
+
+    const hasSystem = await systemOption.isVisible().catch(() => false);
+    if (!hasSystem) {
+      test.skip();
+      return;
+    }
+
+    await systemOption.click();
+    await page.waitForTimeout(500);
+
+    // Emulate dark mode preference
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.waitForTimeout(500);
+
+    const html = page.locator('html');
+    const darkClass = await html.getAttribute('class') ?? '';
+    expect(darkClass).toContain('dark');
+
+    // Switch to light preference
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.waitForTimeout(500);
+
+    const lightClass = await html.getAttribute('class') ?? '';
+    expect(lightClass).not.toContain('dark');
   });
 });
