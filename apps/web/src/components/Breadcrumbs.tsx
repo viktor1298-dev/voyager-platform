@@ -12,6 +12,11 @@ const PATH_LABELS: Record<string, string> = {
   alerts: 'Alerts',
   settings: 'Settings',
   health: 'Health',
+  features: 'Feature Flags',
+  webhooks: 'Webhooks',
+  users: 'Users',
+  audit: 'Audit Logs',
+  deployments: 'Deployments',
 }
 
 export function Breadcrumbs() {
