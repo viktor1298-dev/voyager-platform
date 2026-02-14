@@ -264,6 +264,31 @@ export default function DashboardPage() {
   )
 }
 
+function HealthDot({ clusterId }: { clusterId: string }) {
+  const statusQuery = trpc.health.status.useQuery(undefined, {
+    refetchInterval: 60_000,
+  })
+  const entry = statusQuery.data?.find((s) => s.clusterId === clusterId)
+  if (!entry || entry.status === 'unknown') return null
+
+  const colors: Record<string, string> = {
+    healthy: 'var(--color-status-active)',
+    degraded: 'var(--color-status-warning)',
+    critical: 'var(--color-status-error)',
+  }
+  const color = colors[entry.status] ?? 'var(--color-text-dim)'
+  const checkedAt = entry.checkedAt ? new Date(entry.checkedAt).toLocaleString() : 'Never'
+  const tooltip = `Health: ${entry.status} | Last check: ${checkedAt}${entry.responseTimeMs != null ? ` | ${entry.responseTimeMs}ms` : ''}`
+
+  return (
+    <span
+      className="h-1.5 w-1.5 rounded-full shrink-0"
+      style={{ backgroundColor: color }}
+      title={tooltip}
+    />
+  )
+}
+
 function ClusterCard({
   cluster,
   index,
@@ -316,6 +341,7 @@ function ClusterCard({
             <span className="text-sm font-bold text-[var(--color-text-primary)] truncate">
               {cluster.name}
             </span>
+            {cluster.source === 'db' && <HealthDot clusterId={cluster.id} />}
           </div>
 
           {/* Row 2: Details */}
