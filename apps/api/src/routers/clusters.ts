@@ -2,8 +2,11 @@ import { TRPCError } from '@trpc/server'
 import { clusters, nodes } from '@voyager/db'
 import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
+import { cached, invalidateK8sCache } from '../lib/cache'
 import { getCoreV1Api, getAppsV1Api, getVersionApi } from '../lib/k8s'
 import { normalizeProvider } from '../lib/providers'
+
+const K8S_CACHE_TTL = 30 // seconds
 import { publicProcedure, router } from '../trpc'
 
 export const clustersRouter = router({
@@ -33,12 +36,12 @@ export const clustersRouter = router({
   live: publicProcedure.query(async () => {
     try {
       const [versionInfo, nodesResponse, podsResponse, nsResponse, eventsResponse, deploymentsResponse] = await Promise.all([
-        getVersionApi().getCode(),
-        getCoreV1Api().listNode(),
-        getCoreV1Api().listPodForAllNamespaces(),
-        getCoreV1Api().listNamespace(),
-        getCoreV1Api().listEventForAllNamespaces(),
-        getAppsV1Api().listDeploymentForAllNamespaces(),
+        cached('k8s:version', K8S_CACHE_TTL, () => getVersionApi().getCode()),
+        cached('k8s:nodes', K8S_CACHE_TTL, () => getCoreV1Api().listNode()),
+        cached('k8s:pods', K8S_CACHE_TTL, () => getCoreV1Api().listPodForAllNamespaces()),
+        cached('k8s:namespaces', K8S_CACHE_TTL, () => getCoreV1Api().listNamespace()),
+        cached('k8s:events', K8S_CACHE_TTL, () => getCoreV1Api().listEventForAllNamespaces()),
+        cached('k8s:deployments', K8S_CACHE_TTL, () => getAppsV1Api().listDeploymentForAllNamespaces()),
       ])
 
       const k8sNodes = nodesResponse.items.map((node) => ({
@@ -113,7 +116,7 @@ export const clustersRouter = router({
 
   liveNodes: publicProcedure.query(async () => {
     try {
-      const nodesResponse = await getCoreV1Api().listNode()
+      const nodesResponse = await cached('k8s:nodes', K8S_CACHE_TTL, () => getCoreV1Api().listNode())
       return nodesResponse.items.map((node) => {
         const conditions = node.status?.conditions || []
         const ready = conditions.find((c) => c.type === 'Ready')
@@ -145,7 +148,7 @@ export const clustersRouter = router({
     .query(async ({ input }) => {
       try {
         const limit = input?.limit ?? 50
-        const eventsResponse = await getCoreV1Api().listEventForAllNamespaces()
+        const eventsResponse = await cached('k8s:events', K8S_CACHE_TTL, () => getCoreV1Api().listEventForAllNamespaces())
         return eventsResponse.items
           .sort(
             (a, b) =>
@@ -173,6 +176,11 @@ export const clustersRouter = router({
         })
       }
     }),
+
+  invalidateCache: publicProcedure.mutation(async () => {
+    const count = await invalidateK8sCache()
+    return { invalidated: count }
+  }),
 
   create: publicProcedure
     .input(
