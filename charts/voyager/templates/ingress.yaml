@@ -28,6 +28,20 @@ spec:
                 name: voyager-api
                 port:
                   number: {{ .Values.api.port }}
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: voyager-api
+                port:
+                  number: {{ .Values.api.port }}
+          - path: /openapi.json
+            pathType: Exact
+            backend:
+              service:
+                name: voyager-api
+                port:
+                  number: {{ .Values.api.port }}
           - path: /health
             pathType: Prefix
             backend:
