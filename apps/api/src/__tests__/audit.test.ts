@@ -97,12 +97,12 @@ describe('audit router', () => {
 
   it('list requires admin', async () => {
     const caller = createCaller('viewer')
-    await expect(caller.audit.list()).rejects.toThrow('Admin access required')
+    await expect(caller.audit.list({})).rejects.toThrow('Admin access required')
   })
 
   it('list returns paginated results for admin', async () => {
     const caller = createCaller('admin')
-    const result = await caller.audit.list()
+    const result = await caller.audit.list({})
     expect(result).toHaveProperty('items')
     expect(result).toHaveProperty('page', 1)
   })
