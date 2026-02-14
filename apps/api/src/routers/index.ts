@@ -6,6 +6,7 @@ import { deploymentsRouter } from './deployments'
 import { eventsRouter } from './events'
 import { healthRouter } from './health'
 import { logsRouter } from './logs'
+import { metricsRouter } from './metrics'
 import { nodesRouter } from './nodes'
 import { usersRouter } from './users'
 
@@ -18,6 +19,7 @@ export const appRouter = router({
   nodes: nodesRouter,
   events: eventsRouter,
   logs: logsRouter,
+  metrics: metricsRouter,
   users: usersRouter,
 })
 
