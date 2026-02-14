@@ -24,7 +24,7 @@ ingress:
 config:
   apiUrl: "http://voyager-api:4000"
   redisUrl: "redis://redis:6379"
-  databaseUrl: "postgresql://voyager:changeme@postgres:5432/voyager"
+  databaseUrl: "postgresql://voyager:voyager_dev@postgres:5432/voyager"
 
 db:
   image:

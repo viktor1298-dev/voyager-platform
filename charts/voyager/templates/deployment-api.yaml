@@ -17,6 +17,26 @@ spec:
         {{- include "voyager.selectorLabels.api" . | nindent 8 }}
     spec:
       serviceAccountName: voyager-api
+      initContainers:
+        - name: db-init
+          image: "{{ .Values.db.image.repository }}:{{ .Values.db.image.tag }}"
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "Waiting for PostgreSQL..."
+              until pg_isready -h postgres -p 5432 -U voyager; do
+                sleep 2
+              done
+              echo "Running schema init..."
+              PGPASSWORD=$(echo $DATABASE_URL | sed 's|.*://[^:]*:\([^@]*\)@.*|\1|') \
+              psql "$DATABASE_URL" -f /sql/init.sql
+              echo "DB init complete."
+          envFrom:
+            - configMapRef:
+                name: voyager-config
+          volumeMounts:
+            - name: db-init-sql
+              mountPath: /sql
       containers:
         - name: api
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
@@ -47,3 +67,7 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+      volumes:
+        - name: db-init-sql
+          configMap:
+            name: voyager-db-init
