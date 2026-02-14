@@ -17,7 +17,7 @@ import { protectedProcedure, router } from '../trpc'
  */
 function createEventStream<T>(
   eventName: string,
-  signal: AbortSignal,
+  signal: AbortSignal | undefined,
 ): AsyncGenerator<T, void, unknown> {
   const queue: T[] = []
   let resolve: (() => void) | null = null
@@ -32,14 +32,16 @@ function createEventStream<T>(
   }
 
   voyagerEmitter.on(eventName, handler)
-  signal.addEventListener('abort', () => {
-    done = true
-    voyagerEmitter.off(eventName, handler)
-    if (resolve) {
-      resolve()
-      resolve = null
-    }
-  })
+  if (signal) {
+    signal.addEventListener('abort', () => {
+      done = true
+      voyagerEmitter.off(eventName, handler)
+      if (resolve) {
+        resolve()
+        resolve = null
+      }
+    })
+  }
 
   return {
     async next() {
@@ -63,6 +65,10 @@ function createEventStream<T>(
     },
     [Symbol.asyncIterator]() {
       return this
+    },
+    async [Symbol.asyncDispose]() {
+      done = true
+      voyagerEmitter.off(eventName, handler)
     },
   }
 }

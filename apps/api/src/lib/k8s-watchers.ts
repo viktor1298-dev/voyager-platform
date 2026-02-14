@@ -178,13 +178,13 @@ function parseMemoryToBytes(mem: string): number {
 export function watchDeploymentProgress(
   name: string,
   namespace: string,
-  signal: AbortSignal,
+  signal: AbortSignal | undefined,
 ): void {
   const kc = getKubeConfig()
   const appsApi = kc.makeApiClient(k8s.AppsV1Api)
 
   const poll = async () => {
-    if (signal.aborted) return
+    if (signal?.aborted) return
     try {
       const dep = await appsApi.readNamespacedDeployment({ name, namespace })
       const replicas = dep.spec?.replicas ?? 0
@@ -225,7 +225,9 @@ export function watchDeploymentProgress(
   }
 
   const interval = setInterval(poll, SSE_DEPLOYMENT_PROGRESS_INTERVAL_MS)
-  signal.addEventListener('abort', () => clearInterval(interval))
+  if (signal) {
+    signal.addEventListener('abort', () => clearInterval(interval))
+  }
   poll()
 }
 
@@ -235,7 +237,7 @@ export function streamLogs(
   podName: string,
   namespace: string,
   container: string | undefined,
-  signal: AbortSignal,
+  signal: AbortSignal | undefined,
 ): void {
   const kc = getKubeConfig()
   const coreApi = kc.makeApiClient(k8s.CoreV1Api)
@@ -244,14 +246,13 @@ export function streamLogs(
   let lastTimestamp: string | undefined
 
   const poll = async () => {
-    if (signal.aborted) return
+    if (signal?.aborted) return
     try {
       const response = await coreApi.readNamespacedPodLog({
         name: podName,
         namespace,
         container,
         tailLines: lastTimestamp ? undefined : SSE_LOG_TAIL_LINES,
-        sinceTime: lastTimestamp,
         timestamps: true,
       })
 
@@ -278,7 +279,9 @@ export function streamLogs(
   }
 
   const interval = setInterval(poll, SSE_LOG_POLL_INTERVAL_MS)
-  signal.addEventListener('abort', () => clearInterval(interval))
+  if (signal) {
+    signal.addEventListener('abort', () => clearInterval(interval))
+  }
   poll()
 }
 

@@ -14,7 +14,7 @@ COPY packages/types/package.json packages/types/
 RUN pnpm install --frozen-lockfile
 
 # ============================================================
-# Stage 2 — builder: compile TypeScript
+# Stage 2 — builder: bundle with esbuild (single file, no ESM issues)
 # ============================================================
 FROM deps AS builder
 WORKDIR /app
@@ -22,7 +22,15 @@ WORKDIR /app
 COPY apps/api/ apps/api/
 COPY packages/ packages/
 
-RUN pnpm --filter @voyager/api build
+RUN npm i -g esbuild
+WORKDIR /app/apps/api
+RUN esbuild src/server.ts \
+      --bundle \
+      --platform=node \
+      --target=node22 \
+      --format=esm \
+      --outfile=dist/server.mjs \
+      --packages=external
 
 # ============================================================
 # Stage 3 — runner: minimal production image
@@ -35,13 +43,13 @@ RUN addgroup -g 1001 -S nodejs && adduser -S voyager -u 1001
 
 # Deploy production-only deps for the API package
 COPY --from=builder /app /tmp/build
-RUN cd /tmp/build && pnpm deploy --filter @voyager/api --prod /app && rm -rf /tmp/build
+WORKDIR /tmp/build
+RUN pnpm deploy --legacy --filter @voyager/api --prod /app && rm -rf /tmp/build
 
-# Copy compiled output
-COPY --from=builder /app/apps/api/dist /app/dist
-COPY --from=builder /app/packages/config /app/node_modules/@voyager/config
-COPY --from=builder /app/packages/types /app/node_modules/@voyager/types
-COPY --from=builder /app/packages/db /app/node_modules/@voyager/db
+WORKDIR /app
+
+# Copy bundled output
+COPY --from=builder /app/apps/api/dist/server.mjs /app/dist/server.mjs
 
 ENV NODE_ENV=production
 ENV HIDE_STACK_TRACES=true
@@ -49,4 +57,4 @@ ENV HIDE_STACK_TRACES=true
 USER voyager
 EXPOSE 4000
 
-CMD ["node", "dist/server.js"]
+CMD ["node", "dist/server.mjs"]
