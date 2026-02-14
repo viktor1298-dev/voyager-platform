@@ -2,7 +2,6 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { Resource } from '@opentelemetry/resources'
 import { NodeSDK } from '@opentelemetry/sdk-node'
 import {
-  ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
   ATTR_K8S_NAMESPACE_NAME,
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
@@ -15,7 +14,7 @@ const sdk = new NodeSDK({
   resource: new Resource({
     [ATTR_SERVICE_NAME]: 'voyager-api',
     [ATTR_SERVICE_VERSION]: process.env.npm_package_version ?? '0.0.0',
-    [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: process.env.NODE_ENV ?? 'development',
+    ['deployment.environment.name']: process.env.NODE_ENV ?? 'development',
     [ATTR_K8S_NAMESPACE_NAME]: process.env.K8S_NAMESPACE ?? 'default',
   }),
   ...(OTEL_ENDPOINT

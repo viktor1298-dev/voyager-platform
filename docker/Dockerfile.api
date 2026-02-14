@@ -28,7 +28,7 @@ COPY apps/api/tsconfig.json apps/api/tsconfig.json
 COPY packages/config/src packages/config/src
 COPY packages/db/src packages/db/src
 COPY packages/types/src packages/types/src
-COPY tsconfig.json turbo.json ./
+COPY turbo.json ./
 
 # Install tsx globally for the runner
 RUN npm i -g tsx
