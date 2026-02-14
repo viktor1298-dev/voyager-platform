@@ -14,5 +14,5 @@ export default defineConfig({
   treeshake: true,
   minify: false,
   noExternal: [/.*/],
-  external: ['@sentry/profiling-node', 'zod', 'trpc-to-openapi'],
+  external: ['@sentry/profiling-node'],
 })

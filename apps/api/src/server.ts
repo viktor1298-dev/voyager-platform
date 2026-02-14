@@ -49,23 +49,25 @@ app.register(fastifyTRPCOpenApiPlugin, {
   createContext,
 })
 
-app.register(swagger, {
-  mode: 'static',
-  specification: {
-    document: generateOpenApiSpec() as never,
-  },
-})
-
-app.register(swaggerUi, {
-  routePrefix: '/docs',
-  uiConfig: {
-    docExpansion: 'list',
-    deepLinking: true,
-  },
-})
-
-app.get('/openapi.json', async (_request, reply) => {
-  reply.send(generateOpenApiSpec())
+// OpenAPI + Swagger UI — isolated to prevent startup crashes from bundling issues
+app.register(async (instance) => {
+  try {
+    const spec = generateOpenApiSpec()
+    await instance.register(swagger, {
+      mode: 'static',
+      specification: { document: spec as never },
+    })
+    await instance.register(swaggerUi, {
+      routePrefix: '/docs',
+      uiConfig: { docExpansion: 'list', deepLinking: true },
+    })
+    instance.get('/openapi.json', async (_request, reply) => {
+      reply.send(spec)
+    })
+    instance.log.info(`OpenAPI registered with ${Object.keys((spec as Record<string, unknown>).paths ?? {}).length} paths`)
+  } catch (error) {
+    instance.log.warn({ err: error }, 'OpenAPI/Swagger registration failed — /docs will be unavailable')
+  }
 })
 
 // Better-Auth handler — all auth routes via /api/auth/*
