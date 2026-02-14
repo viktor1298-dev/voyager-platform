@@ -2,29 +2,52 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { cached, getRedisClient } from '../lib/cache.js'
-import { getAppsV1Api } from '../lib/k8s.js'
+import { getAppsV1Api, getKubeConfig } from '../lib/k8s.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_DEPLOYMENTS_CACHE_TTL = 30
+const DEPLOYMENTS_CACHE_KEY = 'k8s:deployments:list:v2'
+
+type RolloutInfo = {
+  revision: string
+  image: string
+  updatedAt: string
+}
 
 interface DeploymentInfo {
+  clusterId: string
+  clusterName: string
   name: string
   namespace: string
   replicas: number
   ready: number
   image: string
+  imageVersion: string
+  status: 'Running' | 'Pending' | 'Failed' | 'Scaling'
+  lastUpdated: string
   age: string
-  status: string
+  rolloutHistory: RolloutInfo[]
 }
 
+const rolloutInfoSchema = z.object({
+  revision: z.string(),
+  image: z.string(),
+  updatedAt: z.string(),
+})
+
 const deploymentInfoSchema = z.object({
+  clusterId: z.string(),
+  clusterName: z.string(),
   name: z.string(),
   namespace: z.string(),
   replicas: z.number().int(),
   ready: z.number().int(),
   image: z.string(),
+  imageVersion: z.string(),
+  status: z.enum(['Running', 'Pending', 'Failed', 'Scaling']),
+  lastUpdated: z.string(),
   age: z.string(),
-  status: z.string(),
+  rolloutHistory: z.array(rolloutInfoSchema),
 })
 
 function computeAge(creationTimestamp: Date | string | undefined): string {
@@ -40,11 +63,61 @@ function computeAge(creationTimestamp: Date | string | undefined): string {
   return `${days}d`
 }
 
-function deriveStatus(ready: number, replicas: number): string {
-  if (replicas === 0) return 'Scaled Down'
-  if (ready === replicas) return 'Running'
-  if (ready > 0) return 'Degraded'
-  return 'Unavailable'
+function deriveImageVersion(image: string): string {
+  if (!image || image === 'unknown') return 'unknown'
+  const digestIndex = image.indexOf('@')
+  if (digestIndex > -1) return image.slice(digestIndex + 1)
+  const tagIndex = image.lastIndexOf(':')
+  if (tagIndex > -1 && tagIndex < image.length - 1) return image.slice(tagIndex + 1)
+  return 'latest'
+}
+
+function deriveStatus(params: {
+  ready: number
+  replicas: number
+  available: number
+  unavailable: number
+  generation?: number
+  observedGeneration?: number
+}): 'Running' | 'Pending' | 'Failed' | 'Scaling' {
+  const { ready, replicas, available, unavailable, generation, observedGeneration } = params
+
+  if (generation !== undefined && observedGeneration !== undefined && generation > observedGeneration) {
+    return 'Scaling'
+  }
+
+  if (replicas === 0) return 'Pending'
+  if (unavailable > 0 && ready === 0) return 'Failed'
+  if (ready === replicas && available === replicas) return 'Running'
+  if (ready > 0 || available > 0) return 'Scaling'
+  return 'Pending'
+}
+
+function findLastUpdated(deployment: {
+  metadata?: { creationTimestamp?: Date | string }
+  status?: { conditions?: Array<{ lastUpdateTime?: Date | string; lastTransitionTime?: Date | string }> }
+}): string {
+  const conditionTimes = (deployment.status?.conditions ?? [])
+    .flatMap((condition) => [condition.lastUpdateTime, condition.lastTransitionTime])
+    .filter(Boolean)
+    .map((value) => new Date(value as Date | string).toISOString())
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+
+  if (conditionTimes.length > 0) return conditionTimes[0]
+  return deployment.metadata?.creationTimestamp
+    ? new Date(deployment.metadata.creationTimestamp).toISOString()
+    : new Date(0).toISOString()
+}
+
+function getClusterContext() {
+  const kc = getKubeConfig()
+  const currentContextName = kc.getCurrentContext() || 'default'
+  const context = kc.getContextObject(currentContextName)
+  const clusterName = context?.cluster ?? currentContextName
+  return {
+    clusterId: clusterName,
+    clusterName,
+  }
 }
 
 export const deploymentsRouter = router({
@@ -55,21 +128,70 @@ export const deploymentsRouter = router({
     .input(z.void())
     .output(z.array(deploymentInfoSchema))
     .query(async (): Promise<DeploymentInfo[]> => {
-      return cached('k8s:deployments:list', K8S_DEPLOYMENTS_CACHE_TTL, async () => {
+      return cached(DEPLOYMENTS_CACHE_KEY, K8S_DEPLOYMENTS_CACHE_TTL, async () => {
         const api = getAppsV1Api()
-        const res = await api.listDeploymentForAllNamespaces()
-        return (res.items ?? []).map((d) => {
-          const replicas = d.spec?.replicas ?? 0
-          const ready = d.status?.readyReplicas ?? 0
-          const image = d.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
+        const [{ items: deployments }, { items: replicaSets }] = await Promise.all([
+          api.listDeploymentForAllNamespaces(),
+          api.listReplicaSetForAllNamespaces(),
+        ])
+
+        const { clusterId, clusterName } = getClusterContext()
+
+        const rolloutMap = new Map<string, RolloutInfo[]>()
+
+        for (const rs of replicaSets ?? []) {
+          const namespace = rs.metadata?.namespace ?? 'default'
+          const owners = rs.metadata?.ownerReferences ?? []
+          const deploymentOwner = owners.find((owner) => owner.kind === 'Deployment' && owner.name)
+          if (!deploymentOwner?.name) continue
+
+          const key = `${namespace}/${deploymentOwner.name}`
+          const image = rs.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
+          const revision = rs.metadata?.annotations?.['deployment.kubernetes.io/revision'] ?? 'n/a'
+          const updatedAt = rs.metadata?.creationTimestamp
+            ? new Date(rs.metadata.creationTimestamp).toISOString()
+            : new Date(0).toISOString()
+
+          const existing = rolloutMap.get(key) ?? []
+          existing.push({ revision, image, updatedAt })
+          rolloutMap.set(key, existing)
+        }
+
+        for (const [key, history] of rolloutMap.entries()) {
+          history.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+          rolloutMap.set(key, history.slice(0, 3))
+        }
+
+        return (deployments ?? []).map((deployment) => {
+          const name = deployment.metadata?.name ?? 'unknown'
+          const namespace = deployment.metadata?.namespace ?? 'default'
+          const replicas = deployment.spec?.replicas ?? 0
+          const ready = deployment.status?.readyReplicas ?? 0
+          const available = deployment.status?.availableReplicas ?? 0
+          const unavailable = deployment.status?.unavailableReplicas ?? Math.max(replicas - ready, 0)
+          const image = deployment.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
+          const key = `${namespace}/${name}`
+
           return {
-            name: d.metadata?.name ?? 'unknown',
-            namespace: d.metadata?.namespace ?? 'default',
+            clusterId,
+            clusterName,
+            name,
+            namespace,
             replicas,
             ready,
             image,
-            age: computeAge(d.metadata?.creationTimestamp),
-            status: deriveStatus(ready, replicas),
+            imageVersion: deriveImageVersion(image),
+            status: deriveStatus({
+              ready,
+              replicas,
+              available,
+              unavailable,
+              generation: deployment.metadata?.generation,
+              observedGeneration: deployment.status?.observedGeneration,
+            }),
+            lastUpdated: findLastUpdated(deployment),
+            age: computeAge(deployment.metadata?.creationTimestamp),
+            rolloutHistory: rolloutMap.get(key) ?? [],
           }
         })
       })
@@ -99,7 +221,7 @@ export const deploymentsRouter = router({
           },
         })
         const redis = await getRedisClient()
-        if (redis) await redis.del('k8s:deployments:list')
+        if (redis) await redis.del(DEPLOYMENTS_CACHE_KEY)
         await logAudit(ctx, 'deployment.restart', 'deployment', `${input.namespace}/${input.name}`, {
           namespace: input.namespace,
         })
@@ -133,7 +255,7 @@ export const deploymentsRouter = router({
           body: { spec: { replicas: input.replicas } },
         })
         const redis = await getRedisClient()
-        if (redis) await redis.del('k8s:deployments:list')
+        if (redis) await redis.del(DEPLOYMENTS_CACHE_KEY)
         await logAudit(ctx, 'deployment.scale', 'deployment', `${input.namespace}/${input.name}`, {
           replicas: input.replicas,
         })
