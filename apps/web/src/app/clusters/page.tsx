@@ -53,11 +53,10 @@ function formatLastSeen(date: Date | string | null | undefined) {
 interface AddClusterFormData {
   name: string
   provider: string
-  region: string
   endpoint: string
 }
 
-const INITIAL_FORM: AddClusterFormData = { name: '', provider: 'aws', region: '', endpoint: '' }
+const INITIAL_FORM: AddClusterFormData = { name: '', provider: 'aws', endpoint: '' }
 
 export default function ClustersPage() {
   const router = useRouter()
@@ -104,7 +103,6 @@ export default function ClustersPage() {
       createCluster.mutate({
         name: form.name,
         provider: form.provider,
-        region: form.region || undefined,
         endpoint: form.endpoint,
       })
     },
@@ -369,18 +367,6 @@ export default function ClustersPage() {
                 </option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
-              Region
-            </label>
-            <input
-              type="text"
-              placeholder="us-east-1"
-              value={form.region}
-              onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
-              className={inputClass}
-            />
           </div>
           <div>
             <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
