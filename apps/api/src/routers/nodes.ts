@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { nodes } from '@voyager/db'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { publicProcedure, router } from '../trpc'
+import { publicProcedure, protectedProcedure, router } from '../trpc'
 
 export const nodesRouter = router({
   list: publicProcedure
@@ -17,7 +17,7 @@ export const nodesRouter = router({
     return node
   }),
 
-  upsert: publicProcedure
+  upsert: protectedProcedure
     .input(
       z.object({
         clusterId: z.string().uuid(),
