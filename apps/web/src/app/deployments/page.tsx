@@ -5,6 +5,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { QueryError } from '@/components/ErrorBoundary'
 import { Shimmer } from '@/components/Skeleton'
 import { trpc } from '@/lib/trpc'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { Box, RefreshCw, Scale } from 'lucide-react'
 import { useState } from 'react'
 
@@ -114,6 +115,7 @@ function ScaleDialog({
 }
 
 export default function DeploymentsPage() {
+  const isAdmin = useIsAdmin()
   const [scaleTarget, setScaleTarget] = useState<Deployment | null>(null)
   const [confirmRestart, setConfirmRestart] = useState<Deployment | null>(null)
 
@@ -183,7 +185,7 @@ export default function DeploymentsPage() {
             <span>Image</span>
             <span>Age</span>
             <span>Status</span>
-            <span className="text-right">Actions</span>
+            {isAdmin && <span className="text-right">Actions</span>}
           </div>
 
           {/* Desktop Rows */}
@@ -199,14 +201,16 @@ export default function DeploymentsPage() {
                 <span className="text-[var(--color-text-muted)] font-mono text-[11px] truncate" title={d.image}>{d.image}</span>
                 <span className="text-[var(--color-text-dim)] font-mono tabular-nums">{d.age}</span>
                 <StatusBadge status={d.status} />
-                <div className="flex gap-1 justify-end">
-                  <button type="button" onClick={() => setConfirmRestart(d)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Restart">
-                    <RefreshCw className="h-3 w-3" />Restart
-                  </button>
-                  <button type="button" onClick={() => setScaleTarget(d)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Scale">
-                    <Scale className="h-3 w-3" />Scale
-                  </button>
-                </div>
+                {isAdmin && (
+                  <div className="flex gap-1 justify-end">
+                    <button type="button" onClick={() => setConfirmRestart(d)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Restart">
+                      <RefreshCw className="h-3 w-3" />Restart
+                    </button>
+                    <button type="button" onClick={() => setScaleTarget(d)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Scale">
+                      <Scale className="h-3 w-3" />Scale
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -232,14 +236,16 @@ export default function DeploymentsPage() {
                   <span className="text-[var(--color-text-muted)]">Image</span>
                   <span className="text-[var(--color-text-primary)] font-mono text-[10px] truncate">{d.image}</span>
                 </div>
-                <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
-                  <button type="button" onClick={() => setConfirmRestart(d)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
-                    <RefreshCw className="h-3 w-3" />Restart
-                  </button>
-                  <button type="button" onClick={() => setScaleTarget(d)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
-                    <Scale className="h-3 w-3" />Scale
-                  </button>
-                </div>
+                {isAdmin && (
+                  <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
+                    <button type="button" onClick={() => setConfirmRestart(d)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
+                      <RefreshCw className="h-3 w-3" />Restart
+                    </button>
+                    <button type="button" onClick={() => setScaleTarget(d)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
+                      <Scale className="h-3 w-3" />Scale
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -2,6 +2,7 @@
 
 import { APP_VERSION } from '@/config/constants'
 import { navItems } from '@/config/navigation'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -18,6 +19,7 @@ export function Sidebar({
   setMobileOpen: (v: boolean) => void
 }) {
   const pathname = usePathname()
+  const isAdmin = useIsAdmin()
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/'
@@ -48,6 +50,7 @@ export function Sidebar({
           collapsed={collapsed}
           showLabels={!collapsed}
           isActive={isActive}
+          isAdmin={isAdmin}
           onLinkClick={() => {}}
         />
         <button
@@ -77,6 +80,7 @@ export function Sidebar({
           collapsed={false}
           showLabels
           isActive={isActive}
+          isAdmin={isAdmin}
           onLinkClick={() => setMobileOpen(false)}
         />
         <div className="px-3 py-2 mt-auto">
@@ -93,16 +97,19 @@ function SidebarContent({
   collapsed,
   showLabels,
   isActive,
+  isAdmin,
   onLinkClick,
 }: {
   collapsed: boolean
   showLabels: boolean
   isActive: (path: string) => boolean
+  isAdmin: boolean
   onLinkClick: () => void
 }) {
+  const filteredItems = navItems.filter((item) => !('adminOnly' in item && item.adminOnly) || isAdmin)
   return (
     <nav className="flex flex-col gap-1 px-2">
-      {navItems.map((item) => {
+      {filteredItems.map((item) => {
         const active = isActive(item.id)
         const Icon = item.icon
         return (

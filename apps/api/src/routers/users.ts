@@ -1,5 +1,5 @@
 import { adminProcedure, router } from '../trpc'
-import { user as userTable, account as accountTable } from '@voyager/db/schema'
+import { user as userTable, account as accountTable, session as sessionTable } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
@@ -78,7 +78,8 @@ export const usersRouter = router({
       if (input.userId === ctx.user.id) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot delete yourself' })
       }
-      // Delete accounts first (FK), then user
+      // Delete sessions, accounts (FKs), then user
+      await ctx.db.delete(sessionTable).where(eq(sessionTable.userId, input.userId))
       await ctx.db.delete(accountTable).where(eq(accountTable.userId, input.userId))
       await ctx.db.delete(userTable).where(eq(userTable.id, input.userId))
       return { success: true }

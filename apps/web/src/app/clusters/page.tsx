@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/table'
 import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useForm } from '@tanstack/react-form'
 import { Database, Plus, Search, Trash2, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -60,6 +61,7 @@ const addClusterSchema = z.object({
 
 export default function ClustersPage() {
   const router = useRouter()
+  const isAdmin = useIsAdmin()
   const utils = trpc.useUtils()
   const clusters = trpc.clusters.list.useQuery()
   const createCluster = trpc.clusters.create.useMutation({
@@ -144,12 +146,14 @@ export default function ClustersPage() {
             {clusterList.length} registered · {filtered.length} shown
           </p>
         </div>
-        <button type="button" className={btnPrimary} onClick={() => setShowAddModal(true)}>
-          <span className="flex items-center gap-1.5">
-            <Plus className="h-4 w-4" />
-            Add Cluster
-          </span>
-        </button>
+        {isAdmin && (
+          <button type="button" className={btnPrimary} onClick={() => setShowAddModal(true)}>
+            <span className="flex items-center gap-1.5">
+              <Plus className="h-4 w-4" />
+              Add Cluster
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Search & Filters */}
@@ -277,16 +281,18 @@ export default function ClustersPage() {
                   <span className="text-[var(--color-text-muted)]">Last Seen</span>
                   <span className="text-[var(--color-text-primary)]">{formatLastSeen(cluster.updatedAt)}</span>
                 </div>
-                <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={(e) => handleDeleteClick(e, { id: cluster.id, name: cluster.name })}
-                    className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                    title="Delete cluster"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+                {isAdmin && (
+                  <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteClick(e, { id: cluster.id, name: cluster.name })}
+                      className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                      title="Delete cluster"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -316,9 +322,11 @@ export default function ClustersPage() {
                 <TableHead className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
                   Last Seen
                 </TableHead>
-                <TableHead className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider w-[60px]">
-                  Actions
-                </TableHead>
+                {isAdmin && (
+                  <TableHead className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider w-[60px]">
+                    Actions
+                  </TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -365,16 +373,18 @@ export default function ClustersPage() {
                   <TableCell className="text-xs text-[var(--color-text-muted)]">
                     {formatLastSeen(cluster.updatedAt)}
                   </TableCell>
-                  <TableCell>
-                    <button
-                      type="button"
-                      onClick={(e) => handleDeleteClick(e, { id: cluster.id, name: cluster.name })}
-                      className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                      title="Delete cluster"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </TableCell>
+                  {isAdmin && (
+                    <TableCell>
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteClick(e, { id: cluster.id, name: cluster.name })}
+                        className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                        title="Delete cluster"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
