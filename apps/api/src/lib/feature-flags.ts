@@ -1,5 +1,5 @@
 import { InMemoryProvider, OpenFeature, type EvaluationContext, type JsonValue } from '@openfeature/server-sdk'
-import { existsSync, readFileSync } from 'node:fs'
+import { access, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 type PrimitiveFlag = boolean | string | number | JsonValue
@@ -26,11 +26,15 @@ function parseEnvValue(raw: string): PrimitiveFlag {
   }
 }
 
-function loadFlagsFromFile(): RawFlags {
-  if (!existsSync(FEATURE_FLAGS_FILE)) return {}
+async function loadFlagsFromFile(): Promise<RawFlags> {
+  try {
+    await access(FEATURE_FLAGS_FILE)
+  } catch {
+    return {}
+  }
 
   try {
-    const raw = readFileSync(FEATURE_FLAGS_FILE, 'utf-8')
+    const raw = await readFile(FEATURE_FLAGS_FILE, 'utf-8')
     const parsed = JSON.parse(raw) as unknown
     if (!parsed || typeof parsed !== 'object') return {}
     return parsed as RawFlags
@@ -47,11 +51,15 @@ function loadFlagsFromEnv(): RawFlags {
   return Object.fromEntries(entries)
 }
 
-function buildProviderConfig() {
-  const merged = {
-    ...loadFlagsFromFile(),
+async function getConfiguredFlags(): Promise<RawFlags> {
+  return {
+    ...(await loadFlagsFromFile()),
     ...loadFlagsFromEnv(),
   }
+}
+
+async function buildProviderConfig() {
+  const merged = await getConfiguredFlags()
 
   return Object.fromEntries(
     Object.entries(merged).map(([key, value]) => [
@@ -67,10 +75,13 @@ function buildProviderConfig() {
   )
 }
 
-const provider = new InMemoryProvider(buildProviderConfig())
-OpenFeature.setProviderAndWait(provider).catch(() => {
-  // no-op: fallback behavior handled by default values in getFeatureFlag
-})
+const providerConfigPromise = buildProviderConfig()
+
+providerConfigPromise
+  .then((providerConfig) => OpenFeature.setProviderAndWait(new InMemoryProvider(providerConfig)))
+  .catch((error) => {
+    console.error('[feature-flags] Failed to initialize OpenFeature provider, falling back to default values', error)
+  })
 
 const client = OpenFeature.getClient('voyager-api')
 
@@ -94,9 +105,6 @@ export async function getFeatureFlag<T extends PrimitiveFlag>(
   return (await client.getObjectValue(flagName, defaultValue as JsonValue, context)) as T
 }
 
-export function getConfiguredFeatureFlags(): RawFlags {
-  return {
-    ...loadFlagsFromFile(),
-    ...loadFlagsFromEnv(),
-  }
+export async function getConfiguredFeatureFlags(): Promise<RawFlags> {
+  return getConfiguredFlags()
 }

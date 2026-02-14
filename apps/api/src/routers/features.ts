@@ -14,7 +14,7 @@ export const featuresRouter = router({
   list: adminProcedure.query(async ({ ctx }) => {
     const [dbFlags, configuredFlags] = await Promise.all([
       ctx.db.select().from(featureFlags).orderBy(desc(featureFlags.updatedAt)),
-      Promise.resolve(getConfiguredFeatureFlags()),
+      getConfiguredFeatureFlags(),
     ])
 
     const dbFlagNames = new Set(dbFlags.map((flag) => flag.name))
@@ -61,7 +61,7 @@ export const featuresRouter = router({
       }
     }
 
-    const configuredFlags = getConfiguredFeatureFlags()
+    const configuredFlags = await getConfiguredFeatureFlags()
     const configuredValue = configuredFlags[input.name]
 
     if (configuredValue === undefined) {
