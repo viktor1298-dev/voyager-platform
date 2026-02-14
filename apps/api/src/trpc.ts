@@ -1,12 +1,17 @@
 import { TRPCError, initTRPC } from '@trpc/server'
 import { type Database, db } from '@voyager/db'
+import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
+import { type UserPayload, extractBearerToken, verifyToken } from './lib/auth'
 
 export interface Context {
   db: Database
+  user: UserPayload | null
 }
 
-export function createContext(): Context {
-  return { db }
+export function createContext({ req }: CreateFastifyContextOptions): Context {
+  const token = extractBearerToken(req.headers.authorization)
+  const user = token ? verifyToken(token) : null
+  return { db, user }
 }
 
 const t = initTRPC.context<Context>().create()
@@ -22,4 +27,11 @@ export const publicProcedure = t.procedure.use(async ({ next }) => {
       message: error instanceof Error ? error.message : 'Unknown error',
     })
   }
+})
+
+export const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
+  if (!ctx.user) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Authentication required' })
+  }
+  return next({ ctx: { ...ctx, user: ctx.user } })
 })

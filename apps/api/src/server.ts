@@ -1,4 +1,5 @@
 import cors from '@fastify/cors'
+import rateLimit from '@fastify/rate-limit'
 import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
 import Fastify from 'fastify'
 import { type AppRouter, appRouter } from './routers'
@@ -6,9 +7,38 @@ import { createContext } from './trpc'
 
 const app = Fastify({ logger: true })
 
+const REDIS_URL = process.env.REDIS_URL
+
+const rateLimitConfig: Parameters<typeof rateLimit>[1] = {
+  max: 100,
+  timeWindow: '1 minute',
+  ...(REDIS_URL
+    ? {
+        redis: {
+          host: new URL(REDIS_URL).hostname,
+          port: Number(new URL(REDIS_URL).port) || 6379,
+        },
+      }
+    : {}),
+}
+
+app.register(rateLimit, rateLimitConfig)
+
 app.register(cors, {
   origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
   credentials: true,
+})
+
+// Stricter rate limit for auth endpoints
+app.after(() => {
+  app.route({
+    method: 'POST',
+    url: '/trpc/auth.login',
+    preHandler: app.rateLimit({ max: 10, timeWindow: '1 minute' }),
+    handler: () => {
+      // Handled by tRPC plugin — this just applies the rate limit
+    },
+  })
 })
 
 app.register(fastifyTRPCPlugin, {

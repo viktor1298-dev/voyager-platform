@@ -13,6 +13,11 @@ export function getTRPCClient() {
           typeof window !== 'undefined'
             ? '/trpc'
             : process.env.API_URL || 'http://localhost:4000/trpc',
+        headers() {
+          if (typeof window === 'undefined') return {}
+          const token = localStorage.getItem('voyager-token')
+          return token ? { Authorization: `Bearer ${token}` } : {}
+        },
       }),
     ],
   })
