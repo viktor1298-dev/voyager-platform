@@ -34,7 +34,7 @@ export async function loginAsAdmin(page: Page): Promise<void> {
 
 export async function ensureViewerExists(): Promise<void> {
   try {
-    await fetch('http://localhost:9000/api/auth/sign-up/email', {
+    const signUpRes = await fetch('http://localhost:9000/api/auth/sign-up/email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -43,6 +43,18 @@ export async function ensureViewerExists(): Promise<void> {
         name: 'Viewer User',
       }),
     });
+
+    // After sign-up, set role to viewer via admin API
+    if (signUpRes.ok) {
+      const data = await signUpRes.json() as { user?: { id: string } };
+      if (data.user?.id) {
+        await fetch('http://localhost:9000/api/auth/admin/set-role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: data.user.id, role: 'viewer' }),
+        });
+      }
+    }
   } catch {
     // User may already exist
   }

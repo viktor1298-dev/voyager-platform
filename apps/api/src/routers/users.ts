@@ -26,10 +26,6 @@ export const usersRouter = router({
       role: z.enum(['admin', 'viewer']).default('viewer'),
     }))
     .mutation(async ({ ctx, input }) => {
-      // Use Better-Auth admin API to create user
-      const headers = new Headers()
-      headers.set('x-admin-secret', 'internal')
-      
       try {
         // Use auth.api to create user via Better-Auth
         const result = await auth.api.signUpEmail({
@@ -40,11 +36,12 @@ export const usersRouter = router({
           },
         })
 
-        // Update role if admin
-        if (input.role === 'admin' && result?.user?.id) {
-          await ctx.db.update(userTable)
-            .set({ role: 'admin' })
-            .where(eq(userTable.id, result.user.id))
+        // Set role via Better-Auth admin API
+        if (result?.user?.id) {
+          await auth.api.setRole({
+            headers: new Headers(),
+            body: { userId: result.user.id, role: input.role },
+          })
         }
 
         return { success: true, userId: result?.user?.id }
@@ -78,10 +75,12 @@ export const usersRouter = router({
       if (input.userId === ctx.user.id) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot delete yourself' })
       }
-      // Delete sessions, accounts (FKs), then user
-      await ctx.db.delete(sessionTable).where(eq(sessionTable.userId, input.userId))
-      await ctx.db.delete(accountTable).where(eq(accountTable.userId, input.userId))
-      await ctx.db.delete(userTable).where(eq(userTable.id, input.userId))
+      // Delete sessions, accounts (FKs), then user — atomically
+      await ctx.db.transaction(async (tx) => {
+        await tx.delete(sessionTable).where(eq(sessionTable.userId, input.userId))
+        await tx.delete(accountTable).where(eq(accountTable.userId, input.userId))
+        await tx.delete(userTable).where(eq(userTable.id, input.userId))
+      })
       return { success: true }
     }),
 })
