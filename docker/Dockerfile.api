@@ -1,41 +1,24 @@
-# ============================================================
-# Stage 1 — deps: install ALL dependencies
-# ============================================================
-FROM node:22-alpine AS deps
+# Stage 1 — build
+FROM node:22-alpine AS builder
 RUN corepack enable
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY apps/api/package.json apps/api/
-COPY packages/config/package.json packages/config/
-COPY packages/db/package.json packages/db/
-COPY packages/types/package.json packages/types/
-
+COPY . .
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @voyager/api build
 
-# ============================================================
-# Stage 2 — runner: copy everything + node_modules, run with tsx
-# ============================================================
+# Stage 2 — production (tiny image)
 FROM node:22-alpine AS runner
 RUN addgroup -g 1001 -S nodejs && adduser -S voyager -u 1001
 WORKDIR /app
 
-# Copy entire installed workspace from deps (includes node_modules everywhere)
-COPY --from=deps /app/ ./
-# Now overlay source code WITHOUT overwriting node_modules
-COPY apps/api/src apps/api/src
-COPY apps/api/tsconfig.json apps/api/tsconfig.json
-COPY packages/config/src packages/config/src
-COPY packages/db/src packages/db/src
-COPY packages/types/src packages/types/src
-COPY turbo.json ./
-
-# Install tsx globally for the runner
-RUN npm i -g tsx
+COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/apps/api/package.json ./
+COPY --from=builder /app/charts/voyager/sql ./sql
 
 ENV HIDE_STACK_TRACES=true
 
 USER voyager
 EXPOSE 4000
 
-CMD ["tsx", "apps/api/src/server.ts"]
+CMD ["node", "dist/server.cjs"]
