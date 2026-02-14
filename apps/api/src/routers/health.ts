@@ -65,7 +65,7 @@ async function performK8sHealthCheck(): Promise<{
 export const healthRouter = router({
   check: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid() }))
-    .mutation(async ({ ctx, input }) => {
+    .query(async ({ ctx, input }) => {
       const [cluster] = await ctx.db
         .select()
         .from(clusters)

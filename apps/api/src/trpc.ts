@@ -19,7 +19,17 @@ export function createContext({ req, res }: CreateFastifyContextOptions): Contex
   return { db, user, res }
 }
 
-const t = initTRPC.context<Context>().create()
+const t = initTRPC.context<Context>().create({
+  errorFormatter({ shape, error }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack,
+      },
+    }
+  },
+})
 
 export const router = t.router
 export const publicProcedure = t.procedure.use(async ({ next }) => {
