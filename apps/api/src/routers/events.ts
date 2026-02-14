@@ -7,7 +7,7 @@ export const eventsRouter = router({
   list: publicProcedure
     .input(
       z.object({
-        clusterId: z.string().uuid(),
+        clusterId: z.string().uuid().optional(),
         limit: z.number().int().min(1).max(200).default(50),
         offset: z.number().int().min(0).default(0),
       }),
@@ -16,7 +16,7 @@ export const eventsRouter = router({
       const rows = await ctx.db
         .select()
         .from(events)
-        .where(eq(events.clusterId, input.clusterId))
+        .where(input.clusterId ? eq(events.clusterId, input.clusterId) : undefined)
         .orderBy(desc(events.timestamp))
         .limit(input.limit)
         .offset(input.offset)

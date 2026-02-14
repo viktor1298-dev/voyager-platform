@@ -2,6 +2,7 @@
 
 import { trpc } from '@/lib/trpc'
 import { useEffect, useState } from 'react'
+import { NotificationsPanel } from './NotificationsPanel'
 
 export function TopBar() {
   const liveQuery = trpc.clusters.live.useQuery(undefined, {
@@ -39,11 +40,14 @@ export function TopBar() {
         <Stat label="Alerts" value={alerts === null ? '—' : String(alerts)} color={alerts !== null && alerts > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
       </div>
 
-      <ConnectionStatus
-        dataUpdatedAt={liveQuery.dataUpdatedAt}
-        isDisconnected={isDisconnected}
-        isReconnecting={isReconnecting}
-      />
+      <div className="flex items-center gap-3">
+        <NotificationsPanel />
+        <ConnectionStatus
+          dataUpdatedAt={liveQuery.dataUpdatedAt}
+          isDisconnected={isDisconnected}
+          isReconnecting={isReconnecting}
+        />
+      </div>
     </header>
   )
 }
