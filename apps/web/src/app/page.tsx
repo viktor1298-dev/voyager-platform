@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils'
 import { AlertTriangle, Box, Database, Server } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 
 interface ClusterCardData {
   id: string
@@ -45,7 +45,7 @@ const STATUS_META: Record<string, { label: string; color: string }> = {
   healthy: { label: 'Healthy', color: 'var(--color-status-active)' },
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -324,6 +324,38 @@ export default function DashboardPage() {
         )}
       </PageTransition>
     </AppLayout>
+  )
+}
+
+function DashboardPageFallback() {
+  return (
+    <AppLayout>
+      <PageTransition>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+        <div className="space-y-3">
+          <SkeletonText width="12rem" height="1.5rem" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        </div>
+      </PageTransition>
+    </AppLayout>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardPageFallback />}>
+      <DashboardContent />
+    </Suspense>
   )
 }
 
