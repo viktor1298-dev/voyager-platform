@@ -14,7 +14,7 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getSortingRowModel,
+  getSortedRowModel,
 } from '@tanstack/react-table'
 import { ShieldAlert, ChevronDown, ChevronRight, ClipboardList, Search, X } from 'lucide-react'
 import { Fragment, useMemo, useState } from 'react'
@@ -147,7 +147,7 @@ export default function AuditPage() {
     onSortingChange: setSorting,
     onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
-    getSortingRowModel: getSortingRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     getRowCanExpand: (row) => !!row.original.details,
     manualPagination: true,
     pageCount: totalPages,
