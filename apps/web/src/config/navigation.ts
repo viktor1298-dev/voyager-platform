@@ -1,4 +1,4 @@
-import { Activity, Bell, Box, ClipboardList, FileText, HeartPulse, LayoutDashboard, Server, Settings, Users } from 'lucide-react'
+import { Activity, Bell, Box, ClipboardList, FileText, Flag, HeartPulse, LayoutDashboard, Server, Settings, Users, Webhook } from 'lucide-react'
 
 export const navItems = [
   { id: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -8,6 +8,8 @@ export const navItems = [
   { id: '/events', label: 'Events', icon: Activity },
   { id: '/alerts', label: 'Alerts', icon: Bell },
   { id: '/logs', label: 'Logs', icon: FileText },
+  { id: '/features', label: 'Feature Flags', icon: Flag, adminOnly: true },
+  { id: '/webhooks', label: 'Webhooks', icon: Webhook, adminOnly: true },
   { id: '/users', label: 'Users', icon: Users, adminOnly: true },
   { id: '/audit', label: 'Audit Log', icon: ClipboardList, adminOnly: true },
   { id: '/settings', label: 'Settings', icon: Settings },
