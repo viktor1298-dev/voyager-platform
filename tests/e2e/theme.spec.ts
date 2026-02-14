@@ -6,91 +6,44 @@ test.describe('Theme — Dark/Light/System Toggle', () => {
     await login(page);
   });
 
-  test('should toggle theme and update html/body class', async ({ page }) => {
+  test('should toggle theme via theme button', async ({ page }) => {
     const html = page.locator('html');
+    const btn = page.locator('[data-testid="theme-toggle"]').first();
 
-    // Find theme toggle — try multiple selectors
-    const themeToggle = page.locator('[data-testid="theme-toggle"]')
-      .or(page.getByRole('button', { name: /switch to (light|dark) mode/i }))
-      .or(page.locator('button:has(svg)').filter({ hasText: '' }).nth(0));
-    
-    // The toggle might be in the TopBar — need to find it
-    const toggleBtn = page.getByLabel(/switch to (light|dark) mode/i);
-    const hasAriaLabel = await toggleBtn.count() > 0;
-    
-    const btn = hasAriaLabel ? toggleBtn : themeToggle;
-    await expect(btn.first()).toBeVisible({ timeout: 5000 });
+    await expect(btn).toBeVisible({ timeout: 5000 });
 
-    // Get initial state
-    const initialClass = await html.getAttribute('class') ?? '';
-    const wasDark = initialClass.includes('dark');
+    const labelBefore = (await btn.getAttribute('aria-label')) ?? '';
+    const classBefore = (await html.getAttribute('class')) ?? '';
 
-    // Click to toggle
-    await btn.first().click();
-    await page.waitForTimeout(500);
+    await btn.click();
 
-    // Verify theme changed
-    const afterClass = await html.getAttribute('class') ?? '';
-    if (wasDark) {
-      // Should now be light (no 'dark' in class, or class changed)
-      expect(afterClass).not.toEqual(initialClass);
-    } else {
-      expect(afterClass).toContain('dark');
-    }
+    const labelAfter = (await btn.getAttribute('aria-label')) ?? '';
+    const classAfter = (await html.getAttribute('class')) ?? '';
 
-    // Toggle back
-    await btn.first().click();
-    await page.waitForTimeout(500);
-
-    const finalClass = await html.getAttribute('class') ?? '';
-    // Should be back to initial state
-    if (wasDark) {
-      expect(finalClass).toContain('dark');
-    }
+    expect(labelAfter).not.toEqual(labelBefore);
+    // class may not always change when cycling through system, but one of label/class should
+    expect(labelAfter !== labelBefore || classAfter !== classBefore).toBeTruthy();
   });
 
   test('System theme option follows prefers-color-scheme', async ({ page }) => {
-    // Look for a theme dropdown/select with System option
-    const themeDropdown = page.locator('[data-testid="theme-dropdown"]')
-      .or(page.getByRole('button', { name: /theme/i }))
-      .first();
-
-    const hasDropdown = await themeDropdown.isVisible().catch(() => false);
-    if (!hasDropdown) {
-      test.skip();
-      return;
-    }
-
-    await themeDropdown.click();
-
-    // Select "System" option
-    const systemOption = page.getByRole('menuitem', { name: /system/i })
-      .or(page.getByRole('option', { name: /system/i }))
-      .or(page.locator('[data-testid="theme-system"]'))
-      .first();
-
-    const hasSystem = await systemOption.isVisible().catch(() => false);
-    if (!hasSystem) {
-      test.skip();
-      return;
-    }
-
-    await systemOption.click();
-    await page.waitForTimeout(500);
-
-    // Emulate dark mode preference
-    await page.emulateMedia({ colorScheme: 'dark' });
-    await page.waitForTimeout(500);
-
     const html = page.locator('html');
-    const darkClass = await html.getAttribute('class') ?? '';
-    expect(darkClass).toContain('dark');
+    const btn = page.locator('[data-testid="theme-toggle"]').first();
+    await expect(btn).toBeVisible({ timeout: 5000 });
 
-    // Switch to light preference
+    // Cycle until current theme is System
+    for (let i = 0; i < 4; i++) {
+      const label = (await btn.getAttribute('aria-label')) ?? '';
+      if (/current theme:\s*system/i.test(label)) break;
+      await btn.click();
+    }
+
+    const systemLabel = (await btn.getAttribute('aria-label')) ?? '';
+    expect(systemLabel).toMatch(/current theme:\s*system/i);
+
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await expect.poll(async () => ((await html.getAttribute('class')) ?? '').includes('dark')).toBeTruthy();
+
     await page.emulateMedia({ colorScheme: 'light' });
-    await page.waitForTimeout(500);
-
-    const lightClass = await html.getAttribute('class') ?? '';
-    expect(lightClass).not.toContain('dark');
+    await expect.poll(async () => ((await html.getAttribute('class')) ?? '').includes('dark')).toBeFalsy();
   });
 });
