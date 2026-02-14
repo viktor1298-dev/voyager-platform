@@ -36,11 +36,11 @@ interface Deployment {
 
 function StatusBadge({ status }: { status: Deployment['status'] }) {
   const styles: Record<Deployment['status'], string> = {
-    Running: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
-    Pending: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
-    Failed: 'bg-red-500/15 text-red-400 border-red-500/25',
-    Scaling: 'bg-blue-500/15 text-blue-400 border-blue-500/25',
-    'Restarting...': 'bg-violet-500/15 text-violet-400 border-violet-500/25',
+    Running: 'bg-[var(--color-status-active)]/15 text-[var(--color-status-active)] border-[var(--color-status-active)]/25',
+    Pending: 'bg-[var(--color-status-idle)]/15 text-[var(--color-status-idle)] border-[var(--color-status-idle)]/25',
+    Failed: 'bg-[var(--color-status-error)]/15 text-[var(--color-status-error)] border-[var(--color-status-error)]/25',
+    Scaling: 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)] border-[var(--color-status-warning)]/25',
+    'Restarting...': 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)] border-[var(--color-status-warning)]/25',
   }
 
   return (
