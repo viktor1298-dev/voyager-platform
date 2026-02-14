@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { cached, getRedisClient } from '../lib/cache'
 import { getAppsV1Api } from '../lib/k8s'
-import { publicProcedure, protectedProcedure, router } from '../trpc'
+import { protectedProcedure, router } from '../trpc'
 
 const K8S_DEPLOYMENTS_CACHE_TTL = 30
 
@@ -37,7 +37,7 @@ function deriveStatus(ready: number, replicas: number): string {
 }
 
 export const deploymentsRouter = router({
-  list: publicProcedure.query(async (): Promise<DeploymentInfo[]> => {
+  list: protectedProcedure.query(async (): Promise<DeploymentInfo[]> => {
     return cached('k8s:deployments:list', K8S_DEPLOYMENTS_CACHE_TTL, async () => {
       const api = getAppsV1Api()
       const res = await api.listDeploymentForAllNamespaces()

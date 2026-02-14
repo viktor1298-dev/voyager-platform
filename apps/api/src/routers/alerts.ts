@@ -1,7 +1,7 @@
 import { alerts, alertHistory } from '@voyager/db'
 import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { publicProcedure, protectedProcedure, router } from '../trpc'
+import { protectedProcedure, router } from '../trpc'
 
 const METRIC_VALUES = ['cpu', 'memory', 'pods', 'restarts'] as const
 const OPERATOR_VALUES = ['gt', 'lt', 'eq'] as const
@@ -25,7 +25,7 @@ const updateAlertSchema = z.object({
 })
 
 export const alertsRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
+  list: protectedProcedure.query(async ({ ctx }) => {
     return ctx.db.select().from(alerts).orderBy(desc(alerts.createdAt))
   }),
 
@@ -62,7 +62,7 @@ export const alertsRouter = router({
     return { success: true }
   }),
 
-  history: publicProcedure
+  history: protectedProcedure
     .input(z.object({ limit: z.number().min(1).max(100).default(50) }).optional())
     .query(async ({ ctx, input }) => {
       const limit = input?.limit ?? 50

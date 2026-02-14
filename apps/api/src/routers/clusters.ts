@@ -7,10 +7,10 @@ import { getCoreV1Api, getAppsV1Api, getVersionApi } from '../lib/k8s'
 import { normalizeProvider } from '../lib/providers'
 
 const K8S_CACHE_TTL = 30 // seconds
-import { publicProcedure, protectedProcedure, router } from '../trpc'
+import { protectedProcedure, router } from '../trpc'
 
 export const clustersRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
+  list: protectedProcedure.query(async ({ ctx }) => {
     const allClusters = await ctx.db.select().from(clusters)
     const nodeCounts = await ctx.db
       .select({
@@ -26,14 +26,14 @@ export const clustersRouter = router({
     }))
   }),
 
-  get: publicProcedure.input(z.object({ id: z.string().uuid() })).query(async ({ ctx, input }) => {
+  get: protectedProcedure.input(z.object({ id: z.string().uuid() })).query(async ({ ctx, input }) => {
     const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.id))
     if (!cluster) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
     const clusterNodes = await ctx.db.select().from(nodes).where(eq(nodes.clusterId, input.id))
     return { ...cluster, nodes: clusterNodes }
   }),
 
-  live: publicProcedure.query(async () => {
+  live: protectedProcedure.query(async () => {
     try {
       const [versionInfo, nodesResponse, podsResponse, nsResponse, eventsResponse, deploymentsResponse] = await Promise.all([
         cached('k8s:version', K8S_CACHE_TTL, () => getVersionApi().getCode()),
@@ -114,7 +114,7 @@ export const clustersRouter = router({
     }
   }),
 
-  liveNodes: publicProcedure.query(async () => {
+  liveNodes: protectedProcedure.query(async () => {
     try {
       const nodesResponse = await cached('k8s:nodes', K8S_CACHE_TTL, () => getCoreV1Api().listNode())
       return nodesResponse.items.map((node) => {
@@ -143,7 +143,7 @@ export const clustersRouter = router({
     }
   }),
 
-  liveEvents: publicProcedure
+  liveEvents: protectedProcedure
     .input(z.object({ limit: z.number().default(50) }).optional())
     .query(async ({ input }) => {
       try {
@@ -187,16 +187,14 @@ export const clustersRouter = router({
       z.object({
         name: z.string().min(1).max(255),
         provider: z.string().min(1).max(50),
-        region: z.string().max(100).optional(),
         endpoint: z.string().url().max(500),
         status: z.string().max(50).optional(),
         nodesCount: z.number().int().min(0).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { region: _region, ...dbFields } = input
       const [created] = await ctx.db.insert(clusters).values({
-        ...dbFields,
+        ...input,
         provider: normalizeProvider(input.provider),
         status: input.status ?? 'unreachable',
         nodesCount: input.nodesCount ?? 0,

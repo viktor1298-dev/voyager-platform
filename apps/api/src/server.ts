@@ -13,8 +13,27 @@ app.register(compress, { global: true })
 app.register(rateLimit, {
   max: 100,
   timeWindow: '1 minute',
+  keyGenerator: (req) => req.ip,
 })
 
+// Stricter rate limit for auth.login: max 5 attempts per minute to prevent brute-force
+app.addHook('onRequest', async (request, reply) => {
+  if (request.url === '/trpc/auth.login' && request.method === 'POST') {
+    const key = `login:${request.ip}`
+    const redis = await import('./lib/cache').then(m => m.getRedisClient())
+    if (redis) {
+      const attempts = await redis.incr(key)
+      if (attempts === 1) await redis.expire(key, 60)
+      if (attempts > 5) {
+        reply.code(429).send({ error: 'Too many login attempts. Try again in 1 minute.' })
+      }
+    }
+  }
+})
+
+// ALLOWED_ORIGINS: comma-separated list of allowed origins for CORS.
+// Falls back to localhost:3000 for local development.
+// In production, set to the actual frontend domain(s).
 app.register(cors, {
   origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
   credentials: true,

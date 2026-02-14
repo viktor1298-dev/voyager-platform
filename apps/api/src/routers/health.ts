@@ -3,7 +3,7 @@ import { clusters, healthHistory } from '@voyager/db'
 import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { getCoreV1Api } from '../lib/k8s'
-import { protectedProcedure, publicProcedure, router } from '../trpc'
+import { protectedProcedure, router } from '../trpc'
 
 const HEALTH_STATUS = ['healthy', 'degraded', 'critical', 'unknown'] as const
 type HealthStatus = (typeof HEALTH_STATUS)[number]
@@ -92,7 +92,7 @@ export const healthRouter = router({
       return entry
     }),
 
-  history: publicProcedure
+  history: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid(), limit: z.number().min(1).max(200).default(50) }))
     .query(async ({ ctx, input }) => {
       const rows = await ctx.db
@@ -107,27 +107,34 @@ export const healthRouter = router({
       }))
     }),
 
-  status: publicProcedure.query(async ({ ctx }) => {
-    // Get latest health entry per cluster using a subquery approach
+  status: protectedProcedure.query(async ({ ctx }) => {
+    // Single query: get all clusters with their latest health entry via lateral join
     const allClusters = await ctx.db.select().from(clusters)
-    const result = await Promise.all(
-      allClusters.map(async (cluster) => {
-        const [latest] = await ctx.db
-          .select()
-          .from(healthHistory)
-          .where(eq(healthHistory.clusterId, cluster.id))
-          .orderBy(desc(healthHistory.checkedAt))
-          .limit(1)
-        return {
-          clusterId: cluster.id,
-          clusterName: cluster.name,
-          provider: cluster.provider,
-          status: latest?.status ?? 'unknown',
-          checkedAt: latest?.checkedAt ?? null,
-          responseTimeMs: latest?.responseTimeMs ?? null,
-        }
-      }),
-    )
-    return result
+    if (allClusters.length === 0) return []
+
+    const allLatest = await ctx.db
+      .select()
+      .from(healthHistory)
+      .orderBy(desc(healthHistory.checkedAt))
+
+    // Build a map of clusterId -> latest entry
+    const latestMap = new Map<string, typeof allLatest[0]>()
+    for (const entry of allLatest) {
+      if (!latestMap.has(entry.clusterId)) {
+        latestMap.set(entry.clusterId, entry)
+      }
+    }
+
+    return allClusters.map((cluster) => {
+      const latest = latestMap.get(cluster.id)
+      return {
+        clusterId: cluster.id,
+        clusterName: cluster.name,
+        provider: cluster.provider,
+        status: latest?.status ?? 'unknown',
+        checkedAt: latest?.checkedAt ?? null,
+        responseTimeMs: latest?.responseTimeMs ?? null,
+      }
+    })
   }),
 })

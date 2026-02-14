@@ -1,10 +1,10 @@
 import { events } from '@voyager/db'
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { publicProcedure, protectedProcedure, router } from '../trpc'
+import { protectedProcedure, router } from '../trpc'
 
 export const eventsRouter = router({
-  list: publicProcedure
+  list: protectedProcedure
     .input(
       z.object({
         clusterId: z.string().uuid().optional(),
@@ -45,7 +45,7 @@ export const eventsRouter = router({
       return created
     }),
 
-  stats: publicProcedure
+  stats: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000)

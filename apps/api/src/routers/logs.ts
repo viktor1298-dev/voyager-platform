@@ -2,8 +2,6 @@ import { z } from 'zod'
 import { protectedProcedure, router } from '../trpc'
 import { getCoreV1Api } from '../lib/k8s'
 
-const TAIL_LINES_OPTIONS = [50, 100, 500, 1000] as const
-
 export const logsRouter = router({
   pods: protectedProcedure
     .input(z.object({ namespace: z.string().optional() }).optional())

@@ -1,9 +1,19 @@
 'use client'
 
 import { createTRPCReact, httpBatchLink } from '@trpc/react-query'
+import { TRPCClientError } from '@trpc/client'
 import type { AppRouter } from '@voyager/api/types'
 
 export const trpc = createTRPCReact<AppRouter>()
+
+function clearAuthAndRedirect() {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem('voyager-token')
+  document.cookie = 'voyager-token=; path=/; max-age=0'
+  if (!window.location.pathname.startsWith('/login')) {
+    window.location.href = '/login'
+  }
+}
 
 export function getTRPCClient() {
   return trpc.createClient({
@@ -21,4 +31,11 @@ export function getTRPCClient() {
       }),
     ],
   })
+}
+
+// Global error handler: redirect to login on UNAUTHORIZED
+export function handleTRPCError(error: unknown) {
+  if (error instanceof TRPCClientError && error.data?.code === 'UNAUTHORIZED') {
+    clearAuthAndRedirect()
+  }
 }
