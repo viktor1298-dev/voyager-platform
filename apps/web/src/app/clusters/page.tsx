@@ -15,9 +15,9 @@ import { trpc } from '@/lib/trpc'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useForm } from '@tanstack/react-form'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Database, Plus, Trash2 } from 'lucide-react'
+import { Database, Plus, Trash2, ChevronDown, Check, Server, Globe, Tag } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
@@ -52,6 +52,182 @@ const addClusterSchema = z.object({
   provider: z.string().min(1),
   endpoint: z.string().url('Must be a valid URL'),
 })
+
+/* ── Custom Provider Dropdown ─────────────────────────────────────── */
+function ProviderDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const selected = ADD_PROVIDER_OPTIONS.find((p) => p.value === value) ?? ADD_PROVIDER_OPTIONS[0]
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full px-3 py-2.5 text-sm rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] transition-colors flex items-center justify-between gap-2 cursor-pointer"
+      >
+        <span className="flex items-center gap-2.5">
+          <ProviderLogo provider={selected.value} />
+          <span>{selected.label}</span>
+        </span>
+        <ChevronDown className={`h-4 w-4 text-[var(--color-text-muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-xl overflow-hidden">
+          {ADD_PROVIDER_OPTIONS.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => { onChange(p.value); setOpen(false) }}
+              className={`w-full px-3 py-2.5 text-sm flex items-center gap-2.5 transition-colors cursor-pointer ${
+                p.value === value
+                  ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
+                  : 'text-[var(--color-text-primary)] hover:bg-white/[0.06]'
+              }`}
+            >
+              <ProviderLogo provider={p.value} />
+              <span className="flex-1 text-left">{p.label}</span>
+              {p.value === value && <Check className="h-3.5 w-3.5" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Add Cluster Form (extracted) ────────────────────────────────── */
+function AddClusterForm({
+  addForm,
+  createCluster,
+  inputClass,
+  btnPrimary,
+  btnSecondary,
+  onCancel,
+}: {
+  addForm: ReturnType<typeof useForm<{ name: string; provider: string; endpoint: string }>>
+  createCluster: { isPending: boolean }
+  inputClass: string
+  btnPrimary: string
+  btnSecondary: string
+  onCancel: () => void
+}) {
+  const sectionLabel = 'flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--color-text-dim)] mb-3'
+  const fieldLabel = 'block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5'
+  const errorText = 'mt-1.5 text-[11px] text-red-400 flex items-center gap-1'
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        addForm.handleSubmit()
+      }}
+      className="space-y-5"
+    >
+      {/* Section: Identity */}
+      <div>
+        <div className={sectionLabel}>
+          <Tag className="h-3 w-3" />
+          Identity
+        </div>
+        <div className="space-y-3">
+          <addForm.Field name="name">
+            {(field) => (
+              <div>
+                <label className={fieldLabel}>
+                  Cluster Name <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="production-us-east"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
+                  className={inputClass}
+                  autoFocus
+                />
+                {field.state.meta.errors?.length > 0 && (
+                  <p className={errorText}>{field.state.meta.errors.map((e) => String(e)).join(', ')}</p>
+                )}
+              </div>
+            )}
+          </addForm.Field>
+
+          <addForm.Field name="provider">
+            {(field) => (
+              <div>
+                <label className={fieldLabel}>
+                  Provider <span className="text-red-400">*</span>
+                </label>
+                <ProviderDropdown value={field.state.value} onChange={field.handleChange} />
+              </div>
+            )}
+          </addForm.Field>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-[var(--color-border)]/50" />
+
+      {/* Section: Connection */}
+      <div>
+        <div className={sectionLabel}>
+          <Globe className="h-3 w-3" />
+          Connection
+        </div>
+        <addForm.Field name="endpoint">
+          {(field) => (
+            <div>
+              <label className={fieldLabel}>
+                API Endpoint <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="url"
+                placeholder="https://k8s-api.example.com:6443"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                onBlur={field.handleBlur}
+                className={inputClass}
+              />
+              {field.state.meta.errors?.length > 0 && (
+                <p className={errorText}>{field.state.meta.errors.map((e) => String(e)).join(', ')}</p>
+              )}
+              <p className="mt-1.5 text-[11px] text-[var(--color-text-dim)]">
+                The Kubernetes API server URL. Must be reachable from the platform.
+              </p>
+            </div>
+          )}
+        </addForm.Field>
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-3 pt-3 border-t border-[var(--color-border)]/50">
+        <button type="button" className={btnSecondary} onClick={onCancel}>
+          Cancel
+        </button>
+        <addForm.Subscribe selector={(s) => s.isSubmitting}>
+          {(isSubmitting) => (
+            <button type="submit" className={btnPrimary} disabled={isSubmitting || createCluster.isPending}>
+              <span className="flex items-center gap-1.5">
+                <Plus className="h-3.5 w-3.5" />
+                {createCluster.isPending ? 'Adding…' : 'Add Cluster'}
+              </span>
+            </button>
+          )}
+        </addForm.Subscribe>
+      </div>
+    </form>
+  )
+}
 
 type ClusterRow = {
   id: string
@@ -302,54 +478,14 @@ export default function ClustersPage() {
 
       {/* Add Cluster Modal */}
       <Dialog open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Cluster">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            addForm.handleSubmit()
-          }}
-          className="space-y-4"
-        >
-          <addForm.Field name="name">
-            {(field) => (
-              <label className="block">
-                <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">Cluster Name</span>
-                <input type="text" placeholder="production-us-east" value={field.state.value} onChange={(e) => field.handleChange(e.target.value)} onBlur={field.handleBlur} className={inputClass} />
-                {field.state.meta.errors?.length > 0 && <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map((e) => String(e)).join(', ')}</p>}
-              </label>
-            )}
-          </addForm.Field>
-          <addForm.Field name="provider">
-            {(field) => (
-              <label className="block">
-                <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">Provider</span>
-                <select value={field.state.value} onChange={(e) => field.handleChange(e.target.value)} className={inputClass}>
-                  {ADD_PROVIDER_OPTIONS.map((p) => (
-                    <option key={p.value} value={p.value}>{p.label}</option>
-                  ))}
-                </select>
-              </label>
-            )}
-          </addForm.Field>
-          <addForm.Field name="endpoint">
-            {(field) => (
-              <label className="block">
-                <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">Endpoint URL</span>
-                <input type="url" placeholder="https://k8s-api.example.com:6443" value={field.state.value} onChange={(e) => field.handleChange(e.target.value)} onBlur={field.handleBlur} className={inputClass} />
-                {field.state.meta.errors?.length > 0 && <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map((e) => String(e)).join(', ')}</p>}
-              </label>
-            )}
-          </addForm.Field>
-          <div className="flex justify-end gap-3 pt-2">
-            <button type="button" className={btnSecondary} onClick={() => setShowAddModal(false)}>Cancel</button>
-            <addForm.Subscribe selector={(s) => s.isSubmitting}>
-              {(isSubmitting) => (
-                <button type="submit" className={btnPrimary} disabled={isSubmitting || createCluster.isPending}>
-                  {createCluster.isPending ? 'Adding…' : 'Add Cluster'}
-                </button>
-              )}
-            </addForm.Subscribe>
-          </div>
-        </form>
+        <AddClusterForm
+          addForm={addForm}
+          createCluster={createCluster}
+          inputClass={inputClass}
+          btnPrimary={btnPrimary}
+          btnSecondary={btnSecondary}
+          onCancel={() => setShowAddModal(false)}
+        />
       </Dialog>
 
       {/* Delete Confirmation */}
