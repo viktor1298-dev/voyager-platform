@@ -1,6 +1,7 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { DataTable } from '@/components/DataTable'
@@ -8,6 +9,7 @@ import { QueryError } from '@/components/ErrorBoundary'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { Badge } from '@/components/ui/badge'
 import { Dialog } from '@/components/ui/dialog'
+import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
@@ -65,24 +67,31 @@ type ClusterRow = {
 export default function ClustersPage() {
   const router = useRouter()
   const isAdmin = useIsAdmin()
-  const utils = trpc.useUtils()
   const clusters = trpc.clusters.list.useQuery()
-  const createCluster = trpc.clusters.create.useMutation({
-    onSuccess: () => {
-      utils.clusters.list.invalidate()
-      setShowAddModal(false)
-      toast.success('Cluster added successfully')
-    },
-    onError: (err) => toast.error('Failed to add cluster', { description: err.message }),
-  })
-  const deleteCluster = trpc.clusters.delete.useMutation({
-    onSuccess: () => {
-      utils.clusters.list.invalidate()
-      setDeleteTarget(null)
-      toast.success('Cluster deleted')
-    },
-    onError: (err) => toast.error('Failed to delete cluster', { description: err.message }),
-  })
+  const clusterQueryKey = [['clusters', 'list'], { type: 'query' }] as const
+
+  const createCluster = trpc.clusters.create.useMutation(
+    useOptimisticOptions<ClusterRow[], { name: string; provider: string; endpoint: string }>({
+      queryKey: clusterQueryKey,
+      updater: (old, vars) => [
+        ...(old ?? []),
+        { id: `temp-${Date.now()}`, name: vars.name, provider: vars.provider, status: 'pending', version: null, nodeCount: 0, endpoint: vars.endpoint, updatedAt: new Date().toISOString() },
+      ],
+      successMessage: 'Cluster added successfully',
+      errorMessage: 'Failed to add cluster — rolled back',
+      onSuccess: () => setShowAddModal(false),
+    }),
+  )
+
+  const deleteCluster = trpc.clusters.delete.useMutation(
+    useOptimisticOptions<ClusterRow[], { id: string }>({
+      queryKey: clusterQueryKey,
+      updater: (old, vars) => (old ?? []).filter((c) => c.id !== vars.id),
+      successMessage: 'Cluster deleted',
+      errorMessage: 'Failed to delete cluster — rolled back',
+      onSuccess: () => setDeleteTarget(null),
+    }),
+  )
 
   const [showAddModal, setShowAddModal] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
@@ -212,6 +221,7 @@ export default function ClustersPage() {
 
   return (
     <AppLayout>
+      <PageTransition>
       <Breadcrumbs />
 
       {clusters.error && (
@@ -360,6 +370,7 @@ export default function ClustersPage() {
         loading={deleteCluster.isPending}
         error={deleteCluster.error?.message}
       />
+      </PageTransition>
     </AppLayout>
   )
 }

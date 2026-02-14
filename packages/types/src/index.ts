@@ -1,4 +1,5 @@
 // Shared TypeScript types for Voyager Platform
+export * from './sse'
 
 export interface ClusterInfo {
   name: string

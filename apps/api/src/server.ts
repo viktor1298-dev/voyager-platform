@@ -4,6 +4,7 @@ import rateLimit from '@fastify/rate-limit'
 import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
 import Fastify from 'fastify'
 import { auth } from './lib/auth'
+import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers'
 import { type AppRouter, appRouter } from './routers'
 import { createContext } from './trpc'
 
@@ -81,10 +82,20 @@ const start = async () => {
     await app.listen({ port: PORT, host: HOST })
     console.log(`🚀 API server running on http://${HOST}:${PORT}`)
 
+    // Start K8s watchers for SSE subscriptions
+    try {
+      startPodWatcher()
+      startMetricsPoller()
+      app.log.info('K8s watchers started for SSE subscriptions')
+    } catch (err) {
+      app.log.warn('K8s watchers failed to start (K8s may not be configured): %s', err)
+    }
+
     const signals = ['SIGTERM', 'SIGINT'] as const
     for (const signal of signals) {
       process.on(signal, async () => {
         app.log.info(`${signal} received, shutting down gracefully`)
+        stopAllWatchers()
         await app.close()
         process.exit(0)
       })

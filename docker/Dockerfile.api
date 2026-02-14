@@ -1,31 +1,52 @@
-# Stage 1: Builder
-FROM node:22-alpine AS builder
+# ============================================================
+# Stage 1 — deps: install dependencies (cached when only code changes)
+# ============================================================
+FROM node:22-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/api/package.json apps/api/
-COPY packages/ packages/
+COPY packages/config/package.json packages/config/
+COPY packages/db/package.json packages/db/
+COPY packages/types/package.json packages/types/
 
 RUN pnpm install --frozen-lockfile
 
+# ============================================================
+# Stage 2 — builder: compile TypeScript
+# ============================================================
+FROM deps AS builder
+WORKDIR /app
+
 COPY apps/api/ apps/api/
+COPY packages/ packages/
 
 RUN pnpm --filter @voyager/api build
 
-# Stage 2: Runner
+# ============================================================
+# Stage 3 — runner: minimal production image
+# ============================================================
 FROM node:22-alpine AS runner
+RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 appuser
+RUN addgroup -g 1001 -S nodejs && adduser -S voyager -u 1001
 
-COPY --from=builder /app/apps/api apps/api
-COPY --from=builder /app/node_modules node_modules
-COPY --from=builder /app/apps/api/node_modules apps/api/node_modules
-COPY --from=builder /app/packages packages
+# Deploy production-only deps for the API package
+COPY --from=builder /app /tmp/build
+RUN cd /tmp/build && pnpm deploy --filter @voyager/api --prod /app && rm -rf /tmp/build
 
-USER appuser
+# Copy compiled output
+COPY --from=builder /app/apps/api/dist /app/dist
+COPY --from=builder /app/packages/config /app/node_modules/@voyager/config
+COPY --from=builder /app/packages/types /app/node_modules/@voyager/types
+COPY --from=builder /app/packages/db /app/node_modules/@voyager/db
+
+ENV NODE_ENV=production
+ENV HIDE_STACK_TRACES=true
+
+USER voyager
 EXPOSE 4000
 
-CMD ["./apps/api/node_modules/.bin/tsx", "apps/api/src/server.ts"]
+CMD ["node", "dist/server.js"]

@@ -1,14 +1,16 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
+import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { trpc } from '@/lib/trpc'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Box, RefreshCw, Scale } from 'lucide-react'
+import { Box, Loader2, RefreshCw, Scale } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -38,15 +40,21 @@ function StatusBadge({ status }: { status: string }) {
 
 function ScaleDialog({ deployment, onClose }: { deployment: Deployment; onClose: () => void }) {
   const [replicas, setReplicas] = useState(deployment.replicas)
-  const utils = trpc.useUtils()
-  const scaleMutation = trpc.deployments.scale.useMutation({
-    onSuccess: () => {
-      utils.deployments.list.invalidate()
-      onClose()
-      toast.success(`Scaled ${deployment.name}`, { description: `Replicas set to ${replicas}` })
-    },
-    onError: (err) => toast.error('Scale failed', { description: err.message }),
-  })
+  const deployQueryKey = [['deployments', 'list'], { type: 'query' }] as const
+  const scaleMutation = trpc.deployments.scale.useMutation(
+    useOptimisticOptions<Deployment[], { name: string; namespace: string; replicas: number }>({
+      queryKey: deployQueryKey,
+      updater: (old, vars) =>
+        (old ?? []).map((d) =>
+          d.name === vars.name && d.namespace === vars.namespace
+            ? { ...d, replicas: vars.replicas }
+            : d,
+        ),
+      successMessage: `Scaled ${deployment.name}`,
+      errorMessage: 'Scale failed — rolled back',
+      onSuccess: onClose,
+    }),
+  )
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={onClose} role="presentation">

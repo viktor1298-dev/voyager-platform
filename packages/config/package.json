@@ -1,5 +1,9 @@
 {
   "name": "@voyager/config",
   "private": true,
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./sse": "./src/sse.ts"
+  }
 }

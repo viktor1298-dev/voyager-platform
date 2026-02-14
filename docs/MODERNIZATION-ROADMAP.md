@@ -133,13 +133,45 @@ jsonwebtoken, bcryptjs, jose  (replaced by Better-Auth)
 - [ ] Prefetching + stale-while-revalidate patterns
 
 ### שלב 3 — Real-time & Performance
-- [ ] tRPC SSE subscriptions (live K8s data)
-- [ ] Multi-stage Docker builds
-- [ ] Motion animations (page transitions, cards)
+- [ ] tRPC SSE subscriptions (live K8s data — instant pod crash alerts, deployment progress, live metrics, log streaming)
+- [ ] Multi-stage Docker builds (3-4 min → 20-30 sec, image size 1GB → ~150MB, layer caching)
+- [ ] Motion animations (page transitions, layout animations, exit animations, spring physics)
+- [ ] Optimistic UI mutations (TanStack Query `onMutate` — instant UI feedback before server response)
 
-### שלב 4 — Observability
-- [ ] OpenTelemetry integration
-- [ ] Self-monitoring dashboard
+### שלב 4 — Observability & Error Tracking
+- [ ] **OpenTelemetry (OTel)** — Traces + Metrics + Logs unified. תקן התעשייה ב-2026. Datadog, Grafana, New Relic — כולם OTel native. Self-monitoring dashboard
+- [ ] **Sentry** — Structured error tracking. Stack traces, user context, release tracking, source maps. SDK ל-Next.js + Fastify. כל חברה רצינית רצה Sentry
+- [ ] **Audit Log** — מי עשה מה, מתי. "User X restarted pod Y at 14:32". SOC2 compliance, DB table with user/action/resource/timestamp. Better-Auth session context → automatic user attribution
+
+### שלב 5 — Enterprise Features
+- [ ] **Feature Flags (OpenFeature SDK)** — open standard, runtime toggles. Deploy ≠ release. Gradual rollout 1% → 10% → 100%. Zero-risk releases. LaunchDarkly/Unleash compatible
+- [ ] **OpenAPI Schema** — tRPC 11 OpenAPI adapter. חשיפת REST API spec (Swagger). Third-party integrations, CLI tools, webhook consumers
+- [ ] **Webhook & Integration Framework** — Slack alerts, PagerDuty, email, custom webhooks. Configurable per alert type/severity. Pluggable notification channels
+- [ ] **Edge Caching / PPR** — Next.js 16 Partial Pre-Rendering. Dashboard shell loads instantly (200ms), data streams in. CDN strategy for static assets
+
+### שלב 6 — AI & Collaboration (Wow Factor)
+- [ ] **AI Assistant** — Natural language queries: "show me pods that crashed in the last hour". Ctrl+K → AI mode. Vercel v0, Linear, Raycast — כולם הוסיפו AI ב-2026
+- [ ] **Real-time Presence** — "Viktor is viewing cluster X". Live cursors/indicators. Collaborative debugging
+- [ ] **Shared Dashboards & Annotations** — Custom dashboard layouts, chart annotations ("CPU spike here = deploy v14"), team-shared views
+- [ ] **Collaborative Incident Response** — Shared timeline, action items, post-mortem templates. Like PagerDuty/incident.io built into the platform
+
+---
+
+## Enterprise Readiness Checklist
+
+| Requirement | Status | Phase |
+|-------------|--------|-------|
+| Authentication (Better-Auth + RBAC) | ✅ Done | 3.5 |
+| Rate Limiting | ✅ Done | 1 |
+| CORS + Security Headers | ✅ Done | 2 |
+| Audit Log | ❌ Planned | 4 |
+| Error Tracking (Sentry) | ❌ Planned | 4 |
+| OpenTelemetry | ❌ Planned | 4 |
+| Feature Flags | ❌ Planned | 5 |
+| OpenAPI / REST API | ❌ Planned | 5 |
+| Webhook Integrations | ❌ Planned | 5 |
+| SOC2 Compliance Ready | ❌ Needs Audit Log + Sentry | 4 |
+| Multi-tenant Support | ❌ Future | TBD |
 
 ---
 

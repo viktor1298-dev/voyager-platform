@@ -8,6 +8,7 @@ import { healthRouter } from './health'
 import { logsRouter } from './logs'
 import { metricsRouter } from './metrics'
 import { nodesRouter } from './nodes'
+import { subscriptionsRouter } from './subscriptions'
 import { usersRouter } from './users'
 
 export const appRouter = router({
@@ -20,6 +21,7 @@ export const appRouter = router({
   events: eventsRouter,
   logs: logsRouter,
   metrics: metricsRouter,
+  subscriptions: subscriptionsRouter,
   users: usersRouter,
 })
 
