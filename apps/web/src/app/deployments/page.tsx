@@ -7,33 +7,44 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
-import { trpc } from '@/lib/trpc'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Box, Loader2, RefreshCw, Scale } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
+
+interface RolloutInfo {
+  revision: string
+  image: string
+  updatedAt: string
+}
 
 interface Deployment {
+  clusterId: string
+  clusterName: string
   name: string
   namespace: string
   replicas: number
   ready: number
   image: string
+  imageVersion: string
+  status: 'Running' | 'Pending' | 'Failed' | 'Scaling' | 'Restarting...'
+  lastUpdated: string
   age: string
-  status: string
+  rolloutHistory: RolloutInfo[]
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    Running: 'bg-[var(--color-status-active)]/10 text-[var(--color-status-active)] border-[var(--color-status-active)]/20',
-    Degraded: 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)] border-[var(--color-status-warning)]/20',
-    Unavailable: 'bg-[var(--color-status-error)]/15 text-[var(--color-status-error)] border-[var(--color-status-error)]/20',
-    'Scaled Down': 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)] border-[var(--color-text-dim)]/20',
-    'Restarting...': 'bg-[var(--color-accent)]/15 text-[var(--color-accent)] border-[var(--color-accent)]/20',
+function StatusBadge({ status }: { status: Deployment['status'] }) {
+  const styles: Record<Deployment['status'], string> = {
+    Running: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
+    Pending: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
+    Failed: 'bg-red-500/15 text-red-400 border-red-500/25',
+    Scaling: 'bg-blue-500/15 text-blue-400 border-blue-500/25',
+    'Restarting...': 'bg-violet-500/15 text-violet-400 border-violet-500/25',
   }
+
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${styles[status] ?? styles.Unavailable}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold border ${styles[status]}`}>
       {status === 'Restarting...' && <Loader2 className="h-3 w-3 animate-spin" />}
       {status}
     </span>
@@ -43,13 +54,14 @@ function StatusBadge({ status }: { status: string }) {
 function ScaleDialog({ deployment, onClose }: { deployment: Deployment; onClose: () => void }) {
   const [replicas, setReplicas] = useState(deployment.replicas)
   const deployQueryKey = [['deployments', 'list'], { type: 'query' }] as const
+
   const scaleMutation = trpc.deployments.scale.useMutation(
     useOptimisticOptions<Deployment[], { name: string; namespace: string; replicas: number }>({
       queryKey: deployQueryKey,
       updater: (old, vars) =>
         (old ?? []).map((d) =>
           d.name === vars.name && d.namespace === vars.namespace
-            ? { ...d, replicas: vars.replicas }
+            ? { ...d, replicas: vars.replicas, status: 'Scaling' }
             : d,
         ),
       successMessage: `Scaled ${deployment.name}`,
@@ -98,9 +110,11 @@ export default function DeploymentsPage() {
   const isAdmin = useIsAdmin()
   const [scaleTarget, setScaleTarget] = useState<Deployment | null>(null)
   const [confirmRestart, setConfirmRestart] = useState<Deployment | null>(null)
+  const [namespaceFilter, setNamespaceFilter] = useState<string>('all')
 
   const deploymentsQuery = trpc.deployments.list.useQuery(undefined, { refetchInterval: 30_000 })
   const deployQueryKey = [['deployments', 'list'], { type: 'query' }] as const
+
   const restartMutation = trpc.deployments.restart.useMutation(
     useOptimisticOptions<Deployment[], { name: string; namespace: string }>({
       queryKey: deployQueryKey,
@@ -116,7 +130,6 @@ export default function DeploymentsPage() {
     }),
   )
 
-  // Keyboard shortcuts
   useEffect(() => {
     const onRefresh = () => deploymentsQuery.refetch()
     document.addEventListener('voyager:refresh', onRefresh)
@@ -125,11 +138,44 @@ export default function DeploymentsPage() {
 
   const deployments: Deployment[] = (deploymentsQuery.data as Deployment[] | undefined) ?? []
 
-  const columns = useMemo<ColumnDef<Deployment, unknown>[]>(
-    () => [
+  const namespaces = useMemo(
+    () => Array.from(new Set(deployments.map((d) => d.namespace))).sort((a, b) => a.localeCompare(b)),
+    [deployments],
+  )
+
+  const filteredDeployments = useMemo(
+    () =>
+      namespaceFilter === 'all'
+        ? deployments
+        : deployments.filter((deployment) => deployment.namespace === namespaceFilter),
+    [deployments, namespaceFilter],
+  )
+
+  const groupedByCluster = useMemo(() => {
+    const groups = new Map<string, { clusterId: string; clusterName: string; deployments: Deployment[] }>()
+
+    for (const deployment of filteredDeployments) {
+      const key = deployment.clusterId
+      const existing = groups.get(key)
+      if (existing) {
+        existing.deployments.push(deployment)
+      } else {
+        groups.set(key, {
+          clusterId: deployment.clusterId,
+          clusterName: deployment.clusterName,
+          deployments: [deployment],
+        })
+      }
+    }
+
+    return Array.from(groups.values()).sort((a, b) => a.clusterName.localeCompare(b.clusterName))
+  }, [filteredDeployments])
+
+  const columns = useMemo<ColumnDef<Deployment, unknown>[]>(() => {
+    const base: ColumnDef<Deployment, unknown>[] = [
       {
         accessorKey: 'name',
-        header: 'Name',
+        header: 'Deployment',
         cell: ({ row }) => <span className="text-[var(--color-text-primary)] font-medium">{row.original.name}</span>,
       },
       {
@@ -141,114 +187,174 @@ export default function DeploymentsPage() {
         id: 'replicas',
         header: 'Replicas',
         accessorFn: (row) => `${row.ready}/${row.replicas}`,
-        cell: ({ row }) => <span className="text-[var(--color-text-muted)] font-mono tabular-nums">{row.original.ready}/{row.original.replicas}</span>,
+        cell: ({ row }) => <span className="text-[var(--color-text-primary)] font-mono tabular-nums">{row.original.ready}/{row.original.replicas}</span>,
       },
       {
-        accessorKey: 'image',
-        header: 'Image',
-        cell: ({ row }) => <span className="text-[var(--color-text-muted)] font-mono text-[11px] truncate max-w-[200px] block" title={row.original.image}>{row.original.image}</span>,
-      },
-      {
-        accessorKey: 'age',
-        header: 'Age',
-        cell: ({ row }) => <span className="text-[var(--color-text-dim)] font-mono tabular-nums">{row.original.age}</span>,
+        accessorKey: 'imageVersion',
+        header: 'Version',
+        cell: ({ row }) => <span className="text-[var(--color-text-muted)] font-mono text-[11px]">{row.original.imageVersion}</span>,
       },
       {
         accessorKey: 'status',
         header: 'Status',
         cell: ({ row }) => <StatusBadge status={row.original.status} />,
       },
-      ...(isAdmin
-        ? [
-            {
-              id: 'actions',
-              header: 'Actions',
-              enableSorting: false,
-              cell: ({ row }: { row: { original: Deployment } }) => (
-                <div className="flex gap-1 justify-end">
-                  <button type="button" onClick={() => setConfirmRestart(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Restart">
-                    <RefreshCw className="h-3 w-3" />Restart
-                  </button>
-                  <button type="button" onClick={() => setScaleTarget(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Scale">
-                    <Scale className="h-3 w-3" />Scale
-                  </button>
-                </div>
-              ),
-            } as ColumnDef<Deployment, unknown>,
-          ]
-        : []),
-    ],
-    [isAdmin],
-  )
+      {
+        accessorKey: 'rolloutHistory',
+        header: 'Rollouts',
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-1 max-w-[260px]">
+            {row.original.rolloutHistory.length === 0 ? (
+              <span className="text-[10px] text-[var(--color-text-dim)]">No history</span>
+            ) : (
+              row.original.rolloutHistory.slice(0, 3).map((rollout) => (
+                <span
+                  key={`${rollout.revision}-${rollout.updatedAt}`}
+                  className="px-1.5 py-0.5 rounded border border-[var(--color-border)] text-[10px] text-[var(--color-text-muted)] font-mono"
+                  title={`${rollout.image} • ${new Date(rollout.updatedAt).toLocaleString()}`}
+                >
+                  r{rollout.revision}
+                </span>
+              ))
+            )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'lastUpdated',
+        header: 'Updated',
+        cell: ({ row }) => <span className="text-[var(--color-text-dim)] text-[11px]">{new Date(row.original.lastUpdated).toLocaleString()}</span>,
+      },
+    ]
+
+    if (!isAdmin) return base
+
+    return [
+      ...base,
+      {
+        id: 'actions',
+        header: 'Actions',
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex gap-1 justify-end">
+            <button type="button" onClick={() => setConfirmRestart(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Restart">
+              <RefreshCw className="h-3 w-3" />Restart
+            </button>
+            <button type="button" onClick={() => setScaleTarget(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Scale">
+              <Scale className="h-3 w-3" />Scale
+            </button>
+          </div>
+        ),
+      },
+    ]
+  }, [isAdmin])
 
   return (
     <AppLayout>
       <PageTransition>
-      <Breadcrumbs />
+        <Breadcrumbs />
 
-      {deploymentsQuery.error && (
-        <QueryError message={deploymentsQuery.error.message} onRetry={() => deploymentsQuery.refetch()} />
-      )}
-
-      <div className="mb-6">
-        <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Deployments</h1>
-        <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">{deployments.length} deployments · auto-refresh 30s</p>
-      </div>
-
-      <DataTable
-        data={deployments}
-        columns={columns}
-        searchable
-        searchPlaceholder="Search deployments…"
-        loading={deploymentsQuery.isLoading}
-        emptyIcon={<Box className="h-8 w-8" />}
-        emptyTitle="No deployments found"
-        mobileCard={(d) => (
-          <div className="p-3 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-card)] space-y-2">
-            <div className="flex justify-between items-center gap-2">
-              <span className="text-[var(--color-text-primary)] font-medium text-sm truncate">{d.name}</span>
-              <StatusBadge status={d.status} />
-            </div>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-              <span className="text-[var(--color-text-muted)]">Namespace</span>
-              <span className="text-[var(--color-accent)] font-mono truncate">{d.namespace}</span>
-              <span className="text-[var(--color-text-muted)]">Replicas</span>
-              <span className="text-[var(--color-text-primary)] font-mono tabular-nums">{d.ready}/{d.replicas}</span>
-              <span className="text-[var(--color-text-muted)]">Age</span>
-              <span className="text-[var(--color-text-primary)] font-mono">{d.age}</span>
-            </div>
-            {isAdmin && (
-              <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
-                <button type="button" onClick={() => setConfirmRestart(d)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
-                  <RefreshCw className="h-3 w-3" />Restart
-                </button>
-                <button type="button" onClick={() => setScaleTarget(d)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
-                  <Scale className="h-3 w-3" />Scale
-                </button>
-              </div>
-            )}
-          </div>
+        {deploymentsQuery.error && (
+          <QueryError message={deploymentsQuery.error.message} onRetry={() => deploymentsQuery.refetch()} />
         )}
-      />
 
-      {scaleTarget && <ScaleDialog deployment={scaleTarget} onClose={() => setScaleTarget(null)} />}
+        <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Deployments</h1>
+            <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
+              {filteredDeployments.length} deployments · {groupedByCluster.length} clusters · auto-refresh 30s
+            </p>
+          </div>
 
-      <ConfirmDialog
-        open={confirmRestart !== null}
-        onClose={() => setConfirmRestart(null)}
-        onConfirm={() => confirmRestart && restartMutation.mutate({ name: confirmRestart.name, namespace: confirmRestart.namespace })}
-        title="Restart Deployment?"
-        description={
-          <>
-            This will perform a rolling restart of all pods in{' '}
-            <span className="font-mono text-[var(--color-text-primary)]">{confirmRestart?.namespace}/{confirmRestart?.name}</span>.
-          </>
-        }
-        confirmLabel="Restart"
-        variant="warning"
-        loading={restartMutation.isPending}
-        error={restartMutation.error?.message}
-      />
+          <div className="flex items-center gap-2">
+            <label htmlFor="namespace-filter" className="text-xs text-[var(--color-text-muted)]">Namespace</label>
+            <select
+              id="namespace-filter"
+              value={namespaceFilter}
+              onChange={(event) => setNamespaceFilter(event.target.value)}
+              className="px-3 py-2 rounded-lg text-sm bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]/50"
+            >
+              <option value="all">All namespaces</option>
+              {namespaces.map((namespace) => (
+                <option key={namespace} value={namespace}>{namespace}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          {groupedByCluster.map((cluster) => (
+            <section key={cluster.clusterId} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">{cluster.clusterName}</h2>
+                <span className="text-[11px] text-[var(--color-text-dim)] font-mono">{cluster.deployments.length} deployments</span>
+              </div>
+
+              <DataTable
+                data={cluster.deployments}
+                columns={columns}
+                searchable
+                searchPlaceholder={`Search in ${cluster.clusterName}...`}
+                loading={deploymentsQuery.isLoading}
+                emptyIcon={<Box className="h-7 w-7" />}
+                emptyTitle="No deployments in this cluster"
+                mobileCard={(deployment) => (
+                  <div className="p-3 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-card)] space-y-2">
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-[var(--color-text-primary)] font-medium text-sm truncate">{deployment.name}</span>
+                      <StatusBadge status={deployment.status} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                      <span className="text-[var(--color-text-muted)]">Namespace</span>
+                      <span className="text-[var(--color-accent)] font-mono truncate">{deployment.namespace}</span>
+                      <span className="text-[var(--color-text-muted)]">Replicas</span>
+                      <span className="text-[var(--color-text-primary)] font-mono tabular-nums">{deployment.ready}/{deployment.replicas}</span>
+                      <span className="text-[var(--color-text-muted)]">Version</span>
+                      <span className="text-[var(--color-text-primary)] font-mono">{deployment.imageVersion}</span>
+                    </div>
+                    {isAdmin && (
+                      <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
+                        <button type="button" onClick={() => setConfirmRestart(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
+                          <RefreshCw className="h-3 w-3" />Restart
+                        </button>
+                        <button type="button" onClick={() => setScaleTarget(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
+                          <Scale className="h-3 w-3" />Scale
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              />
+            </section>
+          ))}
+
+          {!deploymentsQuery.isLoading && groupedByCluster.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-14 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+              <Box className="h-8 w-8 mb-2 opacity-40" />
+              <p className="text-sm">No deployments found for selected namespace</p>
+            </div>
+          )}
+        </div>
+
+        {scaleTarget && <ScaleDialog deployment={scaleTarget} onClose={() => setScaleTarget(null)} />}
+
+        <ConfirmDialog
+          open={confirmRestart !== null}
+          onClose={() => setConfirmRestart(null)}
+          onConfirm={() => confirmRestart && restartMutation.mutate({ name: confirmRestart.name, namespace: confirmRestart.namespace })}
+          title="Restart Deployment?"
+          description={
+            <>
+              This will perform a rolling restart of all pods in{' '}
+              <span className="font-mono text-[var(--color-text-primary)]">{confirmRestart?.namespace}/{confirmRestart?.name}</span>.
+            </>
+          }
+          confirmLabel="Restart"
+          variant="warning"
+          loading={restartMutation.isPending}
+          error={restartMutation.error?.message}
+        />
       </PageTransition>
     </AppLayout>
   )
