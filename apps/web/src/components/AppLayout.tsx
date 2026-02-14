@@ -11,7 +11,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <>
+    <AuthGuard>
       <TopBar />
 
       {/* Mobile hamburger */}
@@ -34,6 +34,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       >
         <div className="p-6 max-w-[1400px] bg-dot-grid min-h-full">{children}</div>
       </main>
-    </>
+    </AuthGuard>
   )
 }
