@@ -1,6 +1,8 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { QueryError } from '@/components/ErrorBoundary'
 import { Shimmer } from '@/components/Skeleton'
 import { trpc } from '@/lib/trpc'
 import { AlertTriangle, Calendar, Search, Shield } from 'lucide-react'
@@ -81,6 +83,12 @@ export default function EventsPage() {
 
   return (
     <AppLayout>
+      <Breadcrumbs />
+
+      {eventsQuery.error && (
+        <QueryError message={eventsQuery.error.message} onRetry={() => eventsQuery.refetch()} />
+      )}
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">

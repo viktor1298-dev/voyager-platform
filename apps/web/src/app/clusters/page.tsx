@@ -1,6 +1,8 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { QueryError } from '@/components/ErrorBoundary'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { SkeletonRow } from '@/components/Skeleton'
 import { Badge } from '@/components/ui/badge'
@@ -61,6 +63,12 @@ export default function ClustersPage() {
 
   return (
     <AppLayout>
+      <Breadcrumbs />
+
+      {clusters.error && (
+        <QueryError message={clusters.error.message} onRetry={() => clusters.refetch()} />
+      )}
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">

@@ -1,6 +1,9 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { LoadingState } from '@/components/LoadingState'
+import { QueryError } from '@/components/ErrorBoundary'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatTimestamp } from '@/lib/formatters'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
@@ -97,16 +100,17 @@ export default function ClusterDetailPage() {
   if (!isLoading && error) {
     return (
       <AppLayout>
-        <button type="button" onClick={() => router.back()} className="flex items-center gap-1.5 text-[var(--color-accent)] hover:underline text-sm mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </button>
-        <div className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-8 text-center">
-          <p className="text-[var(--color-status-error)] text-lg font-bold mb-2">Cluster Not Found</p>
-          <p className="text-[var(--color-text-muted)] text-sm">{error.message}</p>
-          <Link href="/clusters" className="inline-block mt-4 text-[var(--color-accent)] hover:underline text-sm">
-            ← Back to Clusters
-          </Link>
-        </div>
+        <Breadcrumbs />
+        <QueryError message={error.message} onRetry={() => isLive ? liveQuery.refetch() : dbCluster.refetch()} />
+      </AppLayout>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <Breadcrumbs />
+        <LoadingState message="Loading cluster details..." />
       </AppLayout>
     )
   }
@@ -189,14 +193,7 @@ export default function ClusterDetailPage() {
 
   return (
     <AppLayout>
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-[11px] font-mono text-[var(--color-text-dim)] mb-4">
-        <Link href="/" className="hover:text-[var(--color-text-muted)] transition-colors">Dashboard</Link>
-        <ChevronRight className="h-3 w-3" />
-        <Link href="/clusters" className="hover:text-[var(--color-text-muted)] transition-colors">Clusters</Link>
-        <ChevronRight className="h-3 w-3" />
-        <span className="text-[var(--color-text-secondary)]">{isLoading ? '...' : cluster.name}</span>
-      </div>
+      <Breadcrumbs />
 
       {/* Back button */}
       <button type="button" onClick={() => router.back()} className="flex items-center gap-1.5 text-[var(--color-accent)] hover:underline text-xs font-mono mb-5">

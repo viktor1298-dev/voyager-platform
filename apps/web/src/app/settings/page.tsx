@@ -1,6 +1,7 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { APP_VERSION } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 import { ExternalLink, Globe, Info, Layers, Server, Wifi } from 'lucide-react'
@@ -91,6 +92,7 @@ export default function SettingsPage() {
 
   return (
     <AppLayout>
+      <Breadcrumbs />
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">

@@ -6,7 +6,9 @@ export interface UserPayload {
   role: 'admin' | 'viewer'
 }
 
-const JWT_SECRET = process.env.JWT_SECRET ?? 'voyager-dev-jwt-secret-change-in-production'
+const JWT_SECRET = process.env.JWT_SECRET ?? (process.env.NODE_ENV === 'production'
+  ? (() => { throw new Error('JWT_SECRET required in production') })()
+  : 'voyager-dev-jwt-secret-change-in-production')
 const TOKEN_EXPIRY = '24h'
 
 export function signToken(payload: UserPayload): string {
