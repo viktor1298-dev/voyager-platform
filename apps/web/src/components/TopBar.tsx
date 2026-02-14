@@ -20,7 +20,7 @@ export function TopBar() {
   const alerts = data ? data.events.filter((e: { type?: string; kind?: string }) => e.type === 'Warning' || e.kind === 'Warning').length : null
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">
+    <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-3 sm:px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--color-accent)] to-indigo-600 flex items-center justify-center text-white text-base shadow-lg shadow-indigo-500/20">
           🚀
@@ -35,7 +35,7 @@ export function TopBar() {
         </div>
       </div>
 
-      <div className="flex gap-6 items-center">
+      <div className="hidden sm:flex gap-6 items-center">
         <Stat label="Total Pods" value={totalPods} color="var(--color-accent)" />
         <Stat label="CPU Usage" value="—" color="var(--color-text-muted)" />
         <Stat label="Alerts" value={alerts === null ? '—' : String(alerts)} color={alerts !== null && alerts > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
@@ -93,14 +93,14 @@ function ConnectionStatus({ dataUpdatedAt, isDisconnected, isReconnecting }: {
         className={`h-2 w-2 rounded-full ${isDisconnected ? '' : 'animate-pulse-slow'}`}
         style={{ backgroundColor: dotColor }}
       />
-      <span className="text-[11px] font-mono font-medium" style={{ color: dotColor }}>
+      <span className="hidden sm:inline text-[11px] font-mono font-medium" style={{ color: dotColor }}>
         {statusText}
       </span>
       {!isDisconnected && (
-        <>
+        <span className="hidden sm:contents">
           <span className="text-[10px] text-[var(--color-text-dim)]">·</span>
           <span className="text-[10px] text-[var(--color-text-muted)] font-mono">Synced {syncLabel}</span>
-        </>
+        </span>
       )}
     </div>
   )
