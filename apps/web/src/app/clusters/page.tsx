@@ -389,10 +389,10 @@ export default function ClustersPage() {
       {/* Add Cluster Modal */}
       <Dialog open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Cluster">
         <form onSubmit={handleAddSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
+          <label className="block">
+            <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
               Cluster Name
-            </label>
+            </span>
             <input
               type="text"
               required
@@ -401,11 +401,11 @@ export default function ClustersPage() {
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               className={inputClass}
             />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
+          </label>
+          <label className="block">
+            <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
               Provider
-            </label>
+            </span>
             <select
               value={form.provider}
               onChange={(e) => setForm((f) => ({ ...f, provider: e.target.value }))}
@@ -417,11 +417,11 @@ export default function ClustersPage() {
                 </option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
+          </label>
+          <label className="block">
+            <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
               Endpoint URL
-            </label>
+            </span>
             <input
               type="url"
               required
@@ -430,7 +430,7 @@ export default function ClustersPage() {
               onChange={(e) => setForm((f) => ({ ...f, endpoint: e.target.value }))}
               className={inputClass}
             />
-          </div>
+          </label>
           {createCluster.error && (
             <p className="text-xs text-red-400">{createCluster.error.message}</p>
           )}
