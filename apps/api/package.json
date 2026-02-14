@@ -9,10 +9,10 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "tsup",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src/",
-    "start": "node --import tsx src/server.ts",
+    "start": "node dist/server.cjs",
     "test": "vitest run",
     "seed:admin": "tsx src/scripts/seed-admin.ts"
   },
@@ -41,6 +41,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "esbuild": "^0.27.3",
+    "tsup": "^8.5.1",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.18"
