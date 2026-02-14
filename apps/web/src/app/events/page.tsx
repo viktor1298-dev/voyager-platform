@@ -1,6 +1,7 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
@@ -136,6 +137,7 @@ export default function EventsPage() {
 
   return (
     <AppLayout>
+      <PageTransition>
       <Breadcrumbs />
       {eventsQuery.error && <QueryError message={eventsQuery.error.message} onRetry={() => eventsQuery.refetch()} />}
       <div className="mb-6">
@@ -174,6 +176,7 @@ export default function EventsPage() {
           )
         }}
       />
+          </PageTransition>
     </AppLayout>
   )
 }

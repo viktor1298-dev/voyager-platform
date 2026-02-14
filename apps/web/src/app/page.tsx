@@ -1,6 +1,7 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { PageTransition } from '@/components/animations'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { SkeletonCard, SkeletonText } from '@/components/Skeleton'
 import {
@@ -119,6 +120,7 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
+      <PageTransition>
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
         <SummaryCard
@@ -260,6 +262,7 @@ export default function DashboardPage() {
           })}
         </div>
       )}
+          </PageTransition>
     </AppLayout>
   )
 }

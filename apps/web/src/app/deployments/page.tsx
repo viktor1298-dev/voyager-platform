@@ -30,9 +30,11 @@ function StatusBadge({ status }: { status: string }) {
     Degraded: 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)] border-[var(--color-status-warning)]/20',
     Unavailable: 'bg-[var(--color-status-error)]/15 text-[var(--color-status-error)] border-[var(--color-status-error)]/20',
     'Scaled Down': 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)] border-[var(--color-text-dim)]/20',
+    'Restarting...': 'bg-[var(--color-accent)]/15 text-[var(--color-accent)] border-[var(--color-accent)]/20',
   }
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${styles[status] ?? styles.Unavailable}`}>
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${styles[status] ?? styles.Unavailable}`}>
+      {status === 'Restarting...' && <Loader2 className="h-3 w-3 animate-spin" />}
       {status}
     </span>
   )
@@ -98,16 +100,21 @@ export default function DeploymentsPage() {
   const [confirmRestart, setConfirmRestart] = useState<Deployment | null>(null)
 
   const deploymentsQuery = trpc.deployments.list.useQuery(undefined, { refetchInterval: 30_000 })
-  const utils = trpc.useUtils()
-  const restartMutation = trpc.deployments.restart.useMutation({
-    onSuccess: () => {
-      utils.deployments.list.invalidate()
-      const name = confirmRestart?.name
-      setConfirmRestart(null)
-      toast.success(`Deployment restarted`, { description: name })
-    },
-    onError: (err) => toast.error('Restart failed', { description: err.message }),
-  })
+  const deployQueryKey = [['deployments', 'list'], { type: 'query' }] as const
+  const restartMutation = trpc.deployments.restart.useMutation(
+    useOptimisticOptions<Deployment[], { name: string; namespace: string }>({
+      queryKey: deployQueryKey,
+      updater: (old, vars) =>
+        (old ?? []).map((d) =>
+          d.name === vars.name && d.namespace === vars.namespace
+            ? { ...d, status: 'Restarting...' }
+            : d,
+        ),
+      successMessage: 'Deployment restarted',
+      errorMessage: 'Restart failed — rolled back',
+      onSuccess: () => setConfirmRestart(null),
+    }),
+  )
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -176,6 +183,7 @@ export default function DeploymentsPage() {
 
   return (
     <AppLayout>
+      <PageTransition>
       <Breadcrumbs />
 
       {deploymentsQuery.error && (
@@ -241,6 +249,7 @@ export default function DeploymentsPage() {
         loading={restartMutation.isPending}
         error={restartMutation.error?.message}
       />
+      </PageTransition>
     </AppLayout>
   )
 }

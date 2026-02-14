@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { SlideIn } from '@/components/animations'
 import { trpc } from '@/lib/trpc'
 import { CHART_HEIGHT, METRICS_GC_TIME, METRICS_STALE_TIME, type TimeRange } from './chart-theme'
 import { ClusterHealthChart } from './ClusterHealthChart'
@@ -53,30 +54,35 @@ export function DashboardCharts() {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <ChartCard title="Cluster Health" loading={health.isLoading} error={health.error?.message}>
-          {health.data && <ClusterHealthChart data={health.data} range={range} />}
-        </ChartCard>
+        <SlideIn delay={0}>
+          <ChartCard title="Cluster Health" loading={health.isLoading} error={health.error?.message}>
+            {health.data && <ClusterHealthChart data={health.data} range={range} />}
+          </ChartCard>
+        </SlideIn>
 
-        <ChartCard title="Resource Usage" loading={resources.isLoading} error={resources.error?.message}>
-          {resources.data && <ResourceUsageChart data={resources.data} range={range} />}
-        </ChartCard>
+        <SlideIn delay={0.05}>
+          <ChartCard title="Resource Usage" loading={resources.isLoading} error={resources.error?.message}>
+            {resources.data && <ResourceUsageChart data={resources.data} range={range} />}
+          </ChartCard>
+        </SlideIn>
 
-        <ChartCard title="Request Rates" loading={requests.isLoading} error={requests.error?.message}>
-          {requests.data && <RequestRateChart data={requests.data} range={range} />}
-        </ChartCard>
+        <SlideIn delay={0.1}>
+          <ChartCard title="Request Rates" loading={requests.isLoading} error={requests.error?.message}>
+            {requests.data && <RequestRateChart data={requests.data} range={range} />}
+          </ChartCard>
+        </SlideIn>
 
-        <ChartCard title="Uptime by Cluster" loading={uptime.isLoading} error={uptime.error?.message}>
-          {uptime.data && <UptimeChart data={uptime.data} />}
-        </ChartCard>
+        <SlideIn delay={0.15}>
+          <ChartCard title="Uptime by Cluster" loading={uptime.isLoading} error={uptime.error?.message}>
+            {uptime.data && <UptimeChart data={uptime.data} />}
+          </ChartCard>
+        </SlideIn>
 
-        <ChartCard
-          title="Alerts Timeline"
-          loading={alerts.isLoading}
-          error={alerts.error?.message}
-          className="lg:col-span-2"
-        >
-          {alerts.data && <AlertsTimelineChart data={alerts.data} range={range} />}
-        </ChartCard>
+        <SlideIn delay={0.2} className="lg:col-span-2">
+          <ChartCard title="Alerts Timeline" loading={alerts.isLoading} error={alerts.error?.message}>
+            {alerts.data && <AlertsTimelineChart data={alerts.data} range={range} />}
+          </ChartCard>
+        </SlideIn>
       </div>
     </section>
   )
@@ -92,7 +98,7 @@ interface ChartCardProps {
 
 function ChartCard({ title, loading, error, className, children }: ChartCardProps) {
   return (
-    <article className={`rounded-xl border bg-card p-4 shadow-sm ${className ?? ''}`} aria-label={title}>
+    <article className="rounded-xl border bg-card p-4 shadow-sm" aria-label={title}>
       <h3 className="mb-3 text-sm font-semibold text-card-foreground">{title}</h3>
       {loading ? (
         <div className={`flex items-center justify-center`} style={{ height: CHART_HEIGHT }}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { APP_VERSION } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
@@ -145,6 +146,7 @@ export default function SettingsPage() {
 
   return (
     <AppLayout>
+      <PageTransition>
       <Breadcrumbs />
       {/* Page Header */}
       <div className="mb-8">
@@ -242,6 +244,7 @@ export default function SettingsPage() {
           </div>
         </SectionCard>
       </div>
+          </PageTransition>
     </AppLayout>
   )
 }

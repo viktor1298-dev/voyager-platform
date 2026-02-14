@@ -1,6 +1,7 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { Shimmer } from '@/components/Skeleton'
 import { trpc } from '@/lib/trpc'
@@ -67,6 +68,7 @@ export default function HealthPage() {
 
   return (
     <AppLayout>
+      <PageTransition>
       <Breadcrumbs />
       <div className="flex items-center gap-3 mb-6 mt-2">
         <HeartPulse className="h-5 w-5 text-[var(--color-accent)]" />
@@ -109,6 +111,7 @@ export default function HealthPage() {
           )}
         </div>
       )}
+          </PageTransition>
     </AppLayout>
   )
 }

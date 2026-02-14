@@ -1,15 +1,17 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
+import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { Shimmer } from '@/components/Skeleton'
 import { Dialog } from '@/components/ui/dialog'
 import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
-import { AlertTriangle, Bell, History, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, Bell, CheckCircle, History, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -55,22 +57,42 @@ export default function AlertsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState<CreateFormData>(INITIAL_FORM)
 
-  const utils = trpc.useUtils()
   const alertsQuery = trpc.alerts.list.useQuery()
   const historyQuery = trpc.alerts.history.useQuery({ limit: 20 })
+  const alertQueryKey = [['alerts', 'list'], { type: 'query' }] as const
+  const historyQueryKey = [['alerts', 'history'], { input: { limit: 20 }, type: 'query' }] as const
 
-  const createMut = trpc.alerts.create.useMutation({
-    onSuccess: () => { utils.alerts.list.invalidate(); setShowCreate(false); setForm(INITIAL_FORM); toast.success('Alert rule created') },
-    onError: (err) => toast.error('Failed to create alert', { description: err.message }),
-  })
-  const updateMut = trpc.alerts.update.useMutation({
-    onSuccess: () => { utils.alerts.list.invalidate(); toast.success('Alert updated') },
-    onError: (err) => toast.error('Failed to update alert', { description: err.message }),
-  })
-  const deleteMut = trpc.alerts.delete.useMutation({
-    onSuccess: () => { utils.alerts.list.invalidate(); utils.alerts.history.invalidate(); setDeleteId(null); toast.success('Alert deleted') },
-    onError: (err) => toast.error('Failed to delete alert', { description: err.message }),
-  })
+  const createMut = trpc.alerts.create.useMutation(
+    useOptimisticOptions<AlertRow[], { name: string; metric: string; operator: string; threshold: number; clusterFilter?: string }>({
+      queryKey: alertQueryKey,
+      updater: (old, vars) => [
+        { id: `temp-${Date.now()}`, name: vars.name, metric: vars.metric, operator: vars.operator, threshold: vars.threshold, clusterFilter: vars.clusterFilter ?? null, enabled: true },
+        ...(old ?? []),
+      ],
+      successMessage: 'Alert rule created',
+      errorMessage: 'Failed to create alert — rolled back',
+      onSuccess: () => { setShowCreate(false); setForm(INITIAL_FORM) },
+    }),
+  )
+  const updateMut = trpc.alerts.update.useMutation(
+    useOptimisticOptions<AlertRow[], { id: string; enabled?: boolean }>({
+      queryKey: alertQueryKey,
+      updater: (old, vars) =>
+        (old ?? []).map((a) => (a.id === vars.id ? { ...a, ...(vars.enabled !== undefined ? { enabled: vars.enabled } : {}) } : a)),
+      successMessage: 'Alert updated',
+      errorMessage: 'Failed to update alert — rolled back',
+    }),
+  )
+  const deleteMut = trpc.alerts.delete.useMutation(
+    useOptimisticOptions<AlertRow[], { id: string }>({
+      queryKey: alertQueryKey,
+      updater: (old, vars) => (old ?? []).filter((a) => a.id !== vars.id),
+      successMessage: 'Alert deleted',
+      errorMessage: 'Failed to delete alert — rolled back',
+      invalidateKeys: [historyQueryKey],
+      onSuccess: () => setDeleteId(null),
+    }),
+  )
 
   useEffect(() => {
     const onRefresh = () => { alertsQuery.refetch(); historyQuery.refetch() }
@@ -120,6 +142,7 @@ export default function AlertsPage() {
 
   return (
     <AppLayout>
+      <PageTransition>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Breadcrumbs />
@@ -227,6 +250,7 @@ export default function AlertsPage() {
           loading={deleteMut.isPending}
         />
       </div>
+      </PageTransition>
     </AppLayout>
   )
 }

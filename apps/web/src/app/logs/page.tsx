@@ -1,6 +1,7 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { QueryError } from '@/components/ErrorBoundary'
 import { Shimmer } from '@/components/Skeleton'
@@ -108,6 +109,7 @@ export default function LogsPage() {
 
   return (
     <AppLayout>
+      <PageTransition>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -225,6 +227,7 @@ export default function LogsPage() {
           </div>
         )}
       </div>
+          </PageTransition>
     </AppLayout>
   )
 }

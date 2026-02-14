@@ -1,10 +1,12 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
+import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { Badge } from '@/components/ui/badge'
 import { Dialog } from '@/components/ui/dialog'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
@@ -47,31 +49,39 @@ export default function UsersPage() {
     if (isAdmin === false) router.replace('/')
   }, [isAdmin, router])
 
-  const utils = trpc.useUtils()
   const usersQuery = trpc.users.list.useQuery(undefined, { enabled: isAdmin })
-  const createUser = trpc.users.create.useMutation({
-    onSuccess: () => {
-      utils.users.list.invalidate()
-      setShowAdd(false)
-      toast.success('User created')
-    },
-    onError: (err) => toast.error('Failed to create user', { description: err.message }),
-  })
-  const updateRole = trpc.users.updateRole.useMutation({
-    onSuccess: (_, vars) => {
-      utils.users.list.invalidate()
-      toast.success(`Role updated to ${vars.role}`)
-    },
-    onError: (err) => toast.error('Failed to update role', { description: err.message }),
-  })
-  const deleteUser = trpc.users.delete.useMutation({
-    onSuccess: () => {
-      utils.users.list.invalidate()
-      setDeleteTarget(null)
-      toast.success('User deleted')
-    },
-    onError: (err) => toast.error('Failed to delete user', { description: err.message }),
-  })
+  const userQueryKey = [['users', 'list'], { type: 'query' }] as const
+
+  const createUser = trpc.users.create.useMutation(
+    useOptimisticOptions<UserRow[], { name: string; email: string; password: string; role: 'admin' | 'viewer' }>({
+      queryKey: userQueryKey,
+      updater: (old, vars) => [
+        ...(old ?? []),
+        { id: `temp-${Date.now()}`, name: vars.name, email: vars.email, role: vars.role, createdAt: new Date().toISOString() },
+      ],
+      successMessage: 'User created',
+      errorMessage: 'Failed to create user — rolled back',
+      onSuccess: () => setShowAdd(false),
+    }),
+  )
+  const updateRole = trpc.users.updateRole.useMutation(
+    useOptimisticOptions<UserRow[], { userId: string; role: string }>({
+      queryKey: userQueryKey,
+      updater: (old, vars) =>
+        (old ?? []).map((u) => (u.id === vars.userId ? { ...u, role: vars.role } : u)),
+      successMessage: 'Role updated',
+      errorMessage: 'Failed to update role — rolled back',
+    }),
+  )
+  const deleteUser = trpc.users.delete.useMutation(
+    useOptimisticOptions<UserRow[], { userId: string }>({
+      queryKey: userQueryKey,
+      updater: (old, vars) => (old ?? []).filter((u) => u.id !== vars.userId),
+      successMessage: 'User deleted',
+      errorMessage: 'Failed to delete user — rolled back',
+      onSuccess: () => setDeleteTarget(null),
+    }),
+  )
 
   const [showAdd, setShowAdd] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
@@ -162,6 +172,7 @@ export default function UsersPage() {
 
   return (
     <AppLayout>
+      <PageTransition>
       <Breadcrumbs />
       {usersQuery.error && <QueryError message={usersQuery.error.message} onRetry={() => usersQuery.refetch()} />}
 
@@ -276,6 +287,7 @@ export default function UsersPage() {
         loading={deleteUser.isPending}
         error={deleteUser.error?.message}
       />
+      </PageTransition>
     </AppLayout>
   )
 }
