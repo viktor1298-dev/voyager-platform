@@ -331,7 +331,13 @@ export const clustersRouter = router({
         tags: ['clusters'],
       },
     })
-    .input(providerConnectionInputSchema)
+    .input(
+      z.object({
+        provider: providerSchema,
+        endpoint: z.string().url().max(500).optional(),
+        connectionConfig: z.unknown(),
+      }),
+    )
     .output(
       z.object({
         success: z.boolean(),
@@ -342,7 +348,19 @@ export const clustersRouter = router({
     )
     .mutation(async ({ input }) => {
       try {
-        const result = await validateClusterConnection(input.provider, input.connectionConfig)
+        const parsedInput = providerConnectionInputSchema.safeParse({
+          provider: input.provider,
+          connectionConfig: input.connectionConfig,
+        })
+
+        if (!parsedInput.success) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Invalid connectionConfig for selected provider',
+          })
+        }
+
+        const result = await validateClusterConnection(parsedInput.data.provider, parsedInput.data.connectionConfig)
         return {
           success: result.reachable,
           message: result.message,
