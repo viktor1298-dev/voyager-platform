@@ -132,6 +132,8 @@ function StatusDot({ connected }: { connected: boolean }) {
   )
 }
 
+export const dynamic = 'force-dynamic'
+
 export default function SettingsPage() {
   const liveQuery = trpc.clusters.live.useQuery(undefined, {
     refetchInterval: 30000,

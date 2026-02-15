@@ -24,6 +24,8 @@ import { toast } from 'sonner'
 
 const RELATIONS: Relation[] = ['owner', 'admin', 'editor', 'viewer']
 
+export const dynamic = 'force-dynamic'
+
 export default function PermissionsPage() {
   const isAdmin = useIsAdmin()
   const router = useRouter()

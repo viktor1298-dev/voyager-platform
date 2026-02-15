@@ -10,8 +10,8 @@ import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { type WebhookRow, mockAdminApi } from '@/lib/mock-admin-api'
 import type { ColumnDef } from '@tanstack/react-table'
 import { ChevronDown, ChevronUp, Copy, Link2, Plus, Trash2, Webhook } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 // TODO: Fetch available event types from backend once webhooks API is connected.
@@ -52,9 +52,12 @@ function buildSecret() {
   return `whsec_${fallback}`
 }
 
-export default function WebhooksPage() {
+export const dynamic = 'force-dynamic'
+
+function WebhooksPageContent() {
   const isAdmin = useIsAdmin()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [webhooks, setWebhooks] = useState<WebhookRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -94,6 +97,12 @@ export default function WebhooksPage() {
     document.addEventListener('voyager:new', onNew)
     return () => document.removeEventListener('voyager:new', onNew)
   }, [])
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setShowAdd(true)
+    }
+  }, [searchParams])
 
   if (!isAdmin) return null
 
@@ -206,7 +215,7 @@ export default function WebhooksPage() {
               {webhooks.length} endpoints
             </p>
           </div>
-          <button type="button" onClick={() => setShowAdd(true)} className={btnPrimary}>
+          <button type="button" onClick={() => router.push('/webhooks/new')} className={btnPrimary}>
             <Plus className="h-4 w-4" />
             Add Webhook
           </button>
@@ -423,5 +432,23 @@ export default function WebhooksPage() {
         />
       </PageTransition>
     </AppLayout>
+  )
+}
+
+function WebhooksPageFallback() {
+  return (
+    <AppLayout>
+      <PageTransition>
+        <Breadcrumbs />
+      </PageTransition>
+    </AppLayout>
+  )
+}
+
+export default function WebhooksPage() {
+  return (
+    <Suspense fallback={<WebhooksPageFallback />}>
+      <WebhooksPageContent />
+    </Suspense>
   )
 }
