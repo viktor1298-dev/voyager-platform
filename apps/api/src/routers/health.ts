@@ -100,6 +100,14 @@ export const healthRouter = router({
         })
         .returning()
 
+      await ctx.db
+        .update(clusters)
+        .set({
+          healthStatus: result.status,
+          lastHealthCheck: entry.checkedAt,
+        })
+        .where(eq(clusters.id, input.clusterId))
+
       return entry
     }),
 
