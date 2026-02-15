@@ -11,21 +11,65 @@ import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_CACHE_TTL = 30 // seconds
 
-const providerSchema = z.enum(['kubeconfig', 'aws-eks', 'azure-aks', 'gke', 'minikube'])
+const providerSchema = z.enum(['kubeconfig', 'aws', 'azure', 'gke', 'minikube'])
 const environmentSchema = z.enum(['production', 'staging', 'development'])
 const healthStatusSchema = z.enum(['healthy', 'degraded', 'critical', 'unreachable', 'unknown'])
 
-const connectionConfigSchema = z
+const kubeconfigConnectionConfigSchema = z
   .object({
-    kubeconfig: z.string().optional(),
+    kubeconfig: z.string().min(1),
     context: z.string().optional(),
-    region: z.string().optional(),
-    clusterName: z.string().optional(),
-    resourceGroup: z.string().optional(),
-    location: z.string().optional(),
+  })
+  .strict()
+
+const awsConnectionConfigSchema = z
+  .object({
+    clusterName: z.string().min(1),
+    region: z.string().min(1),
+    roleArnRef: z.string().optional(),
     credentialRef: z.string().optional(),
   })
-  .passthrough()
+  .strict()
+
+const azureConnectionConfigSchema = z
+  .object({
+    clusterName: z.string().min(1),
+    resourceGroup: z.string().min(1),
+    subscriptionIdRef: z.string().optional(),
+    credentialRef: z.string().optional(),
+  })
+  .strict()
+
+const gkeConnectionConfigSchema = z
+  .object({
+    clusterName: z.string().min(1),
+    location: z.string().min(1),
+    projectIdRef: z.string().optional(),
+    credentialRef: z.string().optional(),
+  })
+  .strict()
+
+const minikubeConnectionConfigSchema = z
+  .object({
+    context: z.string().optional(),
+  })
+  .strict()
+
+const providerConnectionInputSchema = z.discriminatedUnion('provider', [
+  z.object({ provider: z.literal('kubeconfig'), connectionConfig: kubeconfigConnectionConfigSchema }),
+  z.object({ provider: z.literal('aws'), connectionConfig: awsConnectionConfigSchema }),
+  z.object({ provider: z.literal('azure'), connectionConfig: azureConnectionConfigSchema }),
+  z.object({ provider: z.literal('gke'), connectionConfig: gkeConnectionConfigSchema }),
+  z.object({ provider: z.literal('minikube'), connectionConfig: minikubeConnectionConfigSchema }),
+])
+
+const connectionConfigSchema = z.union([
+  kubeconfigConnectionConfigSchema,
+  awsConnectionConfigSchema,
+  azureConnectionConfigSchema,
+  gkeConnectionConfigSchema,
+  minikubeConnectionConfigSchema,
+])
 
 const clusterSchema = z
   .object({
@@ -325,12 +369,7 @@ export const clustersRouter = router({
         tags: ['clusters'],
       },
     })
-    .input(
-      z.object({
-        provider: providerSchema,
-        connectionConfig: connectionConfigSchema,
-      }),
-    )
+    .input(providerConnectionInputSchema)
     .output(
       z.object({
         success: z.boolean(),
@@ -373,17 +412,32 @@ export const clustersRouter = router({
   create: adminProcedure
     .meta({ openapi: { method: 'POST', path: '/api/clusters', protect: true, tags: ['clusters'] } })
     .input(
-      z.object({
-        name: z.string().min(1).max(255),
-        provider: providerSchema,
-        environment: environmentSchema.optional(),
-        endpoint: z.string().url().max(500).optional(),
-        connectionConfig: connectionConfigSchema.optional(),
-        status: z.string().max(50).optional(),
-        healthStatus: healthStatusSchema.optional(),
-        lastHealthCheck: z.coerce.date().optional(),
-        nodesCount: z.number().int().min(0).optional(),
-      }),
+      z
+        .object({
+          name: z.string().min(1).max(255),
+          provider: providerSchema,
+          environment: environmentSchema.optional(),
+          endpoint: z.string().url().max(500).optional(),
+          connectionConfig: connectionConfigSchema.optional(),
+          status: z.string().max(50).optional(),
+          healthStatus: healthStatusSchema.optional(),
+          lastHealthCheck: z.coerce.date().optional(),
+          nodesCount: z.number().int().min(0).optional(),
+        })
+        .superRefine((value, ctx) => {
+          if (!value.connectionConfig) return
+          const parsed = providerConnectionInputSchema.safeParse({
+            provider: value.provider,
+            connectionConfig: value.connectionConfig,
+          })
+          if (!parsed.success) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['connectionConfig'],
+              message: 'Invalid connectionConfig for selected provider',
+            })
+          }
+        }),
     )
     .output(clusterSchema)
     .mutation(async ({ ctx, input }) => {
@@ -394,6 +448,8 @@ export const clustersRouter = router({
           provider: normalizeProvider(input.provider),
           environment: input.environment ?? 'development',
           endpoint: input.endpoint ?? null,
+          // TODO(security): Encrypt/decrypt secrets in connectionConfig before persisting to JSONB.
+          // Placeholder: currently only non-sensitive references should be stored (e.g. credentialRef).
           connectionConfig: input.connectionConfig ?? {},
           status: input.status ?? 'unreachable',
           healthStatus: input.healthStatus ?? 'unknown',
@@ -428,12 +484,33 @@ export const clustersRouter = router({
     .output(clusterSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input
+      const [existing] = await ctx.db.select().from(clusters).where(eq(clusters.id, id))
+      if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
+
+      if (data.connectionConfig !== undefined) {
+        const effectiveProvider = data.provider ?? existing.provider
+        const parsed = providerConnectionInputSchema.safeParse({
+          provider: effectiveProvider,
+          connectionConfig: data.connectionConfig,
+        })
+        if (!parsed.success) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Invalid connectionConfig for selected provider',
+          })
+        }
+      }
+
       const updates: Record<string, unknown> = {}
       if (data.name !== undefined) updates.name = data.name
       if (data.provider !== undefined) updates.provider = normalizeProvider(data.provider)
       if (data.environment !== undefined) updates.environment = data.environment
       if (data.endpoint !== undefined) updates.endpoint = data.endpoint
-      if (data.connectionConfig !== undefined) updates.connectionConfig = data.connectionConfig
+      if (data.connectionConfig !== undefined) {
+        // TODO(security): Encrypt/decrypt secrets in connectionConfig before persisting to JSONB.
+        // Placeholder: currently only non-sensitive references should be stored (e.g. credentialRef).
+        updates.connectionConfig = data.connectionConfig
+      }
       if (data.status !== undefined) updates.status = data.status
       if (data.healthStatus !== undefined) updates.healthStatus = data.healthStatus
       if (data.lastHealthCheck !== undefined) updates.lastHealthCheck = data.lastHealthCheck

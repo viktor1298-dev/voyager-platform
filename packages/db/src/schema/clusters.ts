@@ -1,12 +1,6 @@
 import { integer, jsonb, pgEnum, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 
-export const clusterProviderEnum = pgEnum('cluster_provider', [
-  'kubeconfig',
-  'aws-eks',
-  'azure-aks',
-  'gke',
-  'minikube',
-])
+export const clusterProviderEnum = pgEnum('cluster_provider', ['kubeconfig', 'aws', 'azure', 'gke', 'minikube'])
 
 export const clusterEnvironmentEnum = pgEnum('cluster_environment', ['production', 'staging', 'development'])
 
@@ -24,6 +18,8 @@ export const clusters = pgTable('clusters', {
   provider: clusterProviderEnum('provider').notNull().default('kubeconfig'),
   environment: clusterEnvironmentEnum('environment').notNull().default('development'),
   endpoint: varchar('endpoint', { length: 500 }),
+  // TODO(security): Store connection_config encrypted-at-rest (field-level encryption / KMS) before production.
+  // Placeholder: keep only non-sensitive refs here (e.g. credentialRef), never raw credentials.
   connectionConfig: jsonb('connection_config').$type<Record<string, unknown>>().notNull().default({}),
   status: varchar('status', { length: 50 }).notNull().default('unreachable'),
   healthStatus: clusterHealthStatusEnum('health_status').notNull().default('unknown'),

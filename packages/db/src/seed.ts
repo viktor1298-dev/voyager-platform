@@ -32,7 +32,7 @@ async function seed() {
       },
       {
         name: 'production-eks',
-        provider: 'aws-eks',
+        provider: 'aws',
         environment: 'production',
         endpoint: 'https://eks.us-east-1.amazonaws.com',
         connectionConfig: { clusterName: 'production-eks', region: 'us-east-1', credentialRef: 'vault:eks/prod' },
@@ -43,7 +43,7 @@ async function seed() {
       },
       {
         name: 'staging-aks',
-        provider: 'azure-aks',
+        provider: 'azure',
         environment: 'staging',
         endpoint: 'https://staging-aks.westeurope.azmk8s.io',
         connectionConfig: {
