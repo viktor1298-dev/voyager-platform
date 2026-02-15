@@ -34,13 +34,13 @@ test.describe('Auth Advanced Flows', () => {
     await login(page)
     await page.goto('/clusters')
 
-    // Open the add cluster dialog/form
-    await page.getByRole('button', { name: /add|create|new/i }).first().click()
+    await page.getByRole('button', { name: /add cluster/i }).first().click()
 
-    // Submit without filling fields
-    await page.locator('form').getByRole('button', { name: /add cluster/i }).click()
+    // New flow is a wizard: advance to kubeconfig step and verify empty state blocks progress
+    await page.getByRole('button', { name: /next/i }).click()
 
-    // Verify validation errors are shown (required fields)
-    await expect(page.locator('[data-field-error], .text-destructive, [role="alert"]').first()).toBeVisible()
+    const nextButton = page.getByRole('button', { name: /next/i })
+    await expect(nextButton).toBeDisabled()
+    await expect(page.getByText(/fill the required credential fields to continue/i)).toBeVisible()
   })
 })
