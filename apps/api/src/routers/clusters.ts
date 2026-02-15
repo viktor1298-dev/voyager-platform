@@ -19,6 +19,22 @@ import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_CACHE_TTL = 30 // seconds
 
+const parseOptionalDateInput = (value: string | Date | null | undefined, fieldName: string) => {
+  if (value === undefined || value === null) {
+    return value
+  }
+
+  const parsed = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Invalid ${fieldName}: expected ISO date string or Date`,
+    })
+  }
+
+  return parsed
+}
+
 const providerSchema = z.enum(VALID_PROVIDERS)
 const environmentSchema = z.enum(['production', 'staging', 'development'])
 const healthStatusSchema = z.enum(['healthy', 'degraded', 'critical', 'unreachable', 'unknown'])
@@ -407,7 +423,7 @@ export const clustersRouter = router({
         connectionConfig: connectionConfigSchema.optional(),
         status: z.string().max(50).optional(),
         healthStatus: healthStatusSchema.optional(),
-        lastHealthCheck: z.coerce.date().optional(),
+        lastHealthCheck: z.union([z.string().datetime(), z.date()]).optional(),
         nodesCount: z.number().int().min(0).optional(),
       }),
     )
@@ -426,6 +442,8 @@ export const clustersRouter = router({
         }
       }
 
+      const parsedLastHealthCheck = parseOptionalDateInput(input.lastHealthCheck, 'lastHealthCheck')
+
       const [created] = await ctx.db
         .insert(clusters)
         .values({
@@ -438,7 +456,7 @@ export const clustersRouter = router({
           connectionConfig: input.connectionConfig ?? {},
           status: input.status ?? 'unreachable',
           healthStatus: input.healthStatus ?? 'unknown',
-          lastHealthCheck: input.lastHealthCheck,
+          lastHealthCheck: parsedLastHealthCheck,
           nodesCount: input.nodesCount ?? 0,
         })
         .returning()
@@ -461,7 +479,7 @@ export const clustersRouter = router({
         connectionConfig: connectionConfigSchema.optional(),
         status: z.string().max(50).optional(),
         healthStatus: healthStatusSchema.optional(),
-        lastHealthCheck: z.coerce.date().nullable().optional(),
+        lastHealthCheck: z.union([z.string().datetime(), z.date()]).nullable().optional(),
         version: z.string().max(50).optional(),
         nodesCount: z.number().int().min(0).optional(),
       }),
@@ -498,7 +516,9 @@ export const clustersRouter = router({
       }
       if (data.status !== undefined) updates.status = data.status
       if (data.healthStatus !== undefined) updates.healthStatus = data.healthStatus
-      if (data.lastHealthCheck !== undefined) updates.lastHealthCheck = data.lastHealthCheck
+      if (data.lastHealthCheck !== undefined) {
+        updates.lastHealthCheck = parseOptionalDateInput(data.lastHealthCheck, 'lastHealthCheck')
+      }
       if (data.version !== undefined) updates.version = data.version
       if (data.nodesCount !== undefined) updates.nodesCount = data.nodesCount
       const [updated] = await ctx.db.update(clusters).set(updates).where(eq(clusters.id, id)).returning()
