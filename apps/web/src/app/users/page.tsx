@@ -76,7 +76,7 @@ export default function UsersPage() {
     if (isAdmin === false) router.replace('/')
   }, [isAdmin, router])
 
-  const usersQuery = trpc.users.list.useQuery(undefined, { enabled: isAdmin })
+  const usersQuery = trpc.users.list.useQuery(undefined, { enabled: isAdmin === true })
   const userQueryKey = [['users', 'list'], { type: 'query' }] as const
 
   const createUser = trpc.users.create.useMutation(

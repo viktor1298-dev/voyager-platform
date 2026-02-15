@@ -70,7 +70,7 @@ export default function AuditPage() {
       ...(dateFrom && { from: dateFrom }),
       ...(dateTo && { to: dateTo }),
     },
-    { enabled: isAdmin, placeholderData: keepPreviousData },
+    { enabled: isAdmin === true, placeholderData: keepPreviousData },
   )
 
   const data: AuditEntry[] = query.data?.items ?? []
