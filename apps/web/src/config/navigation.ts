@@ -1,11 +1,27 @@
-import { Activity, Bell, Box, ClipboardList, FileText, Flag, HeartPulse, LayoutDashboard, Server, Settings, Shield, Users, UsersRound, Webhook } from 'lucide-react'
+import {
+  Activity,
+  Bell,
+  Box,
+  ClipboardList,
+  FileText,
+  Flag,
+  HeartPulse,
+  LayoutDashboard,
+  Server,
+  Settings,
+  Shield,
+  Users,
+  UsersRound,
+  Webhook,
+  Wind,
+} from 'lucide-react'
 
 type NavItem = {
   id: string
   label: string
   icon: typeof LayoutDashboard
   adminOnly?: boolean
-  section?: 'access-control'
+  section?: 'access-control' | 'autoscaling'
 }
 
 export const navItems: NavItem[] = [
@@ -21,6 +37,13 @@ export const navItems: NavItem[] = [
   { id: '/users', label: 'Users', icon: Users, adminOnly: true },
   { id: '/audit', label: 'Audit Log', icon: ClipboardList, adminOnly: true },
   { id: '/teams', label: 'Teams', icon: UsersRound, adminOnly: true, section: 'access-control' },
-  { id: '/permissions', label: 'Permissions', icon: Shield, adminOnly: true, section: 'access-control' },
+  {
+    id: '/permissions',
+    label: 'Permissions',
+    icon: Shield,
+    adminOnly: true,
+    section: 'access-control',
+  },
+  { id: '/karpenter', label: 'Karpenter', icon: Wind, section: 'autoscaling' },
   { id: '/settings', label: 'Settings', icon: Settings },
 ] as const
