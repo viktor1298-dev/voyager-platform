@@ -3,9 +3,9 @@ import { integer, jsonb, pgEnum, pgTable, timestamp, uuid, varchar } from 'drizz
 // Canonical provider IDs shared with API/web payloads.
 export const clusterProviderEnum = pgEnum('cluster_provider', [
   'kubeconfig',
-  'aws-eks',
-  'azure-aks',
-  'google-gke',
+  'aws',
+  'azure',
+  'gke',
   'minikube',
 ])
 

@@ -41,9 +41,9 @@ const healthStatusSchema = z.enum(['healthy', 'degraded', 'critical', 'unreachab
 
 const providerConnectionInputSchema = z.discriminatedUnion('provider', [
   z.object({ provider: z.literal('kubeconfig'), connectionConfig: kubeconfigConnectionConfigSchema }),
-  z.object({ provider: z.literal('aws-eks'), connectionConfig: awsConnectionConfigSchema }),
-  z.object({ provider: z.literal('azure-aks'), connectionConfig: azureConnectionConfigSchema }),
-  z.object({ provider: z.literal('google-gke'), connectionConfig: gkeConnectionConfigSchema }),
+  z.object({ provider: z.literal('aws'), connectionConfig: awsConnectionConfigSchema }),
+  z.object({ provider: z.literal('azure'), connectionConfig: azureConnectionConfigSchema }),
+  z.object({ provider: z.literal('gke'), connectionConfig: gkeConnectionConfigSchema }),
   z.object({ provider: z.literal('minikube'), connectionConfig: minikubeConnectionConfigSchema }),
 ])
 
@@ -405,9 +405,9 @@ export const clustersRouter = router({
       try {
         const connectionConfigSchemaByProvider = {
           kubeconfig: kubeconfigConnectionConfigSchema,
-          'aws-eks': awsConnectionConfigSchema,
-          'azure-aks': azureConnectionConfigSchema,
-          'google-gke': gkeConnectionConfigSchema,
+          'aws': awsConnectionConfigSchema,
+          'azure': azureConnectionConfigSchema,
+          'gke': gkeConnectionConfigSchema,
           minikube: minikubeConnectionConfigSchema,
         } as const
 

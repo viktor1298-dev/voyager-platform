@@ -62,7 +62,7 @@ export function createKubeConfigForCluster(
       return kc
     }
 
-    case 'aws-eks':
+    case 'aws':
       awsConnectionConfigSchema.parse(connectionConfig)
       // TODO: Implement IAM / STS-based EKS auth flow (aws eks get-token equivalent)
       throw new TRPCError({
@@ -70,7 +70,7 @@ export function createKubeConfigForCluster(
         message: 'AWS provider support is not implemented yet',
       })
 
-    case 'azure-aks':
+    case 'azure':
       azureConnectionConfigSchema.parse(connectionConfig)
       // TODO: Implement Azure workload identity / AAD integration for AKS auth
       throw new TRPCError({
@@ -78,7 +78,7 @@ export function createKubeConfigForCluster(
         message: 'Azure provider support is not implemented yet',
       })
 
-    case 'google-gke':
+    case 'gke':
       gkeConnectionConfigSchema.parse(connectionConfig)
       // TODO: Implement GCP auth provider integration for GKE auth
       throw new TRPCError({
