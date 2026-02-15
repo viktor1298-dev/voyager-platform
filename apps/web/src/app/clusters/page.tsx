@@ -57,7 +57,7 @@ export default function ClustersPage() {
   const clusterQueryKey = [['clusters', 'list'], { type: 'query' }] as const
 
   const createCluster = trpc.clusters.create.useMutation(
-    useOptimisticOptions<ClusterRow[], { name: string; provider: string; endpoint: string }>({
+    useOptimisticOptions<ClusterRow[], { name: string; provider: string; endpoint: string; connectionConfig?: unknown }>({
       queryKey: clusterQueryKey,
       updater: (old, vars) => [
         ...(old ?? []),
@@ -331,7 +331,7 @@ export default function ClustersPage() {
         <AddClusterWizard
           pending={createCluster.isPending}
           onCancel={() => setShowAddModal(false)}
-          onSubmit={(payload) => createCluster.mutate(payload)}
+          onSubmit={(payload) => createCluster.mutate(payload as any)}
         />
       </Dialog>
 

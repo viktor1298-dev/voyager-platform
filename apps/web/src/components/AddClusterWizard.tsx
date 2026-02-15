@@ -1,5 +1,6 @@
 'use client'
 
+import { getTRPCClient } from '@/lib/trpc'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { AnimatePresence, motion } from 'motion/react'
 import { Loader2, UploadCloud } from 'lucide-react'
@@ -8,10 +9,19 @@ import { useEffect, useMemo, useState, type DragEvent } from 'react'
 type ProviderId = 'kubeconfig' | 'aws' | 'azure' | 'gke' | 'minikube'
 type Environment = 'prod' | 'staging' | 'dev'
 
+type ConnectionConfig = {
+  kubeconfig?: { content?: string }
+  aws?: { accessKeyId: string; secretAccessKey: string; region: string; roleArn?: string }
+  azure?: { subscriptionId?: string; resourceGroup?: string; clusterName?: string; servicePrincipal?: string }
+  gke?: { serviceAccountJson?: string }
+  minikube?: { caCert?: string; clientCert?: string; clientKey?: string; endpoint: string }
+}
+
 type WizardPayload = {
   name: string
-  provider: string
+  provider: ProviderId
   endpoint: string
+  connectionConfig: ConnectionConfig
 }
 
 interface AddClusterWizardProps {
@@ -30,17 +40,29 @@ const providers: Array<{ id: ProviderId; label: string; subtitle: string; icon: 
 
 const cardClass = 'rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3 text-left transition-colors'
 const inputClass = 'w-full px-3 py-2 text-sm rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
+const MAX_UPLOAD_SIZE_BYTES = 1024 * 1024
+
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`))
+    reader.readAsText(file)
+  })
+}
 
 function FileDrop({
   label,
   accept,
   file,
   onFile,
+  onError,
 }: {
   label: string
   accept?: string
   file: File | null
   onFile: (file: File | null) => void
+  onError: (message: string | null) => void
 }) {
   const [dragActive, setDragActive] = useState(false)
 
@@ -48,7 +70,14 @@ function FileDrop({
     e.preventDefault()
     setDragActive(false)
     const dropped = e.dataTransfer.files?.[0] ?? null
-    if (dropped) onFile(dropped)
+    if (!dropped) return
+    if (dropped.size > MAX_UPLOAD_SIZE_BYTES) {
+      onError(`File too large (max 1MB): ${dropped.name}`)
+      onFile(null)
+      return
+    }
+    onError(null)
+    onFile(dropped)
   }
 
   return (
@@ -72,7 +101,21 @@ function FileDrop({
           type="file"
           className="hidden"
           accept={accept}
-          onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+          onChange={(e) => {
+            const selected = e.target.files?.[0] ?? null
+            if (!selected) {
+              onError(null)
+              onFile(null)
+              return
+            }
+            if (selected.size > MAX_UPLOAD_SIZE_BYTES) {
+              onError(`File too large (max 1MB): ${selected.name}`)
+              onFile(null)
+              return
+            }
+            onError(null)
+            onFile(selected)
+          }}
         />
       </label>
     </div>
@@ -81,6 +124,7 @@ function FileDrop({
 
 export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWizardProps) {
   const reduced = useReducedMotion()
+  const trpcClient = useMemo(() => getTRPCClient(), [])
   const [step, setStep] = useState(1)
   const [provider, setProvider] = useState<ProviderId>('kubeconfig')
   const [environment, setEnvironment] = useState<Environment>('prod')
@@ -107,20 +151,110 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
   const [minikubeEndpoint, setMinikubeEndpoint] = useState('')
 
   const [validationState, setValidationState] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
+  const [validationError, setValidationError] = useState<string>('')
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const currentProvider = providers.find((p) => p.id === provider)!
 
   const suggestedName = useMemo(() => `${provider}-${environment}-cluster`, [provider, environment])
 
   useEffect(() => {
+    return () => {
+      setAwsSecretKey('')
+    }
+  }, [])
+
+  const buildConnectionConfig = async (): Promise<ConnectionConfig> => {
+    if (provider === 'kubeconfig') {
+      const fileContent = kubeFile ? await readFileAsText(kubeFile) : ''
+      return { kubeconfig: { content: kubeText.trim() || fileContent } }
+    }
+
+    if (provider === 'aws') {
+      return {
+        aws: {
+          accessKeyId: awsAccessKey.trim(),
+          secretAccessKey: awsSecretKey,
+          region: awsRegion.trim(),
+          roleArn: awsRoleArn.trim() || undefined,
+        },
+      }
+    }
+
+    if (provider === 'azure') {
+      return {
+        azure: {
+          subscriptionId: azureSubscriptionId.trim() || undefined,
+          resourceGroup: azureResourceGroup.trim() || undefined,
+          clusterName: azureClusterName.trim() || undefined,
+          servicePrincipal: azureServicePrincipal.trim() || undefined,
+        },
+      }
+    }
+
+    if (provider === 'gke') {
+      return {
+        gke: {
+          serviceAccountJson: gkeServiceAccount ? await readFileAsText(gkeServiceAccount) : undefined,
+        },
+      }
+    }
+
+    return {
+      minikube: {
+        caCert: minikubeCaCert ? await readFileAsText(minikubeCaCert) : undefined,
+        clientCert: minikubeClientCert ? await readFileAsText(minikubeClientCert) : undefined,
+        clientKey: minikubeClientKey ? await readFileAsText(minikubeClientKey) : undefined,
+        endpoint: minikubeEndpoint.trim(),
+      },
+    }
+  }
+
+  useEffect(() => {
     if (step !== 3) return
-    setValidationState('testing')
-    const timer = setTimeout(() => {
-      setValidationState(step2Valid ? 'success' : 'error')
-    }, 1400)
-    return () => clearTimeout(timer)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step])
+
+    let cancelled = false
+
+    const runValidation = async () => {
+      setValidationState('testing')
+      setValidationError('')
+
+      try {
+        const connectionConfig = await buildConnectionConfig()
+        const endpointForValidation =
+          provider === 'minikube'
+            ? minikubeEndpoint.trim()
+            : provider === 'aws' && awsRegion.trim()
+              ? `https://eks.${awsRegion.trim()}.amazonaws.com`
+              : provider === 'azure' && azureClusterName.trim()
+                ? `https://${azureClusterName.trim()}.azmk8s.io`
+                : provider === 'gke'
+                  ? 'https://container.googleapis.com'
+                  : 'https://kubernetes.default.svc'
+
+        await (trpcClient as any).mutation('clusters.validateConnection', {
+          provider,
+          endpoint: endpointForValidation,
+          connectionConfig,
+        })
+
+        if (!cancelled) {
+          setValidationState('success')
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setValidationState('error')
+          setValidationError(error instanceof Error ? error.message : 'Connection validation failed')
+        }
+      }
+    }
+
+    void runValidation()
+
+    return () => {
+      cancelled = true
+    }
+  }, [step, trpcClient, provider, kubeFile, kubeText, awsAccessKey, awsSecretKey, awsRegion, awsRoleArn, azureSubscriptionId, azureResourceGroup, azureClusterName, azureServicePrincipal, gkeServiceAccount, minikubeCaCert, minikubeClientCert, minikubeClientKey, minikubeEndpoint])
 
   const computedEndpoint = useMemo(() => {
     if (provider === 'minikube') return minikubeEndpoint.trim()
@@ -141,6 +275,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
   }, [computedEndpoint])
 
   const step2Valid = useMemo(() => {
+    if (uploadError) return false
     if (provider === 'kubeconfig') return Boolean(kubeFile || kubeText.trim())
     if (provider === 'aws') return Boolean(awsAccessKey.trim() && awsSecretKey.trim() && awsRegion.trim())
     if (provider === 'azure') {
@@ -152,18 +287,20 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
       return Boolean(minikubeCaCert && minikubeClientCert && minikubeClientKey && minikubeEndpoint.trim())
     }
     return false
-  }, [provider, kubeFile, kubeText, awsAccessKey, awsSecretKey, awsRegion, azureSubscriptionId, azureResourceGroup, azureClusterName, azureServicePrincipal, gkeServiceAccount, minikubeCaCert, minikubeClientCert, minikubeClientKey, minikubeEndpoint])
+  }, [provider, kubeFile, kubeText, awsAccessKey, awsSecretKey, awsRegion, azureSubscriptionId, azureResourceGroup, azureClusterName, azureServicePrincipal, gkeServiceAccount, minikubeCaCert, minikubeClientCert, minikubeClientKey, minikubeEndpoint, uploadError])
 
   const canGoNext = (step === 1) || (step === 2 && step2Valid) || (step === 3 && validationState === 'success') || (step === 4 && endpointValid)
 
   const finalName = nameOverride.trim() || suggestedName
 
-  const submit = () => {
+  const submit = async () => {
     if (!endpointValid || !finalName) return
+    const connectionConfig = await buildConnectionConfig()
     onSubmit({
       name: finalName,
-      provider: provider === 'gke' ? 'gcp' : provider,
+      provider,
       endpoint: computedEndpoint,
+      connectionConfig,
     })
   }
 
@@ -207,7 +344,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
             <div className="space-y-3">
               {provider === 'kubeconfig' && (
                 <>
-                  <FileDrop label="Kubeconfig file" file={kubeFile} onFile={setKubeFile} accept=".yaml,.yml,.conf" />
+                  <FileDrop label="Kubeconfig file" file={kubeFile} onFile={setKubeFile} onError={setUploadError} accept=".yaml,.yml,.conf" />
                   <div>
                     <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Or paste kubeconfig text</label>
                     <textarea
@@ -240,19 +377,20 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
               )}
 
               {provider === 'gke' && (
-                <FileDrop label="Service Account JSON" file={gkeServiceAccount} onFile={setGkeServiceAccount} accept=".json,application/json" />
+                <FileDrop label="Service Account JSON" file={gkeServiceAccount} onFile={setGkeServiceAccount} onError={setUploadError} accept=".json,application/json" />
               )}
 
               {provider === 'minikube' && (
                 <div className="space-y-3">
-                  <FileDrop label="CA cert" file={minikubeCaCert} onFile={setMinikubeCaCert} />
-                  <FileDrop label="Client cert" file={minikubeClientCert} onFile={setMinikubeClientCert} />
-                  <FileDrop label="Client key" file={minikubeClientKey} onFile={setMinikubeClientKey} />
+                  <FileDrop label="CA cert" file={minikubeCaCert} onFile={setMinikubeCaCert} onError={setUploadError} />
+                  <FileDrop label="Client cert" file={minikubeClientCert} onFile={setMinikubeClientCert} onError={setUploadError} />
+                  <FileDrop label="Client key" file={minikubeClientKey} onFile={setMinikubeClientKey} onError={setUploadError} />
                   <input value={minikubeEndpoint} onChange={(e) => setMinikubeEndpoint(e.target.value)} placeholder="https://127.0.0.1:8443" className={inputClass} />
                 </div>
               )}
 
-              {!step2Valid && <p className="text-xs text-red-400">Fill the required credential fields to continue.</p>}
+              {uploadError && <p className="text-xs text-red-400">{uploadError}</p>}
+              {!step2Valid && !uploadError && <p className="text-xs text-red-400">Fill the required credential fields to continue.</p>}
             </div>
           )}
 
@@ -265,7 +403,9 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                 </div>
               )}
               {validationState === 'success' && <p className="text-sm text-emerald-400">Connection test passed. Ready to continue.</p>}
-              {validationState === 'error' && <p className="text-sm text-red-400">Connection test failed. Check credentials and retry.</p>}
+              {validationState === 'error' && (
+                <p className="text-sm text-red-400">{validationError || 'Connection test failed. Check credentials and retry.'}</p>
+              )}
             </div>
           )}
 
@@ -302,7 +442,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
               setStep((s) => s + 1)
               return
             }
-            submit()
+            void submit()
           }}
           className="px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
         >
