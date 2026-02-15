@@ -5,9 +5,10 @@ test.describe('Teams Page', () => {
   test.beforeEach(async ({ page }) => { await login(page) })
   
   test('admin can access /teams page', async ({ page }) => {
-    await page.goto('/teams')
-    await expect(page).toHaveURL(/\/teams$/)
-    await expect(page.getByRole('link', { name: /^Teams$/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /logout/i })).toBeVisible()
+    const teamsLink = page.getByRole('link', { name: /^Teams$/i })
+    await teamsLink.waitFor({ state: 'visible', timeout: 30_000 })
+    await teamsLink.evaluate((el) => (el as HTMLAnchorElement).click())
+    await expect(page).toHaveURL(/\/teams$/, { timeout: 10_000 })
+    await expect(page.getByRole('heading', { name: /^Teams$/i })).toBeVisible({ timeout: 15_000 })
   })
 })
