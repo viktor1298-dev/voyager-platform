@@ -492,7 +492,7 @@ function ClusterCard({
           </div>
         </div>
 
-        <div className="flex w-full sm:w-auto flex-row sm:flex-col items-start sm:items-end justify-between gap-1 sm:gap-2 shrink-0 px-4 pb-4 sm:p-4 sm:pl-0">
+        <div className="flex w-full sm:w-auto flex-row flex-wrap sm:flex-col items-start sm:items-end justify-between gap-1 sm:gap-2 shrink-0 px-4 pb-4 sm:p-4 sm:pl-0">
           <span
             className="text-[10px] font-mono px-2 py-0.5 rounded-md border"
             style={{

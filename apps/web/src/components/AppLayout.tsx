@@ -1,12 +1,14 @@
 'use client'
 
 import { Menu } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { AuthGuard } from './AuthGuard'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -32,7 +34,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <main
         className={`pt-14 min-h-screen transition-all duration-200 ${collapsed ? 'md:ml-12' : 'md:ml-48'}`}
       >
-        <div className="p-3 sm:p-6 max-w-[1400px] w-full max-w-[100vw] overflow-x-hidden bg-dot-grid min-h-full">{children}</div>
+        <div
+          key={pathname}
+          className="p-3 sm:p-6 max-w-[1400px] w-full max-w-[100vw] overflow-x-hidden bg-dot-grid min-h-full"
+        >
+          {children}
+        </div>
       </main>
     </AuthGuard>
   )
