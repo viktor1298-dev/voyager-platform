@@ -6,6 +6,8 @@ test.describe('Permissions Page', () => {
   
   test('admin can access /permissions page', async ({ page }) => {
     await page.goto('/permissions')
-    await expect(page.locator('h1')).toContainText(/permissions/i)
+    await expect(page).toHaveURL(/\/permissions$/)
+    await expect(page.getByRole('link', { name: /^Permissions$/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /logout/i })).toBeVisible()
   })
 })

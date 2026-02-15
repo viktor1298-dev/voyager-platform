@@ -10,16 +10,11 @@ test.describe('TanStack Table — Users Management', () => {
   });
 
   test('table renders with data rows', async ({ page }) => {
-    const desktopTable = page.locator('table').first();
+    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible();
 
-    if (await desktopTable.isVisible().catch(() => false)) {
-      const rows = desktopTable.locator('tbody tr');
-      await expect(rows.first()).toBeVisible({ timeout: 5000 });
-      expect(await rows.count()).toBeGreaterThan(0);
-      return;
-    }
-
-    await expect(page.getByText(/0 users/i)).toBeVisible({ timeout: 5000 });
+    const dataRows = page.locator('tbody tr');
+    await expect(dataRows.first()).toBeVisible({ timeout: 10_000 });
+    expect(await dataRows.count()).toBeGreaterThan(0);
   });
 
   test('clicking column header sorts data', async ({ page }) => {
