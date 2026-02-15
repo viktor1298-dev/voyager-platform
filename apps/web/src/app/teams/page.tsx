@@ -145,7 +145,16 @@ export default function TeamsPage() {
     },
   ], [selectedTeam])
 
-  if (!isAdmin) return null
+  if (isAdmin === null)
+    return (
+      <div className="flex items-center justify-center h-full min-h-[200px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    )
+  if (isAdmin === false) {
+    router.replace('/')
+    return null
+  }
 
   const inputClass = 'w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm'
 
