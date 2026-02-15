@@ -45,8 +45,16 @@ type ValidateConnectionPayload = {
   connectionConfig: ConnectionConfig
 }
 
+type ValidateConnectionResult = {
+  success: boolean
+  message: string
+}
+
 type ValidateConnectionClient = {
-  mutation: (path: 'clusters.validateConnection', input: ValidateConnectionPayload) => Promise<unknown>
+  mutation: (
+    path: 'cluster.validateConnection' | 'clusters.validateConnection',
+    input: ValidateConnectionPayload,
+  ) => Promise<ValidateConnectionResult>
 }
 
 interface AddClusterWizardProps {
@@ -250,14 +258,28 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                   ? 'https://container.googleapis.com'
                   : 'https://kubernetes.default.svc'
 
-        await (trpcClient as unknown as ValidateConnectionClient).mutation('clusters.validateConnection', {
+        const input: ValidateConnectionPayload = {
           provider,
           endpoint: endpointForValidation,
           connectionConfig,
-        })
+        }
+
+        let result: ValidateConnectionResult | null = null
+
+        try {
+          result = await (trpcClient as unknown as ValidateConnectionClient).mutation('cluster.validateConnection', input)
+        } catch {
+          result = await (trpcClient as unknown as ValidateConnectionClient).mutation('clusters.validateConnection', input)
+        }
 
         if (!cancelled) {
-          setValidationState('success')
+          if (result.success) {
+            setValidationState('success')
+            return
+          }
+
+          setValidationState('error')
+          setValidationError(result.message || 'Connection test failed. Check credentials and retry.')
         }
       } catch (error) {
         if (!cancelled) {
