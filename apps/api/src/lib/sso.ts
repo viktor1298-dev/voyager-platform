@@ -4,6 +4,7 @@ import { createDecipheriv, createCipheriv, createHash, randomBytes } from 'node:
 
 const MICROSOFT_PROVIDER_TYPE = 'microsoft-entra-id'
 const ENTRA_DISCOVERY_URL = 'https://login.microsoftonline.com/%TENANT_ID%/v2.0/.well-known/openid-configuration'
+const DEFAULT_SSO_PROVIDER_CACHE_TTL_MS = 60_000
 
 export interface EntraSsoConfigInput {
   tenantId: string
@@ -20,6 +21,11 @@ function getSsoEncryptionKey(): Buffer {
   }
 
   const fallbackSecret = process.env.BETTER_AUTH_SECRET ?? 'voyager-dev-better-auth-secret-change-in-prod'
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('SSO_ENCRYPTION_KEY is required in production')
+  }
+
+  console.warn('[SSO] SSO_ENCRYPTION_KEY is not set. Falling back to BETTER_AUTH_SECRET-derived key (dev only).')
   return createHash('sha256').update(fallbackSecret).digest()
 }
 
@@ -129,9 +135,41 @@ export async function getEntraAuthProvider(db: Database) {
   }
 }
 
+let cachedProvider: { value: Awaited<ReturnType<typeof getEntraAuthProvider>>; expiresAt: number } | null = null
+
+export async function getCachedEntraAuthProvider(db: Database) {
+  const ttlMs = Number.parseInt(process.env.SSO_PROVIDER_CACHE_TTL_MS ?? `${DEFAULT_SSO_PROVIDER_CACHE_TTL_MS}`, 10)
+  const now = Date.now()
+
+  if (cachedProvider && cachedProvider.expiresAt > now) {
+    return cachedProvider.value
+  }
+
+  const value = await getEntraAuthProvider(db)
+  cachedProvider = { value, expiresAt: now + (Number.isFinite(ttlMs) && ttlMs > 0 ? ttlMs : DEFAULT_SSO_PROVIDER_CACHE_TTL_MS) }
+  return value
+}
+
+async function fetchEntraGroupIds(accessToken: string): Promise<string[]> {
+  const response = await fetch('https://graph.microsoft.com/v1.0/me/memberOf', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Graph API memberOf returned HTTP ${response.status}`)
+  }
+
+  const data = (await response.json()) as { value?: Array<{ id?: string; '@odata.type'?: string }> }
+  return (data.value ?? [])
+    .filter((entry) => entry['@odata.type'] === '#microsoft.graph.group' && typeof entry.id === 'string')
+    .map((entry) => entry.id as string)
+}
+
 export async function syncEntraGroupMembership(db: Database, userId: string) {
   const [provider] = await db
-    .select({ groupMappings: ssoProviders.groupMappings })
+    .select({
+      groupMappings: ssoProviders.groupMappings,
+    })
     .from(ssoProviders)
     .where(and(eq(ssoProviders.providerType, MICROSOFT_PROVIDER_TYPE), eq(ssoProviders.enabled, true)))
 
@@ -140,21 +178,18 @@ export async function syncEntraGroupMembership(db: Database, userId: string) {
   if (mappedTeamIds.length === 0) return
 
   const userAccounts = await db
-    .select({ idToken: account.idToken })
+    .select({ accessToken: account.accessToken })
     .from(account)
     .where(and(eq(account.userId, userId), eq(account.providerId, MICROSOFT_PROVIDER_TYPE)))
 
-  const idToken = userAccounts.find((item) => item.idToken)?.idToken
-  if (!idToken) return
-
-  const payload = idToken.split('.')[1]
-  if (!payload) return
+  const accessToken = userAccounts.find((item) => item.accessToken)?.accessToken
+  if (!accessToken) return
 
   let groupIds: string[] = []
   try {
-    const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as { groups?: string[] }
-    groupIds = parsed.groups ?? []
-  } catch {
+    groupIds = await fetchEntraGroupIds(accessToken)
+  } catch (error) {
+    console.warn('[SSO] Failed to fetch Entra group membership via Graph API', error)
     return
   }
 
