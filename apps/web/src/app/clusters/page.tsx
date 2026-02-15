@@ -110,9 +110,9 @@ export default function ClustersPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const currentUserId = useAuthStore((state) => state.user?.id)
 
-  const getPermissionForCluster = useCallback((clusterName: string): Relation | null => {
+  const getPermissionForCluster = useCallback((clusterId: string): Relation | null => {
     if (!currentUserId) return null
-    return getBestRelationForUser(currentUserId, `cluster-${clusterName}`)
+    return getBestRelationForUser(currentUserId, clusterId)
   }, [currentUserId])
 
   // Keyboard shortcuts
@@ -220,7 +220,7 @@ export default function ClustersPage() {
         id: 'permission',
         header: 'Access',
         cell: ({ row }) => {
-          const relation = getPermissionForCluster(row.original.name)
+          const relation = getPermissionForCluster(row.original.id)
           if (!relation) return <span className="text-xs text-[var(--color-text-dim)]">—</span>
           return <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>
         },
@@ -264,7 +264,7 @@ export default function ClustersPage() {
               size: 60,
               cell: ({ row }: { row: { original: ClusterRow } }) => (
                 <ClusterDeleteAction
-                  clusterId={row.original.name}
+                  clusterId={row.original.id}
                   onDelete={() => setDeleteTarget({ id: row.original.id, name: row.original.name })}
                 />
               ),
@@ -336,7 +336,7 @@ export default function ClustersPage() {
               </div>
             </div>
             {(() => {
-              const relation = getPermissionForCluster(row.name)
+              const relation = getPermissionForCluster(row.id)
               if (!relation) return null
               return <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>
             })()}
@@ -355,7 +355,7 @@ export default function ClustersPage() {
             </div>
             {isAdmin && (
               <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">
-                <ClusterDeleteAction clusterId={row.name} onDelete={() => setDeleteTarget({ id: row.id, name: row.name })} />
+                <ClusterDeleteAction clusterId={row.id} onDelete={() => setDeleteTarget({ id: row.id, name: row.name })} />
               </div>
             )}
           </div>

@@ -34,6 +34,8 @@ export default function PermissionsPage() {
   const [principalType, setPrincipalType] = useState<PrincipalType>('team')
   const [relation, setRelation] = useState<Relation>('viewer')
   const [revokeTarget, setRevokeTarget] = useState<AccessGrant | null>(null)
+  const [isGrantPending, setIsGrantPending] = useState(false)
+  const [isRevokePending, setIsRevokePending] = useState(false)
 
   useEffect(() => {
     if (isAdmin === false) router.replace('/')
@@ -82,12 +84,12 @@ export default function PermissionsPage() {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <button type="button" className="rounded-md px-2 py-1 text-xs text-red-300 hover:bg-red-500/10" onClick={() => setRevokeTarget(row.original)}>
+        <button type="button" className="rounded-md px-2 py-1 text-xs text-red-300 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60" disabled={isGrantPending || isRevokePending} onClick={() => setRevokeTarget(row.original)}>
           Revoke
         </button>
       ),
     },
-  ], [principalMap])
+  ], [isGrantPending, isRevokePending, principalMap])
 
   const matrixRows = principals.map((principal) => {
     const row: Record<string, string> = { principal: principal.name, type: principal.type }
@@ -126,29 +128,35 @@ export default function PermissionsPage() {
         </div>
 
         <div className="mb-4 grid gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 lg:grid-cols-[1fr_1fr_1fr_auto]">
-          <select value={principalId} onChange={(event) => {
+          <select aria-label="Principal" value={principalId} onChange={(event) => {
             const next = principals.find((principal) => principal.id === event.target.value)
             setPrincipalId(event.target.value)
             setPrincipalType((next?.type ?? 'user') as PrincipalType)
-          }} className={inputClass}>
+          }} className={inputClass} disabled={isGrantPending || isRevokePending}>
             {principals.map((principal) => <option key={principal.id} value={principal.id}>{principal.name} ({principal.type})</option>)}
           </select>
-          <select value={resourceId} onChange={(event) => setResourceId(event.target.value)} className={inputClass}>
+          <select aria-label="Resource" value={resourceId} onChange={(event) => setResourceId(event.target.value)} className={inputClass} disabled={isGrantPending || isRevokePending}>
             {resources.map((resource) => <option key={resource.id} value={resource.id}>{resource.name}</option>)}
           </select>
-          <select value={relation} onChange={(event) => setRelation(event.target.value as Relation)} className={inputClass}>
+          <select aria-label="Relation" value={relation} onChange={(event) => setRelation(event.target.value as Relation)} className={inputClass} disabled={isGrantPending || isRevokePending}>
             {RELATIONS.map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
           <button
             type="button"
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm text-white"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isGrantPending || isRevokePending}
             onClick={async () => {
-              await mockAccessControlApi.permissions.grant({ principalId, principalType, resourceId, relation })
-              setGrants(await mockAccessControlApi.permissions.listGrants())
-              toast.success('Permission granted')
+              try {
+                setIsGrantPending(true)
+                await mockAccessControlApi.permissions.grant({ principalId, principalType, resourceId, relation })
+                setGrants(await mockAccessControlApi.permissions.listGrants())
+                toast.success('Permission granted')
+              } finally {
+                setIsGrantPending(false)
+              }
             }}
           >
-            <Shield className="h-4 w-4" />Grant
+            <Shield className="h-4 w-4" />{isGrantPending ? 'Granting…' : 'Grant'}
           </button>
         </div>
 
@@ -170,16 +178,22 @@ export default function PermissionsPage() {
           open={revokeTarget !== null}
           onClose={() => setRevokeTarget(null)}
           onConfirm={async () => {
-            if (!revokeTarget) return
-            await mockAccessControlApi.permissions.revoke({ grantId: revokeTarget.id })
-            setGrants((prev) => prev.filter((grant) => grant.id !== revokeTarget.id))
-            setRevokeTarget(null)
-            toast.success('Permission revoked')
+            if (!revokeTarget || isRevokePending) return
+            try {
+              setIsRevokePending(true)
+              await mockAccessControlApi.permissions.revoke({ grantId: revokeTarget.id })
+              setGrants((prev) => prev.filter((grant) => grant.id !== revokeTarget.id))
+              setRevokeTarget(null)
+              toast.success('Permission revoked')
+            } finally {
+              setIsRevokePending(false)
+            }
           }}
           title="Revoke permission"
           description={<span>Revoke <strong>{revokeTarget?.relation}</strong> access from {revokeTarget ? principalMap[revokeTarget.principalId]?.name : ''}?</span>}
           confirmLabel="Revoke"
           variant="danger"
+          loading={isRevokePending}
         />
       </PageTransition>
     </AppLayout>
