@@ -399,35 +399,33 @@ export const clustersRouter = router({
   create: adminProcedure
     .meta({ openapi: { method: 'POST', path: '/api/clusters', protect: true, tags: ['clusters'] } })
     .input(
-      z
-        .object({
-          name: z.string().min(1).max(255),
-          provider: providerSchema,
-          environment: environmentSchema.optional(),
-          endpoint: z.string().url().max(500).optional(),
-          connectionConfig: connectionConfigSchema.optional(),
-          status: z.string().max(50).optional(),
-          healthStatus: healthStatusSchema.optional(),
-          lastHealthCheck: z.coerce.date().optional(),
-          nodesCount: z.number().int().min(0).optional(),
-        })
-        .superRefine((value, ctx) => {
-          if (!value.connectionConfig) return
-          const parsed = providerConnectionInputSchema.safeParse({
-            provider: value.provider,
-            connectionConfig: value.connectionConfig,
-          })
-          if (!parsed.success) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ['connectionConfig'],
-              message: 'Invalid connectionConfig for selected provider',
-            })
-          }
-        }),
+      z.object({
+        name: z.string().min(1).max(255),
+        provider: providerSchema,
+        environment: environmentSchema.optional(),
+        endpoint: z.string().url().max(500).optional(),
+        connectionConfig: connectionConfigSchema.optional(),
+        status: z.string().max(50).optional(),
+        healthStatus: healthStatusSchema.optional(),
+        lastHealthCheck: z.coerce.date().optional(),
+        nodesCount: z.number().int().min(0).optional(),
+      }),
     )
     .output(clusterSchema)
     .mutation(async ({ ctx, input }) => {
+      if (input.connectionConfig !== undefined) {
+        const parsed = providerConnectionInputSchema.safeParse({
+          provider: input.provider,
+          connectionConfig: input.connectionConfig,
+        })
+        if (!parsed.success) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Invalid connectionConfig for selected provider',
+          })
+        }
+      }
+
       const [created] = await ctx.db
         .insert(clusters)
         .values({
