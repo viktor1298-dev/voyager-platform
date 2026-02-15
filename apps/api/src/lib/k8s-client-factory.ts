@@ -1,45 +1,20 @@
 import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
+import {
+  awsConnectionConfigSchema,
+  azureConnectionConfigSchema,
+  gkeConnectionConfigSchema,
+  kubeconfigConnectionConfigSchema,
+  minikubeConnectionConfigSchema,
+  type ClusterConnectionConfig,
+} from './connection-config.js'
 import { getKubeConfig } from './k8s.js'
+import { VALID_PROVIDERS, type Provider } from './providers.js'
 
-export const CLUSTER_PROVIDERS = ['kubeconfig', 'aws', 'azure', 'gke', 'minikube'] as const
-export type ClusterProvider = (typeof CLUSTER_PROVIDERS)[number]
+export const CLUSTER_PROVIDERS = VALID_PROVIDERS
+export type ClusterProvider = Provider
 
 const MINIKUBE_CONTEXT_CANDIDATES = ['minikube', 'docker-desktop'] as const
-
-type KubeconfigConnectionConfig = {
-  kubeconfig: string
-  context?: string
-}
-
-type MinikubeConnectionConfig = {
-  context?: string
-}
-
-type AwsConnectionConfig = {
-  clusterName: string
-  region: string
-  roleArnRef?: string
-}
-
-type AzureConnectionConfig = {
-  clusterName: string
-  resourceGroup: string
-  subscriptionIdRef?: string
-}
-
-type GkeConnectionConfig = {
-  clusterName: string
-  location: string
-  projectIdRef?: string
-}
-
-export type ClusterConnectionConfig =
-  | KubeconfigConnectionConfig
-  | MinikubeConnectionConfig
-  | AwsConnectionConfig
-  | AzureConnectionConfig
-  | GkeConnectionConfig
 
 export function createKubeConfigForCluster(
   provider: ClusterProvider,
@@ -47,7 +22,7 @@ export function createKubeConfigForCluster(
 ): k8s.KubeConfig {
   switch (provider) {
     case 'kubeconfig': {
-      const config = connectionConfig as KubeconfigConnectionConfig
+      const config = kubeconfigConnectionConfigSchema.parse(connectionConfig)
       if (!config.kubeconfig || config.kubeconfig.trim().length === 0) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'kubeconfig is required for kubeconfig provider' })
       }
@@ -71,7 +46,7 @@ export function createKubeConfigForCluster(
 
     case 'minikube': {
       const kc = getKubeConfig()
-      const config = connectionConfig as MinikubeConnectionConfig
+      const config = minikubeConnectionConfigSchema.parse(connectionConfig)
       if (config.context) {
         kc.setCurrentContext(config.context)
         return kc
@@ -88,6 +63,7 @@ export function createKubeConfigForCluster(
     }
 
     case 'aws':
+      awsConnectionConfigSchema.parse(connectionConfig)
       // TODO: Implement IAM / STS-based EKS auth flow (aws eks get-token equivalent)
       throw new TRPCError({
         code: 'NOT_IMPLEMENTED',
@@ -95,6 +71,7 @@ export function createKubeConfigForCluster(
       })
 
     case 'azure':
+      azureConnectionConfigSchema.parse(connectionConfig)
       // TODO: Implement Azure workload identity / AAD integration for AKS auth
       throw new TRPCError({
         code: 'NOT_IMPLEMENTED',
@@ -102,6 +79,7 @@ export function createKubeConfigForCluster(
       })
 
     case 'gke':
+      gkeConnectionConfigSchema.parse(connectionConfig)
       // TODO: Implement GCP auth provider integration for GKE auth
       throw new TRPCError({
         code: 'NOT_IMPLEMENTED',

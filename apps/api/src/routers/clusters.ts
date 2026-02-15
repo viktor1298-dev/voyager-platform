@@ -4,56 +4,24 @@ import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { cached, invalidateK8sCache } from '../lib/cache.js'
+import {
+  awsConnectionConfigSchema,
+  azureConnectionConfigSchema,
+  connectionConfigSchema,
+  gkeConnectionConfigSchema,
+  kubeconfigConnectionConfigSchema,
+  minikubeConnectionConfigSchema,
+} from '../lib/connection-config.js'
 import { validateClusterConnection } from '../lib/k8s-client-factory.js'
 import { getAppsV1Api, getCoreV1Api, getVersionApi } from '../lib/k8s.js'
-import { normalizeProvider } from '../lib/providers.js'
+import { normalizeProvider, VALID_PROVIDERS } from '../lib/providers.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_CACHE_TTL = 30 // seconds
 
-const providerSchema = z.enum(['kubeconfig', 'aws', 'azure', 'gke', 'minikube'])
+const providerSchema = z.enum(VALID_PROVIDERS)
 const environmentSchema = z.enum(['production', 'staging', 'development'])
 const healthStatusSchema = z.enum(['healthy', 'degraded', 'critical', 'unreachable', 'unknown'])
-
-const kubeconfigConnectionConfigSchema = z
-  .object({
-    kubeconfig: z.string().min(1),
-    context: z.string().optional(),
-  })
-  .strict()
-
-const awsConnectionConfigSchema = z
-  .object({
-    clusterName: z.string().min(1),
-    region: z.string().min(1),
-    roleArnRef: z.string().optional(),
-    credentialRef: z.string().optional(),
-  })
-  .strict()
-
-const azureConnectionConfigSchema = z
-  .object({
-    clusterName: z.string().min(1),
-    resourceGroup: z.string().min(1),
-    subscriptionIdRef: z.string().optional(),
-    credentialRef: z.string().optional(),
-  })
-  .strict()
-
-const gkeConnectionConfigSchema = z
-  .object({
-    clusterName: z.string().min(1),
-    location: z.string().min(1),
-    projectIdRef: z.string().optional(),
-    credentialRef: z.string().optional(),
-  })
-  .strict()
-
-const minikubeConnectionConfigSchema = z
-  .object({
-    context: z.string().optional(),
-  })
-  .strict()
 
 const providerConnectionInputSchema = z.discriminatedUnion('provider', [
   z.object({ provider: z.literal('kubeconfig'), connectionConfig: kubeconfigConnectionConfigSchema }),
@@ -63,13 +31,7 @@ const providerConnectionInputSchema = z.discriminatedUnion('provider', [
   z.object({ provider: z.literal('minikube'), connectionConfig: minikubeConnectionConfigSchema }),
 ])
 
-const connectionConfigSchema = z.union([
-  kubeconfigConnectionConfigSchema,
-  awsConnectionConfigSchema,
-  azureConnectionConfigSchema,
-  gkeConnectionConfigSchema,
-  minikubeConnectionConfigSchema,
-])
+// shared connectionConfigSchema imported from lib/connection-config
 
 const clusterSchema = z
   .object({
