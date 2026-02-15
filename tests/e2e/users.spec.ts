@@ -17,7 +17,7 @@ test.describe('Users Page — Admin Only', () => {
     await login(page)
     await page.getByRole('link', { name: /users/i }).first().click()
     await expect(page).toHaveURL(/\/users/, { timeout: 10_000 })
-    await expect(page.getByText(TEST_ADMIN.email)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('table').getByText(TEST_ADMIN.email).first()).toBeVisible({ timeout: 10_000 })
   })
 
   test('admin sees Add User button', async ({ page }) => {
