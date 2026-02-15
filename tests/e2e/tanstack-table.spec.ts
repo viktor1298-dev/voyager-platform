@@ -32,17 +32,26 @@ test.describe('TanStack Table — Users Management', () => {
   });
 
   test('filter/search narrows results', async ({ page }) => {
-    const searchInput = page.getByRole('textbox', { name: /search users/i });
+    const searchInput = page
+      .getByRole('textbox', { name: /search users/i })
+      .or(page.getByPlaceholder(/search users/i))
+      .first();
     await expect(searchInput).toBeVisible({ timeout: 5000 });
 
     const table = page.locator('table').first();
+    await expect.poll(async () => table.locator('tbody tr').count()).toBeGreaterThan(0);
     const rowsBefore = await table.locator('tbody tr').count();
 
-    await searchInput.fill('admin');
+    const firstEmail = (await table.locator('tbody tr').first().locator('td').nth(1).textContent())?.trim() ?? '';
+    const query = firstEmail.slice(0, Math.min(5, firstEmail.length));
+    expect(query.length).toBeGreaterThan(0);
+
+    await searchInput.fill(query);
 
     const rowsAfter = await table.locator('tbody tr').count();
     expect(rowsAfter).toBeLessThanOrEqual(rowsBefore);
     expect(rowsAfter).toBeGreaterThan(0);
+    await expect(table.locator('tbody tr').first()).toContainText(query, { ignoreCase: true });
   });
 
   test('pagination controls work', async ({ page }) => {

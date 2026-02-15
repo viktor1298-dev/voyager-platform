@@ -82,10 +82,11 @@ test.describe('Optimistic UI + Motion Animations', () => {
     const addBtn = page.locator('button:has-text("Add Cluster")')
     if (await addBtn.isVisible()) {
       await addBtn.click()
-      await expect(page.locator('text=Cluster Name')).toBeVisible()
+      await expect(page.getByRole('heading', { name: /add cluster/i })).toBeVisible()
+      await expect(page.getByText(/step 1\/4/i)).toBeVisible()
 
-      await page.locator('button:has(svg.lucide-x)').click()
-      await expect(page.locator('text=Cluster Name')).not.toBeVisible({ timeout: 2000 })
+      await page.getByRole('button', { name: /cancel wizard/i }).click()
+      await expect(page.getByRole('heading', { name: /add cluster/i })).not.toBeVisible({ timeout: 2000 })
     }
   })
 })
