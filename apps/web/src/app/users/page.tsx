@@ -65,6 +65,8 @@ function UserActions({ user, onToggleRole, onDelete, pending }: { user: UserRow;
   )
 }
 
+export const dynamic = 'force-dynamic'
+
 export default function UsersPage() {
   const router = useRouter()
   const isAdmin = useIsAdmin()

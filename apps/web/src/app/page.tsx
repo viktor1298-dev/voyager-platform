@@ -445,7 +445,7 @@ function ClusterCard({
   return (
     <Link href={`/clusters/${cluster.id}`}>
       <div
-        className="cluster-card relative group rounded-xl min-h-[90px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex items-start gap-3 overflow-hidden"
+        className="cluster-card relative group rounded-xl min-h-[90px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 overflow-hidden"
         style={
           {
             '--status-color': getStatusColor(status),
@@ -470,7 +470,7 @@ function ClusterCard({
           style={{ backgroundColor: envMeta.color, opacity: 0.9 }}
         />
 
-        <div className="flex-1 min-w-0 p-4 pl-5">
+        <div className="flex-1 min-w-0 p-4 pl-5 pb-2 sm:pb-4">
           <div className="flex items-center gap-2">
             <span
               className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(status)}`}
@@ -479,7 +479,7 @@ function ClusterCard({
             {cluster.source === 'db' && <HealthDot clusterId={cluster.id} />}
           </div>
 
-          <div className="flex items-center gap-4 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono">
             <span>K8s {cluster.version ?? '—'}</span>
             <span>·</span>
             <span>Nodes: {cluster.nodeCount}</span>
@@ -492,7 +492,7 @@ function ClusterCard({
           </div>
         </div>
 
-        <div className="flex flex-col items-end justify-between gap-1 shrink-0 p-4 pl-0">
+        <div className="flex w-full sm:w-auto flex-row sm:flex-col items-start sm:items-end justify-between gap-1 sm:gap-2 shrink-0 px-4 pb-4 sm:p-4 sm:pl-0">
           <span
             className="text-[10px] font-mono px-2 py-0.5 rounded-md border"
             style={{
