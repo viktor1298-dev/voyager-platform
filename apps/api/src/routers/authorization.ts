@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { createAuthorizationService } from '../lib/authorization.js'
+import { TRPCError } from '@trpc/server'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const subjectSchema = z.object({
@@ -18,7 +19,7 @@ const relationSchema = z.enum(['owner', 'admin', 'editor', 'viewer'])
 export const authorizationRouter = router({
   check: protectedProcedure
     .input(z.object({ subject: subjectSchema, relation: relationSchema, object: objectSchema }))
-    .mutation(async ({ ctx, input }) => {
+    .query(async ({ ctx, input }) => {
       const service = createAuthorizationService(ctx.db)
       const allowed = await service.check(input.subject, input.relation, input.object)
       return { allowed }
@@ -61,6 +62,10 @@ export const authorizationRouter = router({
   listForUser: protectedProcedure
     .input(z.object({ userId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
+      if (ctx.user.role !== 'admin' && ctx.user.id !== input.userId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Permission denied' })
+      }
+
       const service = createAuthorizationService(ctx.db)
       return service.listPermissions({ type: 'user', id: input.userId })
     }),
@@ -76,7 +81,12 @@ export const teamsRouter = router({
     .input(z.object({ name: z.string().min(1).max(255), description: z.string().max(1000).optional() }))
     .mutation(async ({ ctx, input }) => {
       const service = createAuthorizationService(ctx.db)
-      return service.createTeam(input)
+      const team = await service.createTeam(input)
+      await logAudit(ctx, 'team.create', 'team', team.id, {
+        name: team.name,
+        description: team.description,
+      })
+      return team
     }),
 
   addMember: adminProcedure
@@ -90,6 +100,10 @@ export const teamsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const service = createAuthorizationService(ctx.db)
       await service.addTeamMember(input)
+      await logAudit(ctx, 'team.add_member', 'team', input.teamId, {
+        userId: input.userId,
+        role: input.role,
+      })
       return { success: true }
     }),
 
@@ -98,6 +112,9 @@ export const teamsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const service = createAuthorizationService(ctx.db)
       await service.removeTeamMember(input)
+      await logAudit(ctx, 'team.remove_member', 'team', input.teamId, {
+        userId: input.userId,
+      })
       return { success: true }
     }),
 })

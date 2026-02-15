@@ -1,4 +1,5 @@
 import { TRPCError, initTRPC } from '@trpc/server'
+import { z } from 'zod'
 import type { OpenApiMeta } from 'trpc-to-openapi'
 import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
 import { type Database, db } from '@voyager/db'
@@ -86,10 +87,16 @@ export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   return next({ ctx })
 })
 
+const authorizationObjectIdInputSchema = z.object({
+  id: z.string().optional(),
+  objectId: z.string().optional(),
+})
+
 export const authorizedProcedure = (objectType: ObjectType, relation: Relation) =>
   protectedProcedure.use(async (opts) => {
-    const rawInput = (await opts.getRawInput()) as { id?: string; objectId?: string } | undefined
-    const objectId = rawInput?.objectId ?? rawInput?.id
+    const rawInput = await opts.getRawInput()
+    const objectIdInput = authorizationObjectIdInputSchema.safeParse(rawInput)
+    const objectId = objectIdInput.success ? objectIdInput.data.objectId ?? objectIdInput.data.id : undefined
 
     if (!objectId) {
       throw new TRPCError({

@@ -16,7 +16,7 @@ export const relationEnum = pgEnum('relation', ['owner', 'admin', 'editor', 'vie
 export const objectTypeEnum = pgEnum('object_type', ['cluster', 'deployment', 'namespace', 'alert'])
 export const teamMemberRoleEnum = pgEnum('team_member_role', ['admin', 'member'])
 
-export const relations = pgTable(
+export const accessRelations = pgTable(
   'relations',
   {
     id: uuid('id').defaultRandom().primaryKey(),

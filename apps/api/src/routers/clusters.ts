@@ -151,23 +151,18 @@ export const clustersRouter = router({
     .query(async ({ ctx }) => {
       const authz = createAuthorizationService(ctx.db)
       const allClusters = await ctx.db.select().from(clusters)
-      const visibleClusters =
+      const allowedClusterIds =
         ctx.user.role === 'admin'
-          ? allClusters
-          : (
-              await Promise.all(
-                allClusters.map(async (cluster) => ({
-                  cluster,
-                  allowed: await authz.check(
-                    { type: 'user', id: ctx.user.id },
-                    'viewer',
-                    { type: 'cluster', id: cluster.id },
-                  ),
-                })),
-              )
+          ? null
+          : await authz.checkBatch(
+              { type: 'user', id: ctx.user.id },
+              'cluster',
+              allClusters.map((cluster) => cluster.id),
+              'viewer',
             )
-              .filter((entry) => entry.allowed)
-              .map((entry) => entry.cluster)
+
+      const visibleClusters =
+        ctx.user.role === 'admin' ? allClusters : allClusters.filter((cluster) => allowedClusterIds?.has(cluster.id))
 
       const nodeCounts = await ctx.db
         .select({
