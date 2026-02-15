@@ -1,6 +1,6 @@
 export type Relation = 'owner' | 'admin' | 'editor' | 'viewer'
 export type PrincipalType = 'user' | 'team'
-export type TeamRole = 'lead' | 'maintainer' | 'member' | 'observer'
+export type TeamRole = 'admin' | 'member'
 
 export type TeamMember = {
   userId: string
@@ -47,6 +47,8 @@ const RELATION_RANK: Record<Relation, number> = {
   owner: 4,
 }
 
+export const TEAM_ROLE_OPTIONS: TeamRole[] = ['admin', 'member']
+
 const users: AccessPrincipal[] = [
   { id: 'user-morpheus', type: 'user', name: 'Morpheus', email: 'morpheus@voyager.dev' },
   { id: 'user-ron', type: 'user', name: 'Ron', email: 'ron@voyager.dev' },
@@ -61,8 +63,8 @@ let teams: Team[] = [
     description: 'Owns core platform architecture and security posture.',
     createdAt: '2026-01-05T09:15:00.000Z',
     members: [
-      { userId: 'user-morpheus', name: 'Morpheus', email: 'morpheus@voyager.dev', role: 'lead', avatar: 'M' },
-      { userId: 'user-ron', name: 'Ron', email: 'ron@voyager.dev', role: 'maintainer', avatar: 'R' },
+      { userId: 'user-morpheus', name: 'Morpheus', email: 'morpheus@voyager.dev', role: 'admin', avatar: 'M' },
+      { userId: 'user-ron', name: 'Ron', email: 'ron@voyager.dev', role: 'member', avatar: 'R' },
     ],
   },
   {
@@ -71,7 +73,7 @@ let teams: Team[] = [
     description: 'Production operations and reliability automation.',
     createdAt: '2026-01-18T12:00:00.000Z',
     members: [
-      { userId: 'user-dima', name: 'Dima', email: 'dima@voyager.dev', role: 'lead', avatar: 'D' },
+      { userId: 'user-dima', name: 'Dima', email: 'dima@voyager.dev', role: 'admin', avatar: 'D' },
       { userId: 'user-mai', name: 'Mai', email: 'mai@voyager.dev', role: 'member', avatar: 'M' },
     ],
   },
@@ -81,8 +83,8 @@ let teams: Team[] = [
     description: 'Feature delivery, UI, and product iteration.',
     createdAt: '2026-01-23T08:30:00.000Z',
     members: [
-      { userId: 'user-ron', name: 'Ron', email: 'ron@voyager.dev', role: 'lead', avatar: 'R' },
-      { userId: 'user-mai', name: 'Mai', email: 'mai@voyager.dev', role: 'observer', avatar: 'M' },
+      { userId: 'user-ron', name: 'Ron', email: 'ron@voyager.dev', role: 'admin', avatar: 'R' },
+      { userId: 'user-mai', name: 'Mai', email: 'mai@voyager.dev', role: 'member', avatar: 'M' },
     ],
   },
 ]
@@ -128,6 +130,14 @@ export function getResources() {
 
 export function getTeamsLocal() {
   return teams
+}
+
+export function getMockUsers() {
+  return users
+}
+
+export function getTeamMemberUserOptions() {
+  return users.map((user) => ({ id: user.id, name: user.name }))
 }
 
 export function getBestRelationForUser(userId: string, resourceId: string): Relation | null {

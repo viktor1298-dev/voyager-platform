@@ -264,7 +264,7 @@ export default function ClustersPage() {
               size: 60,
               cell: ({ row }: { row: { original: ClusterRow } }) => (
                 <ClusterDeleteAction
-                  clusterId={row.original.name}
+                  clusterId={row.original.id}
                   onDelete={() => setDeleteTarget({ id: row.original.id, name: row.original.name })}
                 />
               ),
@@ -355,7 +355,7 @@ export default function ClustersPage() {
             </div>
             {isAdmin && (
               <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">
-                <ClusterDeleteAction clusterId={row.name} onDelete={() => setDeleteTarget({ id: row.id, name: row.name })} />
+                <ClusterDeleteAction clusterId={row.id} onDelete={() => setDeleteTarget({ id: row.id, name: row.name })} />
               </div>
             )}
           </div>

@@ -8,7 +8,7 @@ import { QueryError } from '@/components/ErrorBoundary'
 import { Badge } from '@/components/ui/badge'
 import { Dialog } from '@/components/ui/dialog'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
-import { mockAccessControlApi, type Team, type TeamRole } from '@/lib/mock-access-control'
+import { getTeamMemberUserOptions, mockAccessControlApi, TEAM_ROLE_OPTIONS, type Team, type TeamRole } from '@/lib/mock-access-control'
 import { useForm } from '@tanstack/react-form'
 import type { ColumnDef } from '@tanstack/react-table'
 import { motion } from 'motion/react'
@@ -23,13 +23,8 @@ const createTeamSchema = z.object({
   description: z.string().min(4, 'Description is required'),
 })
 
-const teamRoles: TeamRole[] = ['lead', 'maintainer', 'member', 'observer']
-const userOptions = [
-  { id: 'user-morpheus', name: 'Morpheus' },
-  { id: 'user-ron', name: 'Ron' },
-  { id: 'user-dima', name: 'Dima' },
-  { id: 'user-mai', name: 'Mai' },
-]
+const teamRoles: TeamRole[] = TEAM_ROLE_OPTIONS
+const userOptions = getTeamMemberUserOptions()
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -110,9 +105,13 @@ export default function TeamsPage() {
           onChange={async (event) => {
             if (!selectedTeam) return
             const role = event.target.value as TeamRole
-            await mockAccessControlApi.teams.setMemberRole({ teamId: selectedTeam.id, userId: row.original.userId, role })
-            setTeams((prev) => prev.map((team) => team.id === selectedTeam.id ? { ...team, members: team.members.map((member) => member.userId === row.original.userId ? { ...member, role } : member) } : team))
-            toast.success('Team role updated')
+            try {
+              await mockAccessControlApi.teams.setMemberRole({ teamId: selectedTeam.id, userId: row.original.userId, role })
+              setTeams((prev) => prev.map((team) => team.id === selectedTeam.id ? { ...team, members: team.members.map((member) => member.userId === row.original.userId ? { ...member, role } : member) } : team))
+              toast.success('Team role updated')
+            } catch {
+              toast.error('Failed to update team role')
+            }
           }}
         >
           {teamRoles.map((role) => <option key={role} value={role}>{role}</option>)}
@@ -128,9 +127,13 @@ export default function TeamsPage() {
           className="rounded-md px-2 py-1 text-xs text-red-300 hover:bg-red-500/10"
           onClick={async () => {
             if (!selectedTeam) return
-            await mockAccessControlApi.teams.removeMember({ teamId: selectedTeam.id, userId: row.original.userId })
-            setTeams((prev) => prev.map((team) => team.id === selectedTeam.id ? { ...team, members: team.members.filter((member) => member.userId !== row.original.userId) } : team))
-            toast.success('Member removed')
+            try {
+              await mockAccessControlApi.teams.removeMember({ teamId: selectedTeam.id, userId: row.original.userId })
+              setTeams((prev) => prev.map((team) => team.id === selectedTeam.id ? { ...team, members: team.members.filter((member) => member.userId !== row.original.userId) } : team))
+              toast.success('Member removed')
+            } catch {
+              toast.error('Failed to remove member')
+            }
           }}
         >
           Remove
@@ -205,10 +208,14 @@ export default function TeamsPage() {
                     type="button"
                     className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-white/[0.06]"
                     onClick={async () => {
-                      await mockAccessControlApi.teams.addMember({ teamId: selectedTeam.id, userId: memberToAdd, role: roleToAdd })
-                      const next = await mockAccessControlApi.teams.list()
-                      setTeams(next)
-                      toast.success('Member added')
+                      try {
+                        await mockAccessControlApi.teams.addMember({ teamId: selectedTeam.id, userId: memberToAdd, role: roleToAdd })
+                        const next = await mockAccessControlApi.teams.list()
+                        setTeams(next)
+                        toast.success('Member added')
+                      } catch {
+                        toast.error('Failed to add member')
+                      }
                     }}
                   >
                     Add member
