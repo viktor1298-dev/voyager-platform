@@ -45,6 +45,23 @@ const STATUS_META: Record<string, { label: string; color: string }> = {
   healthy: { label: 'Healthy', color: 'var(--color-status-active)' },
 }
 
+type HealthGroup = 'healthy' | 'degraded' | 'critical'
+
+const HEALTH_GROUP_ORDER: HealthGroup[] = ['critical', 'degraded', 'healthy']
+
+const HEALTH_GROUP_META: Record<HealthGroup, { label: string; dotColor: string }> = {
+  healthy: { label: 'Healthy', dotColor: 'var(--color-status-active)' },
+  degraded: { label: 'Degraded', dotColor: 'var(--color-status-warning)' },
+  critical: { label: 'Critical', dotColor: 'var(--color-status-error)' },
+}
+
+function getHealthGroup(status: string | null | undefined): HealthGroup {
+  const s = (status ?? 'unknown').toLowerCase()
+  if (s === 'healthy' || s === 'active' || s === 'ready') return 'healthy'
+  if (s === 'warning' || s === 'degraded') return 'degraded'
+  return 'critical'
+}
+
 function DashboardContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -175,8 +192,16 @@ function DashboardContent() {
   }, [clusterList, filters])
 
   const groupedByEnvironment = useMemo(() => {
-    const grouped: Record<ClusterEnvironment, ClusterCardData[]> = { prod: [], staging: [], dev: [] }
-    for (const cluster of visibleClusters) grouped[cluster.environment].push(cluster)
+    const grouped: Record<ClusterEnvironment, Record<HealthGroup, ClusterCardData[]>> = {
+      prod: { healthy: [], degraded: [], critical: [] },
+      staging: { healthy: [], degraded: [], critical: [] },
+      dev: { healthy: [], degraded: [], critical: [] },
+    }
+
+    for (const cluster of visibleClusters) {
+      grouped[cluster.environment][getHealthGroup(cluster.status)].push(cluster)
+    }
+
     return grouped
   }, [visibleClusters])
 
@@ -284,36 +309,54 @@ function DashboardContent() {
         ) : (
           <div className="space-y-6">
             {ENV_ORDER.map((environment) => {
-              const clusters = groupedByEnvironment[environment]
-              if (!clusters || clusters.length === 0) return null
+              const clustersByHealth = groupedByEnvironment[environment]
+              const totalInEnvironment = Object.values(clustersByHealth).reduce(
+                (sum, clusters) => sum + clusters.length,
+                0,
+              )
+              if (totalInEnvironment === 0) return null
               const meta = ENV_META[environment]
+
               return (
-                <section
-                  key={environment}
-                  className="rounded-xl border p-4"
-                  style={{
-                    borderColor: meta.ring,
-                    background: meta.softBg,
-                  }}
-                >
+                <section key={environment} className="rounded-xl border border-[var(--color-border)] p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.color }} />
                     <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{meta.sectionLabel}</h3>
-                    <span className="text-[11px] text-[var(--color-text-dim)] tabular-nums">{clusters.length}</span>
+                    <span className="text-[11px] text-[var(--color-text-dim)] tabular-nums">{totalInEnvironment}</span>
                     <div className="flex-1 h-px bg-[var(--color-border)]/40" />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                    {clusters.map((cluster) => {
-                      const idx = cardIndex++
+                  <div className="space-y-4">
+                    {HEALTH_GROUP_ORDER.map((healthGroup) => {
+                      const clusters = clustersByHealth[healthGroup]
+                      if (clusters.length === 0) return null
+                      const healthMeta = HEALTH_GROUP_META[healthGroup]
+
                       return (
-                        <ClusterCard
-                          key={cluster.id}
-                          cluster={cluster}
-                          index={idx}
-                          runningPods={runningPods}
-                          totalPods={liveData?.totalPods ?? 0}
-                        />
+                        <div key={healthGroup} className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: healthMeta.dotColor }} />
+                            <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--color-text-dim)]">
+                              {healthMeta.label} ({clusters.length})
+                            </span>
+                            <div className="flex-1 h-px bg-[var(--color-border)]/30" />
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                            {clusters.map((cluster) => {
+                              const idx = cardIndex++
+                              return (
+                                <ClusterCard
+                                  key={cluster.id}
+                                  cluster={cluster}
+                                  index={idx}
+                                  runningPods={runningPods}
+                                  totalPods={liveData?.totalPods ?? 0}
+                                />
+                              )
+                            })}
+                          </div>
+                        </div>
                       )
                     })}
                   </div>
