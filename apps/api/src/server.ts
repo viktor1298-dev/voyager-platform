@@ -77,8 +77,9 @@ app.register(async (instance) => {
 })
 
 // Better-Auth handler — all auth routes via /api/auth/*
-// Keep sign-in protected while ensuring session checks are never rate limited.
+// Keep sign-in strict, keep session checks unlimited, and apply moderate limits elsewhere.
 const AUTH_SIGN_IN_MAX = Number.parseInt(process.env.AUTH_SIGN_IN_RATE_LIMIT || '5', 10)
+const AUTH_DEFAULT_MAX = Number.parseInt(process.env.AUTH_DEFAULT_RATE_LIMIT || '30', 10)
 
 const handleAuthRoute = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
@@ -121,9 +122,22 @@ app.route({
 
 app.route({
   method: ['GET', 'POST'],
-  url: '/api/auth/*',
+  url: '/api/auth/get-session',
   config: {
     rateLimit: false,
+  },
+  handler: handleAuthRoute,
+})
+
+app.route({
+  method: ['GET', 'POST'],
+  url: '/api/auth/*',
+  config: {
+    rateLimit: {
+      max: AUTH_DEFAULT_MAX,
+      timeWindow: '1 minute',
+      keyGenerator: (req: { ip: string }) => req.ip,
+    },
   },
   handler: handleAuthRoute,
 })
