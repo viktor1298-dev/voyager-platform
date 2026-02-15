@@ -6,13 +6,19 @@ test.describe('Clusters — CRUD Operations', () => {
     await login(page);
   });
 
-  test('should add a new cluster', async ({ page }) => {
+  test('should open add-cluster wizard and block progress without kubeconfig', async ({ page }) => {
     await page.goto('/clusters');
     await page.getByRole('button', { name: /add cluster/i }).first().click();
 
+    await expect(page.getByRole('heading', { name: /add cluster/i })).toBeVisible();
+    await expect(page.getByText(/step 1\/4/i)).toBeVisible();
+    await expect(page.getByRole('radio', { name: /kubeconfig/i })).toBeChecked();
+
     await page.getByRole('button', { name: /next/i }).click();
     await expect(page.getByText(/step 2\/4/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /next/i })).toBeDisabled();
+
+    await expect(page.getByRole('button', { name: /go to next step|next/i })).toBeDisabled();
+    await expect(page.getByText(/fill the required credential fields to continue/i)).toBeVisible();
   });
 
   test('should view cluster detail', async ({ page }) => {
@@ -27,11 +33,12 @@ test.describe('Clusters — CRUD Operations', () => {
     await expect(page.getByText(clusterName).first()).toBeVisible();
   });
 
-  test('should delete the cluster', async ({ page }) => {
+  test('should show delete action for existing cluster row', async ({ page }) => {
     await page.goto('/clusters');
 
     const firstRow = page.locator('tbody tr').first();
     await expect(firstRow).toBeVisible();
-    await expect(firstRow.getByRole('button', { name: /delete cluster|delete/i })).toBeVisible();
+    await firstRow.hover();
+    await expect(page.getByRole('button', { name: /delete cluster/i }).first()).toBeVisible();
   });
 });

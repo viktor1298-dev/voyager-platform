@@ -79,14 +79,14 @@ test.describe('Optimistic UI + Motion Animations', () => {
     await page.goto('/clusters')
     await expect(page.locator('h1:has-text("Clusters")')).toBeVisible()
 
-    const addBtn = page.locator('button:has-text("Add Cluster")')
-    if (await addBtn.isVisible()) {
-      await addBtn.click()
-      await expect(page.getByRole('heading', { name: /add cluster/i })).toBeVisible()
-      await expect(page.getByText(/step 1\/4/i)).toBeVisible()
+    const deleteBtn = page.getByRole('button', { name: /^delete cluster$/i }).first()
+    if (await deleteBtn.isVisible()) {
+      await deleteBtn.click()
+      await expect(page.getByRole('heading', { name: /delete cluster/i })).toBeVisible()
+      await expect(page.getByText(/this action cannot be undone/i)).toBeVisible()
 
-      await page.getByRole('button', { name: /cancel wizard/i }).click()
-      await expect(page.getByRole('heading', { name: /add cluster/i })).not.toBeVisible({ timeout: 2000 })
+      await page.getByRole('button', { name: /^cancel$/i }).click()
+      await expect(page.getByRole('heading', { name: /delete cluster/i })).not.toBeVisible({ timeout: 2000 })
     }
   })
 })
