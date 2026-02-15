@@ -62,7 +62,7 @@ export function createKubeConfigForCluster(
       return kc
     }
 
-    case 'aws':
+    case 'aws-eks':
       awsConnectionConfigSchema.parse(connectionConfig)
       // TODO: Implement IAM / STS-based EKS auth flow (aws eks get-token equivalent)
       throw new TRPCError({
@@ -70,7 +70,7 @@ export function createKubeConfigForCluster(
         message: 'AWS provider support is not implemented yet',
       })
 
-    case 'azure':
+    case 'azure-aks':
       azureConnectionConfigSchema.parse(connectionConfig)
       // TODO: Implement Azure workload identity / AAD integration for AKS auth
       throw new TRPCError({
@@ -78,7 +78,7 @@ export function createKubeConfigForCluster(
         message: 'Azure provider support is not implemented yet',
       })
 
-    case 'gke':
+    case 'google-gke':
       gkeConnectionConfigSchema.parse(connectionConfig)
       // TODO: Implement GCP auth provider integration for GKE auth
       throw new TRPCError({
@@ -95,23 +95,16 @@ export async function validateClusterConnection(
   provider: ClusterProvider,
   connectionConfig: ClusterConnectionConfig,
 ): Promise<{ reachable: boolean; version?: string; context?: string; message: string }> {
-  try {
-    const kc = createKubeConfigForCluster(provider, connectionConfig)
-    const [versionRes, namespaceRes] = await Promise.all([
-      kc.makeApiClient(k8s.VersionApi).getCode(),
-      kc.makeApiClient(k8s.CoreV1Api).listNamespace(),
-    ])
+  const kc = createKubeConfigForCluster(provider, connectionConfig)
+  const [versionRes, namespaceRes] = await Promise.all([
+    kc.makeApiClient(k8s.VersionApi).getCode(),
+    kc.makeApiClient(k8s.CoreV1Api).listNamespace(),
+  ])
 
-    return {
-      reachable: true,
-      version: `v${versionRes.major}.${versionRes.minor}`,
-      context: kc.getCurrentContext(),
-      message: `Connected successfully (${namespaceRes.items.length} namespaces visible)`,
-    }
-  } catch (error) {
-    return {
-      reachable: false,
-      message: `Connection failed: ${error instanceof Error ? error.message : 'unknown error'}`,
-    }
+  return {
+    reachable: true,
+    version: `v${versionRes.major}.${versionRes.minor}`,
+    context: kc.getCurrentContext(),
+    message: `Connected successfully (${namespaceRes.items.length} namespaces visible)`,
   }
 }

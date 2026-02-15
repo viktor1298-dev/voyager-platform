@@ -36,7 +36,7 @@ function createCaller(user: Context['user'] = null) {
     select: vi.fn().mockReturnValue({
       from: vi.fn().mockImplementation(() => {
         // Return a thenable that also has groupBy for node counts query
-        const result = Promise.resolve([{ id: '1', name: 'test', provider: 'minikube' }])
+        const result = Promise.resolve([{ id: '1', name: 'test', provider: 'minikube', environment: 'development' }])
         ;(result as any).groupBy = vi.fn().mockResolvedValue([{ clusterId: '1', count: 2 }])
         ;(result as any).where = vi.fn().mockResolvedValue([])
         return result
@@ -74,7 +74,7 @@ describe('clusters.list', () => {
   it('returns clusters with node counts', async () => {
     const caller = createCaller({ id: 'u1', email: 'a@b.com', name: 'Admin', role: 'admin' })
     const result = await caller.clusters.list()
-    expect(result).toEqual([{ id: '1', name: 'test', provider: 'minikube', nodeCount: 2 }])
+    expect(result).toEqual([{ id: '1', name: 'test', provider: 'minikube', environment: 'development', nodeCount: 2 }])
   })
 })
 

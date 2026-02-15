@@ -1,6 +1,13 @@
 import { integer, jsonb, pgEnum, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 
-export const clusterProviderEnum = pgEnum('cluster_provider', ['kubeconfig', 'aws', 'azure', 'gke', 'minikube'])
+// Canonical provider IDs shared with API/web payloads.
+export const clusterProviderEnum = pgEnum('cluster_provider', [
+  'kubeconfig',
+  'aws-eks',
+  'azure-aks',
+  'google-gke',
+  'minikube',
+])
 
 export const clusterEnvironmentEnum = pgEnum('cluster_environment', ['production', 'staging', 'development'])
 

@@ -41,9 +41,9 @@ const healthStatusSchema = z.enum(['healthy', 'degraded', 'critical', 'unreachab
 
 const providerConnectionInputSchema = z.discriminatedUnion('provider', [
   z.object({ provider: z.literal('kubeconfig'), connectionConfig: kubeconfigConnectionConfigSchema }),
-  z.object({ provider: z.literal('aws'), connectionConfig: awsConnectionConfigSchema }),
-  z.object({ provider: z.literal('azure'), connectionConfig: azureConnectionConfigSchema }),
-  z.object({ provider: z.literal('gke'), connectionConfig: gkeConnectionConfigSchema }),
+  z.object({ provider: z.literal('aws-eks'), connectionConfig: awsConnectionConfigSchema }),
+  z.object({ provider: z.literal('azure-aks'), connectionConfig: azureConnectionConfigSchema }),
+  z.object({ provider: z.literal('google-gke'), connectionConfig: gkeConnectionConfigSchema }),
   z.object({ provider: z.literal('minikube'), connectionConfig: minikubeConnectionConfigSchema }),
 ])
 
@@ -102,6 +102,45 @@ const liveDeploymentSchema = z.object({
   readyReplicas: z.number(),
   availableReplicas: z.number(),
 })
+
+const CONNECTION_REFUSED_PATTERNS = ['econnrefused', 'connection refused', 'enotfound']
+const AUTH_FAILED_PATTERNS = ['unauthorized', 'forbidden', 'authentication', '401', '403', 'invalid token']
+const TIMEOUT_PATTERNS = ['etimedout', 'timeout', 'timed out', 'aborterror']
+
+function mapValidateConnectionError(error: unknown): TRPCError {
+  if (error instanceof TRPCError) {
+    return error
+  }
+
+  const message = error instanceof Error ? error.message : 'Unknown connection error'
+  const lower = message.toLowerCase()
+
+  if (CONNECTION_REFUSED_PATTERNS.some((pattern) => lower.includes(pattern))) {
+    return new TRPCError({
+      code: 'BAD_GATEWAY',
+      message: `Cluster API is unreachable: ${message}`,
+    })
+  }
+
+  if (AUTH_FAILED_PATTERNS.some((pattern) => lower.includes(pattern))) {
+    return new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: `Authentication failed while validating cluster connection: ${message}`,
+    })
+  }
+
+  if (TIMEOUT_PATTERNS.some((pattern) => lower.includes(pattern))) {
+    return new TRPCError({
+      code: 'GATEWAY_TIMEOUT',
+      message: `Timed out while validating cluster connection: ${message}`,
+    })
+  }
+
+  return new TRPCError({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: `Cluster connection validation failed: ${message}`,
+  })
+}
 
 export const clustersRouter = router({
   list: protectedProcedure
@@ -366,9 +405,9 @@ export const clustersRouter = router({
       try {
         const connectionConfigSchemaByProvider = {
           kubeconfig: kubeconfigConnectionConfigSchema,
-          aws: awsConnectionConfigSchema,
-          azure: azureConnectionConfigSchema,
-          gke: gkeConnectionConfigSchema,
+          'aws-eks': awsConnectionConfigSchema,
+          'azure-aks': azureConnectionConfigSchema,
+          'google-gke': gkeConnectionConfigSchema,
           minikube: minikubeConnectionConfigSchema,
         } as const
 
@@ -391,13 +430,7 @@ export const clustersRouter = router({
           version: result.version,
         }
       } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error
-        }
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: `Connection validation failed: ${error instanceof Error ? error.message : 'unknown error'}`,
-        })
+        throw mapValidateConnectionError(error)
       }
     }),
 
