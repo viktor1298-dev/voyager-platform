@@ -1,13 +1,13 @@
 'use client'
 
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { APP_VERSION } from '@/config/constants'
 import { navItems } from '@/config/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
 import { trpc } from '@/lib/trpc'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 
 export function Sidebar({
   collapsed,
@@ -30,16 +30,17 @@ export function Sidebar({
     return pathname.startsWith(path)
   }
 
-  const showLabels = !collapsed || mobileOpen
+  const _showLabels = !collapsed || mobileOpen
 
   return (
     <>
       {/* Mobile backdrop */}
       {mobileOpen && (
-        <div
+        <button
+          type="button"
           className="fixed inset-0 bg-black/60 z-40 md:hidden"
           onClick={() => setMobileOpen(false)}
-          role="presentation"
+          aria-label="Close sidebar"
         />
       )}
 
@@ -51,7 +52,6 @@ export function Sidebar({
         `}
       >
         <SidebarContent
-          collapsed={collapsed}
           showLabels={!collapsed}
           isActive={isActive}
           isAdmin={isAdmin}
@@ -82,7 +82,6 @@ export function Sidebar({
         `}
       >
         <SidebarContent
-          collapsed={false}
           showLabels
           isActive={isActive}
           isAdmin={isAdmin}
@@ -100,22 +99,23 @@ export function Sidebar({
 }
 
 function SidebarContent({
-  collapsed,
   showLabels,
   isActive,
   isAdmin,
   onLinkClick,
   clusters,
 }: {
-  collapsed: boolean
   showLabels: boolean
   isActive: (path: string) => boolean
   isAdmin: boolean
   onLinkClick: () => void
   clusters: Array<{ id: string; name: string; provider: string | null }>
 }) {
-  const filteredItems = navItems.filter((item) => !('adminOnly' in item && item.adminOnly) || isAdmin)
-  const mainItems = filteredItems.filter((item) => item.section !== 'access-control')
+  const filteredItems = navItems.filter(
+    (item) => !('adminOnly' in item && item.adminOnly) || isAdmin,
+  )
+  const mainItems = filteredItems.filter((item) => !item.section)
+  const autoscalingItems = filteredItems.filter((item) => item.section === 'autoscaling')
   const accessControlItems = filteredItems.filter((item) => item.section === 'access-control')
 
   const renderNavItem = (item: (typeof navItems)[number]) => {
@@ -144,9 +144,16 @@ function SidebarContent({
 
   return (
     <div className="flex flex-col gap-2 px-2">
-      <nav className="flex flex-col gap-1">
-        {mainItems.map(renderNavItem)}
-      </nav>
+      <nav className="flex flex-col gap-1">{mainItems.map(renderNavItem)}</nav>
+
+      {showLabels && autoscalingItems.length > 0 && (
+        <div className="mt-1 border-t border-[var(--color-border)]/60 pt-2">
+          <p className="px-2 mb-1 text-[9px] uppercase tracking-widest font-mono text-[var(--color-text-dim)]">
+            Autoscaling
+          </p>
+          <nav className="flex flex-col gap-1">{autoscalingItems.map(renderNavItem)}</nav>
+        </div>
+      )}
 
       {showLabels && accessControlItems.length > 0 && (
         <div className="mt-1 border-t border-[var(--color-border)]/60 pt-2">
@@ -173,7 +180,10 @@ function SidebarContent({
                   onClick={onLinkClick}
                   className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                  <span
+                    className="h-1.5 w-1.5 rounded-full shrink-0"
+                    style={{ backgroundColor: color }}
+                  />
                   <span className="truncate">{cluster.name}</span>
                 </Link>
               )
