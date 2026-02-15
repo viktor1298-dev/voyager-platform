@@ -1,3 +1,5 @@
+'use client'
+
 export type Relation = 'owner' | 'admin' | 'editor' | 'viewer'
 export type PrincipalType = 'user' | 'team'
 export type TeamRole = 'admin' | 'member'

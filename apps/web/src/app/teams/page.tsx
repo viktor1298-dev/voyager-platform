@@ -100,6 +100,7 @@ export default function TeamsPage() {
       header: 'Role',
       cell: ({ row }) => (
         <select
+          aria-label={`Role for ${row.original.name}`}
           value={row.original.role}
           className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-2 py-1 text-xs"
           onChange={async (event) => {
