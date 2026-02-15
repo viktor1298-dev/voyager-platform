@@ -31,6 +31,19 @@ function createMemoryService(seed?: { relations?: RelationRow[]; teamMemberships
       state.relations.filter((row) => row.subjectType === subject.type && row.subjectId === subject.id),
     listRelationsForObject: async (object: ObjectRef) =>
       state.relations.filter((row) => row.objectType === object.type && row.objectId === object.id),
+    listAccessibleObjectIds: async (subject: SubjectRef, objectType: ObjectRef['type'], relation: Relation) => {
+      const relationLevel = { viewer: 1, editor: 2, admin: 3, owner: 4 } as const
+      const userTeams = subject.type === 'user' ? state.teamMemberships[subject.id] ?? [] : []
+      const userRole = subject.type === 'user' ? state.userRoles[subject.id] ?? null : null
+      const subjects: SubjectRef[] = [subject]
+      subjects.push(...userTeams.map((id) => ({ type: 'team' as const, id })))
+      if (userRole) subjects.push({ type: 'role', id: userRole })
+      return state.relations
+        .filter((row) => row.objectType === objectType)
+        .filter((row) => relationLevel[row.relation] >= relationLevel[relation])
+        .filter((row) => subjects.some((s) => s.type === row.subjectType && s.id === row.subjectId))
+        .map((row) => row.objectId)
+    },
     listTeamMemberUserIds: async (teamId: string) =>
       Object.entries(state.teamMemberships)
         .filter(([, teamIds]) => teamIds.includes(teamId))

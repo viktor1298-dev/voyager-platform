@@ -12,7 +12,7 @@ export { user, session, account, verification } from './auth.js'
 export { auditLog } from './audit-log.js'
 export { featureFlags } from './feature-flags.js'
 export {
-  relations,
+  accessRelations,
   relationEnum,
   subjectTypeEnum,
   objectTypeEnum,
