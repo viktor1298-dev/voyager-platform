@@ -115,35 +115,47 @@ function SidebarContent({
   clusters: Array<{ id: string; name: string; provider: string | null }>
 }) {
   const filteredItems = navItems.filter((item) => !('adminOnly' in item && item.adminOnly) || isAdmin)
+  const mainItems = filteredItems.filter((item) => item.section !== 'access-control')
+  const accessControlItems = filteredItems.filter((item) => item.section === 'access-control')
+
+  const renderNavItem = (item: (typeof navItems)[number]) => {
+    const active = isActive(item.id)
+    const Icon = item.icon
+    return (
+      <Link
+        key={item.id}
+        href={item.id}
+        onClick={onLinkClick}
+        className={`
+          sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg
+          ${
+            active
+              ? 'bg-white/[0.08] text-[var(--color-text-primary)] sidebar-active-bar'
+              : 'text-[var(--color-text-muted)] hover:bg-white/[0.04] hover:text-[var(--color-text-secondary)] sidebar-hover-bar'
+          }
+        `}
+        style={{ transition: 'all var(--duration-fast) ease' }}
+      >
+        <Icon className="sidebar-icon h-4 w-4 shrink-0" />
+        {showLabels && <span className="sidebar-label text-[13px] font-medium">{item.label}</span>}
+      </Link>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-2 px-2">
       <nav className="flex flex-col gap-1">
-        {filteredItems.map((item) => {
-          const active = isActive(item.id)
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.id}
-              href={item.id}
-              onClick={onLinkClick}
-              className={`
-                sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg
-                ${
-                  active
-                    ? 'bg-white/[0.08] text-[var(--color-text-primary)] sidebar-active-bar'
-                    : 'text-[var(--color-text-muted)] hover:bg-white/[0.04] hover:text-[var(--color-text-secondary)] sidebar-hover-bar'
-                }
-              `}
-              style={{ transition: 'all var(--duration-fast) ease' }}
-            >
-              <Icon className="sidebar-icon h-4 w-4 shrink-0" />
-              {showLabels && (
-                <span className="sidebar-label text-[13px] font-medium">{item.label}</span>
-              )}
-            </Link>
-          )
-        })}
+        {mainItems.map(renderNavItem)}
       </nav>
+
+      {showLabels && accessControlItems.length > 0 && (
+        <div className="mt-1 border-t border-[var(--color-border)]/60 pt-2">
+          <p className="px-2 mb-1 text-[9px] uppercase tracking-widest font-mono text-[var(--color-text-dim)]">
+            Access Control
+          </p>
+          <nav className="flex flex-col gap-1">{accessControlItems.map(renderNavItem)}</nav>
+        </div>
+      )}
 
       {showLabels && clusters.length > 0 && (
         <div className="mt-2 border-t border-[var(--color-border)]/60 pt-2">

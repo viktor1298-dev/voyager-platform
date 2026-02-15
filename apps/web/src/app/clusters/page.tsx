@@ -13,9 +13,12 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog } from '@/components/ui/dialog'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
+import { usePermission } from '@/hooks/usePermission'
 import { getClusterEnvironment, getClusterTags, normalizeHealth } from '@/lib/cluster-meta'
+import { getBestRelationForUser, getRelationBadgeClass, type Relation } from '@/lib/mock-access-control'
 import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
+import { useAuthStore } from '@/stores/auth'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Database, Plus, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -56,6 +59,24 @@ type ClusterRow = {
   updatedAt: Date | string | null
 }
 
+function ClusterDeleteAction({ clusterId, onDelete }: { clusterId: string; onDelete: () => void }) {
+  const canDelete = usePermission('cluster', clusterId, 'admin')
+  if (!canDelete) return null
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation()
+        onDelete()
+      }}
+      className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+      title="Delete cluster"
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </button>
+  )
+}
+
 export default function ClustersPage() {
   const router = useRouter()
   const isAdmin = useIsAdmin()
@@ -87,6 +108,12 @@ export default function ClustersPage() {
 
   const [showAddModal, setShowAddModal] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+  const currentUserId = useAuthStore((state) => state.user?.id)
+
+  const getPermissionForCluster = useCallback((clusterName: string): Relation | null => {
+    if (!currentUserId) return null
+    return getBestRelationForUser(currentUserId, `cluster-${clusterName}`)
+  }, [currentUserId])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -190,6 +217,15 @@ export default function ClustersPage() {
         ),
       },
       {
+        id: 'permission',
+        header: 'Access',
+        cell: ({ row }) => {
+          const relation = getPermissionForCluster(row.original.name)
+          if (!relation) return <span className="text-xs text-[var(--color-text-dim)]">—</span>
+          return <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>
+        },
+      },
+      {
         accessorKey: 'version',
         header: 'Version',
         cell: ({ row }) => (
@@ -227,23 +263,16 @@ export default function ClustersPage() {
               enableSorting: false,
               size: 60,
               cell: ({ row }: { row: { original: ClusterRow } }) => (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setDeleteTarget({ id: row.original.id, name: row.original.name })
-                  }}
-                  className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                  title="Delete cluster"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <ClusterDeleteAction
+                  clusterId={row.original.name}
+                  onDelete={() => setDeleteTarget({ id: row.original.id, name: row.original.name })}
+                />
               ),
             } as ColumnDef<ClusterRow, unknown>,
           ]
         : []),
     ],
-    [isAdmin],
+    [getPermissionForCluster, isAdmin],
   )
 
   const toCreateClusterInput = useCallback((payload: AddClusterWizardPayload): CreateClusterInput => {
@@ -306,6 +335,11 @@ export default function ClustersPage() {
                 <Badge variant={statusBadgeVariant(row.status ?? 'unknown')}>{row.status ?? 'unknown'}</Badge>
               </div>
             </div>
+            {(() => {
+              const relation = getPermissionForCluster(row.name)
+              if (!relation) return null
+              return <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>
+            })()}
             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
               <span className="text-[var(--color-text-muted)]">Provider</span>
               <span className="text-[var(--color-text-primary)] flex items-center gap-1.5">
@@ -321,16 +355,7 @@ export default function ClustersPage() {
             </div>
             {isAdmin && (
               <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setDeleteTarget({ id: row.id, name: row.name })
-                  }}
-                  className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <ClusterDeleteAction clusterId={row.name} onDelete={() => setDeleteTarget({ id: row.id, name: row.name })} />
               </div>
             )}
           </div>

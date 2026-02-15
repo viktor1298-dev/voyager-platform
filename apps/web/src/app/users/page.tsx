@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
+import { usePermission } from '@/hooks/usePermission'
 import { Badge } from '@/components/ui/badge'
 import { Dialog } from '@/components/ui/dialog'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
@@ -38,6 +39,30 @@ type UserRow = {
   email: string
   role: string
   createdAt: string | Date | null
+}
+
+function UserActions({ user, onToggleRole, onDelete, pending }: { user: UserRow; onToggleRole: () => void; onDelete: () => void; pending: boolean }) {
+  const canManage = usePermission('user', user.id, 'admin')
+  if (!canManage) return null
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onToggleRole}
+        disabled={pending}
+        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
+      >
+        <UserCog className="h-3 w-3" />{user.role === 'admin' ? 'Demote' : 'Promote'}
+      </button>
+      <button
+        type="button"
+        onClick={onDelete}
+        className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </button>
+    </>
+  )
 }
 
 export default function UsersPage() {
@@ -145,21 +170,12 @@ export default function UsersPage() {
         if (u.id === currentUserId) return <span className="text-[10px] text-[var(--color-text-dim)] font-mono">You</span>
         return (
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => updateRole.mutate({ userId: u.id, role: u.role === 'admin' ? 'viewer' : 'admin' })}
-              disabled={updateRole.isPending}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
-            >
-              <UserCog className="h-3 w-3" />{u.role === 'admin' ? 'Demote' : 'Promote'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setDeleteTarget({ id: u.id, name: u.name })}
-              className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            <UserActions
+              user={u}
+              pending={updateRole.isPending}
+              onToggleRole={() => updateRole.mutate({ userId: u.id, role: u.role === 'admin' ? 'viewer' : 'admin' })}
+              onDelete={() => setDeleteTarget({ id: u.id, name: u.name })}
+            />
           </div>
         )
       },
@@ -210,12 +226,12 @@ export default function UsersPage() {
             </div>
             {u.id !== currentUserId && (
               <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
-                <button type="button" onClick={() => updateRole.mutate({ userId: u.id, role: u.role === 'admin' ? 'viewer' : 'admin' })} disabled={updateRole.isPending} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-text-muted)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors cursor-pointer">
-                  <UserCog className="h-3 w-3" />{u.role === 'admin' ? 'Demote' : 'Promote'}
-                </button>
-                <button type="button" onClick={() => setDeleteTarget({ id: u.id, name: u.name })} className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <UserActions
+                  user={u}
+                  pending={updateRole.isPending}
+                  onToggleRole={() => updateRole.mutate({ userId: u.id, role: u.role === 'admin' ? 'viewer' : 'admin' })}
+                  onDelete={() => setDeleteTarget({ id: u.id, name: u.name })}
+                />
               </div>
             )}
           </div>
