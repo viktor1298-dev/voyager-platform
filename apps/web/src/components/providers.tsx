@@ -1,34 +1,64 @@
 'use client'
 
-import { getTRPCClient, trpc, handleTRPCError } from '@/lib/trpc'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
+import { useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
-import { useState } from 'react'
+import { authClient } from '@/lib/auth-client'
+import { getTRPCClient, handleTRPCError, trpc } from '@/lib/trpc'
+import { useAuthStore } from '@/stores/auth'
 import { CommandPalette } from './CommandPalette'
 import { KeyboardShortcuts } from './KeyboardShortcuts'
 
+function AuthSessionSync() {
+  const { data: session, isPending } = authClient.useSession()
+  const setUser = useAuthStore((state) => state.setUser)
+  const clearUser = useAuthStore((state) => state.clearUser)
+
+  useEffect(() => {
+    if (isPending) return
+
+    if (session?.user) {
+      setUser({
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name ?? session.user.email,
+        role: (session.user as { role?: string }).role === 'admin' ? 'admin' : 'viewer',
+      })
+      return
+    }
+
+    clearUser()
+  }, [session, isPending, setUser, clearUser])
+
+  return null
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: (failureCount, error) => {
-          handleTRPCError(error)
-          const MAX_RETRIES = 3
-          return failureCount < MAX_RETRIES
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: (failureCount, error) => {
+              handleTRPCError(error)
+              const MAX_RETRIES = 3
+              return failureCount < MAX_RETRIES
+            },
+          },
+          mutations: {
+            onError: handleTRPCError,
+          },
         },
-      },
-      mutations: {
-        onError: handleTRPCError,
-      },
-    },
-  }))
+      }),
+  )
   const [trpcClient] = useState(() => getTRPCClient())
 
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
+          <AuthSessionSync />
           {children}
           <Toaster
             position="bottom-right"

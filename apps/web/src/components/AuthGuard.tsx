@@ -1,31 +1,17 @@
 'use client'
 
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import { useAuthStore } from '@/stores/auth'
 import { authClient } from '@/lib/auth-client'
+import { useAuthStore } from '@/stores/auth'
 
 const PUBLIC_PATHS = ['/login']
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { isAuthenticated, isLoading, setUser, logout } = useAuthStore()
-  const { data: session, isPending } = authClient.useSession()
-
-  useEffect(() => {
-    if (isPending) return
-    if (session?.user) {
-      setUser({
-        id: session.user.id,
-        email: session.user.email,
-        name: session.user.name ?? session.user.email,
-        role: (session.user as { role?: string }).role === 'admin' ? 'admin' : 'viewer',
-      })
-    } else {
-      logout()
-    }
-  }, [session, isPending, setUser, logout])
+  const { isAuthenticated, isLoading } = useAuthStore()
+  const { isPending } = authClient.useSession()
 
   useEffect(() => {
     if (PUBLIC_PATHS.includes(pathname)) return
