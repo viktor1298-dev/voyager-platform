@@ -6,7 +6,22 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Loader2, UploadCloud } from 'lucide-react'
 import { useEffect, useMemo, useState, type DragEvent } from 'react'
 
-type ProviderId = 'kubeconfig' | 'aws' | 'azure' | 'gke' | 'minikube'
+type ClusterProviderOption = {
+  id: 'kubeconfig' | 'aws' | 'azure' | 'gke' | 'minikube'
+  label: string
+  subtitle: string
+  icon: string
+}
+
+export const CLUSTER_PROVIDERS = [
+  { id: 'kubeconfig', label: 'Kubeconfig', subtitle: 'Upload config or paste YAML', icon: '📄' },
+  { id: 'aws', label: 'AWS EKS', subtitle: 'Use IAM credentials + region', icon: '☁️' },
+  { id: 'azure', label: 'Azure AKS', subtitle: 'Subscription and cluster details', icon: '🔷' },
+  { id: 'gke', label: 'Google GKE', subtitle: 'Service account JSON', icon: '🟢' },
+  { id: 'minikube', label: 'Minikube / Local', subtitle: 'Cert files + local endpoint', icon: '🏠' },
+] as const satisfies readonly ClusterProviderOption[]
+
+type ProviderId = (typeof CLUSTER_PROVIDERS)[number]['id']
 type Environment = 'prod' | 'staging' | 'dev'
 
 type ConnectionConfig = {
@@ -17,26 +32,28 @@ type ConnectionConfig = {
   minikube?: { caCert?: string; clientCert?: string; clientKey?: string; endpoint: string }
 }
 
-type WizardPayload = {
+export type AddClusterWizardPayload = {
   name: string
   provider: ProviderId
   endpoint: string
   connectionConfig: ConnectionConfig
 }
 
+type ValidateConnectionPayload = {
+  provider: ProviderId
+  endpoint: string
+  connectionConfig: ConnectionConfig
+}
+
+type ValidateConnectionClient = {
+  mutation: (path: 'clusters.validateConnection', input: ValidateConnectionPayload) => Promise<unknown>
+}
+
 interface AddClusterWizardProps {
   pending: boolean
   onCancel: () => void
-  onSubmit: (payload: WizardPayload) => void
+  onSubmit: (payload: AddClusterWizardPayload) => void
 }
-
-const providers: Array<{ id: ProviderId; label: string; subtitle: string; icon: string }> = [
-  { id: 'kubeconfig', label: 'Kubeconfig', subtitle: 'Upload config or paste YAML', icon: '📄' },
-  { id: 'aws', label: 'AWS EKS', subtitle: 'Use IAM credentials + region', icon: '☁️' },
-  { id: 'azure', label: 'Azure AKS', subtitle: 'Subscription and cluster details', icon: '🔷' },
-  { id: 'gke', label: 'Google GKE', subtitle: 'Service account JSON', icon: '🟢' },
-  { id: 'minikube', label: 'Minikube / Local', subtitle: 'Cert files + local endpoint', icon: '🏠' },
-]
 
 const cardClass = 'rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3 text-left transition-colors'
 const inputClass = 'w-full px-3 py-2 text-sm rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
@@ -154,7 +171,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
   const [validationError, setValidationError] = useState<string>('')
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  const currentProvider = providers.find((p) => p.id === provider)!
+  const currentProvider = CLUSTER_PROVIDERS.find((p) => p.id === provider)!
 
   const suggestedName = useMemo(() => `${provider}-${environment}-cluster`, [provider, environment])
 
@@ -232,7 +249,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                   ? 'https://container.googleapis.com'
                   : 'https://kubernetes.default.svc'
 
-        await (trpcClient as any).mutation('clusters.validateConnection', {
+        await (trpcClient as unknown as ValidateConnectionClient).mutation('clusters.validateConnection', {
           provider,
           endpoint: endpointForValidation,
           connectionConfig,
@@ -325,7 +342,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
         >
           {step === 1 && (
             <div className="grid gap-2 sm:grid-cols-2">
-              {providers.map((p) => (
+              {CLUSTER_PROVIDERS.map((p) => (
                 <button
                   key={p.id}
                   type="button"

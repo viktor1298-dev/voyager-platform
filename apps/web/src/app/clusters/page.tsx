@@ -4,7 +4,7 @@ import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-import { AddClusterWizard } from '@/components/AddClusterWizard'
+import { AddClusterWizard, type AddClusterWizardPayload } from '@/components/AddClusterWizard'
 import { DataTable } from '@/components/DataTable'
 import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { QueryError } from '@/components/ErrorBoundary'
@@ -39,6 +39,12 @@ function formatLastSeen(date: Date | string | null | undefined) {
   return `${Math.floor(diffMs / 86_400_000)}d ago`
 }
 
+type CreateClusterInput = {
+  name: string
+  provider: string
+  endpoint: string
+}
+
 type ClusterRow = {
   id: string
   name: string
@@ -57,7 +63,7 @@ export default function ClustersPage() {
   const clusterQueryKey = [['clusters', 'list'], { type: 'query' }] as const
 
   const createCluster = trpc.clusters.create.useMutation(
-    useOptimisticOptions<ClusterRow[], { name: string; provider: string; endpoint: string; connectionConfig?: unknown }>({
+    useOptimisticOptions<ClusterRow[], CreateClusterInput>({
       queryKey: clusterQueryKey,
       updater: (old, vars) => [
         ...(old ?? []),
@@ -240,6 +246,11 @@ export default function ClustersPage() {
     [isAdmin],
   )
 
+  const toCreateClusterInput = useCallback((payload: AddClusterWizardPayload): CreateClusterInput => {
+    const { name, provider, endpoint } = payload
+    return { name, provider, endpoint }
+  }, [])
+
   const btnPrimary =
     'px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer'
 
@@ -331,7 +342,7 @@ export default function ClustersPage() {
         <AddClusterWizard
           pending={createCluster.isPending}
           onCancel={() => setShowAddModal(false)}
-          onSubmit={(payload) => createCluster.mutate(payload as any)}
+          onSubmit={(payload) => createCluster.mutate(toCreateClusterInput(payload))}
         />
       </Dialog>
 
