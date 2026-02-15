@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useForm } from '@tanstack/react-form'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { z } from 'zod'
 import { authClient } from '@/lib/auth-client'
 import { useAuthStore } from '@/stores/auth'
-import { toast } from 'sonner'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -16,6 +16,7 @@ const loginSchema = z.object({
 export default function LoginPage() {
   const router = useRouter()
   const { isAuthenticated } = useAuthStore()
+  const [isSocialLoading, setIsSocialLoading] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated) router.push('/')
@@ -48,10 +49,29 @@ export default function LoginPage() {
     },
   })
 
+  const signInWithMicrosoft = async () => {
+    setIsSocialLoading(true)
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: 'microsoft-entra-id',
+        callbackURL: '/',
+      })
+      if (error) {
+        toast.error('Microsoft sign-in failed', {
+          description: error.message ?? 'Unable to continue with Microsoft Entra ID',
+        })
+      }
+    } finally {
+      setIsSocialLoading(false)
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-primary)]">
       <div className="w-full max-w-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-8 shadow-xl">
-        <h1 className="mb-6 text-center text-2xl font-bold text-[var(--color-text-primary)]">Voyager Platform</h1>
+        <h1 className="mb-6 text-center text-2xl font-bold text-[var(--color-text-primary)]">
+          Voyager Platform
+        </h1>
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -60,7 +80,10 @@ export default function LoginPage() {
           className="space-y-4"
         >
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]">
+            <label
+              htmlFor="email"
+              className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]"
+            >
               Email
             </label>
             <form.Field name="email">
@@ -85,7 +108,10 @@ export default function LoginPage() {
             </form.Field>
           </div>
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]">
+            <label
+              htmlFor="password"
+              className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]"
+            >
               Password
             </label>
             <form.Field name="password">
@@ -121,6 +147,21 @@ export default function LoginPage() {
             )}
           </form.Subscribe>
         </form>
+
+        <div className="my-4 flex items-center gap-2">
+          <div className="h-px flex-1 bg-[var(--color-border)]" />
+          <span className="text-xs text-[var(--color-text-dim)]">or</span>
+          <div className="h-px flex-1 bg-[var(--color-border)]" />
+        </div>
+
+        <button
+          type="button"
+          onClick={signInWithMicrosoft}
+          disabled={isSocialLoading}
+          className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-2 font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-accent)] disabled:opacity-50"
+        >
+          {isSocialLoading ? 'Redirecting to Microsoft…' : 'Continue with Microsoft'}
+        </button>
       </div>
     </div>
   )
