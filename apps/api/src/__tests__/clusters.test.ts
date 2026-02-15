@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+const { mockValidateClusterConnection } = vi.hoisted(() => ({
+  mockValidateClusterConnection: vi.fn(),
+}))
+
 // Mock DB - vi.mock factory cannot reference external variables
 vi.mock('@voyager/db', () => ({
   db: {},
@@ -19,6 +23,10 @@ vi.mock('../lib/cache', () => ({
   invalidateK8sCache: vi.fn().mockResolvedValue(3),
 }))
 
+vi.mock('../lib/k8s-client-factory', () => ({
+  validateClusterConnection: mockValidateClusterConnection,
+}))
+
 vi.mock('../lib/auth', () => ({
   auth: {
     api: { getSession: vi.fn().mockResolvedValue(null) },
@@ -30,6 +38,10 @@ import { clustersRouter } from '../routers/clusters.js'
 import { type Context, router } from '../trpc.js'
 
 const appRouter = router({ clusters: clustersRouter })
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 function createCaller(user: Context['user'] = null) {
   const mockDb = {
@@ -111,5 +123,110 @@ describe('clusters CUD routes require auth', () => {
     await expect(
       caller.clusters.delete({ id: '00000000-0000-0000-0000-000000000000' }),
     ).rejects.toThrow('Authentication required')
+  })
+})
+
+describe('clusters.validateConnection', () => {
+  const adminUser = { id: 'u1', email: 'a@b.com', name: 'Admin', role: 'admin' } as const
+
+  it('returns success for valid connection', async () => {
+    mockValidateClusterConnection.mockResolvedValue({
+      reachable: true,
+      message: 'Connection successful',
+      context: 'ctx',
+      version: '1.30',
+    })
+
+    const caller = createCaller(adminUser)
+    const result = await caller.clusters.validateConnection({
+      provider: 'kubeconfig',
+      connectionConfig: {
+        kubeconfig: 'apiVersion: v1\nclusters: []',
+      },
+    })
+
+    expect(result).toEqual({
+      success: true,
+      message: 'Connection successful',
+      context: 'ctx',
+      version: '1.30',
+    })
+    expect(mockValidateClusterConnection).toHaveBeenCalledOnce()
+  })
+
+  it('fails on invalid provider config shape (Zod validation)', async () => {
+    const caller = createCaller(adminUser)
+
+    await expect(
+      caller.clusters.validateConnection({
+        provider: 'aws',
+        connectionConfig: {
+          kubeconfig: 'apiVersion: v1\nclusters: []',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+
+    expect(mockValidateClusterConnection).not.toHaveBeenCalled()
+  })
+
+  it('requires authentication', async () => {
+    const caller = createCaller(null)
+
+    await expect(
+      caller.clusters.validateConnection({
+        provider: 'kubeconfig',
+        connectionConfig: {
+          kubeconfig: 'apiVersion: v1\nclusters: []',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'UNAUTHORIZED' })
+  })
+
+  it('maps connection refused errors to BAD_GATEWAY', async () => {
+    mockValidateClusterConnection.mockRejectedValue(new Error('connect ECONNREFUSED 127.0.0.1:6443'))
+    const caller = createCaller(adminUser)
+
+    await expect(
+      caller.clusters.validateConnection({
+        provider: 'kubeconfig',
+        connectionConfig: { kubeconfig: 'apiVersion: v1\nclusters: []' },
+      }),
+    ).rejects.toMatchObject({ code: 'BAD_GATEWAY' })
+  })
+
+  it('maps auth errors to UNAUTHORIZED', async () => {
+    mockValidateClusterConnection.mockRejectedValue(new Error('401 Unauthorized'))
+    const caller = createCaller(adminUser)
+
+    await expect(
+      caller.clusters.validateConnection({
+        provider: 'kubeconfig',
+        connectionConfig: { kubeconfig: 'apiVersion: v1\nclusters: []' },
+      }),
+    ).rejects.toMatchObject({ code: 'UNAUTHORIZED' })
+  })
+
+  it('maps timeout errors to GATEWAY_TIMEOUT', async () => {
+    mockValidateClusterConnection.mockRejectedValue(new Error('Request ETIMEDOUT while connecting to API'))
+    const caller = createCaller(adminUser)
+
+    await expect(
+      caller.clusters.validateConnection({
+        provider: 'kubeconfig',
+        connectionConfig: { kubeconfig: 'apiVersion: v1\nclusters: []' },
+      }),
+    ).rejects.toMatchObject({ code: 'GATEWAY_TIMEOUT' })
+  })
+
+  it('maps unknown errors to INTERNAL_SERVER_ERROR', async () => {
+    mockValidateClusterConnection.mockRejectedValue(new Error('Something odd happened'))
+    const caller = createCaller(adminUser)
+
+    await expect(
+      caller.clusters.validateConnection({
+        provider: 'kubeconfig',
+        connectionConfig: { kubeconfig: 'apiVersion: v1\nclusters: []' },
+      }),
+    ).rejects.toMatchObject({ code: 'INTERNAL_SERVER_ERROR' })
   })
 })

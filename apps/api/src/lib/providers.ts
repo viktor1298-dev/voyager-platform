@@ -29,5 +29,9 @@ export function normalizeProvider(provider: string): Provider {
     return 'minikube'
   }
 
-  return 'kubeconfig'
+  if (lower === 'kubeconfig') {
+    return 'kubeconfig'
+  }
+
+  throw new Error(`Unknown provider: ${provider}`)
 }
