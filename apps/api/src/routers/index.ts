@@ -11,7 +11,9 @@ import { healthRouter } from './health.js'
 import { logsRouter } from './logs.js'
 import { metricsRouter } from './metrics.js'
 import { nodesRouter } from './nodes.js'
+import { karpenterRouter } from './karpenter.js'
 import { subscriptionsRouter } from './subscriptions.js'
+import { ssoRouter } from './sso.js'
 import { usersRouter } from './users.js'
 
 export const appRouter = router({
@@ -27,7 +29,9 @@ export const appRouter = router({
   features: featuresRouter,
   logs: logsRouter,
   metrics: metricsRouter,
+  karpenter: karpenterRouter,
   subscriptions: subscriptionsRouter,
+  sso: ssoRouter,
   teams: teamsRouter,
   users: usersRouter,
 })
