@@ -6,7 +6,7 @@ import swaggerUi from '@fastify/swagger-ui'
 import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify'
 import { fastifyTRPCOpenApiPlugin } from 'trpc-to-openapi'
-import { getAuth } from './lib/auth.js'
+import { auth } from './lib/auth.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
@@ -93,7 +93,6 @@ const handleAuthRoute = async (request: FastifyRequest, reply: FastifyReply) => 
       headers,
       ...(request.body ? { body: JSON.stringify(request.body) } : {}),
     })
-    const auth = await getAuth()
     const response = await auth.handler(req)
     reply.status(response.status)
     for (const [key, value] of response.headers.entries()) {
