@@ -15,7 +15,8 @@ import {
 import { validateClusterConnection } from '../lib/k8s-client-factory.js'
 import { getAppsV1Api, getCoreV1Api, getVersionApi } from '../lib/k8s.js'
 import { normalizeProvider, VALID_PROVIDERS } from '../lib/providers.js'
-import { adminProcedure, protectedProcedure, router } from '../trpc.js'
+import { createAuthorizationService } from '../lib/authorization.js'
+import { adminProcedure, authorizedProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_CACHE_TTL = 30 // seconds
 
@@ -148,7 +149,26 @@ export const clustersRouter = router({
     .input(z.void())
     .output(z.array(clusterSchema.extend({ nodeCount: z.number().int() })))
     .query(async ({ ctx }) => {
+      const authz = createAuthorizationService(ctx.db)
       const allClusters = await ctx.db.select().from(clusters)
+      const visibleClusters =
+        ctx.user.role === 'admin'
+          ? allClusters
+          : (
+              await Promise.all(
+                allClusters.map(async (cluster) => ({
+                  cluster,
+                  allowed: await authz.check(
+                    { type: 'user', id: ctx.user.id },
+                    'viewer',
+                    { type: 'cluster', id: cluster.id },
+                  ),
+                })),
+              )
+            )
+              .filter((entry) => entry.allowed)
+              .map((entry) => entry.cluster)
+
       const nodeCounts = await ctx.db
         .select({
           clusterId: nodes.clusterId,
@@ -157,13 +177,14 @@ export const clustersRouter = router({
         .from(nodes)
         .groupBy(nodes.clusterId)
       const countMap = new Map(nodeCounts.map((n) => [n.clusterId, n.count]))
-      return allClusters.map((c) => ({
+
+      return visibleClusters.map((c) => ({
         ...c,
         nodeCount: countMap.get(c.id) ?? 0,
       }))
     }),
 
-  get: protectedProcedure
+  get: authorizedProcedure('cluster', 'viewer')
     .meta({
       openapi: { method: 'GET', path: '/api/clusters/{id}', protect: true, tags: ['clusters'] },
     })

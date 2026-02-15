@@ -3,6 +3,7 @@ import type { OpenApiMeta } from 'trpc-to-openapi'
 import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
 import { type Database, db } from '@voyager/db'
 import { auth } from './lib/auth.js'
+import { createAuthorizationService, type ObjectType, type Relation } from './lib/authorization.js'
 import { captureException } from './lib/sentry.js'
 
 export interface Context {
@@ -84,3 +85,29 @@ export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   }
   return next({ ctx })
 })
+
+export const authorizedProcedure = (objectType: ObjectType, relation: Relation) =>
+  protectedProcedure.use(async (opts) => {
+    const rawInput = (await opts.getRawInput()) as { id?: string; objectId?: string } | undefined
+    const objectId = rawInput?.objectId ?? rawInput?.id
+
+    if (!objectId) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'authorizedProcedure requires input with `id` or `objectId`',
+      })
+    }
+
+    const authz = createAuthorizationService(opts.ctx.db)
+    const allowed = await authz.check(
+      { type: 'user', id: opts.ctx.user.id },
+      relation,
+      { type: objectType, id: objectId },
+    )
+
+    if (!allowed) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Permission denied' })
+    }
+
+    return opts.next()
+  })

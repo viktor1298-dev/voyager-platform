@@ -1,5 +1,6 @@
 import { router } from '../trpc.js'
 import { alertsRouter } from './alerts.js'
+import { authorizationRouter, teamsRouter } from './authorization.js'
 import { auditRouter } from './audit.js'
 import { authRouter } from './auth.js'
 import { clustersRouter } from './clusters.js'
@@ -17,6 +18,7 @@ export const appRouter = router({
   alerts: alertsRouter,
   audit: auditRouter,
   auth: authRouter,
+  authorization: authorizationRouter,
   clusters: clustersRouter,
   deployments: deploymentsRouter,
   health: healthRouter,
@@ -26,6 +28,7 @@ export const appRouter = router({
   logs: logsRouter,
   metrics: metricsRouter,
   subscriptions: subscriptionsRouter,
+  teams: teamsRouter,
   users: usersRouter,
 })
 
