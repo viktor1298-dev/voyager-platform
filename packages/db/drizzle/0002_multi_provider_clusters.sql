@@ -31,8 +31,8 @@ ALTER TABLE "clusters" ALTER COLUMN "provider" DROP DEFAULT;
 ALTER TABLE "clusters" ALTER COLUMN "provider" TYPE "cluster_provider" USING (
   CASE
     WHEN "provider" IN ('minikube') THEN 'minikube'::"cluster_provider"
-    WHEN "provider" IN ('eks', 'aws', 'aws-eks') THEN 'aws'::"cluster_provider"
-    WHEN "provider" IN ('aks', 'azure', 'azure-aks') THEN 'azure'::"cluster_provider"
+    WHEN "provider" IN ('eks', 'aws') THEN 'aws'::"cluster_provider"
+    WHEN "provider" IN ('aks', 'azure') THEN 'azure'::"cluster_provider"
     WHEN "provider" IN ('gcp', 'gke') THEN 'gke'::"cluster_provider"
     ELSE 'kubeconfig'::"cluster_provider"
   END
