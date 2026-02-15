@@ -1,4 +1,9 @@
-export { clusters } from './clusters.js'
+export {
+  clusters,
+  clusterProviderEnum,
+  clusterEnvironmentEnum,
+  clusterHealthStatusEnum,
+} from './clusters.js'
 export { nodes } from './nodes.js'
 export { events } from './events.js'
 export { alerts, alertHistory } from './alerts.js'

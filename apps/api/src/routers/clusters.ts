@@ -4,19 +4,46 @@ import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { cached, invalidateK8sCache } from '../lib/cache.js'
+import {
+  awsConnectionConfigSchema,
+  azureConnectionConfigSchema,
+  connectionConfigSchema,
+  gkeConnectionConfigSchema,
+  kubeconfigConnectionConfigSchema,
+  minikubeConnectionConfigSchema,
+} from '../lib/connection-config.js'
+import { validateClusterConnection } from '../lib/k8s-client-factory.js'
 import { getAppsV1Api, getCoreV1Api, getVersionApi } from '../lib/k8s.js'
-import { normalizeProvider } from '../lib/providers.js'
+import { normalizeProvider, VALID_PROVIDERS } from '../lib/providers.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_CACHE_TTL = 30 // seconds
+
+const providerSchema = z.enum(VALID_PROVIDERS)
+const environmentSchema = z.enum(['production', 'staging', 'development'])
+const healthStatusSchema = z.enum(['healthy', 'degraded', 'critical', 'unreachable', 'unknown'])
+
+const providerConnectionInputSchema = z.discriminatedUnion('provider', [
+  z.object({ provider: z.literal('kubeconfig'), connectionConfig: kubeconfigConnectionConfigSchema }),
+  z.object({ provider: z.literal('aws'), connectionConfig: awsConnectionConfigSchema }),
+  z.object({ provider: z.literal('azure'), connectionConfig: azureConnectionConfigSchema }),
+  z.object({ provider: z.literal('gke'), connectionConfig: gkeConnectionConfigSchema }),
+  z.object({ provider: z.literal('minikube'), connectionConfig: minikubeConnectionConfigSchema }),
+])
+
+// shared connectionConfigSchema imported from lib/connection-config
 
 const clusterSchema = z
   .object({
     id: z.string(),
     name: z.string(),
-    provider: z.string(),
-    endpoint: z.string(),
+    provider: providerSchema,
+    environment: environmentSchema,
+    endpoint: z.string().nullable().optional(),
+    connectionConfig: z.record(z.string(), z.unknown()).or(connectionConfigSchema).optional(),
     status: z.string().nullable().optional(),
+    healthStatus: healthStatusSchema.nullable().optional(),
+    lastHealthCheck: z.union([z.string(), z.date()]).nullable().optional(),
     version: z.string().nullable().optional(),
     nodesCount: z.number().int().nullable().optional(),
     createdAt: z.union([z.string(), z.date()]).optional(),
@@ -295,6 +322,44 @@ export const clustersRouter = router({
       }
     }),
 
+  validateConnection: adminProcedure
+    .meta({
+      openapi: {
+        method: 'POST',
+        path: '/api/clusters/validate-connection',
+        protect: true,
+        tags: ['clusters'],
+      },
+    })
+    .input(providerConnectionInputSchema)
+    .output(
+      z.object({
+        success: z.boolean(),
+        message: z.string(),
+        context: z.string().optional(),
+        version: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const result = await validateClusterConnection(input.provider, input.connectionConfig)
+        return {
+          success: result.reachable,
+          message: result.message,
+          context: result.context,
+          version: result.version,
+        }
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error
+        }
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Connection validation failed: ${error instanceof Error ? error.message : 'unknown error'}`,
+        })
+      }
+    }),
+
   invalidateCache: adminProcedure
     .meta({
       openapi: { method: 'POST', path: '/api/clusters/cache/invalidate', protect: true, tags: ['clusters'] },
@@ -309,22 +374,48 @@ export const clustersRouter = router({
   create: adminProcedure
     .meta({ openapi: { method: 'POST', path: '/api/clusters', protect: true, tags: ['clusters'] } })
     .input(
-      z.object({
-        name: z.string().min(1).max(255),
-        provider: z.string().min(1).max(50),
-        endpoint: z.string().url().max(500),
-        status: z.string().max(50).optional(),
-        nodesCount: z.number().int().min(0).optional(),
-      }),
+      z
+        .object({
+          name: z.string().min(1).max(255),
+          provider: providerSchema,
+          environment: environmentSchema.optional(),
+          endpoint: z.string().url().max(500).optional(),
+          connectionConfig: connectionConfigSchema.optional(),
+          status: z.string().max(50).optional(),
+          healthStatus: healthStatusSchema.optional(),
+          lastHealthCheck: z.coerce.date().optional(),
+          nodesCount: z.number().int().min(0).optional(),
+        })
+        .superRefine((value, ctx) => {
+          if (!value.connectionConfig) return
+          const parsed = providerConnectionInputSchema.safeParse({
+            provider: value.provider,
+            connectionConfig: value.connectionConfig,
+          })
+          if (!parsed.success) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['connectionConfig'],
+              message: 'Invalid connectionConfig for selected provider',
+            })
+          }
+        }),
     )
     .output(clusterSchema)
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db
         .insert(clusters)
         .values({
-          ...input,
+          name: input.name,
           provider: normalizeProvider(input.provider),
+          environment: input.environment ?? 'development',
+          endpoint: input.endpoint ?? null,
+          // TODO(security): Encrypt/decrypt secrets in connectionConfig before persisting to JSONB.
+          // Placeholder: currently only non-sensitive references should be stored (e.g. credentialRef).
+          connectionConfig: input.connectionConfig ?? {},
           status: input.status ?? 'unreachable',
+          healthStatus: input.healthStatus ?? 'unknown',
+          lastHealthCheck: input.lastHealthCheck,
           nodesCount: input.nodesCount ?? 0,
         })
         .returning()
@@ -341,9 +432,13 @@ export const clustersRouter = router({
       z.object({
         id: z.string().uuid(),
         name: z.string().min(1).max(255).optional(),
-        provider: z.string().min(1).max(50).optional(),
-        endpoint: z.string().url().max(500).optional(),
+        provider: providerSchema.optional(),
+        environment: environmentSchema.optional(),
+        endpoint: z.string().url().max(500).nullable().optional(),
+        connectionConfig: connectionConfigSchema.optional(),
         status: z.string().max(50).optional(),
+        healthStatus: healthStatusSchema.optional(),
+        lastHealthCheck: z.coerce.date().nullable().optional(),
         version: z.string().max(50).optional(),
         nodesCount: z.number().int().min(0).optional(),
       }),
@@ -351,11 +446,36 @@ export const clustersRouter = router({
     .output(clusterSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input
+      const [existing] = await ctx.db.select().from(clusters).where(eq(clusters.id, id))
+      if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
+
+      if (data.connectionConfig !== undefined) {
+        const effectiveProvider = data.provider ?? existing.provider
+        const parsed = providerConnectionInputSchema.safeParse({
+          provider: effectiveProvider,
+          connectionConfig: data.connectionConfig,
+        })
+        if (!parsed.success) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Invalid connectionConfig for selected provider',
+          })
+        }
+      }
+
       const updates: Record<string, unknown> = {}
       if (data.name !== undefined) updates.name = data.name
       if (data.provider !== undefined) updates.provider = normalizeProvider(data.provider)
+      if (data.environment !== undefined) updates.environment = data.environment
       if (data.endpoint !== undefined) updates.endpoint = data.endpoint
+      if (data.connectionConfig !== undefined) {
+        // TODO(security): Encrypt/decrypt secrets in connectionConfig before persisting to JSONB.
+        // Placeholder: currently only non-sensitive references should be stored (e.g. credentialRef).
+        updates.connectionConfig = data.connectionConfig
+      }
       if (data.status !== undefined) updates.status = data.status
+      if (data.healthStatus !== undefined) updates.healthStatus = data.healthStatus
+      if (data.lastHealthCheck !== undefined) updates.lastHealthCheck = data.lastHealthCheck
       if (data.version !== undefined) updates.version = data.version
       if (data.nodesCount !== undefined) updates.nodesCount = data.nodesCount
       const [updated] = await ctx.db.update(clusters).set(updates).where(eq(clusters.id, id)).returning()

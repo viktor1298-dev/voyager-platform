@@ -95,7 +95,7 @@ describe('clusters CUD routes require auth', () => {
   it('create throws UNAUTHORIZED without user', async () => {
     const caller = createCaller(null)
     await expect(
-      caller.clusters.create({ name: 'test', provider: 'aws', endpoint: 'https://example.com' }),
+      caller.clusters.create({ name: 'test', provider: 'kubeconfig', endpoint: 'https://example.com' }),
     ).rejects.toThrow('Authentication required')
   })
 
