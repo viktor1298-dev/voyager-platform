@@ -21,13 +21,15 @@ const app = Fastify({ logger: true })
 
 app.register(compress, { global: true })
 
-const DEFAULT_RATE_LIMIT_MAX = Number.parseInt(process.env.RATE_LIMIT_MAX || '1000', 10)
+const DEFAULT_RATE_LIMIT_MAX = Number.parseInt(process.env.RATE_LIMIT_MAX || '200', 10)
 const DEFAULT_RATE_LIMIT_WINDOW = process.env.RATE_LIMIT_TIME_WINDOW || '1 minute'
+const RATE_LIMIT_WHITELIST_PATHS = ['/api/auth/', '/health'] as const
 
 app.register(rateLimit, {
   max: DEFAULT_RATE_LIMIT_MAX,
   timeWindow: DEFAULT_RATE_LIMIT_WINDOW,
   keyGenerator: (req) => req.ip,
+  allowList: (request) => RATE_LIMIT_WHITELIST_PATHS.some((path) => request.url.startsWith(path)),
 })
 
 // ALLOWED_ORIGINS: comma-separated list of allowed origins for CORS.
@@ -77,10 +79,6 @@ app.register(async (instance) => {
 })
 
 // Better-Auth handler — all auth routes via /api/auth/*
-// Keep sign-in strict, keep session checks unlimited, and apply moderate limits elsewhere.
-const AUTH_SIGN_IN_MAX = Number.parseInt(process.env.AUTH_SIGN_IN_RATE_LIMIT || '5', 10)
-const AUTH_DEFAULT_MAX = Number.parseInt(process.env.AUTH_DEFAULT_RATE_LIMIT || '30', 10)
-
 const handleAuthRoute = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const hostHeader = Array.isArray(request.headers.host) ? request.headers.host[0] : request.headers.host
@@ -110,11 +108,7 @@ app.route({
   method: ['GET', 'POST'],
   url: '/api/auth/sign-in/*',
   config: {
-    rateLimit: {
-      max: AUTH_SIGN_IN_MAX,
-      timeWindow: '1 minute',
-      keyGenerator: (req: { ip: string }) => req.ip,
-    },
+    rateLimit: false,
   },
   handler: handleAuthRoute,
 })
@@ -132,11 +126,7 @@ app.route({
   method: ['GET', 'POST'],
   url: '/api/auth/*',
   config: {
-    rateLimit: {
-      max: AUTH_DEFAULT_MAX,
-      timeWindow: '1 minute',
-      keyGenerator: (req: { ip: string }) => req.ip,
-    },
+    rateLimit: false,
   },
   handler: handleAuthRoute,
 })
@@ -151,7 +141,7 @@ app.setErrorHandler((error, _request, reply) => {
   })
 })
 
-app.get('/health', async () => ({ status: 'ok' }))
+app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
 
 const start = async () => {
   try {
