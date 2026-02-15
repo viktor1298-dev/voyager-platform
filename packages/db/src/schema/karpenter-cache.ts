@@ -1,4 +1,4 @@
-import { index, jsonb, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { index, jsonb, pgTable, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core'
 import { clusters } from './clusters.js'
 
 export const karpenterCache = pgTable(
@@ -18,6 +18,10 @@ export const karpenterCache = pgTable(
       table.clusterId,
       table.dataType,
       table.observedAt,
+    ),
+    clusterDataTypeUnique: unique('karpenter_cache_cluster_data_type_uq').on(
+      table.clusterId,
+      table.dataType,
     ),
   }),
 )

@@ -150,19 +150,36 @@ export async function getCachedEntraAuthProvider(db: Database) {
   return value
 }
 
-async function fetchEntraGroupIds(accessToken: string): Promise<string[]> {
-  const response = await fetch('https://graph.microsoft.com/v1.0/me/memberOf', {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
+const MAX_GRAPH_PAGES = 50
 
-  if (!response.ok) {
-    throw new Error(`Graph API memberOf returned HTTP ${response.status}`)
+async function fetchEntraGroupIds(accessToken: string): Promise<string[]> {
+  const groups: string[] = []
+  let url: string | null = 'https://graph.microsoft.com/v1.0/me/memberOf'
+
+  for (let page = 0; url && page < MAX_GRAPH_PAGES; page++) {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Graph API memberOf returned HTTP ${response.status}`)
+    }
+
+    const data = (await response.json()) as {
+      value?: Array<{ id?: string; '@odata.type'?: string }>
+      '@odata.nextLink'?: string
+    }
+
+    for (const entry of data.value ?? []) {
+      if (entry['@odata.type'] === '#microsoft.graph.group' && typeof entry.id === 'string') {
+        groups.push(entry.id)
+      }
+    }
+
+    url = data['@odata.nextLink'] ?? null
   }
 
-  const data = (await response.json()) as { value?: Array<{ id?: string; '@odata.type'?: string }> }
-  return (data.value ?? [])
-    .filter((entry) => entry['@odata.type'] === '#microsoft.graph.group' && typeof entry.id === 'string')
-    .map((entry) => entry.id as string)
+  return groups
 }
 
 export async function syncEntraGroupMembership(db: Database, userId: string) {
