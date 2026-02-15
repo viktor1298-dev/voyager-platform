@@ -4,9 +4,9 @@ import rateLimit from '@fastify/rate-limit'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
-import Fastify from 'fastify'
+import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify'
 import { fastifyTRPCOpenApiPlugin } from 'trpc-to-openapi'
-import { auth } from './lib/auth.js'
+import { getAuth } from './lib/auth.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
@@ -21,9 +21,12 @@ const app = Fastify({ logger: true })
 
 app.register(compress, { global: true })
 
+const DEFAULT_RATE_LIMIT_MAX = Number.parseInt(process.env.RATE_LIMIT_MAX || '1000', 10)
+const DEFAULT_RATE_LIMIT_WINDOW = process.env.RATE_LIMIT_TIME_WINDOW || '1 minute'
+
 app.register(rateLimit, {
-  max: 100,
-  timeWindow: '1 minute',
+  max: DEFAULT_RATE_LIMIT_MAX,
+  timeWindow: DEFAULT_RATE_LIMIT_WINDOW,
   keyGenerator: (req) => req.ip,
 })
 
@@ -74,41 +77,55 @@ app.register(async (instance) => {
 })
 
 // Better-Auth handler — all auth routes via /api/auth/*
-// Stricter rate limiting on sign-in (5 req/min per IP)
+// Keep sign-in protected while ensuring session checks are never rate limited.
 const AUTH_SIGN_IN_MAX = Number.parseInt(process.env.AUTH_SIGN_IN_RATE_LIMIT || '5', 10)
+
+const handleAuthRoute = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const hostHeader = Array.isArray(request.headers.host) ? request.headers.host[0] : request.headers.host
+    const url = new URL(request.url, `http://${hostHeader ?? 'localhost'}`)
+    const headers = new Headers()
+    for (const [key, value] of Object.entries(request.headers)) {
+      if (value) headers.append(key, value.toString())
+    }
+    const req = new Request(url.toString(), {
+      method: request.method,
+      headers,
+      ...(request.body ? { body: JSON.stringify(request.body) } : {}),
+    })
+    const auth = await getAuth()
+    const response = await auth.handler(req)
+    reply.status(response.status)
+    for (const [key, value] of response.headers.entries()) {
+      reply.header(key, value)
+    }
+    reply.send(response.body ? await response.text() : null)
+  } catch (error) {
+    app.log.error(error, 'Authentication Error')
+    reply.status(500).send({ error: 'Internal authentication error', code: 'AUTH_FAILURE' })
+  }
+}
+
 app.route({
   method: ['GET', 'POST'],
-  url: '/api/auth/*',
+  url: '/api/auth/sign-in/*',
   config: {
     rateLimit: {
-      max: (req: { url: string }) => (req.url.includes('/sign-in/') ? AUTH_SIGN_IN_MAX : 100),
+      max: AUTH_SIGN_IN_MAX,
       timeWindow: '1 minute',
       keyGenerator: (req: { ip: string }) => req.ip,
     },
   },
-  async handler(request, reply) {
-    try {
-      const url = new URL(request.url, `http://${request.headers.host}`)
-      const headers = new Headers()
-      for (const [key, value] of Object.entries(request.headers)) {
-        if (value) headers.append(key, value.toString())
-      }
-      const req = new Request(url.toString(), {
-        method: request.method,
-        headers,
-        ...(request.body ? { body: JSON.stringify(request.body) } : {}),
-      })
-      const response = await auth.handler(req)
-      reply.status(response.status)
-      for (const [key, value] of response.headers.entries()) {
-        reply.header(key, value)
-      }
-      reply.send(response.body ? await response.text() : null)
-    } catch (error) {
-      app.log.error(error, 'Authentication Error')
-      reply.status(500).send({ error: 'Internal authentication error', code: 'AUTH_FAILURE' })
-    }
+  handler: handleAuthRoute,
+})
+
+app.route({
+  method: ['GET', 'POST'],
+  url: '/api/auth/*',
+  config: {
+    rateLimit: false,
   },
+  handler: handleAuthRoute,
 })
 
 // Capture unhandled Fastify errors to Sentry
