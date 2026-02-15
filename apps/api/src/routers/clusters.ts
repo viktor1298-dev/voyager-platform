@@ -335,7 +335,7 @@ export const clustersRouter = router({
       z.object({
         provider: providerSchema,
         endpoint: z.string().url().max(500).optional(),
-        connectionConfig: z.unknown(),
+        connectionConfig: z.record(z.string(), z.unknown()),
       }),
     )
     .output(
@@ -348,19 +348,26 @@ export const clustersRouter = router({
     )
     .mutation(async ({ input }) => {
       try {
-        const parsedInput = providerConnectionInputSchema.safeParse({
-          provider: input.provider,
-          connectionConfig: input.connectionConfig,
-        })
+        const connectionConfigSchemaByProvider = {
+          kubeconfig: kubeconfigConnectionConfigSchema,
+          aws: awsConnectionConfigSchema,
+          azure: azureConnectionConfigSchema,
+          gke: gkeConnectionConfigSchema,
+          minikube: minikubeConnectionConfigSchema,
+        } as const
 
-        if (!parsedInput.success) {
+        const parsedConnectionConfig = connectionConfigSchemaByProvider[input.provider].safeParse(
+          input.connectionConfig,
+        )
+
+        if (!parsedConnectionConfig.success) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: 'Invalid connectionConfig for selected provider',
           })
         }
 
-        const result = await validateClusterConnection(parsedInput.data.provider, parsedInput.data.connectionConfig)
+        const result = await validateClusterConnection(input.provider, parsedConnectionConfig.data)
         return {
           success: result.reachable,
           message: result.message,
