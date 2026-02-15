@@ -17,6 +17,8 @@ const PATH_LABELS: Record<string, string> = {
   users: 'Users',
   audit: 'Audit Logs',
   deployments: 'Deployments',
+  teams: 'Teams',
+  permissions: 'Permissions',
 }
 
 export function Breadcrumbs() {
