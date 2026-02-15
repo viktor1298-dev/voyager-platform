@@ -16,10 +16,11 @@ import {
   useReactTable,
   getSortedRowModel,
 } from '@tanstack/react-table'
-import { ShieldAlert, ChevronDown, ChevronRight, ClipboardList, Search, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, ClipboardList, Search, X } from 'lucide-react'
 import { Fragment, useMemo, useState } from 'react'
 import { keepPreviousData } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'motion/react'
+import { useRouter } from 'next/navigation'
 
 type AuditEntry = {
   id: string
@@ -52,6 +53,7 @@ const ACTION_OPTIONS = ['create', 'update', 'delete', 'restart', 'scale', 'login
 const PAGE_SIZE = 20
 
 export default function AuditPage() {
+  const router = useRouter()
   const isAdmin = useIsAdmin()
   const [sorting, setSorting] = useState<SortingState>([{ id: 'timestamp', desc: true }])
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -153,18 +155,10 @@ export default function AuditPage() {
     pageCount: totalPages,
   })
 
-  if (!isAdmin) {
-    return (
-      <AppLayout>
-        <PageTransition>
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <ShieldAlert className="h-12 w-12 text-[var(--color-status-error)] mb-4" />
-            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Access Denied</h2>
-            <p className="text-sm text-[var(--color-text-muted)]">You need admin privileges to view the audit log.</p>
-          </div>
-        </PageTransition>
-      </AppLayout>
-    )
+  if (isAdmin === null) return null // loading
+  if (isAdmin === false) {
+    router.replace('/')
+    return null
   }
 
   const selectClass =
