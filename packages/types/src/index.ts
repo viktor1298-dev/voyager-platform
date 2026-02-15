@@ -1,5 +1,6 @@
 // Shared TypeScript types for Voyager Platform
 export * from './sse.js'
+export * from './karpenter.js'
 
 export interface ClusterInfo {
   name: string
