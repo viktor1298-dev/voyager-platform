@@ -101,6 +101,7 @@ function FileDrop({
     <div className="space-y-1.5">
       <span className="text-xs text-[var(--color-text-secondary)]">{label}</span>
       <label
+        aria-label={`${label} upload drop zone`}
         onDragOver={(e) => {
           e.preventDefault()
           setDragActive(true)
@@ -341,11 +342,13 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
           className="space-y-4"
         >
           {step === 1 && (
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Cluster provider">
               {CLUSTER_PROVIDERS.map((p) => (
                 <button
                   key={p.id}
                   type="button"
+                  role="radio"
+                  aria-checked={provider === p.id}
                   onClick={() => setProvider(p.id)}
                   className={`${cardClass} ${provider === p.id ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10' : 'hover:border-[var(--color-border-hover)]'}`}
                 >
@@ -412,7 +415,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
           )}
 
           {step === 3 && (
-            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4">
+            <div aria-live="polite" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4">
               {validationState === 'testing' && (
                 <div className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -447,10 +450,11 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
       </AnimatePresence>
 
       <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3">
-        <button type="button" onClick={step === 1 ? onCancel : () => setStep((s) => Math.max(1, s - 1))} className="px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer">
+        <button aria-label={step === 1 ? 'Cancel wizard' : 'Go back to previous step'} type="button" onClick={step === 1 ? onCancel : () => setStep((s) => Math.max(1, s - 1))} className="px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer">
           {step === 1 ? 'Cancel' : 'Back'}
         </button>
         <button
+          aria-label={step === 4 ? 'Add cluster' : 'Go to next step'}
           type="button"
           disabled={pending || !canGoNext}
           onClick={() => {
