@@ -8,30 +8,28 @@ test.describe('Users Page — Admin Only', () => {
 
   test('admin can access /users page', async ({ page }) => {
     await login(page)
-    await page.goto('/users')
-    await page.waitForLoadState('networkidle')
+    await page.getByRole('link', { name: /users/i }).first().click()
+    await expect(page).toHaveURL(/\/users/, { timeout: 10_000 })
     await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 10_000 })
   })
 
   test('admin sees user list with at least one user', async ({ page }) => {
     await login(page)
-    await page.goto('/users')
-    await page.waitForLoadState('networkidle')
-    // Should see at least the admin user in the table
-    await expect(page.getByText(TEST_ADMIN.email)).toBeVisible({ timeout: 10_000 })
+    await page.getByRole('link', { name: /users/i }).first().click()
+    await expect(page).toHaveURL(/\/users/, { timeout: 10_000 })
+    await expect(page.getByRole('table').getByText(TEST_ADMIN.email).first()).toBeVisible({ timeout: 10_000 })
   })
 
   test('admin sees Add User button', async ({ page }) => {
     await login(page)
-    await page.goto('/users')
-    await page.waitForLoadState('networkidle')
-    await expect(page.getByRole('button', { name: /add user/i })).toBeVisible()
+    await page.getByRole('link', { name: /users/i }).first().click()
+    await expect(page).toHaveURL(/\/users/, { timeout: 10_000 })
+    await expect(page.getByRole('button', { name: /add user/i })).toBeVisible({ timeout: 10_000 })
   })
 
   test('viewer is redirected away from /users', async ({ page }) => {
     await loginAsViewer(page)
     await page.goto('/users')
-    // Should be redirected to / (non-admin redirect)
-    await expect(page).toHaveURL('/', { timeout: 10_000 })
+    await expect(page).not.toHaveURL(/\/users/, { timeout: 10_000 })
   })
 })

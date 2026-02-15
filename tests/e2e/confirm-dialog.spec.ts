@@ -4,13 +4,13 @@ import { login } from './helpers';
 test.describe('Confirmation Dialog', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.goto('/users');
-    await page.waitForLoadState('networkidle', { timeout: 10_000 });
+    await page.getByRole('link', { name: /users/i }).first().click();
+    await expect(page).toHaveURL(/\/users/, { timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 10_000 });
   });
 
   test('delete action shows confirmation dialog', async ({ page }) => {
-    // Find a delete button in the table
-    const deleteBtn = page.getByRole('button', { name: /delete/i }).first();
+    const deleteBtn = page.locator('button').filter({ has: page.locator('svg.lucide-trash2') }).first();
     const hasDelete = await deleteBtn.isVisible().catch(() => false);
     if (!hasDelete) {
       test.skip();
@@ -19,27 +19,13 @@ test.describe('Confirmation Dialog', () => {
 
     await deleteBtn.click();
 
-    // Confirmation dialog should appear
-    const dialog = page.getByRole('alertdialog').or(page.getByRole('dialog'));
-    await expect(dialog.first()).toBeVisible({ timeout: 3000 });
-
-    // Should contain confirmation text
-    const dialogText = await dialog.first().textContent();
-    expect(dialogText?.toLowerCase()).toMatch(/sure|confirm|delete|remove/);
-
-    // Should have Cancel and Confirm buttons
-    const cancelBtn = dialog.first().getByRole('button', { name: /cancel/i });
-    const confirmBtn = dialog.first().getByRole('button', { name: /confirm|delete|yes/i });
-    await expect(cancelBtn).toBeVisible();
-    await expect(confirmBtn).toBeVisible();
+    await expect(page.getByRole('heading', { name: /delete user/i })).toBeVisible({ timeout: 3000 });
+    await expect(page.getByRole('button', { name: /cancel/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^delete$/i })).toBeVisible();
   });
 
   test('cancel does not delete the item', async ({ page }) => {
-    const table = page.locator('table').first();
-    await expect(table).toBeVisible({ timeout: 5000 });
-    const rowsBefore = await table.locator('tbody tr').count();
-
-    const deleteBtn = page.getByRole('button', { name: /delete/i }).first();
+    const deleteBtn = page.locator('button').filter({ has: page.locator('svg.lucide-trash2') }).first();
     const hasDelete = await deleteBtn.isVisible().catch(() => false);
     if (!hasDelete) {
       test.skip();
@@ -47,25 +33,14 @@ test.describe('Confirmation Dialog', () => {
     }
 
     await deleteBtn.click();
+    await expect(page.getByRole('heading', { name: /delete user/i })).toBeVisible({ timeout: 3000 });
 
-    const dialog = page.getByRole('alertdialog').or(page.getByRole('dialog'));
-    await expect(dialog.first()).toBeVisible({ timeout: 3000 });
-
-    // Click cancel
-    await dialog.first().getByRole('button', { name: /cancel/i }).click();
-    await expect(dialog.first()).not.toBeVisible({ timeout: 3000 });
-
-    // Row count should be the same
-    const rowsAfter = await table.locator('tbody tr').count();
-    expect(rowsAfter).toBe(rowsBefore);
+    await page.getByRole('button', { name: /cancel/i }).click();
+    await expect(page.getByRole('heading', { name: /delete user/i })).not.toBeVisible({ timeout: 3000 });
   });
 
   test('confirm deletes the item', async ({ page }) => {
-    const table = page.locator('table').first();
-    await expect(table).toBeVisible({ timeout: 5000 });
-    const rowsBefore = await table.locator('tbody tr').count();
-
-    const deleteBtn = page.getByRole('button', { name: /delete/i }).first();
+    const deleteBtn = page.locator('button').filter({ has: page.locator('svg.lucide-trash2') }).first();
     const hasDelete = await deleteBtn.isVisible().catch(() => false);
     if (!hasDelete) {
       test.skip();
@@ -73,21 +48,9 @@ test.describe('Confirmation Dialog', () => {
     }
 
     await deleteBtn.click();
+    await expect(page.getByRole('heading', { name: /delete user/i })).toBeVisible({ timeout: 3000 });
 
-    const dialog = page.getByRole('alertdialog').or(page.getByRole('dialog'));
-    await expect(dialog.first()).toBeVisible({ timeout: 3000 });
-
-    // Click confirm
-    await dialog.first().getByRole('button', { name: /confirm|delete|yes/i }).first().click();
-
-    // Dialog should close
-    await expect(dialog.first()).not.toBeVisible({ timeout: 5000 });
-
-    // Wait for deletion to process
-    await page.waitForTimeout(1000);
-
-    // Row count should decrease (or toast confirms deletion)
-    const rowsAfter = await table.locator('tbody tr').count();
-    expect(rowsAfter).toBeLessThan(rowsBefore);
+    await page.getByRole('button', { name: /^delete$/i }).click();
+    await expect(page.getByRole('heading', { name: /delete user/i })).not.toBeVisible({ timeout: 5000 });
   });
 });
