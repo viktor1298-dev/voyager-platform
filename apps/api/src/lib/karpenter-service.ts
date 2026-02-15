@@ -1,8 +1,8 @@
 import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
-import { clusters, type Database } from '@voyager/db'
+import { clusters, karpenterCache, type Database } from '@voyager/db'
 import type { KarpenterEC2NodeClass, KarpenterMetrics, KarpenterNodePool, KarpenterTopology } from '@voyager/types'
-import { eq } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { connectionConfigSchema, type ClusterConnectionConfig } from './connection-config.js'
 import { createKubeConfigForCluster } from './k8s-client-factory.js'
@@ -85,6 +85,10 @@ function mapConditions(conditions: unknown): KarpenterNodePool['status']['condit
     }))
 }
 
+const KARPENTER_CACHE_TTL_MS = Number.parseInt(process.env.KARPENTER_CACHE_TTL_MS ?? '60000', 10)
+
+type KarpenterCacheDataType = 'node-pools' | 'ec2-node-classes' | 'metrics' | 'topology'
+
 export class KarpenterService {
   constructor(
     private readonly db: Database,
@@ -92,6 +96,53 @@ export class KarpenterService {
       kc.makeApiClient(k8s.CustomObjectsApi),
     private readonly coreV1ClientFactory: (kc: k8s.KubeConfig) => CoreV1Client = (kc) => kc.makeApiClient(k8s.CoreV1Api),
   ) {}
+
+  private async getCached<T>(clusterId: string, dataType: KarpenterCacheDataType): Promise<T | null> {
+    try {
+      const [row] = await this.db
+        .select({ payload: karpenterCache.payload, observedAt: karpenterCache.observedAt })
+        .from(karpenterCache)
+        .where(and(eq(karpenterCache.clusterId, clusterId), eq(karpenterCache.dataType, dataType)))
+        .orderBy(desc(karpenterCache.observedAt))
+        .limit(1)
+
+      if (!row) return null
+
+      const ageMs = Date.now() - row.observedAt.getTime()
+      if (ageMs > KARPENTER_CACHE_TTL_MS) {
+        return null
+      }
+
+      return row.payload as T
+    } catch {
+      return null
+    }
+  }
+
+  private async setCached(clusterId: string, dataType: KarpenterCacheDataType, payload: unknown) {
+    try {
+      const normalizedPayload =
+        typeof payload === 'object' && payload !== null ? (payload as Record<string, unknown>) : { value: payload }
+
+      await this.db
+        .insert(karpenterCache)
+        .values({
+          clusterId,
+          dataType,
+          payload: normalizedPayload,
+          observedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: [karpenterCache.clusterId, karpenterCache.dataType],
+          set: {
+            payload: sql`excluded.payload`,
+            observedAt: sql`excluded.observed_at`,
+          },
+        })
+    } catch {
+      // best-effort cache, never fail the request
+    }
+  }
 
   private async getClusterKubeConfig(clusterId: string): Promise<k8s.KubeConfig> {
     const [cluster] = await this.db.select().from(clusters).where(eq(clusters.id, clusterId))
@@ -129,6 +180,9 @@ export class KarpenterService {
   }
 
   async listNodePools(clusterId: string): Promise<KarpenterNodePool[]> {
+    const cached = await this.getCached<KarpenterNodePool[]>(clusterId, 'node-pools')
+    if (cached) return cached
+
     const kc = await this.getClusterKubeConfig(clusterId)
     const customObjects = this.customObjectsClientFactory(kc)
 
@@ -138,7 +192,7 @@ export class KarpenterService {
       plural: KARPENTER_CRD.nodePools.plural,
     })
 
-    return asK8sList(res).items.map((item) => {
+    const result = asK8sList(res).items.map((item) => {
       const metadata = (item.metadata as Record<string, unknown> | undefined) ?? {}
       const spec = (item.spec as Record<string, unknown> | undefined) ?? {}
       const status = (item.status as Record<string, unknown> | undefined) ?? {}
@@ -187,9 +241,15 @@ export class KarpenterService {
         },
       }
     })
+
+    await this.setCached(clusterId, 'node-pools', result)
+    return result
   }
 
   async listEC2NodeClasses(clusterId: string): Promise<KarpenterEC2NodeClass[]> {
+    const cached = await this.getCached<KarpenterEC2NodeClass[]>(clusterId, 'ec2-node-classes')
+    if (cached) return cached
+
     const kc = await this.getClusterKubeConfig(clusterId)
     const customObjects = this.customObjectsClientFactory(kc)
 
@@ -199,7 +259,7 @@ export class KarpenterService {
       plural: KARPENTER_CRD.ec2NodeClasses.plural,
     })
 
-    return asK8sList(res).items.map((item) => {
+    const result = asK8sList(res).items.map((item) => {
       const metadata = (item.metadata as Record<string, unknown> | undefined) ?? {}
       const spec = (item.spec as Record<string, unknown> | undefined) ?? {}
       const status = (item.status as Record<string, unknown> | undefined) ?? {}
@@ -247,9 +307,15 @@ export class KarpenterService {
         },
       }
     })
+
+    await this.setCached(clusterId, 'ec2-node-classes', result)
+    return result
   }
 
   async getMetrics(clusterId: string): Promise<KarpenterMetrics> {
+    const cached = await this.getCached<KarpenterMetrics>(clusterId, 'metrics')
+    if (cached) return cached
+
     const kc = await this.getClusterKubeConfig(clusterId)
     const coreV1 = this.coreV1ClientFactory(kc)
 
@@ -262,16 +328,22 @@ export class KarpenterService {
 
     const pendingPods = podsRes.items.filter((pod) => pod.status?.phase === 'Pending').length
 
-    return {
+    const result = {
       nodesProvisioned: karpenterNodes.length,
       pendingPods,
       estimatedHourlyCostUsd: Number(
         (karpenterNodes.length * KARPENTER_COST.defaultHourlyUsdPerNode).toFixed(2),
       ),
     }
+
+    await this.setCached(clusterId, 'metrics', result)
+    return result
   }
 
   async getTopology(clusterId: string): Promise<KarpenterTopology> {
+    const cached = await this.getCached<KarpenterTopology>(clusterId, 'topology')
+    if (cached) return cached
+
     const kc = await this.getClusterKubeConfig(clusterId)
     const coreV1 = this.coreV1ClientFactory(kc)
 
@@ -328,13 +400,16 @@ export class KarpenterService {
       }
     }
 
-    return {
+    const result = {
       nodePools: [...poolToNodeCount.entries()].map(([nodePool, nodes]) => ({
         nodePool,
         nodes,
         workloads: [...(poolToWorkloads.get(nodePool)?.values() ?? [])],
       })),
     }
+
+    await this.setCached(clusterId, 'topology', result)
+    return result
   }
 }
 
