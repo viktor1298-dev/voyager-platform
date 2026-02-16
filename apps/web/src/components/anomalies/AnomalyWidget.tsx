@@ -2,14 +2,11 @@
 
 import { AlertOctagon, AlertTriangle, Info } from 'lucide-react'
 import Link from 'next/link'
-import { MOCK_ANOMALIES } from '@/lib/anomalies'
+import { filterOpenAnomalies, getAnomalySeverityCounts, MOCK_ANOMALIES } from '@/lib/anomalies'
 
 export function AnomalyWidget() {
-  const open = MOCK_ANOMALIES.filter((a) => a.status === 'open')
-  const critical = open.filter((a) => a.severity === 'critical').length
-  const warning = open.filter((a) => a.severity === 'warning').length
-  const info = open.filter((a) => a.severity === 'info').length
-  const total = open.length
+  const openAnomalies = filterOpenAnomalies(MOCK_ANOMALIES)
+  const { total, critical, warning, info } = getAnomalySeverityCounts(openAnomalies)
 
   return (
     <Link href="/anomalies" className="block">

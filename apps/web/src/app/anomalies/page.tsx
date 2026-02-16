@@ -20,6 +20,7 @@ import {
   type Anomaly,
   type AnomalySeverity,
   type AnomalyStatus,
+  filterOpenAnomalies,
   getRelativeTime,
   MOCK_ANOMALIES,
   severityScore,
@@ -50,7 +51,7 @@ export default function AnomaliesPage() {
   // TODO: replace with trpc.anomalies.list.useQuery() once backend is ready.
   const [anomalies, setAnomalies] = useState<Anomaly[]>(MOCK_ANOMALIES)
   const [severityFilter, setSeverityFilter] = useState<AnomalySeverity | 'all'>('all')
-  const [statusFilter, setStatusFilter] = useState<AnomalyStatus | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<AnomalyStatus | 'all'>('open')
   const [clusterFilter, setClusterFilter] = useState<'all' | string>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [sorting, setSorting] = useState<SortingState>([
@@ -63,9 +64,11 @@ export default function AnomaliesPage() {
   }, [anomalies])
 
   const filteredAnomalies = useMemo(() => {
-    return anomalies.filter((anomaly) => {
+    const statusScoped = statusFilter === 'open' ? filterOpenAnomalies(anomalies) : anomalies
+
+    return statusScoped.filter((anomaly) => {
       if (severityFilter !== 'all' && anomaly.severity !== severityFilter) return false
-      if (statusFilter !== 'all' && anomaly.status !== statusFilter) return false
+      if (statusFilter !== 'all' && statusFilter !== 'open' && anomaly.status !== statusFilter) return false
       if (clusterFilter !== 'all' && anomaly.cluster !== clusterFilter) return false
       return true
     })

@@ -144,3 +144,20 @@ export function severityScore(severity: AnomalySeverity) {
   if (severity === 'warning') return 2
   return 1
 }
+
+export function filterOpenAnomalies(anomalies: Anomaly[]) {
+  return anomalies.filter((anomaly) => anomaly.status === 'open')
+}
+
+export function getAnomalySeverityCounts(anomalies: Anomaly[]) {
+  return anomalies.reduce(
+    (acc, anomaly) => {
+      acc.total += 1
+      if (anomaly.severity === 'critical') acc.critical += 1
+      else if (anomaly.severity === 'warning') acc.warning += 1
+      else acc.info += 1
+      return acc
+    },
+    { total: 0, critical: 0, warning: 0, info: 0 },
+  )
+}
