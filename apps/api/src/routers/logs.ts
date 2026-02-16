@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
+import { createAuthorizationService } from '../lib/authorization.js'
 import { getCoreV1Api } from '../lib/k8s.js'
 import { protectedProcedure, router } from '../trpc.js'
 
@@ -9,7 +10,27 @@ const logTargetSchema = z.object({
   podName: z.string().min(1),
   namespace: z.string().min(1),
   container: z.string().min(1).optional(),
+  clusterId: z.string().uuid().optional(),
 })
+
+async function ensureClusterViewerAccess(params: {
+  db: Parameters<typeof createAuthorizationService>[0]
+  user: { id: string; role: string | null }
+  clusterId: string | undefined
+}): Promise<void> {
+  if (!params.clusterId || params.user.role === 'admin') return
+
+  const authz = createAuthorizationService(params.db)
+  const canViewCluster = await authz.check(
+    { type: 'user', id: params.user.id },
+    'viewer',
+    { type: 'cluster', id: params.clusterId },
+  )
+
+  if (!canViewCluster) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Permission denied' })
+  }
+}
 
 function normalizeLogResponse(response: unknown): string {
   if (typeof response === 'string') return response
@@ -48,8 +69,14 @@ function detectLogLevel(line: string): (typeof LOG_LEVELS)[number] {
 
 export const logsRouter = router({
   pods: protectedProcedure
-    .input(z.object({ namespace: z.string().optional() }).optional())
-    .query(async ({ input }) => {
+    .input(z.object({ namespace: z.string().optional(), clusterId: z.string().uuid().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      await ensureClusterViewerAccess({
+        db: ctx.db,
+        user: ctx.user,
+        clusterId: input?.clusterId,
+      })
+
       const coreApi = getCoreV1Api()
       const ns = input?.namespace
       const response = ns
@@ -86,7 +113,18 @@ export const logsRouter = router({
         levels: z.array(z.enum(LOG_LEVELS)).optional(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      const checkedClusterIds = new Set<string>()
+      for (const target of input.targets) {
+        if (!target.clusterId || checkedClusterIds.has(target.clusterId)) continue
+        checkedClusterIds.add(target.clusterId)
+        await ensureClusterViewerAccess({
+          db: ctx.db,
+          user: ctx.user,
+          clusterId: target.clusterId,
+        })
+      }
+
       const coreApi = getCoreV1Api()
       const searchLower = input.search?.trim().toLowerCase()
       const allowedLevels = new Set(input.levels ?? LOG_LEVELS)
@@ -188,9 +226,16 @@ export const logsRouter = router({
         namespace: z.string(),
         container: z.string().optional(),
         tailLines: z.number().int().positive().default(100),
+        clusterId: z.string().uuid().optional(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      await ensureClusterViewerAccess({
+        db: ctx.db,
+        user: ctx.user,
+        clusterId: input.clusterId,
+      })
+
       const coreApi = getCoreV1Api()
       const raw = await coreApi.readNamespacedPodLog({
         name: input.podName,
