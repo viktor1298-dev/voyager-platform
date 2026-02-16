@@ -23,7 +23,7 @@ app.register(compress, { global: true })
 
 const DEFAULT_RATE_LIMIT_MAX = Number.parseInt(process.env.RATE_LIMIT_MAX || '200', 10)
 const DEFAULT_RATE_LIMIT_WINDOW = process.env.RATE_LIMIT_TIME_WINDOW || '1 minute'
-const RATE_LIMIT_WHITELIST_PATHS = ['/api/auth/', '/health'] as const
+const RATE_LIMIT_WHITELIST_PATHS = ['/api/auth/', '/health', '/system-health'] as const
 
 app.register(rateLimit, {
   max: DEFAULT_RATE_LIMIT_MAX,
@@ -142,6 +142,7 @@ app.setErrorHandler((error, _request, reply) => {
 })
 
 app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
+app.get('/system-health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
 
 const start = async () => {
   try {

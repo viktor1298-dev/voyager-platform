@@ -29,7 +29,7 @@ type NavItem = {
 export const navItems: NavItem[] = [
   { id: '/', label: 'Dashboard', icon: LayoutDashboard },
   { id: '/clusters', label: 'Clusters', icon: Server },
-  { id: '/system-health', label: 'Health', icon: HeartPulse },
+  { id: '/health', label: 'Health', icon: HeartPulse },
   { id: '/deployments', label: 'Deployments', icon: Box },
   { id: '/events', label: 'Events', icon: Activity },
   { id: '/alerts', label: 'Alerts', icon: Bell },
