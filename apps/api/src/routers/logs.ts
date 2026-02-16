@@ -22,10 +22,12 @@ async function listAccessibleClusterIds(params: {
   if (allClusterIds.length === 0) return []
 
   const authz = createAuthorizationService(params.db)
-  const allowedClusterIds =
-    params.user.role === 'admin'
-      ? new Set(allClusterIds)
-      : await authz.checkBatch({ type: 'user', id: params.user.id }, 'cluster', allClusterIds, 'viewer')
+  const allowedClusterIds = await authz.checkBatch(
+    { type: 'user', id: params.user.id },
+    'cluster',
+    allClusterIds,
+    'viewer',
+  )
 
   return allClusterIds.filter((clusterId) => allowedClusterIds.has(clusterId))
 }
@@ -108,16 +110,21 @@ export const logsRouter = router({
   pods: protectedProcedure
     .input(z.object({ namespace: z.string().optional(), clusterId: z.string().uuid().optional() }).optional())
     .query(async ({ ctx, input }) => {
-      const clusterId =
-        ctx.user.role === 'admin'
-          ? input?.clusterId
-          : await resolveClusterIdForNonAdmin({
-              db: ctx.db,
-              user: ctx.user,
-              clusterId: input?.clusterId,
-            })
+      if (ctx.user.role === 'admin') {
+        if (input?.clusterId) {
+          await ensureClusterViewerAccess({
+            db: ctx.db,
+            user: ctx.user,
+            clusterId: input.clusterId,
+          })
+        }
+      } else {
+        const clusterId = await resolveClusterIdForNonAdmin({
+          db: ctx.db,
+          user: ctx.user,
+          clusterId: input?.clusterId,
+        })
 
-      if (clusterId) {
         await ensureClusterViewerAccess({
           db: ctx.db,
           user: ctx.user,
@@ -162,8 +169,9 @@ export const logsRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
+      const hasMissingClusterIdTargets = input.targets.some((target) => !target.clusterId)
       const fallbackClusterId =
-        ctx.user.role === 'admin'
+        ctx.user.role === 'admin' || !hasMissingClusterIdTargets
           ? undefined
           : await resolveClusterIdForNonAdmin({
               db: ctx.db,
@@ -294,16 +302,21 @@ export const logsRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const clusterId =
-        ctx.user.role === 'admin'
-          ? input.clusterId
-          : await resolveClusterIdForNonAdmin({
-              db: ctx.db,
-              user: ctx.user,
-              clusterId: input.clusterId,
-            })
+      if (ctx.user.role === 'admin') {
+        if (input.clusterId) {
+          await ensureClusterViewerAccess({
+            db: ctx.db,
+            user: ctx.user,
+            clusterId: input.clusterId,
+          })
+        }
+      } else {
+        const clusterId = await resolveClusterIdForNonAdmin({
+          db: ctx.db,
+          user: ctx.user,
+          clusterId: input.clusterId,
+        })
 
-      if (clusterId) {
         await ensureClusterViewerAccess({
           db: ctx.db,
           user: ctx.user,
