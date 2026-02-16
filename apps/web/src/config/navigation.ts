@@ -1,5 +1,6 @@
 import {
   Activity,
+  AlertTriangle,
   Bell,
   Box,
   ClipboardList,
@@ -31,6 +32,7 @@ export const navItems: NavItem[] = [
   { id: '/deployments', label: 'Deployments', icon: Box },
   { id: '/events', label: 'Events', icon: Activity },
   { id: '/alerts', label: 'Alerts', icon: Bell },
+  { id: '/anomalies', label: '⚠️ Anomalies', icon: AlertTriangle },
   { id: '/logs', label: 'Logs', icon: FileText },
   { id: '/features', label: 'Feature Flags', icon: Flag, adminOnly: true },
   { id: '/webhooks', label: 'Webhooks', icon: Webhook, adminOnly: true },

@@ -3,6 +3,7 @@
 import { AppLayout } from '@/components/AppLayout'
 import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { PageTransition } from '@/components/animations'
+import { AnomalyWidget } from '@/components/anomalies/AnomalyWidget'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { SkeletonCard, SkeletonText } from '@/components/Skeleton'
 import {
@@ -255,6 +256,10 @@ function DashboardContent() {
             gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'var(--gradient-text-default)'}
             isLoading={isLoading}
           />
+        </div>
+
+        <div className="mb-6 max-w-sm">
+          <AnomalyWidget />
         </div>
 
         <div className="flex flex-col gap-4 mb-5">
