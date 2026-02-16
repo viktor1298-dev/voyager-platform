@@ -21,11 +21,14 @@ export const eventsRouter = router({
   list: protectedProcedure
     .meta({ openapi: { method: 'GET', path: '/api/events', protect: true, tags: ['events'] } })
     .input(
-      z.object({
-        clusterId: z.string().uuid().optional(),
-        limit: z.number().int().min(1).max(200).optional(),
-        offset: z.number().int().min(0).optional(),
-      }),
+      z
+        .object({
+          clusterId: z.string().uuid().optional(),
+          limit: z.number().int().min(1).max(200).optional(),
+          offset: z.number().int().min(0).optional(),
+        })
+        .optional()
+        .default({}),
     )
     .output(z.array(eventSchema))
     .query(async ({ ctx, input }) => {
