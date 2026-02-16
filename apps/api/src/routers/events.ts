@@ -36,7 +36,8 @@ export const eventsRouter = router({
         .orderBy(desc(events.timestamp))
         .limit(input.limit ?? 50)
         .offset(input.offset ?? 0)
-      return rows
+
+      return Array.isArray(rows) ? rows : []
     }),
 
   create: adminProcedure
