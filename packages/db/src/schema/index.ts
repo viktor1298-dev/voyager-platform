@@ -5,6 +5,7 @@ export {
   aiRecommendations,
 } from './ai.js'
 export { alertHistory, alerts } from './alerts.js'
+export { anomalies, anomalyRules, anomalySeverityEnum } from './anomalies.js'
 export { auditLog } from './audit-log.js'
 export { account, session, user, verification } from './auth.js'
 export {
