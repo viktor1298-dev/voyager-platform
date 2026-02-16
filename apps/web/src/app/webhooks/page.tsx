@@ -104,17 +104,6 @@ function WebhooksPageContent() {
     }
   }, [searchParams])
 
-  if (isAdmin === null)
-    return (
-      <div className="flex items-center justify-center h-full min-h-[200px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    )
-  if (isAdmin === false) {
-    router.replace('/')
-    return null
-  }
-
   const resetForm = () => {
     setUrl('')
     setEvents(['cluster.health.changed'])
@@ -210,6 +199,15 @@ function WebhooksPageContent() {
     'inline-flex items-center gap-2 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity cursor-pointer'
   const inputClass =
     'w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)]'
+
+  if (isAdmin === null)
+    return (
+      <div className="flex items-center justify-center h-full min-h-[200px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    )
+
+  if (isAdmin === false) return null
 
   return (
     <AppLayout>
