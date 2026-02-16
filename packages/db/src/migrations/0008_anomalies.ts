@@ -36,6 +36,9 @@ ALTER TABLE "anomalies"
 ALTER TABLE "anomaly_rules"
   ADD CONSTRAINT "anomaly_rules_cluster_id_clusters_id_fk"
   FOREIGN KEY ("cluster_id") REFERENCES "public"."clusters"("id") ON DELETE cascade;
+
+CREATE INDEX IF NOT EXISTS "idx_anomalies_cluster" ON "anomalies" ("cluster_id", "detected_at" DESC);
+CREATE INDEX IF NOT EXISTS "idx_anomaly_rules_cluster" ON "anomaly_rules" ("cluster_id");
 `
 
 export const down = `

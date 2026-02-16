@@ -9,6 +9,8 @@ export type AnomalyType =
   | 'event_flood'
   | 'deployment_stuck'
 
+type RuleOperator = 'gt' | 'gte' | 'lt' | 'lte'
+
 export interface ClusterSignals {
   cpuPercent5m: number
   memoryPercent: number
@@ -26,6 +28,18 @@ interface RuleThresholds {
   eventFloodCount: number
   eventFloodMinutes: number
   deploymentStuckMinutes: number
+}
+
+interface AnomalyRuleConfig {
+  severity: AnomalySeverity
+  operator: RuleOperator
+}
+
+type EffectiveRuleConfigs = Record<AnomalyType, AnomalyRuleConfig>
+
+interface EffectiveThresholds {
+  thresholds: RuleThresholds
+  ruleConfigs: EffectiveRuleConfigs
 }
 
 const DEFAULT_THRESHOLDS: RuleThresholds = {
@@ -47,6 +61,14 @@ const DEFAULT_RULE_SEVERITY: Record<AnomalyType, AnomalySeverity> = {
   deployment_stuck: 'critical',
 }
 
+const DEFAULT_RULE_CONFIGS: EffectiveRuleConfigs = {
+  cpu_spike: { severity: DEFAULT_RULE_SEVERITY.cpu_spike, operator: 'gt' },
+  memory_pressure: { severity: DEFAULT_RULE_SEVERITY.memory_pressure, operator: 'gt' },
+  pod_restart_storm: { severity: DEFAULT_RULE_SEVERITY.pod_restart_storm, operator: 'gt' },
+  event_flood: { severity: DEFAULT_RULE_SEVERITY.event_flood, operator: 'gt' },
+  deployment_stuck: { severity: DEFAULT_RULE_SEVERITY.deployment_stuck, operator: 'gt' },
+}
+
 const METRIC_TO_THRESHOLD_KEY: Record<string, keyof RuleThresholds> = {
   cpu_spike_percent: 'cpuSpikePercent',
   cpu_spike_minutes: 'cpuSpikeMinutes',
@@ -56,6 +78,14 @@ const METRIC_TO_THRESHOLD_KEY: Record<string, keyof RuleThresholds> = {
   event_flood_count: 'eventFloodCount',
   event_flood_minutes: 'eventFloodMinutes',
   deployment_stuck_minutes: 'deploymentStuckMinutes',
+}
+
+const METRIC_TO_ANOMALY_TYPE: Partial<Record<string, AnomalyType>> = {
+  cpu_spike_percent: 'cpu_spike',
+  memory_pressure_percent: 'memory_pressure',
+  pod_restart_storm_count: 'pod_restart_storm',
+  event_flood_count: 'event_flood',
+  deployment_stuck_minutes: 'deployment_stuck',
 }
 
 type NewAnomaly = typeof anomalies.$inferInsert
@@ -93,32 +123,34 @@ export class AnomalyService {
 
   async configure(
     clusterId: string,
-    rules: Array<{ metric: string; operator: 'gt' | 'gte' | 'lt' | 'lte'; threshold: number; severity: AnomalySeverity; enabled: boolean }>,
+    rules: Array<{ metric: string; operator: RuleOperator; threshold: number; severity: AnomalySeverity; enabled: boolean }>,
   ) {
-    await this.db.delete(anomalyRules).where(eq(anomalyRules.clusterId, clusterId))
+    return this.db.transaction(async (tx) => {
+      await tx.delete(anomalyRules).where(eq(anomalyRules.clusterId, clusterId))
 
-    if (rules.length === 0) {
-      return []
-    }
+      if (rules.length === 0) {
+        return []
+      }
 
-    return this.db
-      .insert(anomalyRules)
-      .values(
-        rules.map((rule) => ({
-          clusterId,
-          metric: rule.metric,
-          operator: rule.operator,
-          threshold: String(rule.threshold),
-          severity: rule.severity,
-          enabled: rule.enabled,
-        })),
-      )
-      .returning()
+      return tx
+        .insert(anomalyRules)
+        .values(
+          rules.map((rule) => ({
+            clusterId,
+            metric: rule.metric,
+            operator: rule.operator,
+            threshold: String(rule.threshold),
+            severity: rule.severity,
+            enabled: rule.enabled,
+          })),
+        )
+        .returning()
+    })
   }
 
   async detectAndPersist(clusterId: string, signals: ClusterSignals) {
-    const thresholds = await this.getEffectiveThresholds(clusterId)
-    const findings = detectAnomalies(clusterId, signals, thresholds)
+    const effective = await this.getEffectiveThresholds(clusterId)
+    const findings = detectAnomalies(clusterId, signals, effective.thresholds, effective.ruleConfigs)
 
     if (findings.length === 0) {
       return []
@@ -127,27 +159,43 @@ export class AnomalyService {
     return this.db.insert(anomalies).values(findings).returning()
   }
 
-  private async getEffectiveThresholds(clusterId: string): Promise<RuleThresholds> {
+  private async getEffectiveThresholds(clusterId: string): Promise<EffectiveThresholds> {
     const configuredRules = await this.db
       .select()
       .from(anomalyRules)
       .where(and(eq(anomalyRules.clusterId, clusterId), eq(anomalyRules.enabled, true)))
 
-    if (configuredRules.length === 0) {
-      return DEFAULT_THRESHOLDS
+    const mergedThresholds: RuleThresholds = { ...DEFAULT_THRESHOLDS }
+    const mergedRuleConfigs: EffectiveRuleConfigs = {
+      cpu_spike: { ...DEFAULT_RULE_CONFIGS.cpu_spike },
+      memory_pressure: { ...DEFAULT_RULE_CONFIGS.memory_pressure },
+      pod_restart_storm: { ...DEFAULT_RULE_CONFIGS.pod_restart_storm },
+      event_flood: { ...DEFAULT_RULE_CONFIGS.event_flood },
+      deployment_stuck: { ...DEFAULT_RULE_CONFIGS.deployment_stuck },
     }
 
-    const merged: RuleThresholds = { ...DEFAULT_THRESHOLDS }
     for (const rule of configuredRules) {
       const thresholdKey = METRIC_TO_THRESHOLD_KEY[rule.metric]
-      if (!thresholdKey) continue
+      if (thresholdKey) {
+        const parsed = Number(rule.threshold)
+        if (Number.isFinite(parsed)) {
+          mergedThresholds[thresholdKey] = parsed
+        }
+      }
 
-      const parsed = Number(rule.threshold)
-      if (!Number.isFinite(parsed)) continue
-      merged[thresholdKey] = parsed
+      const anomalyType = METRIC_TO_ANOMALY_TYPE[rule.metric]
+      if (anomalyType) {
+        mergedRuleConfigs[anomalyType] = {
+          operator: normalizeOperator(rule.operator),
+          severity: rule.severity,
+        }
+      }
     }
 
-    return merged
+    return {
+      thresholds: mergedThresholds,
+      ruleConfigs: mergedRuleConfigs,
+    }
   }
 }
 
@@ -155,38 +203,121 @@ export function detectAnomalies(
   clusterId: string,
   signals: ClusterSignals,
   thresholds: RuleThresholds = DEFAULT_THRESHOLDS,
+  ruleConfigs: EffectiveRuleConfigs = DEFAULT_RULE_CONFIGS,
 ): NewAnomaly[] {
   const now = new Date()
   const findings: NewAnomaly[] = []
 
-  if (signals.cpuPercent5m > thresholds.cpuSpikePercent) {
-    findings.push(buildAnomaly(clusterId, 'cpu_spike', now, `CPU usage is above ${thresholds.cpuSpikePercent}% for at least ${thresholds.cpuSpikeMinutes} minutes.`))
+  if (compareWithOperator(signals.cpuPercent5m, thresholds.cpuSpikePercent, ruleConfigs.cpu_spike.operator)) {
+    findings.push(
+      buildAnomaly(
+        clusterId,
+        'cpu_spike',
+        ruleConfigs.cpu_spike.severity,
+        now,
+        `CPU usage is ${formatThresholdCondition(ruleConfigs.cpu_spike.operator, thresholds.cpuSpikePercent, '%')} for at least ${thresholds.cpuSpikeMinutes} minutes.`,
+      ),
+    )
   }
 
-  if (signals.memoryPercent > thresholds.memoryPressurePercent) {
-    findings.push(buildAnomaly(clusterId, 'memory_pressure', now, `Memory usage is above ${thresholds.memoryPressurePercent}%.`))
+  if (compareWithOperator(signals.memoryPercent, thresholds.memoryPressurePercent, ruleConfigs.memory_pressure.operator)) {
+    findings.push(
+      buildAnomaly(
+        clusterId,
+        'memory_pressure',
+        ruleConfigs.memory_pressure.severity,
+        now,
+        `Memory usage is ${formatThresholdCondition(ruleConfigs.memory_pressure.operator, thresholds.memoryPressurePercent, '%')}.`,
+      ),
+    )
   }
 
-  if (signals.podRestarts10m > thresholds.podRestartStormCount) {
-    findings.push(buildAnomaly(clusterId, 'pod_restart_storm', now, `Pod restarts exceeded ${thresholds.podRestartStormCount} in ${thresholds.podRestartStormMinutes} minutes.`))
+  if (compareWithOperator(signals.podRestarts10m, thresholds.podRestartStormCount, ruleConfigs.pod_restart_storm.operator)) {
+    findings.push(
+      buildAnomaly(
+        clusterId,
+        'pod_restart_storm',
+        ruleConfigs.pod_restart_storm.severity,
+        now,
+        `Pod restarts are ${formatThresholdCondition(ruleConfigs.pod_restart_storm.operator, thresholds.podRestartStormCount)} in ${thresholds.podRestartStormMinutes} minutes.`,
+      ),
+    )
   }
 
-  if (signals.events5m > thresholds.eventFloodCount) {
-    findings.push(buildAnomaly(clusterId, 'event_flood', now, `Event volume exceeded ${thresholds.eventFloodCount} in ${thresholds.eventFloodMinutes} minutes.`))
+  if (compareWithOperator(signals.events5m, thresholds.eventFloodCount, ruleConfigs.event_flood.operator)) {
+    findings.push(
+      buildAnomaly(
+        clusterId,
+        'event_flood',
+        ruleConfigs.event_flood.severity,
+        now,
+        `Event volume is ${formatThresholdCondition(ruleConfigs.event_flood.operator, thresholds.eventFloodCount)} in ${thresholds.eventFloodMinutes} minutes.`,
+      ),
+    )
   }
 
-  if (signals.deploymentStuckMinutes > thresholds.deploymentStuckMinutes) {
-    findings.push(buildAnomaly(clusterId, 'deployment_stuck', now, `Deployment rollout is not progressing for more than ${thresholds.deploymentStuckMinutes} minutes.`))
+  if (compareWithOperator(signals.deploymentStuckMinutes, thresholds.deploymentStuckMinutes, ruleConfigs.deployment_stuck.operator)) {
+    findings.push(
+      buildAnomaly(
+        clusterId,
+        'deployment_stuck',
+        ruleConfigs.deployment_stuck.severity,
+        now,
+        `Deployment stuck duration is ${formatThresholdCondition(ruleConfigs.deployment_stuck.operator, thresholds.deploymentStuckMinutes)} minutes.`,
+      ),
+    )
   }
 
   return findings
 }
 
-function buildAnomaly(clusterId: string, type: AnomalyType, detectedAt: Date, description: string): NewAnomaly {
+function compareWithOperator(value: number, threshold: number, operator: RuleOperator): boolean {
+  switch (operator) {
+    case 'gt':
+      return value > threshold
+    case 'gte':
+      return value >= threshold
+    case 'lt':
+      return value < threshold
+    case 'lte':
+      return value <= threshold
+    default:
+      return value > threshold
+  }
+}
+
+function formatThresholdCondition(operator: RuleOperator, threshold: number, suffix = ''): string {
+  switch (operator) {
+    case 'gt':
+      return `> ${threshold}${suffix}`
+    case 'gte':
+      return `≥ ${threshold}${suffix}`
+    case 'lt':
+      return `< ${threshold}${suffix}`
+    case 'lte':
+      return `≤ ${threshold}${suffix}`
+    default:
+      return `> ${threshold}${suffix}`
+  }
+}
+
+function normalizeOperator(operator: string): RuleOperator {
+  switch (operator) {
+    case 'gt':
+    case 'gte':
+    case 'lt':
+    case 'lte':
+      return operator
+    default:
+      return 'gt'
+  }
+}
+
+function buildAnomaly(clusterId: string, type: AnomalyType, severity: AnomalySeverity, detectedAt: Date, description: string): NewAnomaly {
   return {
     clusterId,
     type,
-    severity: DEFAULT_RULE_SEVERITY[type],
+    severity,
     title: buildTitle(type),
     description,
     metadata: {},
