@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { isPublicPath, SESSION_COOKIE_NAME, SECURE_SESSION_COOKIE_NAME } from '@/lib/auth-constants'
 
 const PROTECTED_ROUTES = ['/', '/clusters', '/webhooks', '/features', '/users', '/teams', '/permissions', '/audit']
 
@@ -7,14 +8,10 @@ function isProtectedRoute(pathname: string) {
   return PROTECTED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))
 }
 
-function isPublicRoute(pathname: string) {
-  return pathname === '/login' || pathname.startsWith('/auth/')
-}
-
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
 
-  if (isPublicRoute(pathname)) {
+  if (isPublicPath(pathname)) {
     return NextResponse.next()
   }
 
@@ -23,8 +20,8 @@ export function middleware(request: NextRequest) {
   }
 
   const sessionCookie =
-    request.cookies.get('better-auth.session_token')?.value ??
-    request.cookies.get('__Secure-better-auth.session_token')?.value
+    request.cookies.get(SESSION_COOKIE_NAME)?.value ??
+    request.cookies.get(SECURE_SESSION_COOKIE_NAME)?.value
 
   if (!sessionCookie) {
     const loginUrl = new URL('/login', request.url)

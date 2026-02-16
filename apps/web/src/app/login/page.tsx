@@ -24,7 +24,8 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const requestedReturnUrl = params.get('returnUrl')
-    if (requestedReturnUrl && requestedReturnUrl.startsWith('/')) {
+    // Validate returnUrl: must start with '/' but not '//' (to prevent protocol-relative URLs)
+    if (requestedReturnUrl && requestedReturnUrl.startsWith('/') && !requestedReturnUrl.startsWith('//')) {
       setReturnUrl(requestedReturnUrl)
     }
   }, [])

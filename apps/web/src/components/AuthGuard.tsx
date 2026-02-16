@@ -3,8 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { authClient } from '@/lib/auth-client'
-
-const PUBLIC_PATHS = ['/login']
+import { isPublicPath } from '@/lib/auth-constants'
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -13,7 +12,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!pathname) return
-    if (PUBLIC_PATHS.includes(pathname) || pathname.startsWith('/auth/')) return
+    if (isPublicPath(pathname)) return
 
     if (!isPending && !session) {
       const returnUrl = encodeURIComponent(pathname)
@@ -22,7 +21,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [isPending, pathname, router, session])
 
   if (!pathname) return null
-  if (PUBLIC_PATHS.includes(pathname) || pathname.startsWith('/auth/')) return <>{children}</>
+  if (isPublicPath(pathname)) return <>{children}</>
   if (isPending) return null
   if (!session) return null
 

@@ -20,6 +20,7 @@ import {
 } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
+import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS, HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
 import { AlertTriangle, Box, Database, Server } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -95,11 +96,11 @@ function DashboardContent() {
   }
 
   const liveQuery = trpc.clusters.live.useQuery(undefined, {
-    refetchInterval: 30000,
+    refetchInterval: LIVE_CLUSTER_REFETCH_MS,
   })
 
   const listQuery = trpc.clusters.list.useQuery(undefined, {
-    refetchInterval: 60000,
+    refetchInterval: DB_CLUSTER_REFETCH_MS,
   })
 
   const liveData = liveQuery.data
@@ -404,7 +405,7 @@ export default function DashboardPage() {
 
 function HealthDot({ clusterId }: { clusterId: string }) {
   const statusQuery = trpc.health.status.useQuery({}, {
-    refetchInterval: 60_000,
+    refetchInterval: HEALTH_STATUS_REFETCH_MS,
   })
   const entry = statusQuery.data?.find((s) => s.clusterId === clusterId)
   if (!entry || entry.status === 'unknown') return null
