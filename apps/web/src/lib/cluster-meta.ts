@@ -6,30 +6,26 @@ export const ENV_META: Record<
     label: string
     sectionLabel: string
     color: string
-    softBg: string
-    ring: string
+    badgeClass: string
   }
 > = {
   prod: {
     label: 'Production',
     sectionLabel: 'Production',
-    color: 'var(--color-status-error)',
-    softBg: 'color-mix(in srgb, var(--color-status-error) 10%, transparent)',
-    ring: 'color-mix(in srgb, var(--color-status-error) 40%, transparent)',
+    color: 'rgb(107 114 128)',
+    badgeClass: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700',
   },
   staging: {
     label: 'Staging / QA',
     sectionLabel: 'Staging / QA',
-    color: 'var(--color-status-warning)',
-    softBg: 'color-mix(in srgb, var(--color-status-warning) 10%, transparent)',
-    ring: 'color-mix(in srgb, var(--color-status-warning) 40%, transparent)',
+    color: 'rgb(59 130 246)',
+    badgeClass: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
   },
   dev: {
     label: 'Dev / Minikube',
     sectionLabel: 'Dev / Minikube',
-    color: 'var(--color-status-active)',
-    softBg: 'color-mix(in srgb, var(--color-status-active) 10%, transparent)',
-    ring: 'color-mix(in srgb, var(--color-status-active) 40%, transparent)',
+    color: 'rgb(168 85 247)',
+    badgeClass: 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
   },
 }
 
