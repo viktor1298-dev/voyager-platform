@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
+import { PageTransition } from '@/components/animations/PageTransition'
 import { authClient, getAuthBaseUrl } from '@/lib/auth-client'
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
@@ -16,12 +17,23 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter()
-  const { isAuthenticated } = useAuthStore()
+  const [returnUrl, setReturnUrl] = useState('/')
+  const { data: session, isPending } = authClient.useSession()
   const providersQuery = trpc.sso.getProviders.useQuery(undefined, { retry: false })
 
   useEffect(() => {
-    if (isAuthenticated) router.push('/')
-  }, [isAuthenticated, router])
+    const params = new URLSearchParams(window.location.search)
+    const requestedReturnUrl = params.get('returnUrl')
+    if (requestedReturnUrl && requestedReturnUrl.startsWith('/')) {
+      setReturnUrl(requestedReturnUrl)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      router.replace(returnUrl)
+    }
+  }, [isPending, returnUrl, router, session])
 
   const microsoftProvider = providersQuery.data?.find((provider) => provider.id === 'microsoft-entra-id' && provider.enabled)
 
@@ -33,7 +45,7 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           providerId: 'microsoft-entra-id',
-          callbackURL: `${window.location.origin}/`,
+          callbackURL: `${window.location.origin}${returnUrl}`,
         }),
       })
 
@@ -64,10 +76,12 @@ export default function LoginPage() {
         email: value.email,
         password: value.password,
       })
+
       if (error) {
         toast.error('Login failed', { description: error.message ?? 'Invalid credentials' })
         return
       }
+
       if (data?.user) {
         useAuthStore.getState().setUser({
           id: data.user.id,
@@ -76,15 +90,17 @@ export default function LoginPage() {
           role: (data.user as { role?: string }).role === 'admin' ? 'admin' : 'viewer',
         })
         toast.success('Welcome back!', { description: `Signed in as ${data.user.email}` })
+        router.replace(returnUrl)
       }
-      router.push('/')
     },
   })
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-primary)]">
-      <div className="w-full max-w-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-8 shadow-xl">
-        <h1 className="mb-6 text-center text-2xl font-bold text-[var(--color-text-primary)]">Voyager Platform</h1>
+    <PageTransition className="flex min-h-screen items-center justify-center bg-[var(--color-bg-primary)] px-4 py-10">
+      <div className="w-full max-w-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-xl sm:p-8">
+        <h1 className="mb-2 text-center text-2xl font-bold text-[var(--color-text-primary)]">Voyager Platform</h1>
+        <p className="mb-6 text-center text-sm text-[var(--color-text-muted)]">Sign in to continue to your dashboard</p>
+
         {microsoftProvider && (
           <button
             type="button"
@@ -94,6 +110,7 @@ export default function LoginPage() {
             Sign in with Microsoft
           </button>
         )}
+
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -116,16 +133,16 @@ export default function LoginPage() {
                     onBlur={field.handleBlur}
                     className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
                     placeholder="admin@voyager.local"
+                    autoComplete="email"
                   />
                   {field.state.meta.errors?.length > 0 && (
-                    <p className="mt-1 text-xs text-red-400">
-                      {field.state.meta.errors.map((e) => String(e)).join(', ')}
-                    </p>
+                    <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map((e) => String(e)).join(', ')}</p>
                   )}
                 </>
               )}
             </form.Field>
           </div>
+
           <div>
             <label htmlFor="password" className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]">
               Password
@@ -141,16 +158,16 @@ export default function LoginPage() {
                     onBlur={field.handleBlur}
                     className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
                     placeholder="••••••••"
+                    autoComplete="current-password"
                   />
                   {field.state.meta.errors?.length > 0 && (
-                    <p className="mt-1 text-xs text-red-400">
-                      {field.state.meta.errors.map((e) => String(e)).join(', ')}
-                    </p>
+                    <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map((e) => String(e)).join(', ')}</p>
                   )}
                 </>
               )}
             </form.Field>
           </div>
+
           <form.Subscribe selector={(s) => s.isSubmitting}>
             {(isSubmitting) => (
               <button
@@ -164,6 +181,6 @@ export default function LoginPage() {
           </form.Subscribe>
         </form>
       </div>
-    </div>
+    </PageTransition>
   )
 }
