@@ -49,7 +49,7 @@ function TypeBadge({ type }: { type: string }) {
 export default function EventsPage() {
   const [filter, setFilter] = useState<EventFilter>('all')
 
-  const eventsQuery = trpc.clusters.liveEvents.useQuery(undefined, { refetchInterval: 30000 })
+  const eventsQuery = trpc.clusters.liveEvents.useQuery({ limit: 50 }, { refetchInterval: 30000 })
   const events: KubeEvent[] = (eventsQuery.data as KubeEvent[] | undefined) ?? []
 
   useEffect(() => {
