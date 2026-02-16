@@ -22,3 +22,4 @@ export {
   teamMembers,
   teamMemberRoleEnum,
 } from './authorization.js'
+export { anomalies, anomalyRules, anomalySeverityEnum } from './anomalies.js'

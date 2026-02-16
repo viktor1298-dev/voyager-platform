@@ -1,5 +1,6 @@
 import { router } from '../trpc.js'
 import { alertsRouter } from './alerts.js'
+import { anomaliesRouter } from './anomalies.js'
 import { authorizationRouter, teamsRouter } from './authorization.js'
 import { auditRouter } from './audit.js'
 import { authRouter } from './auth.js'
@@ -18,6 +19,7 @@ import { usersRouter } from './users.js'
 
 export const appRouter = router({
   alerts: alertsRouter,
+  anomalies: anomaliesRouter,
   audit: auditRouter,
   auth: authRouter,
   authorization: authorizationRouter,
