@@ -18,7 +18,11 @@ async function ensureClusterViewerAccess(params: {
   user: { id: string; role: string | null }
   clusterId: string | undefined
 }): Promise<void> {
-  if (!params.clusterId || params.user.role === 'admin') return
+  if (params.user.role === 'admin') return
+
+  if (!params.clusterId) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'clusterId is required' })
+  }
 
   const authz = createAuthorizationService(params.db)
   const canViewCluster = await authz.check(
@@ -114,16 +118,20 @@ export const logsRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const checkedClusterIds = new Set<string>()
-      for (const target of input.targets) {
-        if (!target.clusterId || checkedClusterIds.has(target.clusterId)) continue
-        checkedClusterIds.add(target.clusterId)
-        await ensureClusterViewerAccess({
-          db: ctx.db,
-          user: ctx.user,
-          clusterId: target.clusterId,
-        })
+      if (ctx.user.role !== 'admin' && input.targets.some((target) => !target.clusterId)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'clusterId is required' })
       }
+
+      const uniqueClusterIds = [...new Set(input.targets.map((target) => target.clusterId).filter(Boolean))]
+      await Promise.all(
+        uniqueClusterIds.map((clusterId) =>
+          ensureClusterViewerAccess({
+            db: ctx.db,
+            user: ctx.user,
+            clusterId,
+          }),
+        ),
+      )
 
       const coreApi = getCoreV1Api()
       const searchLower = input.search?.trim().toLowerCase()
