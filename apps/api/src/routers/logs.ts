@@ -22,10 +22,12 @@ async function listAccessibleClusterIds(params: {
   if (allClusterIds.length === 0) return []
 
   const authz = createAuthorizationService(params.db)
-  const allowedClusterIds =
-    params.user.role === 'admin'
-      ? new Set(allClusterIds)
-      : await authz.checkBatch({ type: 'user', id: params.user.id }, 'cluster', allClusterIds, 'viewer')
+  const allowedClusterIds = await authz.checkBatch(
+    { type: 'user', id: params.user.id },
+    'cluster',
+    allClusterIds,
+    'viewer',
+  )
 
   return allClusterIds.filter((clusterId) => allowedClusterIds.has(clusterId))
 }
@@ -35,7 +37,21 @@ async function resolveClusterIdForNonAdmin(params: {
   user: { id: string; role: string | null }
   clusterId: string | undefined
 }): Promise<string> {
-  if (params.clusterId) return params.clusterId
+  const authz = createAuthorizationService(params.db)
+
+  if (params.clusterId) {
+    const canViewCluster = await authz.check(
+      { type: 'user', id: params.user.id },
+      'viewer',
+      { type: 'cluster', id: params.clusterId },
+    )
+
+    if (!canViewCluster) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Permission denied' })
+    }
+
+    return params.clusterId
+  }
 
   const accessibleClusterIds = await listAccessibleClusterIds({ db: params.db, user: params.user })
 
@@ -48,25 +64,6 @@ async function resolveClusterIdForNonAdmin(params: {
   }
 
   throw new TRPCError({ code: 'BAD_REQUEST', message: 'clusterId is required' })
-}
-
-async function ensureClusterViewerAccess(params: {
-  db: Parameters<typeof createAuthorizationService>[0]
-  user: { id: string; role: string | null }
-  clusterId: string
-}): Promise<void> {
-  if (params.user.role === 'admin') return
-
-  const authz = createAuthorizationService(params.db)
-  const canViewCluster = await authz.check(
-    { type: 'user', id: params.user.id },
-    'viewer',
-    { type: 'cluster', id: params.clusterId },
-  )
-
-  if (!canViewCluster) {
-    throw new TRPCError({ code: 'FORBIDDEN', message: 'Permission denied' })
-  }
 }
 
 function normalizeLogResponse(response: unknown): string {
@@ -108,20 +105,11 @@ export const logsRouter = router({
   pods: protectedProcedure
     .input(z.object({ namespace: z.string().optional(), clusterId: z.string().uuid().optional() }).optional())
     .query(async ({ ctx, input }) => {
-      const clusterId =
-        ctx.user.role === 'admin'
-          ? input?.clusterId
-          : await resolveClusterIdForNonAdmin({
-              db: ctx.db,
-              user: ctx.user,
-              clusterId: input?.clusterId,
-            })
-
-      if (clusterId) {
-        await ensureClusterViewerAccess({
+      if (ctx.user.role !== 'admin') {
+        await resolveClusterIdForNonAdmin({
           db: ctx.db,
           user: ctx.user,
-          clusterId,
+          clusterId: input?.clusterId,
         })
       }
 
@@ -162,32 +150,35 @@ export const logsRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const fallbackClusterId =
-        ctx.user.role === 'admin'
-          ? undefined
-          : await resolveClusterIdForNonAdmin({
+      const hasMissingClusterIdTargets = input.targets.some((target) => !target.clusterId)
+
+      if (ctx.user.role !== 'admin' && hasMissingClusterIdTargets) {
+        await resolveClusterIdForNonAdmin({
+          db: ctx.db,
+          user: ctx.user,
+          clusterId: undefined,
+        })
+      }
+
+      if (ctx.user.role !== 'admin') {
+        const explicitClusterIds = [
+          ...new Set(
+            input.targets
+              .map((target) => target.clusterId)
+              .filter((clusterId): clusterId is string => Boolean(clusterId)),
+          ),
+        ]
+
+        await Promise.all(
+          explicitClusterIds.map((clusterId) =>
+            resolveClusterIdForNonAdmin({
               db: ctx.db,
               user: ctx.user,
-              clusterId: undefined,
-            })
-
-      const uniqueClusterIds = [
-        ...new Set(
-          input.targets
-            .map((target) => target.clusterId ?? fallbackClusterId)
-            .filter((clusterId): clusterId is string => Boolean(clusterId)),
-        ),
-      ]
-
-      await Promise.all(
-        uniqueClusterIds.map((clusterId) =>
-          ensureClusterViewerAccess({
-            db: ctx.db,
-            user: ctx.user,
-            clusterId,
-          }),
-        ),
-      )
+              clusterId,
+            }),
+          ),
+        )
+      }
 
       const coreApi = getCoreV1Api()
       const searchLower = input.search?.trim().toLowerCase()
@@ -294,20 +285,11 @@ export const logsRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const clusterId =
-        ctx.user.role === 'admin'
-          ? input.clusterId
-          : await resolveClusterIdForNonAdmin({
-              db: ctx.db,
-              user: ctx.user,
-              clusterId: input.clusterId,
-            })
-
-      if (clusterId) {
-        await ensureClusterViewerAccess({
+      if (ctx.user.role !== 'admin') {
+        await resolveClusterIdForNonAdmin({
           db: ctx.db,
           user: ctx.user,
-          clusterId,
+          clusterId: input.clusterId,
         })
       }
 
