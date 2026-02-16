@@ -3,66 +3,12 @@
 import { Loader2, Send, User } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { trpc } from '@/lib/trpc'
+import { type AiChatMessage, useAiAssistantStore } from '@/stores/ai-assistant'
 
-type ChatRole = 'user' | 'assistant'
-
-export type ChatMessage = {
-  id: string
-  role: ChatRole
-  content: string
-  createdAt: string
-  animate?: boolean
-}
-
-type QuickPrompt = {
-  id: string
-  text: string
-}
-
-const HISTORY_KEY = 'voyager-ai-chat-history-v1'
 const PAGE_SIZE = 10
-
-const INITIAL_MESSAGES: ChatMessage[] = [
-  {
-    id: 'seed-1',
-    role: 'assistant',
-    content:
-      'Hi, I am Voyager AI Assistant 🤖. I can analyze cluster health, explain incident patterns, and suggest actionable steps.',
-    createdAt: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
-  },
-  {
-    id: 'seed-2',
-    role: 'user',
-    content: 'Show me a quick overview for production-eu-1.',
-    createdAt: new Date(Date.now() - 1000 * 60 * 7).toISOString(),
-  },
-  {
-    id: 'seed-3',
-    role: 'assistant',
-    content:
-      'production-eu-1 is stable overall. CPU is elevated on payments namespace, and there were 3 warning events in the last hour related to image pulls.',
-    createdAt: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
-  },
-]
-
-function buildAssistantReply(question: string, cluster: string): string {
-  const normalized = question.toLowerCase()
-
-  if (normalized.includes('health') || normalized.includes('analyze')) {
-    return `${cluster}: health score is 84/100. Main risk is CPU pressure in the api and worker deployments. Recommend scaling worker by +1 replica and reviewing throttling limits.`
-  }
-
-  if (normalized.includes('recommend')) {
-    return `Top recommendations for ${cluster}: (1) Increase memory limit for metrics-agent, (2) Enable HPA on checkout service, (3) Rotate aging node pool within 48 hours.`
-  }
-
-  if (normalized.includes('event') || normalized.includes('explain')) {
-    return `Recent event pattern in ${cluster}: Warning events are concentrated around image pull backoff and readiness probe failures. The timeline suggests a deployment config drift from the previous successful release.`
-  }
-
-  return `I analyzed ${cluster}. Baseline is healthy, with intermittent warnings around deployment rollouts. If you want, I can deep dive into health, recommendations, or events specifically.`
-}
 
 function TypewriterText({ text, animate }: { text: string; animate: boolean }) {
   const reduced = useReducedMotion()
@@ -95,37 +41,48 @@ function TypewriterText({ text, animate }: { text: string; animate: boolean }) {
   )
 }
 
+const buildDefaultAssistantGreeting = (clusterName: string | null): AiChatMessage => ({
+  id: `seed-${clusterName ?? 'generic'}`,
+  role: 'assistant',
+  content: clusterName
+    ? `Hi, I am Voyager AI Assistant 🤖. Ask me anything about ${clusterName} health, events, and recommendations.`
+    : 'Hi, I am Voyager AI Assistant 🤖. Select a cluster to start analyzing live signals.',
+  createdAt: new Date().toISOString(),
+})
+
 export function AiChat({
-  selectedCluster,
-  quickPrompt,
+  selectedClusterId,
+  selectedClusterName,
 }: {
-  selectedCluster: string
-  quickPrompt: QuickPrompt | null
+  selectedClusterId: string | null
+  selectedClusterName: string | null
 }) {
   const reduced = useReducedMotion()
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
+  const chatByCluster = useAiAssistantStore((state) => state.chatByCluster)
+  const appendMessage = useAiAssistantStore((state) => state.appendMessage)
+  const setClusterMessages = useAiAssistantStore((state) => state.setClusterMessages)
+  const quickPrompt = useAiAssistantStore((state) => state.quickPrompt)
+  const clearQuickPrompt = useAiAssistantStore((state) => state.clearQuickPrompt)
+
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [draft, setDraft] = useState('')
-  const [isResponding, setIsResponding] = useState(false)
   const viewportRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    const persisted = window.localStorage.getItem(HISTORY_KEY)
-    if (!persisted) return
+  const chatMutation = trpc.ai.chat.useMutation()
 
-    try {
-      const parsed = JSON.parse(persisted) as ChatMessage[]
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        setMessages(parsed)
-      }
-    } catch {
-      window.localStorage.removeItem(HISTORY_KEY)
+  useEffect(() => {
+    if (!selectedClusterId) return
+
+    const existingMessages = chatByCluster[selectedClusterId]
+    if (!existingMessages || existingMessages.length === 0) {
+      setClusterMessages(selectedClusterId, [buildDefaultAssistantGreeting(selectedClusterName)])
     }
-  }, [])
+  }, [chatByCluster, selectedClusterId, selectedClusterName, setClusterMessages])
 
-  useEffect(() => {
-    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(messages))
-  }, [messages])
+  const messages = useMemo(() => {
+    if (!selectedClusterId) return [buildDefaultAssistantGreeting(null)]
+    return chatByCluster[selectedClusterId] ?? [buildDefaultAssistantGreeting(selectedClusterName)]
+  }, [chatByCluster, selectedClusterId, selectedClusterName])
 
   const visibleMessages = useMemo(() => messages.slice(-visibleCount), [messages, visibleCount])
 
@@ -134,61 +91,72 @@ export function AiChat({
   }, [messages.length])
 
   const sendPrompt = useCallback(
-    (content: string) => {
+    async (content: string) => {
       const trimmed = content.trim()
-      if (!trimmed || isResponding) return
+      if (!trimmed || !selectedClusterId || chatMutation.isPending) return
 
-      const userMessage: ChatMessage = {
+      const userMessage: AiChatMessage = {
         id: `user-${Date.now()}`,
         role: 'user',
         content: trimmed,
         createdAt: new Date().toISOString(),
       }
 
-      setMessages((prev) => [...prev, userMessage])
+      appendMessage(selectedClusterId, userMessage)
       setDraft('')
-      setIsResponding(true)
 
       window.requestAnimationFrame(() => {
         const node = viewportRef.current
         if (node) node.scrollTop = node.scrollHeight
       })
 
-      window.setTimeout(
-        () => {
-          const assistantMessage: ChatMessage = {
-            id: `assistant-${Date.now()}`,
-            role: 'assistant',
-            content: buildAssistantReply(trimmed, selectedCluster),
-            createdAt: new Date().toISOString(),
-            animate: true,
-          }
+      try {
+        const response = await chatMutation.mutateAsync({
+          clusterId: selectedClusterId,
+          question: trimmed,
+        })
 
-          setMessages((prev) => [...prev, assistantMessage])
-          setIsResponding(false)
+        const assistantMessage: AiChatMessage = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: response.answer,
+          createdAt: new Date().toISOString(),
+          animate: !reduced,
+        }
 
-          window.requestAnimationFrame(() => {
-            const node = viewportRef.current
-            if (node) node.scrollTop = node.scrollHeight
-          })
-        },
-        reduced ? 150 : 700,
-      )
+        appendMessage(selectedClusterId, assistantMessage)
+      } catch {
+        toast.error('AI response failed. Please try again.')
+
+        appendMessage(selectedClusterId, {
+          id: `assistant-error-${Date.now()}`,
+          role: 'assistant',
+          content: 'I could not reach the AI backend right now. Please retry in a few seconds.',
+          createdAt: new Date().toISOString(),
+          animate: !reduced,
+        })
+      } finally {
+        window.requestAnimationFrame(() => {
+          const node = viewportRef.current
+          if (node) node.scrollTop = node.scrollHeight
+        })
+      }
     },
-    [isResponding, reduced, selectedCluster],
+    [appendMessage, chatMutation, reduced, selectedClusterId],
   )
 
   useEffect(() => {
     if (!quickPrompt) return
     sendPrompt(quickPrompt.text)
-  }, [quickPrompt, sendPrompt])
+    clearQuickPrompt()
+  }, [quickPrompt, sendPrompt, clearQuickPrompt])
 
   return (
     <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 sm:p-5">
       <div className="mb-4 flex items-center justify-between gap-2">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)]">AI Chat</h2>
         <span className="rounded-full border border-[var(--color-border)] px-2 py-1 text-xs text-[var(--color-text-dim)]">
-          Cluster: {selectedCluster}
+          Cluster: {selectedClusterName ?? 'Not selected'}
         </span>
       </div>
 
@@ -240,7 +208,7 @@ export function AiChat({
               )
             })}
 
-            {isResponding && (
+            {chatMutation.isPending && (
               <div className="flex items-center gap-2 text-xs text-[var(--color-text-dim)]">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 AI is analyzing cluster signals...
@@ -253,7 +221,7 @@ export function AiChat({
       <form
         onSubmit={(event) => {
           event.preventDefault()
-          sendPrompt(draft)
+          void sendPrompt(draft)
         }}
         className="mt-3 flex gap-2"
       >
@@ -262,11 +230,12 @@ export function AiChat({
           onChange={(event) => setDraft(event.target.value)}
           placeholder="Ask about health, anomalies, recommendations..."
           aria-label="Ask AI assistant"
-          className="flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+          disabled={!selectedClusterId}
+          className="flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 disabled:opacity-60"
         />
         <button
           type="submit"
-          disabled={!draft.trim() || isResponding}
+          disabled={!selectedClusterId || !draft.trim() || chatMutation.isPending}
           className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Send className="h-4 w-4" />

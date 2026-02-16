@@ -1,8 +1,9 @@
 'use client'
 
 import { AlertTriangle, ArrowDownUp, CheckCheck, Info, ShieldAlert, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { useAiAssistantStore } from '@/stores/ai-assistant'
 
 export type RecommendationSeverity = 'critical' | 'warning' | 'info'
 
@@ -10,6 +11,7 @@ export type Recommendation = {
   id: string
   title: string
   description: string
+  action: string
   severity: RecommendationSeverity
 }
 
@@ -43,9 +45,24 @@ const severityStyles: Record<
   },
 }
 
-export function RecommendationsPanel({ initialItems }: { initialItems: Recommendation[] }) {
+export function RecommendationsPanel({
+  clusterId,
+  initialItems,
+}: {
+  clusterId: string | null
+  initialItems: Recommendation[]
+}) {
   const [items, setItems] = useState(initialItems)
   const [descending, setDescending] = useState(true)
+  const dismissRecommendation = useAiAssistantStore((state) => state.dismissRecommendation)
+  const dismissedIds = useAiAssistantStore((state) =>
+    clusterId ? (state.dismissedRecommendationIds[clusterId] ?? []) : [],
+  )
+
+  useEffect(() => {
+    const filtered = initialItems.filter((item) => !dismissedIds.includes(item.id))
+    setItems(filtered)
+  }, [initialItems, dismissedIds])
 
   const sortedItems = useMemo(
     () =>
@@ -99,11 +116,14 @@ export function RecommendationsPanel({ initialItems }: { initialItems: Recommend
               </div>
 
               <p className="text-sm text-[var(--color-text-secondary)]">{item.description}</p>
+              <p className="mt-2 text-xs text-[var(--color-text-dim)]">Action: {item.action}</p>
 
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => {
+                    if (!clusterId) return
+                    dismissRecommendation(clusterId, item.id)
                     setItems((prev) => prev.filter((entry) => entry.id !== item.id))
                     toast.success('Recommendation dismissed')
                   }}
@@ -116,6 +136,8 @@ export function RecommendationsPanel({ initialItems }: { initialItems: Recommend
                 <button
                   type="button"
                   onClick={() => {
+                    if (!clusterId) return
+                    dismissRecommendation(clusterId, item.id)
                     setItems((prev) => prev.filter((entry) => entry.id !== item.id))
                     toast.success('Marked as resolved')
                   }}
