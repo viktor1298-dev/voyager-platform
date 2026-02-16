@@ -144,7 +144,7 @@ export class AIService {
     }
   }
 
-  public generateRecommendations(snapshot: ClusterAnalysis['snapshot']): AIRecommendation[] {
+  private generateRecommendations(snapshot: ClusterAnalysis['snapshot']): AIRecommendation[] {
     const recommendations: AIRecommendation[] = []
 
     if (snapshot.cpuUsagePercent > AI_SCORE.CPU_WARNING_THRESHOLD) {

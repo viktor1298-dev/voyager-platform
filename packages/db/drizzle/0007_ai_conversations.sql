@@ -24,3 +24,6 @@ CREATE TABLE "ai_recommendations" (
 ALTER TABLE "ai_conversations" ADD CONSTRAINT "ai_conversations_cluster_id_clusters_id_fk" FOREIGN KEY ("cluster_id") REFERENCES "public"."clusters"("id") ON DELETE cascade ON UPDATE no action;
 ALTER TABLE "ai_conversations" ADD CONSTRAINT "ai_conversations_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 ALTER TABLE "ai_recommendations" ADD CONSTRAINT "ai_recommendations_cluster_id_clusters_id_fk" FOREIGN KEY ("cluster_id") REFERENCES "public"."clusters"("id") ON DELETE cascade ON UPDATE no action;
+CREATE INDEX "idx_ai_conversations_cluster" ON "ai_conversations" ("cluster_id");
+CREATE INDEX "idx_ai_conversations_user" ON "ai_conversations" ("user_id");
+CREATE INDEX "idx_ai_recommendations_cluster" ON "ai_recommendations" ("cluster_id");

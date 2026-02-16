@@ -21,6 +21,10 @@ CREATE TABLE IF NOT EXISTS ai_recommendations (
   status ai_recommendation_status NOT NULL DEFAULT 'open',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE INDEX idx_ai_conversations_cluster ON ai_conversations(cluster_id);
+CREATE INDEX idx_ai_conversations_user ON ai_conversations(user_id);
+CREATE INDEX idx_ai_recommendations_cluster ON ai_recommendations(cluster_id);
 `
 
 export const down = `
