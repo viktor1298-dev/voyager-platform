@@ -1,4 +1,5 @@
 import { router } from '../trpc.js'
+import { aiRouter } from './ai.js'
 import { alertsRouter } from './alerts.js'
 import { authorizationRouter, teamsRouter } from './authorization.js'
 import { auditRouter } from './audit.js'
@@ -17,6 +18,7 @@ import { ssoRouter } from './sso.js'
 import { usersRouter } from './users.js'
 
 export const appRouter = router({
+  ai: aiRouter,
   alerts: alertsRouter,
   audit: auditRouter,
   auth: authRouter,

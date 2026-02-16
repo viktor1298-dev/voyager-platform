@@ -50,6 +50,13 @@
       "when": 1771350000000,
       "tag": "0006_karpenter_cache_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1771407600000,
+      "tag": "0007_ai_conversations",
+      "breakpoints": true
     }
   ]
 }
