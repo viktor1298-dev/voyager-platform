@@ -72,8 +72,8 @@ async function getCollaboratorRole(db: Database, dashboardId: string, userId: st
   return row?.role ?? null
 }
 
-function getUserTeamScope(user: { id: string }) {
-  return DEFAULT_ORG_SCOPE_ID
+function getUserTeamScope(user: { id: string; organizationId?: string | null }) {
+  return user.organizationId ?? DEFAULT_ORG_SCOPE_ID
 }
 
 export const dashboardRouter = router({
@@ -102,11 +102,14 @@ export const dashboardRouter = router({
   list: protectedProcedure.input(listDashboardsSchema).query(async ({ ctx, input }) => {
     const userTeamScopeId = getUserTeamScope(ctx.user)
 
-    const accessCondition = or(
-      eq(sharedDashboards.createdBy, ctx.user.id),
-      eq(dashboardCollaborators.userId, ctx.user.id),
-      and(eq(sharedDashboards.visibility, 'team'), eq(sharedDashboards.teamId, userTeamScopeId)),
-      eq(sharedDashboards.visibility, 'public'),
+    const accessCondition = and(
+      eq(sharedDashboards.teamId, userTeamScopeId),
+      or(
+        eq(sharedDashboards.createdBy, ctx.user.id),
+        eq(dashboardCollaborators.userId, ctx.user.id),
+        eq(sharedDashboards.visibility, 'team'),
+        eq(sharedDashboards.visibility, 'public'),
+      ),
     )
 
     let cursorCondition: ReturnType<typeof or> | undefined
@@ -152,10 +155,12 @@ export const dashboardRouter = router({
   }),
 
   get: protectedProcedure.input(getDashboardSchema).query(async ({ ctx, input }) => {
+    const userTeamScopeId = getUserTeamScope(ctx.user)
+
     const [dashboard] = await ctx.db
       .select()
       .from(sharedDashboards)
-      .where(eq(sharedDashboards.id, input.id))
+      .where(and(eq(sharedDashboards.id, input.id), eq(sharedDashboards.teamId, userTeamScopeId)))
       .limit(1)
 
     if (!dashboard) {
