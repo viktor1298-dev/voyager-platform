@@ -1,11 +1,11 @@
-import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from '@sentry/nextjs'
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  output: "standalone",
+  output: 'standalone',
   compress: true,
   images: {
     unoptimized: true,
@@ -13,16 +13,16 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/trpc/:path*",
-        destination: "http://voyager-api:4000/trpc/:path*",
+        source: '/trpc/:path*',
+        destination: 'http://voyager-api:4000/trpc/:path*',
       },
       {
-        source: "/api/:path*",
-        destination: "http://voyager-api:4000/api/:path*",
+        source: '/api/:path*',
+        destination: 'http://voyager-api:4000/api/:path*',
       },
-    ];
+    ]
   },
-};
+}
 
 // Only apply Sentry wrapper if DSN is configured
 const config = process.env.NEXT_PUBLIC_SENTRY_DSN
@@ -33,6 +33,6 @@ const config = process.env.NEXT_PUBLIC_SENTRY_DSN
       widenClientFileUpload: true,
       disableLogger: true,
     })
-  : nextConfig;
+  : nextConfig
 
-export default config;
+export default config
