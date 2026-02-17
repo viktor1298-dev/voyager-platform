@@ -112,7 +112,7 @@ export function DataTable<TData>({
               />
             </div>
           )}
-          {toolbar}
+          {toolbar && <div className="min-w-0 overflow-x-auto">{toolbar}</div>}
         </div>
       )}
 

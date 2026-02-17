@@ -88,7 +88,7 @@ function UserActions({
         type="button"
         onClick={onToggleRole}
         disabled={pending}
-        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
+        className="inline-flex min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] sm:text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
       >
         <UserCog className="h-3 w-3" />
         {user.role === 'admin' ? 'Demote' : 'Promote'}
@@ -96,7 +96,7 @@ function UserActions({
       <button
         type="button"
         onClick={onDelete}
-        className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+        className="min-h-9 px-2.5 py-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>
@@ -285,7 +285,7 @@ export default function UsersPage() {
           <QueryError message={usersQuery.error.message} onRetry={() => usersQuery.refetch()} />
         )}
 
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
               User Management
@@ -296,7 +296,7 @@ export default function UsersPage() {
           </div>
           <button
             type="button"
-            className={btnPrimary}
+            className={`${btnPrimary} w-full sm:w-auto`}
             onClick={() => {
               addForm.reset()
               setShowAdd(true)
@@ -337,7 +337,7 @@ export default function UsersPage() {
                   )}
                 </Badge>
               </div>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+              <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1.5 text-xs">
                 <span className="text-[var(--color-text-muted)]">Email</span>
                 <span className="text-[var(--color-text-primary)] font-mono truncate">
                   {u.email}
@@ -346,7 +346,7 @@ export default function UsersPage() {
                 <span className="text-[var(--color-text-primary)]">{formatDate(u.createdAt)}</span>
               </div>
               {u.id !== currentUserId && (
-                <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
+                <div className="pt-2 border-t border-[var(--color-border)]/50 flex flex-wrap gap-2">
                   <UserActions
                     user={u}
                     pending={updateRole.isPending}

@@ -166,7 +166,7 @@ export default function EventsPage() {
   )
 
   const filterBar = (
-    <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)]">
+    <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)] min-w-max">
       {(['all', 'Normal', 'Warning'] as EventFilter[]).map((f) => {
         const isActive = filter === f
         return (
@@ -174,7 +174,7 @@ export default function EventsPage() {
             key={f}
             type="button"
             onClick={() => setFilter(f)}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 cursor-pointer select-none ${
+            className={`flex min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
               isActive
                 ? 'bg-white/[0.08] text-[var(--color-text-primary)] shadow-sm'
                 : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]'
@@ -205,7 +205,7 @@ export default function EventsPage() {
         {eventsQuery.error && (
           <QueryError message={eventsQuery.error.message} onRetry={() => eventsQuery.refetch()} />
         )}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
             Events
           </h1>
@@ -246,11 +246,11 @@ export default function EventsPage() {
                 <p className="text-[var(--color-text-muted)] text-xs leading-relaxed line-clamp-2">
                   {event.message}
                 </p>
-                <div className="flex items-center gap-3 mt-1.5 text-[10px]">
-                  <span className="text-[var(--color-text-muted)] font-mono truncate">
+                <div className="flex items-center gap-3 mt-1.5 text-[10px] min-w-0">
+                  <span className="text-[var(--color-text-muted)] font-mono truncate min-w-0">
                     {event.object}
                   </span>
-                  <span className="text-[var(--color-accent)] font-mono">{event.namespace}</span>
+                  <span className="text-[var(--color-accent)] font-mono truncate">{event.namespace}</span>
                   {event.count > 1 && (
                     <span className="text-[var(--color-text-dim)] font-mono">×{event.count}</span>
                   )}
