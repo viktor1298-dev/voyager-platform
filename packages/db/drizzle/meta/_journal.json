@@ -64,6 +64,20 @@
       "when": 1771363200000,
       "tag": "0008_anomalies",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1771432500000,
+      "tag": "0009_shared_dashboards",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1771432800000,
+      "tag": "0010_shared_dashboards_team_scope",
+      "breakpoints": true
     }
   ]
 }

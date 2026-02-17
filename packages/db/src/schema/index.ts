@@ -24,6 +24,12 @@ export {
   clusters,
 } from './clusters.js'
 export { events } from './events.js'
+export {
+  dashboardCollaboratorRoleEnum,
+  dashboardCollaborators,
+  dashboardVisibilityEnum,
+  sharedDashboards,
+} from './dashboards.js'
 export { featureFlags } from './feature-flags.js'
 export { healthHistory } from './health-history.js'
 export { karpenterCache } from './karpenter-cache.js'

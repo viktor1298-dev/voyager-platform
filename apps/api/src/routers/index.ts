@@ -7,6 +7,7 @@ import { auditRouter } from './audit.js'
 import { authRouter } from './auth.js'
 import { clustersRouter } from './clusters.js'
 import { deploymentsRouter } from './deployments.js'
+import { dashboardRouter } from './dashboard.js'
 import { eventsRouter } from './events.js'
 import { featuresRouter } from './features.js'
 import { healthRouter } from './health.js'
@@ -28,6 +29,7 @@ export const appRouter = router({
   authorization: authorizationRouter,
   clusters: clustersRouter,
   deployments: deploymentsRouter,
+  dashboard: dashboardRouter,
   health: healthRouter,
   nodes: nodesRouter,
   events: eventsRouter,
