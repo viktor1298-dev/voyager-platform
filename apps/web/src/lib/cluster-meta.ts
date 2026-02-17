@@ -18,8 +18,8 @@ export const ENV_META: Record<
   staging: {
     label: 'Staging / QA',
     sectionLabel: 'Staging / QA',
-    color: 'rgb(59 130 246)',
-    badgeClass: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+    color: 'rgb(14 165 183)',
+    badgeClass: 'bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
   },
   dev: {
     label: 'Dev / Minikube',
