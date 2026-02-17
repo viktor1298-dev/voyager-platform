@@ -11,7 +11,8 @@ export const sharedDashboards = pgTable('shared_dashboards', {
   createdBy: text('created_by')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
-  config: jsonb('config').$type<{ layout?: unknown; widgets?: unknown; filters?: unknown }>().notNull(),
+  teamId: text('team_id').notNull().default('org:default'),
+  config: jsonb('config').$type<{ layout?: unknown[]; widgets?: unknown[]; filters?: Record<string, unknown> }>().notNull(),
   visibility: dashboardVisibilityEnum('visibility').notNull().default('private'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
