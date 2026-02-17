@@ -79,30 +79,46 @@ export const aiRouter = router({
           { role: 'assistant' as const, content: answer, timestamp },
         ]
 
-        const [conversation] = await ctx.db
-          .insert(aiConversations)
-          .values({
+        const fallbackConversationId = crypto.randomUUID()
+        let conversationId = fallbackConversationId
+
+        try {
+          const [conversation] = await ctx.db
+            .insert(aiConversations)
+            .values({
+              clusterId: input.clusterId,
+              userId: ctx.user.id,
+              messages,
+            })
+            .returning({ id: aiConversations.id })
+
+          if (conversation?.id) {
+            conversationId = conversation.id
+          }
+        } catch (persistError) {
+          console.error('[ai.chat] Failed to persist AI conversation, continuing with response', {
             clusterId: input.clusterId,
             userId: ctx.user.id,
-            messages,
-          })
-          .returning({ id: aiConversations.id })
-
-        if (!conversation) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Failed to save AI conversation',
+            error: persistError instanceof Error ? persistError.message : String(persistError),
           })
         }
 
-        await logAudit(ctx, 'ai.chat', 'cluster', input.clusterId, {
-          conversationId: conversation.id,
-          questionLength: input.question.length,
-        })
+        try {
+          await logAudit(ctx, 'ai.chat', 'cluster', input.clusterId, {
+            conversationId,
+            questionLength: input.question.length,
+          })
+        } catch (auditError) {
+          console.error('[ai.chat] Failed to write audit log', {
+            clusterId: input.clusterId,
+            userId: ctx.user.id,
+            error: auditError instanceof Error ? auditError.message : String(auditError),
+          })
+        }
 
         return {
           answer,
-          conversationId: conversation.id,
+          conversationId,
         }
       } catch (error) {
         if (error instanceof TRPCError) throw error
