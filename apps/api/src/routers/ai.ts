@@ -22,6 +22,39 @@ const suggestionsInputSchema = z.object({
   snapshot: clusterSnapshotSchema.optional(),
 })
 
+const LOGICAL_AI_ERROR_CODES = new Set(['NOT_FOUND', 'BAD_REQUEST'])
+const TRANSIENT_AI_ERROR_PATTERNS = [
+  'timeout',
+  'timed out',
+  'econnreset',
+  'econnrefused',
+  'connection refused',
+  'connection reset',
+  'connection terminated',
+  'could not connect',
+]
+
+function isTransientAiError(error: unknown): boolean {
+  if (error instanceof TRPCError && LOGICAL_AI_ERROR_CODES.has(error.code)) {
+    return false
+  }
+
+  const message = error instanceof Error ? error.message : String(error)
+  const normalizedMessage = message.toLowerCase()
+
+  const rawCode =
+    error && typeof error === 'object' && 'code' in error
+      ? String((error as { code: unknown }).code).toLowerCase()
+      : ''
+
+  return (
+    TRANSIENT_AI_ERROR_PATTERNS.some((pattern) => normalizedMessage.includes(pattern)) ||
+    rawCode === 'econnreset' ||
+    rawCode === 'econnrefused' ||
+    rawCode === 'etimedout'
+  )
+}
+
 function buildDegradedChatAnswer(question: string, snapshot?: z.infer<typeof clusterSnapshotSchema>): string {
   const q = question.trim().toLowerCase()
 
@@ -90,6 +123,10 @@ export const aiRouter = router({
             snapshot: input.snapshot,
           })
         } catch (aiError) {
+          if (!isTransientAiError(aiError)) {
+            throw aiError
+          }
+
           console.error('[ai.chat] AI answer generation failed, returning degraded response', {
             clusterId: input.clusterId,
             userId: ctx.user.id,
