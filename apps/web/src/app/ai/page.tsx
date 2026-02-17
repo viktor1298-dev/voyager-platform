@@ -33,17 +33,17 @@ export default function AiAssistantPage() {
   const clustersQuery = trpc.clusters.list.useQuery()
 
   const selectedCluster =
-    clustersQuery.data?.find((cluster) => cluster.id === selectedClusterId) ?? null
+    clustersQuery.data?.find((cluster) => String(cluster.id) === selectedClusterId) ?? null
 
   useEffect(() => {
     if (!clustersQuery.data || clustersQuery.data.length === 0) return
 
     const selectedExists = selectedClusterId
-      ? clustersQuery.data.some((cluster) => cluster.id === selectedClusterId)
+      ? clustersQuery.data.some((cluster) => String(cluster.id) === selectedClusterId)
       : false
 
     if (!selectedExists) {
-      const fallbackClusterId = clustersQuery.data[0].id
+      const fallbackClusterId = String(clustersQuery.data[0].id)
       if (fallbackClusterId !== selectedClusterId) {
         setSelectedClusterId(fallbackClusterId)
       }
@@ -85,7 +85,7 @@ export default function AiAssistantPage() {
                 className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-1 text-sm text-[var(--color-text-primary)] disabled:opacity-60"
               >
                 {clustersQuery.data?.map((cluster) => (
-                  <option key={cluster.id} value={cluster.id}>
+                  <option key={cluster.id} value={String(cluster.id)}>
                     {cluster.name}
                   </option>
                 ))}
