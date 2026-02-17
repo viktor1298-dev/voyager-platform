@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
-import { events, clusters } from '@voyager/db'
 import type { Database } from '@voyager/db'
+import { clusters, events } from '@voyager/db'
 import { and, desc, eq, gte } from 'drizzle-orm'
 import { z } from 'zod'
 
