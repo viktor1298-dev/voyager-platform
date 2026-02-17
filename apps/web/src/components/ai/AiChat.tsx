@@ -9,6 +9,14 @@ import { trpc } from '@/lib/trpc'
 import { type AiChatMessage, useAiAssistantStore } from '@/stores/ai-assistant'
 
 const PAGE_SIZE = 10
+const ANALYZE_FETCH_RETRIES = 2
+const ANALYZE_FETCH_RETRY_DELAY_MS = 350
+
+const ANALYZE_PROMPT_KEYWORDS = {
+  analyze: 'analyze',
+  health: 'health',
+  risk: 'risk',
+} as const
 
 function TypewriterText({ text, animate }: { text: string; animate: boolean }) {
   const reduced = useReducedMotion()
@@ -49,6 +57,37 @@ const buildDefaultAssistantGreeting = (clusterName: string | null): AiChatMessag
     : 'Hi, I am Voyager AI Assistant 🤖. Select a cluster to start analyzing live signals.',
   createdAt: new Date().toISOString(),
 })
+
+function isAnalyzeHealthPrompt(prompt: string): boolean {
+  const lowerPrompt = prompt.toLowerCase()
+  return (
+    lowerPrompt.includes(ANALYZE_PROMPT_KEYWORDS.analyze) &&
+    (lowerPrompt.includes(ANALYZE_PROMPT_KEYWORDS.health) ||
+      lowerPrompt.includes(ANALYZE_PROMPT_KEYWORDS.risk))
+  )
+}
+
+function buildAnalyzeFallbackMessage(analysis: {
+  score: number
+  recommendations: Array<{ title: string }>
+}): string {
+  const topRecommendations = analysis.recommendations
+    .slice(0, 2)
+    .map((recommendation) => `• ${recommendation.title}`)
+    .join('\n')
+
+  return [
+    `Cluster score: ${analysis.score}/100.`,
+    'Top risk factors:',
+    topRecommendations || '• No active risk factors detected.',
+  ].join('\n')
+}
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, ms)
+  })
+}
 
 export function AiChat({
   selectedClusterId,
@@ -129,34 +168,48 @@ export function AiChat({
 
         appendMessage(selectedClusterId, assistantMessage)
       } catch {
-        const lowerPrompt = trimmed.toLowerCase()
-        const isAnalyzeHealthPrompt =
-          lowerPrompt.includes('analyze') &&
-          (lowerPrompt.includes('health') || lowerPrompt.includes('risk'))
-
-        if (isAnalyzeHealthPrompt) {
-          try {
-            const analysis = await trpcUtils.ai.analyze.fetch({ clusterId: selectedClusterId })
-            const topRecommendations = analysis.recommendations
-              .slice(0, 2)
-              .map((recommendation) => `• ${recommendation.title}`)
-              .join('\n')
-
+        if (isAnalyzeHealthPrompt(trimmed)) {
+          const cachedAnalysis = trpcUtils.ai.analyze.getData({ clusterId: selectedClusterId })
+          if (cachedAnalysis) {
             appendMessage(selectedClusterId, {
-              id: `assistant-fallback-${Date.now()}`,
+              id: `assistant-fallback-cached-${Date.now()}`,
               role: 'assistant',
-              content: [
-                `Cluster score: ${analysis.score}/100.`,
-                'Top risk factors:',
-                topRecommendations || '• No active risk factors detected.',
-              ].join('\n'),
+              content: buildAnalyzeFallbackMessage(cachedAnalysis),
               createdAt: new Date().toISOString(),
               animate: !reduced,
             })
             return
-          } catch {
-            // Fall through to user-facing error message.
           }
+
+          for (let attempt = 0; attempt <= ANALYZE_FETCH_RETRIES; attempt += 1) {
+            try {
+              const analysis = await trpcUtils.ai.analyze.fetch({ clusterId: selectedClusterId })
+              appendMessage(selectedClusterId, {
+                id: `assistant-fallback-${Date.now()}`,
+                role: 'assistant',
+                content: buildAnalyzeFallbackMessage(analysis),
+                createdAt: new Date().toISOString(),
+                animate: !reduced,
+              })
+              return
+            } catch {
+              if (attempt < ANALYZE_FETCH_RETRIES) {
+                await sleep(ANALYZE_FETCH_RETRY_DELAY_MS)
+                continue
+              }
+            }
+          }
+
+          appendMessage(selectedClusterId, {
+            id: `assistant-fallback-degraded-${Date.now()}`,
+            role: 'assistant',
+            content:
+              'I could not refresh live AI analysis right now, but the assistant is still available. Please try Analyze Health again in a few seconds.',
+            createdAt: new Date().toISOString(),
+            animate: !reduced,
+          })
+          toast.error('Live AI analysis is temporarily unavailable. Retrying soon usually resolves it.')
+          return
         }
 
         toast.error('AI response failed. Please try again.')
