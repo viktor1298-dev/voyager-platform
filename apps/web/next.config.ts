@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         source: "/trpc/:path*",
         destination: "http://voyager-api:4000/trpc/:path*",
       },
+      {
+        source: "/api/:path*",
+        destination: "http://voyager-api:4000/api/:path*",
+      },
     ];
   },
 };
