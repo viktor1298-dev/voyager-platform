@@ -72,6 +72,7 @@ export function AiChat({
   const viewportRef = useRef<HTMLDivElement | null>(null)
 
   const chatMutation = trpc.ai.chat.useMutation()
+  const trpcUtils = trpc.useUtils()
 
   useEffect(() => {
     if (!selectedClusterId) return
@@ -128,6 +129,36 @@ export function AiChat({
 
         appendMessage(selectedClusterId, assistantMessage)
       } catch {
+        const lowerPrompt = trimmed.toLowerCase()
+        const isAnalyzeHealthPrompt =
+          lowerPrompt.includes('analyze') &&
+          (lowerPrompt.includes('health') || lowerPrompt.includes('risk'))
+
+        if (isAnalyzeHealthPrompt) {
+          try {
+            const analysis = await trpcUtils.ai.analyze.fetch({ clusterId: selectedClusterId })
+            const topRecommendations = analysis.recommendations
+              .slice(0, 2)
+              .map((recommendation) => `• ${recommendation.title}`)
+              .join('\n')
+
+            appendMessage(selectedClusterId, {
+              id: `assistant-fallback-${Date.now()}`,
+              role: 'assistant',
+              content: [
+                `Cluster score: ${analysis.score}/100.`,
+                'Top risk factors:',
+                topRecommendations || '• No active risk factors detected.',
+              ].join('\n'),
+              createdAt: new Date().toISOString(),
+              animate: !reduced,
+            })
+            return
+          } catch {
+            // Fall through to user-facing error message.
+          }
+        }
+
         toast.error('AI response failed. Please try again.')
 
         appendMessage(selectedClusterId, {
@@ -144,7 +175,7 @@ export function AiChat({
         })
       }
     },
-    [appendMessage, chatMutation, reduced, selectedClusterId],
+    [appendMessage, chatMutation, reduced, selectedClusterId, trpcUtils],
   )
 
   useEffect(() => {
