@@ -20,7 +20,8 @@ export function TopBar() {
     try {
       await useAuthStore.getState().logout()
     } finally {
-      router.replace('/login?loggedOut=1')
+      const loggedOutAt = Date.now()
+      router.replace(`/login?loggedOut=1&loggedOutAt=${loggedOutAt}`)
       router.refresh()
       setIsLoggingOut(false)
     }

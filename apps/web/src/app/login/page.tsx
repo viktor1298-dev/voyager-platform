@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
 import { PageTransition } from '@/components/animations/PageTransition'
@@ -15,24 +15,69 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 })
 
+const LOGGED_OUT_GRACE_MS = 5000
+const LEGACY_LOGGED_OUT_GRACE_MS = 1200
+
 export default function LoginPage() {
   const router = useRouter()
-  const [returnUrl, setReturnUrl] = useState('/')
-  const [isLoggedOutRedirect, setIsLoggedOutRedirect] = useState(false)
+  const searchParams = useSearchParams()
+  const [timeTick, setTimeTick] = useState(0)
+  const [legacyLoggedOutStartedAt] = useState(() => Date.now())
   const { data: session, isPending } = authClient.useSession()
   const providersQuery = trpc.sso.getProviders.useQuery(undefined, { retry: false })
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const requestedReturnUrl = params.get('returnUrl')
-    const loggedOut = params.get('loggedOut') === '1'
-    setIsLoggedOutRedirect(loggedOut)
+  const returnUrl = useMemo(() => {
+    const requestedReturnUrl = searchParams.get('returnUrl')
 
     // Validate returnUrl: must start with '/' but not '//' (to prevent protocol-relative URLs)
     if (requestedReturnUrl && requestedReturnUrl.startsWith('/') && !requestedReturnUrl.startsWith('//')) {
-      setReturnUrl(requestedReturnUrl)
+      return requestedReturnUrl
     }
-  }, [])
+
+    return '/'
+  }, [searchParams])
+
+  const loggedOutFlag = searchParams.get('loggedOut') === '1'
+  const loggedOutAtRaw = searchParams.get('loggedOutAt')
+  const parsedLoggedOutAt = loggedOutAtRaw ? Number(loggedOutAtRaw) : Number.NaN
+  const hasTimestampedLoggedOut = Number.isFinite(parsedLoggedOutAt)
+  const now = useMemo(() => Date.now(), [timeTick, searchParams])
+
+  const timestampedGraceRemainingMs = hasTimestampedLoggedOut
+    ? Math.max(0, LOGGED_OUT_GRACE_MS - (now - parsedLoggedOutAt))
+    : 0
+  const legacyGraceRemainingMs = loggedOutFlag && !hasTimestampedLoggedOut
+    ? Math.max(0, LEGACY_LOGGED_OUT_GRACE_MS - (now - legacyLoggedOutStartedAt))
+    : 0
+
+  const isTimestampedGraceActive = hasTimestampedLoggedOut && timestampedGraceRemainingMs > 0
+  const isLegacyGraceActive = loggedOutFlag && !hasTimestampedLoggedOut && legacyGraceRemainingMs > 0
+  const isLoggedOutRedirect = isTimestampedGraceActive || isLegacyGraceActive
+
+  useEffect(() => {
+    if (!isLoggedOutRedirect) return
+
+    const remainingMs = isTimestampedGraceActive ? timestampedGraceRemainingMs : legacyGraceRemainingMs
+    if (remainingMs <= 0) return
+
+    const timeout = window.setTimeout(() => {
+      setTimeTick((prev) => prev + 1)
+    }, remainingMs + 10)
+
+    return () => window.clearTimeout(timeout)
+  }, [isLoggedOutRedirect, isTimestampedGraceActive, legacyGraceRemainingMs, timestampedGraceRemainingMs])
+
+  useEffect(() => {
+    if (!loggedOutFlag || isLoggedOutRedirect) return
+
+    const nextParams = new URLSearchParams(searchParams.toString())
+    nextParams.delete('loggedOut')
+    nextParams.delete('loggedOutAt')
+
+    const nextQuery = nextParams.toString()
+    const nextUrl = nextQuery.length > 0 ? `/login?${nextQuery}` : '/login'
+    window.history.replaceState(window.history.state, '', nextUrl)
+  }, [isLoggedOutRedirect, loggedOutFlag, searchParams])
 
   useEffect(() => {
     if (isLoggedOutRedirect) return
