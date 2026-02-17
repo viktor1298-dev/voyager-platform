@@ -30,10 +30,39 @@ export function Sidebar({
     return pathname.startsWith(path)
   }
 
-  const _showLabels = !collapsed || mobileOpen
-
   return (
     <>
+      <aside
+        data-testid="sidebar-desktop"
+        className={`
+          fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-40 transition-all duration-200
+          hidden md:flex
+          ${collapsed ? 'w-12' : 'w-48'}
+        `}
+      >
+        <SidebarContent
+          showLabels={!collapsed}
+          isActive={isActive}
+          isAdmin={isAdmin === true}
+          onLinkClick={() => {}}
+          clusters={sidebarClusters}
+        />
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          className="mt-auto mx-2 mb-2 flex items-center justify-center h-8 rounded-lg text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)] hover:bg-white/[0.04] transition-colors"
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </button>
+        {!collapsed && (
+          <div className="px-3 py-2">
+            <div className="text-[9px] text-[var(--color-text-dim)] font-mono text-left">
+              Voyager {APP_VERSION}
+            </div>
+          </div>
+        )}
+      </aside>
+
       {/* Mobile backdrop */}
       {mobileOpen && (
         <button
@@ -64,37 +93,6 @@ export function Sidebar({
             Voyager {APP_VERSION}
           </div>
         </div>
-      </aside>
-
-      <aside
-        data-testid="sidebar-desktop"
-        className={`
-          fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-40 transition-all duration-200
-          hidden md:flex
-          ${collapsed ? 'w-12' : 'w-48'}
-        `}
-      >
-        <SidebarContent
-          showLabels={!collapsed}
-          isActive={isActive}
-          isAdmin={isAdmin === true}
-          onLinkClick={() => {}}
-          clusters={sidebarClusters}
-        />
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="mt-auto mx-2 mb-2 flex items-center justify-center h-8 rounded-lg text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)] hover:bg-white/[0.04] transition-colors"
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </button>
-        {!collapsed && (
-          <div className="px-3 py-2">
-            <div className="text-[9px] text-[var(--color-text-dim)] font-mono text-left">
-              Voyager {APP_VERSION}
-            </div>
-          </div>
-        )}
       </aside>
     </>
   )
