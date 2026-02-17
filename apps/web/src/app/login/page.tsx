@@ -18,6 +18,20 @@ const loginSchema = z.object({
 const LOGGED_OUT_GRACE_MS = 5000
 const LEGACY_LOGGED_OUT_GRACE_MS = 1200
 
+function formatFieldError(error: unknown): string {
+  if (typeof error === 'string') return error
+  if (error instanceof Error) return error.message
+  if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
+    return (error as { message: string }).message
+  }
+
+  try {
+    return JSON.stringify(error)
+  } catch {
+    return 'Invalid value'
+  }
+}
+
 function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -189,7 +203,7 @@ function LoginPageContent() {
                     autoComplete="email"
                   />
                   {field.state.meta.errors?.length > 0 && (
-                    <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map((e) => String(e)).join(', ')}</p>
+                    <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map((e) => formatFieldError(e)).join(', ')}</p>
                   )}
                 </>
               )}
@@ -214,7 +228,7 @@ function LoginPageContent() {
                     autoComplete="current-password"
                   />
                   {field.state.meta.errors?.length > 0 && (
-                    <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map((e) => String(e)).join(', ')}</p>
+                    <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map((e) => formatFieldError(e)).join(', ')}</p>
                   )}
                 </>
               )}
