@@ -143,18 +143,18 @@ html.light {
   --color-bg-secondary: #edf0f5;
   --color-bg-card: #ffffff;
   --color-bg-card-hover: #f0f2f7;
-  --color-border: rgba(0, 0, 0, 0.12);
-  --color-border-hover: rgba(0, 0, 0, 0.24);
+  --color-border: rgba(0, 0, 0, 0.14);
+  --color-border-hover: rgba(0, 0, 0, 0.28);
   --color-text-primary: #1a202c;
-  --color-text-secondary: #344154;
-  --color-text-muted: #4a576b;
-  --color-text-dim: #6b778c;
-  --color-text-secondary-strong: #2f3a49;
-  --color-table-header: #2f3a49;
-  --color-table-meta: #3e4b5e;
-  --color-separator: rgba(0, 0, 0, 0.14);
-  --color-table-separator: rgba(0, 0, 0, 0.2);
-  --color-badge-label: #1f2937;
+  --color-text-secondary: #2c394b;
+  --color-text-muted: #39485d;
+  --color-text-dim: #52627a;
+  --color-text-secondary-strong: #233043;
+  --color-table-header: #253247;
+  --color-table-meta: #2f3d52;
+  --color-separator: rgba(0, 0, 0, 0.2);
+  --color-table-separator: rgba(0, 0, 0, 0.28);
+  --color-badge-label: #162132;
   --color-accent: #6366f1;
 
   --glass-bg: rgba(255, 255, 255, 0.6);
@@ -185,15 +185,15 @@ html.light {
 
 @media (max-width: 768px) {
   html.light {
-    --color-text-secondary: #2f3c4d;
-    --color-text-muted: #3f4d63;
-    --color-text-dim: #55637a;
-    --color-text-secondary-strong: #283446;
-    --color-table-header: #283446;
-    --color-table-meta: #344258;
-    --color-separator: rgba(0, 0, 0, 0.18);
-    --color-table-separator: rgba(0, 0, 0, 0.26);
-    --color-badge-label: #172131;
+    --color-text-secondary: #273447;
+    --color-text-muted: #34445b;
+    --color-text-dim: #4b5d76;
+    --color-text-secondary-strong: #1f2d42;
+    --color-table-header: #203047;
+    --color-table-meta: #2a3a52;
+    --color-separator: rgba(0, 0, 0, 0.24);
+    --color-table-separator: rgba(0, 0, 0, 0.34);
+    --color-badge-label: #111d31;
   }
 }
 
@@ -403,6 +403,30 @@ h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
   --relation-border: color-mix(in srgb, #059669 35%, transparent);
   --relation-bg: color-mix(in srgb, #059669 16%, transparent);
   --relation-label: var(--color-badge-label);
+}
+
+html.light .relation-badge--owner {
+  --relation-border: color-mix(in srgb, #7c3aed 52%, transparent);
+  --relation-bg: color-mix(in srgb, #7c3aed 24%, transparent);
+  --relation-label: #4c1d95;
+}
+
+html.light .relation-badge--admin {
+  --relation-border: color-mix(in srgb, #e11d48 52%, transparent);
+  --relation-bg: color-mix(in srgb, #e11d48 24%, transparent);
+  --relation-label: #9f1239;
+}
+
+html.light .relation-badge--editor {
+  --relation-border: color-mix(in srgb, #2563eb 52%, transparent);
+  --relation-bg: color-mix(in srgb, #2563eb 24%, transparent);
+  --relation-label: #1d4ed8;
+}
+
+html.light .relation-badge--viewer {
+  --relation-border: color-mix(in srgb, #059669 52%, transparent);
+  --relation-bg: color-mix(in srgb, #059669 24%, transparent);
+  --relation-label: #065f46;
 }
 
 /* Sidebar active accent bar */
