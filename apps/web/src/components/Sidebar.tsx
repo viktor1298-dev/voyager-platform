@@ -51,7 +51,7 @@ export function Sidebar({
         `}
       >
         <SidebarContent
-          showLabels={!collapsed}
+          showLabels={mobileOpen || !collapsed}
           isActive={isActive}
           isAdmin={isAdmin === true}
           onLinkClick={() => setMobileOpen(false)}
