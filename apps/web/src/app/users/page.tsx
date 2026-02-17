@@ -44,9 +44,29 @@ type UserRow = {
   createdAt: string | Date | null
 }
 
-function isRenderableUser(user: UserRow | null | undefined): user is UserRow {
-  if (!user) return false
-  return user.id.trim().length > 0 && user.name.trim().length > 0 && user.email.trim().length > 0
+function normalizeNonEmptyString(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const normalized = value.trim()
+  return normalized.length > 0 ? normalized : null
+}
+
+function sanitizeUserRow(raw: unknown): UserRow | null {
+  if (!raw || typeof raw !== 'object') return null
+
+  const candidate = raw as Record<string, unknown>
+  const id = normalizeNonEmptyString(candidate.id)
+  const name = normalizeNonEmptyString(candidate.name)
+  const email = normalizeNonEmptyString(candidate.email)
+
+  if (!id || !name || !email) return null
+
+  const role = typeof candidate.role === 'string' ? candidate.role : null
+  const createdAt =
+    typeof candidate.createdAt === 'string' || candidate.createdAt instanceof Date
+      ? candidate.createdAt
+      : null
+
+  return { id, name, email, role, createdAt }
 }
 
 function UserActions({
@@ -163,8 +183,10 @@ export default function UsersPage() {
     }
   }, [usersQuery, addForm.reset])
 
-  const allUsers: UserRow[] = usersQuery.data ?? []
-  const users = useMemo(() => allUsers.filter(isRenderableUser), [allUsers])
+  const users = useMemo(() => {
+    const rawUsers: unknown[] = Array.isArray(usersQuery.data) ? usersQuery.data : []
+    return rawUsers.map(sanitizeUserRow).filter((user): user is UserRow => user !== null)
+  }, [usersQuery.data])
 
   const columns = useMemo<ColumnDef<UserRow, unknown>[]>(
     () => [
@@ -269,9 +291,7 @@ export default function UsersPage() {
               User Management
             </h1>
             <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
-              {users.length === allUsers.length
-                ? `${users.length} users`
-                : `${users.length} of ${allUsers.length} users shown`}
+              {`${users.length} users`}
             </p>
           </div>
           <button
