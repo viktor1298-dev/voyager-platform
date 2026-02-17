@@ -4,6 +4,7 @@ import { Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { AuthGuard } from './AuthGuard'
+import { PresenceBar } from './PresenceBar'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 
@@ -46,6 +47,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <main
         className={`pt-14 min-h-screen overflow-x-clip transition-all duration-200 ${collapsed ? 'md:ml-12' : 'md:ml-48'}`}
       >
+        <PresenceBar />
         <div
           key={pathname}
           className="p-3 sm:p-6 max-w-[1400px] w-full max-w-[100vw] overflow-x-hidden bg-dot-grid min-h-full"
