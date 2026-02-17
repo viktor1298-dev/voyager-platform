@@ -38,7 +38,7 @@ export function Sidebar({
       {mobileOpen && (
         <button
           type="button"
-          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[1px] md:hidden"
           onClick={() => setMobileOpen(false)}
           aria-label="Close sidebar"
         />
