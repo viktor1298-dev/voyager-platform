@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertTriangle, ArrowDownUp, CheckCheck, Info, ShieldAlert, X } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useAiAssistantStore } from '@/stores/ai-assistant'
 
@@ -52,25 +52,20 @@ export function RecommendationsPanel({
   clusterId: string | null
   initialItems: Recommendation[]
 }) {
-  const [items, setItems] = useState(initialItems)
   const [descending, setDescending] = useState(true)
   const dismissRecommendation = useAiAssistantStore((state) => state.dismissRecommendation)
-  const dismissedIds = useAiAssistantStore((state) =>
-    clusterId ? (state.dismissedRecommendationIds[clusterId] ?? []) : [],
-  )
-
-  useEffect(() => {
-    const filtered = initialItems.filter((item) => !dismissedIds.includes(item.id))
-    setItems(filtered)
-  }, [initialItems, dismissedIds])
+  const dismissedIdsByCluster = useAiAssistantStore((state) => state.dismissedRecommendationIds)
+  const dismissedIds = clusterId ? (dismissedIdsByCluster[clusterId] ?? []) : []
 
   const sortedItems = useMemo(
     () =>
-      [...items].sort((a, b) => {
-        const order = descending ? -1 : 1
-        return (severityWeight[a.severity] - severityWeight[b.severity]) * order
-      }),
-    [items, descending],
+      initialItems
+        .filter((item) => !dismissedIds.includes(item.id))
+        .sort((a, b) => {
+          const order = descending ? -1 : 1
+          return (severityWeight[a.severity] - severityWeight[b.severity]) * order
+        }),
+    [initialItems, dismissedIds, descending],
   )
 
   return (
@@ -124,7 +119,6 @@ export function RecommendationsPanel({
                   onClick={() => {
                     if (!clusterId) return
                     dismissRecommendation(clusterId, item.id)
-                    setItems((prev) => prev.filter((entry) => entry.id !== item.id))
                     toast.success('Recommendation dismissed')
                   }}
                   className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-border)] px-2.5 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-white/[0.04]"
@@ -138,7 +132,6 @@ export function RecommendationsPanel({
                   onClick={() => {
                     if (!clusterId) return
                     dismissRecommendation(clusterId, item.id)
-                    setItems((prev) => prev.filter((entry) => entry.id !== item.id))
                     toast.success('Marked as resolved')
                   }}
                   className="inline-flex items-center gap-1 rounded-lg bg-[var(--color-accent)] px-2.5 py-1.5 text-xs font-medium text-white hover:opacity-90"

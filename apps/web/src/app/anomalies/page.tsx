@@ -68,7 +68,8 @@ export default function AnomaliesPage() {
 
     return statusScoped.filter((anomaly) => {
       if (severityFilter !== 'all' && anomaly.severity !== severityFilter) return false
-      if (statusFilter !== 'all' && statusFilter !== 'open' && anomaly.status !== statusFilter) return false
+      if (statusFilter !== 'all' && statusFilter !== 'open' && anomaly.status !== statusFilter)
+        return false
       if (clusterFilter !== 'all' && anomaly.cluster !== clusterFilter) return false
       return true
     })
@@ -86,6 +87,11 @@ export default function AnomaliesPage() {
       prev.map((item) => (item.id === id ? { ...item, status: 'resolved' } : item)),
     )
     toast.success('Anomaly resolved')
+  }
+
+  const isInteractiveTarget = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false
+    return Boolean(target.closest('a, button, input, select, textarea, [role="button"]'))
   }
 
   const columns = useMemo<ColumnDef<Anomaly, unknown>[]>(
@@ -263,11 +269,12 @@ export default function AnomaliesPage() {
                     <Fragment key={row.id}>
                       <tr
                         className="border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer"
-                        onClick={() =>
+                        onClick={(event) => {
+                          if (isInteractiveTarget(event.target)) return
                           setExpandedId((prev) =>
                             prev === row.original.id ? null : row.original.id,
                           )
-                        }
+                        }}
                       >
                         {row.getVisibleCells().map((cell) => (
                           <td key={cell.id} className="px-3 py-2.5 align-top">
