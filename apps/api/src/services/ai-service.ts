@@ -17,6 +17,11 @@ const AI_SCORE = {
   LOG_ERROR_PENALTY: 10,
 } as const
 
+const AI_DB_RETRY = {
+  ATTEMPTS: 3,
+  BASE_DELAY_MS: 120,
+} as const
+
 export const aiSeveritySchema = z.enum(['critical', 'warning', 'info'])
 
 export const aiRecommendationSchema = z.object({
@@ -77,11 +82,58 @@ function isRestartLikeEvent(reason: string | null, message: string | null): bool
   )
 }
 
+function isTransientDbError(error: unknown): boolean {
+  const source = error instanceof Error ? error.message : String(error)
+  const normalized = source.toLowerCase()
+
+  return (
+    normalized.includes('timeout') ||
+    normalized.includes('timed out') ||
+    normalized.includes('econnreset') ||
+    normalized.includes('connection terminated') ||
+    normalized.includes('connection reset') ||
+    normalized.includes('too many clients') ||
+    normalized.includes('could not connect')
+  )
+}
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
 export class AIService {
   private readonly db: Database
 
   public constructor(ctx: ServiceContext) {
     this.db = ctx.db
+  }
+
+  private async withDbRetry<T>(operation: () => Promise<T>, fallback?: () => T): Promise<T> {
+    let lastError: unknown
+
+    for (let attempt = 0; attempt < AI_DB_RETRY.ATTEMPTS; attempt += 1) {
+      try {
+        return await operation()
+      } catch (error) {
+        lastError = error
+
+        if (!isTransientDbError(error)) {
+          break
+        }
+
+        if (attempt < AI_DB_RETRY.ATTEMPTS - 1) {
+          await sleep(AI_DB_RETRY.BASE_DELAY_MS * (attempt + 1))
+        }
+      }
+    }
+
+    if (fallback) {
+      return fallback()
+    }
+
+    throw lastError
   }
 
   public async analyzeClusterHealth(
@@ -90,33 +142,39 @@ export class AIService {
   ): Promise<ClusterAnalysis> {
     const parsedSnapshot = snapshot ? clusterSnapshotSchema.parse(snapshot) : undefined
 
-    const [cluster] = await this.db
-      .select()
-      .from(clusters)
-      .where(eq(clusters.id, clusterId))
-      .limit(1)
+    const [cluster] = await this.withDbRetry(() =>
+      this.db.select().from(clusters).where(eq(clusters.id, clusterId)).limit(1),
+    )
 
     if (!cluster) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
     }
 
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
-    const recentEvents = await this.db
-      .select({
-        reason: events.reason,
-        message: events.message,
-        timestamp: events.timestamp,
-      })
-      .from(events)
-      .where(and(eq(events.clusterId, clusterId), gte(events.timestamp, oneHourAgo)))
-      .orderBy(desc(events.timestamp))
+    const recentEvents = await this.withDbRetry(
+      () =>
+        this.db
+          .select({
+            reason: events.reason,
+            message: events.message,
+            timestamp: events.timestamp,
+          })
+          .from(events)
+          .where(and(eq(events.clusterId, clusterId), gte(events.timestamp, oneHourAgo)))
+          .orderBy(desc(events.timestamp)),
+      () => [],
+    )
 
-    const latestEvent = await this.db
-      .select({ timestamp: events.timestamp })
-      .from(events)
-      .where(eq(events.clusterId, clusterId))
-      .orderBy(desc(events.timestamp))
-      .limit(1)
+    const latestEvent = await this.withDbRetry(
+      () =>
+        this.db
+          .select({ timestamp: events.timestamp })
+          .from(events)
+          .where(eq(events.clusterId, clusterId))
+          .orderBy(desc(events.timestamp))
+          .limit(1),
+      () => [],
+    )
 
     const inferredRestartCount = recentEvents.filter((event) =>
       isRestartLikeEvent(event.reason, event.message),
