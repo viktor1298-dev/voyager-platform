@@ -44,7 +44,30 @@ export function Sidebar({
         />
       )}
 
+      {/* Mobile sidebar */}
       <aside
+        data-testid="sidebar"
+        className={`
+          fixed left-0 top-14 bottom-0 w-48 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-50 transition-transform duration-200 md:hidden
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        <SidebarContent
+          showLabels
+          isActive={isActive}
+          isAdmin={isAdmin === true}
+          onLinkClick={() => setMobileOpen(false)}
+          clusters={sidebarClusters}
+        />
+        <div className="px-3 py-2 mt-auto">
+          <div className="text-[9px] text-[var(--color-text-dim)] font-mono text-left">
+            Voyager {APP_VERSION}
+          </div>
+        </div>
+      </aside>
+
+      <aside
+        data-testid="sidebar"
         className={`
           fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-40 transition-all duration-200
           hidden md:flex
@@ -72,27 +95,6 @@ export function Sidebar({
             </div>
           </div>
         )}
-      </aside>
-
-      {/* Mobile sidebar */}
-      <aside
-        className={`
-          fixed left-0 top-14 bottom-0 w-48 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-50 transition-transform duration-200 md:hidden
-          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
-      >
-        <SidebarContent
-          showLabels
-          isActive={isActive}
-          isAdmin={isAdmin === true}
-          onLinkClick={() => setMobileOpen(false)}
-          clusters={sidebarClusters}
-        />
-        <div className="px-3 py-2 mt-auto">
-          <div className="text-[9px] text-[var(--color-text-dim)] font-mono text-left">
-            Voyager {APP_VERSION}
-          </div>
-        </div>
       </aside>
     </>
   )
