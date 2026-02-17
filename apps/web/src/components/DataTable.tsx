@@ -2,18 +2,27 @@
 
 import {
   type ColumnDef,
-  type SortingState,
   type ColumnFiltersState,
-  type VisibilityState,
-  type PaginationState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type PaginationState,
+  type SortingState,
   useReactTable,
+  type VisibilityState,
 } from '@tanstack/react-table'
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Search,
+} from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 
 interface DataTableProps<TData> {
@@ -127,20 +136,24 @@ export function DataTable<TData>({
       >
         {loading ? (
           <div className="p-4 space-y-1">
-            {Array.from({ length: skeletonRows }).map((_, i) => (
-              <div key={i} className="flex gap-4 py-3">
-                <div className="skeleton-shimmer h-4 flex-[2] rounded" />
-                <div className="skeleton-shimmer h-4 flex-1 rounded" />
-                <div className="skeleton-shimmer h-4 flex-1 rounded" />
-                <div className="skeleton-shimmer h-4 flex-1 rounded" />
-              </div>
-            ))}
+            {Array.from({ length: skeletonRows }, (_, index) => `skeleton-${index + 1}`).map(
+              (skeletonKey) => (
+                <div key={skeletonKey} className="flex gap-4 py-3">
+                  <div className="skeleton-shimmer h-4 flex-[2] rounded" />
+                  <div className="skeleton-shimmer h-4 flex-1 rounded" />
+                  <div className="skeleton-shimmer h-4 flex-1 rounded" />
+                  <div className="skeleton-shimmer h-4 flex-1 rounded" />
+                </div>
+              ),
+            )}
           </div>
         ) : sortedRows.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-muted)]">
             {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
             <p className="text-sm font-medium">{emptyTitle}</p>
-            {emptyDescription && <p className="text-xs text-[var(--color-text-dim)] mt-1">{emptyDescription}</p>}
+            {emptyDescription && (
+              <p className="text-xs text-[var(--color-text-dim)] mt-1">{emptyDescription}</p>
+            )}
           </div>
         ) : (
           <>
@@ -148,7 +161,11 @@ export function DataTable<TData>({
             {mobileCard && (
               <div className="md:hidden space-y-3 p-3">
                 {sortedRows.map((row, i) => (
-                  <div key={row.id} style={{ animationDelay: `${i * staggerMs}ms`, animationFillMode: 'both' }} className="animate-slide-up">
+                  <div
+                    key={row.id}
+                    style={{ animationDelay: `${i * staggerMs}ms`, animationFillMode: 'both' }}
+                    className="animate-slide-up"
+                  >
                     {mobileCard(row.original, i)}
                   </div>
                 ))}
@@ -159,7 +176,10 @@ export function DataTable<TData>({
             <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="border-b border-[var(--color-border)] hover:bg-transparent">
+                  <tr
+                    key={headerGroup.id}
+                    className="border-b border-[var(--color-border)] hover:bg-transparent"
+                  >
                     {headerGroup.headers.map((header) => {
                       const canSort = header.column.getCanSort()
                       const sorted = header.column.getIsSorted()
@@ -173,7 +193,9 @@ export function DataTable<TData>({
                             <button
                               type="button"
                               className={`flex items-center gap-1 ${canSort ? 'cursor-pointer hover:text-[var(--color-text-secondary)]' : ''}`}
-                              onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                              onClick={
+                                canSort ? header.column.getToggleSortingHandler() : undefined
+                              }
                             >
                               {flexRender(header.column.columnDef.header, header.getContext())}
                               {canSort && (
@@ -228,19 +250,35 @@ export function DataTable<TData>({
             of {table.getFilteredRowModel().rows.length}
           </span>
           <div className="flex items-center gap-1">
-            <PaginationBtn onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()} aria-label="First page">
+            <PaginationBtn
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+              aria-label="First page"
+            >
               <ChevronsLeft className="h-3.5 w-3.5" />
             </PaginationBtn>
-            <PaginationBtn onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} aria-label="Previous page">
+            <PaginationBtn
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              aria-label="Previous page"
+            >
               <ChevronLeft className="h-3.5 w-3.5" />
             </PaginationBtn>
             <span className="px-2 font-mono tabular-nums">
               {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
             </span>
-            <PaginationBtn onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} aria-label="Next page">
+            <PaginationBtn
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              aria-label="Next page"
+            >
               <ChevronRight className="h-3.5 w-3.5" />
             </PaginationBtn>
-            <PaginationBtn onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()} aria-label="Last page">
+            <PaginationBtn
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+              aria-label="Last page"
+            >
               <ChevronsRight className="h-3.5 w-3.5" />
             </PaginationBtn>
           </div>
@@ -250,7 +288,17 @@ export function DataTable<TData>({
   )
 }
 
-function PaginationBtn({ children, onClick, disabled, 'aria-label': ariaLabel }: { children: ReactNode; onClick: () => void; disabled: boolean; 'aria-label'?: string }) {
+function PaginationBtn({
+  children,
+  onClick,
+  disabled,
+  'aria-label': ariaLabel,
+}: {
+  children: ReactNode
+  onClick: () => void
+  disabled: boolean
+  'aria-label'?: string
+}) {
   return (
     <button
       type="button"
@@ -263,4 +311,3 @@ function PaginationBtn({ children, onClick, disabled, 'aria-label': ariaLabel }:
     </button>
   )
 }
-

@@ -96,6 +96,7 @@ function UserActions({
       <button
         type="button"
         onClick={onDelete}
+        aria-label={`Delete user ${user.name}`}
         className="min-h-9 px-2.5 py-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
       >
         <Trash2 className="h-3.5 w-3.5" />

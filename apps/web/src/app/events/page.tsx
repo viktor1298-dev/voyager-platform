@@ -250,7 +250,9 @@ export default function EventsPage() {
                   <span className="text-[var(--color-text-muted)] font-mono truncate min-w-0">
                     {event.object}
                   </span>
-                  <span className="text-[var(--color-accent)] font-mono truncate">{event.namespace}</span>
+                  <span className="text-[var(--color-accent)] font-mono truncate">
+                    {event.namespace}
+                  </span>
                   {event.count > 1 && (
                     <span className="text-[var(--color-text-dim)] font-mono">×{event.count}</span>
                   )}
