@@ -82,7 +82,15 @@ export function AnomalyCard({ anomaly, onAcknowledge, onResolve }: AnomalyCardPr
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => onAcknowledge?.(anomaly.id)}
+            onPointerDown={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+            }}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              onAcknowledge?.(anomaly.id)
+            }}
             disabled={anomaly.status !== 'open'}
             className="rounded-md border border-[var(--color-border)] px-2.5 py-1 text-[11px] text-[var(--color-text-secondary)] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
@@ -91,7 +99,15 @@ export function AnomalyCard({ anomaly, onAcknowledge, onResolve }: AnomalyCardPr
           </button>
           <button
             type="button"
-            onClick={() => onResolve?.(anomaly.id)}
+            onPointerDown={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+            }}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              onResolve?.(anomaly.id)
+            }}
             disabled={anomaly.status === 'resolved'}
             className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
