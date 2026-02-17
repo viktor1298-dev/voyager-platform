@@ -76,6 +76,8 @@
   --color-text-secondary: #a0aec0;
   --color-text-muted: #6b7994;
   --color-text-dim: #4a5568;
+  --color-separator: rgba(255, 255, 255, 0.06);
+  --color-badge-label: var(--color-text-secondary);
   --color-status-active: #00e599;
   --color-status-idle: #6b7994;
   --color-status-error: #ff4d6a;
@@ -137,12 +139,14 @@ html.light {
   --color-bg-secondary: #edf0f5;
   --color-bg-card: #ffffff;
   --color-bg-card-hover: #f0f2f7;
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-hover: rgba(0, 0, 0, 0.18);
+  --color-border: rgba(0, 0, 0, 0.12);
+  --color-border-hover: rgba(0, 0, 0, 0.24);
   --color-text-primary: #1a202c;
-  --color-text-secondary: #4a5568;
-  --color-text-muted: #718096;
-  --color-text-dim: #a0aec0;
+  --color-text-secondary: #344154;
+  --color-text-muted: #4a576b;
+  --color-text-dim: #6b778c;
+  --color-separator: rgba(0, 0, 0, 0.14);
+  --color-badge-label: #2b3442;
   --color-accent: #6366f1;
 
   --glass-bg: rgba(255, 255, 255, 0.6);
@@ -173,9 +177,10 @@ html.light {
 
 @media (max-width: 768px) {
   html.light {
-    --color-text-secondary: #3f4b5f;
-    --color-text-muted: #5f6b7f;
-    --color-text-dim: #7f8a9d;
+    --color-text-secondary: #2f3c4d;
+    --color-text-muted: #445166;
+    --color-text-dim: #5d6a80;
+    --color-separator: rgba(0, 0, 0, 0.18);
   }
 }
 

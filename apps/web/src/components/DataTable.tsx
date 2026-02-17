@@ -200,7 +200,7 @@ export function DataTable<TData>({
                   <tr
                     key={row.id}
                     onClick={() => onRowClick?.(row.original)}
-                    className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.03] animate-slide-up ${onRowClick ? 'cursor-pointer' : ''}`}
+                    className={`border-b border-[var(--color-separator)] transition-colors hover:bg-white/[0.03] animate-slide-up ${onRowClick ? 'cursor-pointer' : ''}`}
                     style={{ animationDelay: `${i * staggerMs}ms`, animationFillMode: 'both' }}
                   >
                     {row.getVisibleCells().map((cell) => (
