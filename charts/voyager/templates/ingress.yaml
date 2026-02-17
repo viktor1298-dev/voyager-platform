@@ -42,7 +42,7 @@ spec:
                 name: voyager-api
                 port:
                   number: {{ .Values.api.port }}
-          - path: /health
+          - path: /system-health
             pathType: Prefix
             backend:
               service:

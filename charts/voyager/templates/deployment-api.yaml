@@ -53,13 +53,13 @@ spec:
                 name: voyager-secret
           readinessProbe:
             httpGet:
-              path: /health
+              path: /system-health
               port: {{ .Values.api.port }}
             initialDelaySeconds: 10
             periodSeconds: 15
           livenessProbe:
             httpGet:
-              path: /health
+              path: /system-health
               port: {{ .Values.api.port }}
             initialDelaySeconds: 10
             periodSeconds: 15
