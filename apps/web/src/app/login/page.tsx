@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
@@ -18,7 +18,7 @@ const loginSchema = z.object({
 const LOGGED_OUT_GRACE_MS = 5000
 const LEGACY_LOGGED_OUT_GRACE_MS = 1200
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [timeTick, setTimeTick] = useState(0)
@@ -235,5 +235,13 @@ export default function LoginPage() {
         </form>
       </div>
     </PageTransition>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
   )
 }
