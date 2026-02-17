@@ -236,8 +236,8 @@ export default function ClusterDetailPage() {
   const cluster = isLive
     ? {
         name: liveData?.name ?? 'minikube',
-        provider: liveData?.provider ?? 'minikube',
-        version: liveData?.version ?? '—',
+        provider: String(liveData?.provider ?? 'minikube'),
+        version: String(liveData?.version ?? '—'),
         status: liveData?.status ?? 'unknown',
         endpoint: liveData?.endpoint ?? '—',
         nodeCount: liveData?.nodes?.length ?? 0,
@@ -247,8 +247,8 @@ export default function ClusterDetailPage() {
       }
     : {
         name: dbCluster.data?.name ?? '',
-        provider: dbCluster.data?.provider ?? '',
-        version: dbCluster.data?.version ?? '—',
+        provider: String(dbCluster.data?.provider ?? ''),
+        version: String(dbCluster.data?.version ?? '—'),
         status: dbCluster.data?.status ?? 'unknown',
         endpoint: (dbCluster.data as Record<string, unknown>)?.endpoint as string ?? '—',
         nodeCount: dbNodes.data?.length ?? 0,
@@ -258,7 +258,7 @@ export default function ClusterDetailPage() {
       }
 
   const nodes: NodeRow[] = isLive
-    ? (liveData?.nodes ?? []).map((n: Record<string, string>, i: number) => ({
+    ? (liveData?.nodes ?? []).map((n, i: number) => ({
         id: `node-${i}`,
         name: n.name ?? '',
         status: n.status === 'ready' ? 'Ready' : n.status === 'notready' ? 'NotReady' : (n.status ?? 'Unknown'),
@@ -297,13 +297,15 @@ export default function ClusterDetailPage() {
         timestamp: (e.timestamp as string) ?? null,
       }))
 
-  const statusDotClass = cluster.status === 'healthy'
+  const clusterStatus = typeof cluster.status === 'string' ? cluster.status : 'unknown'
+
+  const statusDotClass = clusterStatus === 'healthy'
     ? 'bg-[var(--color-status-active)]'
-    : cluster.status === 'warning' || cluster.status === 'degraded'
+    : clusterStatus === 'warning' || clusterStatus === 'degraded'
       ? 'bg-[var(--color-status-warning)]'
       : 'bg-[var(--color-status-error)]'
 
-  const statusLabel = cluster.status.charAt(0).toUpperCase() + cluster.status.slice(1)
+  const statusLabel = clusterStatus.charAt(0).toUpperCase() + clusterStatus.slice(1)
 
   return (
     <AppLayout>

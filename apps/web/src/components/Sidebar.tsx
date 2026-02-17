@@ -54,7 +54,7 @@ export function Sidebar({
         <SidebarContent
           showLabels={!collapsed}
           isActive={isActive}
-          isAdmin={isAdmin}
+          isAdmin={isAdmin === true}
           onLinkClick={() => {}}
           clusters={sidebarClusters}
         />
@@ -84,7 +84,7 @@ export function Sidebar({
         <SidebarContent
           showLabels
           isActive={isActive}
-          isAdmin={isAdmin}
+          isAdmin={isAdmin === true}
           onLinkClick={() => setMobileOpen(false)}
           clusters={sidebarClusters}
         />

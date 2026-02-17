@@ -37,7 +37,7 @@ type UserRow = {
   id: string
   name: string
   email: string
-  role: string
+  role: string | null
   createdAt: string | Date | null
 }
 
@@ -80,11 +80,11 @@ export default function UsersPage() {
   const userQueryKey = [['users', 'list'], { type: 'query' }] as const
 
   const createUser = trpc.users.create.useMutation(
-    useOptimisticOptions<UserRow[], { name: string; email: string; password: string; role: 'admin' | 'viewer' }>({
+    useOptimisticOptions<UserRow[], { name: string; email: string; password: string; role?: 'admin' | 'viewer' }>({
       queryKey: userQueryKey,
       updater: (old, vars) => [
         ...(old ?? []),
-        { id: `temp-${Date.now()}`, name: vars.name, email: vars.email, role: vars.role, createdAt: new Date().toISOString() },
+        { id: `temp-${Date.now()}`, name: vars.name, email: vars.email, role: vars.role ?? 'viewer', createdAt: new Date().toISOString() },
       ],
       successMessage: 'User created',
       errorMessage: 'Failed to create user — rolled back',

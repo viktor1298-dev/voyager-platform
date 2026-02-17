@@ -44,19 +44,20 @@ function formatLastSeen(date: Date | string | null | undefined) {
 
 type CreateClusterInput = {
   name: string
-  provider: string
-  endpoint: string
+  provider: 'kubeconfig' | 'aws' | 'azure' | 'gke' | 'minikube'
+  endpoint?: string
 }
 
 type ClusterRow = {
   id: string
   name: string
   provider: string | null
-  status: string | null
-  version: string | null
+  status?: string | null
+  version?: string | null
   nodeCount: number
-  endpoint: string | null
-  updatedAt: Date | string | null
+  endpoint?: string | null
+  updatedAt?: Date | string | null
+  environment?: 'development' | 'staging' | 'production'
 }
 
 function ClusterDeleteAction({ clusterId, onDelete }: { clusterId: string; onDelete: () => void }) {

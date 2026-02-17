@@ -106,7 +106,7 @@ export default function FeatureFlagsPage() {
       toast.success(`Feature flag ${nextEnabled ? 'enabled' : 'disabled'}`)
     } catch {
       if (previousFlag) {
-        setFlags((prev) => prev.map((flag) => (flag.id === flagId ? previousFlag : flag)))
+        setFlags((prev) => prev.map((flag) => (flag.id === flagId ? previousFlag! : flag)))
       }
       toast.error('Failed to update feature flag')
       throw new Error('Failed to update feature flag')

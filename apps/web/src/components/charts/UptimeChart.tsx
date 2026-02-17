@@ -70,7 +70,7 @@ export function UptimeChart({ data }: UptimeChartProps) {
           />
           <Tooltip
             {...TOOLTIP_STYLE}
-            formatter={(value: number) => [`${value}%`, 'Uptime']}
+            formatter={(value: number | undefined) => [`${value ?? 0}%`, 'Uptime']}
           />
           <Bar dataKey="uptime" name="Uptime %" radius={BAR_RADIUS}>
             {data.map((entry) => (
