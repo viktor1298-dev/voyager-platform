@@ -11,10 +11,19 @@ import { ThemeToggle } from './ThemeToggle'
 export function TopBar() {
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
-    await useAuthStore.getState().logout()
-    router.push('/login')
+    if (isLoggingOut) return
+
+    setIsLoggingOut(true)
+    try {
+      await useAuthStore.getState().logout()
+    } finally {
+      router.replace('/login')
+      router.refresh()
+      setIsLoggingOut(false)
+    }
   }
 
   const liveQuery = trpc.clusters.live.useQuery(undefined, {
@@ -65,8 +74,9 @@ export function TopBar() {
         <button
           type="button"
           onClick={handleLogout}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-status-error)] hover:bg-[var(--color-status-error)]/10 transition-colors"
-          title="Logout"
+          disabled={isLoggingOut}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-status-error)] hover:bg-[var(--color-status-error)]/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          title={isLoggingOut ? 'Logging out…' : 'Logout'}
         >
           <LogOut className="h-4 w-4" />
           <span className="hidden sm:inline text-[11px] font-medium">Logout</span>
