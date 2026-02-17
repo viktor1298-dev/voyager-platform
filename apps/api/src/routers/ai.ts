@@ -22,6 +22,53 @@ const suggestionsInputSchema = z.object({
   snapshot: clusterSnapshotSchema.optional(),
 })
 
+const LOGICAL_AI_ERROR_CODES = new Set(['NOT_FOUND', 'BAD_REQUEST'])
+const TRANSIENT_AI_ERROR_PATTERNS = [
+  'timeout',
+  'timed out',
+  'econnreset',
+  'econnrefused',
+  'connection refused',
+  'connection reset',
+  'connection terminated',
+  'could not connect',
+]
+
+function isTransientAiError(error: unknown): boolean {
+  if (error instanceof TRPCError && LOGICAL_AI_ERROR_CODES.has(error.code)) {
+    return false
+  }
+
+  const message = error instanceof Error ? error.message : String(error)
+  const normalizedMessage = message.toLowerCase()
+
+  const rawCode =
+    error && typeof error === 'object' && 'code' in error
+      ? String((error as { code: unknown }).code).toLowerCase()
+      : ''
+
+  return (
+    TRANSIENT_AI_ERROR_PATTERNS.some((pattern) => normalizedMessage.includes(pattern)) ||
+    rawCode === 'econnreset' ||
+    rawCode === 'econnrefused' ||
+    rawCode === 'etimedout'
+  )
+}
+
+function buildDegradedChatAnswer(question: string, snapshot?: z.infer<typeof clusterSnapshotSchema>): string {
+  const q = question.trim().toLowerCase()
+
+  if (q.includes('cpu') && snapshot?.cpuUsagePercent !== undefined) {
+    return `Live AI analysis is temporarily unavailable, but the latest provided CPU signal is ${snapshot.cpuUsagePercent.toFixed(1)}%. Please retry in a few seconds for full recommendations.`
+  }
+
+  if ((q.includes('restart') || q.includes('crash')) && snapshot?.podsRestarting !== undefined) {
+    return `Live AI analysis is temporarily unavailable. Latest provided restart signal: ${snapshot.podsRestarting} restarting pods/events. Please retry in a few seconds for deeper diagnosis.`
+  }
+
+  return 'Live AI analysis is temporarily unavailable. I can still respond with cached/basic signals, and full analysis should recover shortly. Please retry in a few seconds.'
+}
+
 const analysisOutputSchema = z.object({
   clusterId: z.string().uuid(),
   clusterName: z.string(),
@@ -67,11 +114,27 @@ export const aiRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         const aiService = new AIService({ db: ctx.db })
-        const answer = await aiService.answerQuestion({
-          clusterId: input.clusterId,
-          question: input.question,
-          snapshot: input.snapshot,
-        })
+        let answer: string
+
+        try {
+          answer = await aiService.answerQuestion({
+            clusterId: input.clusterId,
+            question: input.question,
+            snapshot: input.snapshot,
+          })
+        } catch (aiError) {
+          if (!isTransientAiError(aiError)) {
+            throw aiError
+          }
+
+          console.error('[ai.chat] AI answer generation failed, returning degraded response', {
+            clusterId: input.clusterId,
+            userId: ctx.user.id,
+            error: aiError instanceof Error ? aiError.message : String(aiError),
+          })
+
+          answer = buildDegradedChatAnswer(input.question, input.snapshot)
+        }
 
         const timestamp = new Date().toISOString()
         const messages = [
