@@ -36,11 +36,11 @@ interface Deployment {
 
 function StatusBadge({ status }: { status: Deployment['status'] }) {
   const styles: Record<Deployment['status'], string> = {
-    Running: 'bg-[var(--color-status-active)]/15 border-[var(--color-status-active)]/25',
-    Pending: 'bg-[var(--color-status-idle)]/15 border-[var(--color-status-idle)]/25',
-    Failed: 'bg-[var(--color-status-error)]/15 border-[var(--color-status-error)]/25',
-    Scaling: 'bg-[var(--color-status-warning)]/15 border-[var(--color-status-warning)]/25',
-    'Restarting...': 'bg-[var(--color-status-warning)]/15 border-[var(--color-status-warning)]/25',
+    Running: 'bg-[var(--color-status-active)]/20 border-[var(--color-status-active)]/35',
+    Pending: 'bg-[var(--color-status-idle)]/20 border-[var(--color-status-idle)]/35',
+    Failed: 'bg-[var(--color-status-error)]/20 border-[var(--color-status-error)]/35',
+    Scaling: 'bg-[var(--color-status-warning)]/20 border-[var(--color-status-warning)]/35',
+    'Restarting...': 'bg-[var(--color-status-warning)]/20 border-[var(--color-status-warning)]/35',
   }
 
   const dotColor: Record<Deployment['status'], string> = {
@@ -200,7 +200,7 @@ export default function DeploymentsPage() {
       {
         accessorKey: 'imageVersion',
         header: 'Version',
-        cell: ({ row }) => <span className="text-[var(--color-table-meta)] font-mono text-[11px]">{row.original.imageVersion}</span>,
+        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] font-mono text-[11px]">{row.original.imageVersion}</span>,
       },
       {
         accessorKey: 'status',
@@ -214,12 +214,12 @@ export default function DeploymentsPage() {
         cell: ({ row }) => (
           <div className="flex flex-wrap gap-1 max-w-[260px]">
             {row.original.rolloutHistory.length === 0 ? (
-              <span className="text-[10px] text-[var(--color-table-meta)]">No history</span>
+              <span className="text-[10px] text-[var(--color-text-secondary)]">No history</span>
             ) : (
               row.original.rolloutHistory.slice(0, 3).map((rollout) => (
                 <span
                   key={`${rollout.revision}-${rollout.updatedAt}`}
-                  className="px-1.5 py-0.5 rounded border border-[var(--color-border)] text-[10px] text-[var(--color-table-meta)] font-mono"
+                  className="px-1.5 py-0.5 rounded border border-[var(--color-border)] text-[10px] text-[var(--color-text-secondary)] font-mono"
                   title={`${rollout.image} • ${new Date(rollout.updatedAt).toLocaleString()}`}
                 >
                   r{rollout.revision}
@@ -232,7 +232,7 @@ export default function DeploymentsPage() {
       {
         accessorKey: 'lastUpdated',
         header: 'Updated',
-        cell: ({ row }) => <span className="text-[var(--color-table-meta)] text-[11px]">{new Date(row.original.lastUpdated).toLocaleString()}</span>,
+        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] text-[11px]">{new Date(row.original.lastUpdated).toLocaleString()}</span>,
       },
     ]
 
@@ -246,10 +246,10 @@ export default function DeploymentsPage() {
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex gap-1 justify-end">
-            <button type="button" onClick={() => setConfirmRestart(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-badge-label)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Restart">
+            <button type="button" onClick={() => setConfirmRestart(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/35 text-[10px] font-medium text-[var(--color-badge-label)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)] transition-colors" title="Restart">
               <RefreshCw className="h-3 w-3" />Restart
             </button>
-            <button type="button" onClick={() => setScaleTarget(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-badge-label)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors" title="Scale">
+            <button type="button" onClick={() => setScaleTarget(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/35 text-[10px] font-medium text-[var(--color-badge-label)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)] transition-colors" title="Scale">
               <Scale className="h-3 w-3" />Scale
             </button>
           </div>
@@ -323,10 +323,10 @@ export default function DeploymentsPage() {
                     </div>
                     {isAdmin && (
                       <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
-                        <button type="button" onClick={() => setConfirmRestart(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-badge-label)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
+                        <button type="button" onClick={() => setConfirmRestart(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[var(--color-border)] text-[11px] font-medium text-[var(--color-badge-label)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors">
                           <RefreshCw className="h-3 w-3" />Restart
                         </button>
-                        <button type="button" onClick={() => setScaleTarget(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium text-[var(--color-badge-label)] bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
+                        <button type="button" onClick={() => setScaleTarget(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[var(--color-border)] text-[11px] font-medium text-[var(--color-badge-label)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors">
                           <Scale className="h-3 w-3" />Scale
                         </button>
                       </div>

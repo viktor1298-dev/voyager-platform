@@ -150,11 +150,11 @@ html.light {
   --color-text-muted: #39485d;
   --color-text-dim: #52627a;
   --color-text-secondary-strong: #233043;
-  --color-table-header: #253247;
-  --color-table-meta: #2f3d52;
-  --color-separator: rgba(0, 0, 0, 0.2);
-  --color-table-separator: rgba(0, 0, 0, 0.28);
-  --color-badge-label: #162132;
+  --color-table-header: #1d2b40;
+  --color-table-meta: #25364d;
+  --color-separator: rgba(0, 0, 0, 0.24);
+  --color-table-separator: rgba(0, 0, 0, 0.36);
+  --color-badge-label: #0f1d32;
   --color-accent: #6366f1;
 
   --glass-bg: rgba(255, 255, 255, 0.6);
