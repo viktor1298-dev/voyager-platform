@@ -6,6 +6,7 @@ import swaggerUi from '@fastify/swagger-ui'
 import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify'
 import { fastifyTRPCOpenApiPlugin } from 'trpc-to-openapi'
+import { shouldRequireAuth, UNAUTHORIZED_RESPONSE } from './lib/auth-guard.js'
 import { auth } from './lib/auth.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
@@ -38,6 +39,25 @@ app.register(rateLimit, {
 app.register(cors, {
   origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
   credentials: true,
+})
+
+app.addHook('onRequest', async (request, reply) => {
+  if (!shouldRequireAuth(request.method, request.url)) {
+    return
+  }
+
+  const headers = new Headers()
+  for (const [key, value] of Object.entries(request.headers)) {
+    if (value) {
+      headers.append(key, String(value))
+    }
+  }
+
+  const sessionResult = await auth.api.getSession({ headers }).catch(() => null)
+  if (!sessionResult?.session || !sessionResult.user) {
+    reply.code(401).send(UNAUTHORIZED_RESPONSE)
+    return reply
+  }
 })
 
 app.register(fastifyTRPCPlugin, {
