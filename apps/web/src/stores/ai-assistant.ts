@@ -37,7 +37,10 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       quickPrompt: null,
       chatByCluster: {},
       dismissedRecommendationIds: {},
-      setSelectedClusterId: (clusterId) => set({ selectedClusterId: clusterId }),
+      setSelectedClusterId: (clusterId) =>
+        set((state) =>
+          state.selectedClusterId === clusterId ? state : { selectedClusterId: clusterId },
+        ),
       queueQuickPrompt: (prompt) => set({ quickPrompt: prompt }),
       clearQuickPrompt: () => set({ quickPrompt: null }),
       appendMessage: (clusterId, message) =>

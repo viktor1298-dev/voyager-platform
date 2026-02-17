@@ -38,11 +38,15 @@ export default function AiAssistantPage() {
   useEffect(() => {
     if (!clustersQuery.data || clustersQuery.data.length === 0) return
 
-    if (
-      !selectedClusterId ||
-      !clustersQuery.data.some((cluster) => cluster.id === selectedClusterId)
-    ) {
-      setSelectedClusterId(clustersQuery.data[0].id)
+    const selectedExists = selectedClusterId
+      ? clustersQuery.data.some((cluster) => cluster.id === selectedClusterId)
+      : false
+
+    if (!selectedExists) {
+      const fallbackClusterId = clustersQuery.data[0].id
+      if (fallbackClusterId !== selectedClusterId) {
+        setSelectedClusterId(fallbackClusterId)
+      }
     }
   }, [clustersQuery.data, selectedClusterId, setSelectedClusterId])
 

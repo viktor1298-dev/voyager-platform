@@ -59,6 +59,9 @@ export function AiChat({
 }) {
   const reduced = useReducedMotion()
   const chatByCluster = useAiAssistantStore((state) => state.chatByCluster)
+  const currentClusterMessages = useAiAssistantStore((state) =>
+    selectedClusterId ? state.chatByCluster[selectedClusterId] : undefined,
+  )
   const appendMessage = useAiAssistantStore((state) => state.appendMessage)
   const setClusterMessages = useAiAssistantStore((state) => state.setClusterMessages)
   const quickPrompt = useAiAssistantStore((state) => state.quickPrompt)
@@ -73,11 +76,10 @@ export function AiChat({
   useEffect(() => {
     if (!selectedClusterId) return
 
-    const existingMessages = chatByCluster[selectedClusterId]
-    if (!existingMessages || existingMessages.length === 0) {
+    if (!currentClusterMessages || currentClusterMessages.length === 0) {
       setClusterMessages(selectedClusterId, [buildDefaultAssistantGreeting(selectedClusterName)])
     }
-  }, [chatByCluster, selectedClusterId, selectedClusterName, setClusterMessages])
+  }, [currentClusterMessages, selectedClusterId, selectedClusterName, setClusterMessages])
 
   const messages = useMemo(() => {
     if (!selectedClusterId) return [buildDefaultAssistantGreeting(null)]
