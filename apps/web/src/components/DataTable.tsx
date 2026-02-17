@@ -166,7 +166,7 @@ export function DataTable<TData>({
                       return (
                         <th
                           key={header.id}
-                          className="text-left py-2 px-3 text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider font-normal select-none"
+                          className="text-left py-2 px-3 text-[10px] text-[var(--color-table-header)] font-mono uppercase tracking-wider font-medium select-none"
                           style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
                         >
                           {header.isPlaceholder ? null : (
@@ -200,7 +200,7 @@ export function DataTable<TData>({
                   <tr
                     key={row.id}
                     onClick={() => onRowClick?.(row.original)}
-                    className={`border-b border-[var(--color-separator)] transition-colors hover:bg-white/[0.03] animate-slide-up ${onRowClick ? 'cursor-pointer' : ''}`}
+                    className={`border-b border-[var(--color-table-separator)] transition-colors hover:bg-white/[0.03] animate-slide-up ${onRowClick ? 'cursor-pointer' : ''}`}
                     style={{ animationDelay: `${i * staggerMs}ms`, animationFillMode: 'both' }}
                   >
                     {row.getVisibleCells().map((cell) => (

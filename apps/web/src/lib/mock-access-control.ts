@@ -116,10 +116,10 @@ export function relationAtLeast(current: Relation | null | undefined, required: 
 }
 
 export function getRelationBadgeClass(relation: Relation) {
-  if (relation === 'owner') return 'border-purple-400/30 bg-purple-500/15 text-purple-300'
-  if (relation === 'admin') return 'border-rose-400/30 bg-rose-500/15 text-rose-300'
-  if (relation === 'editor') return 'border-blue-400/30 bg-blue-500/15 text-blue-300'
-  return 'border-emerald-400/30 bg-emerald-500/15 text-emerald-300'
+  if (relation === 'owner') return 'relation-badge relation-badge--owner'
+  if (relation === 'admin') return 'relation-badge relation-badge--admin'
+  if (relation === 'editor') return 'relation-badge relation-badge--editor'
+  return 'relation-badge relation-badge--viewer'
 }
 
 export function getAllPrincipals() {

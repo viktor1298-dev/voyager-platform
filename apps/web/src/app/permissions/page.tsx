@@ -76,7 +76,7 @@ export default function PermissionsPage() {
         return <span className="font-medium text-[var(--color-text-primary)]">{principal?.name ?? row.original.principalId}</span>
       },
     },
-    { accessorKey: 'principalType', header: 'Type', cell: ({ row }) => <span className="text-xs uppercase text-[var(--color-text-muted)]">{row.original.principalType}</span> },
+    { accessorKey: 'principalType', header: 'Type', cell: ({ row }) => <span className="text-xs uppercase text-[var(--color-table-meta)]">{row.original.principalType}</span> },
     {
       accessorKey: 'relation',
       header: 'Relation',
@@ -86,7 +86,7 @@ export default function PermissionsPage() {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <button type="button" className="rounded-md px-2 py-1 text-xs text-red-300 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60" disabled={isGrantPending || isRevokePending} onClick={() => setRevokeTarget(row.original)}>
+        <button type="button" className="rounded-md px-2 py-1 text-xs text-[var(--color-status-error)] hover:bg-red-500/12 disabled:cursor-not-allowed disabled:opacity-60" disabled={isGrantPending || isRevokePending} onClick={() => setRevokeTarget(row.original)}>
           Revoke
         </button>
       ),
@@ -103,13 +103,13 @@ export default function PermissionsPage() {
 
   const matrixColumns = useMemo<ColumnDef<Record<string, string>, unknown>[]>(() => [
     { accessorKey: 'principal', header: 'Principal', cell: ({ row }) => <span className="font-medium text-[var(--color-text-primary)]">{row.original.principal}</span> },
-    { accessorKey: 'type', header: 'Type', cell: ({ row }) => <span className="text-xs uppercase text-[var(--color-text-muted)]">{row.original.type}</span> },
+    { accessorKey: 'type', header: 'Type', cell: ({ row }) => <span className="text-xs uppercase text-[var(--color-table-meta)]">{row.original.type}</span> },
     ...resources.map((resource) => ({
       accessorKey: resource.id,
       header: resource.name,
       cell: ({ row }: { row: { original: Record<string, string> } }) => {
         const value = row.original[resource.id]
-        if (value === '—') return <span className="text-xs text-[var(--color-text-dim)]">—</span>
+        if (value === '—') return <span className="text-xs text-[var(--color-table-meta)]">—</span>
         return <Badge className={getRelationBadgeClass(value as Relation)}>{value}</Badge>
       },
     })),
@@ -135,7 +135,7 @@ export default function PermissionsPage() {
 
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Permissions</h1>
-          <p className="mt-1 text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">Resource-based access control viewer</p>
+          <p className="mt-1 text-[11px] font-mono uppercase tracking-wider text-[var(--color-table-meta)]">Resource-based access control viewer</p>
         </div>
 
         <div className="mb-4 grid gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 lg:grid-cols-[1fr_1fr_1fr_auto]">
@@ -174,7 +174,7 @@ export default function PermissionsPage() {
         <section className="mb-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
           <h2 className="mb-3 text-sm font-semibold text-[var(--color-text-primary)]">Resource Access Viewer</h2>
           <div className="mb-3 flex items-center gap-2">
-            <span className="text-xs text-[var(--color-text-muted)]">Selected resource:</span>
+            <span className="text-xs text-[var(--color-table-meta)]">Selected resource:</span>
             <Badge variant="outline">{resourceMap[resourceId]?.name}</Badge>
           </div>
           <DataTable data={resourceGrants} columns={grantColumns} loading={isLoading} emptyTitle="No permissions for this resource" />
