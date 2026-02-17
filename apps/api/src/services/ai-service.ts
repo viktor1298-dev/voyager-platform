@@ -120,7 +120,7 @@ export class AIService {
         lastError = error
 
         if (!isTransientDbError(error)) {
-          break
+          throw error
         }
 
         if (attempt < AI_DB_RETRY.ATTEMPTS - 1) {
@@ -129,7 +129,7 @@ export class AIService {
       }
     }
 
-    if (fallback) {
+    if (fallback && isTransientDbError(lastError)) {
       return fallback()
     }
 

@@ -6,11 +6,13 @@ function createMockDb(params?: {
   recentEvents?: Array<{ reason: string | null; message: string | null; timestamp: Date }>
   latestEventAt?: Date | null
   failRecentEventsAttempts?: number
+  failRecentEventsErrorMessage?: string
 }) {
   const clusterExists = params?.clusterExists ?? true
   const recentEvents = params?.recentEvents ?? []
   const latestEventAt = params?.latestEventAt ?? null
   const failRecentEventsAttempts = params?.failRecentEventsAttempts ?? 0
+  const failRecentEventsErrorMessage = params?.failRecentEventsErrorMessage ?? 'timeout while reading recent events'
 
   let recentEventsAttempts = 0
 
@@ -41,7 +43,7 @@ function createMockDb(params?: {
               orderBy: async () => {
                 recentEventsAttempts += 1
                 if (recentEventsAttempts <= failRecentEventsAttempts) {
-                  throw new Error('timeout while reading recent events')
+                  throw new Error(failRecentEventsErrorMessage)
                 }
 
                 return recentEvents
@@ -150,5 +152,25 @@ describe('AIService', () => {
     expect(result.clusterName).toBe('prod-cluster')
     expect(result.snapshot.podsRestarting).toBe(1)
     expect(result.score).toBeGreaterThan(0)
+  })
+
+  it('propagates non-transient db errors instead of using fallback', async () => {
+    const service = new AIService({
+      db: createMockDb({
+        failRecentEventsAttempts: 1,
+        failRecentEventsErrorMessage: 'syntax error at or near "FROM"',
+      }) as never,
+    })
+
+    await expect(
+      service.analyzeClusterHealth('11111111-1111-1111-1111-111111111111', {
+        cpuUsagePercent: 30,
+        memoryUsagePercent: 40,
+        podsRestarting: 1,
+        recentEventsCount: 2,
+        logErrorRatePercent: 1,
+        lastEventAt: new Date().toISOString(),
+      }),
+    ).rejects.toThrow('syntax error at or near "FROM"')
   })
 })
