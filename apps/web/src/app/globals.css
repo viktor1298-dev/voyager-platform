@@ -143,18 +143,18 @@ html.light {
   --color-bg-secondary: #edf0f5;
   --color-bg-card: #ffffff;
   --color-bg-card-hover: #f0f2f7;
-  --color-border: rgba(0, 0, 0, 0.14);
-  --color-border-hover: rgba(0, 0, 0, 0.28);
+  --color-border: rgba(0, 0, 0, 0.16);
+  --color-border-hover: rgba(0, 0, 0, 0.3);
   --color-text-primary: #1a202c;
-  --color-text-secondary: #2c394b;
-  --color-text-muted: #39485d;
-  --color-text-dim: #52627a;
-  --color-text-secondary-strong: #233043;
-  --color-table-header: #1d2b40;
-  --color-table-meta: #25364d;
-  --color-separator: rgba(0, 0, 0, 0.24);
-  --color-table-separator: rgba(0, 0, 0, 0.36);
-  --color-badge-label: #0f1d32;
+  --color-text-secondary: #243246;
+  --color-text-muted: #2f4158;
+  --color-text-dim: #435673;
+  --color-text-secondary-strong: #1e2d44;
+  --color-table-header: #1b2b42;
+  --color-table-meta: #223652;
+  --color-separator: rgba(0, 0, 0, 0.26);
+  --color-table-separator: rgba(0, 0, 0, 0.4);
+  --color-badge-label: #0d1e37;
   --color-accent: #6366f1;
 
   --glass-bg: rgba(255, 255, 255, 0.6);
@@ -185,15 +185,15 @@ html.light {
 
 @media (max-width: 768px) {
   html.light {
-    --color-text-secondary: #273447;
-    --color-text-muted: #34445b;
-    --color-text-dim: #4b5d76;
-    --color-text-secondary-strong: #1f2d42;
-    --color-table-header: #203047;
-    --color-table-meta: #2a3a52;
-    --color-separator: rgba(0, 0, 0, 0.24);
-    --color-table-separator: rgba(0, 0, 0, 0.34);
-    --color-badge-label: #111d31;
+    --color-text-secondary: #22354b;
+    --color-text-muted: #2c425b;
+    --color-text-dim: #415876;
+    --color-text-secondary-strong: #1c2f47;
+    --color-table-header: #1d324b;
+    --color-table-meta: #26405d;
+    --color-separator: rgba(0, 0, 0, 0.26);
+    --color-table-separator: rgba(0, 0, 0, 0.38);
+    --color-badge-label: #0f1f39;
   }
 }
 
