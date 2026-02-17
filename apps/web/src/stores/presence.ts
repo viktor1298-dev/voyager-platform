@@ -8,8 +8,8 @@ export interface PresenceUser {
   id: string
   name: string
   currentPage: string
-  avatarUrl?: string
-  lastHeartbeatAt: number
+  avatar?: string
+  lastSeen: string
 }
 
 interface PresenceState {

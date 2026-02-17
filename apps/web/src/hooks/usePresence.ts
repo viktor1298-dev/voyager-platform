@@ -5,14 +5,26 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useRef } from 'react'
 import { AWAY_AFTER_MS, type PresenceUser, usePresenceStore } from '@/stores/presence'
 
-interface PresenceEventPayload {
-  type?: 'snapshot' | 'upsert' | 'remove'
-  user?: Partial<PresenceUser> & { userId?: string; page?: string; heartbeatAt?: number }
-  users?: Array<Partial<PresenceUser> & { userId?: string; page?: string; heartbeatAt?: number }>
+interface BackendPresenceUser {
+  id?: string
   userId?: string
+  name?: string
+  currentPage?: string
+  page?: string
+  avatar?: string
+  lastSeen?: string
 }
 
-function mapIncomingUser(user: Partial<PresenceUser> & { userId?: string; page?: string; heartbeatAt?: number }): PresenceUser | null {
+interface PresenceEventPayload {
+  reason?: string
+  userId?: string
+  users?: BackendPresenceUser[]
+}
+
+const RECONNECT_BASE_DELAY_MS = 1_000
+const RECONNECT_MAX_DELAY_MS = 15_000
+
+function mapIncomingUser(user: BackendPresenceUser): PresenceUser | null {
   const id = user.id ?? user.userId
   if (!id) return null
 
@@ -20,13 +32,13 @@ function mapIncomingUser(user: Partial<PresenceUser> & { userId?: string; page?:
     id,
     name: user.name ?? 'Unknown user',
     currentPage: user.currentPage ?? user.page ?? '/',
-    avatarUrl: user.avatarUrl,
-    lastHeartbeatAt: user.lastHeartbeatAt ?? user.heartbeatAt ?? Date.now(),
+    avatar: user.avatar,
+    lastSeen: user.lastSeen ?? new Date().toISOString(),
   }
 }
 
 async function fetchPresenceInitial(): Promise<PresenceUser[]> {
-  const response = await fetch('/trpc/presence.list', {
+  const response = await fetch('/trpc/presence.getOnlineUsers', {
     method: 'GET',
     credentials: 'include',
   })
@@ -34,14 +46,20 @@ async function fetchPresenceInitial(): Promise<PresenceUser[]> {
   if (!response.ok) return []
 
   const data = (await response.json()) as {
-    result?: { data?: { json?: unknown[]; onlineUsers?: unknown[] } }
+    result?: { data?: { json?: unknown; users?: unknown[]; onlineUsers?: unknown[] } }
   }
 
-  const rawUsers = data.result?.data?.onlineUsers ?? data.result?.data?.json ?? []
-  if (!Array.isArray(rawUsers)) return []
+  const payload = data.result?.data
+  const rawUsers = Array.isArray(payload?.users)
+    ? payload.users
+    : Array.isArray(payload?.json)
+      ? payload.json
+      : Array.isArray(payload?.onlineUsers)
+        ? payload.onlineUsers
+        : []
 
   return rawUsers
-    .map((user) => mapIncomingUser((user as PresenceUser) ?? {}))
+    .map((user) => mapIncomingUser((user as BackendPresenceUser) ?? {}))
     .filter((user): user is PresenceUser => user !== null)
 }
 
@@ -66,34 +84,79 @@ export function usePresence() {
   }, [initialPresenceQuery.data, setOnlineUsers])
 
   useEffect(() => {
-    const eventSource = new EventSource('/trpc/presence.subscribe', { withCredentials: true })
+    let eventSource: EventSource | null = null
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
+    let reconnectAttempts = 0
+    let isUnmounted = false
 
-    eventSource.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data) as PresenceEventPayload
+    const clearReconnectTimer = () => {
+      if (!reconnectTimeout) return
+      clearTimeout(reconnectTimeout)
+      reconnectTimeout = null
+    }
 
-        if (payload.type === 'snapshot' && payload.users) {
-          const users = payload.users
-            .map((user) => mapIncomingUser(user))
-            .filter((user): user is PresenceUser => user !== null)
-          setOnlineUsers(users)
-          return
+    const scheduleReconnect = () => {
+      if (isUnmounted || reconnectTimeout) return
+
+      const delay = Math.min(RECONNECT_BASE_DELAY_MS * 2 ** reconnectAttempts, RECONNECT_MAX_DELAY_MS)
+      reconnectAttempts += 1
+
+      reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null
+        connect()
+      }, delay)
+    }
+
+    const connect = () => {
+      if (isUnmounted) return
+
+      eventSource?.close()
+      eventSource = new EventSource('/trpc/presence.subscribe', { withCredentials: true })
+
+      eventSource.onopen = () => {
+        reconnectAttempts = 0
+        clearReconnectTimer()
+      }
+
+      eventSource.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data) as PresenceEventPayload
+
+          if (Array.isArray(payload.users)) {
+            const users = payload.users
+              .map((user) => mapIncomingUser(user))
+              .filter((user): user is PresenceUser => user !== null)
+
+            if (payload.reason === 'snapshot') {
+              setOnlineUsers(users)
+              return
+            }
+
+            users.forEach((user) => upsertUser(user))
+            return
+          }
+
+          if (payload.reason === 'remove' || payload.reason === 'offline') {
+            if (payload.userId) removeUser(payload.userId)
+          }
+        } catch {
+          // no-op: ignore malformed event payloads
         }
+      }
 
-        if (payload.type === 'remove') {
-          const id = payload.userId ?? payload.user?.id ?? payload.user?.userId
-          if (id) removeUser(id)
-          return
-        }
-
-        const mappedUser = payload.user ? mapIncomingUser(payload.user) : null
-        if (mappedUser) upsertUser(mappedUser)
-      } catch {
-        // no-op: ignore malformed event payloads
+      eventSource.onerror = () => {
+        eventSource?.close()
+        scheduleReconnect()
       }
     }
 
-    return () => eventSource.close()
+    connect()
+
+    return () => {
+      isUnmounted = true
+      clearReconnectTimer()
+      eventSource?.close()
+    }
   }, [removeUser, setOnlineUsers, upsertUser])
 
   useEffect(() => {
@@ -115,7 +178,7 @@ export function usePresence() {
     }, 30_000)
 
     return () => clearInterval(interval)
-  }, [pathname])
+  }, [pathname, setMyStatus])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -135,7 +198,7 @@ export function usePresence() {
     () =>
       state.onlineUsers.map((user) => ({
         ...user,
-        status: Date.now() - user.lastHeartbeatAt > AWAY_AFTER_MS ? ('away' as const) : ('online' as const),
+        status: Date.now() - new Date(user.lastSeen).getTime() > AWAY_AFTER_MS ? ('away' as const) : ('online' as const),
       })),
     [state.onlineUsers],
   )
