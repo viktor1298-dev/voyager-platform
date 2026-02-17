@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { login } from '../e2e/helpers';
+import { stabilizeVisuals } from './stabilize';
 
 async function waitForPageReady(page: Page): Promise<void> {
   await page.waitForLoadState('domcontentloaded');
@@ -23,7 +24,9 @@ async function captureRoute(
   await page.goto(route);
   await waitForPageReady(page);
   await applyTheme(page, theme);
-  await expect(page).toHaveScreenshot(`${name}-${theme}.png`);
+
+  const mask = await stabilizeVisuals(page);
+  await expect(page).toHaveScreenshot(`${name}-${theme}.png`, { mask });
 }
 
 test.describe('Visual regression — main pages', () => {
