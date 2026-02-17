@@ -18,12 +18,16 @@ const loginSchema = z.object({
 export default function LoginPage() {
   const router = useRouter()
   const [returnUrl, setReturnUrl] = useState('/')
+  const [isLoggedOutRedirect, setIsLoggedOutRedirect] = useState(false)
   const { data: session, isPending } = authClient.useSession()
   const providersQuery = trpc.sso.getProviders.useQuery(undefined, { retry: false })
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const requestedReturnUrl = params.get('returnUrl')
+    const loggedOut = params.get('loggedOut') === '1'
+    setIsLoggedOutRedirect(loggedOut)
+
     // Validate returnUrl: must start with '/' but not '//' (to prevent protocol-relative URLs)
     if (requestedReturnUrl && requestedReturnUrl.startsWith('/') && !requestedReturnUrl.startsWith('//')) {
       setReturnUrl(requestedReturnUrl)
@@ -31,10 +35,11 @@ export default function LoginPage() {
   }, [])
 
   useEffect(() => {
+    if (isLoggedOutRedirect) return
     if (!isPending && session?.user) {
       router.replace(returnUrl)
     }
-  }, [isPending, returnUrl, router, session])
+  }, [isLoggedOutRedirect, isPending, returnUrl, router, session])
 
   const microsoftProvider = providersQuery.data?.find((provider) => provider.id === 'microsoft-entra-id' && provider.enabled)
 

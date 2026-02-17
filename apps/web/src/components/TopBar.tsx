@@ -20,7 +20,7 @@ export function TopBar() {
     try {
       await useAuthStore.getState().logout()
     } finally {
-      router.replace('/login')
+      router.replace('/login?loggedOut=1')
       router.refresh()
       setIsLoggingOut(false)
     }
