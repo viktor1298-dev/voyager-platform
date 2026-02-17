@@ -9,6 +9,8 @@ import { trpc } from '@/lib/trpc'
 import { type AiChatMessage, useAiAssistantStore } from '@/stores/ai-assistant'
 
 const PAGE_SIZE = 10
+const ANALYZE_CHAT_RETRIES = 2
+const ANALYZE_CHAT_RETRY_DELAY_MS = 300
 const ANALYZE_FETCH_RETRIES = 2
 const ANALYZE_FETCH_RETRY_DELAY_MS = 350
 
@@ -153,22 +155,32 @@ export function AiChat({
       })
 
       try {
-        const response = await chatMutation.mutateAsync({
-          clusterId: selectedClusterId,
-          question: trimmed,
-        })
+        const isAnalyzePrompt = isAnalyzeHealthPrompt(trimmed)
 
-        const assistantMessage: AiChatMessage = {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: response.answer,
-          createdAt: new Date().toISOString(),
-          animate: !reduced,
-        }
+        if (isAnalyzePrompt) {
+          for (let attempt = 0; attempt <= ANALYZE_CHAT_RETRIES; attempt += 1) {
+            try {
+              const response = await chatMutation.mutateAsync({
+                clusterId: selectedClusterId,
+                question: trimmed,
+              })
 
-        appendMessage(selectedClusterId, assistantMessage)
-      } catch {
-        if (isAnalyzeHealthPrompt(trimmed)) {
+              appendMessage(selectedClusterId, {
+                id: `assistant-${Date.now()}`,
+                role: 'assistant',
+                content: response.answer,
+                createdAt: new Date().toISOString(),
+                animate: !reduced,
+              })
+              return
+            } catch {
+              if (attempt < ANALYZE_CHAT_RETRIES) {
+                await sleep(ANALYZE_CHAT_RETRY_DELAY_MS)
+                continue
+              }
+            }
+          }
+
           const cachedAnalysis = trpcUtils.ai.analyze.getData({ clusterId: selectedClusterId })
           if (cachedAnalysis) {
             appendMessage(selectedClusterId, {
@@ -212,6 +224,19 @@ export function AiChat({
           return
         }
 
+        const response = await chatMutation.mutateAsync({
+          clusterId: selectedClusterId,
+          question: trimmed,
+        })
+
+        appendMessage(selectedClusterId, {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: response.answer,
+          createdAt: new Date().toISOString(),
+          animate: !reduced,
+        })
+      } catch {
         toast.error('AI response failed. Please try again.')
 
         appendMessage(selectedClusterId, {
