@@ -93,10 +93,11 @@ export function AlertsTimelineChart({ data, range }: AlertsTimelineChartProps) {
           <ZAxis type="number" dataKey="z" range={BUBBLE_SIZE_RANGE} name="Count" />
           <Tooltip
             {...TOOLTIP_STYLE}
-            formatter={(value: number, name: string) => {
-              if (name === 'Time') return formatTimestamp(new Date(value).toISOString(), range)
-              if (name === 'Severity') return SEVERITY_LABELS[value] ?? value
-              return value
+            formatter={(value: number | undefined, name?: string) => {
+              const safeValue = typeof value === 'number' ? value : 0
+              if (name === 'Time') return formatTimestamp(new Date(safeValue).toISOString(), range)
+              if (name === 'Severity') return SEVERITY_LABELS[safeValue] ?? safeValue
+              return safeValue
             }}
           />
           <Legend />

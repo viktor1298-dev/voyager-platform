@@ -24,13 +24,13 @@ import { useRouter } from 'next/navigation'
 
 type AuditEntry = {
   id: string
-  userId: string
-  userEmail: string
+  userId?: string | null
+  userEmail?: string | null
   action: string
   resource: string
-  resourceId: string
-  details: Record<string, unknown> | null
-  ipAddress: string
+  resourceId?: string | null
+  details?: Record<string, unknown> | null
+  ipAddress?: string | null
   timestamp: string
 }
 

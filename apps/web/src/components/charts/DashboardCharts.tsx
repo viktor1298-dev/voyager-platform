@@ -31,6 +31,23 @@ export function DashboardCharts() {
   const uptime = trpc.metrics.uptimeHistory.useQuery({ range }, queryOpts)
   const alerts = trpc.metrics.alertsTimeline.useQuery({ range }, queryOpts)
 
+  const healthData = (health.data ?? []).map((p) => ({
+    timestamp: p.timestamp,
+    healthy: Number(p.healthy ?? 0),
+    degraded: Number(p.degraded ?? 0),
+    offline: Number(p.offline ?? 0),
+  }))
+  const resourceData = (resources.data ?? []).map((p) => ({
+    timestamp: p.timestamp,
+    cpu: Number(p.cpu ?? 0),
+    memory: Number(p.memory ?? 0),
+  }))
+  const requestData = (requests.data ?? []).map((p) => ({
+    timestamp: p.timestamp,
+    success: Number(p.success ?? 0),
+    error: Number(p.error ?? 0),
+  }))
+
   return (
     <section className="space-y-6" aria-label="Metrics Dashboard">
       {/* Time Range Selector */}
@@ -56,19 +73,19 @@ export function DashboardCharts() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <SlideIn delay={0}>
           <ChartCard title="Cluster Health" loading={health.isLoading} error={health.error?.message}>
-            {health.data && <ClusterHealthChart data={health.data} range={range} />}
+            {health.data && <ClusterHealthChart data={healthData} range={range} />}
           </ChartCard>
         </SlideIn>
 
         <SlideIn delay={0.05}>
           <ChartCard title="Resource Usage" loading={resources.isLoading} error={resources.error?.message}>
-            {resources.data && <ResourceUsageChart data={resources.data} range={range} />}
+            {resources.data && <ResourceUsageChart data={resourceData} range={range} />}
           </ChartCard>
         </SlideIn>
 
         <SlideIn delay={0.1}>
           <ChartCard title="Request Rates" loading={requests.isLoading} error={requests.error?.message}>
-            {requests.data && <RequestRateChart data={requests.data} range={range} />}
+            {requests.data && <RequestRateChart data={requestData} range={range} />}
           </ChartCard>
         </SlideIn>
 

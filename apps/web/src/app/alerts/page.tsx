@@ -59,8 +59,8 @@ export default function AlertsPage() {
 
   const alertsQuery = trpc.alerts.list.useQuery()
   const historyQuery = trpc.alerts.history.useQuery({ limit: 20 })
-  const alertQueryKey = [['alerts', 'list'], { type: 'query' }] as const
-  const historyQueryKey = [['alerts', 'history'], { input: { limit: 20 }, type: 'query' }] as const
+  const alertQueryKey: unknown[] = [['alerts', 'list'], { type: 'query' }]
+  const historyQueryKey: unknown[] = [['alerts', 'history'], { input: { limit: 20 }, type: 'query' }]
 
   const createMut = trpc.alerts.create.useMutation(
     useOptimisticOptions<AlertRow[], { name: string; metric: string; operator: string; threshold: number; clusterFilter?: string }>({

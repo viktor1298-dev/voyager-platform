@@ -8,16 +8,16 @@ import { useEffect, useRef, useState } from 'react'
 interface KubeEvent {
   id: string
   clusterId: string
-  namespace: string | null
+  namespace?: string | null
   kind: string
-  reason: string | null
-  message: string | null
-  source: string | null
+  reason?: string | null
+  message?: string | null
+  source?: string | null
   involvedObject?: unknown
   timestamp: string
-  createdAt: string
-  clusterName?: string
-  cluster?: string
+  createdAt?: string
+  clusterName?: string | null
+  cluster?: string | null
 }
 
 function relativeTime(date: string | Date): string {
@@ -40,11 +40,9 @@ export function NotificationsPanel() {
     { refetchInterval: 30000 },
   )
 
-  const alerts = (eventsQuery.data ?? []).filter(
-    (e: KubeEvent) => e.kind === 'Warning'
-  )
+  const alerts = ((eventsQuery.data ?? []) as KubeEvent[]).filter((e) => e.kind === 'Warning')
   const unreadCount = lastReadTimestamp
-    ? alerts.filter((e: KubeEvent) => new Date(e.timestamp) > new Date(lastReadTimestamp)).length
+    ? alerts.filter((e) => new Date(e.timestamp) > new Date(lastReadTimestamp)).length
     : alerts.length
 
   useEffect(() => {
@@ -107,7 +105,7 @@ export function NotificationsPanel() {
             </div>
           ) : (
             <div className="py-1">
-              {alerts.map((event: KubeEvent, i: number) => (
+              {alerts.map((event, i: number) => (
                 <div
                   key={event.id ?? i}
                   className="flex items-start gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors"

@@ -251,8 +251,13 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
           connectionConfig,
         }
 
-        // @ts-expect-error validateConnection exists on backend; API types are temporarily behind
-        const result = await trpcClient.clusters.validateConnection.mutate(input)
+        const result = await (trpcClient as unknown as {
+          clusters: {
+            validateConnection: {
+              mutate: (payload: ValidateConnectionPayload) => Promise<{ success: boolean; message?: string }>
+            }
+          }
+        }).clusters.validateConnection.mutate(input)
 
         if (!cancelled) {
           if (result.success) {
