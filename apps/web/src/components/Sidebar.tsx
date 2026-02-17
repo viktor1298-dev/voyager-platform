@@ -67,7 +67,7 @@ export function Sidebar({
       </aside>
 
       <aside
-        data-testid="sidebar"
+        data-testid="sidebar-desktop"
         className={`
           fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-40 transition-all duration-200
           hidden md:flex
