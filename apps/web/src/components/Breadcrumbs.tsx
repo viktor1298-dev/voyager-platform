@@ -14,6 +14,7 @@ const PATH_LABELS: Record<string, string> = {
   health: 'Health',
   'system-health': 'Health',
   features: 'Feature Flags',
+  'feature-flags': 'Feature Flags',
   webhooks: 'Webhooks',
   users: 'Users',
   audit: 'Audit Logs',
