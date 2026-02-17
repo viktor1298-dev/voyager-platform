@@ -171,6 +171,14 @@ html.light {
   --gradient-text-default: linear-gradient(135deg, var(--color-text-primary), var(--color-accent));
 }
 
+@media (max-width: 768px) {
+  html.light {
+    --color-text-secondary: #3f4b5f;
+    --color-text-muted: #5f6b7f;
+    --color-text-dim: #7f8a9d;
+  }
+}
+
 html.light ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.12);
 }
