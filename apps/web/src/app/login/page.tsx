@@ -40,17 +40,19 @@ export default function LoginPage() {
   const loggedOutFlag = searchParams.get('loggedOut') === '1'
   const loggedOutAtRaw = searchParams.get('loggedOutAt')
   const parsedLoggedOutAt = loggedOutAtRaw ? Number(loggedOutAtRaw) : Number.NaN
-  const hasTimestampedLoggedOut = Number.isFinite(parsedLoggedOutAt)
   const now = useMemo(() => Date.now(), [timeTick, searchParams])
 
-  const timestampedGraceRemainingMs = hasTimestampedLoggedOut
-    ? Math.max(0, LOGGED_OUT_GRACE_MS - (now - parsedLoggedOutAt))
+  const loggedOutAgeMs = Number.isFinite(parsedLoggedOutAt) ? now - parsedLoggedOutAt : Number.NaN
+  const hasValidTimestampedLoggedOut = Number.isFinite(loggedOutAgeMs) && loggedOutAgeMs >= 0 && loggedOutAgeMs <= LOGGED_OUT_GRACE_MS
+
+  const timestampedGraceRemainingMs = hasValidTimestampedLoggedOut
+    ? Math.max(0, LOGGED_OUT_GRACE_MS - loggedOutAgeMs)
     : 0
-  const legacyGraceRemainingMs = loggedOutFlag && !hasTimestampedLoggedOut
+  const legacyGraceRemainingMs = loggedOutFlag && !loggedOutAtRaw
     ? Math.max(0, LEGACY_LOGGED_OUT_GRACE_MS - (now - legacyLoggedOutStartedAt))
     : 0
 
-  const isTimestampedGraceActive = hasTimestampedLoggedOut && timestampedGraceRemainingMs > 0
+  const isTimestampedGraceActive = hasValidTimestampedLoggedOut && timestampedGraceRemainingMs > 0
   const isLegacyGraceActive = loggedOutFlag && !hasTimestampedLoggedOut && legacyGraceRemainingMs > 0
   const isLoggedOutRedirect = isTimestampedGraceActive || isLegacyGraceActive
 
