@@ -12,7 +12,8 @@ function createMockDb(params?: {
   const recentEvents = params?.recentEvents ?? []
   const latestEventAt = params?.latestEventAt ?? null
   const failRecentEventsAttempts = params?.failRecentEventsAttempts ?? 0
-  const failRecentEventsErrorMessage = params?.failRecentEventsErrorMessage ?? 'timeout while reading recent events'
+  const failRecentEventsErrorMessage =
+    params?.failRecentEventsErrorMessage ?? 'timeout while reading recent events'
 
   let recentEventsAttempts = 0
 
