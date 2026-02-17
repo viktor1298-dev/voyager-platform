@@ -266,7 +266,7 @@ function DashboardContent() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
-              <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-0.5">
+              <p className="text-[11px] text-[var(--color-table-meta)] font-mono uppercase tracking-wider mt-0.5">
                 {clusterList.filter((c) => c.source === 'live').length} live ·{' '}
                 {clusterList.filter((c) => c.source === 'db').length} registered
               </p>
@@ -290,7 +290,7 @@ function DashboardContent() {
                   >
                     <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
                     <span className="capitalize">{filter}</span>
-                    <span className="tabular-nums text-[var(--color-text-dim)]">{envCounts[filter]}</span>
+                    <span className="tabular-nums text-[var(--color-table-meta)]">{envCounts[filter]}</span>
                   </button>
                 )
               })}
@@ -387,6 +387,7 @@ function DashboardPageFallback() {
           <SkeletonCard />
         </div>
         <div className="space-y-3">
+          <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
           <SkeletonText width="12rem" height="1.5rem" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             <SkeletonCard />
