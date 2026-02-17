@@ -53,7 +53,7 @@ export default function LoginPage() {
     : 0
 
   const isTimestampedGraceActive = hasValidTimestampedLoggedOut && timestampedGraceRemainingMs > 0
-  const isLegacyGraceActive = loggedOutFlag && !hasTimestampedLoggedOut && legacyGraceRemainingMs > 0
+  const isLegacyGraceActive = loggedOutFlag && !loggedOutAtRaw && legacyGraceRemainingMs > 0
   const isLoggedOutRedirect = isTimestampedGraceActive || isLegacyGraceActive
 
   useEffect(() => {
