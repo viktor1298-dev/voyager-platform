@@ -139,7 +139,10 @@ export function DataTable<TData>({
             {mobileCard && (
               <div className="md:hidden p-3 space-y-3">
                 {Array.from({ length: Math.min(skeletonRows, 3) }, (_, index) => (
-                  <div key={`mobile-skeleton-${index + 1}`} className="rounded-lg p-4 border border-[var(--color-border)] bg-[var(--color-bg-card)] space-y-2">
+                  <div
+                    key={`mobile-skeleton-${index + 1}`}
+                    className="rounded-lg p-4 border border-[var(--color-border)] bg-[var(--color-bg-card)] space-y-2"
+                  >
                     <div className="skeleton-shimmer h-4 w-1/2 rounded" />
                     <div className="skeleton-shimmer h-3 w-full rounded" />
                     <div className="skeleton-shimmer h-3 w-3/4 rounded" />
@@ -151,7 +154,10 @@ export function DataTable<TData>({
               <tbody>
                 {Array.from({ length: skeletonRows }, (_, index) => `skeleton-${index + 1}`).map(
                   (skeletonKey) => (
-                    <tr key={skeletonKey} className="border-b border-[var(--color-table-separator)]">
+                    <tr
+                      key={skeletonKey}
+                      className="border-b border-[var(--color-table-separator)]"
+                    >
                       <td className="py-2.5 px-3" colSpan={Math.max(columns.length, 1)}>
                         <div className="flex gap-4">
                           <div className="skeleton-shimmer h-4 flex-[2] rounded" />
@@ -205,12 +211,26 @@ export function DataTable<TData>({
                       return (
                         <th
                           key={header.id}
+                          aria-sort={
+                            sorted === 'asc'
+                              ? 'ascending'
+                              : sorted === 'desc'
+                                ? 'descending'
+                                : 'none'
+                          }
                           className="text-left py-2 px-3 text-[10px] text-[var(--color-table-header)] font-mono uppercase tracking-wider font-medium select-none"
                           style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
                         >
                           {header.isPlaceholder ? null : (
                             <button
                               type="button"
+                              aria-label={
+                                typeof header.column.columnDef.header === 'string'
+                                  ? canSort
+                                    ? `Sort by ${header.column.columnDef.header}`
+                                    : header.column.columnDef.header
+                                  : undefined
+                              }
                               className={`flex items-center gap-1 ${canSort ? 'cursor-pointer hover:text-[var(--color-text-secondary)]' : ''}`}
                               onClick={
                                 canSort ? header.column.getToggleSortingHandler() : undefined
