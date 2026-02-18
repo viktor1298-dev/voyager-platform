@@ -1,9 +1,10 @@
-import { auth } from '../lib/auth.js'
+import { TRPCError } from '@trpc/server'
+import { AI_CONFIG } from '@voyager/config'
 import { db } from '@voyager/db'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { auth } from '../lib/auth.js'
 import { AIService, clusterSnapshotSchema } from '../services/ai-service.js'
-import { AI_CONFIG } from '@voyager/config'
 
 const aiStreamBodySchema = z.object({
   clusterId: z.string().uuid(),
@@ -12,7 +13,56 @@ const aiStreamBodySchema = z.object({
   threadId: z.string().uuid().optional(),
 })
 
+const aiHistoryQuerySchema = z.object({
+  clusterId: z.string().uuid(),
+  messageLimit: z.coerce.number().int().min(1).max(500).optional(),
+})
+
+const SSE_PROTOCOL_VERSION = 'v1'
+
 export async function registerAiStreamRoute(app: FastifyInstance): Promise<void> {
+  const handleHistoryRequest = async (request: FastifyRequest, reply: FastifyReply) => {
+    const parsed = aiHistoryQuerySchema.safeParse(request.query)
+    if (!parsed.success) {
+      reply.code(400).send({ error: 'Invalid request query' })
+      return
+    }
+
+    const headers = new Headers()
+    for (const [key, value] of Object.entries(request.headers)) {
+      if (value) headers.append(key, String(value))
+    }
+
+    const sessionResult = await auth.api.getSession({ headers }).catch(() => null)
+    if (!sessionResult?.session || !sessionResult.user) {
+      reply.code(401).send({ error: 'Unauthorized' })
+      return
+    }
+
+    try {
+      const aiService = new AIService({ db })
+      const history = await aiService.getLatestThreadHistory({
+        clusterId: parsed.data.clusterId,
+        userId: sessionResult.user.id,
+        messageLimit: parsed.data.messageLimit,
+      })
+
+      if (!history) {
+        reply.code(404).send({ error: 'No conversation history found' })
+        return
+      }
+
+      reply.code(200).send(history)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to fetch conversation history'
+      reply.code(500).send({ error: message })
+    }
+  }
+
+  app.get('/api/ai/conversations/latest', handleHistoryRequest)
+  app.get('/api/ai/conversations', handleHistoryRequest)
+
   app.post('/api/ai/stream', async (request: FastifyRequest, reply: FastifyReply) => {
     const parsed = aiStreamBodySchema.safeParse(request.body)
     if (!parsed.success) {
@@ -39,7 +89,9 @@ export async function registerAiStreamRoute(app: FastifyInstance): Promise<void>
 
     const writeEvent = (event: string, payload: Record<string, unknown>) => {
       reply.raw.write(`event: ${event}\n`)
-      reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`)
+      reply.raw.write(
+        `data: ${JSON.stringify({ ...payload, protocolVersion: SSE_PROTOCOL_VERSION })}\n\n`,
+      )
     }
 
     const heartbeat = setInterval(() => {
@@ -57,18 +109,29 @@ export async function registerAiStreamRoute(app: FastifyInstance): Promise<void>
           userId: sessionResult.user.id,
         },
         (token) => {
-          writeEvent('token', { token })
+          writeEvent('token', { delta: token })
         },
       )
 
       writeEvent('done', {
+        done: true,
         threadId: result.threadId,
         provider: result.provider,
         model: result.model,
       })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'AI streaming failed'
-      writeEvent('error', { message })
+      const normalizedError =
+        error instanceof TRPCError
+          ? {
+              code: error.code,
+              message: error.message,
+            }
+          : {
+              code: 'AI_STREAM_ERROR',
+              message: error instanceof Error ? error.message : 'AI streaming failed',
+            }
+
+      writeEvent('error', normalizedError)
     } finally {
       clearInterval(heartbeat)
       reply.raw.end()

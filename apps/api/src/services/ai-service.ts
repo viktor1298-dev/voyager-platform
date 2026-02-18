@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import type { Database } from '@voyager/db'
-import { clusters, events } from '@voyager/db'
+import { events, clusters } from '@voyager/db'
 import { and, desc, eq, gte } from 'drizzle-orm'
 import { z } from 'zod'
 import { AiConversationStore } from './ai-conversation-store.js'
@@ -112,7 +112,9 @@ function buildSystemPrompt(analysis: ClusterAnalysis): string {
     `Score: ${analysis.score}/100`,
     `Snapshot: CPU=${analysis.snapshot.cpuUsagePercent.toFixed(1)}%; Memory=${analysis.snapshot.memoryUsagePercent.toFixed(1)}%; Restarts=${analysis.snapshot.podsRestarting}; Events=${analysis.snapshot.recentEventsCount}; LogErrorRate=${analysis.snapshot.logErrorRatePercent.toFixed(1)}%`,
     'Top recommendations:',
-    ...analysis.recommendations.slice(0, 3).map((rec) => `- [${rec.severity}] ${rec.title}: ${rec.action}`),
+    ...analysis.recommendations
+      .slice(0, 3)
+      .map((rec) => `- [${rec.severity}] ${rec.title}: ${rec.action}`),
   ].join('\n')
 }
 
@@ -290,6 +292,47 @@ export class AIService {
     return recommendations
   }
 
+  public async getLatestThreadHistory(params: {
+    clusterId: string
+    userId: string
+    messageLimit?: number
+  }): Promise<{
+    threadId: string
+    clusterId: string
+    title: string | null
+    provider: 'openai' | 'anthropic'
+    model: string
+    createdAt: Date
+    updatedAt: Date
+    messages: Array<{
+      id: string
+      role: 'system' | 'user' | 'assistant'
+      content: string
+      createdAt: Date
+    }>
+  } | null> {
+    const history = await this.conversationStore.getLatestThreadHistory({
+      userId: params.userId,
+      clusterId: params.clusterId,
+      messageLimit: params.messageLimit,
+    })
+
+    if (!history) {
+      return null
+    }
+
+    return {
+      threadId: history.id,
+      clusterId: history.clusterId,
+      title: history.title,
+      provider: history.provider,
+      model: history.model,
+      createdAt: history.createdAt,
+      updatedAt: history.updatedAt,
+      messages: history.messages,
+    }
+  }
+
   public async answerQuestion(params: {
     clusterId: string
     question: string
@@ -338,7 +381,11 @@ export class AIService {
       })
       persistedThreadId = thread.id
 
-      const history = await this.conversationStore.getThreadMessages(thread.id)
+      const history = await this.conversationStore.getThreadMessages({
+        threadId: thread.id,
+        userId: params.userId,
+        clusterId: params.clusterId,
+      })
       promptMessages.push(...history.slice(-20))
     }
 
@@ -350,9 +397,11 @@ export class AIService {
       temperature: 0.2,
     }
 
-    if (persistedThreadId) {
+    if (persistedThreadId && params.userId) {
       await this.conversationStore.appendMessage({
         threadId: persistedThreadId,
+        clusterId: params.clusterId,
+        userId: params.userId,
         role: 'user',
         content: params.question,
         provider: config.provider,
@@ -369,9 +418,11 @@ export class AIService {
       },
     })
 
-    if (persistedThreadId) {
+    if (persistedThreadId && params.userId) {
       await this.conversationStore.appendMessage({
         threadId: persistedThreadId,
+        clusterId: params.clusterId,
+        userId: params.userId,
         role: 'assistant',
         content: assistantTokens.join(''),
         provider: config.provider,

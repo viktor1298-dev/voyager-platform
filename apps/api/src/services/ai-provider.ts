@@ -29,7 +29,10 @@ export interface AiStreamCallbacks {
 export function readAiProviderConfigFromEnv(): AiProviderConfig {
   const provider = (process.env.AI_PROVIDER ?? AI_CONFIG.DEFAULT_PROVIDER) as AiProviderName
   const model = process.env.AI_MODEL ?? AI_CONFIG.DEFAULT_MODEL
-  const timeoutMs = Number.parseInt(process.env.AI_TIMEOUT_MS ?? `${AI_CONFIG.REQUEST_TIMEOUT_MS}`, 10)
+  const timeoutMs = Number.parseInt(
+    process.env.AI_TIMEOUT_MS ?? `${AI_CONFIG.REQUEST_TIMEOUT_MS}`,
+    10,
+  )
   const maxOutputTokens = Number.parseInt(
     process.env.AI_MAX_OUTPUT_TOKENS ?? `${AI_CONFIG.MAX_OUTPUT_TOKENS}`,
     10,
@@ -103,7 +106,10 @@ export class AiProviderClient {
     await this.streamOpenAi(input, callbacks)
   }
 
-  private async streamOpenAi(input: AiCompletionRequest, callbacks: AiStreamCallbacks): Promise<void> {
+  private async streamOpenAi(
+    input: AiCompletionRequest,
+    callbacks: AiStreamCallbacks,
+  ): Promise<void> {
     const baseUrl = this.config.baseUrl ?? 'https://api.openai.com/v1'
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
@@ -143,12 +149,16 @@ export class AiProviderClient {
           return
         }
 
-        const parsed = JSON.parse(payload) as {
-          choices?: Array<{ delta?: { content?: string } }>
-        }
-        const token = parsed.choices?.[0]?.delta?.content
-        if (token) {
-          await callbacks.onToken(token)
+        try {
+          const parsed = JSON.parse(payload) as {
+            choices?: Array<{ delta?: { content?: string } }>
+          }
+          const token = parsed.choices?.[0]?.delta?.content
+          if (token) {
+            await callbacks.onToken(token)
+          }
+        } catch {
+          // Ignore malformed stream payloads and continue reading.
         }
       }
     }
@@ -156,7 +166,10 @@ export class AiProviderClient {
     await callbacks.onComplete?.()
   }
 
-  private async streamAnthropic(input: AiCompletionRequest, callbacks: AiStreamCallbacks): Promise<void> {
+  private async streamAnthropic(
+    input: AiCompletionRequest,
+    callbacks: AiStreamCallbacks,
+  ): Promise<void> {
     const baseUrl = this.config.baseUrl ?? 'https://api.anthropic.com/v1'
     const response = await fetch(`${baseUrl}/messages`, {
       method: 'POST',
@@ -203,12 +216,16 @@ export class AiProviderClient {
         const payload = trimmed.replace(/^data:\s*/, '')
         if (!payload || payload === '[DONE]') continue
 
-        const parsed = JSON.parse(payload) as {
-          type?: string
-          delta?: { text?: string }
-        }
-        if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
-          await callbacks.onToken(parsed.delta.text)
+        try {
+          const parsed = JSON.parse(payload) as {
+            type?: string
+            delta?: { text?: string }
+          }
+          if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+            await callbacks.onToken(parsed.delta.text)
+          }
+        } catch {
+          // Ignore malformed stream payloads and continue reading.
         }
       }
     }
