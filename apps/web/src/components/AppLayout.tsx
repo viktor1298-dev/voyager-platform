@@ -54,7 +54,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           type="button"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          className="fixed top-3.5 left-3 z-50 flex items-center justify-center h-8 w-8 rounded-lg hover:bg-white/[0.06] transition-colors"
+          className={`fixed top-3.5 left-3 flex items-center justify-center h-8 w-8 rounded-lg hover:bg-white/[0.06] transition-colors ${
+            mobileOpen ? 'z-30' : 'z-50'
+          }`}
         >
           <Menu className="h-5 w-5 text-[var(--color-text-muted)]" />
         </button>

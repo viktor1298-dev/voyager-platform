@@ -31,4 +31,23 @@ test.describe('BYOK key flow', () => {
     await expect(page.getByRole('button', { name: /test new key/i })).toBeEnabled()
     await expect(saveButton).toBeEnabled()
   })
+
+  test('Settings BYOK test/save use backend response (not route unavailable)', async ({ page }) => {
+    await page.goto('/settings')
+
+    const apiKeyInput = page.getByLabel(/api key/i)
+    const testButton = page.getByTestId('byok-test')
+    const saveButton = page.getByTestId('byok-save')
+    const actionStatus = page.getByTestId('byok-action-status')
+
+    await apiKeyInput.fill('sk-test-123456789')
+
+    await testButton.click()
+    await expect(actionStatus).toBeVisible({ timeout: 15_000 })
+    await expect(actionStatus).not.toContainText(/route is unavailable/i)
+
+    await saveButton.click()
+    await expect(actionStatus).toBeVisible({ timeout: 15_000 })
+    await expect(actionStatus).not.toContainText(/route is unavailable/i)
+  })
 })

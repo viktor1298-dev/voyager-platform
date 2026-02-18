@@ -47,7 +47,7 @@ export function Sidebar({
       <aside
         data-testid="sidebar"
         className={`
-          fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-50 transition-all duration-200
+          fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-50 transition-transform duration-200
           ${isDesktop ? 'translate-x-0' : mobileOpen ? 'translate-x-0' : '-translate-x-full'}
           ${isDesktop ? (collapsed ? 'w-12' : 'w-48') : 'w-48'}
         `}
@@ -55,8 +55,9 @@ export function Sidebar({
         <SidebarContent
           showLabels={!isDesktop || mobileOpen || !collapsed}
           isActive={isActive}
+          pathname={pathname}
           isAdmin={isAdmin === true}
-          onLinkClick={() => setMobileOpen(false)}
+          onSameRouteClick={() => setMobileOpen(false)}
           clusters={sidebarClusters}
         />
         {isDesktop && (
@@ -83,14 +84,16 @@ export function Sidebar({
 function SidebarContent({
   showLabels,
   isActive,
+  pathname,
   isAdmin,
-  onLinkClick,
+  onSameRouteClick,
   clusters,
 }: {
   showLabels: boolean
   isActive: (path: string) => boolean
+  pathname: string
   isAdmin: boolean
-  onLinkClick: () => void
+  onSameRouteClick: () => void
   clusters: Array<{ id: string; name: string; provider: string | null }>
 }) {
   const filteredItems = navItems.filter(
@@ -107,7 +110,11 @@ function SidebarContent({
       <Link
         key={item.id}
         href={item.id}
-        onClick={onLinkClick}
+        onClick={() => {
+          if (pathname === item.id) {
+            onSameRouteClick()
+          }
+        }}
         className={`
           sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg
           ${
@@ -159,7 +166,11 @@ function SidebarContent({
                 <Link
                   key={cluster.id}
                   href="/clusters"
-                  onClick={onLinkClick}
+                  onClick={() => {
+                    if (pathname === '/clusters') {
+                      onSameRouteClick()
+                    }
+                  }}
                   className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]"
                 >
                   <span

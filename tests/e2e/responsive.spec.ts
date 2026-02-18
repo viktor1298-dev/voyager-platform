@@ -42,6 +42,18 @@ test.describe('Responsive — Mobile Viewport', () => {
     await expect(usersDesktopTable).toBeHidden();
   });
 
+  test('mobile nav first tap should navigate immediately', async ({ page }) => {
+    await login(page);
+    await page.goto('/users');
+
+    const menuButton = page.getByRole('button', { name: /open navigation menu|close navigation menu/i });
+    await menuButton.click();
+
+    await page.getByRole('link', { name: /^settings$/i }).click();
+    await expect(page).toHaveURL(/\/settings/);
+    await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible({ timeout: 10_000 });
+  });
+
   test('should render BYOK actions as full-width touch targets on mobile', async ({ page }) => {
     await login(page);
     await page.goto('/settings');
