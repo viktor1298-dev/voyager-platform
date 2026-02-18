@@ -1,5 +1,5 @@
 import { desc } from 'drizzle-orm'
-import { index, jsonb, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { index, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
 import { user } from './auth.js'
 import { clusters } from './clusters.js'
 
@@ -73,6 +73,28 @@ export const aiMessages = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index('idx_ai_messages_thread_created').on(table.threadId, desc(table.createdAt))],
+)
+
+export const userAiKeys = pgTable(
+  'user_ai_keys',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    provider: aiProviderEnum('provider').notNull(),
+    encryptedKey: text('encrypted_key').notNull(),
+    model: varchar('model', { length: 120 }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex('uidx_user_ai_keys_user_provider').on(table.userId, table.provider),
+    index('idx_user_ai_keys_user_updated').on(table.userId, desc(table.updatedAt)),
+  ],
 )
 
 export const aiRecommendations = pgTable('ai_recommendations', {

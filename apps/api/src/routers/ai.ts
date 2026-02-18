@@ -3,6 +3,7 @@ import { aiRecommendations } from '@voyager/db'
 import { and, desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
+import { AiKeySettingsService } from '../services/ai-key-settings-service.js'
 import { AIService, aiRecommendationSchema, clusterSnapshotSchema } from '../services/ai-service.js'
 import { protectedProcedure, router } from '../trpc.js'
 
@@ -26,6 +27,16 @@ const suggestionsInputSchema = z.object({
 const historyInputSchema = z.object({
   clusterId: z.string().uuid(),
   messageLimit: z.number().int().min(1).max(500).optional(),
+})
+
+const aiKeySettingsInputSchema = z.object({
+  provider: z.enum(['openai', 'anthropic']),
+  apiKey: z.string().min(10).max(512),
+  model: z.string().min(1).max(120),
+})
+
+const aiKeyStatusInputSchema = z.object({
+  provider: z.enum(['openai', 'anthropic']).optional(),
 })
 
 const LOGICAL_AI_ERROR_CODES = new Set(['NOT_FOUND', 'BAD_REQUEST'])
@@ -254,7 +265,110 @@ export const aiRouter = router({
       }
     }),
 
+  keySettingsCreate: protectedProcedure
+    .input(aiKeySettingsInputSchema)
+    .output(
+      z.object({
+        provider: z.enum(['openai', 'anthropic']),
+        model: z.string(),
+        maskedKey: z.string(),
+        hasKey: z.literal(true),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const service = new AiKeySettingsService(ctx.db)
+      const tested = await service.testConnection({
+        provider: input.provider,
+        model: input.model,
+        apiKey: input.apiKey,
+      })
 
+      if (!tested.ok) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: tested.error ?? 'Failed to validate provider key',
+        })
+      }
+
+      return service.upsertUserKey({
+        userId: ctx.user.id,
+        provider: input.provider,
+        model: input.model,
+        apiKey: input.apiKey,
+      })
+    }),
+
+  keySettingsUpdate: protectedProcedure
+    .input(aiKeySettingsInputSchema)
+    .output(
+      z.object({
+        provider: z.enum(['openai', 'anthropic']),
+        model: z.string(),
+        maskedKey: z.string(),
+        hasKey: z.literal(true),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const service = new AiKeySettingsService(ctx.db)
+      const tested = await service.testConnection({
+        provider: input.provider,
+        model: input.model,
+        apiKey: input.apiKey,
+      })
+
+      if (!tested.ok) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: tested.error ?? 'Failed to validate provider key',
+        })
+      }
+
+      return service.upsertUserKey({
+        userId: ctx.user.id,
+        provider: input.provider,
+        model: input.model,
+        apiKey: input.apiKey,
+      })
+    }),
+
+  keySettingsTestConnection: protectedProcedure
+    .input(aiKeySettingsInputSchema)
+    .output(
+      z.object({
+        ok: z.boolean(),
+        provider: z.enum(['openai', 'anthropic']),
+        model: z.string(),
+        error: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const service = new AiKeySettingsService(ctx.db)
+      return service.testConnection({
+        provider: input.provider,
+        model: input.model,
+        apiKey: input.apiKey,
+      })
+    }),
+
+  keySettingsStatus: protectedProcedure
+    .input(aiKeyStatusInputSchema)
+    .output(
+      z.array(
+        z.object({
+          provider: z.enum(['openai', 'anthropic']),
+          model: z.string(),
+          maskedKey: z.string(),
+          hasKey: z.literal(true),
+        }),
+      ),
+    )
+    .query(async ({ ctx, input }) => {
+      const service = new AiKeySettingsService(ctx.db)
+      return service.getUserKeyStatus({
+        userId: ctx.user.id,
+        provider: input.provider,
+      })
+    }),
 
   suggestions: protectedProcedure
     .input(suggestionsInputSchema)
