@@ -28,11 +28,17 @@ BEGIN
 END
 $$;
 
-CREATE UNIQUE INDEX IF NOT EXISTS "uidx_user_ai_keys_user_provider"
-  ON "user_ai_keys" ("user_id", "provider");
+DO $$
+BEGIN
+  IF to_regclass('public.user_ai_keys') IS NOT NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "uidx_user_ai_keys_user_provider"
+      ON "user_ai_keys" ("user_id", "provider");
 
-CREATE INDEX IF NOT EXISTS "idx_user_ai_keys_user_updated"
-  ON "user_ai_keys" ("user_id", "updated_at" DESC);
+    CREATE INDEX IF NOT EXISTS "idx_user_ai_keys_user_updated"
+      ON "user_ai_keys" ("user_id", "updated_at" DESC);
 
-CREATE INDEX IF NOT EXISTS "idx_user_ai_keys_provider_updated"
-  ON "user_ai_keys" ("provider", "updated_at" DESC);
+    CREATE INDEX IF NOT EXISTS "idx_user_ai_keys_provider_updated"
+      ON "user_ai_keys" ("provider", "updated_at" DESC);
+  END IF;
+END
+$$;
