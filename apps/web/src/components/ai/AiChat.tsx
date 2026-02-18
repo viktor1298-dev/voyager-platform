@@ -25,11 +25,28 @@ type ConversationHistoryResponse = {
 
 type StreamChunkEvent = {
   type?: string
+  token?: string
   delta?: string
   content?: string
   done?: boolean
+  threadId?: string
+  provider?: string
+  model?: string
   error?: string
 }
+
+type StreamResult =
+  | {
+      status: 'ok'
+      answer: string
+      threadId: string | null
+    }
+  | {
+      status: 'transport-error'
+    }
+  | {
+      status: 'protocol-error'
+    }
 
 function toMessageId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -48,48 +65,17 @@ function parseSseEventBlock(block: string): { event: string; data: string } | nu
   }
 }
 
-async function fetchHistory(clusterId: string): Promise<ConversationHistoryResponse | null> {
-  const candidates = [
-    `/api/ai/conversations/latest?clusterId=${encodeURIComponent(clusterId)}`,
-    `/api/ai/conversations?clusterId=${encodeURIComponent(clusterId)}`,
-  ]
-
-  for (const url of candidates) {
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-      })
-      if (!response.ok) continue
-
-      const parsed = (await response.json()) as
-        | ConversationHistoryResponse
-        | ConversationHistoryResponse[]
-
-      if (Array.isArray(parsed)) {
-        return parsed[0] ?? null
-      }
-
-      if (parsed && Array.isArray(parsed.messages)) {
-        return parsed
-      }
-    } catch {
-      // Try next candidate endpoint
-    }
-  }
-
-  return null
-}
-
 async function streamAssistantReply(params: {
   clusterId: string
   question: string
+  threadId: string | null
   onDelta: (delta: string) => void
   signal: AbortSignal
-}): Promise<{ answer: string } | null> {
+}): Promise<StreamResult> {
   const body = JSON.stringify({
     clusterId: params.clusterId,
     question: params.question,
+    threadId: params.threadId,
   })
 
   const candidates = ['/api/ai/chat/stream', '/api/ai/stream']
@@ -115,6 +101,8 @@ async function streamAssistantReply(params: {
 
       let aggregate = ''
       let buffer = ''
+      let sawProtocolEvent = false
+      let resolvedThreadId: string | null = params.threadId
 
       while (true) {
         const { done, value } = await reader.read()
@@ -133,54 +121,63 @@ async function streamAssistantReply(params: {
             if (!event) continue
             if (!event.data || event.data === '[DONE]') continue
 
-            const parsed = JSON.parse(event.data) as StreamChunkEvent
-            const delta = parsed.delta ?? parsed.content ?? ''
+            let parsed: StreamChunkEvent
+            try {
+              parsed = JSON.parse(event.data) as StreamChunkEvent
+            } catch {
+              continue
+            }
+
+            const isDoneEvent = event.event === 'done' || parsed.done === true
+            const delta = parsed.token ?? parsed.delta ?? parsed.content ?? ''
+
             if (delta) {
+              sawProtocolEvent = true
               aggregate += delta
               params.onDelta(delta)
             }
 
-            if (parsed.done) {
-              return { answer: aggregate }
+            if (parsed.threadId) {
+              resolvedThreadId = parsed.threadId
+            }
+
+            if (isDoneEvent) {
+              sawProtocolEvent = true
+              return {
+                status: 'ok',
+                answer: aggregate,
+                threadId: resolvedThreadId,
+              }
             }
           }
 
           continue
         }
 
-        if (contentType.includes('application/x-ndjson')) {
-          buffer += chunk
-          const lines = buffer.split('\n')
-          buffer = lines.pop() ?? ''
-
-          for (const line of lines) {
-            const trimmed = line.trim()
-            if (!trimmed) continue
-
-            const parsed = JSON.parse(trimmed) as StreamChunkEvent
-            const delta = parsed.delta ?? parsed.content ?? ''
-            if (delta) {
-              aggregate += delta
-              params.onDelta(delta)
-            }
-          }
-
-          continue
+        return {
+          status: 'protocol-error',
         }
-
-        aggregate += chunk
-        params.onDelta(chunk)
       }
 
-      if (aggregate.trim()) {
-        return { answer: aggregate }
+      if (sawProtocolEvent) {
+        return {
+          status: 'ok',
+          answer: aggregate,
+          threadId: resolvedThreadId,
+        }
+      }
+
+      return {
+        status: 'protocol-error',
       }
     } catch {
       // Try next candidate endpoint
     }
   }
 
-  return null
+  return {
+    status: 'transport-error',
+  }
 }
 
 const buildDefaultAssistantGreeting = (clusterName: string | null): AiChatMessage => ({
@@ -201,8 +198,11 @@ export function AiChat({
 }) {
   const reduced = useReducedMotion()
   const chatByCluster = useAiAssistantStore((state) => state.chatByCluster)
+  const threadIdByCluster = useAiAssistantStore((state) => state.threadIdByCluster)
   const appendMessage = useAiAssistantStore((state) => state.appendMessage)
   const setClusterMessages = useAiAssistantStore((state) => state.setClusterMessages)
+  const appendToMessage = useAiAssistantStore((state) => state.appendToMessage)
+  const setThreadId = useAiAssistantStore((state) => state.setThreadId)
   const quickPrompt = useAiAssistantStore((state) => state.quickPrompt)
   const clearQuickPrompt = useAiAssistantStore((state) => state.clearQuickPrompt)
 
@@ -218,6 +218,7 @@ export function AiChat({
   const viewportRef = useRef<HTMLDivElement | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
+  const trpcUtils = trpc.useUtils()
   const chatMutation = trpc.ai.chat.useMutation()
 
   const messages = useMemo(() => {
@@ -245,7 +246,9 @@ export function AiChat({
     setHistoryError(null)
 
     try {
-      const history = await fetchHistory(selectedClusterId)
+      const history = (await trpcUtils.ai.history.fetch({
+        clusterId: selectedClusterId,
+      })) as ConversationHistoryResponse | null
 
       if (!history || history.messages.length === 0) {
         const existing = chatByCluster[selectedClusterId]
@@ -256,6 +259,8 @@ export function AiChat({
         }
         return
       }
+
+      setThreadId(selectedClusterId, history.conversationId)
 
       const mapped: AiChatMessage[] = history.messages.map((message, index) => ({
         id: `history-${history.conversationId}-${index}`,
@@ -272,7 +277,15 @@ export function AiChat({
       setIsHistoryLoading(false)
       scrollToBottom()
     }
-  }, [chatByCluster, scrollToBottom, selectedClusterId, selectedClusterName, setClusterMessages])
+  }, [
+    chatByCluster,
+    scrollToBottom,
+    selectedClusterId,
+    selectedClusterName,
+    setClusterMessages,
+    setThreadId,
+    trpcUtils.ai.history,
+  ])
 
   const sendPrompt = useCallback(
     async (content: string) => {
@@ -305,18 +318,10 @@ export function AiChat({
         animate: !reduced,
       })
 
-      const updateStreamingContent = (delta: string) => {
-        const current = chatByCluster[selectedClusterId] ?? []
-        const updated = current.map((message) =>
-          message.id === assistantMessageId
-            ? {
-                ...message,
-                content: `${message.content}${delta}`,
-              }
-            : message,
-        )
+      const currentThreadId = threadIdByCluster[selectedClusterId] ?? null
 
-        setClusterMessages(selectedClusterId, updated)
+      const updateStreamingContent = (delta: string) => {
+        appendToMessage(selectedClusterId, assistantMessageId, delta)
         scrollToBottom()
       }
 
@@ -327,26 +332,41 @@ export function AiChat({
         const streamed = await streamAssistantReply({
           clusterId: selectedClusterId,
           question: trimmed,
+          threadId: currentThreadId,
           onDelta: updateStreamingContent,
           signal: abortController.signal,
         })
 
-        if (!streamed || !streamed.answer.trim()) {
+        if (streamed.status === 'ok') {
+          if (streamed.threadId) {
+            setThreadId(selectedClusterId, streamed.threadId)
+          }
+
+          if (!streamed.answer.trim()) {
+            setChatError('AI stream finished without content. Please retry.')
+          }
+        } else if (streamed.status === 'transport-error') {
           const response = await chatMutation.mutateAsync({
             clusterId: selectedClusterId,
             question: trimmed,
           })
 
-          const current = chatByCluster[selectedClusterId] ?? []
-          const updated = current.map((message) =>
-            message.id === assistantMessageId
-              ? {
-                  ...message,
-                  content: response.answer,
-                }
-              : message,
+          setClusterMessages(
+            selectedClusterId,
+            (useAiAssistantStore.getState().chatByCluster[selectedClusterId] ?? []).map(
+              (message) =>
+                message.id === assistantMessageId
+                  ? {
+                      ...message,
+                      content: response.answer,
+                    }
+                  : message,
+            ),
           )
-          setClusterMessages(selectedClusterId, updated)
+
+          setThreadId(selectedClusterId, response.conversationId)
+        } else {
+          setChatError('AI stream protocol mismatch. Please retry.')
         }
 
         void syncHistory()
@@ -354,17 +374,18 @@ export function AiChat({
         setChatError('AI response failed. Please retry.')
         toast.error('AI response failed. Please retry.')
 
-        const current = chatByCluster[selectedClusterId] ?? []
-        const updated = current.map((message) =>
-          message.id === assistantMessageId
-            ? {
-                ...message,
-                content:
-                  'I could not reach the AI backend right now. Please retry in a few seconds.',
-              }
-            : message,
+        setClusterMessages(
+          selectedClusterId,
+          (useAiAssistantStore.getState().chatByCluster[selectedClusterId] ?? []).map((message) =>
+            message.id === assistantMessageId
+              ? {
+                  ...message,
+                  content:
+                    'I could not reach the AI backend right now. Please retry in a few seconds.',
+                }
+              : message,
+          ),
         )
-        setClusterMessages(selectedClusterId, updated)
       } finally {
         setStreamingMessageId(null)
         setIsStreaming(false)
@@ -374,14 +395,16 @@ export function AiChat({
     },
     [
       appendMessage,
-      chatByCluster,
+      appendToMessage,
       chatMutation,
       isStreaming,
       reduced,
       scrollToBottom,
       selectedClusterId,
       setClusterMessages,
+      setThreadId,
       syncHistory,
+      threadIdByCluster,
     ],
   )
 

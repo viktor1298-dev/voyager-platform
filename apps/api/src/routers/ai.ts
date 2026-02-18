@@ -22,6 +22,10 @@ const suggestionsInputSchema = z.object({
   snapshot: clusterSnapshotSchema.optional(),
 })
 
+const historyInputSchema = z.object({
+  clusterId: z.string().uuid(),
+})
+
 const LOGICAL_AI_ERROR_CODES = new Set(['NOT_FOUND', 'BAD_REQUEST'])
 const TRANSIENT_AI_ERROR_PATTERNS = [
   'timeout',
@@ -55,7 +59,10 @@ function isTransientAiError(error: unknown): boolean {
   )
 }
 
-function buildDegradedChatAnswer(question: string, snapshot?: z.infer<typeof clusterSnapshotSchema>): string {
+function buildDegradedChatAnswer(
+  question: string,
+  snapshot?: z.infer<typeof clusterSnapshotSchema>,
+): string {
   const q = question.trim().toLowerCase()
 
   if (q.includes('cpu') && snapshot?.cpuUsagePercent !== undefined) {
@@ -189,6 +196,71 @@ export const aiRouter = router({
           code: 'INTERNAL_SERVER_ERROR',
           message: `AI chat failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         })
+      }
+    }),
+
+  history: protectedProcedure
+    .input(historyInputSchema)
+    .output(
+      z
+        .object({
+          conversationId: z.string().uuid(),
+          createdAt: z.date(),
+          updatedAt: z.date(),
+          messages: z.array(
+            z.object({
+              role: z.enum(['user', 'assistant']),
+              content: z.string(),
+              timestamp: z.string(),
+            }),
+          ),
+        })
+        .nullable(),
+    )
+    .query(async ({ ctx, input }) => {
+      const [latest] = await ctx.db
+        .select({
+          id: aiConversations.id,
+          createdAt: aiConversations.createdAt,
+          updatedAt: aiConversations.updatedAt,
+          messages: aiConversations.messages,
+        })
+        .from(aiConversations)
+        .where(
+          and(
+            eq(aiConversations.clusterId, input.clusterId),
+            eq(aiConversations.userId, ctx.user.id),
+          ),
+        )
+        .orderBy(desc(aiConversations.updatedAt))
+        .limit(1)
+
+      if (!latest) {
+        return null
+      }
+
+      const parsedMessages = z
+        .array(
+          z.object({
+            role: z.enum(['user', 'assistant']),
+            content: z.string(),
+            timestamp: z.string(),
+          }),
+        )
+        .safeParse(latest.messages)
+
+      if (!parsedMessages.success) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Stored AI conversation history is invalid',
+        })
+      }
+
+      return {
+        conversationId: latest.id,
+        createdAt: latest.createdAt,
+        updatedAt: latest.updatedAt,
+        messages: parsedMessages.data,
       }
     }),
 
