@@ -73,5 +73,44 @@ test('parses testConnection response using exact { success, provider, model } co
 
 test('maps backend provider to UI provider', () => {
   expect(mapBackendProviderToUi('claude')).toBe('anthropic')
+  expect(mapBackendProviderToUi('anthropic')).toBe('anthropic')
   expect(mapBackendProviderToUi('openai')).toBe('openai')
+  expect(mapBackendProviderToUi('gemini')).toBeNull()
+})
+
+test('rejects unknown provider values in get/save/testConnection responses', () => {
+  expect(
+    normalizeGetResponse({
+      keys: [
+        {
+          provider: 'gemini',
+          model: 'gemini-pro',
+          maskedKey: '***',
+          hasKey: true,
+        },
+      ],
+    }),
+  ).toBeNull()
+
+  expect(
+    normalizeSaveResponse({
+      key: {
+        provider: 'gemini',
+        model: 'gemini-pro',
+        maskedKey: '***',
+        hasKey: true,
+      },
+    }),
+  ).toBeNull()
+
+  expect(
+    normalizeTestConnectionResponse({
+      success: true,
+      provider: 'gemini',
+      model: 'gemini-pro',
+    }),
+  ).toEqual({
+    ok: false,
+    message: 'Connection failed: invalid provider in response',
+  })
 })
