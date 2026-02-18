@@ -56,6 +56,86 @@ test('falls back to legacy query path only for missing-procedure/path errors', a
   expect(untypedClient.query).toHaveBeenNthCalledWith(2, 'ai.keys.get', undefined)
 })
 
+test('rethrows non-route QUERY errors on get path', async () => {
+  const backendError = new Error('FORBIDDEN: denied by policy')
+  untypedClient.query.mockRejectedValueOnce(backendError)
+
+  await expect(getAiKeySettings()).rejects.toBe(backendError)
+  expect(untypedClient.query).toHaveBeenCalledTimes(1)
+  expect(untypedClient.query).toHaveBeenNthCalledWith(1, 'aiKeys.get', undefined)
+})
+
+test('falls back on structured NOT_FOUND tRPC shape (error.data.code)', async () => {
+  untypedClient.query
+    .mockRejectedValueOnce({
+      message: 'No "query"-procedure on path "aiKeys.get"',
+      data: { code: 'NOT_FOUND' },
+    })
+    .mockResolvedValueOnce({
+      keys: [
+        {
+          provider: 'openai',
+          model: 'gpt-4o-mini',
+          maskedKey: 'sk-proj-***',
+          hasKey: true,
+          updatedAt: null,
+        },
+      ],
+    })
+
+  await expect(getAiKeySettings()).resolves.toEqual({
+    provider: 'openai',
+    model: 'gpt-4o-mini',
+    maskedKey: 'sk-proj-***',
+    hasKey: true,
+    updatedAt: null,
+  })
+
+  expect(untypedClient.query).toHaveBeenCalledTimes(2)
+  expect(untypedClient.query).toHaveBeenNthCalledWith(1, 'aiKeys.get', undefined)
+  expect(untypedClient.query).toHaveBeenNthCalledWith(2, 'ai.keys.get', undefined)
+})
+
+test('falls back mutation path from aiKeys.* to ai.keys.* on missing-procedure errors', async () => {
+  untypedClient.mutation
+    .mockRejectedValueOnce(new Error('No "mutation"-procedure on path "aiKeys.save"'))
+    .mockResolvedValueOnce({
+      key: {
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+        maskedKey: 'sk-proj-***',
+        hasKey: true,
+        updatedAt: null,
+      },
+    })
+
+  await expect(
+    upsertAiKeySettings({
+      provider: 'openai',
+      apiKey: 'sk-test',
+      model: 'gpt-4o-mini',
+    }),
+  ).resolves.toEqual({
+    provider: 'openai',
+    model: 'gpt-4o-mini',
+    maskedKey: 'sk-proj-***',
+    hasKey: true,
+    updatedAt: null,
+  })
+
+  expect(untypedClient.mutation).toHaveBeenCalledTimes(2)
+  expect(untypedClient.mutation).toHaveBeenNthCalledWith(1, 'aiKeys.save', {
+    provider: 'openai',
+    apiKey: 'sk-test',
+    model: 'gpt-4o-mini',
+  })
+  expect(untypedClient.mutation).toHaveBeenNthCalledWith(2, 'ai.keys.save', {
+    provider: 'openai',
+    apiKey: 'sk-test',
+    model: 'gpt-4o-mini',
+  })
+})
+
 test('rethrows non-route backend errors instead of collapsing to route unavailable', async () => {
   const backendError = new Error('UNAUTHORIZED: session expired')
   untypedClient.mutation.mockRejectedValueOnce(backendError)

@@ -83,12 +83,17 @@ function isMissingProcedurePathError(error: unknown): boolean {
   const root = getRecord(error)
   const data = getRecord(root?.data)
   const shape = getRecord(root?.shape)
+  const shapeData = getRecord(shape?.data)
 
-  const messageCandidates = [root?.message, data?.message, shape?.message]
+  const messageCandidates = [root?.message, data?.message, shape?.message, shapeData?.message]
   const message = messageCandidates.find((value) => typeof value === 'string')
   const normalizedMessage = typeof message === 'string' ? message.toLowerCase() : ''
 
-  if (typeof data?.code === 'string' && data.code.toUpperCase() === 'NOT_FOUND') {
+  const codeCandidates = [data?.code, shapeData?.code]
+    .filter((value): value is string => typeof value === 'string')
+    .map((value) => value.toUpperCase())
+
+  if (codeCandidates.includes('NOT_FOUND')) {
     if (
       normalizedMessage.includes('procedure') ||
       normalizedMessage.includes('path') ||
@@ -143,18 +148,20 @@ async function mutateWithFallback<TInput>(paths: string[], input: TInput): Promi
 }
 
 export async function getAiKeySettings(): Promise<AiKeyRecord | null> {
-  try {
-    const namespace = getAiKeyNamespace()
-    if (namespace?.get?.query) {
+  const namespace = getAiKeyNamespace()
+  if (namespace?.get?.query) {
+    try {
       const result = await namespace.get.query()
       return normalizeGetResponse(result)
+    } catch (error) {
+      if (!isMissingProcedurePathError(error)) {
+        throw error
+      }
     }
-
-    const fallback = await queryWithFallback(['aiKeys.get', 'ai.keys.get'])
-    return normalizeGetResponse(fallback)
-  } catch {
-    return null
   }
+
+  const fallback = await queryWithFallback(['aiKeys.get', 'ai.keys.get'])
+  return normalizeGetResponse(fallback)
 }
 
 export async function upsertAiKeySettings(input: UpsertAiKeyInput): Promise<AiKeyRecord> {
