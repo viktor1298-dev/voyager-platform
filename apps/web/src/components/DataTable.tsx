@@ -135,18 +135,37 @@ export function DataTable<TData>({
         }}
       >
         {loading ? (
-          <div className="p-4 space-y-1">
-            {Array.from({ length: skeletonRows }, (_, index) => `skeleton-${index + 1}`).map(
-              (skeletonKey) => (
-                <div key={skeletonKey} className="flex gap-4 py-3">
-                  <div className="skeleton-shimmer h-4 flex-[2] rounded" />
-                  <div className="skeleton-shimmer h-4 flex-1 rounded" />
-                  <div className="skeleton-shimmer h-4 flex-1 rounded" />
-                  <div className="skeleton-shimmer h-4 flex-1 rounded" />
-                </div>
-              ),
+          <>
+            {mobileCard && (
+              <div className="md:hidden p-3 space-y-3">
+                {Array.from({ length: Math.min(skeletonRows, 3) }, (_, index) => (
+                  <div key={`mobile-skeleton-${index + 1}`} className="rounded-lg p-4 border border-[var(--color-border)] bg-[var(--color-bg-card)] space-y-2">
+                    <div className="skeleton-shimmer h-4 w-1/2 rounded" />
+                    <div className="skeleton-shimmer h-3 w-full rounded" />
+                    <div className="skeleton-shimmer h-3 w-3/4 rounded" />
+                  </div>
+                ))}
+              </div>
             )}
-          </div>
+            <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
+              <tbody>
+                {Array.from({ length: skeletonRows }, (_, index) => `skeleton-${index + 1}`).map(
+                  (skeletonKey) => (
+                    <tr key={skeletonKey} className="border-b border-[var(--color-table-separator)]">
+                      <td className="py-2.5 px-3" colSpan={Math.max(columns.length, 1)}>
+                        <div className="flex gap-4">
+                          <div className="skeleton-shimmer h-4 flex-[2] rounded" />
+                          <div className="skeleton-shimmer h-4 flex-1 rounded" />
+                          <div className="skeleton-shimmer h-4 flex-1 rounded" />
+                          <div className="skeleton-shimmer h-4 flex-1 rounded" />
+                        </div>
+                      </td>
+                    </tr>
+                  ),
+                )}
+              </tbody>
+            </table>
+          </>
         ) : sortedRows.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-muted)]">
             {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
