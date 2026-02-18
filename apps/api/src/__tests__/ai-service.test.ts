@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, beforeEach } from 'vitest'
+import { encryptApiKey } from '../services/ai-key-crypto.js'
 import { AIService } from '../services/ai-service.js'
 
 function createMockDb(params?: {
@@ -68,6 +69,10 @@ function createMockDb(params?: {
 }
 
 describe('AIService', () => {
+  beforeEach(() => {
+    process.env.AI_KEYS_ENCRYPTION_KEY = 'ai-service-test-secret'
+  })
+
   it('returns scale recommendation for high CPU', async () => {
     const service = new AIService({ db: createMockDb() as never })
 
@@ -180,5 +185,63 @@ describe('AIService', () => {
         lastEventAt: new Date().toISOString(),
       }),
     ).rejects.toThrow('syntax error at or near "FROM"')
+  })
+
+  it('resolves BYOK config deterministically by latest update then provider preference', async () => {
+    const openAiEncrypted = encryptApiKey('sk-openai')
+    const claudeEncrypted = encryptApiKey('sk-claude')
+
+    const db = {
+      select: () => ({
+        from: () => ({
+          where: async () => [
+            {
+              provider: 'claude',
+              model: 'claude-3-5-sonnet',
+              encryptedKey: claudeEncrypted,
+              updatedAt: new Date('2026-02-18T00:00:00.000Z'),
+            },
+            {
+              provider: 'openai',
+              model: 'gpt-4o-mini',
+              encryptedKey: openAiEncrypted,
+              updatedAt: new Date('2026-02-18T00:00:00.000Z'),
+            },
+          ],
+        }),
+      }),
+    }
+
+    const service = new AIService({ db: db as never })
+    const resolved = await (service as any).resolveUserAiConfig({ userId: 'user-1' })
+
+    expect(resolved.provider).toBe('openai')
+    expect(resolved.model).toBe('gpt-4o-mini')
+    expect(resolved.apiKey).toBe('sk-openai')
+  })
+
+  it('uses explicitly requested provider and throws when it is missing', async () => {
+    const claudeEncrypted = encryptApiKey('sk-claude')
+
+    const db = {
+      select: () => ({
+        from: () => ({
+          where: async () => [
+            {
+              provider: 'claude',
+              model: 'claude-3-5-sonnet',
+              encryptedKey: claudeEncrypted,
+              updatedAt: new Date('2026-02-18T00:00:00.000Z'),
+            },
+          ],
+        }),
+      }),
+    }
+
+    const service = new AIService({ db: db as never })
+
+    await expect(
+      (service as any).resolveUserAiConfig({ userId: 'user-1', preferredProvider: 'openai' }),
+    ).rejects.toThrow('NO_API_KEY')
   })
 })

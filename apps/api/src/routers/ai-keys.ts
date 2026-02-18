@@ -1,12 +1,28 @@
 import { TRPCError } from '@trpc/server'
 import { userAiKeys } from '@voyager/db'
-import { and, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { decryptApiKey, encryptApiKey, maskApiKey } from '../services/ai-key-crypto.js'
 import { AiProviderClient } from '../services/ai-provider.js'
 import { protectedProcedure, router } from '../trpc.js'
 
 const userAiProviderSchema = z.enum(['openai', 'claude'])
+
+const aiKeyMetadataSchema = z.object({
+  provider: userAiProviderSchema,
+  model: z.string().min(1).max(120),
+  maskedKey: z.string(),
+  updatedAt: z.date(),
+})
+
+const saveAiKeyOutputSchema = z.object({ key: aiKeyMetadataSchema })
+const getAiKeysOutputSchema = z.object({ keys: z.array(aiKeyMetadataSchema) })
+const deleteAiKeyOutputSchema = z.object({ success: z.literal(true) })
+const testConnectionOutputSchema = z.object({
+  success: z.literal(true),
+  provider: userAiProviderSchema,
+  model: z.string().min(1).max(120),
+})
 
 function toClientProvider(provider: 'openai' | 'claude'): 'openai' | 'anthropic' {
   return provider === 'claude' ? 'anthropic' : provider
@@ -21,6 +37,7 @@ export const aiKeysRouter = router({
         model: z.string().min(1).max(120),
       }),
     )
+    .output(saveAiKeyOutputSchema)
     .mutation(async ({ ctx, input }) => {
       const encryptedKey = encryptApiKey(input.apiKey)
 
@@ -42,9 +59,12 @@ export const aiKeysRouter = router({
         })
 
       return {
-        provider: input.provider,
-        model: input.model,
-        maskedKey: maskApiKey(input.apiKey),
+        key: {
+          provider: input.provider,
+          model: input.model,
+          maskedKey: maskApiKey(input.apiKey),
+          updatedAt: new Date(),
+        },
       }
     }),
 
@@ -56,6 +76,7 @@ export const aiKeysRouter = router({
         })
         .optional(),
     )
+    .output(getAiKeysOutputSchema)
     .query(async ({ ctx, input }) => {
       const rows = await ctx.db
         .select({
@@ -70,13 +91,16 @@ export const aiKeysRouter = router({
             ? and(eq(userAiKeys.userId, ctx.user.id), eq(userAiKeys.provider, input.provider))
             : eq(userAiKeys.userId, ctx.user.id),
         )
+        .orderBy(desc(userAiKeys.updatedAt), userAiKeys.provider)
 
-      return rows.map((row) => ({
-        provider: row.provider,
-        model: row.model,
-        maskedKey: maskApiKey(decryptApiKey(row.encryptedKey)),
-        updatedAt: row.updatedAt,
-      }))
+      return {
+        keys: rows.map((row) => ({
+          provider: row.provider,
+          model: row.model,
+          maskedKey: maskApiKey(decryptApiKey(row.encryptedKey)),
+          updatedAt: row.updatedAt,
+        })),
+      }
     }),
 
   delete: protectedProcedure
@@ -85,6 +109,7 @@ export const aiKeysRouter = router({
         provider: userAiProviderSchema,
       }),
     )
+    .output(deleteAiKeyOutputSchema)
     .mutation(async ({ ctx, input }) => {
       await ctx.db
         .delete(userAiKeys)
@@ -99,6 +124,7 @@ export const aiKeysRouter = router({
         provider: userAiProviderSchema,
       }),
     )
+    .output(testConnectionOutputSchema)
     .mutation(async ({ ctx, input }) => {
       const [record] = await ctx.db
         .select({

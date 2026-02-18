@@ -14,6 +14,7 @@ const chatInputSchema = z.object({
   question: z.string().min(1).max(2000),
   snapshot: clusterSnapshotSchema.optional(),
   threadId: z.string().uuid().optional(),
+  provider: z.enum(['openai', 'claude']).optional(),
 })
 
 const suggestionsInputSchema = z.object({
@@ -177,7 +178,7 @@ export const aiRouter = router({
         answer: z.string(),
         conversationId: z.string().uuid(),
         threadId: z.string().uuid().optional(),
-        provider: z.string().optional(),
+        provider: z.enum(['openai', 'anthropic']).optional(),
         model: z.string().optional(),
       }),
     )
@@ -186,7 +187,7 @@ export const aiRouter = router({
         const aiService = new AIService({ db: ctx.db })
         let answer: string
         let threadId: string | undefined = input.threadId
-        let provider: string | undefined
+        let provider: 'openai' | 'anthropic' | undefined
         let model: string | undefined
 
         try {
@@ -196,6 +197,7 @@ export const aiRouter = router({
             snapshot: input.snapshot,
             threadId: input.threadId,
             userId: ctx.user.id,
+            provider: input.provider,
           })
           answer = aiResult.answer
           threadId = aiResult.threadId
@@ -231,6 +233,7 @@ export const aiRouter = router({
               question: input.question,
               answer,
               threadId: input.threadId,
+              provider: input.provider,
             })
             threadId = persisted.threadId
             provider = persisted.provider
