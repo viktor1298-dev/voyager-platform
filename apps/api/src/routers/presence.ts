@@ -2,6 +2,15 @@ import { z } from 'zod'
 import { protectedProcedure, router } from '../trpc.js'
 import { getOnlineUsers, heartbeatPresence, subscribeToPresence } from '../lib/presence.js'
 
+const PRESENCE_ONE_SHOT_ENV_KEYS = ['PLAYWRIGHT', 'E2E'] as const
+
+function shouldUseOneShotPresenceStream() {
+  if (process.env.DISABLE_PRESENCE_STREAM === 'true') return true
+  if (process.env.NODE_ENV === 'test') return true
+
+  return PRESENCE_ONE_SHOT_ENV_KEYS.some((key) => process.env[key] === 'true')
+}
+
 export const presenceRouter = router({
   getOnlineUsers: protectedProcedure.query(async () => {
     return getOnlineUsers()
@@ -30,8 +39,14 @@ export const presenceRouter = router({
 
   subscribe: protectedProcedure.subscription(async function* ({ signal }) {
     const stream = subscribeToPresence(signal)
+    const oneShot = shouldUseOneShotPresenceStream()
+
     for await (const update of stream) {
       yield update
+
+      if (oneShot) {
+        return
+      }
     }
   }),
 })

@@ -7,13 +7,15 @@ test.describe('Responsive — Mobile Viewport', () => {
   test('should login and load dashboard on mobile', async ({ page }) => {
     await login(page);
     await expect(page).toHaveURL('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByRole('button', { name: /logout/i })).toBeVisible({ timeout: 10_000 });
   });
 
   test('should not have horizontal overflow on mobile', async ({ page }) => {
     await login(page);
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible({ timeout: 10_000 });
 
     const hasOverflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > document.documentElement.clientWidth;
