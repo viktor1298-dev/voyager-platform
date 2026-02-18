@@ -271,7 +271,7 @@ export function AiChat({
   }, [])
 
   const syncHistory = useCallback(async () => {
-    if (!selectedClusterId) return
+    if (!selectedClusterId || locked) return
 
     setIsHistoryLoading(true)
     setHistoryError(null)
@@ -314,7 +314,14 @@ export function AiChat({
       setIsHistoryLoading(false)
       scrollToBottom()
     }
-  }, [scrollToBottom, selectedClusterId, selectedClusterName, setClusterMessages, setThreadId])
+  }, [
+    locked,
+    scrollToBottom,
+    selectedClusterId,
+    selectedClusterName,
+    setClusterMessages,
+    setThreadId,
+  ])
 
   const sendPrompt = useCallback(
     async (content: string) => {
@@ -442,12 +449,13 @@ export function AiChat({
   )
 
   useEffect(() => {
+    if (locked) return
     void syncHistory()
 
     return () => {
       abortRef.current?.abort()
     }
-  }, [syncHistory])
+  }, [locked, syncHistory])
 
   useEffect(() => {
     if (!quickPrompt) return
@@ -490,7 +498,7 @@ export function AiChat({
         </div>
       )}
 
-      {historyError && (
+      {!locked && historyError && (
         <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/10 px-3 py-2 text-xs text-[var(--color-status-warning)]">
           <div className="inline-flex items-center gap-2">
             <AlertTriangle className="h-3.5 w-3.5" />
@@ -517,62 +525,72 @@ export function AiChat({
       >
         <AnimatePresence initial={false}>
           <div className="space-y-3">
-            {isHistoryLoading && (
+            {!locked && isHistoryLoading && (
               <div className="flex items-center gap-2 text-xs text-[var(--color-text-dim)]">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Loading conversation history...
               </div>
             )}
 
-            {visibleMessages.map((message) => {
-              const isUser = message.role === 'user'
-              const isStreamingMessage = message.id === streamingMessageId
+            {!locked &&
+              visibleMessages.map((message) => {
+                const isUser = message.role === 'user'
+                const isStreamingMessage = message.id === streamingMessageId
 
-              return (
-                <motion.div
-                  key={message.id}
-                  initial={reduced ? false : { opacity: 0, y: 8 }}
-                  animate={reduced ? {} : { opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={`flex items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}
-                >
-                  {!isUser && (
-                    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] text-sm">
-                      🤖
-                    </div>
-                  )}
-
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3 py-2 ${
-                      isUser
-                        ? 'bg-[var(--color-accent)] text-white'
-                        : 'border border-[var(--color-border)] bg-[var(--color-bg-card)]'
-                    }`}
+                return (
+                  <motion.div
+                    key={message.id}
+                    initial={reduced ? false : { opacity: 0, y: 8 }}
+                    animate={reduced ? {} : { opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className={`flex items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}
                   >
-                    {isUser ? (
-                      <p className="text-sm leading-6 text-white">{message.content}</p>
-                    ) : (
-                      <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
-                        {message.content}
-                        {isStreamingMessage && isStreaming && (
-                          <span className="ml-1 inline-block animate-pulse text-[var(--color-text-dim)]">
-                            ▋
-                          </span>
-                        )}
-                      </p>
+                    {!isUser && (
+                      <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] text-sm">
+                        🤖
+                      </div>
                     )}
-                  </div>
 
-                  {isUser && (
-                    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-                      <User className="h-4 w-4" />
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-3 py-2 ${
+                        isUser
+                          ? 'bg-[var(--color-accent)] text-white'
+                          : 'border border-[var(--color-border)] bg-[var(--color-bg-card)]'
+                      }`}
+                    >
+                      {isUser ? (
+                        <p className="text-sm leading-6 text-white">{message.content}</p>
+                      ) : (
+                        <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                          {message.content}
+                          {isStreamingMessage && isStreaming && (
+                            <span className="ml-1 inline-block animate-pulse text-[var(--color-text-dim)]">
+                              ▋
+                            </span>
+                          )}
+                        </p>
+                      )}
                     </div>
-                  )}
-                </motion.div>
-              )
-            })}
 
-            {(chatMutation.isPending || isStreaming) && (
+                    {isUser && (
+                      <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+                        <User className="h-4 w-4" />
+                      </div>
+                    )}
+                  </motion.div>
+                )
+              })}
+
+            {locked && (
+              <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-8 text-center">
+                <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                  AI Chat is locked
+                </p>
+                <p className="mt-1 text-xs text-[var(--color-text-dim)]">{lockMessage}</p>
+              </div>
+            )}
+
+            {!locked && (chatMutation.isPending || isStreaming) && (
               <div className="flex items-center gap-2 text-xs text-[var(--color-text-dim)]">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 AI is analyzing cluster signals...
