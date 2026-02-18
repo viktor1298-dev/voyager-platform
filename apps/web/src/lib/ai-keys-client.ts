@@ -1,14 +1,15 @@
 import { getTRPCClient } from '@/lib/trpc'
+import {
+  mapUiProviderToBackend,
+  normalizeGetResponse,
+  normalizeSaveResponse,
+  normalizeTestConnectionResponse,
+  type AiKeyRecord,
+  type BackendAiProvider,
+  type UiAiProvider as AiProvider,
+} from '@/lib/ai-keys-contract'
 
-export type AiProvider = 'anthropic' | 'openai'
-
-export interface AiKeyRecord {
-  provider: AiProvider
-  model: string
-  maskedKey: string
-  hasKey: boolean
-  updatedAt: string | null
-}
+export type { AiProvider }
 
 interface UpsertAiKeyInput {
   provider: AiProvider
@@ -22,6 +23,18 @@ interface TestConnectionInput {
   apiKey?: string
 }
 
+interface BackendUpsertAiKeyInput {
+  provider: BackendAiProvider
+  apiKey: string
+  model: string
+}
+
+interface BackendTestConnectionInput {
+  provider: BackendAiProvider
+  model: string
+  apiKey?: string
+}
+
 interface ProcedureCaller<TInput, TOutput> {
   mutate?: (payload: TInput) => Promise<TOutput>
   query?: (payload?: TInput) => Promise<TOutput>
@@ -29,9 +42,9 @@ interface ProcedureCaller<TInput, TOutput> {
 
 interface AiKeyNamespace {
   get?: ProcedureCaller<void, unknown>
-  save?: ProcedureCaller<UpsertAiKeyInput, unknown>
-  upsert?: ProcedureCaller<UpsertAiKeyInput, unknown>
-  testConnection?: ProcedureCaller<TestConnectionInput, unknown>
+  save?: ProcedureCaller<BackendUpsertAiKeyInput, unknown>
+  upsert?: ProcedureCaller<BackendUpsertAiKeyInput, unknown>
+  testConnection?: ProcedureCaller<BackendTestConnectionInput, unknown>
 }
 
 function toErrorMessage(error: unknown): string {
@@ -44,50 +57,6 @@ function toErrorMessage(error: unknown): string {
 function getRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object') return null
   return value as Record<string, unknown>
-}
-
-function toAiProvider(value: unknown): AiProvider {
-  return value === 'openai' ? 'openai' : 'anthropic'
-}
-
-function normalizeAiKeyRecord(payload: unknown): AiKeyRecord | null {
-  const topLevel = getRecord(payload)
-  if (!topLevel) return null
-
-  const nested = getRecord(topLevel.settings)
-  const source = nested ?? topLevel
-
-  const provider = toAiProvider(source.provider)
-  const model =
-    typeof source.model === 'string' && source.model.length > 0
-      ? source.model
-      : 'claude-sonnet-4-20250514'
-  const maskedKey = typeof source.maskedKey === 'string' ? source.maskedKey : ''
-  const hasKey =
-    typeof source.hasKey === 'boolean'
-      ? source.hasKey
-      : typeof topLevel.hasKey === 'boolean'
-        ? topLevel.hasKey
-        : maskedKey.length > 0
-
-  const updatedAt =
-    typeof source.updatedAt === 'string'
-      ? source.updatedAt
-      : source.updatedAt instanceof Date
-        ? source.updatedAt.toISOString()
-        : null
-
-  if (!hasKey && !maskedKey) {
-    return null
-  }
-
-  return {
-    provider,
-    model,
-    maskedKey,
-    hasKey,
-    updatedAt,
-  }
 }
 
 function getAiKeyNamespace(): AiKeyNamespace | null {
@@ -113,7 +82,7 @@ export async function getAiKeySettings(): Promise<AiKeyRecord | null> {
     }
 
     const result = await namespace.get.query()
-    return normalizeAiKeyRecord(result)
+    return normalizeGetResponse(result)
   } catch {
     return null
   }
@@ -130,8 +99,11 @@ export async function upsertAiKeySettings(input: UpsertAiKeyInput): Promise<AiKe
     throw new Error('AI key save route is unavailable')
   }
 
-  const raw = await mutate(input)
-  const normalized = normalizeAiKeyRecord(raw)
+  const raw = await mutate({
+    ...input,
+    provider: mapUiProviderToBackend(input.provider),
+  })
+  const normalized = normalizeSaveResponse(raw)
   if (!normalized) {
     throw new Error('AI key save response is invalid')
   }
@@ -149,18 +121,11 @@ export async function testAiKeyConnection(
   }
 
   try {
-    const result = await namespace.testConnection.mutate(input)
-    const data = getRecord(result)
-
-    const ok = typeof data?.ok === 'boolean' ? data.ok : false
-    const message =
-      typeof data?.message === 'string'
-        ? data.message
-        : ok
-          ? 'Connection succeeded'
-          : 'Connection failed'
-
-    return { ok, message }
+    const result = await namespace.testConnection.mutate({
+      ...input,
+      provider: mapUiProviderToBackend(input.provider),
+    })
+    return normalizeTestConnectionResponse(result)
   } catch (error) {
     return {
       ok: false,
