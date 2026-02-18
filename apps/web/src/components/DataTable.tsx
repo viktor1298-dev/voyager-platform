@@ -204,6 +204,7 @@ export function DataTable<TData>({
                       return (
                         <th
                           key={header.id}
+                          scope="col"
                           aria-sort={ariaSort}
                           className="text-left py-2 px-3 text-[10px] text-[var(--color-table-header)] font-mono uppercase tracking-wider font-medium select-none"
                           style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
@@ -299,6 +300,7 @@ export function DataTable<TData>({
                       return (
                         <th
                           key={header.id}
+                          scope="col"
                           aria-sort={ariaSort}
                           className="text-left py-2 px-3 text-[10px] text-[var(--color-table-header)] font-mono uppercase tracking-wider font-medium select-none"
                           style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
