@@ -29,9 +29,9 @@ const historyInputSchema = z.object({
   messageLimit: z.number().int().min(1).max(500).optional(),
 })
 
-const aiProviderInputSchema = z.enum(['openai', 'anthropic', 'claude'])
+const aiProviderInputSchema = z.enum(['openai', 'claude'])
 const aiProviderInternalSchema = z.enum(['openai', 'anthropic'])
-const aiProviderBackendSchema = z.enum(['openai', 'claude'])
+const aiProviderBackendSchema = aiProviderInputSchema
 
 const aiKeySettingsInputSchema = z.object({
   provider: aiProviderInputSchema,
@@ -44,9 +44,9 @@ const aiKeyStatusInputSchema = z.object({
 })
 
 function toInternalAiProvider(
-  provider: z.infer<typeof aiProviderInputSchema>,
+  provider: z.infer<typeof aiProviderBackendSchema>,
 ): z.infer<typeof aiProviderInternalSchema> {
-  return provider === 'claude' ? 'anthropic' : provider
+  return provider === 'claude' ? 'anthropic' : 'openai'
 }
 
 function toBackendAiProvider(
@@ -285,7 +285,7 @@ export const aiRouter = router({
     .input(aiKeySettingsInputSchema)
     .output(
       z.object({
-        provider: aiProviderInternalSchema,
+        provider: aiProviderBackendSchema,
         model: z.string(),
         maskedKey: z.string(),
         hasKey: z.literal(true),
@@ -308,19 +308,24 @@ export const aiRouter = router({
         })
       }
 
-      return service.upsertUserKey({
+      const key = await service.upsertUserKey({
         userId: ctx.user.id,
         provider,
         model: input.model,
         apiKey: input.apiKey,
       })
+
+      return {
+        ...key,
+        provider: toBackendAiProvider(key.provider),
+      }
     }),
 
   keySettingsUpdate: protectedProcedure
     .input(aiKeySettingsInputSchema)
     .output(
       z.object({
-        provider: aiProviderInternalSchema,
+        provider: aiProviderBackendSchema,
         model: z.string(),
         maskedKey: z.string(),
         hasKey: z.literal(true),
@@ -343,12 +348,17 @@ export const aiRouter = router({
         })
       }
 
-      return service.upsertUserKey({
+      const key = await service.upsertUserKey({
         userId: ctx.user.id,
         provider,
         model: input.model,
         apiKey: input.apiKey,
       })
+
+      return {
+        ...key,
+        provider: toBackendAiProvider(key.provider),
+      }
     }),
 
   keySettingsTestConnection: protectedProcedure
@@ -356,18 +366,23 @@ export const aiRouter = router({
     .output(
       z.object({
         ok: z.boolean(),
-        provider: aiProviderInternalSchema,
+        provider: aiProviderBackendSchema,
         model: z.string(),
         error: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const service = new AiKeySettingsService(ctx.db)
-      return service.testConnection({
+      const result = await service.testConnection({
         provider: toInternalAiProvider(input.provider),
         model: input.model,
         apiKey: input.apiKey,
       })
+
+      return {
+        ...result,
+        provider: toBackendAiProvider(result.provider),
+      }
     }),
 
   keySettingsStatus: protectedProcedure
@@ -375,7 +390,7 @@ export const aiRouter = router({
     .output(
       z.array(
         z.object({
-          provider: aiProviderInternalSchema,
+          provider: aiProviderBackendSchema,
           model: z.string(),
           maskedKey: z.string(),
           hasKey: z.literal(true),
@@ -385,10 +400,15 @@ export const aiRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const service = new AiKeySettingsService(ctx.db)
-      return service.getUserKeyStatus({
+      const keys = await service.getUserKeyStatus({
         userId: ctx.user.id,
         provider: input.provider ? toInternalAiProvider(input.provider) : undefined,
       })
+
+      return keys.map((key) => ({
+        ...key,
+        provider: toBackendAiProvider(key.provider),
+      }))
     }),
 
   keys: router({

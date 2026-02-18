@@ -9,6 +9,54 @@ import { AiProviderClient } from './ai-provider.js'
 const KEY_ALGORITHM = 'aes-256-gcm'
 const KEY_IV_BYTES = 12
 
+const PROVIDER_VALIDATION_MESSAGES = {
+  invalidCredentials: 'Invalid provider credentials. Please verify the API key and model.',
+  modelUnavailable: 'The selected model is unavailable for this account.',
+  rateLimited: 'Provider rate limit reached. Please retry shortly.',
+  providerUnavailable: 'Provider is temporarily unavailable. Please retry shortly.',
+  generic: 'Failed to validate provider credentials.',
+} as const
+
+function sanitizeProviderValidationError(error: unknown): string {
+  const message = (error instanceof Error ? error.message : String(error)).toLowerCase()
+
+  if (
+    message.includes('401') ||
+    message.includes('403') ||
+    message.includes('unauthorized') ||
+    message.includes('invalid api key') ||
+    message.includes('authentication') ||
+    message.includes('forbidden')
+  ) {
+    return PROVIDER_VALIDATION_MESSAGES.invalidCredentials
+  }
+
+  if (
+    message.includes('404') ||
+    message.includes('model') && (message.includes('not found') || message.includes('does not exist'))
+  ) {
+    return PROVIDER_VALIDATION_MESSAGES.modelUnavailable
+  }
+
+  if (message.includes('429') || message.includes('rate limit') || message.includes('quota')) {
+    return PROVIDER_VALIDATION_MESSAGES.rateLimited
+  }
+
+  if (
+    message.includes('timeout') ||
+    message.includes('timed out') ||
+    message.includes('econnreset') ||
+    message.includes('econnrefused') ||
+    message.includes('service unavailable') ||
+    message.includes('temporarily unavailable')
+  ) {
+    return PROVIDER_VALIDATION_MESSAGES.providerUnavailable
+  }
+
+  return PROVIDER_VALIDATION_MESSAGES.generic
+}
+
+
 function resolveKeyMaterial(): Buffer {
   const raw = process.env.AI_KEYS_ENCRYPTION_KEY
   if (!raw) {
@@ -231,11 +279,17 @@ export class AiKeySettingsService {
 
       return { ok: true, provider: input.provider, model: input.model }
     } catch (error) {
+      console.error('[ai.byok] Provider validation failed', {
+        provider: input.provider,
+        model: input.model,
+        error: error instanceof Error ? error.message : String(error),
+      })
+
       return {
         ok: false,
         provider: input.provider,
         model: input.model,
-        error: error instanceof Error ? error.message : 'Connection test failed',
+        error: sanitizeProviderValidationError(error),
       }
     }
   }
