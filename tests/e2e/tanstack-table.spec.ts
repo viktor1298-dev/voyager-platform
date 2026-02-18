@@ -39,7 +39,13 @@ test.describe('TanStack Table — Users Management', () => {
     const clickTarget = canClickButton ? sortTarget : nameHeader
 
     const readNames = async () => {
-      const values = await table.locator('tbody tr td:first-child').allTextContents()
+      const headers = await table.locator('thead th').allTextContents()
+      const nameColumnIndex = headers.findIndex((headerText) => /name/i.test(headerText.trim()))
+      expect(nameColumnIndex).toBeGreaterThanOrEqual(0)
+
+      const values = await table
+        .locator(`tbody tr td:nth-child(${nameColumnIndex + 1})`)
+        .allTextContents()
       return values.map((v) => v.trim()).filter(Boolean)
     }
 

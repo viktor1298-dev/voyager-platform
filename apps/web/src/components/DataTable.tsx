@@ -208,47 +208,46 @@ export function DataTable<TData>({
                     {headerGroup.headers.map((header) => {
                       const canSort = header.column.getCanSort()
                       const sorted = header.column.getIsSorted()
+                      const ariaSort =
+                        canSort && sorted === 'asc'
+                          ? 'ascending'
+                          : canSort && sorted === 'desc'
+                            ? 'descending'
+                            : undefined
+
                       return (
                         <th
                           key={header.id}
-                          aria-sort={
-                            sorted === 'asc'
-                              ? 'ascending'
-                              : sorted === 'desc'
-                                ? 'descending'
-                                : 'none'
-                          }
+                          aria-sort={ariaSort}
                           className="text-left py-2 px-3 text-[10px] text-[var(--color-table-header)] font-mono uppercase tracking-wider font-medium select-none"
                           style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
                         >
-                          {header.isPlaceholder ? null : (
+                          {header.isPlaceholder ? null : canSort ? (
                             <button
                               type="button"
                               aria-label={
                                 typeof header.column.columnDef.header === 'string'
-                                  ? canSort
-                                    ? `Sort by ${header.column.columnDef.header}`
-                                    : header.column.columnDef.header
+                                  ? `Sort by ${header.column.columnDef.header}`
                                   : undefined
                               }
-                              className={`flex items-center gap-1 ${canSort ? 'cursor-pointer hover:text-[var(--color-text-secondary)]' : ''}`}
-                              onClick={
-                                canSort ? header.column.getToggleSortingHandler() : undefined
-                              }
+                              className="flex items-center gap-1 cursor-pointer hover:text-[var(--color-text-secondary)]"
+                              onClick={header.column.getToggleSortingHandler()}
                             >
                               {flexRender(header.column.columnDef.header, header.getContext())}
-                              {canSort && (
-                                <span className="ml-0.5">
-                                  {sorted === 'asc' ? (
-                                    <ArrowUp className="h-3 w-3" />
-                                  ) : sorted === 'desc' ? (
-                                    <ArrowDown className="h-3 w-3" />
-                                  ) : (
-                                    <ArrowUpDown className="h-2.5 w-2.5 opacity-40" />
-                                  )}
-                                </span>
-                              )}
+                              <span className="ml-0.5">
+                                {sorted === 'asc' ? (
+                                  <ArrowUp className="h-3 w-3" />
+                                ) : sorted === 'desc' ? (
+                                  <ArrowDown className="h-3 w-3" />
+                                ) : (
+                                  <ArrowUpDown className="h-2.5 w-2.5 opacity-40" />
+                                )}
+                              </span>
                             </button>
+                          ) : (
+                            <span>
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                            </span>
                           )}
                         </th>
                       )
