@@ -76,6 +76,18 @@ test('rethrows non-encrypted missing-column read errors', async () => {
   expect(untypedClient.query).toHaveBeenNthCalledWith(1, 'aiKeys.get', undefined)
 })
 
+test('rethrows structured non-encrypted missing-column read errors', async () => {
+  const backendError = {
+    message: 'column "model_version" does not exist',
+    data: { code: 'INTERNAL_SERVER_ERROR' },
+  }
+  untypedClient.query.mockRejectedValueOnce(backendError)
+
+  await expect(getAiKeySettings()).rejects.toBe(backendError)
+  expect(untypedClient.query).toHaveBeenCalledTimes(1)
+  expect(untypedClient.query).toHaveBeenNthCalledWith(1, 'aiKeys.get', undefined)
+})
+
 test('rethrows non-route QUERY errors on get path', async () => {
   const backendError = new Error('FORBIDDEN: denied by policy')
   untypedClient.query.mockRejectedValueOnce(backendError)
