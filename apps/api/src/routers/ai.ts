@@ -187,20 +187,19 @@ export const aiRouter = router({
           provider = aiResult.provider
           model = aiResult.model
         } catch (aiError) {
-          if (!isTransientAiError(aiError)) {
-            throw aiError
+          if (isTransientAiError(aiError)) {
+            console.error('[ai.chat] AI answer generation failed due to transient error', {
+              clusterId: input.clusterId,
+              userId: ctx.user.id,
+              error: aiError instanceof Error ? aiError.message : String(aiError),
+            })
+            throw new TRPCError({
+              code: 'SERVICE_UNAVAILABLE',
+              message: 'AI provider is temporarily unavailable. Please retry shortly.',
+            })
           }
 
-          console.error('[ai.chat] AI answer generation failed with transient provider failure', {
-            clusterId: input.clusterId,
-            userId: ctx.user.id,
-            error: aiError instanceof Error ? aiError.message : String(aiError),
-          })
-
-          throw new TRPCError({
-            code: 'SERVICE_UNAVAILABLE',
-            message: 'AI provider temporarily unavailable. Please retry shortly.',
-          })
+          throw aiError
         }
 
         if (!threadId) {
@@ -216,7 +215,7 @@ export const aiRouter = router({
             provider = persisted.provider
             model = persisted.model
           } catch (persistError) {
-            console.error('[ai.chat] Failed to persist fallback exchange', {
+            console.error('[ai.chat] Failed to persist AI exchange', {
               clusterId: input.clusterId,
               userId: ctx.user.id,
               error: persistError instanceof Error ? persistError.message : String(persistError),
