@@ -20,12 +20,15 @@ type AiAssistantState = {
   selectedClusterId: string | null
   quickPrompt: AiQuickPrompt | null
   chatByCluster: Record<string, AiChatMessage[]>
+  threadIdByCluster: Record<string, string>
   dismissedRecommendationIds: Record<string, string[]>
   setSelectedClusterId: (clusterId: string) => void
   queueQuickPrompt: (prompt: AiQuickPrompt) => void
   clearQuickPrompt: () => void
   appendMessage: (clusterId: string, message: AiChatMessage) => void
   setClusterMessages: (clusterId: string, messages: AiChatMessage[]) => void
+  appendToMessage: (clusterId: string, messageId: string, delta: string) => void
+  setThreadId: (clusterId: string, threadId: string) => void
   dismissRecommendation: (clusterId: string, recommendationId: string) => void
   getDismissedForCluster: (clusterId: string) => string[]
 }
@@ -36,6 +39,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       selectedClusterId: null,
       quickPrompt: null,
       chatByCluster: {},
+      threadIdByCluster: {},
       dismissedRecommendationIds: {},
       setSelectedClusterId: (clusterId) =>
         set((state) =>
@@ -55,6 +59,32 @@ export const useAiAssistantStore = create<AiAssistantState>()(
           chatByCluster: {
             ...state.chatByCluster,
             [clusterId]: messages,
+          },
+        })),
+      appendToMessage: (clusterId, messageId, delta) =>
+        set((state) => {
+          const current = state.chatByCluster[clusterId] ?? []
+          const next = current.map((message) =>
+            message.id === messageId
+              ? {
+                  ...message,
+                  content: `${message.content}${delta}`,
+                }
+              : message,
+          )
+
+          return {
+            chatByCluster: {
+              ...state.chatByCluster,
+              [clusterId]: next,
+            },
+          }
+        }),
+      setThreadId: (clusterId, threadId) =>
+        set((state) => ({
+          threadIdByCluster: {
+            ...state.threadIdByCluster,
+            [clusterId]: threadId,
           },
         })),
       dismissRecommendation: (clusterId, recommendationId) =>
@@ -78,6 +108,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       partialize: (state) => ({
         selectedClusterId: state.selectedClusterId,
         chatByCluster: state.chatByCluster,
+        threadIdByCluster: state.threadIdByCluster,
         dismissedRecommendationIds: state.dismissedRecommendationIds,
       }),
     },
