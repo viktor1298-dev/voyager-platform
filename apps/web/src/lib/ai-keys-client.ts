@@ -44,6 +44,7 @@ interface AiKeyNamespace {
   save?: ProcedureCaller<BackendUpsertAiKeyInput, unknown>
   upsert?: ProcedureCaller<BackendUpsertAiKeyInput, unknown>
   testConnection?: ProcedureCaller<BackendTestConnectionInput, unknown>
+  testStoredConnection?: ProcedureCaller<{ provider: BackendAiProvider }, unknown>
 }
 
 function toErrorMessage(error: unknown): string {
@@ -112,12 +113,20 @@ export async function testAiKeyConnection(
 ): Promise<{ ok: boolean; message: string }> {
   const namespace = getAiKeyNamespace()
 
-  if (!namespace?.testConnection?.mutate) {
-    return { ok: false, message: 'AI key test route is unavailable' }
-  }
-
   try {
-    const result = await namespace.testConnection.mutate(input)
+    if (input.apiKey?.trim()) {
+      if (!namespace?.testConnection?.mutate) {
+        return { ok: false, message: 'AI key test route is unavailable' }
+      }
+      const result = await namespace.testConnection.mutate(input)
+      return normalizeTestConnectionResponse(result)
+    }
+
+    if (!namespace?.testStoredConnection?.mutate) {
+      return { ok: false, message: 'AI saved-key test route is unavailable' }
+    }
+
+    const result = await namespace.testStoredConnection.mutate({ provider: input.provider })
     return normalizeTestConnectionResponse(result)
   } catch (error) {
     return {
