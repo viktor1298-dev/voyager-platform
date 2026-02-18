@@ -14,11 +14,13 @@ export function Sidebar({
   setCollapsed,
   mobileOpen,
   setMobileOpen,
+  isDesktop,
 }: {
   collapsed: boolean
   setCollapsed: (v: boolean) => void
   mobileOpen: boolean
   setMobileOpen: (v: boolean) => void
+  isDesktop: boolean
 }) {
   const pathname = usePathname()
   const isAdmin = useIsAdmin()
@@ -33,10 +35,10 @@ export function Sidebar({
   return (
     <>
       {/* Mobile backdrop */}
-      {mobileOpen && (
+      {!isDesktop && mobileOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[1px] md:hidden"
+          className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[1px]"
           onClick={() => setMobileOpen(false)}
           aria-label="Close sidebar"
         />
@@ -46,24 +48,26 @@ export function Sidebar({
         data-testid="sidebar"
         className={`
           fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-50 transition-all duration-200
-          w-48 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
-          ${collapsed ? 'md:w-12' : 'md:w-48'}
+          ${isDesktop ? 'translate-x-0' : mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${isDesktop ? (collapsed ? 'w-12' : 'w-48') : 'w-48'}
         `}
       >
         <SidebarContent
-          showLabels={mobileOpen || !collapsed}
+          showLabels={!isDesktop || mobileOpen || !collapsed}
           isActive={isActive}
           isAdmin={isAdmin === true}
           onLinkClick={() => setMobileOpen(false)}
           clusters={sidebarClusters}
         />
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="mt-auto mx-2 mb-2 hidden md:flex items-center justify-center h-8 rounded-lg text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)] hover:bg-white/[0.04] transition-colors"
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </button>
+        {isDesktop && (
+          <button
+            type="button"
+            onClick={() => setCollapsed(!collapsed)}
+            className="mt-auto mx-2 mb-2 flex items-center justify-center h-8 rounded-lg text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)] hover:bg-white/[0.04] transition-colors"
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
+        )}
         {(!collapsed || mobileOpen) && (
           <div className="px-3 py-2 mt-auto md:mt-0">
             <div className="text-[9px] text-[var(--color-text-dim)] font-mono text-left">

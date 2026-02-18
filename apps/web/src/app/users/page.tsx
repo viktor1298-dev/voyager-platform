@@ -14,11 +14,10 @@ import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { Badge } from '@/components/ui/badge'
 import { Dialog } from '@/components/ui/dialog'
-import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { usePermission } from '@/hooks/usePermission'
+import { authClient } from '@/lib/auth-client'
 import { trpc } from '@/lib/trpc'
-import { useAuthStore } from '@/stores/auth'
 
 const createUserSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -112,8 +111,9 @@ export const dynamic = 'force-dynamic'
 
 export default function UsersPage() {
   const router = useRouter()
-  const isAdmin = useIsAdmin()
-  const currentUserId = useAuthStore((s) => s.user?.id)
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
+  const currentUserId = session?.user?.id
+  const isAdmin = isSessionPending ? null : (session?.user as { role?: string } | undefined)?.role === 'admin'
 
   useEffect(() => {
     if (isAdmin === false) router.replace('/')

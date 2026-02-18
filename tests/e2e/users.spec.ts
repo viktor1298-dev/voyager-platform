@@ -20,6 +20,13 @@ test.describe('Users Page — Admin Only', () => {
     await expect(page.getByRole('table').getByText(TEST_ADMIN.email).first()).toBeVisible({ timeout: 10_000 })
   })
 
+  test('users page does not stay stuck on loading state for admin', async ({ page }) => {
+    await login(page)
+    await page.goto('/users')
+    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText('Loading…')).toBeHidden()
+  })
+
   test('admin sees Add User button', async ({ page }) => {
     await login(page)
     await page.getByRole('link', { name: /users/i }).first().click()
