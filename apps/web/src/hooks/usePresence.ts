@@ -189,22 +189,20 @@ export function usePresence() {
     return () => clearInterval(interval)
   }, [setMyStatus])
 
-  const state = usePresenceStore((s) => ({
-    onlineUsers: s.onlineUsers,
-    myStatus: s.myStatus,
-  }))
+  const onlineUsers = usePresenceStore((s) => s.onlineUsers)
+  const myStatus = usePresenceStore((s) => s.myStatus)
 
   const usersWithStatus = useMemo(
     () =>
-      state.onlineUsers.map((user) => ({
+      onlineUsers.map((user) => ({
         ...user,
         status: Date.now() - new Date(user.lastSeen).getTime() > AWAY_AFTER_MS ? ('away' as const) : ('online' as const),
       })),
-    [state.onlineUsers],
+    [onlineUsers],
   )
 
   return {
     onlineUsers: usersWithStatus,
-    myStatus: state.myStatus,
+    myStatus,
   }
 }
