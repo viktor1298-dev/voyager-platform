@@ -55,14 +55,36 @@ export const useAiAssistantStore = create<AiAssistantState>()(
           },
         })),
       setClusterMessages: (clusterId, messages) =>
-        set((state) => ({
-          chatByCluster: {
-            ...state.chatByCluster,
-            [clusterId]: messages,
-          },
-        })),
+        set((state) => {
+          const current = state.chatByCluster[clusterId] ?? []
+          const isSame =
+            current.length === messages.length &&
+            current.every((message, index) => {
+              const next = messages[index]
+              return (
+                message.id === next?.id &&
+                message.role === next?.role &&
+                message.content === next?.content &&
+                message.createdAt === next?.createdAt &&
+                message.animate === next?.animate
+              )
+            })
+
+          if (isSame) {
+            return state
+          }
+
+          return {
+            chatByCluster: {
+              ...state.chatByCluster,
+              [clusterId]: messages,
+            },
+          }
+        }),
       appendToMessage: (clusterId, messageId, delta) =>
         set((state) => {
+          if (!delta) return state
+
           const current = state.chatByCluster[clusterId] ?? []
           const next = current.map((message) =>
             message.id === messageId
@@ -81,12 +103,18 @@ export const useAiAssistantStore = create<AiAssistantState>()(
           }
         }),
       setThreadId: (clusterId, threadId) =>
-        set((state) => ({
-          threadIdByCluster: {
-            ...state.threadIdByCluster,
-            [clusterId]: threadId,
-          },
-        })),
+        set((state) => {
+          if (state.threadIdByCluster[clusterId] === threadId) {
+            return state
+          }
+
+          return {
+            threadIdByCluster: {
+              ...state.threadIdByCluster,
+              [clusterId]: threadId,
+            },
+          }
+        }),
       dismissRecommendation: (clusterId, recommendationId) =>
         set((state) => {
           const current = state.dismissedRecommendationIds[clusterId] ?? []

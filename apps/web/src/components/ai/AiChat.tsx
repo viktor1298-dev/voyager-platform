@@ -273,7 +273,7 @@ export function AiChat({
       })) as ConversationHistoryResponse | null
 
       if (!history || history.messages.length === 0) {
-        const existing = chatByCluster[selectedClusterId]
+        const existing = useAiAssistantStore.getState().chatByCluster[selectedClusterId]
         if (!existing || existing.length === 0) {
           setClusterMessages(selectedClusterId, [
             buildDefaultAssistantGreeting(selectedClusterName),
@@ -298,7 +298,7 @@ export function AiChat({
       }))
 
       setClusterMessages(selectedClusterId, mapped)
-      setVisibleCount(PAGE_SIZE)
+      setVisibleCount((current) => (current === PAGE_SIZE ? current : PAGE_SIZE))
     } catch {
       setHistoryError('Could not load conversation history')
     } finally {
@@ -306,7 +306,6 @@ export function AiChat({
       scrollToBottom()
     }
   }, [
-    chatByCluster,
     scrollToBottom,
     selectedClusterId,
     selectedClusterName,
