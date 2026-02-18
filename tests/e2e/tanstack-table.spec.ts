@@ -20,13 +20,18 @@ test.describe('TanStack Table — Users Management', () => {
     await expect(table.getByRole('columnheader', { name: /email/i }).first()).toBeVisible()
 
     const dataRows = table.locator('tbody tr')
-    const rowCount = await dataRows.count()
+    const emptyStateCell = table
+      .locator('tbody tr td')
+      .filter({ hasText: /no users found/i })
+      .first()
+    const hasEmptyState = await emptyStateCell.isVisible().catch(() => false)
 
-    if (rowCount === 0) {
-      await expect(page.getByText(/no users found/i)).toBeVisible()
+    if (hasEmptyState) {
+      await expect(emptyStateCell).toBeVisible()
       return
     }
 
+    const rowCount = await dataRows.count()
     await expect(dataRows.first()).toBeVisible({ timeout: 10_000 })
     expect(rowCount).toBeGreaterThan(0)
   })
