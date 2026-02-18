@@ -11,7 +11,7 @@ test.describe('BYOK key flow', () => {
 
     await expect(page.getByText('AI Chat Locked (BYOK)')).toBeVisible()
     await expect(page.getByRole('link', { name: /open settings/i })).toBeVisible()
-    await expect(page.getByText(/valid saved api key|verifying saved byok key status/i)).toBeVisible()
+    await expect(page.getByText(/valid saved api key|verifying saved byok key status/i).first()).toBeVisible()
   })
 
   test('Settings BYOK actions keep UX clear for saved key vs raw key', async ({ page }) => {
