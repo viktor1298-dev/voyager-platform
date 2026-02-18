@@ -1,6 +1,4 @@
 import { TRPCError } from '@trpc/server'
-import { aiRecommendations } from '@voyager/db'
-import { and, desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { AIService, aiRecommendationSchema, clusterSnapshotSchema } from '../services/ai-service.js'
@@ -204,6 +202,14 @@ export const aiRouter = router({
           provider = aiResult.provider
           model = aiResult.model
         } catch (aiError) {
+          if (
+            aiError instanceof TRPCError &&
+            aiError.code === 'BAD_REQUEST' &&
+            aiError.message === 'NO_API_KEY'
+          ) {
+            throw aiError
+          }
+
           if (!isTransientAiError(aiError)) {
             throw aiError
           }
@@ -284,32 +290,7 @@ export const aiRouter = router({
         const aiService = new AIService({ db: ctx.db })
         const analysis = await aiService.analyzeClusterHealth(input.clusterId, input.snapshot)
 
-        for (const recommendation of analysis.recommendations) {
-          const [existing] = await ctx.db
-            .select({ id: aiRecommendations.id })
-            .from(aiRecommendations)
-            .where(
-              and(
-                eq(aiRecommendations.clusterId, input.clusterId),
-                eq(aiRecommendations.title, recommendation.title),
-                eq(aiRecommendations.status, 'open'),
-              ),
-            )
-            .orderBy(desc(aiRecommendations.createdAt))
-            .limit(1)
-
-          if (!existing) {
-            await ctx.db.insert(aiRecommendations).values({
-              clusterId: input.clusterId,
-              severity: recommendation.severity,
-              title: recommendation.title,
-              description: recommendation.description,
-              action: recommendation.action,
-              status: 'open',
-            })
-          }
-        }
-
+        // Read-only AI rule: compute and return recommendations only.
         await logAudit(ctx, 'ai.suggestions', 'cluster', input.clusterId, {
           recommendationCount: analysis.recommendations.length,
           score: analysis.score,

@@ -1,16 +1,12 @@
 import { TRPCError } from '@trpc/server'
 import { AI_CONFIG } from '@voyager/config'
 import type { Database } from '@voyager/db'
-import { events, clusters } from '@voyager/db'
+import { events, clusters, userAiKeys } from '@voyager/db'
 import { and, desc, eq, gte } from 'drizzle-orm'
 import { z } from 'zod'
 import { AiConversationStore } from './ai-conversation-store.js'
-import {
-  type AiChatMessage,
-  type AiCompletionRequest,
-  AiProviderClient,
-  readAiProviderConfigFromEnv,
-} from './ai-provider.js'
+import { type AiChatMessage, type AiCompletionRequest, AiProviderClient } from './ai-provider.js'
+import { decryptApiKey } from './ai-key-crypto.js'
 
 const AI_SCORE = {
   MAX: 100,
@@ -132,6 +128,32 @@ export class AIService {
   public constructor(ctx: ServiceContext) {
     this.db = ctx.db
     this.conversationStore = new AiConversationStore(ctx.db)
+  }
+
+  private async resolveUserAiConfig(userId: string): Promise<{
+    provider: 'openai' | 'anthropic'
+    model: string
+    apiKey: string
+  }> {
+    const [record] = await this.db
+      .select({
+        provider: userAiKeys.provider,
+        model: userAiKeys.model,
+        encryptedKey: userAiKeys.encryptedKey,
+      })
+      .from(userAiKeys)
+      .where(eq(userAiKeys.userId, userId))
+      .limit(1)
+
+    if (!record) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'NO_API_KEY' })
+    }
+
+    return {
+      provider: record.provider === 'claude' ? 'anthropic' : 'openai',
+      model: record.model,
+      apiKey: decryptApiKey(record.encryptedKey),
+    }
   }
 
   private async withDbRetry<T>(operation: () => Promise<T>, fallback?: () => T): Promise<T> {
@@ -365,8 +387,17 @@ export class AIService {
     onToken: (token: string) => Promise<void> | void,
   ): Promise<{ threadId?: string; provider?: string; model?: string }> {
     const analysis = await this.analyzeClusterHealth(params.clusterId, params.snapshot)
-    const config = readAiProviderConfigFromEnv()
-    const client = new AiProviderClient(config)
+
+    if (!params.userId) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'NO_API_KEY' })
+    }
+
+    const config = await this.resolveUserAiConfig(params.userId)
+    const client = new AiProviderClient({
+      ...config,
+      timeoutMs: AI_CONFIG.REQUEST_TIMEOUT_MS,
+      maxOutputTokens: AI_CONFIG.MAX_OUTPUT_TOKENS,
+    })
 
     const promptMessages: AiChatMessage[] = []
 
@@ -445,16 +476,7 @@ export class AIService {
     answer: string
     threadId?: string
   }): Promise<{ threadId: string; provider: 'openai' | 'anthropic'; model: string }> {
-    const providerConfig = (() => {
-      try {
-        return readAiProviderConfigFromEnv()
-      } catch {
-        return {
-          provider: AI_CONFIG.DEFAULT_PROVIDER,
-          model: AI_CONFIG.DEFAULT_MODEL,
-        }
-      }
-    })()
+    const providerConfig = await this.resolveUserAiConfig(params.userId)
 
     const thread = await this.conversationStore.upsertThread({
       threadId: params.threadId,
