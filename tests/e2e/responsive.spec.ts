@@ -65,3 +65,21 @@ test.describe('Responsive — Mobile Viewport', () => {
     expect(Math.abs(saveBox!.x - testBox!.x)).toBeLessThanOrEqual(2);
   });
 });
+
+test.describe('Responsive — Desktop Viewport', () => {
+  test.use({ viewport: { width: 1920, height: 1080 } });
+
+  test('should keep desktop shell on /users (no hamburger, desktop table visible)', async ({ page }) => {
+    await login(page);
+    await page.goto('/users');
+
+    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('button', { name: /open navigation menu|close navigation menu/i })).toBeHidden();
+
+    const sidebar = page.locator('[data-testid="sidebar"]');
+    await expect(sidebar).toBeVisible();
+
+    const usersTable = page.locator('table').first();
+    await expect(usersTable).toBeVisible();
+  });
+});
