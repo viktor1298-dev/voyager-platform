@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { aiConversations, aiRecommendations } from '@voyager/db'
+import { aiRecommendations } from '@voyager/db'
 import { and, desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
@@ -21,6 +21,11 @@ const chatInputSchema = z.object({
 const suggestionsInputSchema = z.object({
   clusterId: z.string().uuid(),
   snapshot: clusterSnapshotSchema.optional(),
+})
+
+const historyInputSchema = z.object({
+  clusterId: z.string().uuid(),
+  messageLimit: z.number().int().min(1).max(500).optional(),
 })
 
 const LOGICAL_AI_ERROR_CODES = new Set(['NOT_FOUND', 'BAD_REQUEST'])
@@ -56,7 +61,10 @@ function isTransientAiError(error: unknown): boolean {
   )
 }
 
-function buildDegradedChatAnswer(question: string, snapshot?: z.infer<typeof clusterSnapshotSchema>): string {
+function buildDegradedChatAnswer(
+  question: string,
+  snapshot?: z.infer<typeof clusterSnapshotSchema>,
+): string {
   const q = question.trim().toLowerCase()
 
   if (q.includes('cpu') && snapshot?.cpuUsagePercent !== undefined) {
@@ -85,6 +93,25 @@ const analysisOutputSchema = z.object({
   recommendations: z.array(aiRecommendationSchema),
 })
 
+const historyOutputSchema = z.object({
+  conversationId: z.string().uuid(),
+  threadId: z.string().uuid(),
+  clusterId: z.string().uuid(),
+  title: z.string().nullable(),
+  provider: z.enum(['openai', 'anthropic']),
+  model: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  messages: z.array(
+    z.object({
+      id: z.string().uuid(),
+      role: z.enum(['system', 'user', 'assistant']),
+      content: z.string(),
+      createdAt: z.date(),
+    }),
+  ),
+})
+
 export const aiRouter = router({
   analyze: protectedProcedure
     .input(analyzeInputSchema)
@@ -105,6 +132,42 @@ export const aiRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Failed to analyze cluster: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        })
+      }
+    }),
+
+  history: protectedProcedure
+    .input(historyInputSchema)
+    .output(historyOutputSchema.nullable())
+    .query(async ({ ctx, input }) => {
+      try {
+        const aiService = new AIService({ db: ctx.db })
+        const history = await aiService.getLatestThreadHistory({
+          clusterId: input.clusterId,
+          userId: ctx.user.id,
+          messageLimit: input.messageLimit,
+        })
+
+        if (!history) {
+          return null
+        }
+
+        return {
+          conversationId: history.threadId,
+          threadId: history.threadId,
+          clusterId: history.clusterId,
+          title: history.title,
+          provider: history.provider,
+          model: history.model,
+          createdAt: history.createdAt,
+          updatedAt: history.updatedAt,
+          messages: history.messages,
+        }
+      } catch (error) {
+        if (error instanceof TRPCError) throw error
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to fetch AI history: ${error instanceof Error ? error.message : 'Unknown error'}`,
         })
       }
     }),
@@ -154,35 +217,28 @@ export const aiRouter = router({
           answer = buildDegradedChatAnswer(input.question, input.snapshot)
         }
 
-        const timestamp = new Date().toISOString()
-        const messages = [
-          { role: 'user' as const, content: input.question, timestamp },
-          { role: 'assistant' as const, content: answer, timestamp },
-        ]
-
-        const fallbackConversationId = crypto.randomUUID()
-        let conversationId = fallbackConversationId
-
-        try {
-          const [conversation] = await ctx.db
-            .insert(aiConversations)
-            .values({
+        if (!threadId) {
+          try {
+            const persisted = await aiService.persistConversationExchange({
               clusterId: input.clusterId,
               userId: ctx.user.id,
-              messages,
+              question: input.question,
+              answer,
+              threadId: input.threadId,
             })
-            .returning({ id: aiConversations.id })
-
-          if (conversation?.id) {
-            conversationId = conversation.id
+            threadId = persisted.threadId
+            provider = persisted.provider
+            model = persisted.model
+          } catch (persistError) {
+            console.error('[ai.chat] Failed to persist fallback exchange', {
+              clusterId: input.clusterId,
+              userId: ctx.user.id,
+              error: persistError instanceof Error ? persistError.message : String(persistError),
+            })
           }
-        } catch (persistError) {
-          console.error('[ai.chat] Failed to persist AI conversation, continuing with response', {
-            clusterId: input.clusterId,
-            userId: ctx.user.id,
-            error: persistError instanceof Error ? persistError.message : String(persistError),
-          })
         }
+
+        const conversationId = threadId ?? crypto.randomUUID()
 
         try {
           await logAudit(ctx, 'ai.chat', 'cluster', input.clusterId, {

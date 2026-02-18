@@ -1,4 +1,5 @@
 import { TRPCError } from '@trpc/server'
+import { AI_CONFIG } from '@voyager/config'
 import type { Database } from '@voyager/db'
 import { events, clusters } from '@voyager/db'
 import { and, desc, eq, gte } from 'drizzle-orm'
@@ -434,6 +435,60 @@ export class AIService {
       threadId: persistedThreadId,
       provider: config.provider,
       model: config.model,
+    }
+  }
+
+  public async persistConversationExchange(params: {
+    clusterId: string
+    userId: string
+    question: string
+    answer: string
+    threadId?: string
+  }): Promise<{ threadId: string; provider: 'openai' | 'anthropic'; model: string }> {
+    const providerConfig = (() => {
+      try {
+        return readAiProviderConfigFromEnv()
+      } catch {
+        return {
+          provider: AI_CONFIG.DEFAULT_PROVIDER,
+          model: AI_CONFIG.DEFAULT_MODEL,
+        }
+      }
+    })()
+
+    const thread = await this.conversationStore.upsertThread({
+      threadId: params.threadId,
+      clusterId: params.clusterId,
+      userId: params.userId,
+      provider: providerConfig.provider,
+      model: providerConfig.model,
+      title: params.question.slice(0, 120),
+    })
+
+    await this.conversationStore.appendMessage({
+      threadId: thread.id,
+      clusterId: params.clusterId,
+      userId: params.userId,
+      role: 'user',
+      content: params.question,
+      provider: thread.provider,
+      model: thread.model,
+    })
+
+    await this.conversationStore.appendMessage({
+      threadId: thread.id,
+      clusterId: params.clusterId,
+      userId: params.userId,
+      role: 'assistant',
+      content: params.answer,
+      provider: thread.provider,
+      model: thread.model,
+    })
+
+    return {
+      threadId: thread.id,
+      provider: thread.provider,
+      model: thread.model,
     }
   }
 
