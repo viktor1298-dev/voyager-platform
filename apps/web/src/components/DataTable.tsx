@@ -103,6 +103,65 @@ export function DataTable<TData>({
   const rows = paginated ? table.getRowModel().rows : table.getFilteredRowModel().rows
   const sortedRows = paginated ? rows : table.getSortedRowModel().rows
 
+  const renderTableHeader = () => (
+    <thead>
+      {table.getHeaderGroups().map((headerGroup) => (
+        <tr
+          key={headerGroup.id}
+          className="border-b border-[var(--color-border)] hover:bg-transparent"
+        >
+          {headerGroup.headers.map((header) => {
+            const canSort = header.column.getCanSort()
+            const sorted = header.column.getIsSorted()
+            const ariaSort =
+              canSort && sorted === 'asc'
+                ? 'ascending'
+                : canSort && sorted === 'desc'
+                  ? 'descending'
+                  : undefined
+            const plainHeader =
+              typeof header.column.columnDef.header === 'string'
+                ? header.column.columnDef.header
+                : null
+
+            return (
+              <th
+                key={header.id}
+                scope="col"
+                aria-sort={ariaSort}
+                aria-label={plainHeader ?? undefined}
+                className="text-left py-2 px-3 text-[10px] text-[var(--color-table-header)] font-mono uppercase tracking-wider font-medium select-none"
+                style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+              >
+                {header.isPlaceholder ? null : canSort ? (
+                  <button
+                    type="button"
+                    aria-label={plainHeader ? `Sort by ${plainHeader}` : undefined}
+                    className="flex items-center gap-1 cursor-pointer hover:text-[var(--color-text-secondary)]"
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <span className="ml-0.5">
+                      {sorted === 'asc' ? (
+                        <ArrowUp className="h-3 w-3" />
+                      ) : sorted === 'desc' ? (
+                        <ArrowDown className="h-3 w-3" />
+                      ) : (
+                        <ArrowUpDown className="h-2.5 w-2.5 opacity-40" />
+                      )}
+                    </span>
+                  </button>
+                ) : (
+                  <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
+                )}
+              </th>
+            )
+          })}
+        </tr>
+      ))}
+    </thead>
+  )
+
   return (
     <div className="space-y-3 min-w-0">
       {/* Toolbar */}
@@ -151,6 +210,7 @@ export function DataTable<TData>({
               </div>
             )}
             <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
+              {renderTableHeader()}
               <tbody>
                 {Array.from({ length: skeletonRows }, (_, index) => `skeleton-${index + 1}`).map(
                   (skeletonKey) => (
@@ -158,7 +218,10 @@ export function DataTable<TData>({
                       key={skeletonKey}
                       className="border-b border-[var(--color-table-separator)]"
                     >
-                      <td className="py-2.5 px-3" colSpan={Math.max(columns.length, 1)}>
+                      <td
+                        className="py-2.5 px-3"
+                        colSpan={Math.max(table.getAllLeafColumns().length, columns.length, 1)}
+                      >
                         <div className="flex gap-4">
                           <div className="skeleton-shimmer h-4 flex-[2] rounded" />
                           <div className="skeleton-shimmer h-4 flex-1 rounded" />
@@ -185,63 +248,7 @@ export function DataTable<TData>({
             )}
 
             <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="border-b border-[var(--color-border)] hover:bg-transparent"
-                  >
-                    {headerGroup.headers.map((header) => {
-                      const canSort = header.column.getCanSort()
-                      const sorted = header.column.getIsSorted()
-                      const ariaSort =
-                        canSort && sorted === 'asc'
-                          ? 'ascending'
-                          : canSort && sorted === 'desc'
-                            ? 'descending'
-                            : undefined
-
-                      return (
-                        <th
-                          key={header.id}
-                          scope="col"
-                          aria-sort={ariaSort}
-                          className="text-left py-2 px-3 text-[10px] text-[var(--color-table-header)] font-mono uppercase tracking-wider font-medium select-none"
-                          style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
-                        >
-                          {header.isPlaceholder ? null : canSort ? (
-                            <button
-                              type="button"
-                              aria-label={
-                                typeof header.column.columnDef.header === 'string'
-                                  ? `Sort by ${header.column.columnDef.header}`
-                                  : undefined
-                              }
-                              className="flex items-center gap-1 cursor-pointer hover:text-[var(--color-text-secondary)]"
-                              onClick={header.column.getToggleSortingHandler()}
-                            >
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                              <span className="ml-0.5">
-                                {sorted === 'asc' ? (
-                                  <ArrowUp className="h-3 w-3" />
-                                ) : sorted === 'desc' ? (
-                                  <ArrowDown className="h-3 w-3" />
-                                ) : (
-                                  <ArrowUpDown className="h-2.5 w-2.5 opacity-40" />
-                                )}
-                              </span>
-                            </button>
-                          ) : (
-                            <span>
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                            </span>
-                          )}
-                        </th>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </thead>
+              {renderTableHeader()}
               <tbody>
                 <tr className="border-b border-[var(--color-table-separator)]">
                   <td
@@ -281,63 +288,7 @@ export function DataTable<TData>({
 
             {/* Desktop Table */}
             <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="border-b border-[var(--color-border)] hover:bg-transparent"
-                  >
-                    {headerGroup.headers.map((header) => {
-                      const canSort = header.column.getCanSort()
-                      const sorted = header.column.getIsSorted()
-                      const ariaSort =
-                        canSort && sorted === 'asc'
-                          ? 'ascending'
-                          : canSort && sorted === 'desc'
-                            ? 'descending'
-                            : undefined
-
-                      return (
-                        <th
-                          key={header.id}
-                          scope="col"
-                          aria-sort={ariaSort}
-                          className="text-left py-2 px-3 text-[10px] text-[var(--color-table-header)] font-mono uppercase tracking-wider font-medium select-none"
-                          style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
-                        >
-                          {header.isPlaceholder ? null : canSort ? (
-                            <button
-                              type="button"
-                              aria-label={
-                                typeof header.column.columnDef.header === 'string'
-                                  ? `Sort by ${header.column.columnDef.header}`
-                                  : undefined
-                              }
-                              className="flex items-center gap-1 cursor-pointer hover:text-[var(--color-text-secondary)]"
-                              onClick={header.column.getToggleSortingHandler()}
-                            >
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                              <span className="ml-0.5">
-                                {sorted === 'asc' ? (
-                                  <ArrowUp className="h-3 w-3" />
-                                ) : sorted === 'desc' ? (
-                                  <ArrowDown className="h-3 w-3" />
-                                ) : (
-                                  <ArrowUpDown className="h-2.5 w-2.5 opacity-40" />
-                                )}
-                              </span>
-                            </button>
-                          ) : (
-                            <span>
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                            </span>
-                          )}
-                        </th>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </thead>
+              {renderTableHeader()}
               <tbody>
                 {sortedRows.map((row, i) => (
                   <tr
