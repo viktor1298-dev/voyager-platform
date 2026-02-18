@@ -91,7 +91,7 @@ function UserActions({
         type="button"
         onClick={onToggleRole}
         disabled={pending}
-        className="inline-flex min-h-11 items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] sm:text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
+        className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
       >
         <UserCog className="h-3 w-3" />
         {user.role === 'admin' ? 'Demote' : 'Promote'}
@@ -350,18 +350,32 @@ export default function UsersPage() {
                 <span className="text-[var(--color-text-primary)]">{formatDate(u.createdAt)}</span>
               </div>
               {u.id !== currentUserId && (
-                <div className="pt-2 border-t border-[var(--color-border)]/50 grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
-                  <UserActions
-                    user={u}
-                    pending={updateRole.isPending}
-                    onToggleRole={() =>
+                <div className="pt-2 border-t border-[var(--color-border)]/50 grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-2 items-center min-w-0">
+                  <button
+                    type="button"
+                    onClick={() =>
                       updateRole.mutate({
                         userId: u.id,
                         role: u.role === 'admin' ? 'viewer' : 'admin',
                       })
                     }
-                    onDelete={() => setDeleteTarget({ id: u.id, name: u.name })}
-                  />
+                    disabled={updateRole.isPending}
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
+                  >
+                    <UserCog className="h-3.5 w-3.5" />
+                    {u.role === 'admin' ? 'Demote to viewer' : 'Promote to admin'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget({ id: u.id, name: u.name })}
+                    aria-label="Delete user"
+                    className="min-h-11 w-full sm:w-auto sm:min-w-11 px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                  >
+                    <span className="inline-flex items-center justify-center gap-1.5">
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span className="sm:hidden text-xs font-medium">Delete</span>
+                    </span>
+                  </button>
                 </div>
               )}
             </div>

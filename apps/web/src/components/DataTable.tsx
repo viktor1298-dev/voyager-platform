@@ -104,7 +104,7 @@ export function DataTable<TData>({
   const sortedRows = paginated ? rows : table.getSortedRowModel().rows
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 min-w-0">
       {/* Toolbar */}
       {(searchable || toolbar) && (
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -127,7 +127,7 @@ export function DataTable<TData>({
 
       {/* Table Container */}
       <div
-        className="rounded-xl border border-[var(--color-border)] overflow-hidden"
+        className="w-full max-w-full rounded-xl border border-[var(--color-border)] overflow-hidden"
         style={{
           background: 'var(--glass-bg)',
           backdropFilter: 'blur(var(--glass-blur))',

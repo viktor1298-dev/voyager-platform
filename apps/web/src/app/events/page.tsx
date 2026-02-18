@@ -267,7 +267,7 @@ export default function EventsPage() {
                     {isClient ? timeAgo(event.lastSeen) : formatTimestamp(event.lastSeen)}
                   </span>
                 </div>
-                <p className="text-[var(--color-text-muted)] text-xs leading-relaxed line-clamp-2">
+                <p className="text-[var(--color-text-muted)] text-xs leading-relaxed line-clamp-2 break-words min-w-0">
                   {event.message}
                 </p>
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 mt-1.5 text-[10px] min-w-0">
