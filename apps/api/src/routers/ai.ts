@@ -61,23 +61,6 @@ function isTransientAiError(error: unknown): boolean {
   )
 }
 
-function buildDegradedChatAnswer(
-  question: string,
-  snapshot?: z.infer<typeof clusterSnapshotSchema>,
-): string {
-  const q = question.trim().toLowerCase()
-
-  if (q.includes('cpu') && snapshot?.cpuUsagePercent !== undefined) {
-    return `Live AI analysis is temporarily unavailable, but the latest provided CPU signal is ${snapshot.cpuUsagePercent.toFixed(1)}%. Please retry in a few seconds for full recommendations.`
-  }
-
-  if ((q.includes('restart') || q.includes('crash')) && snapshot?.podsRestarting !== undefined) {
-    return `Live AI analysis is temporarily unavailable. Latest provided restart signal: ${snapshot.podsRestarting} restarting pods/events. Please retry in a few seconds for deeper diagnosis.`
-  }
-
-  return 'Live AI analysis is temporarily unavailable. I can still respond with cached/basic signals, and full analysis should recover shortly. Please retry in a few seconds.'
-}
-
 const analysisOutputSchema = z.object({
   clusterId: z.string().uuid(),
   clusterName: z.string(),
@@ -204,17 +187,19 @@ export const aiRouter = router({
           provider = aiResult.provider
           model = aiResult.model
         } catch (aiError) {
-          if (!isTransientAiError(aiError)) {
-            throw aiError
+          if (isTransientAiError(aiError)) {
+            console.error('[ai.chat] AI answer generation failed due to transient error', {
+              clusterId: input.clusterId,
+              userId: ctx.user.id,
+              error: aiError instanceof Error ? aiError.message : String(aiError),
+            })
+            throw new TRPCError({
+              code: 'SERVICE_UNAVAILABLE',
+              message: 'AI provider is temporarily unavailable. Please retry shortly.',
+            })
           }
 
-          console.error('[ai.chat] AI answer generation failed, returning degraded response', {
-            clusterId: input.clusterId,
-            userId: ctx.user.id,
-            error: aiError instanceof Error ? aiError.message : String(aiError),
-          })
-
-          answer = buildDegradedChatAnswer(input.question, input.snapshot)
+          throw aiError
         }
 
         if (!threadId) {
@@ -230,7 +215,7 @@ export const aiRouter = router({
             provider = persisted.provider
             model = persisted.model
           } catch (persistError) {
-            console.error('[ai.chat] Failed to persist fallback exchange', {
+            console.error('[ai.chat] Failed to persist AI exchange', {
               clusterId: input.clusterId,
               userId: ctx.user.id,
               error: persistError instanceof Error ? persistError.message : String(persistError),
