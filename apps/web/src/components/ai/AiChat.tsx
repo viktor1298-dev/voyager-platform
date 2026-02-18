@@ -416,14 +416,8 @@ export function AiChat({
 
         setClusterMessages(
           selectedClusterId,
-          (useAiAssistantStore.getState().chatByCluster[selectedClusterId] ?? []).map((message) =>
-            message.id === assistantMessageId
-              ? {
-                  ...message,
-                  content:
-                    'I could not reach the AI backend right now. Please retry in a few seconds.',
-                }
-              : message,
+          (useAiAssistantStore.getState().chatByCluster[selectedClusterId] ?? []).filter(
+            (message) => message.id !== assistantMessageId,
           ),
         )
       } finally {
