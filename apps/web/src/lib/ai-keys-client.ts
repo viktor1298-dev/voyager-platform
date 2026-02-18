@@ -123,29 +123,16 @@ function isMissingProcedurePathError(error: unknown): boolean {
   )
 }
 
-function hasEncryptedKeyToken(message: string): boolean {
-  return (
-    message.includes('"encrypted_key"') ||
-    message.includes("'encrypted_key'") ||
-    message.includes('encrypted_key')
-  )
-}
-
-function isMissingColumnSignature(message: string): boolean {
-  return (
-    message.includes('no such column') ||
-    (message.includes('column') && message.includes('does not exist'))
-  )
-}
+const LEGACY_ENCRYPTED_KEY_MISSING_COLUMN_PATTERNS = [
+  /column\s+["']?encrypted_key["']?\s+does not exist/,
+  /no such column:\s*["']?encrypted_key["']?/,
+]
 
 function isRecoverableAiKeyReadError(error: unknown): boolean {
   const normalizedMessage = getErrorMessage(error)
-
-  if (!hasEncryptedKeyToken(normalizedMessage)) {
-    return false
-  }
-
-  return isMissingColumnSignature(normalizedMessage)
+  return LEGACY_ENCRYPTED_KEY_MISSING_COLUMN_PATTERNS.some((pattern) =>
+    pattern.test(normalizedMessage),
+  )
 }
 
 async function queryWithFallback(paths: string[]): Promise<unknown> {

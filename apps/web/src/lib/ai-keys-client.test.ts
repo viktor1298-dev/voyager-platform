@@ -67,6 +67,14 @@ test('treats legacy encrypted_key read errors as empty saved-key state', async (
   expect(untypedClient.query).toHaveBeenNthCalledWith(1, 'aiKeys.get', undefined)
 })
 
+test('treats sqlite legacy encrypted_key missing-column read errors as empty saved-key state', async () => {
+  untypedClient.query.mockRejectedValueOnce(new Error('SQLITE_ERROR: no such column: encrypted_key'))
+
+  await expect(getAiKeySettings()).resolves.toBeNull()
+  expect(untypedClient.query).toHaveBeenCalledTimes(1)
+  expect(untypedClient.query).toHaveBeenNthCalledWith(1, 'aiKeys.get', undefined)
+})
+
 test('rethrows non-encrypted missing-column read errors', async () => {
   const backendError = new Error('column "model_version" does not exist')
   untypedClient.query.mockRejectedValueOnce(backendError)
