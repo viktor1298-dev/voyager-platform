@@ -197,6 +197,7 @@ export default function UsersPage() {
       {
         accessorKey: 'name',
         header: 'Name',
+        enableSorting: true,
         cell: ({ row }) => (
           <span className="font-medium text-[var(--color-text-primary)]">{row.original.name}</span>
         ),
@@ -204,6 +205,7 @@ export default function UsersPage() {
       {
         accessorKey: 'email',
         header: 'Email',
+        enableSorting: true,
         cell: ({ row }) => (
           <span className="text-[var(--color-text-muted)] font-mono text-[12px]">
             {row.original.email}
