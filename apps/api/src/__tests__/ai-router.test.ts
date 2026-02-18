@@ -41,6 +41,75 @@ function createCaller() {
   return { caller, insertSpy }
 }
 
+describe('ai.analyze stability handling', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    logAuditMock.mockResolvedValue(undefined)
+  })
+
+  it('returns analysis even when audit logging fails', async () => {
+    vi.spyOn(AIService.prototype, 'analyzeClusterHealth').mockResolvedValueOnce({
+      clusterId: '11111111-1111-4111-8111-111111111111',
+      clusterName: 'dev-cluster',
+      snapshot: {
+        cpuUsagePercent: 42,
+        memoryUsagePercent: 55,
+        podsRestarting: 0,
+        recentEventsCount: 3,
+        logErrorRatePercent: 1,
+        lastEventAt: new Date('2026-02-18T12:00:00.000Z'),
+      },
+      score: 95,
+      recommendations: [
+        {
+          severity: 'info',
+          title: 'Cluster health looks stable',
+          description: 'No rule-based anomalies were detected in current metrics/events/log signals.',
+          action: 'Continue monitoring and keep autoscaling and alerts tuned.',
+        },
+      ],
+    })
+    logAuditMock.mockRejectedValueOnce(new Error('connection reset during audit insert'))
+
+    const { caller } = createCaller()
+
+    const result = await caller.ai.analyze({
+      clusterId: '11111111-1111-4111-8111-111111111111',
+    })
+
+    expect(result.score).toBe(95)
+    expect(result.clusterName).toBe('dev-cluster')
+  })
+
+  it('maps transient analyze failures to SERVICE_UNAVAILABLE', async () => {
+    vi.spyOn(AIService.prototype, 'analyzeClusterHealth').mockRejectedValueOnce(
+      new Error('database connection refused while reading events'),
+    )
+
+    const { caller } = createCaller()
+
+    await expect(
+      caller.ai.analyze({
+        clusterId: '11111111-1111-4111-8111-111111111111',
+      }),
+    ).rejects.toMatchObject({ code: 'SERVICE_UNAVAILABLE' })
+  })
+
+  it('keeps non-transient analyze failures as INTERNAL_SERVER_ERROR', async () => {
+    vi.spyOn(AIService.prototype, 'analyzeClusterHealth').mockRejectedValueOnce(
+      new Error('invalid cluster metrics shape'),
+    )
+
+    const { caller } = createCaller()
+
+    await expect(
+      caller.ai.analyze({
+        clusterId: '11111111-1111-4111-8111-111111111111',
+      }),
+    ).rejects.toMatchObject({ code: 'INTERNAL_SERVER_ERROR' })
+  })
+})
+
 describe('ai.chat transient provider handling', () => {
   beforeEach(() => {
     vi.clearAllMocks()
