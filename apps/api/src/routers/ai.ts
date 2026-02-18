@@ -15,6 +15,7 @@ const chatInputSchema = z.object({
   clusterId: z.string().uuid(),
   question: z.string().min(1).max(2000),
   snapshot: clusterSnapshotSchema.optional(),
+  threadId: z.string().uuid().optional(),
 })
 
 const suggestionsInputSchema = z.object({
@@ -110,18 +111,35 @@ export const aiRouter = router({
 
   chat: protectedProcedure
     .input(chatInputSchema)
-    .output(z.object({ answer: z.string(), conversationId: z.string().uuid() }))
+    .output(
+      z.object({
+        answer: z.string(),
+        conversationId: z.string().uuid(),
+        threadId: z.string().uuid().optional(),
+        provider: z.string().optional(),
+        model: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         const aiService = new AIService({ db: ctx.db })
         let answer: string
+        let threadId: string | undefined = input.threadId
+        let provider: string | undefined
+        let model: string | undefined
 
         try {
-          answer = await aiService.answerQuestion({
+          const aiResult = await aiService.answerQuestion({
             clusterId: input.clusterId,
             question: input.question,
             snapshot: input.snapshot,
+            threadId: input.threadId,
+            userId: ctx.user.id,
           })
+          answer = aiResult.answer
+          threadId = aiResult.threadId
+          provider = aiResult.provider
+          model = aiResult.model
         } catch (aiError) {
           if (!isTransientAiError(aiError)) {
             throw aiError
@@ -182,6 +200,9 @@ export const aiRouter = router({
         return {
           answer,
           conversationId,
+          threadId,
+          provider,
+          model,
         }
       } catch (error) {
         if (error instanceof TRPCError) throw error

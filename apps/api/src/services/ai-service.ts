@@ -3,6 +3,13 @@ import type { Database } from '@voyager/db'
 import { clusters, events } from '@voyager/db'
 import { and, desc, eq, gte } from 'drizzle-orm'
 import { z } from 'zod'
+import { AiConversationStore } from './ai-conversation-store.js'
+import {
+  type AiChatMessage,
+  type AiCompletionRequest,
+  AiProviderClient,
+  readAiProviderConfigFromEnv,
+} from './ai-provider.js'
 
 const AI_SCORE = {
   MAX: 100,
@@ -97,6 +104,18 @@ function isTransientDbError(error: unknown): boolean {
   )
 }
 
+function buildSystemPrompt(analysis: ClusterAnalysis): string {
+  return [
+    'You are Voyager AI assistant for Kubernetes SRE operations.',
+    'Keep answers concise, practical, and action-oriented.',
+    `Cluster: ${analysis.clusterName} (${analysis.clusterId})`,
+    `Score: ${analysis.score}/100`,
+    `Snapshot: CPU=${analysis.snapshot.cpuUsagePercent.toFixed(1)}%; Memory=${analysis.snapshot.memoryUsagePercent.toFixed(1)}%; Restarts=${analysis.snapshot.podsRestarting}; Events=${analysis.snapshot.recentEventsCount}; LogErrorRate=${analysis.snapshot.logErrorRatePercent.toFixed(1)}%`,
+    'Top recommendations:',
+    ...analysis.recommendations.slice(0, 3).map((rec) => `- [${rec.severity}] ${rec.title}: ${rec.action}`),
+  ].join('\n')
+}
+
 async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => {
     setTimeout(resolve, ms)
@@ -105,9 +124,11 @@ async function sleep(ms: number): Promise<void> {
 
 export class AIService {
   private readonly db: Database
+  private readonly conversationStore: AiConversationStore
 
   public constructor(ctx: ServiceContext) {
     this.db = ctx.db
+    this.conversationStore = new AiConversationStore(ctx.db)
   }
 
   private async withDbRetry<T>(operation: () => Promise<T>, fallback?: () => T): Promise<T> {
@@ -273,34 +294,96 @@ export class AIService {
     clusterId: string
     question: string
     snapshot?: ClusterSnapshotInput
-  }): Promise<string> {
+    threadId?: string
+    userId?: string
+  }): Promise<{ answer: string; threadId?: string; provider?: string; model?: string }> {
+    const chunks: string[] = []
+    const result = await this.answerQuestionStream(params, async (token) => {
+      chunks.push(token)
+    })
+
+    return {
+      answer: chunks.join(''),
+      threadId: result.threadId,
+      provider: result.provider,
+      model: result.model,
+    }
+  }
+
+  public async answerQuestionStream(
+    params: {
+      clusterId: string
+      question: string
+      snapshot?: ClusterSnapshotInput
+      threadId?: string
+      userId?: string
+    },
+    onToken: (token: string) => Promise<void> | void,
+  ): Promise<{ threadId?: string; provider?: string; model?: string }> {
     const analysis = await this.analyzeClusterHealth(params.clusterId, params.snapshot)
-    const q = params.question.trim().toLowerCase()
+    const config = readAiProviderConfigFromEnv()
+    const client = new AiProviderClient(config)
 
-    if (q.includes('cpu')) {
-      return `CPU usage is ${analysis.snapshot.cpuUsagePercent.toFixed(1)}%. ${analysis.snapshot.cpuUsagePercent > AI_SCORE.CPU_WARNING_THRESHOLD ? 'Recommendation: consider scaling up or optimizing resource requests.' : 'CPU is currently within a safe operating range.'}`
+    const promptMessages: AiChatMessage[] = []
+
+    let persistedThreadId: string | undefined
+    if (params.userId) {
+      const thread = await this.conversationStore.upsertThread({
+        threadId: params.threadId,
+        clusterId: params.clusterId,
+        userId: params.userId,
+        provider: config.provider,
+        model: config.model,
+        title: params.question.slice(0, 120),
+      })
+      persistedThreadId = thread.id
+
+      const history = await this.conversationStore.getThreadMessages(thread.id)
+      promptMessages.push(...history.slice(-20))
     }
 
-    if (q.includes('restart') || q.includes('crash')) {
-      return `Detected ${analysis.snapshot.podsRestarting} restart-related events. ${analysis.snapshot.podsRestarting > AI_SCORE.RESTART_WARNING_THRESHOLD ? 'Recommendation: investigate crash loops and probe configuration.' : 'No major restart risk is currently detected.'}`
+    const systemMessage: AiChatMessage = { role: 'system', content: buildSystemPrompt(analysis) }
+    const userMessage: AiChatMessage = { role: 'user', content: params.question }
+
+    const request: AiCompletionRequest = {
+      messages: [systemMessage, ...promptMessages, userMessage],
+      temperature: 0.2,
     }
 
-    if (q.includes('event') || q.includes('idle')) {
-      const lastEventText = analysis.snapshot.lastEventAt
-        ? analysis.snapshot.lastEventAt.toISOString()
-        : 'No events recorded'
-      return `Recent events count: ${analysis.snapshot.recentEventsCount}. Last event: ${lastEventText}.`
+    if (persistedThreadId) {
+      await this.conversationStore.appendMessage({
+        threadId: persistedThreadId,
+        role: 'user',
+        content: params.question,
+        provider: config.provider,
+        model: config.model,
+      })
     }
 
-    const topRecommendations = analysis.recommendations
-      .slice(0, 2)
-      .map((rec) => `• ${rec.title}`)
-      .join('\n')
-    return [
-      `Cluster score: ${analysis.score}/100.`,
-      'Top recommendations:',
-      topRecommendations,
-    ].join('\n')
+    const assistantTokens: string[] = []
+
+    await client.stream(request, {
+      onToken: async (token) => {
+        assistantTokens.push(token)
+        await onToken(token)
+      },
+    })
+
+    if (persistedThreadId) {
+      await this.conversationStore.appendMessage({
+        threadId: persistedThreadId,
+        role: 'assistant',
+        content: assistantTokens.join(''),
+        provider: config.provider,
+        model: config.model,
+      })
+    }
+
+    return {
+      threadId: persistedThreadId,
+      provider: config.provider,
+      model: config.model,
+    }
   }
 
   private calculateHealthScore(snapshot: ClusterAnalysis['snapshot']): number {

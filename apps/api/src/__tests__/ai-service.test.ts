@@ -116,10 +116,16 @@ describe('AIService', () => {
     expect(result.recommendations.some((rec) => rec.title === 'Cluster appears idle')).toBe(true)
   })
 
-  it('builds contextual answer for restart question', async () => {
+  it('aggregates streamed answer tokens into final answer', async () => {
     const service = new AIService({ db: createMockDb() as never })
 
-    const answer = await service.answerQuestion({
+    service.answerQuestionStream = async (_params, onToken) => {
+      await onToken('Detected restart pressure. ')
+      await onToken('Investigate crash loops.')
+      return { threadId: '11111111-1111-1111-1111-111111111111', provider: 'openai', model: 'gpt-4o-mini' }
+    }
+
+    const response = await service.answerQuestion({
       clusterId: '11111111-1111-1111-1111-111111111111',
       question: 'Do we have restart issues?',
       snapshot: {
@@ -132,8 +138,9 @@ describe('AIService', () => {
       },
     })
 
-    expect(answer.toLowerCase()).toContain('restart')
-    expect(answer.toLowerCase()).toContain('investigate crash loops')
+    expect(response.answer.toLowerCase()).toContain('restart')
+    expect(response.answer.toLowerCase()).toContain('investigate crash loops')
+    expect(response.threadId).toBe('11111111-1111-1111-1111-111111111111')
   })
 
   it('falls back to snapshot defaults when recent events query keeps timing out', async () => {

@@ -1,8 +1,11 @@
 export {
   aiConversations,
+  aiMessages,
+  aiProviderEnum,
   aiRecommendationSeverityEnum,
   aiRecommendationStatusEnum,
   aiRecommendations,
+  aiThreads,
 } from './ai.js'
 export { alertHistory, alerts } from './alerts.js'
 export { anomalies, anomalyRules, anomalySeverityEnum } from './anomalies.js'

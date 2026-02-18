@@ -12,6 +12,7 @@ import { generateOpenApiSpec } from './lib/openapi.js'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
 import { shutdownTelemetry } from './lib/telemetry.js'
+import { registerAiStreamRoute } from './routes/ai-stream.js'
 import { type AppRouter, appRouter } from './routers/index.js'
 import { createContext } from './trpc.js'
 
@@ -160,6 +161,8 @@ app.setErrorHandler((error, _request, reply) => {
     statusCode: errorWithStatus.statusCode ?? 500,
   })
 })
+
+await registerAiStreamRoute(app)
 
 app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
 app.get('/system-health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
