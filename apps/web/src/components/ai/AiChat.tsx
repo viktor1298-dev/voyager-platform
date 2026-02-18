@@ -17,10 +17,17 @@ type ConversationHistoryMessage = {
 }
 
 type ConversationHistoryResponse = {
-  conversationId: string
+  threadId?: string | null
+  conversationId?: string | null
   createdAt?: string
   updatedAt?: string
   messages: ConversationHistoryMessage[]
+}
+
+type FallbackChatResponse = {
+  answer: string
+  threadId?: string | null
+  conversationId?: string | null
 }
 
 type StreamChunkEvent = {
@@ -50,6 +57,21 @@ type StreamResult =
 
 function toMessageId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function resolveCanonicalThreadId(payload: {
+  threadId?: string | null
+  conversationId?: string | null
+}): string | null {
+  if (payload.threadId?.trim()) {
+    return payload.threadId
+  }
+
+  if (payload.conversationId?.trim()) {
+    return payload.conversationId
+  }
+
+  return null
 }
 
 function parseSseEventBlock(block: string): { event: string; data: string } | null {
@@ -260,10 +282,16 @@ export function AiChat({
         return
       }
 
-      setThreadId(selectedClusterId, history.conversationId)
+      const canonicalHistoryThreadId = resolveCanonicalThreadId(history)
+      if (canonicalHistoryThreadId) {
+        setThreadId(selectedClusterId, canonicalHistoryThreadId)
+      }
+
+      const historyMessagePrefix =
+        canonicalHistoryThreadId ?? history.conversationId ?? selectedClusterId
 
       const mapped: AiChatMessage[] = history.messages.map((message, index) => ({
-        id: `history-${history.conversationId}-${index}`,
+        id: `history-${historyMessagePrefix}-${index}`,
         role: message.role,
         content: message.content,
         createdAt: message.timestamp ?? history.createdAt ?? new Date().toISOString(),
@@ -346,10 +374,10 @@ export function AiChat({
             setChatError('AI stream finished without content. Please retry.')
           }
         } else if (streamed.status === 'transport-error') {
-          const response = await chatMutation.mutateAsync({
+          const response = (await chatMutation.mutateAsync({
             clusterId: selectedClusterId,
             question: trimmed,
-          })
+          })) as FallbackChatResponse
 
           setClusterMessages(
             selectedClusterId,
@@ -364,7 +392,10 @@ export function AiChat({
             ),
           )
 
-          setThreadId(selectedClusterId, response.conversationId)
+          const canonicalFallbackThreadId = resolveCanonicalThreadId(response)
+          if (canonicalFallbackThreadId) {
+            setThreadId(selectedClusterId, canonicalFallbackThreadId)
+          }
         } else {
           setChatError('AI stream protocol mismatch. Please retry.')
         }
