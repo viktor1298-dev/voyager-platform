@@ -15,6 +15,14 @@ vi.mock('../services/ai-provider.js', () => ({
   },
 }))
 
+import {
+  aiKeysGetInputSchema,
+  aiKeysGetOutputSchema,
+  aiKeysSaveInputSchema,
+  aiKeysSaveOutputSchema,
+  aiKeysTestConnectionInputSchema,
+  aiKeysTestConnectionOutputSchema,
+} from '@voyager/types'
 import { aiKeysRouter } from '../routers/ai-keys.js'
 import { type Context, router } from '../trpc.js'
 
@@ -74,54 +82,44 @@ function createTestCaller(db: unknown, user: Context['user']) {
   })
 }
 
-describe('aiKeysRouter', () => {
+describe('aiKeys router contract compatibility', () => {
   beforeEach(() => {
-    process.env.AI_KEYS_ENCRYPTION_KEY = 'router-test-secret'
+    process.env.AI_KEYS_ENCRYPTION_KEY = 'contract-test-secret'
   })
 
-  it('supports save/get/delete CRUD for authenticated user', async () => {
+  it('matches shared save/get/testConnection schemas used by adapters', async () => {
     const db = createMockDb()
     const caller = createTestCaller(db, {
-      id: 'user-1',
-      email: 'u1@test.local',
-      name: 'User 1',
+      id: 'user-contract',
+      email: 'contract@test.local',
+      name: 'Contract User',
       role: 'member',
     })
 
-    const saved = await caller.aiKeys.save({
+    const saveInput = aiKeysSaveInputSchema.parse({
       provider: 'openai',
       apiKey: 'sk-test-12345',
       model: 'gpt-4o-mini',
     })
 
-    expect(saved.key.provider).toBe('openai')
-    expect(saved.key.maskedKey.length).toBeGreaterThan(0)
-    expect(saved.provider).toBe(saved.key.provider)
-    expect(saved.model).toBe(saved.key.model)
-    expect(saved.maskedKey).toBe(saved.key.maskedKey)
+    const saveResponse = aiKeysSaveOutputSchema.parse(await caller.aiKeys.save(saveInput))
+    expect(saveResponse.provider).toBe(saveResponse.key.provider)
+    expect(saveResponse.model).toBe(saveResponse.key.model)
+    expect(saveResponse.maskedKey).toBe(saveResponse.key.maskedKey)
 
-    const listed = await caller.aiKeys.get()
-    expect(listed.keys.length).toBe(1)
-    expect(listed.items.length).toBe(1)
-    expect(listed.keys[0]?.provider).toBe('openai')
-    expect(listed.items[0]?.provider).toBe('openai')
+    const getInput = aiKeysGetInputSchema.parse(undefined)
+    const getResponse = aiKeysGetOutputSchema.parse(await caller.aiKeys.get(getInput))
 
-    const deleted = await caller.aiKeys.delete({ provider: 'openai' })
-    expect(deleted.success).toBe(true)
+    expect(getResponse.keys.length).toBe(1)
+    expect(getResponse.items.length).toBe(1)
+    expect(getResponse.items[0]).toEqual(getResponse.keys[0])
 
-    const afterDelete = await caller.aiKeys.get()
-    expect(afterDelete.keys.length).toBe(0)
-  })
+    const testConnectionInput = aiKeysTestConnectionInputSchema.parse({ provider: 'openai' })
+    const testConnectionResponse = aiKeysTestConnectionOutputSchema.parse(
+      await caller.aiKeys.testConnection(testConnectionInput),
+    )
 
-  it('testConnection returns NO_API_KEY when no key configured', async () => {
-    const db = createMockDb()
-    const caller = createTestCaller(db, {
-      id: 'user-2',
-      email: 'u2@test.local',
-      name: 'User 2',
-      role: 'member',
-    })
-
-    await expect(caller.aiKeys.testConnection({ provider: 'openai' })).rejects.toThrow('NO_API_KEY')
+    expect(testConnectionResponse.success).toBe(true)
+    expect(testConnectionResponse.provider).toBe('openai')
   })
 })
