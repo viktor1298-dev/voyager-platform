@@ -18,8 +18,20 @@ interface UpsertAiKeyInput {
 
 interface TestConnectionInput {
   provider: AiProvider
-  apiKey: string
   model: string
+  apiKey?: string
+}
+
+interface ProcedureCaller<TInput, TOutput> {
+  mutate?: (payload: TInput) => Promise<TOutput>
+  query?: (payload?: TInput) => Promise<TOutput>
+}
+
+interface AiKeyNamespace {
+  get?: ProcedureCaller<void, unknown>
+  save?: ProcedureCaller<UpsertAiKeyInput, unknown>
+  upsert?: ProcedureCaller<UpsertAiKeyInput, unknown>
+  testConnection?: ProcedureCaller<TestConnectionInput, unknown>
 }
 
 function toErrorMessage(error: unknown): string {
@@ -29,61 +41,126 @@ function toErrorMessage(error: unknown): string {
   return 'Unknown error'
 }
 
+function getRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object') return null
+  return value as Record<string, unknown>
+}
+
+function toAiProvider(value: unknown): AiProvider {
+  return value === 'openai' ? 'openai' : 'anthropic'
+}
+
+function normalizeAiKeyRecord(payload: unknown): AiKeyRecord | null {
+  const topLevel = getRecord(payload)
+  if (!topLevel) return null
+
+  const nested = getRecord(topLevel.settings)
+  const source = nested ?? topLevel
+
+  const provider = toAiProvider(source.provider)
+  const model =
+    typeof source.model === 'string' && source.model.length > 0
+      ? source.model
+      : 'claude-sonnet-4-20250514'
+  const maskedKey = typeof source.maskedKey === 'string' ? source.maskedKey : ''
+  const hasKey =
+    typeof source.hasKey === 'boolean'
+      ? source.hasKey
+      : typeof topLevel.hasKey === 'boolean'
+        ? topLevel.hasKey
+        : maskedKey.length > 0
+
+  const updatedAt =
+    typeof source.updatedAt === 'string'
+      ? source.updatedAt
+      : source.updatedAt instanceof Date
+        ? source.updatedAt.toISOString()
+        : null
+
+  if (!hasKey && !maskedKey) {
+    return null
+  }
+
+  return {
+    provider,
+    model,
+    maskedKey,
+    hasKey,
+    updatedAt,
+  }
+}
+
+function getAiKeyNamespace(): AiKeyNamespace | null {
+  const client = getTRPCClient()
+  const clientRecord = getRecord(client)
+  if (!clientRecord) return null
+
+  const direct = getRecord(clientRecord.aiKeys)
+  if (direct) return direct as AiKeyNamespace
+
+  const aiNamespace = getRecord(clientRecord.ai)
+  const nestedKeys = aiNamespace ? getRecord(aiNamespace.keys) : null
+  if (nestedKeys) return nestedKeys as AiKeyNamespace
+
+  return null
+}
+
 export async function getAiKeySettings(): Promise<AiKeyRecord | null> {
   try {
-    const client = getTRPCClient() as unknown as {
-      aiKeys?: {
-        get?: {
-          query: () => Promise<AiKeyRecord | null>
-        }
-      }
-    }
-
-    if (!client.aiKeys?.get?.query) {
+    const namespace = getAiKeyNamespace()
+    if (!namespace?.get?.query) {
       return null
     }
 
-    return await client.aiKeys.get.query()
+    const result = await namespace.get.query()
+    return normalizeAiKeyRecord(result)
   } catch {
     return null
   }
 }
 
 export async function upsertAiKeySettings(input: UpsertAiKeyInput): Promise<AiKeyRecord> {
-  const client = getTRPCClient() as unknown as {
-    aiKeys?: {
-      upsert?: {
-        mutate: (payload: UpsertAiKeyInput) => Promise<AiKeyRecord>
-      }
-    }
+  const namespace = getAiKeyNamespace()
+
+  const save = namespace?.save?.mutate
+  const upsert = namespace?.upsert?.mutate
+  const mutate = save ?? upsert
+
+  if (!mutate) {
+    throw new Error('AI key save route is unavailable')
   }
 
-  if (!client.aiKeys?.upsert?.mutate) {
-    throw new Error('aiKeys.upsert route is unavailable')
+  const raw = await mutate(input)
+  const normalized = normalizeAiKeyRecord(raw)
+  if (!normalized) {
+    throw new Error('AI key save response is invalid')
   }
 
-  return client.aiKeys.upsert.mutate(input)
+  return normalized
 }
 
-export async function testAiKeyConnection(input: TestConnectionInput): Promise<{ ok: boolean; message: string }> {
-  const client = getTRPCClient() as unknown as {
-    aiKeys?: {
-      testConnection?: {
-        mutate: (payload: TestConnectionInput) => Promise<{ ok: boolean; message?: string }>
-      }
-    }
-  }
+export async function testAiKeyConnection(
+  input: TestConnectionInput,
+): Promise<{ ok: boolean; message: string }> {
+  const namespace = getAiKeyNamespace()
 
-  if (!client.aiKeys?.testConnection?.mutate) {
-    return { ok: false, message: 'aiKeys.testConnection route is unavailable' }
+  if (!namespace?.testConnection?.mutate) {
+    return { ok: false, message: 'AI key test route is unavailable' }
   }
 
   try {
-    const result = await client.aiKeys.testConnection.mutate(input)
-    return {
-      ok: Boolean(result.ok),
-      message: result.message ?? (result.ok ? 'Connection succeeded' : 'Connection failed'),
-    }
+    const result = await namespace.testConnection.mutate(input)
+    const data = getRecord(result)
+
+    const ok = typeof data?.ok === 'boolean' ? data.ok : false
+    const message =
+      typeof data?.message === 'string'
+        ? data.message
+        : ok
+          ? 'Connection succeeded'
+          : 'Connection failed'
+
+    return { ok, message }
   } catch (error) {
     return {
       ok: false,
