@@ -98,13 +98,15 @@ export default function EventsPage() {
     [events],
   )
 
-
-  const formatTimestamp = useCallback((timestamp: string) => {
-    const date = new Date(timestamp)
-    if (Number.isNaN(date.getTime())) return '—'
-    if (!isClient) return `${date.toISOString().replace('T', ' ').slice(0, 19)} UTC`
-    return date.toLocaleString()
-  }, [isClient])
+  const formatTimestamp = useCallback(
+    (timestamp: string) => {
+      const date = new Date(timestamp)
+      if (Number.isNaN(date.getTime())) return '—'
+      if (!isClient) return `${date.toISOString().replace('T', ' ').slice(0, 19)} UTC`
+      return date.toLocaleString()
+    },
+    [isClient],
+  )
 
   const columns = useMemo<ColumnDef<KubeEvent, unknown>[]>(
     () => [
@@ -190,7 +192,7 @@ export default function EventsPage() {
             key={f}
             type="button"
             onClick={() => setFilter(f)}
-            className={`flex min-h-9 items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+            className={`flex min-h-11 items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
               isActive
                 ? 'bg-white/[0.08] text-[var(--color-text-primary)] shadow-sm'
                 : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]'
@@ -273,7 +275,9 @@ export default function EventsPage() {
                     {event.object}
                   </span>
                   {event.count > 1 && (
-                    <span className="text-[var(--color-text-dim)] font-mono justify-self-end">×{event.count}</span>
+                    <span className="text-[var(--color-text-dim)] font-mono justify-self-end">
+                      ×{event.count}
+                    </span>
                   )}
                   <span className="text-[var(--color-accent)] font-mono truncate min-w-0 col-span-2">
                     {event.namespace}

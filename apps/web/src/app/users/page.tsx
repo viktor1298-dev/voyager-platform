@@ -91,7 +91,7 @@ function UserActions({
         type="button"
         onClick={onToggleRole}
         disabled={pending}
-        className="inline-flex min-h-9 items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] sm:text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
+        className="inline-flex min-h-11 items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] sm:text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
       >
         <UserCog className="h-3 w-3" />
         {user.role === 'admin' ? 'Demote' : 'Promote'}
@@ -100,7 +100,7 @@ function UserActions({
         type="button"
         onClick={onDelete}
         aria-label="Delete user"
-        className="min-h-9 px-2.5 py-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+        className="min-h-11 min-w-11 px-2.5 py-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>
