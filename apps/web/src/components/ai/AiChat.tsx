@@ -246,11 +246,16 @@ export function AiChat({
 
   const viewportRef = useRef<HTMLDivElement | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const lockedRef = useRef(locked)
 
   const trpcUtils = trpc.useUtils()
   const trpcUtilsRef = useRef(trpcUtils)
   trpcUtilsRef.current = trpcUtils
   const chatMutation = trpc.ai.chat.useMutation()
+
+  useEffect(() => {
+    lockedRef.current = locked
+  }, [locked])
 
   const messages = useMemo(() => {
     if (!selectedClusterId) return [buildDefaultAssistantGreeting(null)]
@@ -271,7 +276,7 @@ export function AiChat({
   }, [])
 
   const syncHistory = useCallback(async () => {
-    if (!selectedClusterId || locked) return
+    if (!selectedClusterId || lockedRef.current) return
 
     setIsHistoryLoading(true)
     setHistoryError(null)
@@ -314,14 +319,7 @@ export function AiChat({
       setIsHistoryLoading(false)
       scrollToBottom()
     }
-  }, [
-    locked,
-    scrollToBottom,
-    selectedClusterId,
-    selectedClusterName,
-    setClusterMessages,
-    setThreadId,
-  ])
+  }, [scrollToBottom, selectedClusterId, selectedClusterName, setClusterMessages, setThreadId])
 
   const sendPrompt = useCallback(
     async (content: string) => {
@@ -408,7 +406,9 @@ export function AiChat({
           setChatError('AI stream protocol mismatch. Please retry.')
         }
 
-        void syncHistory()
+        if (!lockedRef.current) {
+          void syncHistory()
+        }
       } catch {
         setChatError('AI response failed. Please retry.')
         toast.error('AI response failed. Please retry.')
