@@ -1,13 +1,15 @@
 'use client'
 
-import { BrainCircuit, Lightbulb, Stethoscope } from 'lucide-react'
-import { useEffect } from 'react'
+import { BrainCircuit, Lightbulb, Lock, Settings, Stethoscope } from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { AppLayout } from '@/components/AppLayout'
 import { AiChat } from '@/components/ai/AiChat'
 import { type Recommendation, RecommendationsPanel } from '@/components/ai/RecommendationsPanel'
 import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { getAiKeySettings } from '@/lib/ai-keys-client'
 import { trpc } from '@/lib/trpc'
 import { useAiAssistantStore } from '@/stores/ai-assistant'
 
@@ -31,6 +33,20 @@ export default function AiAssistantPage() {
   const queueQuickPrompt = useAiAssistantStore((state) => state.queueQuickPrompt)
 
   const trpcUtils = trpc.useUtils()
+
+  const [hasByokKey, setHasByokKey] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    void getAiKeySettings().then((settings) => {
+      if (cancelled) return
+      setHasByokKey(Boolean(settings?.hasKey || settings?.maskedKey))
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const clustersQuery = trpc.clusters.list.useQuery()
 
@@ -60,14 +76,17 @@ export default function AiAssistantPage() {
     },
   )
 
-  const recommendations: Recommendation[] =
-    analysisQuery.data?.recommendations.map((recommendation, index) => ({
-      id: `${recommendation.severity}-${recommendation.title}-${index}`,
-      title: recommendation.title,
-      description: recommendation.description,
-      action: recommendation.action,
-      severity: recommendation.severity,
-    })) ?? []
+  const recommendations: Recommendation[] = useMemo(
+    () =>
+      analysisQuery.data?.recommendations.map((recommendation, index) => ({
+        id: `${recommendation.severity}-${recommendation.title}-${index}`,
+        title: recommendation.title,
+        description: recommendation.description,
+        action: recommendation.action,
+        severity: recommendation.severity,
+      })) ?? [],
+    [analysisQuery.data?.recommendations],
+  )
 
   return (
     <AppLayout>
@@ -100,8 +119,7 @@ export default function AiAssistantPage() {
               AI Assistant
             </h1>
             <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-              Smart cluster analysis with conversational insights, recommendations, and event
-              reasoning.
+              Read-only cluster intelligence: health score, recommendations, and event reasoning.
             </p>
 
             {analysisQuery.data && selectedCluster && (
@@ -125,8 +143,12 @@ export default function AiAssistantPage() {
                   <button
                     key={action.key}
                     type="button"
-                    disabled={!selectedClusterId}
+                    disabled={!selectedClusterId || !hasByokKey}
                     onClick={() => {
+                      if (!hasByokKey) {
+                        toast.warning('Add your API key in Settings to unlock AI Chat')
+                        return
+                      }
                       queueQuickPrompt({ id: `${action.key}-${Date.now()}`, text: action.prompt })
                       toast.success(`${action.label} queued`)
                     }}
@@ -167,11 +189,41 @@ export default function AiAssistantPage() {
           )}
 
           <div className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
-            <AiChat
-              key={selectedCluster?.id ?? 'no-cluster'}
-              selectedClusterId={selectedCluster?.id ?? null}
-              selectedClusterName={selectedCluster?.name ?? null}
-            />
+            <section className="space-y-3">
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)]">
+                  🟢 FREE Tier Analytics
+                </div>
+                <p className="text-xs text-[var(--color-text-secondary)]">
+                  Health score, snapshot insights, and recommendations are always available.
+                </p>
+              </div>
+
+              {hasByokKey ? (
+                <AiChat
+                  key={selectedCluster?.id ?? 'no-cluster'}
+                  selectedClusterId={selectedCluster?.id ?? null}
+                  selectedClusterName={selectedCluster?.name ?? null}
+                />
+              ) : (
+                <div className="rounded-2xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/10 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--color-status-warning)]">
+                    <Lock className="h-4 w-4" />🔵 AI Chat Locked (BYOK)
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    Add your API key in Settings to unlock AI Chat.
+                  </p>
+                  <Link
+                    href="/settings"
+                    className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-white/[0.04]"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Open Settings
+                  </Link>
+                </div>
+              )}
+            </section>
+
             <RecommendationsPanel
               key={selectedCluster?.id ?? 'no-cluster'}
               clusterId={selectedCluster?.id ?? null}
