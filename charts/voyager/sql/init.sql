@@ -155,3 +155,47 @@ CREATE TABLE IF NOT EXISTS "sso_providers" (
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS "sso_providers_provider_type_unq" ON "sso_providers" USING btree ("provider_type");
+
+-- BYOK keys (migration 0011 + 0012 guards)
+CREATE TABLE IF NOT EXISTS "user_ai_keys" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "provider" varchar(50) NOT NULL,
+  "encrypted_key" text NOT NULL,
+  "model" varchar(120) NOT NULL,
+  "updated_at" timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "uidx_user_ai_keys_user_provider"
+  ON "user_ai_keys" ("user_id", "provider");
+
+CREATE INDEX IF NOT EXISTS "idx_user_ai_keys_user_updated"
+  ON "user_ai_keys" ("user_id", "updated_at" DESC);
+
+CREATE INDEX IF NOT EXISTS "idx_user_ai_keys_provider_updated"
+  ON "user_ai_keys" ("provider", "updated_at" DESC);
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_ai_keys') THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM pg_constraint
+      WHERE conname = 'chk_user_ai_keys_encrypted_key_not_blank'
+    ) THEN
+      ALTER TABLE "user_ai_keys"
+      ADD CONSTRAINT "chk_user_ai_keys_encrypted_key_not_blank"
+      CHECK (btrim("encrypted_key") <> '');
+    END IF;
+
+    IF NOT EXISTS (
+      SELECT 1
+      FROM pg_constraint
+      WHERE conname = 'chk_user_ai_keys_model_not_blank'
+    ) THEN
+      ALTER TABLE "user_ai_keys"
+      ADD CONSTRAINT "chk_user_ai_keys_model_not_blank"
+      CHECK (btrim("model") <> '');
+    END IF;
+  END IF;
+END $$;
