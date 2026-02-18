@@ -55,10 +55,13 @@ function sanitizeUserRow(raw: unknown): UserRow | null {
 
   const candidate = raw as Record<string, unknown>
   const id = normalizeNonEmptyString(candidate.id)
-  const name = normalizeNonEmptyString(candidate.name)
   const email = normalizeNonEmptyString(candidate.email)
 
-  if (!id || !name || !email) return null
+  if (!id || !email) return null
+
+  const nameFromApi = normalizeNonEmptyString(candidate.name)
+  const fallbackName = email.split('@')[0]?.trim() || 'Unknown user'
+  const name = nameFromApi ?? fallbackName
 
   const role = typeof candidate.role === 'string' ? candidate.role : null
   const createdAt =
