@@ -29,8 +29,10 @@ export function mapUiProviderToBackend(provider: UiAiProvider): BackendAiProvide
   return provider === 'anthropic' ? 'claude' : 'openai'
 }
 
-export function mapBackendProviderToUi(provider: unknown): UiAiProvider {
-  return provider === 'openai' ? 'openai' : 'anthropic'
+export function mapBackendProviderToUi(provider: unknown): UiAiProvider | null {
+  if (provider === 'openai') return 'openai'
+  if (provider === 'claude' || provider === 'anthropic') return 'anthropic'
+  return null
 }
 
 function normalizeKeyLike(input: unknown): AiKeyRecord | null {
@@ -38,6 +40,8 @@ function normalizeKeyLike(input: unknown): AiKeyRecord | null {
   if (!source) return null
 
   const provider = mapBackendProviderToUi(source.provider)
+  if (!provider) return null
+
   const model =
     typeof source.model === 'string' && source.model.trim().length > 0
       ? source.model
@@ -96,6 +100,10 @@ export function normalizeTestConnectionResponse(payload: unknown): {
 
   if (!success) {
     return { ok: false, message: 'Connection failed' }
+  }
+
+  if (!provider) {
+    return { ok: false, message: 'Connection failed: invalid provider in response' }
   }
 
   if (model) {
