@@ -1,17 +1,41 @@
-# Stage 1 — build
-FROM node:22-alpine AS builder
+# ============================================================
+# Stage 1 — deps: install dependencies (cached when only code changes)
+# ============================================================
+FROM node:22-alpine AS deps
 RUN corepack enable
 WORKDIR /app
-COPY . .
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/api/package.json apps/api/
+COPY packages/config/package.json packages/config/
+COPY packages/db/package.json packages/db/
+COPY packages/types/package.json packages/types/
+
 RUN pnpm install --frozen-lockfile
+
+# ============================================================
+# Stage 2 — builder: build API and dependencies
+# ============================================================
+FROM deps AS builder
+WORKDIR /app
+
+COPY packages/config packages/config
+COPY packages/types packages/types
+COPY packages/db packages/db
+COPY apps/api apps/api
+COPY charts/voyager/sql charts/voyager/sql
+
 RUN pnpm --filter @voyager/config build
 RUN pnpm --filter @voyager/types build
 RUN pnpm --filter @voyager/db build
 RUN pnpm --filter @voyager/api build
+
 # Prune to production deps only
 RUN pnpm --filter @voyager/api deploy --prod --legacy /app/pruned
 
-# Stage 2 — production
+# ============================================================
+# Stage 3 — production: minimal runtime image
+# ============================================================
 FROM node:22-alpine AS runner
 RUN addgroup -g 1001 -S nodejs && adduser -S voyager -u 1001
 WORKDIR /app
