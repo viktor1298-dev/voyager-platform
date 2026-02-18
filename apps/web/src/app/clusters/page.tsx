@@ -31,9 +31,15 @@ function statusBadgeVariant(status: string) {
   return 'outline' as const
 }
 
-function formatLastSeen(date: Date | string | null | undefined) {
+function formatLastSeen(date: Date | string | null | undefined, isClient: boolean) {
   if (!date) return '—'
   const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return '—'
+
+  if (!isClient) {
+    return `${d.toISOString().replace('T', ' ').slice(0, 19)} UTC`
+  }
+
   const now = Date.now()
   const diffMs = now - d.getTime()
   if (diffMs < 60_000) return 'just now'
@@ -109,12 +115,17 @@ export default function ClustersPage() {
 
   const [showAddModal, setShowAddModal] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+  const [isClient, setIsClient] = useState(false)
   const currentUserId = useAuthStore((state) => state.user?.id)
 
   const getPermissionForCluster = useCallback((clusterId: string): Relation | null => {
     if (!currentUserId) return null
     return getBestRelationForUser(currentUserId, clusterId)
   }, [currentUserId])
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -253,7 +264,9 @@ export default function ClustersPage() {
         accessorFn: (row) => row.updatedAt,
         header: 'Last Seen',
         cell: ({ row }) => (
-          <span className="text-xs text-[var(--color-text-muted)]">{formatLastSeen(row.original.updatedAt)}</span>
+          <span className="text-xs text-[var(--color-text-muted)]" suppressHydrationWarning>
+            {formatLastSeen(row.original.updatedAt, isClient)}
+          </span>
         ),
       },
       ...(isAdmin
@@ -273,7 +286,7 @@ export default function ClustersPage() {
           ]
         : []),
     ],
-    [getPermissionForCluster, isAdmin],
+    [getPermissionForCluster, isAdmin, isClient],
   )
 
   const toCreateClusterInput = useCallback((payload: AddClusterWizardPayload): CreateClusterInput => {
@@ -352,7 +365,9 @@ export default function ClustersPage() {
               <span className="text-[var(--color-text-muted)]">Nodes</span>
               <span className="text-[var(--color-text-primary)] font-mono tabular-nums">{row.nodeCount}</span>
               <span className="text-[var(--color-text-muted)]">Last Seen</span>
-              <span className="text-[var(--color-text-primary)]">{formatLastSeen(row.updatedAt)}</span>
+              <span className="text-[var(--color-text-primary)]" suppressHydrationWarning>
+                {formatLastSeen(row.updatedAt, isClient)}
+              </span>
             </div>
             {isAdmin && (
               <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">

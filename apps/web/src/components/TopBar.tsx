@@ -97,15 +97,16 @@ function ConnectionStatus({ dataUpdatedAt, isDisconnected, isReconnecting }: {
   isDisconnected: boolean
   isReconnecting: boolean
 }) {
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState<number | null>(null)
 
   useEffect(() => {
+    setNow(Date.now())
     const interval = setInterval(() => setNow(Date.now()), 5000)
     return () => clearInterval(interval)
   }, [])
 
-  const secondsAgo = dataUpdatedAt ? Math.floor((now - dataUpdatedAt) / 1000) : 0
-  const syncLabel = secondsAgo < 5 ? 'just now' : secondsAgo + 's ago'
+  const secondsAgo = now !== null && dataUpdatedAt ? Math.floor((now - dataUpdatedAt) / 1000) : 0
+  const syncLabel = now === null || secondsAgo < 5 ? 'just now' : secondsAgo + 's ago'
 
   const dotColor = isDisconnected
     ? 'var(--color-status-error, #ef4444)'
