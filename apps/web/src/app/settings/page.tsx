@@ -165,13 +165,18 @@ export default function SettingsPage() {
   const [model, setModel] = useState(PROVIDERS[0].models[0])
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [storedMaskedKey, setStoredMaskedKey] = useState<string | null>(null)
+  const [storedKeyProvider, setStoredKeyProvider] = useState<AiProvider | null>(null)
   const [isKeyLoading, setIsKeyLoading] = useState(true)
   const [isTesting, setIsTesting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [testStatus, setTestStatus] = useState<{
+    type: 'success' | 'error'
+    message: string
+  } | null>(null)
   const [isHydrated, setIsHydrated] = useState(false)
   const [lastSyncLabel, setLastSyncLabel] = useState('—')
 
-  const hasStoredKey = Boolean(storedMaskedKey)
+  const hasStoredKey = Boolean(storedMaskedKey) && storedKeyProvider === provider
   const hasRawKeyInput = apiKeyInput.trim().length > 0
 
   const providerConfig = useMemo(
@@ -188,6 +193,10 @@ export default function SettingsPage() {
       setModel(providerConfig.models[0])
     }
   }, [model, providerConfig])
+
+  useEffect(() => {
+    setTestStatus(null)
+  }, [provider, model, apiKeyInput])
 
   useEffect(() => {
     setIsHydrated(true)
@@ -226,6 +235,7 @@ export default function SettingsPage() {
         setProvider(keySettings.provider)
         setModel(keySettings.model)
         setStoredMaskedKey(keySettings.maskedKey || null)
+        setStoredKeyProvider(keySettings.provider)
       }
 
       setIsKeyLoading(false)
@@ -377,8 +387,10 @@ export default function SettingsPage() {
                     })
                       .then((result) => {
                         if (result.ok) {
+                          setTestStatus({ type: 'success', message: result.message })
                           toast.success(result.message)
                         } else {
+                          setTestStatus({ type: 'error', message: result.message })
                           toast.error(result.message)
                         }
                       })
@@ -403,13 +415,16 @@ export default function SettingsPage() {
                     void upsertAiKeySettings({ provider, model, apiKey: apiKeyInput.trim() })
                       .then((saved) => {
                         setStoredMaskedKey(saved.maskedKey)
+                        setStoredKeyProvider(saved.provider)
                         setApiKeyInput('')
+                        setTestStatus({ type: 'success', message: 'AI key saved successfully' })
                         toast.success('AI key saved')
                       })
                       .catch((error) => {
-                        toast.error(
-                          error instanceof Error ? error.message : 'Failed to save AI key',
-                        )
+                        const message =
+                          error instanceof Error ? error.message : 'Failed to save AI key'
+                        setTestStatus({ type: 'error', message })
+                        toast.error(message)
                       })
                       .finally(() => setIsSaving(false))
                   }}
@@ -423,6 +438,24 @@ export default function SettingsPage() {
                 <p className="text-xs text-[var(--color-text-dim)]">
                   You can test your saved key, or enter a new key and save to replace it.
                 </p>
+              )}
+
+              {!hasRawKeyInput && storedMaskedKey && storedKeyProvider && storedKeyProvider !== provider && (
+                <p className="text-xs text-[var(--color-text-dim)]">
+                  Saved key exists for {storedKeyProvider}, switch provider to test it.
+                </p>
+              )}
+
+              {testStatus && (
+                <div
+                  className={`rounded-xl border px-3 py-2 text-xs ${
+                    testStatus.type === 'success'
+                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                      : 'border-red-500/40 bg-red-500/10 text-red-300'
+                  }`}
+                >
+                  {testStatus.message}
+                </div>
               )}
 
               {isKeyLoading && (

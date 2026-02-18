@@ -99,7 +99,8 @@ export function normalizeTestConnectionResponse(payload: unknown): {
   const model = typeof root?.model === 'string' && root.model.length > 0 ? root.model : null
 
   if (!success) {
-    return { ok: false, message: 'Connection failed' }
+    const errorMessage = typeof root?.error === 'string' && root.error.trim().length > 0 ? root.error : null
+    return { ok: false, message: errorMessage ?? 'Connection failed' }
   }
 
   if (!provider) {

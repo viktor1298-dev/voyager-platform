@@ -64,10 +64,14 @@ test('parses testConnection response using exact { success, provider, model } co
     message: 'Connection succeeded (anthropic/claude-sonnet-4-20250514)',
   })
 
-  const failed = normalizeTestConnectionResponse({ success: false, provider: 'openai' })
+  const failed = normalizeTestConnectionResponse({
+    success: false,
+    provider: 'openai',
+    error: 'Invalid API key',
+  })
   expect(failed).toEqual({
     ok: false,
-    message: 'Connection failed',
+    message: 'Invalid API key',
   })
 })
 
