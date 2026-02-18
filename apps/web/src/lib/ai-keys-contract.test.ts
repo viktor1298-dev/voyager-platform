@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict'
-import test from 'node:test'
+import { expect, test } from 'vitest'
 import {
   mapBackendProviderToUi,
   mapUiProviderToBackend,
@@ -9,8 +8,8 @@ import {
 } from './ai-keys-contract'
 
 test('maps UI provider to backend provider at API boundary', () => {
-  assert.equal(mapUiProviderToBackend('anthropic'), 'claude')
-  assert.equal(mapUiProviderToBackend('openai'), 'openai')
+  expect(mapUiProviderToBackend('anthropic')).toBe('claude')
+  expect(mapUiProviderToBackend('openai')).toBe('openai')
 })
 
 test('parses get response using exact { keys: [...] } contract and hydrates hasKey', () => {
@@ -25,7 +24,7 @@ test('parses get response using exact { keys: [...] } contract and hydrates hasK
     ],
   })
 
-  assert.deepEqual(parsed, {
+  expect(parsed).toEqual({
     provider: 'anthropic',
     model: 'claude-sonnet-4-20250514',
     maskedKey: 'sk-ant-***',
@@ -45,7 +44,7 @@ test('parses save response using exact { key: ... } contract', () => {
     },
   })
 
-  assert.deepEqual(parsed, {
+  expect(parsed).toEqual({
     provider: 'openai',
     model: 'gpt-4o-mini',
     maskedKey: 'sk-proj-***',
@@ -60,19 +59,19 @@ test('parses testConnection response using exact { success, provider, model } co
     provider: 'claude',
     model: 'claude-sonnet-4-20250514',
   })
-  assert.deepEqual(ok, {
+  expect(ok).toEqual({
     ok: true,
     message: 'Connection succeeded (anthropic/claude-sonnet-4-20250514)',
   })
 
   const failed = normalizeTestConnectionResponse({ success: false, provider: 'openai' })
-  assert.deepEqual(failed, {
+  expect(failed).toEqual({
     ok: false,
     message: 'Connection failed',
   })
 })
 
 test('maps backend provider to UI provider', () => {
-  assert.equal(mapBackendProviderToUi('claude'), 'anthropic')
-  assert.equal(mapBackendProviderToUi('openai'), 'openai')
+  expect(mapBackendProviderToUi('claude')).toBe('anthropic')
+  expect(mapBackendProviderToUi('openai')).toBe('openai')
 })
