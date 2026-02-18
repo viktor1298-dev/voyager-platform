@@ -1,3 +1,4 @@
+import { TRPCError } from '@trpc/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { logAuditMock } = vi.hoisted(() => ({
@@ -76,5 +77,20 @@ describe('ai.chat transient provider handling', () => {
         question: 'What is wrong?',
       }),
     ).rejects.toMatchObject({ code: 'INTERNAL_SERVER_ERROR' })
+  })
+
+  it('does not remap logical TRPC failures to SERVICE_UNAVAILABLE', async () => {
+    vi.spyOn(AIService.prototype, 'answerQuestion').mockRejectedValueOnce(
+      new TRPCError({ code: 'BAD_REQUEST', message: 'invalid input prompt' }),
+    )
+
+    const { caller } = createCaller()
+
+    await expect(
+      caller.ai.chat({
+        clusterId: '11111111-1111-4111-8111-111111111111',
+        question: 'What is wrong?',
+      }),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
   })
 })
