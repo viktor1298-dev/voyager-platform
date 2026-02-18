@@ -40,7 +40,7 @@ export default function AiAssistantPage() {
     let cancelled = false
     void getAiKeySettings().then((settings) => {
       if (cancelled) return
-      setHasByokKey(Boolean(settings?.hasKey))
+      setHasByokKey(Boolean(settings?.hasKey || settings?.maskedKey))
     })
 
     return () => {
@@ -115,7 +115,9 @@ export default function AiAssistantPage() {
           </div>
 
           <header className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 sm:p-5">
-            <h1 className="text-xl font-bold text-[var(--color-text-primary)] sm:text-2xl">AI Assistant</h1>
+            <h1 className="text-xl font-bold text-[var(--color-text-primary)] sm:text-2xl">
+              AI Assistant
+            </h1>
             <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
               Read-only cluster intelligence: health score, recommendations, and event reasoning.
             </p>
@@ -206,8 +208,7 @@ export default function AiAssistantPage() {
               ) : (
                 <div className="rounded-2xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/10 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--color-status-warning)]">
-                    <Lock className="h-4 w-4" />
-                    🔵 AI Chat Locked (BYOK)
+                    <Lock className="h-4 w-4" />🔵 AI Chat Locked (BYOK)
                   </div>
                   <p className="text-sm text-[var(--color-text-secondary)]">
                     Add your API key in Settings to unlock AI Chat.

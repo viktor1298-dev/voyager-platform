@@ -33,7 +33,11 @@ interface ProviderConfig {
 }
 
 const PROVIDERS: ProviderConfig[] = [
-  { value: 'anthropic', label: 'Claude (Anthropic)', models: ['claude-sonnet-4-20250514', 'claude-3-7-sonnet-latest'] },
+  {
+    value: 'anthropic',
+    label: 'Claude (Anthropic)',
+    models: ['claude-sonnet-4-20250514', 'claude-3-7-sonnet-latest'],
+  },
   { value: 'openai', label: 'OpenAI', models: ['gpt-4.1', 'gpt-4o-mini'] },
 ]
 
@@ -42,7 +46,9 @@ const clusterColumns: ColumnDef<ClusterRow, unknown>[] = [
     accessorKey: 'name',
     header: 'Name',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-primary)] font-medium text-[12px]">{getValue<string>()}</span>
+      <span className="text-[var(--color-text-primary)] font-medium text-[12px]">
+        {getValue<string>()}
+      </span>
     ),
   },
   {
@@ -56,7 +62,9 @@ const clusterColumns: ColumnDef<ClusterRow, unknown>[] = [
     accessorKey: 'endpoint',
     header: 'Endpoint',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-muted)] font-mono text-[11px]">{getValue<string>()}</span>
+      <span className="text-[var(--color-text-muted)] font-mono text-[11px]">
+        {getValue<string>()}
+      </span>
     ),
   },
   {
@@ -112,7 +120,9 @@ function SectionCard({
     >
       <div className="flex items-center gap-2.5 mb-5">
         <span className="text-[var(--color-accent)]">{icon}</span>
-        <h3 className="text-[14px] font-bold text-[var(--color-text-primary)] tracking-tight">{title}</h3>
+        <h3 className="text-[14px] font-bold text-[var(--color-text-primary)] tracking-tight">
+          {title}
+        </h3>
       </div>
       {children}
     </div>
@@ -159,7 +169,13 @@ export default function SettingsPage() {
   const [isTesting, setIsTesting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
-  const providerConfig = useMemo(() => PROVIDERS.find((item) => item.value === provider) ?? PROVIDERS[0], [provider])
+  const hasStoredKey = Boolean(storedMaskedKey)
+  const hasRawKeyInput = apiKeyInput.trim().length > 0
+
+  const providerConfig = useMemo(
+    () => PROVIDERS.find((item) => item.value === provider) ?? PROVIDERS[0],
+    [provider],
+  )
 
   useEffect(() => {
     if (!providerConfig.models.includes(model)) {
@@ -178,7 +194,7 @@ export default function SettingsPage() {
       if (keySettings) {
         setProvider(keySettings.provider)
         setModel(keySettings.model)
-        setStoredMaskedKey(keySettings.maskedKey)
+        setStoredMaskedKey(keySettings.maskedKey || null)
       }
 
       setIsKeyLoading(false)
@@ -201,7 +217,9 @@ export default function SettingsPage() {
         <Breadcrumbs />
 
         <div className="mb-8">
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Settings</h1>
+          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+            Settings
+          </h1>
           <p className="text-[12px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
             Platform configuration & information
           </p>
@@ -237,7 +255,10 @@ export default function SettingsPage() {
             <InfoRow
               label="Voyager Version"
               value={
-                <span className="gradient-text font-bold" style={{ backgroundImage: 'var(--gradient-text-default)' }}>
+                <span
+                  className="gradient-text font-bold"
+                  style={{ backgroundImage: 'var(--gradient-text-default)' }}
+                >
                   {APP_VERSION}
                 </span>
               }
@@ -246,14 +267,21 @@ export default function SettingsPage() {
             <InfoRow label="Runtime" value="Next.js 16 + tRPC 11" />
             <InfoRow
               label="Status"
-              value={<span className="text-[var(--color-status-active)] text-[12px] font-semibold">Operational</span>}
+              value={
+                <span className="text-[var(--color-status-active)] text-[12px] font-semibold">
+                  Operational
+                </span>
+              }
             />
           </SectionCard>
 
           <SectionCard icon={<Info className="h-4 w-4" />} title="AI Bring Your Own Key (BYOK)">
             <div className="space-y-3">
               <div>
-                <label htmlFor="provider" className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono">
+                <label
+                  htmlFor="provider"
+                  className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono"
+                >
                   Provider
                 </label>
                 <select
@@ -271,7 +299,10 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label htmlFor="model" className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono">
+                <label
+                  htmlFor="model"
+                  className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono"
+                >
                   Model
                 </label>
                 <select
@@ -289,7 +320,10 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label htmlFor="api-key" className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono">
+                <label
+                  htmlFor="api-key"
+                  className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono"
+                >
                   API Key
                 </label>
                 <input
@@ -300,10 +334,13 @@ export default function SettingsPage() {
                   placeholder={provider === 'anthropic' ? 'sk-ant-...' : 'sk-...'}
                   className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                 />
-                <p className="mt-1 text-[11px] text-[var(--color-text-dim)]">We never show your full key in the UI.</p>
+                <p className="mt-1 text-[11px] text-[var(--color-text-dim)]">
+                  We never show your full key in the UI.
+                </p>
                 {(storedMaskedKey || apiKeyInput) && (
                   <p className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
-                    Key preview: <span className="font-mono">{storedMaskedKey ?? maskApiKey(apiKeyInput)}</span>
+                    Key preview:{' '}
+                    <span className="font-mono">{storedMaskedKey ?? maskApiKey(apiKeyInput)}</span>
                   </p>
                 )}
               </div>
@@ -311,10 +348,14 @@ export default function SettingsPage() {
               <div className="flex flex-wrap gap-2 pt-1">
                 <button
                   type="button"
-                  disabled={!apiKeyInput.trim() || isTesting}
+                  disabled={(!hasRawKeyInput && !hasStoredKey) || isTesting}
                   onClick={() => {
                     setIsTesting(true)
-                    void testAiKeyConnection({ provider, model, apiKey: apiKeyInput.trim() })
+                    void testAiKeyConnection({
+                      provider,
+                      model,
+                      apiKey: hasRawKeyInput ? apiKeyInput.trim() : undefined,
+                    })
                       .then((result) => {
                         if (result.ok) {
                           toast.success(result.message)
@@ -326,7 +367,13 @@ export default function SettingsPage() {
                   }}
                   className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-white/[0.04] disabled:opacity-60"
                 >
-                  {isTesting ? 'Testing...' : 'Test Connection'}
+                  {isTesting
+                    ? hasRawKeyInput
+                      ? 'Testing new key...'
+                      : 'Testing saved key...'
+                    : hasRawKeyInput
+                      ? 'Test New Key'
+                      : 'Test Saved Key'}
                 </button>
 
                 <button
@@ -341,7 +388,9 @@ export default function SettingsPage() {
                         toast.success('AI key saved')
                       })
                       .catch((error) => {
-                        toast.error(error instanceof Error ? error.message : 'Failed to save AI key')
+                        toast.error(
+                          error instanceof Error ? error.message : 'Failed to save AI key',
+                        )
                       })
                       .finally(() => setIsSaving(false))
                   }}
@@ -351,7 +400,15 @@ export default function SettingsPage() {
                 </button>
               </div>
 
-              {isKeyLoading && <p className="text-xs text-[var(--color-text-dim)]">Loading saved key status…</p>}
+              {hasStoredKey && !hasRawKeyInput && (
+                <p className="text-xs text-[var(--color-text-dim)]">
+                  You can test your saved key, or enter a new key and save to replace it.
+                </p>
+              )}
+
+              {isKeyLoading && (
+                <p className="text-xs text-[var(--color-text-dim)]">Loading saved key status…</p>
+              )}
             </div>
           </SectionCard>
 
@@ -361,7 +418,8 @@ export default function SettingsPage() {
 
           <SectionCard icon={<Info className="h-4 w-4" />} title="About">
             <p className="text-[13px] text-[var(--color-text-secondary)] leading-relaxed mb-4">
-              <strong className="text-[var(--color-text-primary)]">Voyager Platform</strong> — Unified Kubernetes Operations Dashboard.
+              <strong className="text-[var(--color-text-primary)]">Voyager Platform</strong> —
+              Unified Kubernetes Operations Dashboard.
             </p>
             <div className="flex flex-col gap-2">
               <a
@@ -401,7 +459,11 @@ function ClusterTable({
       })
     }
     for (const c of clusters) {
-      if (live && ((c.name as string) === (live.name as string) || (c.name as string) === 'minikube-dev')) continue
+      if (
+        live &&
+        ((c.name as string) === (live.name as string) || (c.name as string) === 'minikube-dev')
+      )
+        continue
       result.push({
         id: (c.id as string) ?? '',
         name: (c.name as string) ?? '',
@@ -414,7 +476,9 @@ function ClusterTable({
   }, [live, clusters])
 
   if (rows.length === 0) {
-    return <p className="text-[12px] text-[var(--color-text-muted)] py-4">No clusters registered.</p>
+    return (
+      <p className="text-[12px] text-[var(--color-text-muted)] py-4">No clusters registered.</p>
+    )
   }
 
   return <DataTable data={rows} columns={clusterColumns} />
