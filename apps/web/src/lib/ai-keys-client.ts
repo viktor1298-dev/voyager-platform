@@ -1,6 +1,5 @@
 import { getTRPCClient } from '@/lib/trpc'
 import {
-  mapUiProviderToBackend,
   normalizeGetResponse,
   normalizeSaveResponse,
   normalizeTestConnectionResponse,
@@ -99,10 +98,7 @@ export async function upsertAiKeySettings(input: UpsertAiKeyInput): Promise<AiKe
     throw new Error('AI key save route is unavailable')
   }
 
-  const raw = await mutate({
-    ...input,
-    provider: mapUiProviderToBackend(input.provider),
-  })
+  const raw = await mutate(input)
   const normalized = normalizeSaveResponse(raw)
   if (!normalized) {
     throw new Error('AI key save response is invalid')
@@ -121,10 +117,7 @@ export async function testAiKeyConnection(
   }
 
   try {
-    const result = await namespace.testConnection.mutate({
-      ...input,
-      provider: mapUiProviderToBackend(input.provider),
-    })
+    const result = await namespace.testConnection.mutate(input)
     return normalizeTestConnectionResponse(result)
   } catch (error) {
     return {

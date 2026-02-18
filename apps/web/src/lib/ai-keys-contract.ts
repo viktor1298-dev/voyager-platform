@@ -1,5 +1,5 @@
 export type UiAiProvider = 'anthropic' | 'openai'
-export type BackendAiProvider = 'claude' | 'openai'
+export type BackendAiProvider = 'anthropic' | 'openai'
 
 export interface AiKeyRecord {
   provider: UiAiProvider
@@ -26,7 +26,7 @@ function toIsoDate(value: unknown): string | null {
 }
 
 export function mapUiProviderToBackend(provider: UiAiProvider): BackendAiProvider {
-  return provider === 'anthropic' ? 'claude' : 'openai'
+  return provider
 }
 
 export function mapBackendProviderToUi(provider: unknown): UiAiProvider | null {
