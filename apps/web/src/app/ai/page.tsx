@@ -8,7 +8,7 @@ import { AiChat } from '@/components/ai/AiChat'
 import { type Recommendation, RecommendationsPanel } from '@/components/ai/RecommendationsPanel'
 import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { getAiKeySettings } from '@/lib/ai-keys-client'
+import { getAiKeySettings, testAiKeyConnection } from '@/lib/ai-keys-client'
 import { trpc } from '@/lib/trpc'
 import { useAiAssistantStore } from '@/stores/ai-assistant'
 
@@ -33,14 +33,32 @@ export default function AiAssistantPage() {
 
   const trpcUtils = trpc.useUtils()
 
-  const [hasByokKey, setHasByokKey] = useState(false)
+  const [byokState, setByokState] = useState<'checking' | 'locked' | 'unlocked'>('checking')
+  const hasByokKey = byokState === 'unlocked'
 
   useEffect(() => {
     let cancelled = false
-    void getAiKeySettings().then((settings) => {
+
+    const resolveByokState = async () => {
+      setByokState('checking')
+      const settings = await getAiKeySettings()
       if (cancelled) return
-      setHasByokKey(Boolean(settings?.hasKey || settings?.maskedKey))
-    })
+
+      if (!settings?.hasKey || !settings.provider) {
+        setByokState('locked')
+        return
+      }
+
+      const testResult = await testAiKeyConnection({
+        provider: settings.provider,
+        model: settings.model,
+      })
+      if (cancelled) return
+
+      setByokState(testResult.ok ? 'unlocked' : 'locked')
+    }
+
+    void resolveByokState()
 
     return () => {
       cancelled = true
@@ -203,7 +221,11 @@ export default function AiAssistantPage() {
                 selectedClusterId={selectedCluster?.id ?? null}
                 selectedClusterName={selectedCluster?.name ?? null}
                 locked={!hasByokKey}
-                lockMessage="Add your API key in Settings to unlock AI Chat"
+                lockMessage={
+                  byokState === 'checking'
+                    ? 'Verifying saved BYOK key status...'
+                    : 'Add a valid saved API key in Settings to unlock AI Chat'
+                }
               />
 
               {/* Lock state is rendered directly in AiChat */}

@@ -23,25 +23,45 @@ test.describe('Responsive — Mobile Viewport', () => {
     expect(hasOverflow).toBe(false);
   });
 
-  test('should handle sidebar on mobile', async ({ page }) => {
+  test('should handle sidebar on mobile without switching users table to desktop layout', async ({ page }) => {
     await login(page);
-    await page.goto('/');
+    await page.goto('/users');
 
-    // Sidebar should be hidden or collapsible on mobile
-    const sidebar = page.locator('nav, aside, [data-testid="sidebar"]').first();
-    const menuButton = page.getByRole('button', { name: /menu|hamburger/i })
-      .or(page.locator('[data-testid="mobile-menu"]'));
+    const sidebar = page.locator('[data-testid="sidebar"]');
+    const menuButton = page.getByRole('button', { name: /open navigation menu|close navigation menu/i });
+    const usersDesktopTable = page.locator('table').first();
+    const usersMobileCards = page.locator('table').locator('xpath=preceding-sibling::div[contains(@class,"md:hidden")]').first();
 
-    // Either sidebar is hidden, or there's a hamburger menu
-    const sidebarHidden = !(await sidebar.isVisible().catch(() => false));
-    const hasMenuButton = (await menuButton.count()) > 0;
+    await expect(menuButton).toBeVisible();
+    await expect(usersMobileCards).toBeVisible();
+    await expect(usersDesktopTable).toBeHidden();
 
-    expect(sidebarHidden || hasMenuButton).toBe(true);
+    await menuButton.click();
+    await expect(sidebar).toBeVisible({ timeout: 5_000 });
+    await expect(usersMobileCards).toBeVisible();
+    await expect(usersDesktopTable).toBeHidden();
+  });
 
-    // If hamburger exists, click it and verify sidebar appears
-    if (hasMenuButton && (await menuButton.first().isVisible())) {
-      await menuButton.first().click();
-      await expect(sidebar).toBeVisible({ timeout: 5_000 });
-    }
+  test('should render BYOK actions as full-width touch targets on mobile', async ({ page }) => {
+    await login(page);
+    await page.goto('/settings');
+
+    const actions = page.getByTestId('byok-actions');
+    const saveBtn = page.getByTestId('byok-save');
+    const testBtn = page.getByTestId('byok-test');
+
+    await expect(actions).toBeVisible();
+    await expect(saveBtn).toBeVisible();
+    await expect(testBtn).toBeVisible();
+
+    const saveBox = await saveBtn.boundingBox();
+    const testBox = await testBtn.boundingBox();
+
+    expect(saveBox).not.toBeNull();
+    expect(testBox).not.toBeNull();
+
+    expect(saveBox!.height).toBeGreaterThanOrEqual(44);
+    expect(testBox!.height).toBeGreaterThanOrEqual(44);
+    expect(Math.abs(saveBox!.x - testBox!.x)).toBeLessThanOrEqual(2);
   });
 });

@@ -14,15 +14,22 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
-    if (!mobileOpen) return
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.body.style.overflow = previousOverflow
+    if (pathname) {
+      setMobileOpen(false)
     }
-  }, [mobileOpen])
+  }, [pathname])
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 768px)')
+    const onDesktopMatch = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setMobileOpen(false)
+      }
+    }
+
+    media.addEventListener('change', onDesktopMatch)
+    return () => media.removeEventListener('change', onDesktopMatch)
+  }, [])
 
   return (
     <AuthGuard>

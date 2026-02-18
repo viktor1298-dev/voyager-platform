@@ -166,17 +166,21 @@ export default function SettingsPage() {
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [storedMaskedKey, setStoredMaskedKey] = useState<string | null>(null)
   const [storedKeyProvider, setStoredKeyProvider] = useState<AiProvider | null>(null)
+  const [storedKeyModel, setStoredKeyModel] = useState<string | null>(null)
   const [isKeyLoading, setIsKeyLoading] = useState(true)
   const [isTesting, setIsTesting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [testStatus, setTestStatus] = useState<{
+  const [actionStatus, setActionStatus] = useState<{
     type: 'success' | 'error'
     message: string
+    action: 'save' | 'test'
+    at: string
   } | null>(null)
   const [isHydrated, setIsHydrated] = useState(false)
   const [lastSyncLabel, setLastSyncLabel] = useState('—')
 
-  const hasStoredKey = Boolean(storedMaskedKey) && storedKeyProvider === provider
+  const hasStoredKeyForProvider = Boolean(storedMaskedKey) && storedKeyProvider === provider
+  const hasStoredKeyForSelection = hasStoredKeyForProvider && storedKeyModel === model
   const hasRawKeyInput = apiKeyInput.trim().length > 0
 
   const providerConfig = useMemo(
@@ -194,9 +198,7 @@ export default function SettingsPage() {
     }
   }, [model, providerConfig])
 
-  useEffect(() => {
-    setTestStatus(null)
-  }, [provider, model, apiKeyInput])
+  // Keep latest action status visible until a newer save/test result replaces it.
 
   useEffect(() => {
     setIsHydrated(true)
@@ -236,6 +238,7 @@ export default function SettingsPage() {
         setModel(keySettings.model)
         setStoredMaskedKey(keySettings.maskedKey || null)
         setStoredKeyProvider(keySettings.provider)
+        setStoredKeyModel(keySettings.model)
       }
 
       setIsKeyLoading(false)
@@ -305,7 +308,41 @@ export default function SettingsPage() {
           </SectionCard>
 
           <SectionCard icon={<Info className="h-4 w-4" />} title="AI Bring Your Own Key (BYOK)">
-            <div className="space-y-3">
+            <form
+              className="space-y-3"
+              onSubmit={(event) => {
+                event.preventDefault()
+                if (!apiKeyInput.trim() || isSaving) return
+
+                setIsSaving(true)
+                void upsertAiKeySettings({ provider, model, apiKey: apiKeyInput.trim() })
+                  .then((saved) => {
+                    setStoredMaskedKey(saved.maskedKey)
+                    setStoredKeyProvider(saved.provider)
+                    setStoredKeyModel(saved.model)
+                    setApiKeyInput('')
+                    const message = `AI key saved for ${saved.provider}/${saved.model}`
+                    setActionStatus({
+                      type: 'success',
+                      message,
+                      action: 'save',
+                      at: new Date().toISOString(),
+                    })
+                    toast.success('AI key saved')
+                  })
+                  .catch((error) => {
+                    const message = error instanceof Error ? error.message : 'Failed to save AI key'
+                    setActionStatus({
+                      type: 'error',
+                      message,
+                      action: 'save',
+                      at: new Date().toISOString(),
+                    })
+                    toast.error(message)
+                  })
+                  .finally(() => setIsSaving(false))
+              }}
+            >
               <div>
                 <label
                   htmlFor="provider"
@@ -374,10 +411,23 @@ export default function SettingsPage() {
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2 pt-1">
+              <div
+                data-testid="byok-actions"
+                className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2"
+              >
+                <button
+                  type="submit"
+                  data-testid="byok-save"
+                  disabled={!apiKeyInput.trim() || isSaving}
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-[var(--color-accent)]/20 hover:opacity-90 disabled:opacity-60"
+                >
+                  {isSaving ? 'Saving...' : 'Save Key'}
+                </button>
+
                 <button
                   type="button"
-                  disabled={(!hasRawKeyInput && !hasStoredKey) || isTesting}
+                  data-testid="byok-test"
+                  disabled={(!hasRawKeyInput && !hasStoredKeyForProvider) || isTesting}
                   onClick={() => {
                     setIsTesting(true)
                     void testAiKeyConnection({
@@ -387,16 +437,26 @@ export default function SettingsPage() {
                     })
                       .then((result) => {
                         if (result.ok) {
-                          setTestStatus({ type: 'success', message: result.message })
+                          setActionStatus({
+                            type: 'success',
+                            message: result.message,
+                            action: 'test',
+                            at: new Date().toISOString(),
+                          })
                           toast.success(result.message)
                         } else {
-                          setTestStatus({ type: 'error', message: result.message })
+                          setActionStatus({
+                            type: 'error',
+                            message: result.message,
+                            action: 'test',
+                            at: new Date().toISOString(),
+                          })
                           toast.error(result.message)
                         }
                       })
                       .finally(() => setIsTesting(false))
                   }}
-                  className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-white/[0.04] disabled:opacity-60"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-white/[0.04] disabled:opacity-60"
                 >
                   {isTesting
                     ? hasRawKeyInput
@@ -406,62 +466,69 @@ export default function SettingsPage() {
                       ? 'Test New Key'
                       : 'Test Saved Key'}
                 </button>
-
-                <button
-                  type="button"
-                  disabled={!apiKeyInput.trim() || isSaving}
-                  onClick={() => {
-                    setIsSaving(true)
-                    void upsertAiKeySettings({ provider, model, apiKey: apiKeyInput.trim() })
-                      .then((saved) => {
-                        setStoredMaskedKey(saved.maskedKey)
-                        setStoredKeyProvider(saved.provider)
-                        setApiKeyInput('')
-                        setTestStatus({ type: 'success', message: 'AI key saved successfully' })
-                        toast.success('AI key saved')
-                      })
-                      .catch((error) => {
-                        const message =
-                          error instanceof Error ? error.message : 'Failed to save AI key'
-                        setTestStatus({ type: 'error', message })
-                        toast.error(message)
-                      })
-                      .finally(() => setIsSaving(false))
-                  }}
-                  className="rounded-xl bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
-                >
-                  {isSaving ? 'Saving...' : 'Save Key'}
-                </button>
               </div>
 
-              {hasStoredKey && !hasRawKeyInput && (
+              {hasStoredKeyForProvider && !hasRawKeyInput && (
                 <p className="text-xs text-[var(--color-text-dim)]">
                   You can test your saved key, or enter a new key and save to replace it.
                 </p>
               )}
 
-              {!hasRawKeyInput && storedMaskedKey && storedKeyProvider && storedKeyProvider !== provider && (
-                <p className="text-xs text-[var(--color-text-dim)]">
-                  Saved key exists for {storedKeyProvider}, switch provider to test it.
-                </p>
+              {!hasRawKeyInput &&
+                storedMaskedKey &&
+                storedKeyProvider &&
+                storedKeyProvider !== provider && (
+                  <p className="text-xs text-[var(--color-text-dim)]">
+                    Saved key exists for {storedKeyProvider}, switch provider to test it.
+                  </p>
+                )}
+
+              {!isKeyLoading && (
+                <div
+                  data-testid="byok-saved-state"
+                  className={`rounded-xl border px-3 py-2 text-xs ${
+                    hasStoredKeyForSelection
+                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                      : hasStoredKeyForProvider
+                        ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                        : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-dim)]'
+                  }`}
+                >
+                  {hasStoredKeyForSelection
+                    ? `Saved key active for ${provider}/${model}`
+                    : hasStoredKeyForProvider
+                      ? `Saved key exists for ${provider}/${storedKeyModel ?? 'another model'} (selected model is ${model})`
+                      : 'No saved key for selected provider'}
+                </div>
               )}
 
-              {testStatus && (
+              {actionStatus && (
                 <div
+                  data-testid="byok-action-status"
                   className={`rounded-xl border px-3 py-2 text-xs ${
-                    testStatus.type === 'success'
+                    actionStatus.type === 'success'
                       ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
                       : 'border-red-500/40 bg-red-500/10 text-red-300'
                   }`}
                 >
-                  {testStatus.message}
+                  <div className="font-medium">
+                    {actionStatus.action === 'save' ? 'Save result' : 'Test result'}
+                  </div>
+                  <div>{actionStatus.message}</div>
+                  <div className="mt-0.5 opacity-80">
+                    {new Date(actionStatus.at).toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                    })}
+                  </div>
                 </div>
               )}
 
               {isKeyLoading && (
                 <p className="text-xs text-[var(--color-text-dim)]">Loading saved key status…</p>
               )}
-            </div>
+            </form>
           </SectionCard>
 
           <SectionCard icon={<Layers className="h-4 w-4" />} title="Registered Clusters">
