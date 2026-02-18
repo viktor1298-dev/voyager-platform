@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { authClient } from '@/lib/auth-client'
 import { isPublicPath } from '@/lib/auth-constants'
 
@@ -10,32 +10,27 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { data: session, isPending } = authClient.useSession()
   const [isHydrated, setIsHydrated] = useState(false)
-  const [hasAuthedSession, setHasAuthedSession] = useState(false)
+
+  const hasValidSession = useMemo(() => Boolean(session?.user), [session])
+  const isSessionResolved = !isPending
 
   useEffect(() => {
     setIsHydrated(true)
   }, [])
 
   useEffect(() => {
-    if (session) {
-      setHasAuthedSession(true)
-    }
-  }, [session])
-
-  useEffect(() => {
     if (!pathname) return
     if (isPublicPath(pathname)) return
+    if (!isHydrated || !isSessionResolved || hasValidSession) return
 
-    if (!isPending && !session && !hasAuthedSession) {
-      const returnUrl = encodeURIComponent(pathname)
-      router.replace(`/login?returnUrl=${returnUrl}`)
-    }
-  }, [hasAuthedSession, isPending, pathname, router, session])
+    const returnUrl = encodeURIComponent(pathname)
+    router.replace(`/login?returnUrl=${returnUrl}`)
+  }, [hasValidSession, isHydrated, isSessionResolved, pathname, router])
 
   if (!pathname) return null
   if (isPublicPath(pathname)) return <>{children}</>
 
-  if (!isHydrated || (isPending && !session && !hasAuthedSession)) {
+  if (!isHydrated || !isSessionResolved) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <h1 className="text-base font-medium text-[var(--color-text-muted)]">Loading…</h1>
@@ -43,7 +38,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!session && !hasAuthedSession) return null
+  if (!hasValidSession) return null
 
   return <>{children}</>
 }
