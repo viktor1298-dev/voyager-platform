@@ -168,6 +168,8 @@ export default function SettingsPage() {
   const [isKeyLoading, setIsKeyLoading] = useState(true)
   const [isTesting, setIsTesting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
+  const [lastSyncLabel, setLastSyncLabel] = useState('—')
 
   const hasStoredKey = Boolean(storedMaskedKey)
   const hasRawKeyInput = apiKeyInput.trim().length > 0
@@ -177,11 +179,40 @@ export default function SettingsPage() {
     [provider],
   )
 
+  const live = liveQuery.data
+  const clusters = listQuery.data ?? []
+  const isConnected = !!live
+
   useEffect(() => {
     if (!providerConfig.models.includes(model)) {
       setModel(providerConfig.models[0])
     }
   }, [model, providerConfig])
+
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isHydrated || !isConnected) {
+      setLastSyncLabel('—')
+      return
+    }
+
+    const formatSyncTime = () =>
+      new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      })
+
+    setLastSyncLabel(formatSyncTime())
+    const timer = window.setInterval(() => {
+      setLastSyncLabel(formatSyncTime())
+    }, 1_000)
+
+    return () => window.clearInterval(timer)
+  }, [isConnected, isHydrated])
 
   useEffect(() => {
     let cancelled = false
@@ -206,10 +237,6 @@ export default function SettingsPage() {
       cancelled = true
     }
   }, [])
-
-  const live = liveQuery.data
-  const clusters = listQuery.data ?? []
-  const isConnected = !!live
 
   return (
     <AppLayout>
@@ -239,15 +266,7 @@ export default function SettingsPage() {
             <InfoRow label="K8s Version" value={isConnected ? live.version : '—'} />
             <InfoRow
               label="Last Sync"
-              value={
-                isConnected
-                  ? new Date().toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                    })
-                  : '—'
-              }
+              value={<span suppressHydrationWarning>{isConnected ? lastSyncLabel : '—'}</span>}
             />
           </SectionCard>
 

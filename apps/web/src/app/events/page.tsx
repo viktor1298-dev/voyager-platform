@@ -113,7 +113,10 @@ export default function EventsPage() {
         header: 'Time',
         accessorFn: (row) => row.lastSeen,
         cell: ({ row }) => (
-          <span className="text-[var(--color-text-muted)] font-mono tabular-nums text-xs">
+          <span
+            className="text-[var(--color-text-muted)] font-mono tabular-nums text-xs"
+            suppressHydrationWarning
+          >
             {isClient ? timeAgo(row.original.lastSeen) : formatTimestamp(row.original.lastSeen)}
           </span>
         ),
@@ -222,7 +225,10 @@ export default function EventsPage() {
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
             Events
           </h1>
-          <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
+          <p
+            className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1"
+            suppressHydrationWarning
+          >
             {events.length} events · auto-refresh 30s
           </p>
         </div>
@@ -252,7 +258,10 @@ export default function EventsPage() {
                       {event.reason}
                     </span>
                   </div>
-                  <span className="text-[var(--color-text-dim)] font-mono text-[10px] tabular-nums shrink-0">
+                  <span
+                    className="text-[var(--color-text-dim)] font-mono text-[10px] tabular-nums shrink-0"
+                    suppressHydrationWarning
+                  >
                     {isClient ? timeAgo(event.lastSeen) : formatTimestamp(event.lastSeen)}
                   </span>
                 </div>
