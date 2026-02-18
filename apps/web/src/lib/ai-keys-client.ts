@@ -79,14 +79,46 @@ function getAiKeyNamespace(): AiKeyNamespace | null {
   return null
 }
 
+function isMissingProcedurePathError(error: unknown): boolean {
+  const root = getRecord(error)
+  const data = getRecord(root?.data)
+  const shape = getRecord(root?.shape)
+
+  const messageCandidates = [root?.message, data?.message, shape?.message]
+  const message = messageCandidates.find((value) => typeof value === 'string')
+  const normalizedMessage = typeof message === 'string' ? message.toLowerCase() : ''
+
+  if (typeof data?.code === 'string' && data.code.toUpperCase() === 'NOT_FOUND') {
+    if (
+      normalizedMessage.includes('procedure') ||
+      normalizedMessage.includes('path') ||
+      normalizedMessage.includes('router')
+    ) {
+      return true
+    }
+  }
+
+  return (
+    normalizedMessage.includes('no procedure') ||
+    normalizedMessage.includes('no "query"-procedure on path') ||
+    normalizedMessage.includes('no "mutation"-procedure on path') ||
+    normalizedMessage.includes('invalid path') ||
+    (normalizedMessage.includes('not found') &&
+      (normalizedMessage.includes('procedure') || normalizedMessage.includes('path')))
+  )
+}
+
 async function queryWithFallback(paths: string[]): Promise<unknown> {
   const untyped = getUntypedClient(getTRPCClient())
 
   for (const path of paths) {
     try {
       return await untyped.query(path, undefined)
-    } catch {
-      // try next path
+    } catch (error) {
+      if (isMissingProcedurePathError(error)) {
+        continue
+      }
+      throw error
     }
   }
 
@@ -99,8 +131,11 @@ async function mutateWithFallback<TInput>(paths: string[], input: TInput): Promi
   for (const path of paths) {
     try {
       return await untyped.mutation(path, input)
-    } catch {
-      // try next path
+    } catch (error) {
+      if (isMissingProcedurePathError(error)) {
+        continue
+      }
+      throw error
     }
   }
 
