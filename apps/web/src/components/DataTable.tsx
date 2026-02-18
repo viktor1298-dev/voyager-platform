@@ -173,13 +173,94 @@ export function DataTable<TData>({
             </table>
           </>
         ) : sortedRows.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-muted)]">
-            {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
-            <p className="text-sm font-medium">{emptyTitle}</p>
-            {emptyDescription && (
-              <p className="text-xs text-[var(--color-text-dim)] mt-1">{emptyDescription}</p>
+          <>
+            {mobileCard && (
+              <div className="md:hidden flex flex-col items-center justify-center py-10 text-[var(--color-text-muted)]">
+                {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
+                <p className="text-sm font-medium">{emptyTitle}</p>
+                {emptyDescription && (
+                  <p className="text-xs text-[var(--color-text-dim)] mt-1">{emptyDescription}</p>
+                )}
+              </div>
             )}
-          </div>
+
+            <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
+              <thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr
+                    key={headerGroup.id}
+                    className="border-b border-[var(--color-border)] hover:bg-transparent"
+                  >
+                    {headerGroup.headers.map((header) => {
+                      const canSort = header.column.getCanSort()
+                      const sorted = header.column.getIsSorted()
+                      const ariaSort =
+                        canSort && sorted === 'asc'
+                          ? 'ascending'
+                          : canSort && sorted === 'desc'
+                            ? 'descending'
+                            : undefined
+
+                      return (
+                        <th
+                          key={header.id}
+                          aria-sort={ariaSort}
+                          className="text-left py-2 px-3 text-[10px] text-[var(--color-table-header)] font-mono uppercase tracking-wider font-medium select-none"
+                          style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                        >
+                          {header.isPlaceholder ? null : canSort ? (
+                            <button
+                              type="button"
+                              aria-label={
+                                typeof header.column.columnDef.header === 'string'
+                                  ? `Sort by ${header.column.columnDef.header}`
+                                  : undefined
+                              }
+                              className="flex items-center gap-1 cursor-pointer hover:text-[var(--color-text-secondary)]"
+                              onClick={header.column.getToggleSortingHandler()}
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              <span className="ml-0.5">
+                                {sorted === 'asc' ? (
+                                  <ArrowUp className="h-3 w-3" />
+                                ) : sorted === 'desc' ? (
+                                  <ArrowDown className="h-3 w-3" />
+                                ) : (
+                                  <ArrowUpDown className="h-2.5 w-2.5 opacity-40" />
+                                )}
+                              </span>
+                            </button>
+                          ) : (
+                            <span>
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                            </span>
+                          )}
+                        </th>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                <tr className="border-b border-[var(--color-table-separator)]">
+                  <td
+                    colSpan={Math.max(table.getAllLeafColumns().length, 1)}
+                    className="py-16 text-center text-[var(--color-text-muted)]"
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
+                      <p className="text-sm font-medium">{emptyTitle}</p>
+                      {emptyDescription && (
+                        <p className="text-xs text-[var(--color-text-dim)] mt-1">
+                          {emptyDescription}
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </>
         ) : (
           <>
             {/* Mobile Cards */}

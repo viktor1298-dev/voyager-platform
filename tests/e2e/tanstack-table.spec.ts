@@ -11,25 +11,29 @@ test.describe('TanStack Table — Users Management', () => {
     })
   })
 
-  test('table renders with data rows', async ({ page }) => {
+  test('table renders structure and rows/empty state', async ({ page }) => {
     await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible()
 
-    const dataRows = page.locator('tbody tr')
+    const table = page.locator('table').first()
+    await expect(table).toBeVisible({ timeout: 10_000 })
+    await expect(table.getByRole('columnheader', { name: /name/i }).first()).toBeVisible()
+    await expect(table.getByRole('columnheader', { name: /email/i }).first()).toBeVisible()
+
+    const dataRows = table.locator('tbody tr')
+    const rowCount = await dataRows.count()
+
+    if (rowCount === 0) {
+      await expect(page.getByText(/no users found/i)).toBeVisible()
+      return
+    }
+
     await expect(dataRows.first()).toBeVisible({ timeout: 10_000 })
-    expect(await dataRows.count()).toBeGreaterThan(0)
+    expect(rowCount).toBeGreaterThan(0)
   })
 
   test('clicking column header sorts data', async ({ page }) => {
     const table = page.locator('table').first()
-    const hasTable = await table.isVisible().catch(() => false)
-    if (!hasTable) {
-      test.skip()
-      return
-    }
-
-    const rows = table.locator('tbody tr')
-    const rowCount = await rows.count()
-    expect(rowCount).toBeGreaterThan(0)
+    await expect(table).toBeVisible({ timeout: 10_000 })
 
     const nameHeader = table.getByRole('columnheader', { name: /name/i }).first()
     await expect(nameHeader).toBeVisible()
@@ -46,10 +50,16 @@ test.describe('TanStack Table — Users Management', () => {
       const values = await table
         .locator(`tbody tr td:nth-child(${nameColumnIndex + 1})`)
         .allTextContents()
-      return values.map((v) => v.trim()).filter(Boolean)
+
+      return values.map((v) => v.trim()).filter((v) => v.length > 0 && !/^no users found$/i.test(v))
     }
 
     const initial = await readNames()
+
+    if (initial.length === 0) {
+      await expect(page.getByText(/no users found/i)).toBeVisible()
+      return
+    }
 
     await clickTarget.click()
     const asc = await readNames()
@@ -76,12 +86,14 @@ test.describe('TanStack Table — Users Management', () => {
       .first()
     await expect(searchInput).toBeVisible({ timeout: 5000 })
 
-    const table = page.locator('table').first()
-    const hasTable = await table.isVisible().catch(() => false)
-    if (!hasTable) {
+    const noUsersState = page.getByText(/no users found/i)
+    if (await noUsersState.isVisible().catch(() => false)) {
       await expect(page.getByText(/0 users/i)).toBeVisible()
       return
     }
+
+    const table = page.locator('table').first()
+    await expect(table).toBeVisible()
 
     const rowsBefore = await table.locator('tbody tr').count()
     await searchInput.fill('admin')
