@@ -182,7 +182,7 @@ export default function EventsPage() {
   )
 
   const filterBar = (
-    <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)] min-w-max">
+    <div className="flex flex-wrap items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)] w-full sm:w-auto">
       {(['all', 'Normal', 'Warning'] as EventFilter[]).map((f) => {
         const isActive = filter === f
         return (
@@ -190,7 +190,7 @@ export default function EventsPage() {
             key={f}
             type="button"
             onClick={() => setFilter(f)}
-            className={`flex min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+            className={`flex min-h-9 items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
               isActive
                 ? 'bg-white/[0.08] text-[var(--color-text-primary)] shadow-sm'
                 : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]'
@@ -251,10 +251,10 @@ export default function EventsPage() {
                 {isWarning && (
                   <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--color-status-warning)]/60 rounded-l-lg" />
                 )}
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2 mb-1.5 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
                     <TypeBadge type={event.type} />
-                    <span className="text-[var(--color-text-secondary)] font-medium text-xs">
+                    <span className="text-[var(--color-text-secondary)] font-medium text-xs truncate">
                       {event.reason}
                     </span>
                   </div>
@@ -268,16 +268,16 @@ export default function EventsPage() {
                 <p className="text-[var(--color-text-muted)] text-xs leading-relaxed line-clamp-2">
                   {event.message}
                 </p>
-                <div className="flex items-center gap-3 mt-1.5 text-[10px] min-w-0">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 mt-1.5 text-[10px] min-w-0">
                   <span className="text-[var(--color-text-muted)] font-mono truncate min-w-0">
                     {event.object}
                   </span>
-                  <span className="text-[var(--color-accent)] font-mono truncate">
+                  {event.count > 1 && (
+                    <span className="text-[var(--color-text-dim)] font-mono justify-self-end">×{event.count}</span>
+                  )}
+                  <span className="text-[var(--color-accent)] font-mono truncate min-w-0 col-span-2">
                     {event.namespace}
                   </span>
-                  {event.count > 1 && (
-                    <span className="text-[var(--color-text-dim)] font-mono">×{event.count}</span>
-                  )}
                 </div>
               </div>
             )
