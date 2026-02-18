@@ -122,4 +122,40 @@ describe('aiKeys router contract compatibility', () => {
     expect(testConnectionResponse.success).toBe(true)
     expect(testConnectionResponse.provider).toBe('openai')
   })
+
+  it('preserves compatibility fields for claude payloads and validates testConnection contract', async () => {
+    const db = createMockDb()
+    const caller = createTestCaller(db, {
+      id: 'user-contract-claude',
+      email: 'claude@test.local',
+      name: 'Claude Contract User',
+      role: 'member',
+    })
+
+    const saveInput = aiKeysSaveInputSchema.parse({
+      provider: 'claude',
+      apiKey: 'sk-ant-test-67890',
+      model: 'claude-3-5-sonnet',
+    })
+
+    const saveResponse = aiKeysSaveOutputSchema.parse(await caller.aiKeys.save(saveInput))
+    expect(saveResponse.key.provider).toBe('claude')
+    expect(saveResponse.provider).toBe('claude')
+    expect(saveResponse.model).toBe(saveResponse.key.model)
+    expect(saveResponse.maskedKey).toBe(saveResponse.key.maskedKey)
+
+    const getResponse = aiKeysGetOutputSchema.parse(await caller.aiKeys.get())
+    expect(getResponse.keys.length).toBe(1)
+    expect(getResponse.items.length).toBe(1)
+    expect(getResponse.items[0]).toEqual(getResponse.keys[0])
+    expect(getResponse.keys[0]?.provider).toBe('claude')
+
+    const testConnectionResponse = aiKeysTestConnectionOutputSchema.parse(
+      await caller.aiKeys.testConnection(aiKeysTestConnectionInputSchema.parse({ provider: 'claude' })),
+    )
+
+    expect(testConnectionResponse.success).toBe(true)
+    expect(testConnectionResponse.provider).toBe('claude')
+    expect(testConnectionResponse.model).toBe('claude-3-5-sonnet')
+  })
 })
