@@ -6,7 +6,7 @@ test.describe('User Role Display', () => {
     await login(page)
     // Navigate to settings or profile page where role is displayed
     await page.goto('/settings')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     // Admin user should see admin badge/label
     await expect(
       page.getByText(/admin/i).first()
@@ -16,7 +16,7 @@ test.describe('User Role Display', () => {
   test('should show admin controls on clusters page', async ({ page }) => {
     await login(page)
     await page.goto('/clusters')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     // Admin should see add cluster button (admin control)
     await expect(
       page.getByRole('button', { name: /add|create|new/i }).first()

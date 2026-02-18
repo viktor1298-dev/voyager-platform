@@ -20,7 +20,7 @@ test.describe('Navigation — All Pages Load', () => {
       page.on('pageerror', (err) => errors.push(err.message));
 
       await page.goto(path);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Verify heading or key content exists
       const headingEl = page.getByRole('heading', { name: heading });

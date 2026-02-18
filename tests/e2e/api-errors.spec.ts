@@ -17,7 +17,7 @@ test.describe('API Error Handling', () => {
     )
 
     await page.goto('/clusters')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     // Should display an error message (toast, alert, or inline)
     await expect(
@@ -30,7 +30,7 @@ test.describe('API Error Handling', () => {
   test('should show not found page for invalid routes', async ({ page }) => {
     await login(page)
     await page.goto('/this-page-does-not-exist-12345')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     // Should show 404 or "not found" text
     await expect(
