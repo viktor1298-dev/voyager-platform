@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { protectedProcedure, router } from '../trpc.js'
 import { getOnlineUsers, heartbeatPresence, subscribeToPresence } from '../lib/presence.js'
 
-const PRESENCE_ONE_SHOT_ENV_KEYS = ['PLAYWRIGHT', 'E2E', 'CI'] as const
+const PRESENCE_ONE_SHOT_ENV_KEYS = ['PLAYWRIGHT', 'E2E'] as const
 
 function shouldUseOneShotPresenceStream() {
   if (process.env.DISABLE_PRESENCE_STREAM === 'true') return true
