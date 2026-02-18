@@ -61,23 +61,6 @@ function isTransientAiError(error: unknown): boolean {
   )
 }
 
-function buildDegradedChatAnswer(
-  question: string,
-  snapshot?: z.infer<typeof clusterSnapshotSchema>,
-): string {
-  const q = question.trim().toLowerCase()
-
-  if (q.includes('cpu') && snapshot?.cpuUsagePercent !== undefined) {
-    return `Live AI analysis is temporarily unavailable, but the latest provided CPU signal is ${snapshot.cpuUsagePercent.toFixed(1)}%. Please retry in a few seconds for full recommendations.`
-  }
-
-  if ((q.includes('restart') || q.includes('crash')) && snapshot?.podsRestarting !== undefined) {
-    return `Live AI analysis is temporarily unavailable. Latest provided restart signal: ${snapshot.podsRestarting} restarting pods/events. Please retry in a few seconds for deeper diagnosis.`
-  }
-
-  return 'Live AI analysis is temporarily unavailable. I can still respond with cached/basic signals, and full analysis should recover shortly. Please retry in a few seconds.'
-}
-
 const analysisOutputSchema = z.object({
   clusterId: z.string().uuid(),
   clusterName: z.string(),
@@ -208,13 +191,16 @@ export const aiRouter = router({
             throw aiError
           }
 
-          console.error('[ai.chat] AI answer generation failed, returning degraded response', {
+          console.error('[ai.chat] AI answer generation failed with transient provider failure', {
             clusterId: input.clusterId,
             userId: ctx.user.id,
             error: aiError instanceof Error ? aiError.message : String(aiError),
           })
 
-          answer = buildDegradedChatAnswer(input.question, input.snapshot)
+          throw new TRPCError({
+            code: 'SERVICE_UNAVAILABLE',
+            message: 'AI provider temporarily unavailable. Please retry shortly.',
+          })
         }
 
         if (!threadId) {
