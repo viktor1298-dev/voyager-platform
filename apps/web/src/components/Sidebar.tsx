@@ -55,9 +55,8 @@ export function Sidebar({
         <SidebarContent
           showLabels={!isDesktop || mobileOpen || !collapsed}
           isActive={isActive}
-          pathname={pathname}
           isAdmin={isAdmin === true}
-          onSameRouteClick={() => setMobileOpen(false)}
+          onNavigate={() => setMobileOpen(false)}
           clusters={sidebarClusters}
         />
         {isDesktop && (
@@ -84,16 +83,14 @@ export function Sidebar({
 function SidebarContent({
   showLabels,
   isActive,
-  pathname,
   isAdmin,
-  onSameRouteClick,
+  onNavigate,
   clusters,
 }: {
   showLabels: boolean
   isActive: (path: string) => boolean
-  pathname: string
   isAdmin: boolean
-  onSameRouteClick: () => void
+  onNavigate: () => void
   clusters: Array<{ id: string; name: string; provider: string | null }>
 }) {
   const filteredItems = navItems.filter(
@@ -111,9 +108,7 @@ function SidebarContent({
         key={item.id}
         href={item.id}
         onClick={() => {
-          if (pathname === item.id) {
-            onSameRouteClick()
-          }
+          onNavigate()
         }}
         className={`
           sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg
@@ -167,9 +162,7 @@ function SidebarContent({
                   key={cluster.id}
                   href="/clusters"
                   onClick={() => {
-                    if (pathname === '/clusters') {
-                      onSameRouteClick()
-                    }
+                    onNavigate()
                   }}
                   className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]"
                 >

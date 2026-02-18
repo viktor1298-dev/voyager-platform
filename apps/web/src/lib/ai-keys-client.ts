@@ -79,7 +79,7 @@ function getAiKeyNamespace(): AiKeyNamespace | null {
   return null
 }
 
-function isMissingProcedurePathError(error: unknown): boolean {
+function getErrorMessage(error: unknown): string {
   const root = getRecord(error)
   const data = getRecord(root?.data)
   const shape = getRecord(root?.shape)
@@ -87,7 +87,17 @@ function isMissingProcedurePathError(error: unknown): boolean {
 
   const messageCandidates = [root?.message, data?.message, shape?.message, shapeData?.message]
   const message = messageCandidates.find((value) => typeof value === 'string')
-  const normalizedMessage = typeof message === 'string' ? message.toLowerCase() : ''
+
+  return typeof message === 'string' ? message.toLowerCase() : ''
+}
+
+function isMissingProcedurePathError(error: unknown): boolean {
+  const root = getRecord(error)
+  const data = getRecord(root?.data)
+  const shape = getRecord(root?.shape)
+  const shapeData = getRecord(shape?.data)
+
+  const normalizedMessage = getErrorMessage(error)
 
   const codeCandidates = [data?.code, shapeData?.code]
     .filter((value): value is string => typeof value === 'string')
@@ -110,6 +120,16 @@ function isMissingProcedurePathError(error: unknown): boolean {
     normalizedMessage.includes('invalid path') ||
     (normalizedMessage.includes('not found') &&
       (normalizedMessage.includes('procedure') || normalizedMessage.includes('path')))
+  )
+}
+
+function isRecoverableAiKeyReadError(error: unknown): boolean {
+  const normalizedMessage = getErrorMessage(error)
+
+  return (
+    normalizedMessage.includes('encrypted_key') ||
+    normalizedMessage.includes('no such column') ||
+    (normalizedMessage.includes('column') && normalizedMessage.includes('does not exist'))
   )
 }
 
@@ -154,14 +174,24 @@ export async function getAiKeySettings(): Promise<AiKeyRecord | null> {
       const result = await namespace.get.query()
       return normalizeGetResponse(result)
     } catch (error) {
+      if (isRecoverableAiKeyReadError(error)) {
+        return null
+      }
       if (!isMissingProcedurePathError(error)) {
         throw error
       }
     }
   }
 
-  const fallback = await queryWithFallback(['aiKeys.get', 'ai.keys.get'])
-  return normalizeGetResponse(fallback)
+  try {
+    const fallback = await queryWithFallback(['aiKeys.get', 'ai.keys.get'])
+    return normalizeGetResponse(fallback)
+  } catch (error) {
+    if (isRecoverableAiKeyReadError(error)) {
+      return null
+    }
+    throw error
+  }
 }
 
 export async function upsertAiKeySettings(input: UpsertAiKeyInput): Promise<AiKeyRecord> {

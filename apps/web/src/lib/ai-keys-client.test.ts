@@ -56,6 +56,15 @@ test('falls back to legacy query path only for missing-procedure/path errors', a
   expect(untypedClient.query).toHaveBeenNthCalledWith(2, 'ai.keys.get', undefined)
 })
 
+
+test('treats legacy encrypted_key read errors as empty saved-key state', async () => {
+  untypedClient.query.mockRejectedValueOnce(new Error('Failed query: select "encrypted_key" from user_ai_keys'))
+
+  await expect(getAiKeySettings()).resolves.toBeNull()
+  expect(untypedClient.query).toHaveBeenCalledTimes(1)
+  expect(untypedClient.query).toHaveBeenNthCalledWith(1, 'aiKeys.get', undefined)
+})
+
 test('rethrows non-route QUERY errors on get path', async () => {
   const backendError = new Error('FORBIDDEN: denied by policy')
   untypedClient.query.mockRejectedValueOnce(backendError)

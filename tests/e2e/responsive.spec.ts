@@ -54,6 +54,20 @@ test.describe('Responsive — Mobile Viewport', () => {
     await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible({ timeout: 10_000 });
   });
 
+
+  test('mobile nav tap lands on target route without login returnUrl drift', async ({ page }) => {
+    await login(page);
+    await page.goto('/clusters');
+
+    const menuButton = page.getByRole('button', { name: /open navigation menu|close navigation menu/i });
+    await menuButton.click();
+
+    await page.getByRole('link', { name: /^events$/i }).click();
+    await expect(page).toHaveURL(/\/events$/);
+    await expect(page).not.toHaveURL(/\/login\?/);
+    await expect(page).not.toHaveURL(/returnUrl=/);
+  });
+
   test('should render BYOK actions as full-width touch targets on mobile', async ({ page }) => {
     await login(page);
     await page.goto('/settings');
