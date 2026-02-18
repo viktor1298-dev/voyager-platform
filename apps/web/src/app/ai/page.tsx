@@ -1,7 +1,6 @@
 'use client'
 
-import { BrainCircuit, Lightbulb, Lock, Settings, Stethoscope } from 'lucide-react'
-import Link from 'next/link'
+import { BrainCircuit, Lightbulb, Stethoscope } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { AppLayout } from '@/components/AppLayout'
@@ -199,29 +198,15 @@ export default function AiAssistantPage() {
                 </p>
               </div>
 
-              {hasByokKey ? (
-                <AiChat
-                  key={selectedCluster?.id ?? 'no-cluster'}
-                  selectedClusterId={selectedCluster?.id ?? null}
-                  selectedClusterName={selectedCluster?.name ?? null}
-                />
-              ) : (
-                <div className="rounded-2xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/10 p-4">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--color-status-warning)]">
-                    <Lock className="h-4 w-4" />🔵 AI Chat Locked (BYOK)
-                  </div>
-                  <p className="text-sm text-[var(--color-text-secondary)]">
-                    Add your API key in Settings to unlock AI Chat.
-                  </p>
-                  <Link
-                    href="/settings"
-                    className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-white/[0.04]"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Open Settings
-                  </Link>
-                </div>
-              )}
+              <AiChat
+                key={selectedCluster?.id ?? 'no-cluster'}
+                selectedClusterId={selectedCluster?.id ?? null}
+                selectedClusterName={selectedCluster?.name ?? null}
+                locked={!hasByokKey}
+                lockMessage="Add your API key in Settings to unlock AI Chat"
+              />
+
+              {/* Lock state is rendered directly in AiChat */}
             </section>
 
             <RecommendationsPanel

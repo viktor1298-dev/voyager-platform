@@ -1,7 +1,8 @@
 'use client'
 
-import { AlertTriangle, Loader2, Send, User } from 'lucide-react'
+import { AlertTriangle, Loader2, Lock, Send, Settings, User } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
+import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
@@ -214,14 +215,18 @@ const buildDefaultAssistantGreeting = (clusterName: string | null): AiChatMessag
 export function AiChat({
   selectedClusterId,
   selectedClusterName,
+  locked = false,
+  lockMessage = 'Add your API key in Settings to unlock AI Chat',
 }: {
   selectedClusterId: string | null
   selectedClusterName: string | null
+  locked?: boolean
+  lockMessage?: string
 }) {
   const reduced = useReducedMotion()
   const chatByCluster = useAiAssistantStore((state) => state.chatByCluster)
   const activeThreadId = useAiAssistantStore((state) =>
-    selectedClusterId ? state.threadIdByCluster[selectedClusterId] ?? null : null,
+    selectedClusterId ? (state.threadIdByCluster[selectedClusterId] ?? null) : null,
   )
   const appendMessage = useAiAssistantStore((state) => state.appendMessage)
   const setClusterMessages = useAiAssistantStore((state) => state.setClusterMessages)
@@ -241,9 +246,13 @@ export function AiChat({
 
   const viewportRef = useRef<HTMLDivElement | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const lockedRef = useRef(locked)
 
   const trpcUtils = trpc.useUtils()
+  const trpcUtilsRef = useRef(trpcUtils)
+  trpcUtilsRef.current = trpcUtils
   const chatMutation = trpc.ai.chat.useMutation()
+  lockedRef.current = locked
 
   const messages = useMemo(() => {
     if (!selectedClusterId) return [buildDefaultAssistantGreeting(null)]
@@ -264,15 +273,17 @@ export function AiChat({
   }, [])
 
   const syncHistory = useCallback(async () => {
-    if (!selectedClusterId) return
+    if (!selectedClusterId || lockedRef.current) return
 
     setIsHistoryLoading(true)
     setHistoryError(null)
 
     try {
-      const history = (await trpcUtils.ai.history.fetch({
+      const history = (await trpcUtilsRef.current.ai.history.fetch({
         clusterId: selectedClusterId,
       })) as ConversationHistoryResponse | null
+
+      if (lockedRef.current) return
 
       if (!history || history.messages.length === 0) {
         const existing = useAiAssistantStore.getState().chatByCluster[selectedClusterId]
@@ -302,24 +313,19 @@ export function AiChat({
       setClusterMessages(selectedClusterId, mapped)
       setVisibleCount((current) => (current === PAGE_SIZE ? current : PAGE_SIZE))
     } catch {
-      setHistoryError('Could not load conversation history')
+      if (!lockedRef.current) {
+        setHistoryError('Could not load conversation history')
+      }
     } finally {
       setIsHistoryLoading(false)
       scrollToBottom()
     }
-  }, [
-    scrollToBottom,
-    selectedClusterId,
-    selectedClusterName,
-    setClusterMessages,
-    setThreadId,
-    trpcUtils,
-  ])
+  }, [scrollToBottom, selectedClusterId, selectedClusterName, setClusterMessages, setThreadId])
 
   const sendPrompt = useCallback(
     async (content: string) => {
       const trimmed = content.trim()
-      if (!trimmed || !selectedClusterId || isStreaming || chatMutation.isPending) return
+      if (!trimmed || !selectedClusterId || locked || isStreaming || chatMutation.isPending) return
 
       setChatError(null)
       setLastPrompt(trimmed)
@@ -401,7 +407,9 @@ export function AiChat({
           setChatError('AI stream protocol mismatch. Please retry.')
         }
 
-        void syncHistory()
+        if (!lockedRef.current) {
+          void syncHistory()
+        }
       } catch {
         setChatError('AI response failed. Please retry.')
         toast.error('AI response failed. Please retry.')
@@ -430,6 +438,7 @@ export function AiChat({
       appendToMessage,
       chatMutation,
       isStreaming,
+      locked,
       reduced,
       scrollToBottom,
       selectedClusterId,
@@ -441,29 +450,56 @@ export function AiChat({
   )
 
   useEffect(() => {
+    if (locked) return
     void syncHistory()
 
     return () => {
       abortRef.current?.abort()
     }
-  }, [syncHistory])
+  }, [locked, syncHistory])
 
   useEffect(() => {
     if (!quickPrompt) return
+    if (locked) {
+      clearQuickPrompt()
+      return
+    }
     void sendPrompt(quickPrompt.text)
     clearQuickPrompt()
-  }, [quickPrompt, sendPrompt, clearQuickPrompt])
+  }, [quickPrompt, locked, sendPrompt, clearQuickPrompt])
 
   return (
     <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 sm:p-5">
-      <div className="mb-4 flex items-center justify-between gap-2">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)]">AI Chat</h2>
         <span className="rounded-full border border-[var(--color-border)] px-2 py-1 text-xs text-[var(--color-text-dim)]">
           Cluster: {selectedClusterName ?? 'Not selected'}
         </span>
       </div>
 
-      {historyError && (
+      <p className="mb-3 text-xs text-[var(--color-text-dim)]">
+        Read-only assistant: provides analysis and guidance only, never modifies cluster resources.
+      </p>
+
+      {locked && (
+        <div className="mb-3 rounded-xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/10 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--color-status-warning)]">
+              <Lock className="h-3.5 w-3.5" />
+              {lockMessage}
+            </div>
+            <Link
+              href="/settings"
+              className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs text-[var(--color-text-primary)] hover:bg-white/[0.04]"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              Settings
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {!locked && historyError && (
         <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/10 px-3 py-2 text-xs text-[var(--color-status-warning)]">
           <div className="inline-flex items-center gap-2">
             <AlertTriangle className="h-3.5 w-3.5" />
@@ -486,66 +522,76 @@ export function AiChat({
         onScroll={(event) => {
           if (event.currentTarget.scrollTop < 40) loadOlder()
         }}
-        className="h-[440px] overflow-y-auto rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-bg-secondary)] p-3 sm:p-4"
+        className="h-[52vh] min-h-[320px] max-h-[520px] overflow-y-auto rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-bg-secondary)] p-3 sm:h-[440px] sm:p-4"
       >
         <AnimatePresence initial={false}>
           <div className="space-y-3">
-            {isHistoryLoading && (
+            {!locked && isHistoryLoading && (
               <div className="flex items-center gap-2 text-xs text-[var(--color-text-dim)]">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Loading conversation history...
               </div>
             )}
 
-            {visibleMessages.map((message) => {
-              const isUser = message.role === 'user'
-              const isStreamingMessage = message.id === streamingMessageId
+            {!locked &&
+              visibleMessages.map((message) => {
+                const isUser = message.role === 'user'
+                const isStreamingMessage = message.id === streamingMessageId
 
-              return (
-                <motion.div
-                  key={message.id}
-                  initial={reduced ? false : { opacity: 0, y: 8 }}
-                  animate={reduced ? {} : { opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={`flex items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}
-                >
-                  {!isUser && (
-                    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] text-sm">
-                      🤖
-                    </div>
-                  )}
-
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3 py-2 ${
-                      isUser
-                        ? 'bg-[var(--color-accent)] text-white'
-                        : 'border border-[var(--color-border)] bg-[var(--color-bg-card)]'
-                    }`}
+                return (
+                  <motion.div
+                    key={message.id}
+                    initial={reduced ? false : { opacity: 0, y: 8 }}
+                    animate={reduced ? {} : { opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className={`flex items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}
                   >
-                    {isUser ? (
-                      <p className="text-sm leading-6 text-white">{message.content}</p>
-                    ) : (
-                      <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
-                        {message.content}
-                        {isStreamingMessage && isStreaming && (
-                          <span className="ml-1 inline-block animate-pulse text-[var(--color-text-dim)]">
-                            ▋
-                          </span>
-                        )}
-                      </p>
+                    {!isUser && (
+                      <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] text-sm">
+                        🤖
+                      </div>
                     )}
-                  </div>
 
-                  {isUser && (
-                    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-                      <User className="h-4 w-4" />
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-3 py-2 ${
+                        isUser
+                          ? 'bg-[var(--color-accent)] text-white'
+                          : 'border border-[var(--color-border)] bg-[var(--color-bg-card)]'
+                      }`}
+                    >
+                      {isUser ? (
+                        <p className="text-sm leading-6 text-white">{message.content}</p>
+                      ) : (
+                        <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                          {message.content}
+                          {isStreamingMessage && isStreaming && (
+                            <span className="ml-1 inline-block animate-pulse text-[var(--color-text-dim)]">
+                              ▋
+                            </span>
+                          )}
+                        </p>
+                      )}
                     </div>
-                  )}
-                </motion.div>
-              )
-            })}
 
-            {(chatMutation.isPending || isStreaming) && (
+                    {isUser && (
+                      <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+                        <User className="h-4 w-4" />
+                      </div>
+                    )}
+                  </motion.div>
+                )
+              })}
+
+            {locked && (
+              <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-8 text-center">
+                <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                  AI Chat is locked
+                </p>
+                <p className="mt-1 text-xs text-[var(--color-text-dim)]">{lockMessage}</p>
+              </div>
+            )}
+
+            {!locked && (chatMutation.isPending || isStreaming) && (
               <div className="flex items-center gap-2 text-xs text-[var(--color-text-dim)]">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 AI is analyzing cluster signals...
@@ -565,7 +611,7 @@ export function AiChat({
                 void sendPrompt(lastPrompt)
               }
             }}
-            disabled={!lastPrompt || isStreaming || chatMutation.isPending}
+            disabled={locked || !lastPrompt || isStreaming || chatMutation.isPending}
             className="rounded-lg border border-[var(--color-status-error)]/40 px-2 py-1 text-[11px] hover:bg-[var(--color-status-error)]/10 disabled:opacity-60"
           >
             Retry last prompt
@@ -585,12 +631,14 @@ export function AiChat({
           onChange={(event) => setDraft(event.target.value)}
           placeholder="Ask about health, anomalies, recommendations..."
           aria-label="Ask AI assistant"
-          disabled={!selectedClusterId || isHistoryLoading}
+          disabled={!selectedClusterId || locked || isHistoryLoading}
           className="flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 disabled:opacity-60"
         />
         <button
           type="submit"
-          disabled={!selectedClusterId || !draft.trim() || isStreaming || chatMutation.isPending}
+          disabled={
+            !selectedClusterId || locked || !draft.trim() || isStreaming || chatMutation.isPending
+          }
           className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Send className="h-4 w-4" />
