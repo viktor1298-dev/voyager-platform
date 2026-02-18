@@ -8,7 +8,7 @@ import {
 } from './ai-keys-contract'
 
 test('maps UI provider to backend provider at API boundary', () => {
-  expect(mapUiProviderToBackend('anthropic')).toBe('claude')
+  expect(mapUiProviderToBackend('anthropic')).toBe('anthropic')
   expect(mapUiProviderToBackend('openai')).toBe('openai')
 })
 
@@ -16,7 +16,7 @@ test('parses get response using exact { keys: [...] } contract and hydrates hasK
   const parsed = normalizeGetResponse({
     keys: [
       {
-        provider: 'claude',
+        provider: 'anthropic',
         model: 'claude-sonnet-4-20250514',
         maskedKey: 'sk-ant-***',
         updatedAt: '2026-02-18T04:00:00.000Z',
@@ -56,7 +56,7 @@ test('parses save response using exact { key: ... } contract', () => {
 test('parses testConnection response using exact { success, provider, model } contract', () => {
   const ok = normalizeTestConnectionResponse({
     success: true,
-    provider: 'claude',
+    provider: 'anthropic',
     model: 'claude-sonnet-4-20250514',
   })
   expect(ok).toEqual({
