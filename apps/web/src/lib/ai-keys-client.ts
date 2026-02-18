@@ -1,3 +1,5 @@
+import { createTRPCClientProxy, getUntypedClient } from '@trpc/client'
+import type { AppRouter } from '@voyager/api/types'
 import { getTRPCClient } from '@/lib/trpc'
 import {
   normalizeGetResponse,
@@ -60,8 +62,8 @@ function getRecord(value: unknown): Record<string, unknown> | null {
 }
 
 function getAiKeyNamespace(): AiKeyNamespace | null {
-  const client = getTRPCClient()
-  const clientRecord = getRecord(client)
+  const proxyClient = createTRPCClientProxy<AppRouter>(getUntypedClient(getTRPCClient()))
+  const clientRecord = getRecord(proxyClient)
   if (!clientRecord) return null
 
   const direct = getRecord(clientRecord.aiKeys)
