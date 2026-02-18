@@ -11,6 +11,7 @@ const aiStreamBodySchema = z.object({
   question: z.string().min(1).max(2000),
   snapshot: clusterSnapshotSchema.optional(),
   threadId: z.string().uuid().optional(),
+  provider: z.enum(['openai', 'claude']).optional(),
 })
 
 const aiHistoryQuerySchema = z.object({
@@ -107,6 +108,7 @@ export async function registerAiStreamRoute(app: FastifyInstance): Promise<void>
           snapshot: parsed.data.snapshot,
           threadId: parsed.data.threadId,
           userId: sessionResult.user.id,
+          provider: parsed.data.provider,
         },
         (token) => {
           writeEvent('token', { delta: token })

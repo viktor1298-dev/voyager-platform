@@ -121,6 +121,8 @@ async function sleep(ms: number): Promise<void> {
   })
 }
 
+const AI_PROVIDER_PREFERENCE: Array<'openai' | 'claude'> = ['openai', 'claude']
+
 export class AIService {
   private readonly db: Database
   private readonly conversationStore: AiConversationStore
@@ -130,24 +132,41 @@ export class AIService {
     this.conversationStore = new AiConversationStore(ctx.db)
   }
 
-  private async resolveUserAiConfig(userId: string): Promise<{
+  private async resolveUserAiConfig(params: { userId: string; preferredProvider?: 'openai' | 'claude' }): Promise<{
     provider: 'openai' | 'anthropic'
     model: string
     apiKey: string
   }> {
-    const [record] = await this.db
+    const rows = await this.db
       .select({
         provider: userAiKeys.provider,
         model: userAiKeys.model,
         encryptedKey: userAiKeys.encryptedKey,
+        updatedAt: userAiKeys.updatedAt,
       })
       .from(userAiKeys)
-      .where(eq(userAiKeys.userId, userId))
-      .limit(1)
+      .where(eq(userAiKeys.userId, params.userId))
 
-    if (!record) {
+    if (rows.length === 0) {
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'NO_API_KEY' })
     }
+
+    const explicitMatch = params.preferredProvider
+      ? rows.find((row) => row.provider === params.preferredProvider)
+      : undefined
+
+    if (params.preferredProvider && !explicitMatch) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'NO_API_KEY' })
+    }
+
+    const fallback = [...rows].sort((a, b) => {
+      const timeDiff = b.updatedAt.getTime() - a.updatedAt.getTime()
+      if (timeDiff !== 0) return timeDiff
+
+      return AI_PROVIDER_PREFERENCE.indexOf(a.provider) - AI_PROVIDER_PREFERENCE.indexOf(b.provider)
+    })[0]
+
+    const record = explicitMatch ?? fallback
 
     return {
       provider: record.provider === 'claude' ? 'anthropic' : 'openai',
@@ -362,7 +381,8 @@ export class AIService {
     snapshot?: ClusterSnapshotInput
     threadId?: string
     userId?: string
-  }): Promise<{ answer: string; threadId?: string; provider?: string; model?: string }> {
+    provider?: 'openai' | 'claude'
+  }): Promise<{ answer: string; threadId?: string; provider?: 'openai' | 'anthropic'; model?: string }> {
     const chunks: string[] = []
     const result = await this.answerQuestionStream(params, async (token) => {
       chunks.push(token)
@@ -383,16 +403,20 @@ export class AIService {
       snapshot?: ClusterSnapshotInput
       threadId?: string
       userId?: string
+      provider?: 'openai' | 'claude'
     },
     onToken: (token: string) => Promise<void> | void,
-  ): Promise<{ threadId?: string; provider?: string; model?: string }> {
+  ): Promise<{ threadId?: string; provider?: 'openai' | 'anthropic'; model?: string }> {
     const analysis = await this.analyzeClusterHealth(params.clusterId, params.snapshot)
 
     if (!params.userId) {
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'NO_API_KEY' })
     }
 
-    const config = await this.resolveUserAiConfig(params.userId)
+    const config = await this.resolveUserAiConfig({
+      userId: params.userId,
+      preferredProvider: params.provider,
+    })
     const client = new AiProviderClient({
       ...config,
       timeoutMs: AI_CONFIG.REQUEST_TIMEOUT_MS,
@@ -475,8 +499,12 @@ export class AIService {
     question: string
     answer: string
     threadId?: string
+    provider?: 'openai' | 'claude'
   }): Promise<{ threadId: string; provider: 'openai' | 'anthropic'; model: string }> {
-    const providerConfig = await this.resolveUserAiConfig(params.userId)
+    const providerConfig = await this.resolveUserAiConfig({
+      userId: params.userId,
+      preferredProvider: params.provider,
+    })
 
     const thread = await this.conversationStore.upsertThread({
       threadId: params.threadId,
