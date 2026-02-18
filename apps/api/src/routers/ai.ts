@@ -131,14 +131,35 @@ export const aiRouter = router({
         const aiService = new AIService({ db: ctx.db })
         const analysis = await aiService.analyzeClusterHealth(input.clusterId, input.snapshot)
 
-        await logAudit(ctx, 'ai.analyze', 'cluster', input.clusterId, {
-          recommendationCount: analysis.recommendations.length,
-          score: analysis.score,
-        })
+        try {
+          await logAudit(ctx, 'ai.analyze', 'cluster', input.clusterId, {
+            recommendationCount: analysis.recommendations.length,
+            score: analysis.score,
+          })
+        } catch (auditError) {
+          console.error('[ai.analyze] Failed to write audit log', {
+            clusterId: input.clusterId,
+            userId: ctx.user.id,
+            error: auditError instanceof Error ? auditError.message : String(auditError),
+          })
+        }
 
         return analysis
       } catch (error) {
         if (error instanceof TRPCError) throw error
+
+        if (isTransientAiError(error)) {
+          console.error('[ai.analyze] Analyze request failed due to transient backend error', {
+            clusterId: input.clusterId,
+            userId: ctx.user.id,
+            error: error instanceof Error ? error.message : String(error),
+          })
+          throw new TRPCError({
+            code: 'SERVICE_UNAVAILABLE',
+            message: 'Analyze Health is temporarily unavailable. Please retry shortly.',
+          })
+        }
+
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Failed to analyze cluster: ${error instanceof Error ? error.message : 'Unknown error'}`,
