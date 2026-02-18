@@ -11,7 +11,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Box, Loader2, RefreshCw, Scale } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 interface RolloutInfo {
   revision: string
@@ -116,6 +116,7 @@ function ScaleDialog({ deployment, onClose }: { deployment: Deployment; onClose:
 
 export default function DeploymentsPage() {
   const isAdmin = useIsAdmin()
+  const [isClient, setIsClient] = useState(false)
   const [scaleTarget, setScaleTarget] = useState<Deployment | null>(null)
   const [confirmRestart, setConfirmRestart] = useState<Deployment | null>(null)
   const [namespaceFilter, setNamespaceFilter] = useState<string>('all')
@@ -137,6 +138,10 @@ export default function DeploymentsPage() {
       onSuccess: () => setConfirmRestart(null),
     }),
   )
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   useEffect(() => {
     const onRefresh = () => deploymentsQuery.refetch()
@@ -179,6 +184,13 @@ export default function DeploymentsPage() {
     return Array.from(groups.values()).sort((a, b) => a.clusterName.localeCompare(b.clusterName))
   }, [filteredDeployments])
 
+  const formatTimestamp = useCallback((timestamp: string) => {
+    const date = new Date(timestamp)
+    if (Number.isNaN(date.getTime())) return '—'
+    if (!isClient) return `${date.toISOString().replace('T', ' ').slice(0, 19)} UTC`
+    return date.toLocaleString()
+  }, [isClient])
+
   const columns = useMemo<ColumnDef<Deployment, unknown>[]>(() => {
     const base: ColumnDef<Deployment, unknown>[] = [
       {
@@ -220,7 +232,7 @@ export default function DeploymentsPage() {
                 <span
                   key={`${rollout.revision}-${rollout.updatedAt}`}
                   className="px-1.5 py-0.5 rounded border border-[var(--color-border)] text-[10px] text-[var(--color-text-secondary)] font-mono"
-                  title={`${rollout.image} • ${new Date(rollout.updatedAt).toLocaleString()}`}
+                  title={`${rollout.image} • ${formatTimestamp(rollout.updatedAt)}`}
                 >
                   r{rollout.revision}
                 </span>
@@ -232,7 +244,7 @@ export default function DeploymentsPage() {
       {
         accessorKey: 'lastUpdated',
         header: 'Updated',
-        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] text-[11px]">{new Date(row.original.lastUpdated).toLocaleString()}</span>,
+        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] text-[11px]">{formatTimestamp(row.original.lastUpdated)}</span>,
       },
     ]
 
@@ -256,7 +268,7 @@ export default function DeploymentsPage() {
         ),
       },
     ]
-  }, [isAdmin])
+  }, [formatTimestamp, isAdmin])
 
   return (
     <AppLayout>

@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from '@tanstack/react-table'
 import { AlertTriangle, Calendar, Shield } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
@@ -63,6 +63,7 @@ function TypeBadge({ type }: { type: string }) {
 
 export default function EventsPage() {
   const [filter, setFilter] = useState<EventFilter>('all')
+  const [isClient, setIsClient] = useState(false)
 
   const eventsQuery = trpc.clusters.liveEvents.useQuery({ limit: 50 }, { refetchInterval: 30000 })
   const events = useMemo(
@@ -70,6 +71,10 @@ export default function EventsPage() {
       ((eventsQuery.data as Array<Partial<KubeEvent>> | undefined) ?? []).filter(isRenderableEvent),
     [eventsQuery.data],
   )
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   useEffect(() => {
     const onRefresh = () => eventsQuery.refetch()
@@ -93,6 +98,14 @@ export default function EventsPage() {
     [events],
   )
 
+
+  const formatTimestamp = useCallback((timestamp: string) => {
+    const date = new Date(timestamp)
+    if (Number.isNaN(date.getTime())) return '—'
+    if (!isClient) return `${date.toISOString().replace('T', ' ').slice(0, 19)} UTC`
+    return date.toLocaleString()
+  }, [isClient])
+
   const columns = useMemo<ColumnDef<KubeEvent, unknown>[]>(
     () => [
       {
@@ -101,7 +114,7 @@ export default function EventsPage() {
         accessorFn: (row) => row.lastSeen,
         cell: ({ row }) => (
           <span className="text-[var(--color-text-muted)] font-mono tabular-nums text-xs">
-            {timeAgo(row.original.lastSeen)}
+            {isClient ? timeAgo(row.original.lastSeen) : formatTimestamp(row.original.lastSeen)}
           </span>
         ),
       },
@@ -162,7 +175,7 @@ export default function EventsPage() {
         ),
       },
     ],
-    [],
+    [formatTimestamp, isClient],
   )
 
   const filterBar = (

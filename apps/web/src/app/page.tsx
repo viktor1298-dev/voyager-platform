@@ -223,6 +223,10 @@ function DashboardContent() {
   return (
     <AppLayout>
       <PageTransition>
+        <header className="mb-4">
+          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
+        </header>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <SummaryCard
             icon={<Server className="h-4 w-4" />}
@@ -272,7 +276,8 @@ function DashboardContent() {
               </p>
             </div>
 
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)]">
+            <div className="w-full sm:w-auto overflow-x-auto">
+              <div className="flex min-w-max items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)]">
               {(['all', 'prod', 'staging', 'dev'] as const).map((filter) => {
                 const isActive = filters.environment === filter || (filter === 'all' && filters.environment === 'all')
                 const color = filter === 'all' ? 'var(--color-accent)' : ENV_META[filter].color
@@ -294,6 +299,7 @@ function DashboardContent() {
                   </button>
                 )
               })}
+              </div>
             </div>
           </div>
 
@@ -380,6 +386,10 @@ function DashboardPageFallback() {
   return (
     <AppLayout>
       <PageTransition>
+        <header className="mb-4">
+          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
+        </header>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <SkeletonCard />
           <SkeletonCard />
