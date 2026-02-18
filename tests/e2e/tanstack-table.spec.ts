@@ -59,10 +59,32 @@ test.describe('TanStack Table — Users Management', () => {
       return values.map((v) => v.trim()).filter((v) => v.length > 0 && !/^no users found$/i.test(v))
     }
 
+    const skeletonRows = table.locator('tbody tr td .skeleton-shimmer').first()
+    const emptyStateCell = table
+      .locator('tbody tr td')
+      .filter({ hasText: /no users found/i })
+      .first()
+
+    await expect
+      .poll(
+        async () => {
+          const hasSkeleton = await skeletonRows.isVisible().catch(() => false)
+          if (hasSkeleton) return 'loading'
+
+          const hasEmptyState = await emptyStateCell.isVisible().catch(() => false)
+          if (hasEmptyState) return 'empty'
+
+          const names = await readNames()
+          return names.length > 0 ? 'data' : 'unknown'
+        },
+        { timeout: 10_000, message: 'wait for users table to settle out of skeleton state' },
+      )
+      .toMatch(/^(empty|data)$/)
+
     const initial = await readNames()
 
     if (initial.length === 0) {
-      await expect(page.getByText(/no users found/i)).toBeVisible()
+      await expect(emptyStateCell).toBeVisible()
       return
     }
 
