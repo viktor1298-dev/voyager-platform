@@ -22,7 +22,10 @@ export async function login(page: Page, user = TEST_ADMIN): Promise<void> {
   await page.getByRole('button', { name: /sign in|log in|login/i }).click();
 
   await expect(page).not.toHaveURL(/\/login/, { timeout: 20_000 });
-  await page.waitForLoadState('networkidle', { timeout: 10_000 });
+
+  // networkidle is flaky in this app because post-login dashboard bootstrapping
+  // may keep long-polling/live requests open. Wait for an authenticated shell signal instead.
+  await expect(page.getByRole('button', { name: /logout/i })).toBeVisible({ timeout: 20_000 });
 }
 
 export async function loginAsViewer(page: Page): Promise<void> {

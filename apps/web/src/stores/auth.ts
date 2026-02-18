@@ -21,14 +21,40 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  setUser: (user) => set({ user, isAuthenticated: !!user, isLoading: false }),
-  clearUser: () => set({ user: null, isAuthenticated: false, isLoading: false }),
+  setUser: (user) =>
+    set((state) => {
+      const isSameUser =
+        state.user?.id === user?.id &&
+        state.user?.email === user?.email &&
+        state.user?.name === user?.name &&
+        state.user?.role === user?.role
+
+      if (isSameUser && state.isAuthenticated === !!user && state.isLoading === false) {
+        return state
+      }
+
+      return { user, isAuthenticated: !!user, isLoading: false }
+    }),
+  clearUser: () =>
+    set((state) => {
+      if (!state.user && state.isAuthenticated === false && state.isLoading === false) {
+        return state
+      }
+
+      return { user: null, isAuthenticated: false, isLoading: false }
+    }),
   logout: async () => {
     try {
       await authClient.signOut()
     } catch {
       // ignore errors on signout
     }
-    set({ user: null, isAuthenticated: false, isLoading: false })
+    set((state) => {
+      if (!state.user && state.isAuthenticated === false && state.isLoading === false) {
+        return state
+      }
+
+      return { user: null, isAuthenticated: false, isLoading: false }
+    })
   },
 }))
