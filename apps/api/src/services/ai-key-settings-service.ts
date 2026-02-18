@@ -1,9 +1,9 @@
+import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto'
 import { TRPCError } from '@trpc/server'
 import { AI_CONFIG, type AiProviderName } from '@voyager/config'
 import type { Database } from '@voyager/db'
 import { userAiKeys } from '@voyager/db'
 import { and, desc, eq } from 'drizzle-orm'
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto'
 import { AiProviderClient } from './ai-provider.js'
 
 const KEY_ALGORITHM = 'aes-256-gcm'
@@ -52,7 +52,10 @@ function encryptApiKey(plain: string): string {
 function decryptApiKey(cipherText: string): string {
   const [ivBase64, authTagBase64, payloadBase64] = cipherText.split(':')
   if (!ivBase64 || !authTagBase64 || !payloadBase64) {
-    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Invalid encrypted AI key payload' })
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Invalid encrypted AI key payload',
+    })
   }
 
   const decipher = createDecipheriv(
@@ -84,8 +87,16 @@ export class AiKeySettingsService {
     provider: AiProviderName
     apiKey: string
     model: string
-  }): Promise<{ provider: AiProviderName; model: string; maskedKey: string; hasKey: true }> {
+  }): Promise<{
+    provider: AiProviderName
+    model: string
+    maskedKey: string
+    hasKey: true
+    updatedAt: Date
+  }> {
     const encrypted = encryptApiKey(input.apiKey.trim())
+
+    const updatedAt = new Date()
 
     await this.db
       .insert(userAiKeys)
@@ -100,7 +111,7 @@ export class AiKeySettingsService {
         set: {
           encryptedKey: encrypted,
           model: input.model,
-          updatedAt: new Date(),
+          updatedAt,
         },
       })
 
@@ -109,17 +120,27 @@ export class AiKeySettingsService {
       model: input.model,
       maskedKey: maskApiKey(input.apiKey),
       hasKey: true,
+      updatedAt,
     }
   }
 
-  public async getUserKeyStatus(input: {
-    userId: string
-    provider?: AiProviderName
-  }): Promise<Array<{ provider: AiProviderName; model: string; maskedKey: string; hasKey: true }>> {
+  public async getUserKeyStatus(input: { userId: string; provider?: AiProviderName }): Promise<
+    Array<{
+      provider: AiProviderName
+      model: string
+      maskedKey: string
+      hasKey: true
+      updatedAt: Date
+    }>
+  > {
     const rows = await this.db
       .select()
       .from(userAiKeys)
-      .where(input.provider ? and(eq(userAiKeys.userId, input.userId), eq(userAiKeys.provider, input.provider)) : eq(userAiKeys.userId, input.userId))
+      .where(
+        input.provider
+          ? and(eq(userAiKeys.userId, input.userId), eq(userAiKeys.provider, input.provider))
+          : eq(userAiKeys.userId, input.userId),
+      )
       .orderBy(desc(userAiKeys.updatedAt))
 
     return rows.map((row) => {
@@ -129,6 +150,7 @@ export class AiKeySettingsService {
         model: row.model,
         maskedKey: maskApiKey(decrypted),
         hasKey: true as const,
+        updatedAt: row.updatedAt,
       }
     })
   }
@@ -170,7 +192,8 @@ export class AiKeySettingsService {
       apiKey: decryptApiKey(row.encryptedKey),
       timeoutMs,
       maxOutputTokens,
-      baseUrl: row.provider === 'anthropic' ? process.env.ANTHROPIC_BASE_URL : process.env.OPENAI_BASE_URL,
+      baseUrl:
+        row.provider === 'anthropic' ? process.env.ANTHROPIC_BASE_URL : process.env.OPENAI_BASE_URL,
     }
   }
 
@@ -195,7 +218,10 @@ export class AiKeySettingsService {
         apiKey: input.apiKey,
         timeoutMs,
         maxOutputTokens,
-        baseUrl: input.provider === 'anthropic' ? process.env.ANTHROPIC_BASE_URL : process.env.OPENAI_BASE_URL,
+        baseUrl:
+          input.provider === 'anthropic'
+            ? process.env.ANTHROPIC_BASE_URL
+            : process.env.OPENAI_BASE_URL,
       })
 
       await client.complete({

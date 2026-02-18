@@ -1,5 +1,15 @@
 import { desc } from 'drizzle-orm'
-import { index, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
+import {
+  index,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core'
 import { user } from './auth.js'
 import { clusters } from './clusters.js'
 
@@ -94,6 +104,7 @@ export const userAiKeys = pgTable(
   (table) => [
     uniqueIndex('uidx_user_ai_keys_user_provider').on(table.userId, table.provider),
     index('idx_user_ai_keys_user_updated').on(table.userId, desc(table.updatedAt)),
+    index('idx_user_ai_keys_provider_updated').on(table.provider, desc(table.updatedAt)),
   ],
 )
 

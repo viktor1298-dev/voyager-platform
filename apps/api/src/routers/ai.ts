@@ -29,15 +29,31 @@ const historyInputSchema = z.object({
   messageLimit: z.number().int().min(1).max(500).optional(),
 })
 
+const aiProviderInputSchema = z.enum(['openai', 'anthropic', 'claude'])
+const aiProviderInternalSchema = z.enum(['openai', 'anthropic'])
+const aiProviderBackendSchema = z.enum(['openai', 'claude'])
+
 const aiKeySettingsInputSchema = z.object({
-  provider: z.enum(['openai', 'anthropic']),
+  provider: aiProviderInputSchema,
   apiKey: z.string().min(10).max(512),
   model: z.string().min(1).max(120),
 })
 
 const aiKeyStatusInputSchema = z.object({
-  provider: z.enum(['openai', 'anthropic']).optional(),
+  provider: aiProviderInputSchema.optional(),
 })
+
+function toInternalAiProvider(
+  provider: z.infer<typeof aiProviderInputSchema>,
+): z.infer<typeof aiProviderInternalSchema> {
+  return provider === 'claude' ? 'anthropic' : provider
+}
+
+function toBackendAiProvider(
+  provider: z.infer<typeof aiProviderInternalSchema>,
+): z.infer<typeof aiProviderBackendSchema> {
+  return provider === 'anthropic' ? 'claude' : 'openai'
+}
 
 const LOGICAL_AI_ERROR_CODES = new Set(['NOT_FOUND', 'BAD_REQUEST'])
 const TRANSIENT_AI_ERROR_PATTERNS = [
@@ -269,16 +285,18 @@ export const aiRouter = router({
     .input(aiKeySettingsInputSchema)
     .output(
       z.object({
-        provider: z.enum(['openai', 'anthropic']),
+        provider: aiProviderInternalSchema,
         model: z.string(),
         maskedKey: z.string(),
         hasKey: z.literal(true),
+        updatedAt: z.date(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const service = new AiKeySettingsService(ctx.db)
+      const provider = toInternalAiProvider(input.provider)
       const tested = await service.testConnection({
-        provider: input.provider,
+        provider,
         model: input.model,
         apiKey: input.apiKey,
       })
@@ -292,7 +310,7 @@ export const aiRouter = router({
 
       return service.upsertUserKey({
         userId: ctx.user.id,
-        provider: input.provider,
+        provider,
         model: input.model,
         apiKey: input.apiKey,
       })
@@ -302,16 +320,18 @@ export const aiRouter = router({
     .input(aiKeySettingsInputSchema)
     .output(
       z.object({
-        provider: z.enum(['openai', 'anthropic']),
+        provider: aiProviderInternalSchema,
         model: z.string(),
         maskedKey: z.string(),
         hasKey: z.literal(true),
+        updatedAt: z.date(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const service = new AiKeySettingsService(ctx.db)
+      const provider = toInternalAiProvider(input.provider)
       const tested = await service.testConnection({
-        provider: input.provider,
+        provider,
         model: input.model,
         apiKey: input.apiKey,
       })
@@ -325,7 +345,7 @@ export const aiRouter = router({
 
       return service.upsertUserKey({
         userId: ctx.user.id,
-        provider: input.provider,
+        provider,
         model: input.model,
         apiKey: input.apiKey,
       })
@@ -336,7 +356,7 @@ export const aiRouter = router({
     .output(
       z.object({
         ok: z.boolean(),
-        provider: z.enum(['openai', 'anthropic']),
+        provider: aiProviderInternalSchema,
         model: z.string(),
         error: z.string().optional(),
       }),
@@ -344,7 +364,7 @@ export const aiRouter = router({
     .mutation(async ({ ctx, input }) => {
       const service = new AiKeySettingsService(ctx.db)
       return service.testConnection({
-        provider: input.provider,
+        provider: toInternalAiProvider(input.provider),
         model: input.model,
         apiKey: input.apiKey,
       })
@@ -355,10 +375,11 @@ export const aiRouter = router({
     .output(
       z.array(
         z.object({
-          provider: z.enum(['openai', 'anthropic']),
+          provider: aiProviderInternalSchema,
           model: z.string(),
           maskedKey: z.string(),
           hasKey: z.literal(true),
+          updatedAt: z.date(),
         }),
       ),
     )
@@ -366,9 +387,151 @@ export const aiRouter = router({
       const service = new AiKeySettingsService(ctx.db)
       return service.getUserKeyStatus({
         userId: ctx.user.id,
-        provider: input.provider,
+        provider: input.provider ? toInternalAiProvider(input.provider) : undefined,
       })
     }),
+
+  keys: router({
+    get: protectedProcedure
+      .output(
+        z.object({
+          keys: z.array(
+            z.object({
+              provider: aiProviderBackendSchema,
+              model: z.string(),
+              maskedKey: z.string(),
+              hasKey: z.literal(true),
+              updatedAt: z.date(),
+            }),
+          ),
+        }),
+      )
+      .query(async ({ ctx }) => {
+        const service = new AiKeySettingsService(ctx.db)
+        const keys = await service.getUserKeyStatus({ userId: ctx.user.id })
+        return {
+          keys: keys.map((key) => ({
+            ...key,
+            provider: toBackendAiProvider(key.provider),
+          })),
+        }
+      }),
+
+    save: protectedProcedure
+      .input(aiKeySettingsInputSchema)
+      .output(
+        z.object({
+          key: z.object({
+            provider: aiProviderBackendSchema,
+            model: z.string(),
+            maskedKey: z.string(),
+            hasKey: z.literal(true),
+            updatedAt: z.date(),
+          }),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const service = new AiKeySettingsService(ctx.db)
+        const provider = toInternalAiProvider(input.provider)
+        const tested = await service.testConnection({
+          provider,
+          model: input.model,
+          apiKey: input.apiKey,
+        })
+
+        if (!tested.ok) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: tested.error ?? 'Failed to validate provider key',
+          })
+        }
+
+        const key = await service.upsertUserKey({
+          userId: ctx.user.id,
+          provider,
+          model: input.model,
+          apiKey: input.apiKey,
+        })
+
+        return {
+          key: {
+            ...key,
+            provider: toBackendAiProvider(key.provider),
+          },
+        }
+      }),
+
+    upsert: protectedProcedure
+      .input(aiKeySettingsInputSchema)
+      .output(
+        z.object({
+          key: z.object({
+            provider: aiProviderBackendSchema,
+            model: z.string(),
+            maskedKey: z.string(),
+            hasKey: z.literal(true),
+            updatedAt: z.date(),
+          }),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const service = new AiKeySettingsService(ctx.db)
+        const provider = toInternalAiProvider(input.provider)
+        const tested = await service.testConnection({
+          provider,
+          model: input.model,
+          apiKey: input.apiKey,
+        })
+
+        if (!tested.ok) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: tested.error ?? 'Failed to validate provider key',
+          })
+        }
+
+        const key = await service.upsertUserKey({
+          userId: ctx.user.id,
+          provider,
+          model: input.model,
+          apiKey: input.apiKey,
+        })
+
+        return {
+          key: {
+            ...key,
+            provider: toBackendAiProvider(key.provider),
+          },
+        }
+      }),
+
+    testConnection: protectedProcedure
+      .input(aiKeySettingsInputSchema)
+      .output(
+        z.object({
+          success: z.boolean(),
+          provider: aiProviderBackendSchema,
+          model: z.string(),
+          error: z.string().optional(),
+        }),
+      )
+      .mutation(async ({ input, ctx }) => {
+        const service = new AiKeySettingsService(ctx.db)
+        const provider = toInternalAiProvider(input.provider)
+        const result = await service.testConnection({
+          provider,
+          model: input.model,
+          apiKey: input.apiKey,
+        })
+
+        return {
+          success: result.ok,
+          provider: toBackendAiProvider(result.provider),
+          model: result.model,
+          error: result.error,
+        }
+      }),
+  }),
 
   suggestions: protectedProcedure
     .input(suggestionsInputSchema)
