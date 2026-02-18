@@ -242,8 +242,15 @@ export default function SettingsPage() {
           setStoredKeyProvider(keySettings.provider)
           setStoredKeyModel(keySettings.model)
         }
-      } catch {
+      } catch (error) {
         if (cancelled) return
+
+        console.error('[Settings/BYOK] Failed to load saved AI key settings', {
+          area: 'settings/byok',
+          operation: 'loadAiKeySettings',
+          error,
+        })
+
         setStoredMaskedKey(null)
         setStoredKeyProvider(null)
         setStoredKeyModel(null)
@@ -537,9 +544,6 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {isKeyLoading && (
-                <p className="text-xs text-[var(--color-text-dim)]">Loading saved key status…</p>
-              )}
             </form>
           </SectionCard>
 
