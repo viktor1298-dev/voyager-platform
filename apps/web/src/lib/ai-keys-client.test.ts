@@ -58,9 +58,20 @@ test('falls back to legacy query path only for missing-procedure/path errors', a
 
 
 test('treats legacy encrypted_key read errors as empty saved-key state', async () => {
-  untypedClient.query.mockRejectedValueOnce(new Error('Failed query: select "encrypted_key" from user_ai_keys'))
+  untypedClient.query.mockRejectedValueOnce(
+    new Error('column "encrypted_key" does not exist in relation "user_ai_keys"'),
+  )
 
   await expect(getAiKeySettings()).resolves.toBeNull()
+  expect(untypedClient.query).toHaveBeenCalledTimes(1)
+  expect(untypedClient.query).toHaveBeenNthCalledWith(1, 'aiKeys.get', undefined)
+})
+
+test('rethrows non-encrypted missing-column read errors', async () => {
+  const backendError = new Error('column "model_version" does not exist')
+  untypedClient.query.mockRejectedValueOnce(backendError)
+
+  await expect(getAiKeySettings()).rejects.toBe(backendError)
   expect(untypedClient.query).toHaveBeenCalledTimes(1)
   expect(untypedClient.query).toHaveBeenNthCalledWith(1, 'aiKeys.get', undefined)
 })
