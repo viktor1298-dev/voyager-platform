@@ -91,7 +91,7 @@ function UserActions({
         type="button"
         onClick={onToggleRole}
         disabled={pending}
-        className="inline-flex min-h-9 items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] sm:text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
+        className="inline-flex min-h-11 items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] sm:text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
       >
         <UserCog className="h-3 w-3" />
         {user.role === 'admin' ? 'Demote' : 'Promote'}
@@ -100,7 +100,7 @@ function UserActions({
         type="button"
         onClick={onDelete}
         aria-label="Delete user"
-        className="min-h-9 px-2.5 py-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+        className="min-h-11 min-w-11 px-2.5 py-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>
@@ -322,12 +322,12 @@ export default function UsersPage() {
           emptyIcon={<Users className="h-10 w-10" />}
           emptyTitle="No users found"
           mobileCard={(u) => (
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
-              <div className="flex justify-between items-center gap-2">
-                <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm">
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2 min-w-0">
+              <div className="flex justify-between items-center gap-2 min-w-0">
+                <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm min-w-0">
                   {u.name}
                 </span>
-                <Badge variant={u.role === 'admin' ? 'warning' : 'outline'}>
+                <Badge variant={u.role === 'admin' ? 'warning' : 'outline'} className="shrink-0">
                   {u.role === 'admin' ? (
                     <span className="flex items-center gap-1">
                       <ShieldAlert className="h-3 w-3" />
@@ -343,14 +343,14 @@ export default function UsersPage() {
               </div>
               <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1.5 text-xs">
                 <span className="text-[var(--color-text-muted)]">Email</span>
-                <span className="text-[var(--color-text-primary)] font-mono truncate">
+                <span className="text-[var(--color-text-primary)] font-mono break-all min-w-0">
                   {u.email}
                 </span>
                 <span className="text-[var(--color-text-muted)]">Created</span>
                 <span className="text-[var(--color-text-primary)]">{formatDate(u.createdAt)}</span>
               </div>
               {u.id !== currentUserId && (
-                <div className="pt-2 border-t border-[var(--color-border)]/50 flex flex-wrap gap-2">
+                <div className="pt-2 border-t border-[var(--color-border)]/50 grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
                   <UserActions
                     user={u}
                     pending={updateRole.isPending}
