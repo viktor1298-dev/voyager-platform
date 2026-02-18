@@ -220,7 +220,9 @@ export function AiChat({
 }) {
   const reduced = useReducedMotion()
   const chatByCluster = useAiAssistantStore((state) => state.chatByCluster)
-  const threadIdByCluster = useAiAssistantStore((state) => state.threadIdByCluster)
+  const activeThreadId = useAiAssistantStore((state) =>
+    selectedClusterId ? state.threadIdByCluster[selectedClusterId] ?? null : null,
+  )
   const appendMessage = useAiAssistantStore((state) => state.appendMessage)
   const setClusterMessages = useAiAssistantStore((state) => state.setClusterMessages)
   const appendToMessage = useAiAssistantStore((state) => state.appendToMessage)
@@ -311,7 +313,7 @@ export function AiChat({
     selectedClusterName,
     setClusterMessages,
     setThreadId,
-    trpcUtils.ai.history,
+    trpcUtils,
   ])
 
   const sendPrompt = useCallback(
@@ -345,7 +347,7 @@ export function AiChat({
         animate: !reduced,
       })
 
-      const currentThreadId = threadIdByCluster[selectedClusterId] ?? null
+      const currentThreadId = activeThreadId
 
       const updateStreamingContent = (delta: string) => {
         appendToMessage(selectedClusterId, assistantMessageId, delta)
@@ -434,7 +436,7 @@ export function AiChat({
       setClusterMessages,
       setThreadId,
       syncHistory,
-      threadIdByCluster,
+      activeThreadId,
     ],
   )
 
