@@ -230,18 +230,28 @@ export default function SettingsPage() {
 
     const loadAiKeySettings = async () => {
       setIsKeyLoading(true)
-      const keySettings = await getAiKeySettings()
-      if (cancelled) return
 
-      if (keySettings) {
-        setProvider(keySettings.provider)
-        setModel(keySettings.model)
-        setStoredMaskedKey(keySettings.maskedKey || null)
-        setStoredKeyProvider(keySettings.provider)
-        setStoredKeyModel(keySettings.model)
+      try {
+        const keySettings = await getAiKeySettings()
+        if (cancelled) return
+
+        if (keySettings) {
+          setProvider(keySettings.provider)
+          setModel(keySettings.model)
+          setStoredMaskedKey(keySettings.maskedKey || null)
+          setStoredKeyProvider(keySettings.provider)
+          setStoredKeyModel(keySettings.model)
+        }
+      } catch {
+        if (cancelled) return
+        setStoredMaskedKey(null)
+        setStoredKeyProvider(null)
+        setStoredKeyModel(null)
+      } finally {
+        if (!cancelled) {
+          setIsKeyLoading(false)
+        }
       }
-
-      setIsKeyLoading(false)
     }
 
     void loadAiKeySettings()
@@ -483,24 +493,26 @@ export default function SettingsPage() {
                   </p>
                 )}
 
-              {!isKeyLoading && (
-                <div
-                  data-testid="byok-saved-state"
-                  className={`rounded-xl border px-3 py-2 text-xs ${
-                    hasStoredKeyForSelection
+              <div
+                data-testid="byok-saved-state"
+                className={`rounded-xl border px-3 py-2 text-xs ${
+                  isKeyLoading
+                    ? 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-dim)]'
+                    : hasStoredKeyForSelection
                       ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
                       : hasStoredKeyForProvider
                         ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
                         : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-dim)]'
-                  }`}
-                >
-                  {hasStoredKeyForSelection
+                }`}
+              >
+                {isKeyLoading
+                  ? 'Loading saved key status…'
+                  : hasStoredKeyForSelection
                     ? `Saved key active for ${provider}/${model}`
                     : hasStoredKeyForProvider
                       ? `Saved key exists for ${provider}/${storedKeyModel ?? 'another model'} (selected model is ${model})`
                       : 'No saved key for selected provider'}
-                </div>
-              )}
+              </div>
 
               {actionStatus && (
                 <div
