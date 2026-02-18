@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const serviceMocks = {
   deleteUserKey: vi.fn(),
@@ -23,7 +23,9 @@ vi.mock('../services/ai-key-settings-service.js', () => ({
 import { aiRouter } from '../routers/ai.js'
 import type { Context } from '../trpc.js'
 
-function createCaller(user: Context['user'] = { id: 'user-1', email: 'u@v.test', role: 'user' } as any) {
+function createCaller(
+  user: Context['user'] = { id: 'user-1', email: 'u@v.test', role: 'user' } as any,
+) {
   return aiRouter.createCaller({
     db: {} as any,
     user,
@@ -51,6 +53,19 @@ describe('ai router key endpoints', () => {
     expect(result).toEqual({ deleted: true, provider: 'openai' })
   })
 
+  it('returns deleted=false when provider key does not exist', async () => {
+    serviceMocks.deleteUserKey.mockResolvedValue({ deleted: false })
+
+    const caller = createCaller()
+    const result = await caller.keys.delete({ provider: 'anthropic' })
+
+    expect(serviceMocks.deleteUserKey).toHaveBeenCalledWith({
+      userId: 'user-1',
+      provider: 'anthropic',
+    })
+    expect(result).toEqual({ deleted: false, provider: 'anthropic' })
+  })
+
   it('tests stored connection using current user id', async () => {
     serviceMocks.testStoredConnection.mockResolvedValue({
       ok: true,
@@ -71,5 +86,47 @@ describe('ai router key endpoints', () => {
       model: 'claude-3-7-sonnet-latest',
       error: undefined,
     })
+  })
+
+  it('returns success=false and error when no stored key exists', async () => {
+    serviceMocks.testStoredConnection.mockResolvedValue({
+      ok: false,
+      provider: 'openai',
+      error: 'No saved key found for this provider',
+    })
+
+    const caller = createCaller()
+    const result = await caller.keys.testStoredConnection({ provider: 'openai' })
+
+    expect(serviceMocks.testStoredConnection).toHaveBeenCalledWith({
+      userId: 'user-1',
+      provider: 'openai',
+    })
+    expect(result).toEqual({
+      success: false,
+      provider: 'openai',
+      model: undefined,
+      error: 'No saved key found for this provider',
+    })
+  })
+
+  it('preserves sanitized failure message contract from service', async () => {
+    serviceMocks.testStoredConnection.mockResolvedValue({
+      ok: false,
+      provider: 'anthropic',
+      model: 'claude-3-7-sonnet-latest',
+      error: 'Invalid provider credentials. Please verify the API key and model.',
+    })
+
+    const caller = createCaller()
+    const result = await caller.keys.testStoredConnection({ provider: 'anthropic' })
+
+    expect(result).toEqual({
+      success: false,
+      provider: 'anthropic',
+      model: 'claude-3-7-sonnet-latest',
+      error: 'Invalid provider credentials. Please verify the API key and model.',
+    })
+    expect(result.error).not.toContain('sk-')
   })
 })
