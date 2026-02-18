@@ -252,10 +252,7 @@ export function AiChat({
   const trpcUtilsRef = useRef(trpcUtils)
   trpcUtilsRef.current = trpcUtils
   const chatMutation = trpc.ai.chat.useMutation()
-
-  useEffect(() => {
-    lockedRef.current = locked
-  }, [locked])
+  lockedRef.current = locked
 
   const messages = useMemo(() => {
     if (!selectedClusterId) return [buildDefaultAssistantGreeting(null)]
@@ -286,6 +283,8 @@ export function AiChat({
         clusterId: selectedClusterId,
       })) as ConversationHistoryResponse | null
 
+      if (lockedRef.current) return
+
       if (!history || history.messages.length === 0) {
         const existing = useAiAssistantStore.getState().chatByCluster[selectedClusterId]
         if (!existing || existing.length === 0) {
@@ -314,7 +313,9 @@ export function AiChat({
       setClusterMessages(selectedClusterId, mapped)
       setVisibleCount((current) => (current === PAGE_SIZE ? current : PAGE_SIZE))
     } catch {
-      setHistoryError('Could not load conversation history')
+      if (!lockedRef.current) {
+        setHistoryError('Could not load conversation history')
+      }
     } finally {
       setIsHistoryLoading(false)
       scrollToBottom()
