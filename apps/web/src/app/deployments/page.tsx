@@ -282,6 +282,9 @@ export default function DeploymentsPage() {
         <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
           <div>
             <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Deployments</h1>
+            <p className="text-[12px] text-[var(--color-text-muted)] mt-1">
+              Track rollout status, replica health, and restart/scale operations.
+            </p>
             <p className="text-[11px] text-[var(--color-table-meta)] font-mono uppercase tracking-wider mt-1">
               {filteredDeployments.length} deployments · {groupedByCluster.length} clusters · auto-refresh 30s
             </p>
