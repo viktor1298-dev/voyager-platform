@@ -30,6 +30,8 @@ export default function AiAssistantPage() {
   const setSelectedClusterId = useAiAssistantStore((state) => state.setSelectedClusterId)
   const queueQuickPrompt = useAiAssistantStore((state) => state.queueQuickPrompt)
 
+  const trpcUtils = trpc.useUtils()
+
   const clustersQuery = trpc.clusters.list.useQuery()
 
   const selectedCluster =
@@ -145,8 +147,22 @@ export default function AiAssistantPage() {
           )}
 
           {(clustersQuery.error || analysisQuery.error) && (
-            <div className="rounded-2xl border border-[var(--color-status-error)]/40 bg-[var(--color-status-error)]/10 p-4 text-sm text-[var(--color-status-error)]">
-              Failed to load AI assistant data. Please retry.
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--color-status-error)]/40 bg-[var(--color-status-error)]/10 p-4 text-sm text-[var(--color-status-error)]">
+              <span>Failed to load AI assistant data. Please retry.</span>
+              <button
+                type="button"
+                onClick={() => {
+                  void Promise.all([
+                    clustersQuery.refetch(),
+                    selectedClusterId
+                      ? trpcUtils.ai.analyze.invalidate({ clusterId: selectedClusterId })
+                      : Promise.resolve(),
+                  ])
+                }}
+                className="rounded-lg border border-[var(--color-status-error)]/40 px-2 py-1 text-xs hover:bg-[var(--color-status-error)]/10"
+              >
+                Retry
+              </button>
             </div>
           )}
 

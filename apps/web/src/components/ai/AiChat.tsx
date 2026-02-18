@@ -1,6 +1,6 @@
 'use client'
 
-import { Loader2, Send, User } from 'lucide-react'
+import { AlertTriangle, Loader2, Send, User } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -9,46 +9,178 @@ import { trpc } from '@/lib/trpc'
 import { type AiChatMessage, useAiAssistantStore } from '@/stores/ai-assistant'
 
 const PAGE_SIZE = 10
-const ANALYZE_CHAT_RETRIES = 2
-const ANALYZE_CHAT_RETRY_DELAY_MS = 300
-const ANALYZE_FETCH_RETRIES = 2
-const ANALYZE_FETCH_RETRY_DELAY_MS = 350
 
-const ANALYZE_PROMPT_KEYWORDS = {
-  analyze: 'analyze',
-  health: 'health',
-  risk: 'risk',
-} as const
+type ConversationHistoryMessage = {
+  role: 'user' | 'assistant'
+  content: string
+  timestamp?: string
+}
 
-function TypewriterText({ text, animate }: { text: string; animate: boolean }) {
-  const reduced = useReducedMotion()
-  const [visibleChars, setVisibleChars] = useState(animate && !reduced ? 0 : text.length)
+type ConversationHistoryResponse = {
+  conversationId: string
+  createdAt?: string
+  updatedAt?: string
+  messages: ConversationHistoryMessage[]
+}
 
-  useEffect(() => {
-    if (!animate || reduced) {
-      setVisibleChars(text.length)
-      return
-    }
+type StreamChunkEvent = {
+  type?: string
+  delta?: string
+  content?: string
+  done?: boolean
+  error?: string
+}
 
-    setVisibleChars(0)
-    const interval = window.setInterval(() => {
-      setVisibleChars((prev) => {
-        if (prev >= text.length) {
-          window.clearInterval(interval)
-          return text.length
-        }
-        return prev + 2
+function toMessageId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function parseSseEventBlock(block: string): { event: string; data: string } | null {
+  const lines = block.split('\n').map((line) => line.trim())
+  if (lines.length === 0) return null
+
+  const eventLine = lines.find((line) => line.startsWith('event:'))
+  const dataLines = lines.filter((line) => line.startsWith('data:'))
+
+  return {
+    event: eventLine ? eventLine.slice(6).trim() : 'message',
+    data: dataLines.map((line) => line.slice(5).trim()).join('\n'),
+  }
+}
+
+async function fetchHistory(clusterId: string): Promise<ConversationHistoryResponse | null> {
+  const candidates = [
+    `/api/ai/conversations/latest?clusterId=${encodeURIComponent(clusterId)}`,
+    `/api/ai/conversations?clusterId=${encodeURIComponent(clusterId)}`,
+  ]
+
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include',
       })
-    }, 16)
+      if (!response.ok) continue
 
-    return () => window.clearInterval(interval)
-  }, [animate, reduced, text])
+      const parsed = (await response.json()) as
+        | ConversationHistoryResponse
+        | ConversationHistoryResponse[]
 
-  return (
-    <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
-      {text.slice(0, visibleChars)}
-    </p>
-  )
+      if (Array.isArray(parsed)) {
+        return parsed[0] ?? null
+      }
+
+      if (parsed && Array.isArray(parsed.messages)) {
+        return parsed
+      }
+    } catch {
+      // Try next candidate endpoint
+    }
+  }
+
+  return null
+}
+
+async function streamAssistantReply(params: {
+  clusterId: string
+  question: string
+  onDelta: (delta: string) => void
+  signal: AbortSignal
+}): Promise<{ answer: string } | null> {
+  const body = JSON.stringify({
+    clusterId: params.clusterId,
+    question: params.question,
+  })
+
+  const candidates = ['/api/ai/chat/stream', '/api/ai/stream']
+
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'text/event-stream, application/x-ndjson, application/json',
+        },
+        credentials: 'include',
+        body,
+        signal: params.signal,
+      })
+
+      if (!response.ok || !response.body) continue
+
+      const contentType = response.headers.get('content-type')?.toLowerCase() ?? ''
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+
+      let aggregate = ''
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        if (!chunk) continue
+
+        if (contentType.includes('text/event-stream')) {
+          buffer += chunk
+          const blocks = buffer.split('\n\n')
+          buffer = blocks.pop() ?? ''
+
+          for (const block of blocks) {
+            const event = parseSseEventBlock(block)
+            if (!event) continue
+            if (!event.data || event.data === '[DONE]') continue
+
+            const parsed = JSON.parse(event.data) as StreamChunkEvent
+            const delta = parsed.delta ?? parsed.content ?? ''
+            if (delta) {
+              aggregate += delta
+              params.onDelta(delta)
+            }
+
+            if (parsed.done) {
+              return { answer: aggregate }
+            }
+          }
+
+          continue
+        }
+
+        if (contentType.includes('application/x-ndjson')) {
+          buffer += chunk
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+
+          for (const line of lines) {
+            const trimmed = line.trim()
+            if (!trimmed) continue
+
+            const parsed = JSON.parse(trimmed) as StreamChunkEvent
+            const delta = parsed.delta ?? parsed.content ?? ''
+            if (delta) {
+              aggregate += delta
+              params.onDelta(delta)
+            }
+          }
+
+          continue
+        }
+
+        aggregate += chunk
+        params.onDelta(chunk)
+      }
+
+      if (aggregate.trim()) {
+        return { answer: aggregate }
+      }
+    } catch {
+      // Try next candidate endpoint
+    }
+  }
+
+  return null
 }
 
 const buildDefaultAssistantGreeting = (clusterName: string | null): AiChatMessage => ({
@@ -60,37 +192,6 @@ const buildDefaultAssistantGreeting = (clusterName: string | null): AiChatMessag
   createdAt: new Date().toISOString(),
 })
 
-function isAnalyzeHealthPrompt(prompt: string): boolean {
-  const lowerPrompt = prompt.toLowerCase()
-  return (
-    lowerPrompt.includes(ANALYZE_PROMPT_KEYWORDS.analyze) &&
-    (lowerPrompt.includes(ANALYZE_PROMPT_KEYWORDS.health) ||
-      lowerPrompt.includes(ANALYZE_PROMPT_KEYWORDS.risk))
-  )
-}
-
-function buildAnalyzeFallbackMessage(analysis: {
-  score: number
-  recommendations: Array<{ title: string }>
-}): string {
-  const topRecommendations = analysis.recommendations
-    .slice(0, 2)
-    .map((recommendation) => `• ${recommendation.title}`)
-    .join('\n')
-
-  return [
-    `Cluster score: ${analysis.score}/100.`,
-    'Top risk factors:',
-    topRecommendations || '• No active risk factors detected.',
-  ].join('\n')
-}
-
-async function sleep(ms: number): Promise<void> {
-  await new Promise((resolve) => {
-    window.setTimeout(resolve, ms)
-  })
-}
-
 export function AiChat({
   selectedClusterId,
   selectedClusterName,
@@ -100,9 +201,6 @@ export function AiChat({
 }) {
   const reduced = useReducedMotion()
   const chatByCluster = useAiAssistantStore((state) => state.chatByCluster)
-  const currentClusterMessages = useAiAssistantStore((state) =>
-    selectedClusterId ? state.chatByCluster[selectedClusterId] : undefined,
-  )
   const appendMessage = useAiAssistantStore((state) => state.appendMessage)
   const setClusterMessages = useAiAssistantStore((state) => state.setClusterMessages)
   const quickPrompt = useAiAssistantStore((state) => state.quickPrompt)
@@ -110,18 +208,17 @@ export function AiChat({
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [draft, setDraft] = useState('')
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState<string | null>(null)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null)
+  const [chatError, setChatError] = useState<string | null>(null)
+  const [lastPrompt, setLastPrompt] = useState<string | null>(null)
+
   const viewportRef = useRef<HTMLDivElement | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   const chatMutation = trpc.ai.chat.useMutation()
-  const trpcUtils = trpc.useUtils()
-
-  useEffect(() => {
-    if (!selectedClusterId) return
-
-    if (!currentClusterMessages || currentClusterMessages.length === 0) {
-      setClusterMessages(selectedClusterId, [buildDefaultAssistantGreeting(selectedClusterName)])
-    }
-  }, [currentClusterMessages, selectedClusterId, selectedClusterName, setClusterMessages])
 
   const messages = useMemo(() => {
     if (!selectedClusterId) return [buildDefaultAssistantGreeting(null)]
@@ -134,13 +231,59 @@ export function AiChat({
     setVisibleCount((current) => Math.min(current + PAGE_SIZE, messages.length))
   }, [messages.length])
 
+  const scrollToBottom = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      const node = viewportRef.current
+      if (node) node.scrollTop = node.scrollHeight
+    })
+  }, [])
+
+  const syncHistory = useCallback(async () => {
+    if (!selectedClusterId) return
+
+    setIsHistoryLoading(true)
+    setHistoryError(null)
+
+    try {
+      const history = await fetchHistory(selectedClusterId)
+
+      if (!history || history.messages.length === 0) {
+        const existing = chatByCluster[selectedClusterId]
+        if (!existing || existing.length === 0) {
+          setClusterMessages(selectedClusterId, [
+            buildDefaultAssistantGreeting(selectedClusterName),
+          ])
+        }
+        return
+      }
+
+      const mapped: AiChatMessage[] = history.messages.map((message, index) => ({
+        id: `history-${history.conversationId}-${index}`,
+        role: message.role,
+        content: message.content,
+        createdAt: message.timestamp ?? history.createdAt ?? new Date().toISOString(),
+      }))
+
+      setClusterMessages(selectedClusterId, mapped)
+      setVisibleCount(PAGE_SIZE)
+    } catch {
+      setHistoryError('Could not load conversation history')
+    } finally {
+      setIsHistoryLoading(false)
+      scrollToBottom()
+    }
+  }, [chatByCluster, scrollToBottom, selectedClusterId, selectedClusterName, setClusterMessages])
+
   const sendPrompt = useCallback(
     async (content: string) => {
       const trimmed = content.trim()
-      if (!trimmed || !selectedClusterId || chatMutation.isPending) return
+      if (!trimmed || !selectedClusterId || isStreaming || chatMutation.isPending) return
+
+      setChatError(null)
+      setLastPrompt(trimmed)
 
       const userMessage: AiChatMessage = {
-        id: `user-${Date.now()}`,
+        id: toMessageId('user'),
         role: 'user',
         content: trimmed,
         createdAt: new Date().toISOString(),
@@ -148,117 +291,111 @@ export function AiChat({
 
       appendMessage(selectedClusterId, userMessage)
       setDraft('')
+      scrollToBottom()
 
-      window.requestAnimationFrame(() => {
-        const node = viewportRef.current
-        if (node) node.scrollTop = node.scrollHeight
+      const assistantMessageId = toMessageId('assistant-stream')
+      setStreamingMessageId(assistantMessageId)
+      setIsStreaming(true)
+
+      appendMessage(selectedClusterId, {
+        id: assistantMessageId,
+        role: 'assistant',
+        content: '',
+        createdAt: new Date().toISOString(),
+        animate: !reduced,
       })
 
+      const updateStreamingContent = (delta: string) => {
+        const current = chatByCluster[selectedClusterId] ?? []
+        const updated = current.map((message) =>
+          message.id === assistantMessageId
+            ? {
+                ...message,
+                content: `${message.content}${delta}`,
+              }
+            : message,
+        )
+
+        setClusterMessages(selectedClusterId, updated)
+        scrollToBottom()
+      }
+
+      const abortController = new AbortController()
+      abortRef.current = abortController
+
       try {
-        const isAnalyzePrompt = isAnalyzeHealthPrompt(trimmed)
-
-        if (isAnalyzePrompt) {
-          for (let attempt = 0; attempt <= ANALYZE_CHAT_RETRIES; attempt += 1) {
-            try {
-              const response = await chatMutation.mutateAsync({
-                clusterId: selectedClusterId,
-                question: trimmed,
-              })
-
-              appendMessage(selectedClusterId, {
-                id: `assistant-${Date.now()}`,
-                role: 'assistant',
-                content: response.answer,
-                createdAt: new Date().toISOString(),
-                animate: !reduced,
-              })
-              return
-            } catch {
-              if (attempt < ANALYZE_CHAT_RETRIES) {
-                await sleep(ANALYZE_CHAT_RETRY_DELAY_MS)
-                continue
-              }
-            }
-          }
-
-          const cachedAnalysis = trpcUtils.ai.analyze.getData({ clusterId: selectedClusterId })
-          if (cachedAnalysis) {
-            appendMessage(selectedClusterId, {
-              id: `assistant-fallback-cached-${Date.now()}`,
-              role: 'assistant',
-              content: buildAnalyzeFallbackMessage(cachedAnalysis),
-              createdAt: new Date().toISOString(),
-              animate: !reduced,
-            })
-            return
-          }
-
-          for (let attempt = 0; attempt <= ANALYZE_FETCH_RETRIES; attempt += 1) {
-            try {
-              const analysis = await trpcUtils.ai.analyze.fetch({ clusterId: selectedClusterId })
-              appendMessage(selectedClusterId, {
-                id: `assistant-fallback-${Date.now()}`,
-                role: 'assistant',
-                content: buildAnalyzeFallbackMessage(analysis),
-                createdAt: new Date().toISOString(),
-                animate: !reduced,
-              })
-              return
-            } catch {
-              if (attempt < ANALYZE_FETCH_RETRIES) {
-                await sleep(ANALYZE_FETCH_RETRY_DELAY_MS)
-                continue
-              }
-            }
-          }
-
-          appendMessage(selectedClusterId, {
-            id: `assistant-fallback-degraded-${Date.now()}`,
-            role: 'assistant',
-            content:
-              'I could not refresh live AI analysis right now, but the assistant is still available. Please try Analyze Health again in a few seconds.',
-            createdAt: new Date().toISOString(),
-            animate: !reduced,
-          })
-          toast.error('Live AI analysis is temporarily unavailable. Retrying soon usually resolves it.')
-          return
-        }
-
-        const response = await chatMutation.mutateAsync({
+        const streamed = await streamAssistantReply({
           clusterId: selectedClusterId,
           question: trimmed,
+          onDelta: updateStreamingContent,
+          signal: abortController.signal,
         })
 
-        appendMessage(selectedClusterId, {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: response.answer,
-          createdAt: new Date().toISOString(),
-          animate: !reduced,
-        })
+        if (!streamed || !streamed.answer.trim()) {
+          const response = await chatMutation.mutateAsync({
+            clusterId: selectedClusterId,
+            question: trimmed,
+          })
+
+          const current = chatByCluster[selectedClusterId] ?? []
+          const updated = current.map((message) =>
+            message.id === assistantMessageId
+              ? {
+                  ...message,
+                  content: response.answer,
+                }
+              : message,
+          )
+          setClusterMessages(selectedClusterId, updated)
+        }
+
+        void syncHistory()
       } catch {
-        toast.error('AI response failed. Please try again.')
+        setChatError('AI response failed. Please retry.')
+        toast.error('AI response failed. Please retry.')
 
-        appendMessage(selectedClusterId, {
-          id: `assistant-error-${Date.now()}`,
-          role: 'assistant',
-          content: 'I could not reach the AI backend right now. Please retry in a few seconds.',
-          createdAt: new Date().toISOString(),
-          animate: !reduced,
-        })
+        const current = chatByCluster[selectedClusterId] ?? []
+        const updated = current.map((message) =>
+          message.id === assistantMessageId
+            ? {
+                ...message,
+                content:
+                  'I could not reach the AI backend right now. Please retry in a few seconds.',
+              }
+            : message,
+        )
+        setClusterMessages(selectedClusterId, updated)
       } finally {
-        window.requestAnimationFrame(() => {
-          const node = viewportRef.current
-          if (node) node.scrollTop = node.scrollHeight
-        })
+        setStreamingMessageId(null)
+        setIsStreaming(false)
+        abortRef.current = null
+        scrollToBottom()
       }
     },
-    [appendMessage, chatMutation, reduced, selectedClusterId, trpcUtils],
+    [
+      appendMessage,
+      chatByCluster,
+      chatMutation,
+      isStreaming,
+      reduced,
+      scrollToBottom,
+      selectedClusterId,
+      setClusterMessages,
+      syncHistory,
+    ],
   )
 
   useEffect(() => {
+    void syncHistory()
+
+    return () => {
+      abortRef.current?.abort()
+    }
+  }, [syncHistory])
+
+  useEffect(() => {
     if (!quickPrompt) return
-    sendPrompt(quickPrompt.text)
+    void sendPrompt(quickPrompt.text)
     clearQuickPrompt()
   }, [quickPrompt, sendPrompt, clearQuickPrompt])
 
@@ -271,6 +408,24 @@ export function AiChat({
         </span>
       </div>
 
+      {historyError && (
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/10 px-3 py-2 text-xs text-[var(--color-status-warning)]">
+          <div className="inline-flex items-center gap-2">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            {historyError}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              void syncHistory()
+            }}
+            className="rounded-lg border border-[var(--color-status-warning)]/40 px-2 py-1 text-[11px] hover:bg-[var(--color-status-warning)]/10"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       <div
         ref={viewportRef}
         onScroll={(event) => {
@@ -280,8 +435,17 @@ export function AiChat({
       >
         <AnimatePresence initial={false}>
           <div className="space-y-3">
+            {isHistoryLoading && (
+              <div className="flex items-center gap-2 text-xs text-[var(--color-text-dim)]">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Loading conversation history...
+              </div>
+            )}
+
             {visibleMessages.map((message) => {
               const isUser = message.role === 'user'
+              const isStreamingMessage = message.id === streamingMessageId
+
               return (
                 <motion.div
                   key={message.id}
@@ -306,7 +470,14 @@ export function AiChat({
                     {isUser ? (
                       <p className="text-sm leading-6 text-white">{message.content}</p>
                     ) : (
-                      <TypewriterText text={message.content} animate={Boolean(message.animate)} />
+                      <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                        {message.content}
+                        {isStreamingMessage && isStreaming && (
+                          <span className="ml-1 inline-block animate-pulse text-[var(--color-text-dim)]">
+                            ▋
+                          </span>
+                        )}
+                      </p>
                     )}
                   </div>
 
@@ -319,7 +490,7 @@ export function AiChat({
               )
             })}
 
-            {chatMutation.isPending && (
+            {(chatMutation.isPending || isStreaming) && (
               <div className="flex items-center gap-2 text-xs text-[var(--color-text-dim)]">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 AI is analyzing cluster signals...
@@ -328,6 +499,24 @@ export function AiChat({
           </div>
         </AnimatePresence>
       </div>
+
+      {chatError && (
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[var(--color-status-error)]/40 bg-[var(--color-status-error)]/10 px-3 py-2 text-xs text-[var(--color-status-error)]">
+          <span>{chatError}</span>
+          <button
+            type="button"
+            onClick={() => {
+              if (lastPrompt) {
+                void sendPrompt(lastPrompt)
+              }
+            }}
+            disabled={!lastPrompt || isStreaming || chatMutation.isPending}
+            className="rounded-lg border border-[var(--color-status-error)]/40 px-2 py-1 text-[11px] hover:bg-[var(--color-status-error)]/10 disabled:opacity-60"
+          >
+            Retry last prompt
+          </button>
+        </div>
+      )}
 
       <form
         onSubmit={(event) => {
@@ -341,12 +530,12 @@ export function AiChat({
           onChange={(event) => setDraft(event.target.value)}
           placeholder="Ask about health, anomalies, recommendations..."
           aria-label="Ask AI assistant"
-          disabled={!selectedClusterId}
+          disabled={!selectedClusterId || isHistoryLoading}
           className="flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 disabled:opacity-60"
         />
         <button
           type="submit"
-          disabled={!selectedClusterId || !draft.trim() || chatMutation.isPending}
+          disabled={!selectedClusterId || !draft.trim() || isStreaming || chatMutation.isPending}
           className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Send className="h-4 w-4" />
