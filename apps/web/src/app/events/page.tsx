@@ -253,7 +253,7 @@ export default function EventsPage() {
                     </span>
                   </div>
                   <span className="text-[var(--color-text-dim)] font-mono text-[10px] tabular-nums shrink-0">
-                    {timeAgo(event.lastSeen)}
+                    {isClient ? timeAgo(event.lastSeen) : formatTimestamp(event.lastSeen)}
                   </span>
                 </div>
                 <p className="text-[var(--color-text-muted)] text-xs leading-relaxed line-clamp-2">
