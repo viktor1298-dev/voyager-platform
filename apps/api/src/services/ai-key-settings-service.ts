@@ -203,6 +203,43 @@ export class AiKeySettingsService {
     })
   }
 
+  public async deleteUserKey(input: {
+    userId: string
+    provider: AiProviderName
+  }): Promise<{ deleted: boolean }> {
+    const deletedRows = await this.db
+      .delete(userAiKeys)
+      .where(and(eq(userAiKeys.userId, input.userId), eq(userAiKeys.provider, input.provider)))
+      .returning({ id: userAiKeys.id })
+
+    return { deleted: deletedRows.length > 0 }
+  }
+
+  public async testStoredConnection(input: {
+    userId: string
+    provider: AiProviderName
+  }): Promise<{ ok: boolean; provider: AiProviderName; model?: string; error?: string }> {
+    const [row] = await this.db
+      .select()
+      .from(userAiKeys)
+      .where(and(eq(userAiKeys.userId, input.userId), eq(userAiKeys.provider, input.provider)))
+      .limit(1)
+
+    if (!row) {
+      return {
+        ok: false,
+        provider: input.provider,
+        error: 'No saved key found for this provider',
+      }
+    }
+
+    return this.testConnection({
+      provider: row.provider,
+      model: row.model,
+      apiKey: decryptApiKey(row.encryptedKey),
+    })
+  }
+
   public async getPreferredUserProviderConfig(userId: string): Promise<
     | {
         provider: AiProviderName

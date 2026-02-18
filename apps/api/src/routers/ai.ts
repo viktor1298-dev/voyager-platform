@@ -41,6 +41,9 @@ const aiKeyStatusInputSchema = z.object({
   provider: aiProviderSchema.optional(),
 })
 
+const aiKeyProviderInputSchema = z.object({
+  provider: aiProviderSchema,
+})
 
 const LOGICAL_AI_ERROR_CODES = new Set(['NOT_FOUND', 'BAD_REQUEST'])
 const TRANSIENT_AI_ERROR_PATTERNS = [
@@ -550,6 +553,52 @@ export const aiRouter = router({
           provider,
           model: input.model,
           apiKey: input.apiKey,
+        })
+
+        return {
+          success: result.ok,
+          provider: result.provider,
+          model: result.model,
+          error: result.error,
+        }
+      }),
+
+    delete: protectedProcedure
+      .input(aiKeyProviderInputSchema)
+      .output(
+        z.object({
+          deleted: z.boolean(),
+          provider: aiProviderSchema,
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const service = new AiKeySettingsService(ctx.db)
+        const result = await service.deleteUserKey({
+          userId: ctx.user.id,
+          provider: input.provider,
+        })
+
+        return {
+          deleted: result.deleted,
+          provider: input.provider,
+        }
+      }),
+
+    testStoredConnection: protectedProcedure
+      .input(aiKeyProviderInputSchema)
+      .output(
+        z.object({
+          success: z.boolean(),
+          provider: aiProviderSchema,
+          model: z.string().optional(),
+          error: z.string().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const service = new AiKeySettingsService(ctx.db)
+        const result = await service.testStoredConnection({
+          userId: ctx.user.id,
+          provider: input.provider,
         })
 
         return {
