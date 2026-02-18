@@ -5,6 +5,7 @@ import { events, clusters } from '@voyager/db'
 import { and, desc, eq, gte } from 'drizzle-orm'
 import { z } from 'zod'
 import { AiConversationStore } from './ai-conversation-store.js'
+import { AiKeySettingsService } from './ai-key-settings-service.js'
 import {
   type AiChatMessage,
   type AiCompletionRequest,
@@ -128,10 +129,12 @@ async function sleep(ms: number): Promise<void> {
 export class AIService {
   private readonly db: Database
   private readonly conversationStore: AiConversationStore
+  private readonly aiKeySettingsService: AiKeySettingsService
 
   public constructor(ctx: ServiceContext) {
     this.db = ctx.db
     this.conversationStore = new AiConversationStore(ctx.db)
+    this.aiKeySettingsService = new AiKeySettingsService(ctx.db)
   }
 
   private async withDbRetry<T>(operation: () => Promise<T>, fallback?: () => T): Promise<T> {
@@ -365,7 +368,10 @@ export class AIService {
     onToken: (token: string) => Promise<void> | void,
   ): Promise<{ threadId?: string; provider?: string; model?: string }> {
     const analysis = await this.analyzeClusterHealth(params.clusterId, params.snapshot)
-    const config = readAiProviderConfigFromEnv()
+    const config = params.userId
+      ? (await this.aiKeySettingsService.getPreferredUserProviderConfig(params.userId)) ??
+        readAiProviderConfigFromEnv()
+      : readAiProviderConfigFromEnv()
     const client = new AiProviderClient(config)
 
     const promptMessages: AiChatMessage[] = []

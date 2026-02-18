@@ -78,6 +78,20 @@
       "when": 1771432800000,
       "tag": "0010_shared_dashboards_team_scope",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1771480000000,
+      "tag": "0011_user_ai_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1771480001000,
+      "tag": "0012_user_ai_keys_guards",
+      "breakpoints": true
     }
   ]
 }
