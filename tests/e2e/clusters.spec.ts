@@ -24,13 +24,35 @@ test.describe('Clusters — CRUD Operations', () => {
   test('should view cluster detail', async ({ page }) => {
     await page.goto('/clusters');
 
-    const firstRow = page.locator('tbody tr').first();
+    const table = page.locator('table').first();
+    await expect(table).toBeVisible();
+
+    const nameHeader = table.getByRole('columnheader', { name: /name/i }).first();
+    await expect(nameHeader).toBeVisible();
+
+    const headers = await table.locator('thead th').allTextContents();
+    const nameColumnIndex = headers.findIndex((headerText) => /name/i.test(headerText.trim()));
+    expect(nameColumnIndex).toBeGreaterThanOrEqual(0);
+
+    const firstRow = table.locator('tbody tr').first();
     await expect(firstRow).toBeVisible();
-    const clusterName = (await firstRow.locator('td').first().innerText()).trim();
+
+    await expect
+      .poll(async () => {
+        const text = await firstRow
+          .locator(`td:nth-child(${nameColumnIndex + 1})`)
+          .innerText();
+        return text.trim();
+      })
+      .not.toBe('');
+
+    const clusterName = (
+      await firstRow.locator(`td:nth-child(${nameColumnIndex + 1})`).innerText()
+    ).trim();
 
     await firstRow.click();
     await expect(page).toHaveURL(/\/clusters\/.+/);
-    await expect(page.getByText(clusterName).first()).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: clusterName })).toBeVisible();
   });
 
   test('should show delete action for existing cluster row', async ({ page }) => {
