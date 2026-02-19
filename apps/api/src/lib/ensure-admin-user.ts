@@ -1,11 +1,12 @@
-import { db, user as userTable } from '@voyager/db'
-import { eq } from 'drizzle-orm'
+import { account as accountTable, db, user as userTable } from '@voyager/db'
+import { and, eq } from 'drizzle-orm'
 import { auth } from './auth.js'
 import { createBootstrapUser } from './auth-bootstrap.js'
 
 const DEFAULT_ADMIN_EMAIL = 'admin@voyager.local'
 const DEFAULT_ADMIN_PASSWORD = 'admin123'
 const DEFAULT_ADMIN_NAME = 'Voyager Admin'
+const LEGACY_SEEDED_ADMIN_USER_ID = 'admin-001'
 
 const internalHeaders = new Headers({ 'x-internal-seed': 'true' })
 
@@ -15,6 +16,11 @@ type EnsureAdminUserOptions = {
    * Never enabled in runtime server startup path.
    */
   allowLocalDevDefaults?: boolean
+}
+
+type CredentialAccountRecord = {
+  providerId: string | null
+  password: string | null
 }
 
 function getAdminCredentials(options: EnsureAdminUserOptions) {
@@ -44,6 +50,18 @@ function getAdminCredentials(options: EnsureAdminUserOptions) {
   )
 }
 
+function isKnownLegacySeededAdminFingerprint(userId: string, email: string) {
+  return userId === LEGACY_SEEDED_ADMIN_USER_ID && email === DEFAULT_ADMIN_EMAIL
+}
+
+function isLegacyCredentialHash(account: CredentialAccountRecord | null | undefined) {
+  if (!account?.providerId || !account.password) return false
+  if (account.providerId !== 'credential') return false
+
+  // Legacy Helm SQL bootstrap inserted pgcrypto/bcrypt hashes that Better-Auth cannot parse.
+  return /^\$2[aby]\$/.test(account.password)
+}
+
 export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Promise<void> {
   const { adminEmail, adminPassword, adminName } = getAdminCredentials(options)
 
@@ -62,6 +80,24 @@ export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Pro
   } catch (error) {
     console.error('Failed to query admin user by email', { adminEmail, error })
     throw error
+  }
+
+  if (existingUserId && isKnownLegacySeededAdminFingerprint(existingUserId, adminEmail)) {
+    const [credentialAccount] = await db
+      .select({ providerId: accountTable.providerId, password: accountTable.password })
+      .from(accountTable)
+      .where(and(eq(accountTable.userId, existingUserId), eq(accountTable.providerId, 'credential')))
+      .limit(1)
+
+    if (isLegacyCredentialHash(credentialAccount)) {
+      console.warn('Detected legacy SQL-seeded admin credential, replacing bootstrap admin record', {
+        adminEmail,
+        existingUserId,
+      })
+      await db.delete(userTable).where(eq(userTable.id, existingUserId))
+      existingUserId = null
+      existingUserRole = null
+    }
   }
 
   if (existingUserId) {
@@ -91,11 +127,16 @@ export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Pro
     throw error
   }
 
+  if (!createdUserId) {
+    throw new Error('Failed to create admin user — no user id returned')
+  }
+
   try {
     await auth.api.setRole({
       headers: internalHeaders,
       body: { userId: createdUserId, role: 'admin' },
     })
+    console.info('Bootstrap admin user ensured via Better-Auth', { adminEmail, createdUserId })
   } catch (error) {
     console.error('Failed to set admin role for created user', { adminEmail, createdUserId, error })
     throw error
