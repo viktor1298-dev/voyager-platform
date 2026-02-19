@@ -9,6 +9,8 @@ import { AiProviderClient } from './ai-provider.js'
 const KEY_ALGORITHM = 'aes-256-gcm'
 const KEY_IV_BYTES = 12
 
+type UserAiKeyProvider = 'openai' | 'claude'
+
 const PROVIDER_VALIDATION_MESSAGES = {
   invalidCredentials: 'Invalid provider credentials. Please verify the API key and model.',
   modelUnavailable: 'The selected model is unavailable for this account.',
@@ -56,6 +58,13 @@ function sanitizeProviderValidationError(error: unknown): string {
   return PROVIDER_VALIDATION_MESSAGES.generic
 }
 
+function toClientProvider(provider: UserAiKeyProvider): AiProviderName {
+  return provider === 'claude' ? 'anthropic' : 'openai'
+}
+
+function toStoredProvider(provider: AiProviderName): UserAiKeyProvider {
+  return provider === 'anthropic' ? 'claude' : 'openai'
+}
 
 function resolveKeyMaterial(): Buffer {
   const raw = process.env.AI_KEYS_ENCRYPTION_KEY
@@ -143,14 +152,14 @@ export class AiKeySettingsService {
     updatedAt: Date
   }> {
     const encrypted = encryptApiKey(input.apiKey.trim())
-
+    const storedProvider = toStoredProvider(input.provider)
     const updatedAt = new Date()
 
     await this.db
       .insert(userAiKeys)
       .values({
         userId: input.userId,
-        provider: input.provider,
+        provider: storedProvider,
         encryptedKey: encrypted,
         model: input.model,
       })
@@ -186,7 +195,10 @@ export class AiKeySettingsService {
       .from(userAiKeys)
       .where(
         input.provider
-          ? and(eq(userAiKeys.userId, input.userId), eq(userAiKeys.provider, input.provider))
+          ? and(
+              eq(userAiKeys.userId, input.userId),
+              eq(userAiKeys.provider, toStoredProvider(input.provider)),
+            )
           : eq(userAiKeys.userId, input.userId),
       )
       .orderBy(desc(userAiKeys.updatedAt))
@@ -194,7 +206,7 @@ export class AiKeySettingsService {
     return rows.map((row) => {
       const decrypted = decryptApiKey(row.encryptedKey)
       return {
-        provider: row.provider,
+        provider: toClientProvider(row.provider),
         model: row.model,
         maskedKey: maskApiKey(decrypted),
         hasKey: true as const,
@@ -209,7 +221,12 @@ export class AiKeySettingsService {
   }): Promise<{ deleted: boolean }> {
     const deletedRows = await this.db
       .delete(userAiKeys)
-      .where(and(eq(userAiKeys.userId, input.userId), eq(userAiKeys.provider, input.provider)))
+      .where(
+        and(
+          eq(userAiKeys.userId, input.userId),
+          eq(userAiKeys.provider, toStoredProvider(input.provider)),
+        ),
+      )
       .returning({ id: userAiKeys.id })
 
     return { deleted: deletedRows.length > 0 }
@@ -222,7 +239,12 @@ export class AiKeySettingsService {
     const [row] = await this.db
       .select()
       .from(userAiKeys)
-      .where(and(eq(userAiKeys.userId, input.userId), eq(userAiKeys.provider, input.provider)))
+      .where(
+        and(
+          eq(userAiKeys.userId, input.userId),
+          eq(userAiKeys.provider, toStoredProvider(input.provider)),
+        ),
+      )
       .limit(1)
 
     if (!row) {
@@ -234,7 +256,7 @@ export class AiKeySettingsService {
     }
 
     return this.testConnection({
-      provider: row.provider,
+      provider: toClientProvider(row.provider),
       model: row.model,
       apiKey: decryptApiKey(row.encryptedKey),
     })
@@ -262,6 +284,7 @@ export class AiKeySettingsService {
       return undefined
     }
 
+    const provider = toClientProvider(row.provider)
     const timeoutMs = Number.parseInt(
       process.env.AI_TIMEOUT_MS ?? `${AI_CONFIG.REQUEST_TIMEOUT_MS}`,
       10,
@@ -272,13 +295,12 @@ export class AiKeySettingsService {
     )
 
     return {
-      provider: row.provider,
+      provider,
       model: row.model,
       apiKey: decryptApiKey(row.encryptedKey),
       timeoutMs,
       maxOutputTokens,
-      baseUrl:
-        row.provider === 'anthropic' ? process.env.ANTHROPIC_BASE_URL : process.env.OPENAI_BASE_URL,
+      baseUrl: provider === 'anthropic' ? process.env.ANTHROPIC_BASE_URL : process.env.OPENAI_BASE_URL,
     }
   }
 

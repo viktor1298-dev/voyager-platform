@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "rm -rf dist && pnpm --filter @voyager/db build && tsc --project tsconfig.build.json",
+    "build": "rm -rf dist && pnpm --filter @voyager/types build && pnpm --filter @voyager/db build && tsc --project tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src/",
     "start": "node dist/server.js",

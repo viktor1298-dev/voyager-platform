@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { AiConversationStore } from './ai-conversation-store.js'
 import { type AiChatMessage, type AiCompletionRequest, AiProviderClient } from './ai-provider.js'
 import { decryptApiKey } from './ai-key-crypto.js'
+import { AiKeySettingsService } from './ai-key-settings-service.js'
 
 const AI_SCORE = {
   MAX: 100,
