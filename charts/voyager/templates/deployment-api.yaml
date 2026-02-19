@@ -44,6 +44,8 @@ spec:
           ports:
             - containerPort: {{ .Values.api.port }}
           env:
+            - name: NODE_ENV
+              value: {{ default "development" .Values.env.NODE_ENV | quote }}
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://jaeger:4318"
           envFrom:

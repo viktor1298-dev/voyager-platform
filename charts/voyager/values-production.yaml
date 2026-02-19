@@ -1,6 +1,9 @@
 # Production values for Voyager Platform
 namespace: voyager
 
+env:
+  NODE_ENV: production
+
 web:
   replicaCount: 2
   image:
@@ -124,7 +127,9 @@ rbac:
 secret:
   dbPassword: ""
   jwtSecret: ""
+  adminEmail: ""
   adminPassword: ""
+  adminName: "Voyager Admin"
 
 nodeAffinity:
   preferredDuringSchedulingIgnoredDuringExecution:
