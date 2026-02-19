@@ -1,6 +1,7 @@
 import { db, user as userTable } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import { auth } from './auth.js'
+import { createBootstrapUser } from './auth-bootstrap.js'
 
 const DEFAULT_ADMIN_EMAIL = 'admin@voyager.local'
 const DEFAULT_ADMIN_PASSWORD = 'admin123'
@@ -80,22 +81,14 @@ export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Pro
 
   let createdUserId: string | null = null
   try {
-    const result = await auth.api.signUpEmail({
-      body: {
-        email: adminEmail,
-        password: adminPassword,
-        name: adminName,
-      },
+    createdUserId = await createBootstrapUser({
+      email: adminEmail,
+      password: adminPassword,
+      name: adminName,
     })
-
-    createdUserId = result?.user?.id ?? null
   } catch (error) {
     console.error('Failed to create admin user', { adminEmail, error })
     throw error
-  }
-
-  if (!createdUserId) {
-    throw new Error('Failed to create admin user — no user returned')
   }
 
   try {

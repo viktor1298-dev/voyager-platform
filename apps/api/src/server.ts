@@ -9,6 +9,7 @@ import { fastifyTRPCOpenApiPlugin } from 'trpc-to-openapi'
 import { UNAUTHORIZED_RESPONSE, shouldRequireAuth } from './lib/auth-guard.js'
 import { auth } from './lib/auth.js'
 import { resolveExternalRequestUrl } from './lib/auth-request.js'
+import { mapAuthRouteErrorToBody, mapAuthRouteErrorToStatus } from './lib/auth-error-mapping.js'
 import { ensureAdminUser } from './lib/ensure-admin-user.js'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
@@ -127,7 +128,9 @@ const handleAuthRoute = async (request: FastifyRequest, reply: FastifyReply) => 
     reply.send(response.body ? await response.text() : null)
   } catch (error) {
     app.log.error(error, 'Authentication Error')
-    reply.status(500).send({ error: 'Internal authentication error', code: 'AUTH_FAILURE' })
+    const status = mapAuthRouteErrorToStatus(request.url, error)
+    const body = mapAuthRouteErrorToBody(request.url, error)
+    reply.status(status).send(body)
   }
 }
 
