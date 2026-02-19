@@ -2,18 +2,10 @@ import { db } from '@voyager/db'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { admin, genericOAuth, microsoftEntraId } from 'better-auth/plugins'
+import { resolveTrustedOrigins } from './auth-origins.js'
 import { getEntraAuthProvider, syncEntraGroupMembership } from './sso.js'
 
-const DEFAULT_ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:9000',
-  'http://voyager-platform.voyagerlabs.co',
-  'https://voyager-platform.voyagerlabs.co',
-] as const
-
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
-  : [...DEFAULT_ALLOWED_ORIGINS]
+const ALLOWED_ORIGINS = resolveTrustedOrigins(process.env)
 const SESSION_EXPIRY_SECONDS = Number.parseInt(process.env.SESSION_EXPIRY_SECONDS || '86400', 10)
 
 const microsoftFromEnv =
