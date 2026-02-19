@@ -6,14 +6,16 @@ import swaggerUi from '@fastify/swagger-ui'
 import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify'
 import { fastifyTRPCOpenApiPlugin } from 'trpc-to-openapi'
-import { shouldRequireAuth, UNAUTHORIZED_RESPONSE } from './lib/auth-guard.js'
+import { UNAUTHORIZED_RESPONSE, shouldRequireAuth } from './lib/auth-guard.js'
 import { auth } from './lib/auth.js'
-import { generateOpenApiSpec } from './lib/openapi.js'
+import { resolveExternalRequestUrl } from './lib/auth-request.js'
+import { ensureAdminUser } from './lib/ensure-admin-user.js'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
+import { generateOpenApiSpec } from './lib/openapi.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
 import { shutdownTelemetry } from './lib/telemetry.js'
-import { registerAiStreamRoute } from './routes/ai-stream.js'
 import { type AppRouter, appRouter } from './routers/index.js'
+import { registerAiStreamRoute } from './routes/ai-stream.js'
 import { createContext } from './trpc.js'
 
 // Initialize Sentry early
@@ -102,8 +104,12 @@ app.register(async (instance) => {
 // Better-Auth handler — all auth routes via /api/auth/*
 const handleAuthRoute = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const hostHeader = Array.isArray(request.headers.host) ? request.headers.host[0] : request.headers.host
-    const url = new URL(request.url, `http://${hostHeader ?? 'localhost'}`)
+    const url = resolveExternalRequestUrl(request.url, {
+      headers: request.headers,
+      trustedProtocol: request.protocol,
+      trustedHost: request.host,
+      trustForwardedHeaders: Array.isArray(request.ips) && request.ips.length > 0,
+    })
     const headers = new Headers()
     for (const [key, value] of Object.entries(request.headers)) {
       if (value) headers.append(key, value.toString())
@@ -169,6 +175,8 @@ app.get('/system-health', { config: { rateLimit: false } }, async () => ({ statu
 
 const start = async () => {
   try {
+    await ensureAdminUser({ allowLocalDevDefaults: false })
+
     const PORT = Number.parseInt(process.env.PORT || '4000', 10)
     const HOST = process.env.HOST || '0.0.0.0'
     await app.listen({ port: PORT, host: HOST })
