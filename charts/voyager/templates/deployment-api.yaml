@@ -1,3 +1,5 @@
+{{- $env := default (dict) .Values.env -}}
+{{- $nodeEnv := default "development" (index $env "NODE_ENV") -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -45,7 +47,7 @@ spec:
             - containerPort: {{ .Values.api.port }}
           env:
             - name: NODE_ENV
-              value: {{ default "development" .Values.env.NODE_ENV | quote }}
+              value: {{ $nodeEnv | quote }}
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://jaeger:4318"
           envFrom:
