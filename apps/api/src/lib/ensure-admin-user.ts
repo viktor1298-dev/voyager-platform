@@ -1,5 +1,5 @@
-import { db, user as userTable } from '@voyager/db'
-import { eq } from 'drizzle-orm'
+import { account as accountTable, db, user as userTable } from '@voyager/db'
+import { and, eq } from 'drizzle-orm'
 import { auth } from './auth.js'
 import { createBootstrapUser } from './auth-bootstrap.js'
 
@@ -44,6 +44,13 @@ function getAdminCredentials(options: EnsureAdminUserOptions) {
   )
 }
 
+function isConfirmedLegacyCredentialHash(hash: string | null | undefined) {
+  if (typeof hash !== 'string' || hash.length === 0) return false
+  // Legacy Helm SQL bootstrap inserted pgcrypto/bcrypt hashes that Better-Auth cannot parse.
+  // Re-bootstrap that account through Better-Auth APIs only when legacy format is clearly confirmed.
+  return /^\$2[aby]\$\d{2}\$/i.test(hash)
+}
+
 export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Promise<void> {
   const { adminEmail, adminPassword, adminName } = getAdminCredentials(options)
 
@@ -62,6 +69,19 @@ export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Pro
   } catch (error) {
     console.error('Failed to query admin user by email', { adminEmail, error })
     throw error
+  }
+
+  if (existingUserId) {
+    const [credentialAccount] = await db
+      .select({ password: accountTable.password })
+      .from(accountTable)
+      .where(and(eq(accountTable.userId, existingUserId), eq(accountTable.providerId, 'credential')))
+      .limit(1)
+
+    if (credentialAccount && isConfirmedLegacyCredentialHash(credentialAccount.password)) {
+      await db.delete(userTable).where(eq(userTable.id, existingUserId))
+      existingUserId = null
+    }
   }
 
   if (existingUserId) {
