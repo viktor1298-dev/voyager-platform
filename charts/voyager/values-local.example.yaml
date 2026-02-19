@@ -1,0 +1,23 @@
+# Example local developer-only overrides for bootstrap users.
+# Copy to charts/voyager/values-local.yaml (gitignored) and fill with real local values.
+# Use with: helm template voyager ./charts/voyager -n voyager -f charts/voyager/values-dev.yaml -f charts/voyager/values-local.yaml
+
+env:
+  NODE_ENV: development
+
+# Required runtime secrets for local install/render
+secret:
+  dbPassword: "<fill-db-password>"
+  jwtSecret: "<fill-jwt-secret>"
+  adminEmail: "<fill-admin-email@example.local>"
+  adminPassword: "<fill-admin-password>"
+  adminName: "Voyager Admin"
+
+devBootstrap:
+  enabled: true
+  adminEmail: "<fill-bootstrap-admin-email@example.local>"
+  adminPassword: "<fill-bootstrap-admin-password>"
+  adminName: "<fill-bootstrap-admin-name>"
+  # Optional viewer account
+  viewerEmail: "<fill-viewer-email@example.local>"
+  viewerPassword: "<fill-viewer-password>"

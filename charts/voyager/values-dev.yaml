@@ -16,7 +16,8 @@ config:
   redisUrl: "redis://redis:6379"
 
 # Dev bootstrap credentials must be provided from local untracked file:
-#   helm upgrade ... -f charts/voyager/values-local.yaml
+#   cp charts/voyager/values-local.example.yaml charts/voyager/values-local.yaml
+#   helm template voyager ./charts/voyager -n voyager -f charts/voyager/values-dev.yaml -f charts/voyager/values-local.yaml
 # Keep disabled here to avoid committing credentials.
 devBootstrap:
   enabled: false
@@ -27,5 +28,5 @@ devBootstrap:
   viewerPassword: ""
 
 secret:
-  dbPassword: voyager_dev
-  jwtSecret: dev-jwt-secret
+  dbPassword: ""
+  jwtSecret: ""

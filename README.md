@@ -139,9 +139,13 @@ eval $(minikube docker-env)
 docker build -f docker/Dockerfile.api -t voyager-api:dev .
 docker build -f docker/Dockerfile.web -t voyager-web:dev .
 
-# Deploy with Helm
+# Prepare local untracked secrets file once
+cp charts/voyager/values-local.example.yaml charts/voyager/values-local.yaml
+
+# Deploy with Helm (requires local overrides)
 helm upgrade --install voyager ./charts/voyager \
   -f charts/voyager/values-dev.yaml \
+  -f charts/voyager/values-local.yaml \
   --namespace voyager --create-namespace
 
 # Verify
