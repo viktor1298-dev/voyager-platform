@@ -9,7 +9,7 @@ import { ensureAdminUser } from '../lib/ensure-admin-user.js'
 
 async function seedAdmin() {
   console.log('🌱 Seeding admin user via Better-Auth...')
-  await ensureAdminUser()
+  await ensureAdminUser({ allowLocalDevDefaults: true })
   console.log('🎉 Admin seed complete!')
 }
 
