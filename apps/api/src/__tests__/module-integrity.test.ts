@@ -10,7 +10,8 @@ describe('api module integrity', () => {
   it('keeps ensure-admin-user module referenced by server import', () => {
     const serverPath = resolve(__dirname, '../server.ts')
     const serverSource = readFileSync(serverPath, 'utf8')
-    expect(serverSource).toContain("./lib/ensure-admin-user.js")
+    expect(serverSource).toMatch(/from ['"]\.\/lib\/ensure-admin-user\.js['"]/)
+    expect(serverSource).toMatch(/ensureAdminUser\s*\(/)
 
     const ensureAdminUserPath = resolve(__dirname, '../lib/ensure-admin-user.ts')
     expect(existsSync(ensureAdminUserPath)).toBe(true)
