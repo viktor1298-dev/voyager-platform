@@ -6,6 +6,7 @@ export {
   aiRecommendationStatusEnum,
   aiRecommendations,
   aiThreads,
+  userAiKeyProviderEnum,
   userAiKeys,
 } from './ai.js'
 export { alertHistory, alerts } from './alerts.js'

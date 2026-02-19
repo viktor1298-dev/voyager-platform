@@ -1,5 +1,6 @@
 import { router } from '../trpc.js'
 import { aiRouter } from './ai.js'
+import { aiKeysRouter } from './ai-keys.js'
 import { alertsRouter } from './alerts.js'
 import { anomaliesRouter } from './anomalies.js'
 import { authorizationRouter, teamsRouter } from './authorization.js'
@@ -22,9 +23,7 @@ import { usersRouter } from './users.js'
 
 export const appRouter = router({
   ai: aiRouter,
-  // Backward-compatible alias used by deployed/web clients that still call top-level aiKeys.* procedures.
-  // Keep in sync with ai.keys router.
-  aiKeys: aiRouter.keys,
+  aiKeys: aiKeysRouter,
   alerts: alertsRouter,
   anomalies: anomaliesRouter,
   audit: auditRouter,

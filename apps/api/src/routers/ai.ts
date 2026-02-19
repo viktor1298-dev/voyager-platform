@@ -1,6 +1,4 @@
 import { TRPCError } from '@trpc/server'
-import { aiRecommendations } from '@voyager/db'
-import { and, desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { AiKeySettingsService } from '../services/ai-key-settings-service.js'
@@ -17,6 +15,7 @@ const chatInputSchema = z.object({
   question: z.string().min(1).max(2000),
   snapshot: clusterSnapshotSchema.optional(),
   threadId: z.string().uuid().optional(),
+  provider: z.enum(['openai', 'claude']).optional(),
 })
 
 const suggestionsInputSchema = z.object({
@@ -200,7 +199,7 @@ export const aiRouter = router({
         answer: z.string(),
         conversationId: z.string().uuid(),
         threadId: z.string().uuid().optional(),
-        provider: z.string().optional(),
+        provider: z.enum(['openai', 'anthropic']).optional(),
         model: z.string().optional(),
       }),
     )
@@ -209,7 +208,7 @@ export const aiRouter = router({
         const aiService = new AIService({ db: ctx.db })
         let answer: string
         let threadId: string | undefined = input.threadId
-        let provider: string | undefined
+        let provider: 'openai' | 'anthropic' | undefined
         let model: string | undefined
 
         try {
@@ -219,22 +218,23 @@ export const aiRouter = router({
             snapshot: input.snapshot,
             threadId: input.threadId,
             userId: ctx.user.id,
+            provider: input.provider,
           })
           answer = aiResult.answer
           threadId = aiResult.threadId
           provider = aiResult.provider
           model = aiResult.model
         } catch (aiError) {
-          if (isTransientAiError(aiError)) {
-            console.error('[ai.chat] AI answer generation failed due to transient error', {
-              clusterId: input.clusterId,
-              userId: ctx.user.id,
-              error: aiError instanceof Error ? aiError.message : String(aiError),
-            })
-            throw new TRPCError({
-              code: 'SERVICE_UNAVAILABLE',
-              message: 'AI provider is temporarily unavailable. Please retry shortly.',
-            })
+          if (
+            aiError instanceof TRPCError &&
+            aiError.code === 'BAD_REQUEST' &&
+            aiError.message === 'NO_API_KEY'
+          ) {
+            throw aiError
+          }
+
+          if (!isTransientAiError(aiError)) {
+            throw aiError
           }
 
           throw aiError
@@ -248,6 +248,7 @@ export const aiRouter = router({
               question: input.question,
               answer,
               threadId: input.threadId,
+              provider: input.provider,
             })
             threadId = persisted.threadId
             provider = persisted.provider
@@ -623,32 +624,7 @@ export const aiRouter = router({
         const aiService = new AIService({ db: ctx.db })
         const analysis = await aiService.analyzeClusterHealth(input.clusterId, input.snapshot)
 
-        for (const recommendation of analysis.recommendations) {
-          const [existing] = await ctx.db
-            .select({ id: aiRecommendations.id })
-            .from(aiRecommendations)
-            .where(
-              and(
-                eq(aiRecommendations.clusterId, input.clusterId),
-                eq(aiRecommendations.title, recommendation.title),
-                eq(aiRecommendations.status, 'open'),
-              ),
-            )
-            .orderBy(desc(aiRecommendations.createdAt))
-            .limit(1)
-
-          if (!existing) {
-            await ctx.db.insert(aiRecommendations).values({
-              clusterId: input.clusterId,
-              severity: recommendation.severity,
-              title: recommendation.title,
-              description: recommendation.description,
-              action: recommendation.action,
-              status: 'open',
-            })
-          }
-        }
-
+        // Read-only AI rule: compute and return recommendations only.
         await logAudit(ctx, 'ai.suggestions', 'cluster', input.clusterId, {
           recommendationCount: analysis.recommendations.length,
           score: analysis.score,
