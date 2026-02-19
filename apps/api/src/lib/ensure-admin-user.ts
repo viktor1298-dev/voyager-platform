@@ -25,8 +25,11 @@ type CredentialAccountRecord = {
 
 type AuthApiError = {
   statusCode?: number
-  status?: string
+  status?: string | number
   message?: string
+  code?: string | number
+  cause?: unknown
+  response?: unknown
 }
 
 function getAdminCredentials(options: EnsureAdminUserOptions) {
@@ -70,8 +73,40 @@ function isLegacyCredentialHash(account: CredentialAccountRecord | null | undefi
 
 function isUnauthorizedAuthApiError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
-  const authError = error as AuthApiError
-  return authError.statusCode === 401 || authError.status === 'UNAUTHORIZED'
+
+  const queue: unknown[] = [error]
+  const visited = new Set<unknown>()
+
+  while (queue.length > 0 && visited.size < 20) {
+    const current = queue.shift()
+    if (!current || typeof current !== 'object' || visited.has(current)) continue
+    visited.add(current)
+
+    const authError = current as AuthApiError
+    const record = current as Record<string, unknown>
+
+    const message = typeof authError.message === 'string' ? authError.message.toLowerCase() : ''
+    const statusLike = [authError.statusCode, authError.status, authError.code, record.httpStatus]
+
+    if (
+      statusLike.includes(401) ||
+      statusLike.includes('UNAUTHORIZED') ||
+      statusLike.includes('AUTH_UNAUTHORIZED') ||
+      message.includes('unauthorized') ||
+      message.includes('not authorized') ||
+      message.includes('status code 401')
+    ) {
+      return true
+    }
+
+    if (authError.cause) queue.push(authError.cause)
+    if (authError.response) queue.push(authError.response)
+    if (record.error) queue.push(record.error)
+    if (record.data) queue.push(record.data)
+    if (record.body) queue.push(record.body)
+  }
+
+  return false
 }
 
 async function setAdminRoleWithBootstrapFallback(userId: string, adminEmail: string): Promise<void> {
@@ -91,6 +126,18 @@ async function setAdminRoleWithBootstrapFallback(userId: string, adminEmail: str
     })
 
     await db.update(userTable).set({ role: 'admin' }).where(eq(userTable.id, userId))
+
+    const [updatedUser] = await db
+      .select({ role: userTable.role })
+      .from(userTable)
+      .where(eq(userTable.id, userId))
+      .limit(1)
+
+    if (updatedUser?.role !== 'admin') {
+      throw new Error(
+        `Bootstrap fallback failed to verify admin role assignment for user ${userId} (${adminEmail})`,
+      )
+    }
   }
 }
 

@@ -52,7 +52,7 @@ describe('ensureAdminUser', () => {
 
   beforeEach(() => {
     vi.resetModules()
-    vi.clearAllMocks()
+    vi.resetAllMocks()
 
     selectMock.mockReturnValue({ from: selectFromMock })
     selectFromMock.mockReturnValue({ where: selectWhereMock })
@@ -113,7 +113,9 @@ describe('ensureAdminUser', () => {
   })
 
   it('falls back to direct role update when setRole is unauthorized for existing user', async () => {
-    selectLimitMock.mockResolvedValueOnce([{ id: 'admin-existing', role: 'user' }])
+    selectLimitMock
+      .mockResolvedValueOnce([{ id: 'admin-existing', role: 'user' }])
+      .mockResolvedValueOnce([{ role: 'admin' }])
     setRoleMock.mockRejectedValueOnce({ statusCode: 401, status: 'UNAUTHORIZED' })
 
     const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
@@ -123,6 +125,39 @@ describe('ensureAdminUser', () => {
     expect(updateSetMock).toHaveBeenCalledWith({ role: 'admin' })
     expect(updateWhereMock).toHaveBeenCalledTimes(1)
     expect(createBootstrapUserMock).not.toHaveBeenCalled()
+  })
+
+  it('falls back and verifies role update for created user when setRole returns nested unauthorized error', async () => {
+    selectLimitMock.mockResolvedValueOnce([]).mockResolvedValueOnce([{ role: 'admin' }])
+
+    createBootstrapUserMock.mockResolvedValueOnce('admin-created')
+    setRoleMock.mockRejectedValueOnce({
+      message: 'setRole failed',
+      cause: {
+        response: {
+          status: 401,
+          message: 'Unauthorized',
+        },
+      },
+    })
+
+    const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
+    await expect(ensureAdminUser()).resolves.toBeUndefined()
+
+    expect(createBootstrapUserMock).toHaveBeenCalledTimes(1)
+    expect(updateMock).toHaveBeenCalledTimes(1)
+    expect(updateSetMock).toHaveBeenCalledWith({ role: 'admin' })
+    expect(updateWhereMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('throws explicit error when fallback role update cannot be verified', async () => {
+    selectLimitMock
+      .mockResolvedValueOnce([{ id: 'admin-existing', role: 'user' }])
+      .mockResolvedValueOnce([{ role: 'user' }])
+    setRoleMock.mockRejectedValueOnce({ statusCode: 401 })
+
+    const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
+    await expect(ensureAdminUser()).rejects.toThrow('Bootstrap fallback failed to verify admin role assignment')
   })
 
   it('still throws when setRole fails with non-authorization error', async () => {
