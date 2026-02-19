@@ -8,6 +8,10 @@ const selectMock = vi.fn(() => ({ from: selectFromMock }))
 const deleteWhereMock = vi.fn()
 const deleteMock = vi.fn(() => ({ where: deleteWhereMock }))
 
+const updateWhereMock = vi.fn()
+const updateSetMock = vi.fn(() => ({ where: updateWhereMock }))
+const updateMock = vi.fn(() => ({ set: updateSetMock }))
+
 const setRoleMock = vi.fn()
 const createBootstrapUserMock = vi.fn()
 
@@ -15,6 +19,7 @@ vi.mock('@voyager/db', () => ({
   db: {
     select: selectMock,
     delete: deleteMock,
+    update: updateMock,
   },
   user: {
     id: 'id',
@@ -53,6 +58,8 @@ describe('ensureAdminUser', () => {
     selectFromMock.mockReturnValue({ where: selectWhereMock })
     selectWhereMock.mockReturnValue({ limit: selectLimitMock })
     deleteMock.mockReturnValue({ where: deleteWhereMock })
+    updateMock.mockReturnValue({ set: updateSetMock })
+    updateSetMock.mockReturnValue({ where: updateWhereMock })
 
     vi.stubEnv('NODE_ENV', 'test')
     vi.stubEnv('ADMIN_EMAIL', 'admin@voyager.local')
@@ -103,5 +110,28 @@ describe('ensureAdminUser', () => {
         body: { userId: 'admin-new', role: 'admin' },
       }),
     )
+  })
+
+  it('falls back to direct role update when setRole is unauthorized for existing user', async () => {
+    selectLimitMock.mockResolvedValueOnce([{ id: 'admin-existing', role: 'user' }])
+    setRoleMock.mockRejectedValueOnce({ statusCode: 401, status: 'UNAUTHORIZED' })
+
+    const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
+    await expect(ensureAdminUser()).resolves.toBeUndefined()
+
+    expect(updateMock).toHaveBeenCalledTimes(1)
+    expect(updateSetMock).toHaveBeenCalledWith({ role: 'admin' })
+    expect(updateWhereMock).toHaveBeenCalledTimes(1)
+    expect(createBootstrapUserMock).not.toHaveBeenCalled()
+  })
+
+  it('still throws when setRole fails with non-authorization error', async () => {
+    selectLimitMock.mockResolvedValueOnce([{ id: 'admin-existing', role: 'user' }])
+    setRoleMock.mockRejectedValueOnce(new Error('boom'))
+
+    const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
+    await expect(ensureAdminUser()).rejects.toThrow('boom')
+
+    expect(updateMock).not.toHaveBeenCalled()
   })
 })

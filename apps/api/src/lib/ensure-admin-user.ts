@@ -23,6 +23,12 @@ type CredentialAccountRecord = {
   password: string | null
 }
 
+type AuthApiError = {
+  statusCode?: number
+  status?: string
+  message?: string
+}
+
 function getAdminCredentials(options: EnsureAdminUserOptions) {
   const adminEmail = process.env.ADMIN_EMAIL
   const adminPassword = process.env.ADMIN_PASSWORD
@@ -60,6 +66,32 @@ function isLegacyCredentialHash(account: CredentialAccountRecord | null | undefi
 
   // Legacy Helm SQL bootstrap inserted pgcrypto/bcrypt hashes that Better-Auth cannot parse.
   return /^\$2[aby]\$/.test(account.password)
+}
+
+function isUnauthorizedAuthApiError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const authError = error as AuthApiError
+  return authError.statusCode === 401 || authError.status === 'UNAUTHORIZED'
+}
+
+async function setAdminRoleWithBootstrapFallback(userId: string, adminEmail: string): Promise<void> {
+  try {
+    await auth.api.setRole({
+      headers: internalHeaders,
+      body: { userId, role: 'admin' },
+    })
+  } catch (error) {
+    if (!isUnauthorizedAuthApiError(error)) {
+      throw error
+    }
+
+    console.warn('Better-Auth setRole unauthorized during bootstrap; applying scoped DB role fallback', {
+      adminEmail,
+      userId,
+    })
+
+    await db.update(userTable).set({ role: 'admin' }).where(eq(userTable.id, userId))
+  }
 }
 
 export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Promise<void> {
@@ -103,10 +135,7 @@ export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Pro
   if (existingUserId) {
     if (existingUserRole !== 'admin') {
       try {
-        await auth.api.setRole({
-          headers: internalHeaders,
-          body: { userId: existingUserId, role: 'admin' },
-        })
+        await setAdminRoleWithBootstrapFallback(existingUserId, adminEmail)
       } catch (error) {
         console.error('Failed to set admin role for existing user', { adminEmail, existingUserId, error })
         throw error
@@ -132,10 +161,7 @@ export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Pro
   }
 
   try {
-    await auth.api.setRole({
-      headers: internalHeaders,
-      body: { userId: createdUserId, role: 'admin' },
-    })
+    await setAdminRoleWithBootstrapFallback(createdUserId, adminEmail)
     console.info('Bootstrap admin user ensured via Better-Auth', { adminEmail, createdUserId })
   } catch (error) {
     console.error('Failed to set admin role for created user', { adminEmail, createdUserId, error })
