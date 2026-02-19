@@ -1,4 +1,7 @@
 # Minikube development overrides
+env:
+  NODE_ENV: development
+
 web:
   image:
     pullPolicy: Never
@@ -12,7 +15,18 @@ config:
   databaseUrl: "postgresql://voyager:voyager_dev@postgres:5432/voyager"
   redisUrl: "redis://redis:6379"
 
+# Dev bootstrap credentials must be provided from local untracked file:
+#   cp charts/voyager/values-local.example.yaml charts/voyager/values-local.yaml
+#   helm template voyager ./charts/voyager -n voyager -f charts/voyager/values-dev.yaml -f charts/voyager/values-local.yaml
+# Keep disabled here to avoid committing credentials.
+devBootstrap:
+  enabled: false
+  adminEmail: ""
+  adminPassword: ""
+  adminName: "Voyager Admin"
+  viewerEmail: ""
+  viewerPassword: ""
+
 secret:
-  dbPassword: voyager_dev
-  jwtSecret: dev-jwt-secret
-  adminPassword: admin123
+  dbPassword: ""
+  jwtSecret: ""

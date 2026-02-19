@@ -1,5 +1,8 @@
 namespace: voyager
 
+env:
+  NODE_ENV: development
+
 web:
   replicaCount: 1
   image:
@@ -55,5 +58,15 @@ rbac:
 
 secret:
   dbPassword: ""  # Override per environment
-  betterAuthSecret: ""   # Override per environment
-  adminPassword: ""  # Override per environment
+  jwtSecret: ""   # Override per environment
+  adminEmail: ""  # Required in production (or set devBootstrap in non-production)
+  adminPassword: ""  # Required in production (or set devBootstrap in non-production)
+  adminName: "Voyager Admin"
+
+devBootstrap:
+  enabled: false
+  adminEmail: ""
+  adminPassword: ""
+  adminName: "Voyager Admin"
+  viewerEmail: ""
+  viewerPassword: ""
