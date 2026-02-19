@@ -21,6 +21,9 @@ ingress:
   className: nginx
   host: voyager-platform.voyagerlabs.co
 
+env:
+  NODE_ENV: development
+
 config:
   apiUrl: "http://voyager-api:4000"
   redisUrl: "redis://redis:6379"
@@ -56,4 +59,5 @@ rbac:
 secret:
   dbPassword: ""  # Override per environment
   betterAuthSecret: ""   # Override per environment
+  adminEmail: ""  # Override per environment
   adminPassword: ""  # Override per environment
