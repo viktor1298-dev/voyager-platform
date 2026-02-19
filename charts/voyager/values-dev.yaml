@@ -28,5 +28,7 @@ devBootstrap:
   viewerPassword: ""
 
 secret:
-  dbPassword: ""
-  jwtSecret: ""
+  dbPassword: voyager_dev
+  jwtSecret: dev-jwt-secret
+  adminEmail: admin@voyager.local
+  adminPassword: admin123
