@@ -17,28 +17,6 @@ export const aiRecommendationStatusEnum = pgEnum('ai_recommendation_status', [
 export const aiProviderEnum = pgEnum('ai_provider', ['openai', 'anthropic'])
 export const userAiKeyProviderEnum = pgEnum('user_ai_key_provider', ['openai', 'claude'])
 
-export const userAiKeys = pgTable(
-  'user_ai_keys',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    userId: text('user_id')
-      .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
-    provider: userAiKeyProviderEnum('provider').notNull(),
-    encryptedKey: text('encrypted_key').notNull(),
-    model: varchar('model', { length: 120 }).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true })
-      .notNull()
-      .defaultNow()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    uniqueIndex('idx_user_ai_keys_user_provider').on(table.userId, table.provider),
-    index('idx_user_ai_keys_user').on(table.userId),
-  ],
-)
-
 export const aiConversations = pgTable('ai_conversations', {
   id: uuid('id').defaultRandom().primaryKey(),
   clusterId: uuid('cluster_id')
@@ -105,7 +83,7 @@ export const userAiKeys = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    provider: aiProviderEnum('provider').notNull(),
+    provider: userAiKeyProviderEnum('provider').notNull(),
     encryptedKey: text('encrypted_key').notNull(),
     model: varchar('model', { length: 120 }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
