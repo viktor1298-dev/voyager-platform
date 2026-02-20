@@ -309,7 +309,8 @@ export default function ClusterDetailPage() {
 
   return (
     <AppLayout>
-      <Breadcrumbs />
+      {/* Pass cluster name so breadcrumb shows "live-minikube" instead of raw UUID */}
+      <Breadcrumbs segmentLabels={{ [id]: cluster.name || id }} />
 
       <button type="button" onClick={() => router.back()} className="flex items-center gap-1.5 text-[var(--color-accent)] hover:underline text-xs font-mono mb-5">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
