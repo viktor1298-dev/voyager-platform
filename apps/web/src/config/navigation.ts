@@ -9,6 +9,7 @@ import {
   Flag,
   HeartPulse,
   LayoutDashboard,
+  LayoutGrid,
   Server,
   Settings,
   Shield,
@@ -29,6 +30,7 @@ type NavItem = {
 export const navItems: NavItem[] = [
   { id: '/', label: 'Dashboard', icon: LayoutDashboard },
   { id: '/clusters', label: 'Clusters', icon: Server },
+  { id: '/dashboards', label: 'Shared Dashboards', icon: LayoutGrid },
   { id: '/health', label: 'Health', icon: HeartPulse },
   { id: '/deployments', label: 'Deployments', icon: Box },
   { id: '/events', label: 'Events', icon: Activity },

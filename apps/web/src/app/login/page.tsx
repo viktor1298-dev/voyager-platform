@@ -153,7 +153,7 @@ function LoginPageContent() {
         useAuthStore.getState().setUser({
           id: data.user.id,
           email: data.user.email,
-          name: data.user.name ?? data.user.email,
+          name: (data.user.name && !/^<[^>]+>$/.test(data.user.name.trim())) ? data.user.name : data.user.email,
           role: (data.user as { role?: string }).role === 'admin' ? 'admin' : 'viewer',
         })
         toast.success('Welcome back!', { description: `Signed in as ${data.user.email}` })
