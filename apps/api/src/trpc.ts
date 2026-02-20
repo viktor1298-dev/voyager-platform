@@ -94,8 +94,23 @@ const authorizationObjectIdInputSchema = z.object({
 
 export const authorizedProcedure = (objectType: ObjectType, relation: Relation) =>
   protectedProcedure.use(async (opts) => {
+    // Admin users bypass all authorization checks
+    if (opts.ctx.user.role === 'admin') {
+      return opts.next()
+    }
+
     const rawInput = await opts.getRawInput()
-    const objectIdInput = authorizationObjectIdInputSchema.safeParse(rawInput)
+
+    // getRawInput() may return the SuperJSON-wrapped format { json: {...} } depending on
+    // the tRPC transport. Unwrap if needed so we can extract id/objectId from the actual payload.
+    const inputPayload =
+      rawInput !== null &&
+      typeof rawInput === 'object' &&
+      'json' in (rawInput as Record<string, unknown>)
+        ? (rawInput as Record<string, unknown>).json
+        : rawInput
+
+    const objectIdInput = authorizationObjectIdInputSchema.safeParse(inputPayload)
     const objectId = objectIdInput.success ? objectIdInput.data.objectId ?? objectIdInput.data.id : undefined
 
     if (!objectId) {

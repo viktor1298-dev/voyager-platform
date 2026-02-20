@@ -38,12 +38,13 @@ export async function loginAsAdmin(page: Page): Promise<void> {
 
 export async function ensureViewerExists(): Promise<void> {
   try {
+    const baseUrl = process.env.BASE_URL || 'http://localhost:9000';
     const headers = {
       'Content-Type': 'application/json',
-      Origin: 'http://localhost:9000',
+      Origin: baseUrl,
     };
 
-    await fetch('http://localhost:9000/api/auth/sign-up/email', {
+    await fetch(`${baseUrl}/api/auth/sign-up/email`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
