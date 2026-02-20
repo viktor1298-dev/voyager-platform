@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { APP_VERSION } from '@/config/constants'
@@ -52,6 +52,18 @@ export function Sidebar({
           ${isDesktop ? (collapsed ? 'w-12' : 'w-48') : 'w-48'}
         `}
       >
+        {!isDesktop && mobileOpen && (
+          <div className="flex justify-end px-2 pb-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close navigation"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        )}
         <SidebarContent
           showLabels={!isDesktop || mobileOpen || !collapsed}
           isActive={isActive}

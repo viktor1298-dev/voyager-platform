@@ -295,7 +295,7 @@ export default function ClustersPage() {
   }, [])
 
   const btnPrimary =
-    'px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer'
+    'px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer min-h-[44px]'
 
   return (
     <AppLayout>
