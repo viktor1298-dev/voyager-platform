@@ -414,7 +414,7 @@ export default function SettingsPage() {
                   type="password"
                   value={apiKeyInput}
                   onChange={(event) => setApiKeyInput(event.target.value)}
-                  placeholder={provider === 'anthropic' ? 'sk-ant-...' : 'sk-...'}
+                  placeholder={provider === 'claude' ? 'sk-ant-...' : 'sk-...'}
                   className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                 />
                 <p className="mt-1 text-[11px] text-[var(--color-text-dim)]">

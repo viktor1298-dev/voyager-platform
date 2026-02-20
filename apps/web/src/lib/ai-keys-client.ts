@@ -4,6 +4,7 @@ import {
   type AiKeyRecord,
   type UiAiProvider as AiProvider,
   type BackendAiProvider,
+  mapUiProviderToBackend,
   normalizeGetResponse,
   normalizeSaveResponse,
   normalizeTestConnectionResponse,
@@ -203,13 +204,18 @@ export async function upsertAiKeySettings(input: UpsertAiKeyInput): Promise<AiKe
   const upsert = namespace?.upsert?.mutate
   const mutate = save ?? upsert
 
+  const backendInput: BackendUpsertAiKeyInput = {
+    ...input,
+    provider: mapUiProviderToBackend(input.provider),
+  }
+
   let raw: unknown = null
   if (mutate) {
-    raw = await mutate(input)
+    raw = await mutate(backendInput)
   } else {
     raw = await mutateWithFallback(
       ['aiKeys.save', 'ai.keys.save', 'aiKeys.upsert', 'ai.keys.upsert'],
-      input,
+      backendInput,
     )
   }
 
@@ -229,17 +235,19 @@ export async function testAiKeyConnection(
   input: TestConnectionInput,
 ): Promise<{ ok: boolean; message: string }> {
   const namespace = getAiKeyNamespace()
+  const backendProvider = mapUiProviderToBackend(input.provider)
+  const backendInput: BackendTestConnectionInput = { ...input, provider: backendProvider }
 
   try {
     if (input.apiKey?.trim()) {
       if (namespace?.testConnection?.mutate) {
-        const result = await namespace.testConnection.mutate(input)
+        const result = await namespace.testConnection.mutate(backendInput)
         return normalizeTestConnectionResponse(result)
       }
 
       const fallback = await mutateWithFallback(
         ['aiKeys.testConnection', 'ai.keys.testConnection'],
-        input,
+        backendInput,
       )
       if (!fallback) {
         return { ok: false, message: 'AI key test route is unavailable' }
@@ -248,14 +256,14 @@ export async function testAiKeyConnection(
     }
 
     if (namespace?.testStoredConnection?.mutate) {
-      const result = await namespace.testStoredConnection.mutate({ provider: input.provider })
+      const result = await namespace.testStoredConnection.mutate({ provider: backendProvider })
       return normalizeTestConnectionResponse(result)
     }
 
     const fallback = await mutateWithFallback(
       ['aiKeys.testStoredConnection', 'ai.keys.testStoredConnection'],
       {
-        provider: input.provider,
+        provider: backendProvider,
       },
     )
     if (!fallback) {
