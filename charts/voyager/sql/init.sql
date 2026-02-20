@@ -271,7 +271,7 @@ VALUES (
   'healthy',
   'v1.32.0',
   3,
-  'production'::"cluster_environment",
+  'staging'::"cluster_environment",
   '{"region": "us-east-1", "clusterName": "prod-eks-1"}'::jsonb,
   'healthy'::"cluster_health_status",
   NOW(),
@@ -355,23 +355,6 @@ CREATE INDEX IF NOT EXISTS "relations_subject_lookup_idx" ON "relations" USING b
 CREATE INDEX IF NOT EXISTS "relations_object_lookup_idx" ON "relations" USING btree ("object_type","object_id");
 CREATE INDEX IF NOT EXISTS "relations_relation_lookup_idx" ON "relations" USING btree ("subject_type","subject_id","object_type","object_id","relation");
 CREATE INDEX IF NOT EXISTS "team_members_user_lookup_idx" ON "team_members" USING btree ("user_id");
-
--- Seed test cluster for E2E tests
-INSERT INTO "clusters" (id, name, provider, environment, endpoint, connection_config, status, health_status, nodes_count, created_at, updated_at)
-VALUES (
-  'e2e-test-cluster-001'::uuid,
-  'minikube-test',
-  'minikube'::"cluster_provider",
-  'development'::"cluster_environment",
-  'https://192.168.49.2:8443',
-  '{}'::jsonb,
-  'healthy',
-  'healthy'::"cluster_health_status",
-  1,
-  NOW(),
-  NOW()
-)
-ON CONFLICT (name) DO NOTHING;
 
 -- Grant admin users owner permissions on all clusters
 INSERT INTO "relations" ("subject_type", "subject_id", "relation", "object_type", "object_id", "created_by")
