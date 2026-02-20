@@ -32,3 +32,5 @@ secret:
   jwtSecret: dev-jwt-secret
   adminEmail: admin@voyager.local
   adminPassword: admin123
+  # AES-256 dev key for BYOK encryption (dev only — not for production)
+  aiKeysEncryptionKey: "1a67454d08771cb9c3270657401a721e9aff5630f83b8754842c82ccc2d1a3b4"
