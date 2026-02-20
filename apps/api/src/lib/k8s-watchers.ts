@@ -116,34 +116,69 @@ export function startMetricsPoller(): void {
   const poll = async () => {
     try {
       const kc = getKubeConfig()
+      const coreApi = kc.makeApiClient(k8s.CoreV1Api)
       const metricsClient = new k8s.Metrics(kc)
-      const nodeMetrics = await metricsClient.getNodeMetrics()
+
+      // Fetch node metrics and node capacity/allocatable in parallel
+      const [nodeMetrics, nodesResponse] = await Promise.all([
+        metricsClient.getNodeMetrics(),
+        coreApi.listNode(),
+      ])
+
+      // Build capacity map keyed by node name
+      const capacityMap = new Map<string, { cpuNano: number; memBytes: number }>()
+      for (const node of nodesResponse.items) {
+        const name = node.metadata?.name
+        if (name) {
+          capacityMap.set(name, {
+            cpuNano: parseCpuToNano(node.status?.allocatable?.cpu ?? '0'),
+            memBytes: parseMemoryToBytes(node.status?.allocatable?.memory ?? '0'),
+          })
+        }
+      }
 
       let totalCpuNano = 0
       let totalMemBytes = 0
+      let totalCpuAllocatableNano = 0
+      let totalMemAllocatableBytes = 0
+
       for (const node of nodeMetrics.items) {
         const cpuStr = node.usage?.cpu ?? '0'
         const memStr = node.usage?.memory ?? '0'
         totalCpuNano += parseCpuToNano(cpuStr)
         totalMemBytes += parseMemoryToBytes(memStr)
+
+        const capacity = capacityMap.get(node.metadata?.name ?? '')
+        if (capacity) {
+          totalCpuAllocatableNano += capacity.cpuNano
+          totalMemAllocatableBytes += capacity.memBytes
+        }
+      }
+
+      const cpuPercent =
+        totalCpuAllocatableNano > 0
+          ? Math.round((totalCpuNano / totalCpuAllocatableNano) * 1000) / 10
+          : null
+      const memoryPercent =
+        totalMemAllocatableBytes > 0
+          ? Math.round((totalMemBytes / totalMemAllocatableBytes) * 1000) / 10
+          : null
+
+      let podCount = 0
+      try {
+        const pods = await coreApi.listPodForAllNamespaces()
+        podCount = pods.items?.length ?? 0
+      } catch {
+        // ignore
       }
 
       const event: MetricsEvent = {
         cpuCores: totalCpuNano / 1e9,
-        cpuPercent: null, // Requires node capacity info for real percentage
+        cpuPercent,
         memoryBytes: totalMemBytes,
-        memoryPercent: null,
-        podCount: 0, // Filled below
+        memoryPercent,
+        podCount,
         timestamp: new Date().toISOString(),
-      }
-
-      // Get pod count
-      try {
-        const coreApi = kc.makeApiClient(k8s.CoreV1Api)
-        const pods = await coreApi.listPodForAllNamespaces()
-        event.podCount = pods.items?.length ?? 0
-      } catch {
-        // ignore
       }
 
       voyagerEmitter.emitMetrics(event)

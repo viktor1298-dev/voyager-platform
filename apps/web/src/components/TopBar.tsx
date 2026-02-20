@@ -32,6 +32,11 @@ export function TopBar() {
     retry: 2,
   })
 
+  const statsQuery = trpc.metrics.currentStats.useQuery(undefined, {
+    refetchInterval: 30000,
+    retry: 1,
+  })
+
   const isConnected = !liveQuery.isError && liveQuery.data !== undefined
   const isReconnecting = liveQuery.isLoading && liveQuery.dataUpdatedAt > 0
   const isDisconnected = liveQuery.isError
@@ -41,6 +46,13 @@ export function TopBar() {
   const alerts = data
     ? data.events.filter((e: { type?: string | null; kind?: string | null }) => e.type === 'Warning' || e.kind === 'Warning').length
     : null
+
+  const cpuValue =
+    statsQuery.data?.cpuPercent != null
+      ? `${statsQuery.data.cpuPercent.toFixed(1)}%`
+      : statsQuery.isLoading
+        ? '…'
+        : '0%'
 
   return (
     <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-3 sm:px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">
@@ -60,7 +72,7 @@ export function TopBar() {
 
       <div className="hidden sm:flex gap-6 items-center">
         <Stat label="Total Pods" value={totalPods} color="var(--color-accent)" />
-        <Stat label="CPU Usage" value="—" color="var(--color-text-muted)" />
+        <Stat label="CPU Usage" value={cpuValue} color={statsQuery.data?.cpuPercent != null && statsQuery.data.cpuPercent > 80 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
         <Stat label="Alerts" value={alerts === null ? '—' : String(alerts)} color={alerts !== null && alerts > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
       </div>
 
