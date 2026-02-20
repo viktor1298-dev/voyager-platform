@@ -231,7 +231,7 @@ export default function LogsPage() {
               Download
             </button>
 
-            <label className="inline-flex items-center gap-2 text-sm text-[var(--color-text-secondary)] cursor-pointer select-none">
+            <label className="inline-flex min-h-[44px] items-center gap-2 text-sm text-[var(--color-text-secondary)] cursor-pointer select-none">
               <input
                 type="checkbox"
                 className="rounded border-[var(--color-border)] accent-[var(--color-accent)]"
@@ -241,7 +241,7 @@ export default function LogsPage() {
               Live tail (5s)
             </label>
 
-            <label className="inline-flex items-center gap-2 text-sm text-[var(--color-text-secondary)] cursor-pointer select-none">
+            <label className="inline-flex min-h-[44px] items-center gap-2 text-sm text-[var(--color-text-secondary)] cursor-pointer select-none">
               <input
                 type="checkbox"
                 className="rounded border-[var(--color-border)] accent-[var(--color-accent)]"
@@ -259,12 +259,12 @@ export default function LogsPage() {
                 {filteredPods.map((pod) => {
                   const targetKey = podKey(pod.namespace, pod.name)
                   return (
-                    <label key={targetKey} className="flex items-start gap-2 text-sm">
+                    <label key={targetKey} className="flex min-h-[44px] items-center gap-2 text-sm">
                       <input
                         type="checkbox"
                         checked={selectedPods.includes(targetKey)}
                         onChange={() => togglePod(targetKey)}
-                        className="mt-0.5 rounded border-[var(--color-border)] accent-[var(--color-accent)]"
+                        className="shrink-0 rounded border-[var(--color-border)] accent-[var(--color-accent)]"
                       />
                       <span className="text-[var(--color-text-primary)] break-all">
                         {pod.name}
@@ -292,7 +292,7 @@ export default function LogsPage() {
                 {LOG_LEVELS.map((level) => (
                   <label
                     key={level}
-                    className="inline-flex items-center gap-1 rounded-md border border-[var(--color-border)] px-2 py-1 text-xs"
+                    className="inline-flex min-h-[44px] items-center gap-1 rounded-md border border-[var(--color-border)] px-2 py-1 text-xs"
                   >
                     <input
                       type="checkbox"
