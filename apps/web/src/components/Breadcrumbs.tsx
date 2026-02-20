@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 const PATH_LABELS: Record<string, string> = {
   '': 'Dashboard',
   clusters: 'Clusters',
+  dashboards: 'Shared Dashboards',
   events: 'Events',
   logs: 'Logs',
   alerts: 'Alerts',
@@ -23,14 +24,24 @@ const PATH_LABELS: Record<string, string> = {
   permissions: 'Permissions',
 }
 
-function formatSegmentLabel(segment: string) {
+function formatSegmentLabel(segment: string, segmentLabels?: Record<string, string>) {
+  // Check caller-supplied override first (e.g. cluster name for UUID segments)
+  if (segmentLabels?.[segment]) return segmentLabels[segment]
   const known = PATH_LABELS[segment]
   if (known) return known
   if (segment.length > 24) return `${segment.slice(0, 8)}…${segment.slice(-6)}`
   return segment
 }
 
-export function Breadcrumbs() {
+/**
+ * Renders a breadcrumb trail based on the current URL pathname.
+ *
+ * @param segmentLabels  Optional map of URL segment → display label.
+ *                       Useful for dynamic segments like cluster IDs where
+ *                       the page already has the human-readable name.
+ *                       Example: `{ 'abc-123': 'live-minikube' }`
+ */
+export function Breadcrumbs({ segmentLabels }: { segmentLabels?: Record<string, string> } = {}) {
   const pathname = usePathname()
   if (!pathname || pathname === '/') return null
 
@@ -40,7 +51,7 @@ export function Breadcrumbs() {
   let currentPath = ''
   for (const segment of segments) {
     currentPath += `/${segment}`
-    crumbs.push({ label: formatSegmentLabel(segment), href: currentPath })
+    crumbs.push({ label: formatSegmentLabel(segment, segmentLabels), href: currentPath })
   }
 
   return (

@@ -10,6 +10,18 @@ import { useAuthStore } from '@/stores/auth'
 import { CommandPalette } from './CommandPalette'
 import { KeyboardShortcuts } from './KeyboardShortcuts'
 
+/**
+ * Sanitize a display name from the auth session.
+ * Strips unfilled template placeholders like <fill-admin-name> or <fill-bootstrap-admin-name>
+ * that may have been seeded via Helm chart values without replacement.
+ */
+function sanitizeDisplayName(name: string | null | undefined, fallback: string): string {
+  if (!name || !name.trim()) return fallback
+  // Detect unfilled placeholders: strings starting with '<' and ending with '>'
+  if (/^<[^>]+>$/.test(name.trim())) return fallback
+  return name
+}
+
 function AuthSessionSync() {
   const { data: session, isPending } = authClient.useSession()
   const setUser = useAuthStore((state) => state.setUser)
@@ -22,7 +34,7 @@ function AuthSessionSync() {
       setUser({
         id: session.user.id,
         email: session.user.email,
-        name: session.user.name ?? session.user.email,
+        name: sanitizeDisplayName(session.user.name, session.user.email),
         role: (session.user as { role?: string }).role === 'admin' ? 'admin' : 'viewer',
       })
       return
