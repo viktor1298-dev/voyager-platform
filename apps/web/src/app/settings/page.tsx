@@ -34,7 +34,7 @@ interface ProviderConfig {
 
 const PROVIDERS: ProviderConfig[] = [
   {
-    value: 'anthropic',
+    value: 'claude',
     label: 'Claude (Anthropic)',
     models: ['claude-sonnet-4-20250514', 'claude-3-7-sonnet-latest'],
   },
@@ -161,7 +161,7 @@ export default function SettingsPage() {
     refetchInterval: 60000,
   })
 
-  const [provider, setProvider] = useState<AiProvider>('anthropic')
+  const [provider, setProvider] = useState<AiProvider>('claude')
   const [model, setModel] = useState(PROVIDERS[0].models[0])
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [storedMaskedKey, setStoredMaskedKey] = useState<string | null>(null)
