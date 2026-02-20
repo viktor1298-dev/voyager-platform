@@ -1,7 +1,8 @@
-import { db } from '@voyager/db'
+import { auditLog, db, user } from '@voyager/db'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { admin, genericOAuth, microsoftEntraId } from 'better-auth/plugins'
+import { eq } from 'drizzle-orm'
 import { resolveTrustedOrigins } from './auth-origins.js'
 import { getEntraAuthProvider, syncEntraGroupMembership } from './sso.js'
 
@@ -43,6 +44,28 @@ export const auth = betterAuth({
         async after(session) {
           if (!session?.userId) return
           await syncEntraGroupMembership(db, session.userId)
+
+          // Audit: log user login event
+          try {
+            const [userData] = await db
+              .select({ id: user.id, email: user.email })
+              .from(user)
+              .where(eq(user.id, session.userId))
+              .limit(1)
+
+            if (userData) {
+              await db.insert(auditLog).values({
+                userId: userData.id,
+                userEmail: userData.email,
+                action: 'user.login',
+                resource: 'session',
+                resourceId: session.id,
+                ipAddress: (session as { ipAddress?: string | null }).ipAddress ?? null,
+              })
+            }
+          } catch (err) {
+            console.error('[audit] Failed to log login event:', err)
+          }
         },
       },
     },
