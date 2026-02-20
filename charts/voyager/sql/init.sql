@@ -199,3 +199,134 @@ BEGIN
     END IF;
   END IF;
 END $$;
+
+-- Multi-provider clusters (migration 0002)
+DO $$ BEGIN
+ CREATE TYPE "public"."cluster_provider" AS ENUM('kubeconfig', 'aws', 'azure', 'gke', 'minikube');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ CREATE TYPE "public"."cluster_environment" AS ENUM('production', 'staging', 'development');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ CREATE TYPE "public"."cluster_health_status" AS ENUM('healthy', 'degraded', 'critical', 'unreachable', 'unknown');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+ALTER TABLE "clusters" ADD COLUMN IF NOT EXISTS "environment" "cluster_environment" DEFAULT 'development' NOT NULL;
+ALTER TABLE "clusters" ADD COLUMN IF NOT EXISTS "connection_config" jsonb DEFAULT '{}'::jsonb NOT NULL;
+ALTER TABLE "clusters" ADD COLUMN IF NOT EXISTS "health_status" "cluster_health_status" DEFAULT 'unknown' NOT NULL;
+ALTER TABLE "clusters" ADD COLUMN IF NOT EXISTS "last_health_check" timestamp with time zone;
+ALTER TABLE "clusters" ALTER COLUMN "endpoint" DROP NOT NULL;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'clusters' 
+    AND column_name = 'provider' 
+    AND data_type = 'character varying'
+  ) THEN
+    ALTER TABLE "clusters" ALTER COLUMN "provider" TYPE "cluster_provider" USING (
+      CASE
+        WHEN "provider" IN ('minikube') THEN 'minikube'::"cluster_provider"
+        WHEN "provider" IN ('eks', 'aws') THEN 'aws'::"cluster_provider"
+        WHEN "provider" IN ('aks', 'azure') THEN 'azure'::"cluster_provider"
+        WHEN "provider" IN ('gcp', 'gke') THEN 'gke'::"cluster_provider"
+        ELSE 'kubeconfig'::"cluster_provider"
+      END
+    );
+    ALTER TABLE "clusters" ALTER COLUMN "provider" SET DEFAULT 'kubeconfig';
+  END IF;
+END $$;
+
+-- RBAC Authorization (migration 0003)
+DO $$ BEGIN
+ CREATE TYPE "public"."subject_type" AS ENUM('user', 'team', 'role');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ CREATE TYPE "public"."relation" AS ENUM('owner', 'admin', 'editor', 'viewer');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ CREATE TYPE "public"."object_type" AS ENUM('cluster', 'deployment', 'namespace', 'alert');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ CREATE TYPE "public"."team_member_role" AS ENUM('admin', 'member');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS "teams" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"description" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "teams_name_unique" UNIQUE("name")
+);
+
+CREATE TABLE IF NOT EXISTS "relations" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"subject_type" "subject_type" NOT NULL,
+	"subject_id" text NOT NULL,
+	"relation" "relation" NOT NULL,
+	"object_type" "object_type" NOT NULL,
+	"object_id" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"created_by" text,
+	CONSTRAINT "relations_subject_object_relation_unq" UNIQUE("subject_type","subject_id","relation","object_type","object_id")
+);
+
+CREATE TABLE IF NOT EXISTS "team_members" (
+	"team_id" uuid NOT NULL,
+	"user_id" text NOT NULL,
+	"role" "team_member_role" DEFAULT 'member' NOT NULL,
+	"joined_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "team_members_pk" PRIMARY KEY("team_id","user_id")
+);
+
+DO $$ BEGIN
+ ALTER TABLE "relations" ADD CONSTRAINT "relations_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ ALTER TABLE "team_members" ADD CONSTRAINT "team_members_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ ALTER TABLE "team_members" ADD CONSTRAINT "team_members_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+CREATE INDEX IF NOT EXISTS "relations_subject_lookup_idx" ON "relations" USING btree ("subject_type","subject_id");
+CREATE INDEX IF NOT EXISTS "relations_object_lookup_idx" ON "relations" USING btree ("object_type","object_id");
+CREATE INDEX IF NOT EXISTS "relations_relation_lookup_idx" ON "relations" USING btree ("subject_type","subject_id","object_type","object_id","relation");
+CREATE INDEX IF NOT EXISTS "team_members_user_lookup_idx" ON "team_members" USING btree ("user_id");
+
+-- Grant admin users owner permissions on all clusters
+INSERT INTO "relations" ("subject_type", "subject_id", "relation", "object_type", "object_id", "created_by")
+SELECT 'user'::"subject_type", u."id", 'owner'::"relation", 'cluster'::"object_type", c."id"::text, u."id"
+FROM "user" u
+CROSS JOIN "clusters" c
+WHERE u."role" = 'admin'
+ON CONFLICT ("subject_type","subject_id","relation","object_type","object_id") DO NOTHING;
