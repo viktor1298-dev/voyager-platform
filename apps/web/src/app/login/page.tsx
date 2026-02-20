@@ -172,7 +172,7 @@ function LoginPageContent() {
           <button
             type="button"
             onClick={signInWithMicrosoft}
-            className="mb-4 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-2 font-medium text-[var(--color-text-primary)] transition hover:opacity-90"
+            className="mb-4 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-2 font-medium text-[var(--color-text-primary)] transition hover:opacity-90 min-h-[44px]"
           >
             Sign in with Microsoft
           </button>
@@ -240,7 +240,7 @@ function LoginPageContent() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-lg bg-[var(--color-accent)] py-2 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                className="w-full rounded-lg bg-[var(--color-accent)] py-2 font-medium text-white transition hover:opacity-90 disabled:opacity-50 min-h-[44px]"
               >
                 {isSubmitting ? 'Signing in...' : 'Sign In'}
               </button>
