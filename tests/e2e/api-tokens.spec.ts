@@ -4,8 +4,8 @@ test.describe('API Tokens', () => {
   test.beforeEach(async ({ page }) => {
     // Login as admin
     await page.goto('/login')
-    await page.getByLabel('Email').fill('admin@voyager.local')
-    await page.getByLabel('Password').fill('admin123')
+    await page.getByLabel('Email').fill(process.env.E2E_ADMIN_EMAIL ?? 'admin@voyager.local')
+    await page.getByLabel('Password').fill(process.env.E2E_ADMIN_PASSWORD ?? 'admin123')
     await page.getByRole('button', { name: /sign in/i }).click()
     await page.waitForURL(/\/(dashboard|$)/, { timeout: 15000 })
     // Navigate to Settings > API Tokens
