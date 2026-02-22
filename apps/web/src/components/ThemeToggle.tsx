@@ -27,7 +27,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="h-8 w-8 rounded-lg border border-[var(--color-border)] bg-[var(--glass-bg)]" />
+      <div className="h-11 w-11 rounded-lg border border-[var(--color-border)] bg-[var(--glass-bg)]" />
     )
   }
 
@@ -37,7 +37,7 @@ export function ThemeToggle() {
       data-testid="theme-toggle"
       aria-label={`Current theme: ${current.label}. Click to switch.`}
       title={`Theme: ${current.label}`}
-      className="h-8 w-8 rounded-lg border border-[var(--color-border)] hover:border-[var(--color-border-hover)] bg-[var(--glass-bg)] hover:bg-[var(--color-bg-card-hover)] flex items-center justify-center transition-all duration-200"
+      className="h-11 w-11 rounded-lg border border-[var(--color-border)] hover:border-[var(--color-border-hover)] bg-[var(--glass-bg)] hover:bg-[var(--color-bg-card-hover)] flex items-center justify-center transition-all duration-200"
     >
       <Icon className="h-4 w-4 text-[var(--color-text-secondary)]" />
     </button>

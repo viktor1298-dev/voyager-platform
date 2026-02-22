@@ -287,7 +287,7 @@ function DashboardContent() {
                     type="button"
                     onClick={() => setEnvironmentFilter(filter)}
                     className={cn(
-                      'flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 cursor-pointer',
+                      'flex items-center gap-1.5 px-3 py-1 min-h-[44px] rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 cursor-pointer',
                       isActive
                         ? 'bg-white/[0.08] text-[var(--color-text-primary)] shadow-sm'
                         : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]',

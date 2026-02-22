@@ -88,7 +88,7 @@ export function TopBar() {
           type="button"
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-status-error)] hover:bg-[var(--color-status-error)]/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-2.5 min-h-[44px] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-status-error)] hover:bg-[var(--color-status-error)]/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           aria-label={isLoggingOut ? 'Logging out' : 'Logout'}
           title={isLoggingOut ? 'Logging out…' : 'Logout'}
         >
