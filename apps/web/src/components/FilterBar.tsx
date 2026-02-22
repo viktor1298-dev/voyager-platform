@@ -194,7 +194,7 @@ export function FilterBar({
               <motion.span
                 key={chip.key}
                 layout
-                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-1 min-h-[44px] text-xs text-[var(--color-text-secondary)]"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-1 text-xs text-[var(--color-text-secondary)]"
               >
                 {chip.label}
               </motion.span>
