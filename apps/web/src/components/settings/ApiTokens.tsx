@@ -170,7 +170,7 @@ export function ApiTokensSection() {
             value={tokenName}
             onChange={(event) => setTokenName(event.target.value)}
             placeholder="e.g. Claude Desktop"
-            className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2.5 text-sm text-[var(--color-text-primary)]"
+            className="w-full min-h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2.5 text-sm text-[var(--color-text-primary)]"
           />
         </div>
 
