@@ -17,6 +17,7 @@ import { captureException, flushSentry, initSentry } from './lib/sentry.js'
 import { shutdownTelemetry } from './lib/telemetry.js'
 import { type AppRouter, appRouter } from './routers/index.js'
 import { registerAiStreamRoute } from './routes/ai-stream.js'
+import { registerMcpRoute } from './routes/mcp.js'
 import { createContext } from './trpc.js'
 
 // Initialize Sentry early
@@ -172,6 +173,7 @@ app.setErrorHandler((error, _request, reply) => {
 })
 
 await registerAiStreamRoute(app)
+await registerMcpRoute(app)
 
 app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
 app.get('/system-health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
