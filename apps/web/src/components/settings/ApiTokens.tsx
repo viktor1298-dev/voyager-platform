@@ -5,16 +5,23 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { trpc } from '@/lib/trpc'
 
-const MCP_SNIPPET = `{
-  "mcpServers": {
-    "voyager": {
-      "url": "http://voyager-platform.voyagerlabs.co/mcp",
-      "headers": {
-        "Authorization": "Bearer <your-token>"
-      }
-    }
-  }
-}`
+function getMcpSnippet(): string {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://voyager-platform.voyagerlabs.co'
+  return JSON.stringify(
+    {
+      mcpServers: {
+        voyager: {
+          url: `${baseUrl}/mcp`,
+          headers: {
+            Authorization: 'Bearer <your-token>',
+          },
+        },
+      },
+    },
+    null,
+    2,
+  )
+}
 
 function formatDate(value: string | Date | null | undefined) {
   if (!value) return 'Never'
@@ -31,48 +38,28 @@ function formatDate(value: string | Date | null | undefined) {
 
 export function ApiTokensSection() {
   const utils = trpc.useUtils()
-  type TokensApi = {
-    listTokens?: { useQuery?: () => { data?: unknown[]; isLoading?: boolean } }
-    createToken?: {
-      useMutation?: (options?: {
-        onSuccess?: (result: { token?: string }) => void
-        onError?: (error: Error) => void
-      }) => {
-        mutate: (input: { name: string }) => void
-        isPending?: boolean
-      }
-    }
-    revokeToken?: {
-      useMutation?: (options?: { onSuccess?: () => void; onError?: (error: Error) => void }) => {
-        mutate: (input: { id: string }) => void
-        isPending?: boolean
-      }
-    }
-  }
 
-  const tokensApi = (trpc as unknown as { tokens?: TokensApi }).tokens
-
-  const listTokens = tokensApi?.listTokens?.useQuery?.()
-  const createToken = tokensApi?.createToken?.useMutation?.({
-    onSuccess: (result: { token?: string }) => {
+  const listTokens = trpc.tokens.listTokens.useQuery()
+  const createToken = trpc.tokens.createToken.useMutation({
+    onSuccess: (result) => {
       setTokenName('')
-      setCreatedToken(result?.token ?? null)
-      void utils.invalidate()
+      setCreatedToken(result.token ?? null)
+      void utils.tokens.listTokens.invalidate()
       toast.success('API token generated')
     },
-    onError: (error: Error) => {
-      toast.error(error?.message ?? 'Failed to generate token')
+    onError: (error) => {
+      toast.error(error.message ?? 'Failed to generate token')
     },
   })
 
-  const revokeToken = tokensApi?.revokeToken?.useMutation?.({
+  const revokeToken = trpc.tokens.revokeToken.useMutation({
     onSuccess: () => {
       setConfirmRevokeId(null)
-      void utils.invalidate()
+      void utils.tokens.listTokens.invalidate()
       toast.success('Token revoked')
     },
-    onError: (error: Error) => {
-      toast.error(error?.message ?? 'Failed to revoke token')
+    onError: (error) => {
+      toast.error(error.message ?? 'Failed to revoke token')
     },
   })
 
@@ -80,12 +67,7 @@ export function ApiTokensSection() {
   const [createdToken, setCreatedToken] = useState<string | null>(null)
   const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null)
 
-  const tokens = (listTokens?.data ?? []) as Array<{
-    id: string
-    name: string
-    createdAt: string | Date
-    lastUsedAt?: string | Date | null
-  }>
+  const tokens = listTokens.data ?? []
 
   const copyText = async (text: string, label: string) => {
     try {
@@ -98,7 +80,7 @@ export function ApiTokensSection() {
 
   const handleCreate = () => {
     const name = tokenName.trim()
-    if (!name || !createToken) return
+    if (!name || createToken.isPending) return
     createToken.mutate({ name })
   }
 
@@ -109,7 +91,7 @@ export function ApiTokensSection() {
           Existing Tokens
         </h4>
 
-        {listTokens?.isLoading ? (
+        {listTokens.isLoading ? (
           <p className="text-[12px] text-[var(--color-text-dim)]">Loading tokens…</p>
         ) : tokens.length === 0 ? (
           <p className="text-[12px] text-[var(--color-text-dim)]">No API tokens yet.</p>
@@ -139,8 +121,8 @@ export function ApiTokensSection() {
                       <div className="grid min-w-[160px] grid-cols-2 gap-2">
                         <button
                           type="button"
-                          onClick={() => revokeToken?.mutate({ id: token.id })}
-                          disabled={revokeToken?.isPending}
+                          onClick={() => revokeToken.mutate({ id: token.id })}
+                          disabled={revokeToken.isPending}
                           className="inline-flex min-h-11 items-center justify-center rounded-xl bg-red-600 px-3 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-60"
                         >
                           Confirm
@@ -195,11 +177,11 @@ export function ApiTokensSection() {
         <button
           type="button"
           onClick={handleCreate}
-          disabled={!tokenName.trim() || createToken?.isPending}
+          disabled={!tokenName.trim() || createToken.isPending}
           className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-[var(--color-accent)]/20 hover:opacity-90 disabled:opacity-60 sm:w-auto"
         >
           <KeyRound className="h-4 w-4" />
-          {createToken?.isPending ? 'Generating...' : 'Generate Token'}
+          {createToken.isPending ? 'Generating...' : 'Generate Token'}
         </button>
 
         {createdToken && (
@@ -241,13 +223,13 @@ export function ApiTokensSection() {
 
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
           <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-xs text-[var(--color-text-secondary)]">
-            {MCP_SNIPPET}
+            {getMcpSnippet()}
           </pre>
         </div>
 
         <button
           type="button"
-          onClick={() => copyText(MCP_SNIPPET, 'Snippet')}
+          onClick={() => copyText(getMcpSnippet(), 'Snippet')}
           className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-[var(--color-border)] px-3 text-sm font-medium text-[var(--color-text-primary)] hover:bg-white/[0.04]"
         >
           <Copy className="h-4 w-4" />
