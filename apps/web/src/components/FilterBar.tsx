@@ -168,6 +168,7 @@ export function FilterBar({
                 type="button"
                 onClick={() => toggleTag(tag)}
                 className={cn(
+                  'min-h-[44px]',
                   chipClass,
                   active
                     ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)] text-[var(--color-text-primary)]'
