@@ -112,7 +112,7 @@ export function FilterBar({
   ].filter(Boolean) as Array<{ key: string; label: string }>
 
   const chipClass =
-    'rounded-full px-3 py-1 text-xs font-medium border border-[var(--color-border)] transition-colors cursor-pointer'
+    'rounded-full px-3 py-1 min-h-[44px] text-xs font-medium border border-[var(--color-border)] transition-colors cursor-pointer'
 
   return (
     <div className={cn('space-y-3', className)}>
