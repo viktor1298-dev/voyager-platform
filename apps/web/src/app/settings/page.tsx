@@ -441,7 +441,7 @@ export default function SettingsPage() {
                   type="submit"
                   data-testid="byok-save"
                   disabled={!apiKeyInput.trim() || isSaving}
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-[var(--color-accent)]/20 hover:opacity-90 disabled:opacity-60"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-[var(--color-accent)]/20 hover:opacity-90 disabled:opacity-60"
                 >
                   {isSaving ? 'Saving...' : 'Save Key'}
                 </button>
@@ -478,7 +478,7 @@ export default function SettingsPage() {
                       })
                       .finally(() => setIsTesting(false))
                   }}
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-white/[0.04] disabled:opacity-60"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-white/[0.04] disabled:opacity-60"
                 >
                   {isTesting
                     ? hasRawKeyInput
