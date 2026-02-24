@@ -15,8 +15,6 @@ import { ArrowLeft, Server, Box, Globe, Cpu } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-const LIVE_CLUSTER_ID = 'live-minikube'
-
 function providerIcon(provider: string): string {
   const map: Record<string, string> = {
     minikube: 'simple-icons:kubernetes',
@@ -201,11 +199,10 @@ function HeaderSkeleton() {
 export default function ClusterDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const isLive = id === LIVE_CLUSTER_ID
   const [dataMode, setDataMode] = useState<'stored' | 'live'>('stored')
 
-  const dbCluster = trpc.clusters.get.useQuery({ id }, { enabled: !isLive })
-  const hasConnectionConfig = isLive || Boolean(dbCluster.data?.connectionConfig)
+  const dbCluster = trpc.clusters.get.useQuery({ id })
+  const hasConnectionConfig = Boolean(dbCluster.data?.connectionConfig)
 
   useEffect(() => {
     if (!hasConnectionConfig && dataMode === 'live') {
@@ -213,7 +210,7 @@ export default function ClusterDetailPage() {
     }
   }, [dataMode, hasConnectionConfig])
 
-  const showLiveData = isLive || (hasConnectionConfig && dataMode === 'live')
+  const showLiveData = hasConnectionConfig && dataMode === 'live'
 
   const liveQuery = trpc.clusters.live.useQuery({ clusterId: id }, {
     enabled: showLiveData,
@@ -230,8 +227,8 @@ export default function ClusterDetailPage() {
     refetchInterval: 30000,
   })
 
-  const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !showLiveData && !isLive })
-  const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !showLiveData && !isLive })
+  const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !showLiveData })
+  const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !showLiveData })
 
   const isLoading = showLiveData ? liveQuery.isLoading : dbCluster.isLoading
 
@@ -391,7 +388,7 @@ export default function ClusterDetailPage() {
           <TabsTrigger value="stored">Stored Data</TabsTrigger>
           <TabsTrigger value="live" disabled={!hasConnectionConfig}>Live Data</TabsTrigger>
         </TabsList>
-        {!hasConnectionConfig && !isLive && (
+        {!hasConnectionConfig && (
           <p className="mt-2 text-xs text-[var(--color-text-dim)]">Live Data requires a cluster connection configuration.</p>
         )}
         <TabsContent value="stored" className={showLiveData ? 'hidden' : ''} />
