@@ -210,17 +210,21 @@ export default function ClusterDetailPage() {
     staleTime: 30000,
   })
 
-  const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !isLive })
-  const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !isLive })
+  // Fallback to stored data when live query fails
+  const liveFailed = isLive && liveQuery.isError
+  const effectiveIsLive = isLive && !liveFailed
 
-  const isLoading = isLive ? liveQuery.isLoading : dbCluster.isLoading
+  const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !effectiveIsLive })
+  const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !effectiveIsLive })
 
-  const error = isLive ? liveQuery.error : dbCluster.error
+  const isLoading = effectiveIsLive ? liveQuery.isLoading : dbCluster.isLoading
+
+  const error = dbCluster.error
   if (!isLoading && error) {
     return (
       <AppLayout>
         <Breadcrumbs />
-        <QueryError message={error.message} onRetry={() => isLive ? liveQuery.refetch() : dbCluster.refetch()} />
+        <QueryError message={error.message} onRetry={() => dbCluster.refetch()} />
       </AppLayout>
     )
   }
@@ -235,7 +239,7 @@ export default function ClusterDetailPage() {
   }
 
   const liveData = liveQuery.data
-  const cluster = isLive
+  const cluster = effectiveIsLive
     ? {
         name: liveData?.name ?? 'minikube',
         provider: String(liveData?.provider ?? 'minikube'),
@@ -261,7 +265,7 @@ export default function ClusterDetailPage() {
         namespaceCount: 0,
       }
 
-  const nodes: NodeRow[] = isLive
+  const nodes: NodeRow[] = effectiveIsLive
     ? (liveData?.nodes ?? []).map((n, i: number) => ({
         id: `node-${i}`,
         name: n.name ?? '',
@@ -283,7 +287,7 @@ export default function ClusterDetailPage() {
         memory: `${n.memoryAllocatable ?? '—'} / ${n.memoryCapacity ?? '—'}`,
       }))
 
-  const events: EventRow[] = isLive
+  const events: EventRow[] = effectiveIsLive
     ? (liveData?.events ?? []).slice(0, 20).map((e: Record<string, unknown>, i: number) => ({
         id: `ev-${i}`,
         type: (e.type as string) ?? 'Normal',
@@ -349,9 +353,14 @@ export default function ClusterDetailPage() {
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
                 {statusLabel}
               </span>
-              {isLive && (
+              {effectiveIsLive && (
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-status-active)]/10 text-[var(--color-status-active)] border border-[var(--color-status-active)]/20">
                   LIVE
+                </span>
+              )}
+              {liveFailed && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)] border border-[var(--color-status-warning)]/20">
+                  STORED (live unavailable)
                 </span>
               )}
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20">
@@ -367,7 +376,7 @@ export default function ClusterDetailPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { icon: Server, label: 'Nodes', value: String(cluster.nodeCount) },
-            { icon: Box, label: 'Pods', value: isLive ? `${cluster.runningPods} / ${cluster.podCount}` : String(cluster.podCount || '—') },
+            { icon: Box, label: 'Pods', value: effectiveIsLive ? `${cluster.runningPods} / ${cluster.podCount}` : String(cluster.podCount || '—') },
             { icon: Globe, label: 'Namespaces', value: String(cluster.namespaceCount || '—') },
             { icon: Cpu, label: 'Version', value: cluster.version },
           ].map((stat) => (
@@ -393,7 +402,7 @@ export default function ClusterDetailPage() {
         <DataTable
           data={nodes}
           columns={nodeColumns}
-          loading={isLive ? liveQuery.isLoading : dbNodes.isLoading}
+          loading={effectiveIsLive ? liveQuery.isLoading : dbNodes.isLoading}
           emptyTitle="No nodes found"
           mobileCard={(node) => (
             <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
@@ -429,7 +438,7 @@ export default function ClusterDetailPage() {
         <DataTable
           data={events}
           columns={eventColumns}
-          loading={isLive ? liveQuery.isLoading : dbEvents.isLoading}
+          loading={effectiveIsLive ? liveQuery.isLoading : dbEvents.isLoading}
           emptyTitle="No events found"
           searchable
           searchPlaceholder="Search events…"
