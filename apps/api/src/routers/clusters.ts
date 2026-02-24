@@ -15,7 +15,7 @@ import {
   minikubeConnectionConfigSchema,
 } from '../lib/connection-config.js'
 import { validateClusterConnection } from '../lib/k8s-client-factory.js'
-import { getAppsV1Api, getCoreV1Api, getVersionApi } from '../lib/k8s.js'
+import * as k8s from '@kubernetes/client-node'
 import { normalizeProvider, VALID_PROVIDERS } from '../lib/providers.js'
 import { createAuthorizationService } from '../lib/authorization.js'
 import { adminProcedure, authorizedProcedure, protectedProcedure, router } from '../trpc.js'
@@ -216,7 +216,7 @@ export const clustersRouter = router({
     .meta({
       openapi: { method: 'GET', path: '/api/clusters/live', protect: true, tags: ['clusters'] },
     })
-    .input(z.void())
+    .input(z.object({ clusterId: z.string().uuid() }))
     .output(
       z.object({
         name: z.string(),
@@ -232,16 +232,22 @@ export const clustersRouter = router({
         endpoint: z.string(),
       }),
     )
-    .query(async () => {
+    .query(async ({ ctx, input }) => {
       try {
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const appsV1 = kc.makeApiClient(k8s.AppsV1Api)
+        const versionApi = kc.makeApiClient(k8s.VersionApi)
+
+        const cachePrefix = `k8s:${input.clusterId}`
         const [versionInfo, nodesResponse, podsResponse, nsResponse, eventsResponse, deploymentsResponse] =
           await Promise.all([
-            cached('k8s:version', K8S_CACHE_TTL, () => getVersionApi().getCode()),
-            cached('k8s:nodes', K8S_CACHE_TTL, () => getCoreV1Api().listNode()),
-            cached('k8s:pods', K8S_CACHE_TTL, () => getCoreV1Api().listPodForAllNamespaces()),
-            cached('k8s:namespaces', K8S_CACHE_TTL, () => getCoreV1Api().listNamespace()),
-            cached('k8s:events', K8S_CACHE_TTL, () => getCoreV1Api().listEventForAllNamespaces()),
-            cached('k8s:deployments', K8S_CACHE_TTL, () => getAppsV1Api().listDeploymentForAllNamespaces()),
+            cached(`${cachePrefix}:version`, K8S_CACHE_TTL, () => versionApi.getCode()),
+            cached(`${cachePrefix}:nodes`, K8S_CACHE_TTL, () => coreV1.listNode()),
+            cached(`${cachePrefix}:pods`, K8S_CACHE_TTL, () => coreV1.listPodForAllNamespaces()),
+            cached(`${cachePrefix}:namespaces`, K8S_CACHE_TTL, () => coreV1.listNamespace()),
+            cached(`${cachePrefix}:events`, K8S_CACHE_TTL, () => coreV1.listEventForAllNamespaces()),
+            cached(`${cachePrefix}:deployments`, K8S_CACHE_TTL, () => appsV1.listDeploymentForAllNamespaces()),
           ])
 
         const k8sNodes = nodesResponse.items.map((node) => ({
@@ -294,9 +300,11 @@ export const clustersRouter = router({
         const allNodesReady = k8sNodes.every((n) => n.status === 'ready')
         const status = allNodesReady ? 'healthy' : 'degraded'
 
+        const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.clusterId))
+
         return {
-          name: 'minikube',
-          provider: 'minikube',
+          name: cluster?.name ?? 'unknown',
+          provider: cluster?.provider ?? 'unknown',
           version: `v${versionInfo.major}.${versionInfo.minor}`,
           status,
           nodes: k8sNodes,
@@ -305,7 +313,7 @@ export const clustersRouter = router({
           namespaces,
           events,
           deployments,
-          endpoint: 'https://192.168.49.2:8443',
+          endpoint: cluster?.endpoint ?? kc.getCurrentCluster()?.server ?? 'unknown',
         }
       } catch (error) {
         throw new TRPCError({
@@ -319,7 +327,7 @@ export const clustersRouter = router({
     .meta({
       openapi: { method: 'GET', path: '/api/clusters/live/nodes', protect: true, tags: ['clusters'] },
     })
-    .input(z.void())
+    .input(z.object({ clusterId: z.string().uuid() }))
     .output(
       z.array(
         z.object({
@@ -336,9 +344,11 @@ export const clustersRouter = router({
         }),
       ),
     )
-    .query(async () => {
+    .query(async ({ input }) => {
       try {
-        const nodesResponse = await cached('k8s:nodes', K8S_CACHE_TTL, () => getCoreV1Api().listNode())
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const nodesResponse = await cached(`k8s:${input.clusterId}:nodes`, K8S_CACHE_TTL, () => coreV1.listNode())
         return nodesResponse.items.map((node) => {
           const conditions = node.status?.conditions || []
           const ready = conditions.find((c) => c.type === 'Ready')
@@ -369,7 +379,7 @@ export const clustersRouter = router({
     .meta({
       openapi: { method: 'GET', path: '/api/clusters/live/events', protect: true, tags: ['clusters'] },
     })
-    .input(z.object({ limit: z.number().int().min(1).max(200).optional() }))
+    .input(z.object({ clusterId: z.string().uuid(), limit: z.number().int().min(1).max(200).optional() }))
     .output(
       z.array(
         z.object({
@@ -386,8 +396,10 @@ export const clustersRouter = router({
     .query(async ({ input }) => {
       try {
         const limit = input.limit ?? 50
-        const eventsResponse = await cached('k8s:events', K8S_CACHE_TTL, () =>
-          getCoreV1Api().listEventForAllNamespaces(),
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const eventsResponse = await cached(`k8s:${input.clusterId}:events`, K8S_CACHE_TTL, () =>
+          coreV1.listEventForAllNamespaces(),
         )
         return eventsResponse.items
           .sort(
@@ -409,6 +421,49 @@ export const clustersRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Failed to fetch events from K8s API: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        })
+      }
+    }),
+
+  liveStatus: protectedProcedure
+    .meta({
+      openapi: { method: 'GET', path: '/api/clusters/live/status', protect: true, tags: ['clusters'] },
+    })
+    .input(z.object({ clusterId: z.string().uuid() }))
+    .output(
+      z.object({
+        version: z.string(),
+        nodeCount: z.number().int(),
+        podCount: z.number().int(),
+        runningPods: z.number().int(),
+        namespaceCount: z.number().int(),
+      }),
+    )
+    .query(async ({ input }) => {
+      try {
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const versionApi = kc.makeApiClient(k8s.VersionApi)
+
+        const cachePrefix = `k8s:${input.clusterId}`
+        const [versionInfo, nodesRes, podsRes, nsRes] = await Promise.all([
+          cached(`${cachePrefix}:version`, K8S_CACHE_TTL, () => versionApi.getCode()),
+          cached(`${cachePrefix}:nodes`, K8S_CACHE_TTL, () => coreV1.listNode()),
+          cached(`${cachePrefix}:pods`, K8S_CACHE_TTL, () => coreV1.listPodForAllNamespaces()),
+          cached(`${cachePrefix}:namespaces`, K8S_CACHE_TTL, () => coreV1.listNamespace()),
+        ])
+
+        return {
+          version: `v${versionInfo.major}.${versionInfo.minor}`,
+          nodeCount: nodesRes.items.length,
+          podCount: podsRes.items.length,
+          runningPods: podsRes.items.filter((p) => p.status?.phase === 'Running').length,
+          namespaceCount: nsRes.items.length,
+        }
+      } catch (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to fetch cluster status: ${error instanceof Error ? error.message : 'Unknown error'}`,
         })
       }
     }),
