@@ -35,9 +35,11 @@ function createDbMock() {
       encryptedKey: string
     }>
     deleteRows: Array<{ id: string }>
+    selectLimitArgs: number[]
   } = {
     selectRows: [],
     deleteRows: [],
+    selectLimitArgs: [],
   }
 
   const db = {
@@ -55,10 +57,16 @@ function createDbMock() {
       from: vi.fn(() => ({
         where: vi.fn(() => ({
           orderBy: vi.fn(async () => state.selectRows),
-          limit: vi.fn(async () => state.selectRows),
+          limit: vi.fn(async (value: number) => {
+            state.selectLimitArgs.push(value)
+            return state.selectRows.slice(0, value)
+          }),
         })),
         orderBy: vi.fn(() => ({
-          limit: vi.fn(async () => state.selectRows),
+          limit: vi.fn(async (value: number) => {
+            state.selectLimitArgs.push(value)
+            return state.selectRows.slice(0, value)
+          }),
         })),
       })),
     })),
@@ -216,6 +224,47 @@ describe('AiKeySettingsService key lifecycle', () => {
       provider: 'anthropic',
       model: 'claude-3-7-sonnet-latest',
       error: 'Invalid provider credentials. Please verify the API key and model.',
+    })
+  })
+
+  it('testStoredConnection enforces deterministic single-row fetch with limit(1)', async () => {
+    const { db, state } = createDbMock()
+    const service = new AiKeySettingsService(db as any)
+
+    await service.upsertUserKey({
+      userId: 'user-1',
+      provider: 'openai',
+      apiKey: 'sk-test-first-row-123456',
+      model: 'gpt-4.1-mini',
+    })
+
+    state.selectRows = [
+      {
+        provider: 'openai',
+        model: 'gpt-4.1-mini',
+        encryptedKey: state.upsertValues!.encryptedKey,
+      },
+      {
+        provider: 'openai',
+        model: 'gpt-4.1-nano',
+        encryptedKey: state.upsertValues!.encryptedKey,
+      },
+    ]
+
+    const testConnectionSpy = vi.spyOn(service, 'testConnection').mockResolvedValue({
+      ok: true,
+      provider: 'openai',
+      model: 'gpt-4.1-mini',
+    })
+
+    await service.testStoredConnection({ userId: 'user-1', provider: 'openai' })
+
+    expect(state.selectLimitArgs).toContain(1)
+    expect(testConnectionSpy).toHaveBeenCalledTimes(1)
+    expect(testConnectionSpy).toHaveBeenCalledWith({
+      provider: 'openai',
+      model: 'gpt-4.1-mini',
+      apiKey: 'sk-test-first-row-123456',
     })
   })
 })

@@ -24,21 +24,18 @@ export class ClusterClientPool {
       return cached.kc
     }
 
-    // Fetch from DB
     const [cluster] = await db.select().from(clusters).where(eq(clusters.id, clusterId))
     if (!cluster) {
       throw new Error(`Cluster ${clusterId} not found`)
     }
 
-    // Decrypt connectionConfig
     let config = cluster.connectionConfig as Record<string, unknown>
     if (typeof config.__encrypted === 'string' && /^[0-9a-fA-F]{64}$/.test(ENCRYPTION_KEY)) {
       config = JSON.parse(decryptCredential(config.__encrypted, ENCRYPTION_KEY))
     }
 
-    const kc = createKubeConfigForCluster(cluster.provider, config as ClusterConnectionConfig)
+    const kc = await createKubeConfigForCluster(cluster.provider, config as ClusterConnectionConfig)
 
-    // Evict oldest if at capacity
     if (this.cache.size >= MAX_ENTRIES) {
       let oldestKey: string | undefined
       let oldestTime = Number.POSITIVE_INFINITY
