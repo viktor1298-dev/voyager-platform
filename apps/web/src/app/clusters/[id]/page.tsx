@@ -6,14 +6,13 @@ import { DataTable } from '@/components/DataTable'
 import { LoadingState } from '@/components/LoadingState'
 import { QueryError } from '@/components/ErrorBoundary'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { ArrowLeft, Server, Box, Globe, Cpu } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 
 function providerIcon(provider: string): string {
   const map: Record<string, string> = {
@@ -199,45 +198,27 @@ function HeaderSkeleton() {
 export default function ClusterDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const [dataMode, setDataMode] = useState<'stored' | 'live'>('stored')
 
   const dbCluster = trpc.clusters.get.useQuery({ id })
-  const hasConnectionConfig = Boolean(dbCluster.data?.hasCredentials)
-
-  useEffect(() => {
-    if (!hasConnectionConfig && dataMode === 'live') {
-      setDataMode('stored')
-    }
-  }, [dataMode, hasConnectionConfig])
-
-  const showLiveData = hasConnectionConfig && dataMode === 'live'
+  const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
+  const isLive = hasCredentials
 
   const liveQuery = trpc.clusters.live.useQuery({ clusterId: id }, {
-    enabled: showLiveData,
+    enabled: isLive,
     refetchInterval: 30000,
   })
 
-  const liveNodesQuery = trpc.clusters.liveNodes.useQuery({ clusterId: id }, {
-    enabled: showLiveData,
-    refetchInterval: 30000,
-  })
+  const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !isLive })
+  const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !isLive })
 
-  const liveEventsQuery = trpc.clusters.liveEvents.useQuery({ clusterId: id, limit: 20 }, {
-    enabled: showLiveData,
-    refetchInterval: 30000,
-  })
+  const isLoading = isLive ? liveQuery.isLoading : dbCluster.isLoading
 
-  const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !showLiveData })
-  const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !showLiveData })
-
-  const isLoading = showLiveData ? liveQuery.isLoading : dbCluster.isLoading
-
-  const error = showLiveData ? liveQuery.error ?? liveNodesQuery.error ?? liveEventsQuery.error : dbCluster.error
+  const error = isLive ? liveQuery.error : dbCluster.error
   if (!isLoading && error) {
     return (
       <AppLayout>
         <Breadcrumbs />
-        <QueryError message={error.message} onRetry={() => showLiveData ? liveQuery.refetch() : dbCluster.refetch()} />
+        <QueryError message={error.message} onRetry={() => isLive ? liveQuery.refetch() : dbCluster.refetch()} />
       </AppLayout>
     )
   }
@@ -252,17 +233,18 @@ export default function ClusterDetailPage() {
   }
 
   const liveData = liveQuery.data
-  const cluster = showLiveData
+  const cluster = isLive
     ? {
         name: liveData?.name ?? 'minikube',
         provider: String(liveData?.provider ?? 'minikube'),
         version: String(liveData?.version ?? '—'),
         status: liveData?.status ?? 'unknown',
         endpoint: liveData?.endpoint ?? '—',
-        nodeCount: (liveNodesQuery.data ?? liveData?.nodes ?? []).length,
+        nodeCount: liveData?.nodes?.length ?? 0,
         podCount: liveData?.totalPods ?? 0,
         runningPods: liveData?.runningPods ?? 0,
         namespaceCount: liveData?.namespaces?.length ?? 0,
+        lastConnectedAt: (dbCluster.data as Record<string, unknown> | undefined)?.lastConnectedAt as string | null | undefined,
       }
     : {
         name: dbCluster.data?.name ?? '',
@@ -270,14 +252,15 @@ export default function ClusterDetailPage() {
         version: String(dbCluster.data?.version ?? '—'),
         status: dbCluster.data?.status ?? 'unknown',
         endpoint: (dbCluster.data as Record<string, unknown>)?.endpoint as string ?? '—',
+        lastConnectedAt: (dbCluster.data as Record<string, unknown>)?.lastConnectedAt as string | null | undefined,
         nodeCount: dbNodes.data?.length ?? 0,
         podCount: 0,
         runningPods: 0,
         namespaceCount: 0,
       }
 
-  const nodes: NodeRow[] = showLiveData
-    ? (liveNodesQuery.data ?? liveData?.nodes ?? []).map((n, i: number) => ({
+  const nodes: NodeRow[] = isLive
+    ? (liveData?.nodes ?? []).map((n, i: number) => ({
         id: `node-${i}`,
         name: n.name ?? '',
         status: n.status === 'ready' ? 'Ready' : n.status === 'notready' ? 'NotReady' : (n.status ?? 'Unknown'),
@@ -298,8 +281,8 @@ export default function ClusterDetailPage() {
         memory: `${n.memoryAllocatable ?? '—'} / ${n.memoryCapacity ?? '—'}`,
       }))
 
-  const events: EventRow[] = showLiveData
-    ? (liveEventsQuery.data ?? liveData?.events ?? []).slice(0, 20).map((e: Record<string, unknown>, i: number) => ({
+  const events: EventRow[] = isLive
+    ? (liveData?.events ?? []).slice(0, 20).map((e: Record<string, unknown>, i: number) => ({
         id: `ev-${i}`,
         type: (e.type as string) ?? 'Normal',
         reason: (e.reason as string) ?? '—',
@@ -316,6 +299,16 @@ export default function ClusterDetailPage() {
         timestamp: (e.timestamp as string) ?? null,
       }))
 
+  const connectivity = useMemo(() => {
+    const ts = cluster.lastConnectedAt
+    if (!ts) return { dot: 'bg-[var(--color-status-error)]', label: 'Disconnected' }
+
+    const diffMins = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 60000))
+    if (diffMins < 10) return { dot: 'bg-[var(--color-status-active)]', label: `Connected ${diffMins} min ago` }
+    if (diffMins <= 30) return { dot: 'bg-[var(--color-status-warning)]', label: `Last seen ${diffMins} min ago` }
+    return { dot: 'bg-[var(--color-status-error)]', label: 'Disconnected' }
+  }, [cluster.lastConnectedAt])
+
   const clusterStatus = typeof cluster.status === 'string' ? cluster.status : 'unknown'
 
   const statusDotClass = clusterStatus === 'healthy'
@@ -328,8 +321,7 @@ export default function ClusterDetailPage() {
 
   return (
     <AppLayout>
-      {/* Pass cluster name so breadcrumb shows "live-minikube" instead of raw UUID */}
-      <Breadcrumbs segmentLabels={{ [id]: cluster.name || id }} />
+      <Breadcrumbs />
 
       <button type="button" onClick={() => router.back()} className="flex items-center gap-1.5 text-[var(--color-accent)] hover:underline text-xs font-mono mb-5">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
@@ -347,10 +339,15 @@ export default function ClusterDetailPage() {
                 {cluster.name}
               </h1>
               <span className={`h-2.5 w-2.5 rounded-full ${statusDotClass} animate-pulse`} />
+              <span
+                className={`h-2.5 w-2.5 rounded-full ${connectivity.dot}`}
+                title={connectivity.label}
+                aria-label={`Connectivity: ${connectivity.label}`}
+              />
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
                 {statusLabel}
               </span>
-              {showLiveData && (
+              {isLive && (
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-status-active)]/10 text-[var(--color-status-active)] border border-[var(--color-status-active)]/20">
                   LIVE
                 </span>
@@ -368,7 +365,7 @@ export default function ClusterDetailPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { icon: Server, label: 'Nodes', value: String(cluster.nodeCount) },
-            { icon: Box, label: 'Pods', value: showLiveData ? `${cluster.runningPods} / ${cluster.podCount}` : String(cluster.podCount || '—') },
+            { icon: Box, label: 'Pods', value: isLive ? `${cluster.runningPods} / ${cluster.podCount}` : String(cluster.podCount || '—') },
             { icon: Globe, label: 'Namespaces', value: String(cluster.namespaceCount || '—') },
             { icon: Cpu, label: 'Version', value: cluster.version },
           ].map((stat) => (
@@ -383,18 +380,6 @@ export default function ClusterDetailPage() {
         </div>
       </div>
 
-      <Tabs value={showLiveData ? 'live' : 'stored'} onValueChange={(value) => setDataMode(value as 'stored' | 'live')} className="mb-6">
-        <TabsList>
-          <TabsTrigger value="stored">Stored Data</TabsTrigger>
-          <TabsTrigger value="live" disabled={!hasConnectionConfig}>Live Data</TabsTrigger>
-        </TabsList>
-        {!hasConnectionConfig && (
-          <p className="mt-2 text-xs text-[var(--color-text-dim)]">Live Data requires a cluster connection configuration.</p>
-        )}
-        <TabsContent value="stored" className={showLiveData ? 'hidden' : ''} />
-        <TabsContent value="live" className={showLiveData ? '' : 'hidden'} />
-      </Tabs>
-
       {/* Nodes Table — DataTable */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
@@ -406,7 +391,7 @@ export default function ClusterDetailPage() {
         <DataTable
           data={nodes}
           columns={nodeColumns}
-          loading={showLiveData ? liveNodesQuery.isLoading || liveQuery.isLoading : dbNodes.isLoading}
+          loading={isLive ? liveQuery.isLoading : dbNodes.isLoading}
           emptyTitle="No nodes found"
           mobileCard={(node) => (
             <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
@@ -442,7 +427,7 @@ export default function ClusterDetailPage() {
         <DataTable
           data={events}
           columns={eventColumns}
-          loading={showLiveData ? liveEventsQuery.isLoading || liveQuery.isLoading : dbEvents.isLoading}
+          loading={isLive ? liveQuery.isLoading : dbEvents.isLoading}
           emptyTitle="No events found"
           searchable
           searchPlaceholder="Search events…"

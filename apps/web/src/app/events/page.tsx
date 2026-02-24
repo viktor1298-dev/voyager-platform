@@ -9,6 +9,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { trpc } from '@/lib/trpc'
+import { useClusterContext } from '@/stores/cluster-context'
 
 interface KubeEvent {
   type: string
@@ -65,7 +66,12 @@ export default function EventsPage() {
   const [filter, setFilter] = useState<EventFilter>('all')
   const [isClient, setIsClient] = useState(false)
 
-  const eventsQuery = trpc.clusters.liveEvents.useQuery({ limit: 50 }, { refetchInterval: 30000 })
+  const activeClusterId = useClusterContext((s) => s.activeClusterId)
+
+  const eventsQuery = trpc.clusters.liveEvents.useQuery(
+    { clusterId: activeClusterId ?? '', limit: 50 },
+    { refetchInterval: 30000, enabled: Boolean(activeClusterId) },
+  )
   const events = useMemo(
     () =>
       ((eventsQuery.data as Array<Partial<KubeEvent>> | undefined) ?? []).filter(isRenderableEvent),

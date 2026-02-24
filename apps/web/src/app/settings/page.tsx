@@ -18,6 +18,7 @@ import {
   upsertAiKeySettings,
 } from '@/lib/ai-keys-client'
 import { trpc } from '@/lib/trpc'
+import { useClusterContext } from '@/stores/cluster-context'
 
 interface ClusterRow {
   id: string
@@ -155,7 +156,10 @@ function StatusDot({ connected }: { connected: boolean }) {
 export const dynamic = 'force-dynamic'
 
 export default function SettingsPage() {
-  const liveQuery = trpc.clusters.live.useQuery(undefined, {
+  const activeClusterId = useClusterContext((s) => s.activeClusterId)
+
+  const liveQuery = trpc.clusters.live.useQuery({ clusterId: activeClusterId ?? '' }, {
+    enabled: Boolean(activeClusterId),
     refetchInterval: 30000,
   })
   const listQuery = trpc.clusters.list.useQuery(undefined, {

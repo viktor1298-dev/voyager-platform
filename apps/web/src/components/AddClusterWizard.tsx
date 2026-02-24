@@ -26,9 +26,9 @@ type Environment = 'production' | 'staging' | 'development'
 
 type ConnectionConfig =
   | { kubeconfig: string; context?: string }
-  | { accessKeyId: string; secretAccessKey: string; region: string; roleArn?: string }
-  | { subscriptionId: string; tenantId: string; clientId: string; clientSecret: string; resourceGroup: string }
-  | { projectId: string; zone: string; serviceAccountKey: string }
+  | { accessKeyId: string; secretAccessKey: string; region: string; endpoint?: string }
+  | { subscriptionId: string; resourceGroup: string; clusterName: string }
+  | { serviceAccountJson: string; endpoint?: string }
   | { caCert?: string; clientCert?: string; clientKey?: string; endpoint: string }
 
 export type AddClusterWizardPayload = {
@@ -150,17 +150,14 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
   const [awsAccessKey, setAwsAccessKey] = useState('')
   const [awsSecretKey, setAwsSecretKey] = useState('')
   const [awsRegion, setAwsRegion] = useState('')
-  const [awsRoleArn, setAwsRoleArn] = useState('')
+  const [awsEndpoint, setAwsEndpoint] = useState('')
 
   const [azureSubscriptionId, setAzureSubscriptionId] = useState('')
-  const [azureTenantId, setAzureTenantId] = useState('')
-  const [azureClientId, setAzureClientId] = useState('')
-  const [azureClientSecret, setAzureClientSecret] = useState('')
   const [azureResourceGroup, setAzureResourceGroup] = useState('')
+  const [azureClusterName, setAzureClusterName] = useState('')
 
-  const [gkeProjectId, setGkeProjectId] = useState('')
-  const [gkeZone, setGkeZone] = useState('')
-  const [gkeServiceAccount, setGkeServiceAccount] = useState<File | null>(null)
+  const [gkeServiceAccountJson, setGkeServiceAccountJson] = useState('')
+  const [gkeEndpoint, setGkeEndpoint] = useState('')
 
   const [minikubeCaCert, setMinikubeCaCert] = useState<File | null>(null)
   const [minikubeClientCert, setMinikubeClientCert] = useState<File | null>(null)
@@ -178,7 +175,6 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
   useEffect(() => {
     return () => {
       setAwsSecretKey('')
-      setAzureClientSecret('')
     }
   }, [])
 
@@ -193,25 +189,22 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
         accessKeyId: awsAccessKey.trim(),
         secretAccessKey: awsSecretKey,
         region: awsRegion.trim(),
-        roleArn: awsRoleArn.trim() || undefined,
+        endpoint: awsEndpoint.trim() || undefined,
       }
     }
 
     if (provider === 'azure') {
       return {
         subscriptionId: azureSubscriptionId.trim(),
-        tenantId: azureTenantId.trim(),
-        clientId: azureClientId.trim(),
-        clientSecret: azureClientSecret,
         resourceGroup: azureResourceGroup.trim(),
+        clusterName: azureClusterName.trim(),
       }
     }
 
     if (provider === 'gke') {
       return {
-        projectId: gkeProjectId.trim(),
-        zone: gkeZone.trim(),
-        serviceAccountKey: gkeServiceAccount ? await readFileAsText(gkeServiceAccount) : '',
+        serviceAccountJson: gkeServiceAccountJson.trim(),
+        endpoint: gkeEndpoint.trim() || undefined,
       }
     }
 
@@ -237,12 +230,12 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
         const endpointForValidation =
           provider === 'minikube'
             ? minikubeEndpoint.trim()
-            : provider === 'aws' && awsRegion.trim()
-              ? `https://eks.${awsRegion.trim()}.amazonaws.com`
+            : provider === 'aws'
+              ? awsEndpoint.trim() || (awsRegion.trim() ? `https://eks.${awsRegion.trim()}.amazonaws.com` : '')
               : provider === 'azure'
                 ? 'https://management.azure.com'
                 : provider === 'gke'
-                  ? 'https://container.googleapis.com'
+                  ? gkeEndpoint.trim() || 'https://container.googleapis.com'
                   : 'https://kubernetes.default.svc'
 
         const input: ValidateConnectionPayload = {
@@ -281,15 +274,15 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
     return () => {
       cancelled = true
     }
-  }, [step, trpcClient, provider, kubeFile, kubeText, awsAccessKey, awsSecretKey, awsRegion, awsRoleArn, azureSubscriptionId, azureTenantId, azureClientId, azureClientSecret, azureResourceGroup, gkeProjectId, gkeZone, gkeServiceAccount, minikubeCaCert, minikubeClientCert, minikubeClientKey, minikubeEndpoint])
+  }, [step, trpcClient, provider, kubeFile, kubeText, awsAccessKey, awsSecretKey, awsRegion, awsEndpoint, azureSubscriptionId, azureResourceGroup, azureClusterName, gkeServiceAccountJson, gkeEndpoint, minikubeCaCert, minikubeClientCert, minikubeClientKey, minikubeEndpoint])
 
   const computedEndpoint = useMemo(() => {
     if (provider === 'minikube') return minikubeEndpoint.trim()
-    if (provider === 'aws' && awsRegion.trim()) return `https://eks.${awsRegion.trim()}.amazonaws.com`
+    if (provider === 'aws') return awsEndpoint.trim() || (awsRegion.trim() ? `https://eks.${awsRegion.trim()}.amazonaws.com` : '')
     if (provider === 'azure') return 'https://management.azure.com'
-    if (provider === 'gke') return 'https://container.googleapis.com'
+    if (provider === 'gke') return gkeEndpoint.trim() || 'https://container.googleapis.com'
     return 'https://kubernetes.default.svc'
-  }, [provider, minikubeEndpoint, awsRegion])
+  }, [provider, minikubeEndpoint, awsRegion, awsEndpoint, gkeEndpoint])
 
   const endpointValid = useMemo(() => {
     try {
@@ -305,21 +298,13 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
     if (uploadError) return false
     if (provider === 'kubeconfig') return Boolean(kubeFile || kubeText.trim())
     if (provider === 'aws') return Boolean(awsAccessKey.trim() && awsSecretKey.trim() && awsRegion.trim())
-    if (provider === 'azure') {
-      return Boolean(
-        azureSubscriptionId.trim() &&
-        azureTenantId.trim() &&
-        azureClientId.trim() &&
-        azureClientSecret.trim() &&
-        azureResourceGroup.trim(),
-      )
-    }
-    if (provider === 'gke') return Boolean(gkeProjectId.trim() && gkeZone.trim() && gkeServiceAccount)
+    if (provider === 'azure') return Boolean(azureSubscriptionId.trim() && azureResourceGroup.trim() && azureClusterName.trim())
+    if (provider === 'gke') return Boolean(gkeServiceAccountJson.trim())
     if (provider === 'minikube') {
       return Boolean(minikubeCaCert && minikubeClientCert && minikubeClientKey && minikubeEndpoint.trim())
     }
     return false
-  }, [provider, kubeFile, kubeText, awsAccessKey, awsSecretKey, awsRegion, azureSubscriptionId, azureTenantId, azureClientId, azureClientSecret, azureResourceGroup, gkeProjectId, gkeZone, gkeServiceAccount, minikubeCaCert, minikubeClientCert, minikubeClientKey, minikubeEndpoint, uploadError])
+  }, [provider, kubeFile, kubeText, awsAccessKey, awsSecretKey, awsRegion, azureSubscriptionId, azureResourceGroup, azureClusterName, gkeServiceAccountJson, minikubeCaCert, minikubeClientCert, minikubeClientKey, minikubeEndpoint, uploadError])
 
   const canGoNext = (step === 1) || (step === 2 && step2Valid) || (step === 3 && validationState === 'success') || (step === 4 && endpointValid)
 
@@ -395,30 +380,34 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
 
               {provider === 'aws' && (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <input value={awsAccessKey} onChange={(e) => setAwsAccessKey(e.target.value)} placeholder="Access Key" className={inputClass} />
-                  <input type="password" value={awsSecretKey} onChange={(e) => setAwsSecretKey(e.target.value)} placeholder="Secret Key" className={inputClass} />
+                  <input value={awsAccessKey} onChange={(e) => setAwsAccessKey(e.target.value)} placeholder="Access Key ID" className={inputClass} />
+                  <input type="password" value={awsSecretKey} onChange={(e) => setAwsSecretKey(e.target.value)} placeholder="Secret Access Key" className={inputClass} />
                   <input value={awsRegion} onChange={(e) => setAwsRegion(e.target.value)} placeholder="Region (e.g. us-east-1)" className={inputClass} />
-                  <input value={awsRoleArn} onChange={(e) => setAwsRoleArn(e.target.value)} placeholder="Role ARN (optional)" className={inputClass} />
+                  <input value={awsEndpoint} onChange={(e) => setAwsEndpoint(e.target.value)} placeholder="Endpoint (optional)" className={inputClass} />
                 </div>
               )}
 
               {provider === 'azure' && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <input value={azureSubscriptionId} onChange={(e) => setAzureSubscriptionId(e.target.value)} placeholder="Subscription ID" className={inputClass} />
-                  <input value={azureTenantId} onChange={(e) => setAzureTenantId(e.target.value)} placeholder="Tenant ID" className={inputClass} />
-                  <input value={azureClientId} onChange={(e) => setAzureClientId(e.target.value)} placeholder="Client ID" className={inputClass} />
-                  <input type="password" value={azureClientSecret} onChange={(e) => setAzureClientSecret(e.target.value)} placeholder="Client Secret" className={inputClass} />
                   <input value={azureResourceGroup} onChange={(e) => setAzureResourceGroup(e.target.value)} placeholder="Resource Group" className={inputClass} />
+                  <input value={azureClusterName} onChange={(e) => setAzureClusterName(e.target.value)} placeholder="Cluster Name" className={inputClass} />
                 </div>
               )}
 
               {provider === 'gke' && (
                 <div className="space-y-3">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <input value={gkeProjectId} onChange={(e) => setGkeProjectId(e.target.value)} placeholder="Project ID" className={inputClass} />
-                    <input value={gkeZone} onChange={(e) => setGkeZone(e.target.value)} placeholder="Zone (e.g. us-central1-a)" className={inputClass} />
+                  <div>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Service Account JSON</label>
+                    <textarea
+                      rows={6}
+                      value={gkeServiceAccountJson}
+                      onChange={(e) => setGkeServiceAccountJson(e.target.value)}
+                      placeholder={`{\n  "type": "service_account"\n}`}
+                      className={inputClass}
+                    />
                   </div>
-                  <FileDrop label="Service Account JSON" file={gkeServiceAccount} onFile={setGkeServiceAccount} onError={setUploadError} accept=".json,application/json" />
+                  <input value={gkeEndpoint} onChange={(e) => setGkeEndpoint(e.target.value)} placeholder="Endpoint (optional)" className={inputClass} />
                 </div>
               )}
 
