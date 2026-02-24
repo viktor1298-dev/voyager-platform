@@ -202,7 +202,7 @@ export default function ClusterDetailPage() {
   const [dataMode, setDataMode] = useState<'stored' | 'live'>('stored')
 
   const dbCluster = trpc.clusters.get.useQuery({ id })
-  const hasConnectionConfig = Boolean(dbCluster.data?.connectionConfig)
+  const hasConnectionConfig = Boolean(dbCluster.data?.hasCredentials)
 
   useEffect(() => {
     if (!hasConnectionConfig && dataMode === 'live') {
