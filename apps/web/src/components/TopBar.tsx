@@ -27,7 +27,7 @@ export function TopBar() {
     }
   }
 
-  const liveQuery = trpc.clusters.live.useQuery(undefined, {
+  const liveQuery = trpc.clusters.live.useQuery({ clusterId: 'live-minikube' }, {
     refetchInterval: 30000,
     retry: 2,
   })

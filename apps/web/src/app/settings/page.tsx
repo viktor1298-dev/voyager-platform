@@ -154,7 +154,7 @@ function StatusDot({ connected }: { connected: boolean }) {
 export const dynamic = 'force-dynamic'
 
 export default function SettingsPage() {
-  const liveQuery = trpc.clusters.live.useQuery(undefined, {
+  const liveQuery = trpc.clusters.live.useQuery({ clusterId: 'live-minikube' }, {
     refetchInterval: 30000,
   })
   const listQuery = trpc.clusters.list.useQuery(undefined, {

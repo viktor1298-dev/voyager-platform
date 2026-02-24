@@ -14,8 +14,6 @@ import { ArrowLeft, Server, Box, Globe, Cpu } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useMemo } from 'react'
 
-const LIVE_CLUSTER_ID = 'live-minikube'
-
 function providerIcon(provider: string): string {
   const map: Record<string, string> = {
     minikube: 'simple-icons:kubernetes',
@@ -200,14 +198,16 @@ function HeaderSkeleton() {
 export default function ClusterDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const isLive = id === LIVE_CLUSTER_ID
 
-  const liveQuery = trpc.clusters.live.useQuery(undefined, {
+  const dbCluster = trpc.clusters.get.useQuery({ id })
+  const hasConnectionConfig = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.connectionConfig)
+  const isLive = hasConnectionConfig
+
+  const liveQuery = trpc.clusters.live.useQuery({ clusterId: id }, {
     enabled: isLive,
     refetchInterval: 30000,
   })
 
-  const dbCluster = trpc.clusters.get.useQuery({ id }, { enabled: !isLive })
   const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !isLive })
   const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !isLive })
 
@@ -244,6 +244,7 @@ export default function ClusterDetailPage() {
         podCount: liveData?.totalPods ?? 0,
         runningPods: liveData?.runningPods ?? 0,
         namespaceCount: liveData?.namespaces?.length ?? 0,
+        lastConnectedAt: (dbCluster.data as Record<string, unknown> | undefined)?.lastConnectedAt as string | null | undefined,
       }
     : {
         name: dbCluster.data?.name ?? '',
@@ -251,6 +252,7 @@ export default function ClusterDetailPage() {
         version: String(dbCluster.data?.version ?? '—'),
         status: dbCluster.data?.status ?? 'unknown',
         endpoint: (dbCluster.data as Record<string, unknown>)?.endpoint as string ?? '—',
+        lastConnectedAt: (dbCluster.data as Record<string, unknown>)?.lastConnectedAt as string | null | undefined,
         nodeCount: dbNodes.data?.length ?? 0,
         podCount: 0,
         runningPods: 0,
@@ -297,6 +299,16 @@ export default function ClusterDetailPage() {
         timestamp: (e.timestamp as string) ?? null,
       }))
 
+  const connectivity = useMemo(() => {
+    const ts = cluster.lastConnectedAt
+    if (!ts) return { dot: 'bg-[var(--color-status-error)]', label: 'Disconnected' }
+
+    const diffMins = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 60000))
+    if (diffMins < 10) return { dot: 'bg-[var(--color-status-active)]', label: `Connected ${diffMins} min ago` }
+    if (diffMins <= 30) return { dot: 'bg-[var(--color-status-warning)]', label: `Last seen ${diffMins} min ago` }
+    return { dot: 'bg-[var(--color-status-error)]', label: 'Disconnected' }
+  }, [cluster.lastConnectedAt])
+
   const clusterStatus = typeof cluster.status === 'string' ? cluster.status : 'unknown'
 
   const statusDotClass = clusterStatus === 'healthy'
@@ -327,6 +339,11 @@ export default function ClusterDetailPage() {
                 {cluster.name}
               </h1>
               <span className={`h-2.5 w-2.5 rounded-full ${statusDotClass} animate-pulse`} />
+              <span
+                className={`h-2.5 w-2.5 rounded-full ${connectivity.dot}`}
+                title={connectivity.label}
+                aria-label={`Connectivity: ${connectivity.label}`}
+              />
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
                 {statusLabel}
               </span>

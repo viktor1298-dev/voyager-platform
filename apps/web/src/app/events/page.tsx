@@ -65,7 +65,7 @@ export default function EventsPage() {
   const [filter, setFilter] = useState<EventFilter>('all')
   const [isClient, setIsClient] = useState(false)
 
-  const eventsQuery = trpc.clusters.liveEvents.useQuery({ limit: 50 }, { refetchInterval: 30000 })
+  const eventsQuery = trpc.clusters.liveEvents.useQuery({ clusterId: 'live-minikube', limit: 50 }, { refetchInterval: 30000 })
   const events = useMemo(
     () =>
       ((eventsQuery.data as Array<Partial<KubeEvent>> | undefined) ?? []).filter(isRenderableEvent),

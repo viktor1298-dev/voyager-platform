@@ -196,7 +196,7 @@ export const clustersRouter = router({
     .meta({
       openapi: { method: 'GET', path: '/api/clusters/live', protect: true, tags: ['clusters'] },
     })
-    .input(z.void())
+    .input(z.object({ clusterId: z.string().min(1) }))
     .output(
       z.object({
         name: z.string(),
@@ -299,7 +299,7 @@ export const clustersRouter = router({
     .meta({
       openapi: { method: 'GET', path: '/api/clusters/live/nodes', protect: true, tags: ['clusters'] },
     })
-    .input(z.void())
+    .input(z.object({ clusterId: z.string().min(1) }))
     .output(
       z.array(
         z.object({
@@ -349,7 +349,7 @@ export const clustersRouter = router({
     .meta({
       openapi: { method: 'GET', path: '/api/clusters/live/events', protect: true, tags: ['clusters'] },
     })
-    .input(z.object({ limit: z.number().int().min(1).max(200).optional() }))
+    .input(z.object({ clusterId: z.string().min(1), limit: z.number().int().min(1).max(200).optional() }))
     .output(
       z.array(
         z.object({

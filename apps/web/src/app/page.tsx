@@ -96,7 +96,7 @@ function DashboardContent() {
     setFilters((prev) => ({ ...prev, environment }))
   }
 
-  const liveQuery = trpc.clusters.live.useQuery(undefined, {
+  const liveQuery = trpc.clusters.live.useQuery({ clusterId: 'live-minikube' }, {
     refetchInterval: LIVE_CLUSTER_REFETCH_MS,
   })
 
