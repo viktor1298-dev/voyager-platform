@@ -14,7 +14,7 @@ import { Dialog } from '@/components/ui/dialog'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { usePermission } from '@/hooks/usePermission'
-import { getClusterEnvironment, getClusterTags, normalizeHealth } from '@/lib/cluster-meta'
+import { getClusterEnvironment, getClusterTags } from '@/lib/cluster-meta'
 import { getBestRelationForUser, getRelationBadgeClass, type Relation } from '@/lib/mock-access-control'
 import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
@@ -24,11 +24,28 @@ import { Database, Plus, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-function statusBadgeVariant(status: string) {
+type LiveHealthStatus = 'healthy' | 'warning' | 'error' | 'unknown'
+
+function normalizeLiveHealthStatus(status: string | null | undefined): LiveHealthStatus {
+  const value = (status ?? '').toLowerCase()
+  if (value === 'healthy' || value === 'ready' || value === 'active' || value === 'ok') return 'healthy'
+  if (value === 'warning' || value === 'degraded') return 'warning'
+  if (value === 'error' || value === 'critical' || value === 'unreachable') return 'error'
+  return 'unknown'
+}
+
+function healthBadgeVariant(status: LiveHealthStatus) {
   if (status === 'healthy') return 'success' as const
   if (status === 'warning') return 'warning' as const
-  if (status === 'degraded' || status === 'unreachable') return 'destructive' as const
+  if (status === 'error') return 'destructive' as const
   return 'outline' as const
+}
+
+function healthBadgeLabel(status: LiveHealthStatus) {
+  if (status === 'healthy') return 'Healthy'
+  if (status === 'warning') return 'Warning'
+  if (status === 'error') return 'Error'
+  return 'Unknown'
 }
 
 function formatLastSeen(date: Date | string | null | undefined, isClient: boolean) {
@@ -89,6 +106,7 @@ export default function ClustersPage() {
   const router = useRouter()
   const isAdmin = useIsAdmin()
   const clusters = trpc.clusters.list.useQuery()
+  const liveHealth = trpc.health.status.useQuery({}, { refetchInterval: 30000 })
   const clusterQueryKey = [['clusters', 'list'], { type: 'query' }] as const
 
   const createCluster = trpc.clusters.create.useMutation(
@@ -151,6 +169,14 @@ export default function ClustersPage() {
 
   const clusterList: ClusterRow[] = clusters.data ?? []
 
+  const liveHealthByClusterId = useMemo(() => {
+    const map = new Map<string, LiveHealthStatus>()
+    for (const item of liveHealth.data ?? []) {
+      map.set(item.clusterId, normalizeLiveHealthStatus(item.status))
+    }
+    return map
+  }, [liveHealth.data])
+
   const filterOptions = useMemo(() => {
     const statuses = new Set<string>()
     const providers = new Set<string>()
@@ -160,7 +186,7 @@ export default function ClustersPage() {
     for (const cluster of clusterList) {
       statuses.add((cluster.status ?? 'unknown').toLowerCase())
       providers.add(cluster.provider ?? 'unknown')
-      health.add(normalizeHealth(cluster.status))
+      health.add(liveHealthByClusterId.get(cluster.id) ?? normalizeLiveHealthStatus(cluster.status))
       for (const tag of getClusterTags({ name: cluster.name, provider: cluster.provider ?? undefined, source: 'db' })) {
         tags.add(tag)
       }
@@ -173,7 +199,7 @@ export default function ClustersPage() {
       health: Array.from(health),
       tags: Array.from(tags).sort(),
     }
-  }, [clusterList])
+  }, [clusterList, liveHealthByClusterId])
 
   const filteredClusters = useMemo(() => {
     const q = filters.q.trim().toLowerCase()
@@ -183,7 +209,7 @@ export default function ClustersPage() {
       const statusValue = (cluster.status ?? 'unknown').toLowerCase()
       if (filters.status !== 'all' && statusValue !== filters.status) return false
       if (filters.provider !== 'all' && (cluster.provider ?? 'unknown') !== filters.provider) return false
-      const healthValue = normalizeHealth(cluster.status)
+      const healthValue = liveHealthByClusterId.get(cluster.id) ?? normalizeLiveHealthStatus(cluster.status)
       if (filters.health !== 'all' && healthValue !== filters.health) return false
       const clusterTags = getClusterTags({ name: cluster.name, provider: cluster.provider ?? undefined, source: 'db' })
       if (filters.tags.length > 0 && !filters.tags.every((tag) => clusterTags.includes(tag))) return false
@@ -192,7 +218,7 @@ export default function ClustersPage() {
       }
       return true
     })
-  }, [clusterList, filters])
+  }, [clusterList, filters, liveHealthByClusterId])
 
   const onFiltersChange = useCallback((next: FilterValue) => setFilters(next), [])
 
@@ -218,16 +244,19 @@ export default function ClustersPage() {
         ),
       },
       {
-        accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(row.original.status ?? 'unknown')}`} />
-            <Badge variant={statusBadgeVariant(row.original.status ?? 'unknown')}>
-              {row.original.status ?? 'unknown'}
-            </Badge>
-          </div>
-        ),
+        id: 'healthStatus',
+        header: 'Health',
+        cell: ({ row }) => {
+          const liveStatus = liveHealthByClusterId.get(row.original.id) ?? normalizeLiveHealthStatus(row.original.status)
+          return (
+            <div className="flex items-center gap-2">
+              <span className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`} />
+              <Badge variant={healthBadgeVariant(liveStatus)}>
+                {healthBadgeLabel(liveStatus)}
+              </Badge>
+            </div>
+          )
+        },
       },
       {
         id: 'permission',
@@ -287,7 +316,7 @@ export default function ClustersPage() {
           ]
         : []),
     ],
-    [getPermissionForCluster, isAdmin, isClient],
+    [getPermissionForCluster, isAdmin, isClient, liveHealthByClusterId],
   )
 
   const toCreateClusterInput = useCallback((payload: AddClusterWizardPayload): CreateClusterInput => {
@@ -346,8 +375,15 @@ export default function ClustersPage() {
             <div className="flex justify-between items-center gap-2">
               <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm">{row.name}</span>
               <div className="flex items-center gap-2 shrink-0">
-                <span className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(row.status ?? 'unknown')}`} />
-                <Badge variant={statusBadgeVariant(row.status ?? 'unknown')}>{row.status ?? 'unknown'}</Badge>
+                {(() => {
+                  const liveStatus = liveHealthByClusterId.get(row.id) ?? normalizeLiveHealthStatus(row.status)
+                  return (
+                    <>
+                      <span className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`} />
+                      <Badge variant={healthBadgeVariant(liveStatus)}>{healthBadgeLabel(liveStatus)}</Badge>
+                    </>
+                  )
+                })()}
               </div>
             </div>
             {(() => {
