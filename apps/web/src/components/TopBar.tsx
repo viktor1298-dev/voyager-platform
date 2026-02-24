@@ -2,6 +2,7 @@
 
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
+import { useClusterContext } from '@/stores/cluster-context'
 import { LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -27,10 +28,16 @@ export function TopBar() {
     }
   }
 
-  const liveQuery = trpc.clusters.live.useQuery({ clusterId: 'live-minikube' }, {
-    refetchInterval: 30000,
-    retry: 2,
-  })
+  const activeClusterId = useClusterContext((s) => s.activeClusterId)
+
+  const liveQuery = trpc.clusters.live.useQuery(
+    { clusterId: activeClusterId ?? '' },
+    {
+      refetchInterval: 30000,
+      retry: 2,
+      enabled: Boolean(activeClusterId),
+    },
+  )
 
   const isConnected = !liveQuery.isError && liveQuery.data !== undefined
   const isReconnecting = liveQuery.isLoading && liveQuery.dataUpdatedAt > 0

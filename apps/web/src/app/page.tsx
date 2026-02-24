@@ -21,6 +21,7 @@ import {
 } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
+import { useClusterContext } from '@/stores/cluster-context'
 import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS, HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
 import { AlertTriangle, Box, Database, Server } from 'lucide-react'
 import Link from 'next/link'
@@ -96,9 +97,15 @@ function DashboardContent() {
     setFilters((prev) => ({ ...prev, environment }))
   }
 
-  const liveQuery = trpc.clusters.live.useQuery({ clusterId: 'live-minikube' }, {
-    refetchInterval: LIVE_CLUSTER_REFETCH_MS,
-  })
+  const activeClusterId = useClusterContext((s) => s.activeClusterId)
+
+  const liveQuery = trpc.clusters.live.useQuery(
+    { clusterId: activeClusterId ?? '' },
+    {
+      refetchInterval: LIVE_CLUSTER_REFETCH_MS,
+      enabled: Boolean(activeClusterId),
+    },
+  )
 
   const listQuery = trpc.clusters.list.useQuery(undefined, {
     refetchInterval: DB_CLUSTER_REFETCH_MS,
@@ -112,7 +119,7 @@ function DashboardContent() {
 
   if (liveData) {
     clusterList.push({
-      id: 'live-minikube',
+      id: activeClusterId ?? 'live',
       name: liveData.name,
       provider: liveData.provider,
       version: liveData.version,
