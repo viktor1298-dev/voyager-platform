@@ -2,15 +2,37 @@
 
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
+import { useClusterContext } from '@/stores/cluster-context'
 import { LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NotificationsPanel } from './NotificationsPanel'
 import { ThemeToggle } from './ThemeToggle'
+
+type ClusterStatus = 'healthy' | 'warning' | 'error' | 'unknown'
+
+function normalizeClusterStatus(status: string | null | undefined): ClusterStatus {
+  const value = (status ?? 'unknown').toLowerCase()
+  if (value === 'healthy' || value === 'active' || value === 'ready') return 'healthy'
+  if (value === 'warning' || value === 'degraded') return 'warning'
+  if (value === 'error' || value === 'critical' || value === 'down' || value === 'offline') return 'error'
+  return 'unknown'
+}
+
+function statusDot(status: ClusterStatus): string {
+  if (status === 'healthy') return '🟢'
+  if (status === 'warning') return '🟡'
+  if (status === 'error') return '🔴'
+  return '⚪'
+}
 
 export function TopBar() {
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
+  const { activeClusterId, setActiveCluster } = useClusterContext((s) => ({
+    activeClusterId: s.activeClusterId,
+    setActiveCluster: s.setActiveCluster,
+  }))
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
@@ -29,6 +51,11 @@ export function TopBar() {
 
   const liveQuery = trpc.clusters.live.useQuery(undefined, {
     refetchInterval: 30000,
+    retry: 2,
+  })
+
+  const clustersQuery = trpc.clusters.list.useQuery(undefined, {
+    refetchInterval: 60000,
     retry: 2,
   })
 
@@ -54,6 +81,28 @@ export function TopBar() {
         ? '…'
         : '0%'
 
+  const clusterOptions = useMemo(
+    () =>
+      (clustersQuery.data ?? []).map((cluster) => {
+        const status = normalizeClusterStatus((cluster as { status?: string | null }).status)
+        return {
+          id: String(cluster.id),
+          name: cluster.name,
+          status,
+          label: `${statusDot(status)} ${cluster.name}`,
+        }
+      }),
+    [clustersQuery.data],
+  )
+
+  useEffect(() => {
+    if (activeClusterId == null) return
+    const exists = clusterOptions.some((cluster) => cluster.id === activeClusterId)
+    if (!exists) {
+      setActiveCluster(null)
+    }
+  }, [activeClusterId, clusterOptions, setActiveCluster])
+
   return (
     <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-3 sm:px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">
       <div className="flex items-center gap-3">
@@ -71,6 +120,23 @@ export function TopBar() {
       </div>
 
       <div className="hidden sm:flex gap-6 items-center">
+        <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/80 px-2.5 py-1.5">
+          <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wide">Cluster</span>
+          <select
+            aria-label="Active cluster"
+            value={activeClusterId ?? ''}
+            onChange={(event) => setActiveCluster(event.target.value || null)}
+            disabled={clustersQuery.isLoading || clusterOptions.length === 0}
+            className="max-w-[190px] truncate rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs text-[var(--color-text-primary)] disabled:opacity-60"
+          >
+            <option value="">Select Cluster</option>
+            {clusterOptions.map((cluster) => (
+              <option key={cluster.id} value={cluster.id}>
+                {cluster.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <Stat label="Total Pods" value={totalPods} color="var(--color-accent)" />
         <Stat label="CPU Usage" value={cpuValue} color={statsQuery.data?.cpuPercent != null && statsQuery.data.cpuPercent > 80 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
         <Stat label="Alerts" value={alerts === null ? '—' : String(alerts)} color={alerts !== null && alerts > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
