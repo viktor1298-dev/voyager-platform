@@ -60,7 +60,7 @@ export function NotificationsPanel() {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="relative flex items-center justify-center h-9 w-9 rounded-lg border border-[var(--color-border)] hover:bg-white/[0.04] transition-colors"
+        className="relative flex items-center justify-center h-11 w-11 rounded-lg border border-[var(--color-border)] hover:bg-white/[0.04] transition-colors"
       >
         <Bell className="h-4 w-4 text-[var(--color-text-muted)]" />
         {unreadCount > 0 && (

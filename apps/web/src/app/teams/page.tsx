@@ -170,15 +170,17 @@ export default function TeamsPage() {
             <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Teams</h1>
             <p className="mt-1 text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">{teams.length} teams</p>
           </div>
-          <button type="button" onClick={() => setShowCreate(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
+          <button type="button" onClick={() => setShowCreate(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 min-h-[44px]">
             <Plus className="h-4 w-4" />Create Team
           </button>
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[1.1fr_1fr]">
           <div className="space-y-4">
-            <DataTable data={teams} columns={teamColumns} searchable searchPlaceholder="Search teams…" loading={isLoading} onRowClick={(team) => setSelectedTeamId(team.id)} emptyIcon={<Users className="h-10 w-10" />} emptyTitle="No teams" />
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="hidden md:block">
+              <DataTable data={teams} columns={teamColumns} searchable searchPlaceholder="Search teams…" loading={isLoading} onRowClick={(team) => setSelectedTeamId(team.id)} emptyIcon={<Users className="h-10 w-10" />} emptyTitle="No teams" />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 md:hidden">
               {teams.map((team, index) => (
                 <motion.button
                   key={team.id}

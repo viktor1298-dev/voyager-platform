@@ -1,11 +1,12 @@
-import { db, user as userTable } from '@voyager/db'
-import { eq } from 'drizzle-orm'
+import { account as accountTable, db, user as userTable } from '@voyager/db'
+import { and, eq } from 'drizzle-orm'
 import { auth } from './auth.js'
 import { createBootstrapUser } from './auth-bootstrap.js'
 
 const DEFAULT_ADMIN_EMAIL = 'admin@voyager.local'
 const DEFAULT_ADMIN_PASSWORD = 'admin123'
 const DEFAULT_ADMIN_NAME = 'Voyager Admin'
+const LEGACY_SEEDED_ADMIN_USER_ID = 'admin-001'
 
 const internalHeaders = new Headers({ 'x-internal-seed': 'true' })
 
@@ -15,6 +16,20 @@ type EnsureAdminUserOptions = {
    * Never enabled in runtime server startup path.
    */
   allowLocalDevDefaults?: boolean
+}
+
+type CredentialAccountRecord = {
+  providerId: string | null
+  password: string | null
+}
+
+type AuthApiError = {
+  statusCode?: number
+  status?: string | number
+  message?: string
+  code?: string | number
+  cause?: unknown
+  response?: unknown
 }
 
 function getAdminCredentials(options: EnsureAdminUserOptions) {
@@ -44,6 +59,88 @@ function getAdminCredentials(options: EnsureAdminUserOptions) {
   )
 }
 
+function isKnownLegacySeededAdminFingerprint(userId: string, email: string) {
+  return userId === LEGACY_SEEDED_ADMIN_USER_ID && email === DEFAULT_ADMIN_EMAIL
+}
+
+function isLegacyCredentialHash(account: CredentialAccountRecord | null | undefined) {
+  if (!account?.providerId || !account.password) return false
+  if (account.providerId !== 'credential') return false
+
+  // Legacy Helm SQL bootstrap inserted pgcrypto/bcrypt hashes that Better-Auth cannot parse.
+  return /^\$2[aby]\$/.test(account.password)
+}
+
+function isUnauthorizedAuthApiError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+
+  const queue: unknown[] = [error]
+  const visited = new Set<unknown>()
+
+  while (queue.length > 0 && visited.size < 20) {
+    const current = queue.shift()
+    if (!current || typeof current !== 'object' || visited.has(current)) continue
+    visited.add(current)
+
+    const authError = current as AuthApiError
+    const record = current as Record<string, unknown>
+
+    const message = typeof authError.message === 'string' ? authError.message.toLowerCase() : ''
+    const statusLike = [authError.statusCode, authError.status, authError.code, record.httpStatus]
+
+    if (
+      statusLike.includes(401) ||
+      statusLike.includes('UNAUTHORIZED') ||
+      statusLike.includes('AUTH_UNAUTHORIZED') ||
+      message.includes('unauthorized') ||
+      message.includes('not authorized') ||
+      message.includes('status code 401')
+    ) {
+      return true
+    }
+
+    if (authError.cause) queue.push(authError.cause)
+    if (authError.response) queue.push(authError.response)
+    if (record.error) queue.push(record.error)
+    if (record.data) queue.push(record.data)
+    if (record.body) queue.push(record.body)
+  }
+
+  return false
+}
+
+async function setAdminRoleWithBootstrapFallback(userId: string, adminEmail: string): Promise<void> {
+  try {
+    await auth.api.setRole({
+      headers: internalHeaders,
+      body: { userId, role: 'admin' },
+    })
+  } catch (error) {
+    if (!isUnauthorizedAuthApiError(error)) {
+      throw error
+    }
+
+    console.warn('Better-Auth setRole unauthorized during bootstrap; applying scoped DB role fallback', {
+      adminEmail,
+      userId,
+    })
+
+    await db.update(userTable).set({ role: 'admin' }).where(eq(userTable.id, userId))
+
+    const [updatedUser] = await db
+      .select({ role: userTable.role })
+      .from(userTable)
+      .where(eq(userTable.id, userId))
+      .limit(1)
+
+    if (updatedUser?.role !== 'admin') {
+      throw new Error(
+        `Bootstrap fallback failed to verify admin role assignment for user ${userId} (${adminEmail})`,
+      )
+    }
+  }
+}
+
 export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Promise<void> {
   const { adminEmail, adminPassword, adminName } = getAdminCredentials(options)
 
@@ -64,13 +161,28 @@ export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Pro
     throw error
   }
 
+  if (existingUserId && isKnownLegacySeededAdminFingerprint(existingUserId, adminEmail)) {
+    const [credentialAccount] = await db
+      .select({ providerId: accountTable.providerId, password: accountTable.password })
+      .from(accountTable)
+      .where(and(eq(accountTable.userId, existingUserId), eq(accountTable.providerId, 'credential')))
+      .limit(1)
+
+    if (isLegacyCredentialHash(credentialAccount)) {
+      console.warn('Detected legacy SQL-seeded admin credential, replacing bootstrap admin record', {
+        adminEmail,
+        existingUserId,
+      })
+      await db.delete(userTable).where(eq(userTable.id, existingUserId))
+      existingUserId = null
+      existingUserRole = null
+    }
+  }
+
   if (existingUserId) {
     if (existingUserRole !== 'admin') {
       try {
-        await auth.api.setRole({
-          headers: internalHeaders,
-          body: { userId: existingUserId, role: 'admin' },
-        })
+        await setAdminRoleWithBootstrapFallback(existingUserId, adminEmail)
       } catch (error) {
         console.error('Failed to set admin role for existing user', { adminEmail, existingUserId, error })
         throw error
@@ -91,11 +203,13 @@ export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Pro
     throw error
   }
 
+  if (!createdUserId) {
+    throw new Error('Failed to create admin user — no user id returned')
+  }
+
   try {
-    await auth.api.setRole({
-      headers: internalHeaders,
-      body: { userId: createdUserId, role: 'admin' },
-    })
+    await setAdminRoleWithBootstrapFallback(createdUserId, adminEmail)
+    console.info('Bootstrap admin user ensured via Better-Auth', { adminEmail, createdUserId })
   } catch (error) {
     console.error('Failed to set admin role for created user', { adminEmail, createdUserId, error })
     throw error

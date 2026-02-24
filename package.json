@@ -36,7 +36,10 @@
   },
   "dependencies": {
     "@aws-sdk/client-sts": "^3.996.0",
-    "@aws-sdk/s3-request-presigner": "^3.996.0",
+    "@aws-crypto/sha256-js": "^5.2.0",
+    "@smithy/protocol-http": "^5.3.2",
+    "@smithy/signature-v4": "^5.3.2",
+    "@aws-sdk/util-format-url": "^3.374.0",
     "@azure/arm-containerservice": "^24.1.0",
     "@azure/identity": "^4.13.0",
     "@google-cloud/container": "^6.7.0"

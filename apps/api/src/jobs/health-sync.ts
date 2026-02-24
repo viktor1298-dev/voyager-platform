@@ -1,3 +1,4 @@
+import * as k8s from '@kubernetes/client-node'
 import { clusters, db } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
@@ -5,6 +6,7 @@ import { clusterClientPool } from '../lib/cluster-client-pool.js'
 type SyncHealthStatus = 'healthy' | 'warning' | 'error' | 'unknown'
 
 const HEALTH_SYNC_INTERVAL_MS = 5 * 60 * 1000
+const HEALTH_SYNC_CONCURRENCY = 10
 
 function deriveHealthStatus(nodeCount: number, totalPods: number, runningPods: number): SyncHealthStatus {
   if (nodeCount <= 0) return 'error'
@@ -17,7 +19,9 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
   const now = new Date()
 
   try {
-    const { coreV1Api, versionApi } = await clusterClientPool.getClient(clusterId)
+    const kc = await clusterClientPool.getClient(clusterId)
+    const coreV1Api = kc.makeApiClient(k8s.CoreV1Api)
+    const versionApi = kc.makeApiClient(k8s.VersionApi)
 
     const [versionRes, nodesRes, podsRes] = await Promise.all([
       versionApi.getCode(),
@@ -41,7 +45,7 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
         version: `v${versionRes.major}.${versionRes.minor}`,
         nodesCount: totalNodes,
         lastHealthCheck: now,
-        ...( { lastConnectedAt: now } as Record<string, Date>),
+        lastConnectedAt: now,
       })
       .where(eq(clusters.id, clusterId))
   } catch (error) {
@@ -57,6 +61,21 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
   }
 }
 
+async function mapWithConcurrency<T>(items: T[], concurrency: number, worker: (item: T) => Promise<void>): Promise<void> {
+  let index = 0
+
+  const runWorker = async (): Promise<void> => {
+    while (index < items.length) {
+      const current = items[index++]
+      if (!current) return
+      await worker(current)
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => runWorker())
+  await Promise.allSettled(workers)
+}
+
 let intervalHandle: NodeJS.Timeout | null = null
 let isRunning = false
 
@@ -69,12 +88,11 @@ export function startHealthSync(): void {
 
     try {
       const allClusters = await db.select().from(clusters)
-      const activeClusters = allClusters.filter((cluster) => {
-        const maybeActive = (cluster as Record<string, unknown>).isActive
-        return typeof maybeActive === 'boolean' ? maybeActive : true
-      })
+      const activeClusters = allClusters.filter((cluster) => cluster.isActive)
 
-      await Promise.all(activeClusters.map((cluster) => syncClusterHealth(cluster.id)))
+      await mapWithConcurrency(activeClusters, HEALTH_SYNC_CONCURRENCY, async (cluster) => {
+        await syncClusterHealth(cluster.id)
+      })
     } catch (error) {
       console.error('[health-sync] job run failed', error)
     } finally {

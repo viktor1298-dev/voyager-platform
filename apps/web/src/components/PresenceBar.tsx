@@ -17,13 +17,31 @@ export function PresenceBar() {
   const reduced = useReducedMotion()
   const { onlineUsers } = usePresence()
 
+  const count = onlineUsers.length
+
   return (
     <div className="h-10 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/85 backdrop-blur-lg flex items-center px-3 sm:px-6">
       <div className="flex items-center gap-2 min-w-0">
-        <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-dim)] uppercase">
-          Presence
+        {/* Presence icon — pulsing green dot */}
+        <span
+          className="h-2 w-2 rounded-full shrink-0 animate-pulse-slow"
+          style={{ backgroundColor: count > 0 ? 'var(--color-status-active, #22c55e)' : 'var(--color-text-dim)' }}
+          aria-hidden="true"
+        />
+        <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-dim)] uppercase select-none">
+          Online
         </span>
-        <span className="text-[11px] text-[var(--color-text-muted)]">{onlineUsers.length}</span>
+        {/* Count badge */}
+        <span
+          className="inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full text-[9px] font-bold font-mono leading-none"
+          style={{
+            backgroundColor: count > 0 ? 'var(--color-status-active, #22c55e)' : 'rgba(255,255,255,0.06)',
+            color: count > 0 ? '#fff' : 'var(--color-text-dim)',
+          }}
+          title={`${count} user${count !== 1 ? 's' : ''} online`}
+        >
+          {count}
+        </span>
       </div>
 
       <div className="ml-4 flex items-center gap-2 overflow-x-auto">

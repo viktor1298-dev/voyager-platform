@@ -78,6 +78,7 @@ function ClusterDeleteAction({ clusterId, onDelete }: { clusterId: string; onDel
       }}
       className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
       title="Delete cluster"
+      aria-label="Delete cluster"
     >
       <Trash2 className="h-3.5 w-3.5" />
     </button>
@@ -295,7 +296,7 @@ export default function ClustersPage() {
   }, [])
 
   const btnPrimary =
-    'px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer'
+    'px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer min-h-[44px]'
 
   return (
     <AppLayout>

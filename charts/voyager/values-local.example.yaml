@@ -12,6 +12,8 @@ secret:
   adminEmail: "<fill-admin-email@example.local>"
   adminPassword: "<fill-admin-password>"
   adminName: "Voyager Admin"
+  # AES-256 key for BYOK encryption — generate with: openssl rand -hex 32
+  aiKeysEncryptionKey: "<fill-32-byte-hex-key>"
 
 devBootstrap:
   enabled: true

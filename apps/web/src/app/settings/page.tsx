@@ -1,13 +1,14 @@
 'use client'
 
 import type { ColumnDef } from '@tanstack/react-table'
-import { ExternalLink, Globe, Info, Layers, Server, Wifi } from 'lucide-react'
+import { ExternalLink, Globe, Info, KeyRound, Layers, Server, Wifi } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { DataTable } from '@/components/DataTable'
+import { ApiTokensSection } from '@/components/settings/ApiTokens'
 import { APP_VERSION } from '@/config/constants'
 import {
   type AiProvider,
@@ -34,7 +35,7 @@ interface ProviderConfig {
 
 const PROVIDERS: ProviderConfig[] = [
   {
-    value: 'anthropic',
+    value: 'claude',
     label: 'Claude (Anthropic)',
     models: ['claude-sonnet-4-20250514', 'claude-3-7-sonnet-latest'],
   },
@@ -161,7 +162,7 @@ export default function SettingsPage() {
     refetchInterval: 60000,
   })
 
-  const [provider, setProvider] = useState<AiProvider>('anthropic')
+  const [provider, setProvider] = useState<AiProvider>('claude')
   const [model, setModel] = useState(PROVIDERS[0].models[0])
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [storedMaskedKey, setStoredMaskedKey] = useState<string | null>(null)
@@ -543,8 +544,11 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
-
             </form>
+          </SectionCard>
+
+          <SectionCard icon={<KeyRound className="h-4 w-4" />} title="API Tokens">
+            <ApiTokensSection />
           </SectionCard>
 
           <SectionCard icon={<Layers className="h-4 w-4" />} title="Registered Clusters">

@@ -1,0 +1,27 @@
+{
+  "version": "v109-r2",
+  "timestamp": "2026-02-24T19:48:00+02:00",
+  "phase": "D-multi-cluster",
+  "currentStage": "WAIT",
+  "wave": 1,
+  "activeAgents": {
+    "dima": {
+      "session": "agent:developer:subagent:08b0b36e-1c02-4bac-bf1c-67b3d9afe55f",
+      "tasks": ["DB-1","DB-2","DB-3","SEC-1","SEC-2","SEC-3","BE-1","BE-2"],
+      "status": "running"
+    },
+    "beni": {
+      "session": "agent:backend-dev-2:subagent:3911ea1a-0e60-4949-a00f-07b42ce00a60",
+      "tasks": ["BE-3","BE-4","BE-5"],
+      "status": "running"
+    },
+    "ron": {
+      "session": "agent:frontend:subagent:a9a2d0cb-1124-4d9b-88da-c1669b662a27",
+      "tasks": ["FE-1","FE-2"],
+      "status": "running"
+    }
+  },
+  "completedTasks": [],
+  "openGates": ["review","e2e","qa-desktop","qa-mobile"],
+  "status": "wave-1-waiting"
+}

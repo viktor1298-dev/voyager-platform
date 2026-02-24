@@ -11,6 +11,7 @@ import {
 } from '@voyager/types'
 import { and, desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
+import { logAudit } from '../lib/audit.js'
 import { decryptApiKey, encryptApiKey, maskApiKey } from '../services/ai-key-crypto.js'
 import { AiProviderClient } from '../services/ai-provider.js'
 import { protectedProcedure, router } from '../trpc.js'
@@ -47,6 +48,11 @@ export const aiKeysRouter = router({
 
       const updatedAt = new Date()
       const maskedKey = maskApiKey(input.apiKey)
+
+      await logAudit(ctx, 'byok.save', 'ai-key', undefined, {
+        provider: input.provider,
+        model: input.model,
+      })
 
       return {
         key: {
@@ -102,6 +108,10 @@ export const aiKeysRouter = router({
       await ctx.db
         .delete(userAiKeys)
         .where(and(eq(userAiKeys.userId, ctx.user.id), eq(userAiKeys.provider, input.provider)))
+
+      await logAudit(ctx, 'byok.delete', 'ai-key', undefined, {
+        provider: input.provider,
+      })
 
       return { success: true }
     }),

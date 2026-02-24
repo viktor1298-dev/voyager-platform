@@ -1,5 +1,7 @@
-import { GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { Sha256 } from '@aws-crypto/sha256-js'
+import { HttpRequest } from '@smithy/protocol-http'
+import { SignatureV4 } from '@smithy/signature-v4'
+import { formatUrl } from '@aws-sdk/util-format-url'
 import { ContainerServiceClient } from '@azure/arm-containerservice'
 import { DefaultAzureCredential } from '@azure/identity'
 import { ClusterManagerClient } from '@google-cloud/container'
@@ -44,6 +46,51 @@ function ensureEndpoint(endpoint: string | undefined, provider: string): string 
     if (error instanceof TRPCError) throw error
     throw new TRPCError({ code: 'BAD_REQUEST', message: `${provider} endpoint must be a valid URL` })
   }
+}
+
+function withOptionalCa(cluster: Pick<k8s.Cluster, 'name' | 'server'>, caCert?: string): k8s.Cluster {
+  return {
+    ...cluster,
+    skipTLSVerify: false,
+    ...(caCert ? { caData: caCert } : {}),
+  }
+}
+
+async function generateEksToken(config: {
+  region: string
+  accessKeyId: string
+  secretAccessKey: string
+  sessionToken?: string
+  clusterName: string
+}): Promise<string> {
+  const signer = new SignatureV4({
+    service: 'sts',
+    region: config.region,
+    credentials: {
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+      sessionToken: config.sessionToken,
+    },
+    sha256: Sha256,
+  })
+
+  const request = new HttpRequest({
+    protocol: 'https:',
+    hostname: `sts.${config.region}.amazonaws.com`,
+    method: 'GET',
+    path: '/',
+    query: {
+      Action: 'GetCallerIdentity',
+      Version: '2011-06-15',
+    },
+    headers: {
+      host: `sts.${config.region}.amazonaws.com`,
+      'x-k8s-aws-id': config.clusterName,
+    },
+  })
+
+  const presigned = await signer.presign(request, { expiresIn: 60, unsignableHeaders: new Set(['host']) })
+  return `k8s-aws-v1.${toBase64Url(formatUrl(presigned))}`
 }
 
 export async function createKubeConfigForCluster(
@@ -97,19 +144,17 @@ export async function createKubeConfigForCluster(
       const endpoint = ensureEndpoint(config.endpoint, 'AWS')
 
       try {
-        const stsClient = new STSClient({
+        const token = await generateEksToken({
           region: config.region,
-          credentials: {
-            accessKeyId: config.accessKeyId,
-            secretAccessKey: config.secretAccessKey,
-          },
+          accessKeyId: config.accessKeyId,
+          secretAccessKey: config.secretAccessKey,
+          sessionToken: config.sessionToken,
+          clusterName: config.clusterName,
         })
-        const presignedUrl = await getSignedUrl(stsClient, new GetCallerIdentityCommand({}), { expiresIn: 60 })
-        const token = `k8s-aws-v1.${toBase64Url(presignedUrl)}`
 
         const kc = new k8s.KubeConfig()
         kc.loadFromOptions({
-          clusters: [{ name: 'aws-cluster', server: endpoint, skipTLSVerify: true }],
+          clusters: [withOptionalCa({ name: 'aws-cluster', server: endpoint }, config.caCert)],
           users: [{ name: 'aws-user', token }],
           contexts: [{ name: 'aws-context', cluster: 'aws-cluster', user: 'aws-user' }],
           currentContext: 'aws-context',
@@ -184,7 +229,7 @@ export async function createKubeConfigForCluster(
 
         const kc = new k8s.KubeConfig()
         kc.loadFromOptions({
-          clusters: [{ name: 'gke-cluster', server: endpoint, skipTLSVerify: true }],
+          clusters: [withOptionalCa({ name: 'gke-cluster', server: endpoint }, config.caCert)],
           users: [{ name: 'gke-user', token }],
           contexts: [{ name: 'gke-context', cluster: 'gke-cluster', user: 'gke-user' }],
           currentContext: 'gke-context',
