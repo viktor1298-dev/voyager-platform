@@ -48,7 +48,17 @@ test.describe('Multi-cluster flows (Phase D)', () => {
 
     await expect(page).toHaveURL(/\/clusters\/.+/);
     await expect(page.getByText(/loading cluster details/i)).toBeHidden({ timeout: 20_000 });
-    await expect(page.locator('h1').first().or(page.getByRole('heading', { name: /failed to load data/i }))).toBeVisible();
+
+    const heading = page.locator('h1').first();
+    const errorState = page.getByText(/failed to load data/i);
+    await expect(heading.or(errorState)).toBeVisible();
+
+    // Verify cluster detail content is meaningful
+    const hasNodes = page.getByText(/node|ready|status|running/i).first();
+    const hasLiveTab = page.getByRole('tab', { name: /live/i });
+    const hasStoredTab = page.getByRole('tab', { name: /stored/i });
+    const hasDetailContent = hasNodes.or(hasLiveTab).or(hasStoredTab).or(errorState);
+    await expect(hasDetailContent).toBeVisible({ timeout: 10_000 });
   });
 
   test('E2E-3: Invalid kubeconfig → error message', async ({ page }) => {
@@ -88,19 +98,20 @@ test.describe('Multi-cluster flows (Phase D)', () => {
     const rows = page.locator('tbody tr');
     await expect(rows.first()).toBeVisible();
 
+    // Only delete clusters created by E2E tests (e2e-kube- prefix) to preserve real data
     const rowCount = await rows.count();
     let row = rows.first();
     let clusterName = '';
     for (let i = rowCount - 1; i >= 0; i--) {
       const candidate = rows.nth(i);
       const name = (await candidate.locator('td').first().innerText()).trim();
-      if (name) {
+      if (name && /^e2e-kube-/.test(name)) {
         row = candidate;
         clusterName = name;
         break;
       }
     }
-    test.skip(!clusterName, 'No deletable row with a non-empty name was found');
+    test.skip(!clusterName, 'No e2e-created cluster (e2e-kube-*) found to delete');
 
     await row.hover();
     await row.getByRole('button', { name: /delete cluster/i }).click();
