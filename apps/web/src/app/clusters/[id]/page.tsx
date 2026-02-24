@@ -206,6 +206,8 @@ export default function ClusterDetailPage() {
   const liveQuery = trpc.clusters.live.useQuery({ clusterId: id }, {
     enabled: isLive,
     refetchInterval: 30000,
+    retry: false,
+    staleTime: 30000,
   })
 
   const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !isLive })

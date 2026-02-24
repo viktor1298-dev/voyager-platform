@@ -140,7 +140,7 @@ function DashboardContent() {
         name: c.name,
         provider: typeof c.provider === 'string' ? c.provider : 'unknown',
         version: typeof c.version === 'string' ? c.version : null,
-        status: typeof c.status === 'string' ? c.status : null,
+        status: typeof (c as Record<string, unknown>).healthStatus === 'string' ? ((c as Record<string, unknown>).healthStatus as string) : (typeof c.status === 'string' ? c.status : null),
         nodeCount: c.nodeCount,
         source: 'db',
         environment: getClusterEnvironment(c.name, c.provider),
