@@ -49,8 +49,6 @@ export function TopBar() {
     }
   }
 
-  const activeClusterId = useClusterContext((s) => s.activeClusterId)
-
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
     {
