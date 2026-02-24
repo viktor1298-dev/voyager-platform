@@ -29,10 +29,8 @@ function statusDot(status: ClusterStatus): string {
 export function TopBar() {
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
-  const { activeClusterId, setActiveCluster } = useClusterContext((s) => ({
-    activeClusterId: s.activeClusterId,
-    setActiveCluster: s.setActiveCluster,
-  }))
+  const activeClusterId = useClusterContext((s) => s.activeClusterId)
+  const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
