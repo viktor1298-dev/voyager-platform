@@ -200,8 +200,8 @@ export default function ClusterDetailPage() {
   const router = useRouter()
 
   const dbCluster = trpc.clusters.get.useQuery({ id })
-  const hasConnectionConfig = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.connectionConfig)
-  const isLive = hasConnectionConfig
+  const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
+  const isLive = hasCredentials
 
   const liveQuery = trpc.clusters.live.useQuery({ clusterId: id }, {
     enabled: isLive,
