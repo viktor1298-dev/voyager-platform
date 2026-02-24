@@ -3,6 +3,8 @@ import { clusters, nodes } from '@voyager/db'
 import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
+import { encryptCredential, decryptCredential } from '../lib/credential-crypto.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { cached, invalidateK8sCache } from '../lib/cache.js'
 import {
   awsConnectionConfigSchema,
@@ -17,6 +19,23 @@ import { getAppsV1Api, getCoreV1Api, getVersionApi } from '../lib/k8s.js'
 import { normalizeProvider, VALID_PROVIDERS } from '../lib/providers.js'
 import { createAuthorizationService } from '../lib/authorization.js'
 import { adminProcedure, authorizedProcedure, protectedProcedure, router } from '../trpc.js'
+
+const ENCRYPTION_KEY = process.env.CLUSTER_CRED_ENCRYPTION_KEY ?? ''
+const isEncryptionEnabled = /^[0-9a-fA-F]{64}$/.test(ENCRYPTION_KEY)
+
+function encryptConnectionConfig(config: Record<string, unknown>): Record<string, unknown> {
+  if (!isEncryptionEnabled) return config
+  const json = JSON.stringify(config)
+  return { __encrypted: encryptCredential(json, ENCRYPTION_KEY) }
+}
+
+function decryptConnectionConfig(config: Record<string, unknown>): Record<string, unknown> {
+  if (!isEncryptionEnabled) return config
+  if (typeof config.__encrypted === 'string') {
+    return JSON.parse(decryptCredential(config.__encrypted, ENCRYPTION_KEY))
+  }
+  return config // not encrypted (legacy data)
+}
 
 const K8S_CACHE_TTL = 30 // seconds
 
@@ -175,6 +194,7 @@ export const clustersRouter = router({
 
       return visibleClusters.map((c) => ({
         ...c,
+        connectionConfig: decryptConnectionConfig(c.connectionConfig),
         nodeCount: countMap.get(c.id) ?? 0,
       }))
     }),
@@ -189,7 +209,7 @@ export const clustersRouter = router({
       const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.id))
       if (!cluster) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
       const clusterNodes = await ctx.db.select().from(nodes).where(eq(nodes.clusterId, input.id))
-      return { ...cluster, nodes: clusterNodes }
+      return { ...cluster, connectionConfig: decryptConnectionConfig(cluster.connectionConfig), nodes: clusterNodes }
     }),
 
   live: protectedProcedure
@@ -500,9 +520,7 @@ export const clustersRouter = router({
           provider: normalizeProvider(input.provider),
           environment: input.environment ?? 'development',
           endpoint: input.endpoint ?? null,
-          // TODO(security): Encrypt/decrypt secrets in connectionConfig before persisting to JSONB.
-          // Placeholder: currently only non-sensitive references should be stored (e.g. credentialRef).
-          connectionConfig: input.connectionConfig ?? {},
+          connectionConfig: encryptConnectionConfig(input.connectionConfig ?? {}),
           status: input.status ?? 'unreachable',
           healthStatus: input.healthStatus ?? 'unknown',
           lastHealthCheck: parsedLastHealthCheck,
@@ -559,9 +577,7 @@ export const clustersRouter = router({
       if (data.environment !== undefined) updates.environment = data.environment
       if (data.endpoint !== undefined) updates.endpoint = data.endpoint
       if (data.connectionConfig !== undefined) {
-        // TODO(security): Encrypt/decrypt secrets in connectionConfig before persisting to JSONB.
-        // Placeholder: currently only non-sensitive references should be stored (e.g. credentialRef).
-        updates.connectionConfig = data.connectionConfig
+        updates.connectionConfig = encryptConnectionConfig(data.connectionConfig)
       }
       if (data.status !== undefined) updates.status = data.status
       if (data.healthStatus !== undefined) updates.healthStatus = data.healthStatus
@@ -572,6 +588,7 @@ export const clustersRouter = router({
       if (data.nodesCount !== undefined) updates.nodesCount = data.nodesCount
       const [updated] = await ctx.db.update(clusters).set(updates).where(eq(clusters.id, id)).returning()
       if (!updated) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
+      clusterClientPool.invalidate(id)
       await logAudit(ctx, 'cluster.update', 'cluster', id, data)
       return updated
     }),
@@ -585,6 +602,7 @@ export const clustersRouter = router({
     .mutation(async ({ ctx, input }) => {
       const [deleted] = await ctx.db.delete(clusters).where(eq(clusters.id, input.id)).returning()
       if (!deleted) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
+      clusterClientPool.invalidate(input.id)
       await logAudit(ctx, 'cluster.delete', 'cluster', input.id, { name: deleted.name })
       return deleted
     }),

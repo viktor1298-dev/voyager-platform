@@ -20,6 +20,14 @@ import { registerAiStreamRoute } from './routes/ai-stream.js'
 import { registerMcpRoute } from './routes/mcp.js'
 import { createContext } from './trpc.js'
 
+// Validate CLUSTER_CRED_ENCRYPTION_KEY (64-char hex = 32 bytes AES-256 key)
+const CLUSTER_CRED_ENCRYPTION_KEY = process.env.CLUSTER_CRED_ENCRYPTION_KEY ?? ''
+if (!/^[0-9a-fA-F]{64}$/.test(CLUSTER_CRED_ENCRYPTION_KEY)) {
+  console.warn(
+    '⚠️  CLUSTER_CRED_ENCRYPTION_KEY is missing or invalid (expected 64-char hex string). Credential encryption will fail.',
+  )
+}
+
 // Initialize Sentry early
 initSentry()
 
