@@ -1,4 +1,4 @@
-import { integer, jsonb, pgEnum, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, integer, jsonb, pgEnum, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 
 // Canonical provider IDs shared with API/web payloads.
 export const clusterProviderEnum = pgEnum('cluster_provider', [
@@ -33,6 +33,9 @@ export const clusters = pgTable('clusters', {
   lastHealthCheck: timestamp('last_health_check', { withTimezone: true }),
   version: varchar('version', { length: 50 }),
   nodesCount: integer('nodes_count').notNull().default(0),
+  credentialRef: varchar('credential_ref', { length: 255 }),
+  isActive: boolean('is_active').default(true).notNull(),
+  lastConnectedAt: timestamp('last_connected_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .notNull()
