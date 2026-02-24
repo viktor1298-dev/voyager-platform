@@ -12,6 +12,7 @@ const AUTH_TAG_LENGTH = 16
  */
 export function encryptCredential(plaintext: string, key: string): string {
   const keyBuffer = Buffer.from(key, 'hex')
+  if (keyBuffer.length !== 32) throw new Error('Encryption key must be 32 bytes (64 hex chars)')
   const iv = randomBytes(IV_LENGTH)
   const cipher = createCipheriv(ALGORITHM, keyBuffer, iv, { authTagLength: AUTH_TAG_LENGTH })
   const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()])
@@ -31,6 +32,7 @@ export function decryptCredential(cipher: string, key: string): string {
     throw new Error('Invalid cipher format: expected iv:authTag:ciphertext')
   }
   const keyBuffer = Buffer.from(key, 'hex')
+  if (keyBuffer.length !== 32) throw new Error('Encryption key must be 32 bytes (64 hex chars)')
   const iv = Buffer.from(ivHex, 'hex')
   const authTag = Buffer.from(authTagHex, 'hex')
   const ciphertext = Buffer.from(ciphertextHex, 'hex')

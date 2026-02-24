@@ -3,7 +3,7 @@ import { clusters, nodes } from '@voyager/db'
 import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
-import { encryptCredential, decryptCredential } from '../lib/credential-crypto.js'
+import { encryptCredential } from '../lib/credential-crypto.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { cached, invalidateK8sCache } from '../lib/cache.js'
 import {
@@ -27,14 +27,6 @@ function encryptConnectionConfig(config: Record<string, unknown>): Record<string
   if (!isEncryptionEnabled) return config
   const json = JSON.stringify(config)
   return { __encrypted: encryptCredential(json, ENCRYPTION_KEY) }
-}
-
-function decryptConnectionConfig(config: Record<string, unknown>): Record<string, unknown> {
-  if (!isEncryptionEnabled) return config
-  if (typeof config.__encrypted === 'string') {
-    return JSON.parse(decryptCredential(config.__encrypted, ENCRYPTION_KEY))
-  }
-  return config // not encrypted (legacy data)
 }
 
 const K8S_CACHE_TTL = 30 // seconds
@@ -166,7 +158,7 @@ export const clustersRouter = router({
   list: protectedProcedure
     .meta({ openapi: { method: 'GET', path: '/api/clusters', protect: true, tags: ['clusters'] } })
     .input(z.void())
-    .output(z.array(clusterSchema.extend({ nodeCount: z.number().int() })))
+    .output(z.array(clusterSchema.omit({ connectionConfig: true }).extend({ hasCredentials: z.boolean(), nodeCount: z.number().int() })))
     .query(async ({ ctx }) => {
       const authz = createAuthorizationService(ctx.db)
       const allClusters = await ctx.db.select().from(clusters)
@@ -192,11 +184,14 @@ export const clustersRouter = router({
         .groupBy(nodes.clusterId)
       const countMap = new Map(nodeCounts.map((n) => [n.clusterId, n.count]))
 
-      return visibleClusters.map((c) => ({
-        ...c,
-        connectionConfig: decryptConnectionConfig(c.connectionConfig),
-        nodeCount: countMap.get(c.id) ?? 0,
-      }))
+      return visibleClusters.map((c) => {
+        const { connectionConfig, ...rest } = c
+        return {
+          ...rest,
+          hasCredentials: connectionConfig != null && Object.keys(connectionConfig).length > 0,
+          nodeCount: countMap.get(c.id) ?? 0,
+        }
+      })
     }),
 
   get: authorizedProcedure('cluster', 'viewer')
@@ -204,12 +199,13 @@ export const clustersRouter = router({
       openapi: { method: 'GET', path: '/api/clusters/{id}', protect: true, tags: ['clusters'] },
     })
     .input(z.object({ id: z.string().uuid() }))
-    .output(clusterSchema.extend({ nodes: z.array(nodeSchema) }))
+    .output(clusterSchema.omit({ connectionConfig: true }).extend({ hasCredentials: z.boolean(), nodes: z.array(nodeSchema) }))
     .query(async ({ ctx, input }) => {
       const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.id))
       if (!cluster) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
       const clusterNodes = await ctx.db.select().from(nodes).where(eq(nodes.clusterId, input.id))
-      return { ...cluster, connectionConfig: decryptConnectionConfig(cluster.connectionConfig), nodes: clusterNodes }
+      const { connectionConfig, ...rest } = cluster
+      return { ...rest, hasCredentials: connectionConfig != null && Object.keys(connectionConfig).length > 0, nodes: clusterNodes }
     }),
 
   live: protectedProcedure
@@ -234,6 +230,8 @@ export const clustersRouter = router({
     )
     .query(async ({ ctx, input }) => {
       try {
+        const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.clusterId))
+
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
         const appsV1 = kc.makeApiClient(k8s.AppsV1Api)
@@ -299,8 +297,6 @@ export const clustersRouter = router({
 
         const allNodesReady = k8sNodes.every((n) => n.status === 'ready')
         const status = allNodesReady ? 'healthy' : 'degraded'
-
-        const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.clusterId))
 
         return {
           name: cluster?.name ?? 'unknown',
