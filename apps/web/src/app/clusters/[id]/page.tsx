@@ -250,15 +250,25 @@ export default function ClusterDetailPage() {
         podCount: liveData?.totalPods ?? 0,
         runningPods: liveData?.runningPods ?? 0,
         namespaceCount: liveData?.namespaces?.length ?? 0,
-        lastConnectedAt: (dbCluster.data as Record<string, unknown> | undefined)?.lastConnectedAt as string | null | undefined,
+        lastConnectedAt: (() => {
+          const v = (dbCluster.data as Record<string, unknown> | undefined)?.lastConnectedAt
+          if (!v) return null
+          if (v instanceof Date) return v.toISOString()
+          return String(v)
+        })(),
       }
     : {
-        name: dbCluster.data?.name ?? '',
+        name: String(dbCluster.data?.name ?? ''),
         provider: String(dbCluster.data?.provider ?? ''),
         version: String(dbCluster.data?.version ?? '—'),
-        status: dbCluster.data?.status ?? 'unknown',
-        endpoint: (dbCluster.data as Record<string, unknown>)?.endpoint as string ?? '—',
-        lastConnectedAt: (dbCluster.data as Record<string, unknown>)?.lastConnectedAt as string | null | undefined,
+        status: String(dbCluster.data?.status ?? 'unknown'),
+        endpoint: String((dbCluster.data as Record<string, unknown>)?.endpoint ?? '—'),
+        lastConnectedAt: (() => {
+          const v = (dbCluster.data as Record<string, unknown>)?.lastConnectedAt
+          if (!v) return null
+          if (v instanceof Date) return v.toISOString()
+          return String(v)
+        })(),
         nodeCount: dbNodes.data?.length ?? 0,
         podCount: 0,
         runningPods: 0,
@@ -302,7 +312,7 @@ export default function ClusterDetailPage() {
         reason: (e.reason as string) ?? '—',
         message: (e.message as string) ?? '',
         namespace: (e.namespace as string) ?? '',
-        timestamp: (e.timestamp as string) ?? null,
+        timestamp: e.timestamp instanceof Date ? e.timestamp.toISOString() : ((e.timestamp as string) ?? null),
       }))
 
   const connectivity = useMemo(() => {
