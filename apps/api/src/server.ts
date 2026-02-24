@@ -13,6 +13,7 @@ import { mapAuthRouteErrorToBody, mapAuthRouteErrorToStatus } from './lib/auth-e
 import { ensureAdminUser } from './lib/ensure-admin-user.js'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
+import { startHealthSync } from './jobs/health-sync.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
 import { shutdownTelemetry } from './lib/telemetry.js'
 import { type AppRouter, appRouter } from './routers/index.js'
@@ -193,6 +194,9 @@ const start = async () => {
     } catch (err) {
       app.log.warn('K8s watchers failed to start (K8s may not be configured): %s', err)
     }
+
+    startHealthSync()
+    app.log.info('Health sync background job started (5 minute interval)')
 
     const signals = ['SIGTERM', 'SIGINT'] as const
     for (const signal of signals) {
