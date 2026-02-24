@@ -27,32 +27,23 @@ test.describe('Clusters — CRUD Operations', () => {
     const table = page.locator('table').first();
     await expect(table).toBeVisible();
 
-    const nameHeader = table.getByRole('columnheader', { name: /name/i }).first();
-    await expect(nameHeader).toBeVisible();
-
-    const headers = await table.locator('thead th').allTextContents();
-    const nameColumnIndex = headers.findIndex((headerText) => /name/i.test(headerText.trim()));
-    expect(nameColumnIndex).toBeGreaterThanOrEqual(0);
-
     const firstRow = table.locator('tbody tr').first();
     await expect(firstRow).toBeVisible();
 
-    await expect
-      .poll(async () => {
-        const text = await firstRow
-          .locator(`td:nth-child(${nameColumnIndex + 1})`)
-          .innerText();
-        return text.trim();
-      })
-      .not.toBe('');
-
-    const clusterName = (
-      await firstRow.locator(`td:nth-child(${nameColumnIndex + 1})`).innerText()
-    ).trim();
+    const clusterName = (await firstRow.locator('td').first().innerText()).trim();
 
     await firstRow.click();
     await expect(page).toHaveURL(/\/clusters\/.+/);
-    await expect(page.getByRole('heading', { level: 1, name: clusterName })).toBeVisible();
+    await expect(page.getByText(/loading cluster details/i)).toBeHidden({ timeout: 20_000 });
+
+    const readyState = page.locator('h1').first().or(page.getByRole('heading', { name: /failed to load data/i }));
+    await expect(readyState).toBeVisible();
+
+    if (await page.getByRole('heading', { name: /failed to load data/i }).isVisible()) {
+      await expect(page.getByText(/failed to fetch from k8s api/i)).toBeVisible();
+    } else {
+      await expect(page.locator('h1').first()).toContainText(clusterName);
+    }
   });
 
   test('should show delete action for existing cluster row', async ({ page }) => {

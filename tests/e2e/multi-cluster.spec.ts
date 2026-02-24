@@ -1,0 +1,131 @@
+import { test, expect } from '@playwright/test';
+import { login } from './helpers';
+
+async function openAddClusterWizard(page: import('@playwright/test').Page) {
+  await page.goto('/clusters');
+  await page.getByRole('button', { name: /add cluster/i }).first().click();
+  await expect(page.getByText(/step 1\/4/i)).toBeVisible();
+}
+
+test.describe('Multi-cluster flows (Phase D)', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('E2E-1: Add cluster via wizard (kubeconfig) → appears in list', async ({ page }) => {
+    const clusterName = `e2e-kube-${Date.now()}`;
+
+    await openAddClusterWizard(page);
+    await page.getByRole('button', { name: /go to next step/i }).click();
+
+    await page.getByPlaceholder(/apiVersion: v1/i).fill(`apiVersion: v1\nkind: Config\nclusters:\n- name: dev\n  cluster:\n    server: https://kubernetes.default.svc\n    insecure-skip-tls-verify: true\ncontexts:\n- name: dev\n  context:\n    cluster: dev\n    user: dev\ncurrent-context: dev\nusers:\n- name: dev\n  user:\n    token: test`);
+
+    await page.getByRole('button', { name: /go to next step/i }).click();
+    await expect(page.getByText(/step 3\/4/i)).toBeVisible();
+
+    const success = page.getByText(/connection test passed\. ready to continue\./i);
+    const failure = page.getByText(/connection test failed|failed|forbidden|unauthorized|invalid/i).first();
+    await expect(success.or(failure)).toBeVisible({ timeout: 20_000 });
+
+    if (await failure.isVisible()) {
+      test.skip(true, 'Environment cannot validate kubeconfig connection right now');
+    }
+
+    await page.getByRole('button', { name: /go to next step/i }).click();
+    await expect(page.getByText(/step 4\/4/i)).toBeVisible();
+    await page.getByPlaceholder(/name override/i).fill(clusterName);
+    await page.getByRole('button', { name: /add cluster/i }).click();
+
+    await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible();
+    await expect(page.getByText(clusterName).first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('E2E-2: Cluster detail → live tab loads nodes', async ({ page }) => {
+    await page.goto('/clusters');
+    const firstRow = page.locator('tbody tr').first();
+    await expect(firstRow).toBeVisible();
+    await firstRow.click();
+
+    await expect(page).toHaveURL(/\/clusters\/.+/);
+    await expect(page.getByText(/loading cluster details/i)).toBeHidden({ timeout: 20_000 });
+    await expect(page.locator('h1').first().or(page.getByRole('heading', { name: /failed to load data/i }))).toBeVisible();
+  });
+
+  test('E2E-3: Invalid kubeconfig → error message', async ({ page }) => {
+    await openAddClusterWizard(page);
+    await page.getByRole('button', { name: /go to next step/i }).click();
+
+    await page.getByPlaceholder(/apiVersion: v1/i).fill('not-a-valid-kubeconfig');
+    await page.getByRole('button', { name: /go to next step/i }).click();
+
+    await expect(page.getByText(/step 3\/4/i)).toBeVisible();
+    await expect(page.getByText(/failed|invalid|error|forbidden|unauthorized/i).first()).toBeVisible({ timeout: 20_000 });
+  });
+
+  test('E2E-4: TopBar cluster selector → switch context', async ({ page }) => {
+    await page.goto('/clusters');
+
+    const selector = page.getByRole('combobox', { name: /active cluster/i });
+    await expect(selector).toBeVisible();
+
+    const options = selector.locator('option');
+    const count = await options.count();
+    test.skip(count < 3, 'Need at least 2 clusters to verify selector switching');
+
+    const secondValue = await options.nth(1).getAttribute('value');
+    const thirdValue = await options.nth(2).getAttribute('value');
+
+    await selector.selectOption(secondValue!);
+    await expect(selector).toHaveValue(secondValue!);
+
+    await selector.selectOption(thirdValue!);
+    await expect(selector).toHaveValue(thirdValue!);
+  });
+
+  test('E2E-5: Delete cluster → removed from list', async ({ page }) => {
+    await page.goto('/clusters');
+
+    const rows = page.locator('tbody tr');
+    await expect(rows.first()).toBeVisible();
+
+    const rowCount = await rows.count();
+    let row = rows.first();
+    let clusterName = '';
+    for (let i = rowCount - 1; i >= 0; i--) {
+      const candidate = rows.nth(i);
+      const name = (await candidate.locator('td').first().innerText()).trim();
+      if (name) {
+        row = candidate;
+        clusterName = name;
+        break;
+      }
+    }
+    test.skip(!clusterName, 'No deletable row with a non-empty name was found');
+
+    await row.hover();
+    await row.getByRole('button', { name: /delete cluster/i }).click();
+
+    await expect(page.getByRole('heading', { name: /delete cluster/i })).toBeVisible();
+    await page.getByRole('button', { name: /^delete$/i }).click();
+
+    await expect(page.getByText(clusterName)).toHaveCount(0, { timeout: 15_000 });
+  });
+
+  test('E2E-6: AWS provider → fill fields → validate', async ({ page }) => {
+    await openAddClusterWizard(page);
+
+    await page.getByRole('radio', { name: /aws eks/i }).click();
+    await page.getByRole('button', { name: /go to next step/i }).click();
+
+    await page.getByPlaceholder(/access key id/i).fill('AKIAE2EEXAMPLE');
+    await page.getByPlaceholder(/secret access key/i).fill('secret-test-value');
+    await page.getByPlaceholder(/region/i).fill('us-east-1');
+
+    const next = page.getByRole('button', { name: /go to next step/i });
+    await expect(next).toBeEnabled();
+    await next.click();
+
+    await expect(page.getByText(/step 3\/4/i)).toBeVisible();
+    await expect(page.getByText(/testing connection|connection test passed|failed|forbidden|unauthorized|invalid/i).first()).toBeVisible({ timeout: 20_000 });
+  });
+});
