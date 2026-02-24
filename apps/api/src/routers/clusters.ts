@@ -3,6 +3,8 @@ import { clusters, nodes } from '@voyager/db'
 import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
+import { encryptCredential } from '../lib/credential-crypto.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { cached, invalidateK8sCache } from '../lib/cache.js'
 import {
   awsConnectionConfigSchema,
@@ -13,10 +15,19 @@ import {
   minikubeConnectionConfigSchema,
 } from '../lib/connection-config.js'
 import { validateClusterConnection } from '../lib/k8s-client-factory.js'
-import { getAppsV1Api, getCoreV1Api, getVersionApi } from '../lib/k8s.js'
+import * as k8s from '@kubernetes/client-node'
 import { normalizeProvider, VALID_PROVIDERS } from '../lib/providers.js'
 import { createAuthorizationService } from '../lib/authorization.js'
 import { adminProcedure, authorizedProcedure, protectedProcedure, router } from '../trpc.js'
+
+const ENCRYPTION_KEY = process.env.CLUSTER_CRED_ENCRYPTION_KEY ?? ''
+const isEncryptionEnabled = /^[0-9a-fA-F]{64}$/.test(ENCRYPTION_KEY)
+
+function encryptConnectionConfig(config: Record<string, unknown>): Record<string, unknown> {
+  if (!isEncryptionEnabled) return config
+  const json = JSON.stringify(config)
+  return { __encrypted: encryptCredential(json, ENCRYPTION_KEY) }
+}
 
 const K8S_CACHE_TTL = 30 // seconds
 
@@ -147,7 +158,7 @@ export const clustersRouter = router({
   list: protectedProcedure
     .meta({ openapi: { method: 'GET', path: '/api/clusters', protect: true, tags: ['clusters'] } })
     .input(z.void())
-    .output(z.array(clusterSchema.extend({ nodeCount: z.number().int() })))
+    .output(z.array(clusterSchema.omit({ connectionConfig: true }).extend({ hasCredentials: z.boolean(), nodeCount: z.number().int() })))
     .query(async ({ ctx }) => {
       const authz = createAuthorizationService(ctx.db)
       const allClusters = await ctx.db.select().from(clusters)
@@ -173,10 +184,14 @@ export const clustersRouter = router({
         .groupBy(nodes.clusterId)
       const countMap = new Map(nodeCounts.map((n) => [n.clusterId, n.count]))
 
-      return visibleClusters.map((c) => ({
-        ...c,
-        nodeCount: countMap.get(c.id) ?? 0,
-      }))
+      return visibleClusters.map((c) => {
+        const { connectionConfig, ...rest } = c
+        return {
+          ...rest,
+          hasCredentials: connectionConfig != null && Object.keys(connectionConfig).length > 0,
+          nodeCount: countMap.get(c.id) ?? 0,
+        }
+      })
     }),
 
   get: authorizedProcedure('cluster', 'viewer')
@@ -184,19 +199,20 @@ export const clustersRouter = router({
       openapi: { method: 'GET', path: '/api/clusters/{id}', protect: true, tags: ['clusters'] },
     })
     .input(z.object({ id: z.string().uuid() }))
-    .output(clusterSchema.extend({ nodes: z.array(nodeSchema) }))
+    .output(clusterSchema.omit({ connectionConfig: true }).extend({ hasCredentials: z.boolean(), nodes: z.array(nodeSchema) }))
     .query(async ({ ctx, input }) => {
       const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.id))
       if (!cluster) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
       const clusterNodes = await ctx.db.select().from(nodes).where(eq(nodes.clusterId, input.id))
-      return { ...cluster, nodes: clusterNodes }
+      const { connectionConfig, ...rest } = cluster
+      return { ...rest, hasCredentials: connectionConfig != null && Object.keys(connectionConfig).length > 0, nodes: clusterNodes }
     }),
 
   live: protectedProcedure
     .meta({
       openapi: { method: 'GET', path: '/api/clusters/live', protect: true, tags: ['clusters'] },
     })
-    .input(z.void())
+    .input(z.object({ clusterId: z.string().uuid() }))
     .output(
       z.object({
         name: z.string(),
@@ -212,16 +228,24 @@ export const clustersRouter = router({
         endpoint: z.string(),
       }),
     )
-    .query(async () => {
+    .query(async ({ ctx, input }) => {
       try {
+        const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.clusterId))
+
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const appsV1 = kc.makeApiClient(k8s.AppsV1Api)
+        const versionApi = kc.makeApiClient(k8s.VersionApi)
+
+        const cachePrefix = `k8s:${input.clusterId}`
         const [versionInfo, nodesResponse, podsResponse, nsResponse, eventsResponse, deploymentsResponse] =
           await Promise.all([
-            cached('k8s:version', K8S_CACHE_TTL, () => getVersionApi().getCode()),
-            cached('k8s:nodes', K8S_CACHE_TTL, () => getCoreV1Api().listNode()),
-            cached('k8s:pods', K8S_CACHE_TTL, () => getCoreV1Api().listPodForAllNamespaces()),
-            cached('k8s:namespaces', K8S_CACHE_TTL, () => getCoreV1Api().listNamespace()),
-            cached('k8s:events', K8S_CACHE_TTL, () => getCoreV1Api().listEventForAllNamespaces()),
-            cached('k8s:deployments', K8S_CACHE_TTL, () => getAppsV1Api().listDeploymentForAllNamespaces()),
+            cached(`${cachePrefix}:version`, K8S_CACHE_TTL, () => versionApi.getCode()),
+            cached(`${cachePrefix}:nodes`, K8S_CACHE_TTL, () => coreV1.listNode()),
+            cached(`${cachePrefix}:pods`, K8S_CACHE_TTL, () => coreV1.listPodForAllNamespaces()),
+            cached(`${cachePrefix}:namespaces`, K8S_CACHE_TTL, () => coreV1.listNamespace()),
+            cached(`${cachePrefix}:events`, K8S_CACHE_TTL, () => coreV1.listEventForAllNamespaces()),
+            cached(`${cachePrefix}:deployments`, K8S_CACHE_TTL, () => appsV1.listDeploymentForAllNamespaces()),
           ])
 
         const k8sNodes = nodesResponse.items.map((node) => ({
@@ -275,8 +299,8 @@ export const clustersRouter = router({
         const status = allNodesReady ? 'healthy' : 'degraded'
 
         return {
-          name: 'minikube',
-          provider: 'minikube',
+          name: cluster?.name ?? 'unknown',
+          provider: cluster?.provider ?? 'unknown',
           version: `v${versionInfo.major}.${versionInfo.minor}`,
           status,
           nodes: k8sNodes,
@@ -285,7 +309,7 @@ export const clustersRouter = router({
           namespaces,
           events,
           deployments,
-          endpoint: 'https://192.168.49.2:8443',
+          endpoint: cluster?.endpoint ?? kc.getCurrentCluster()?.server ?? 'unknown',
         }
       } catch (error) {
         throw new TRPCError({
@@ -299,7 +323,7 @@ export const clustersRouter = router({
     .meta({
       openapi: { method: 'GET', path: '/api/clusters/live/nodes', protect: true, tags: ['clusters'] },
     })
-    .input(z.void())
+    .input(z.object({ clusterId: z.string().uuid() }))
     .output(
       z.array(
         z.object({
@@ -316,9 +340,11 @@ export const clustersRouter = router({
         }),
       ),
     )
-    .query(async () => {
+    .query(async ({ input }) => {
       try {
-        const nodesResponse = await cached('k8s:nodes', K8S_CACHE_TTL, () => getCoreV1Api().listNode())
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const nodesResponse = await cached(`k8s:${input.clusterId}:nodes`, K8S_CACHE_TTL, () => coreV1.listNode())
         return nodesResponse.items.map((node) => {
           const conditions = node.status?.conditions || []
           const ready = conditions.find((c) => c.type === 'Ready')
@@ -349,7 +375,7 @@ export const clustersRouter = router({
     .meta({
       openapi: { method: 'GET', path: '/api/clusters/live/events', protect: true, tags: ['clusters'] },
     })
-    .input(z.object({ limit: z.number().int().min(1).max(200).optional() }))
+    .input(z.object({ clusterId: z.string().uuid(), limit: z.number().int().min(1).max(200).optional() }))
     .output(
       z.array(
         z.object({
@@ -366,8 +392,10 @@ export const clustersRouter = router({
     .query(async ({ input }) => {
       try {
         const limit = input.limit ?? 50
-        const eventsResponse = await cached('k8s:events', K8S_CACHE_TTL, () =>
-          getCoreV1Api().listEventForAllNamespaces(),
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const eventsResponse = await cached(`k8s:${input.clusterId}:events`, K8S_CACHE_TTL, () =>
+          coreV1.listEventForAllNamespaces(),
         )
         return eventsResponse.items
           .sort(
@@ -389,6 +417,49 @@ export const clustersRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Failed to fetch events from K8s API: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        })
+      }
+    }),
+
+  liveStatus: protectedProcedure
+    .meta({
+      openapi: { method: 'GET', path: '/api/clusters/live/status', protect: true, tags: ['clusters'] },
+    })
+    .input(z.object({ clusterId: z.string().uuid() }))
+    .output(
+      z.object({
+        version: z.string(),
+        nodeCount: z.number().int(),
+        podCount: z.number().int(),
+        runningPods: z.number().int(),
+        namespaceCount: z.number().int(),
+      }),
+    )
+    .query(async ({ input }) => {
+      try {
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const versionApi = kc.makeApiClient(k8s.VersionApi)
+
+        const cachePrefix = `k8s:${input.clusterId}`
+        const [versionInfo, nodesRes, podsRes, nsRes] = await Promise.all([
+          cached(`${cachePrefix}:version`, K8S_CACHE_TTL, () => versionApi.getCode()),
+          cached(`${cachePrefix}:nodes`, K8S_CACHE_TTL, () => coreV1.listNode()),
+          cached(`${cachePrefix}:pods`, K8S_CACHE_TTL, () => coreV1.listPodForAllNamespaces()),
+          cached(`${cachePrefix}:namespaces`, K8S_CACHE_TTL, () => coreV1.listNamespace()),
+        ])
+
+        return {
+          version: `v${versionInfo.major}.${versionInfo.minor}`,
+          nodeCount: nodesRes.items.length,
+          podCount: podsRes.items.length,
+          runningPods: podsRes.items.filter((p) => p.status?.phase === 'Running').length,
+          namespaceCount: nsRes.items.length,
+        }
+      } catch (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to fetch cluster status: ${error instanceof Error ? error.message : 'Unknown error'}`,
         })
       }
     }),
@@ -500,9 +571,7 @@ export const clustersRouter = router({
           provider: normalizeProvider(input.provider),
           environment: input.environment ?? 'development',
           endpoint: input.endpoint ?? null,
-          // TODO(security): Encrypt/decrypt secrets in connectionConfig before persisting to JSONB.
-          // Placeholder: currently only non-sensitive references should be stored (e.g. credentialRef).
-          connectionConfig: input.connectionConfig ?? {},
+          connectionConfig: encryptConnectionConfig(input.connectionConfig ?? {}),
           status: input.status ?? 'unreachable',
           healthStatus: input.healthStatus ?? 'unknown',
           lastHealthCheck: parsedLastHealthCheck,
@@ -559,9 +628,7 @@ export const clustersRouter = router({
       if (data.environment !== undefined) updates.environment = data.environment
       if (data.endpoint !== undefined) updates.endpoint = data.endpoint
       if (data.connectionConfig !== undefined) {
-        // TODO(security): Encrypt/decrypt secrets in connectionConfig before persisting to JSONB.
-        // Placeholder: currently only non-sensitive references should be stored (e.g. credentialRef).
-        updates.connectionConfig = data.connectionConfig
+        updates.connectionConfig = encryptConnectionConfig(data.connectionConfig)
       }
       if (data.status !== undefined) updates.status = data.status
       if (data.healthStatus !== undefined) updates.healthStatus = data.healthStatus
@@ -572,6 +639,7 @@ export const clustersRouter = router({
       if (data.nodesCount !== undefined) updates.nodesCount = data.nodesCount
       const [updated] = await ctx.db.update(clusters).set(updates).where(eq(clusters.id, id)).returning()
       if (!updated) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
+      clusterClientPool.invalidate(id)
       await logAudit(ctx, 'cluster.update', 'cluster', id, data)
       return updated
     }),
@@ -585,6 +653,7 @@ export const clustersRouter = router({
     .mutation(async ({ ctx, input }) => {
       const [deleted] = await ctx.db.delete(clusters).where(eq(clusters.id, input.id)).returning()
       if (!deleted) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
+      clusterClientPool.invalidate(input.id)
       await logAudit(ctx, 'cluster.delete', 'cluster', input.id, { name: deleted.name })
       return deleted
     }),

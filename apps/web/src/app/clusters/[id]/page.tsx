@@ -14,8 +14,6 @@ import { ArrowLeft, Server, Box, Globe, Cpu } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useMemo } from 'react'
 
-const LIVE_CLUSTER_ID = 'live-minikube'
-
 function providerIcon(provider: string): string {
   const map: Record<string, string> = {
     minikube: 'simple-icons:kubernetes',
@@ -200,18 +198,20 @@ function HeaderSkeleton() {
 export default function ClusterDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const isLive = id === LIVE_CLUSTER_ID
 
-  const liveQuery = trpc.clusters.live.useQuery(undefined, {
+  // First fetch the cluster to determine if it has live credentials
+  const dbCluster = trpc.clusters.get.useQuery({ id })
+  const isLive = dbCluster.data?.hasCredentials === true
+
+  const liveQuery = trpc.clusters.live.useQuery({ clusterId: id }, {
     enabled: isLive,
     refetchInterval: 30000,
   })
 
-  const dbCluster = trpc.clusters.get.useQuery({ id }, { enabled: !isLive })
   const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !isLive })
   const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !isLive })
 
-  const isLoading = isLive ? liveQuery.isLoading : dbCluster.isLoading
+  const isLoading = dbCluster.isLoading || (isLive && liveQuery.isLoading)
 
   const error = isLive ? liveQuery.error : dbCluster.error
   if (!isLoading && error) {
