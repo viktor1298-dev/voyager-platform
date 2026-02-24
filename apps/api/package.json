@@ -17,11 +17,16 @@
     "seed:admin": "tsx src/scripts/seed-admin.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-sts": "^3.996.0",
+    "@aws-sdk/s3-request-presigner": "^3.996.0",
+    "@azure/arm-containerservice": "^24.1.0",
+    "@azure/identity": "^4.13.0",
     "@fastify/compress": "^8.3.1",
     "@fastify/cors": "^11.2.0",
     "@fastify/rate-limit": "^10.3.0",
     "@fastify/swagger": "^9.7.0",
     "@fastify/swagger-ui": "^5.2.5",
+    "@google-cloud/container": "^6.7.0",
     "@kubernetes/client-node": "^1.4.0",
     "@openfeature/flagd-provider": "^0.13.4",
     "@openfeature/server-sdk": "^1.20.1",

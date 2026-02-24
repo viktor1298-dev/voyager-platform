@@ -157,7 +157,7 @@ export class KarpenterService {
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid cluster connection configuration' })
     }
 
-    return createKubeConfigForCluster(
+    return await createKubeConfigForCluster(
       parsedCluster.data.provider as Parameters<typeof createKubeConfigForCluster>[0],
       parsedConnectionConfig.data as ClusterConnectionConfig,
     )

@@ -13,6 +13,7 @@ export const awsConnectionConfigSchema = z
     secretAccessKey: z.string().min(1),
     region: z.string().min(1),
     roleArn: z.string().optional(),
+    endpoint: z.string().url().optional(),
   })
   .strict()
 
@@ -30,6 +31,7 @@ export const azureConnectionConfigSchema = z
 export const gkeConnectionConfigSchema = z
   .object({
     serviceAccountJson: z.string().min(1),
+    endpoint: z.string().url().optional(),
   })
   .strict()
 
