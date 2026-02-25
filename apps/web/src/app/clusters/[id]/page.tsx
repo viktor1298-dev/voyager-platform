@@ -228,6 +228,24 @@ export default function ClusterDetailPage() {
 
   const isLoading = effectiveIsLive ? liveQuery.isLoading : dbCluster.isLoading
 
+  // useMemo MUST be called before any early return to satisfy Rules of Hooks
+  const lastConnectedAtRaw = (() => {
+    const v = (dbCluster.data as Record<string, unknown> | undefined)?.lastConnectedAt
+    if (!v) return null
+    if (v instanceof Date) return v.toISOString()
+    return String(v)
+  })()
+
+  const connectivity = useMemo(() => {
+    const ts = lastConnectedAtRaw
+    if (!ts) return { dot: 'bg-[var(--color-status-error)]', label: 'Disconnected' }
+
+    const diffMins = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 60000))
+    if (diffMins < 10) return { dot: 'bg-[var(--color-status-active)]', label: `Connected ${diffMins} min ago` }
+    if (diffMins <= 30) return { dot: 'bg-[var(--color-status-warning)]', label: `Last seen ${diffMins} min ago` }
+    return { dot: 'bg-[var(--color-status-error)]', label: 'Disconnected' }
+  }, [lastConnectedAtRaw])
+
   const error = dbCluster.error
   if (!isLoading && error) {
     return (
@@ -328,16 +346,6 @@ export default function ClusterDetailPage() {
         namespace: asText(e.namespace, ''),
         timestamp: e.timestamp instanceof Date ? e.timestamp.toISOString() : (typeof e.timestamp === 'string' ? e.timestamp : null),
       }))
-
-  const connectivity = useMemo(() => {
-    const ts = cluster.lastConnectedAt
-    if (!ts) return { dot: 'bg-[var(--color-status-error)]', label: 'Disconnected' }
-
-    const diffMins = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 60000))
-    if (diffMins < 10) return { dot: 'bg-[var(--color-status-active)]', label: `Connected ${diffMins} min ago` }
-    if (diffMins <= 30) return { dot: 'bg-[var(--color-status-warning)]', label: `Last seen ${diffMins} min ago` }
-    return { dot: 'bg-[var(--color-status-error)]', label: 'Disconnected' }
-  }, [cluster.lastConnectedAt])
 
   const clusterStatus = typeof cluster.status === 'string' ? cluster.status : 'unknown'
 
