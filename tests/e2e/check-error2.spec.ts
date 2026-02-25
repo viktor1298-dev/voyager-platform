@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('capture cluster detail errors', async ({ page }) => {
+test('verify no React #310 - extended wait', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
   page.on('pageerror', err => errors.push('PAGE_ERROR: ' + err.message));
@@ -10,17 +10,16 @@ test('capture cluster detail errors', async ({ page }) => {
   await page.getByLabel(/password/i).fill('admin123');
   await page.getByRole('button', { name: /sign in|log in/i }).click();
   await page.waitForURL('**/*', { timeout: 10000 });
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(3000);
 
+  // Navigate to cluster detail
   await page.goto('http://voyager-platform.voyagerlabs.co/clusters/550e8400-e29b-41d4-a716-446655440000');
-  await page.waitForTimeout(8000);
+  await page.waitForTimeout(15000);  // Wait longer
 
-  console.log('=== CONSOLE ERRORS ===');
-  for (const e of errors) console.log(e);
-  console.log('=== END ERRORS ===');
+  console.log('=== ERRORS ===');
+  for (const e of errors) console.log(e.substring(0, 200));
   console.log('Total errors:', errors.length);
   
-  // Verify no React #310
   const has310 = errors.some(e => e.includes('#310'));
   expect(has310).toBe(false);
 });
