@@ -271,7 +271,7 @@ export default function ClustersPage() {
         accessorKey: 'version',
         header: 'Version',
         cell: ({ row }) => (
-          <span className="text-xs text-[var(--color-text-muted)] font-mono">{row.original.version ?? '—'}</span>
+          <span className="text-xs text-[var(--color-text-secondary)] font-mono">{row.original.version ?? '—'}</span>
         ),
       },
       {
@@ -285,7 +285,7 @@ export default function ClustersPage() {
         accessorKey: 'endpoint',
         header: 'Endpoint',
         cell: ({ row }) => (
-          <span className="text-xs text-[var(--color-text-muted)] font-mono max-w-[200px] truncate block">{row.original.endpoint ?? '—'}</span>
+          <span className="text-xs text-[var(--color-text-secondary)] font-mono max-w-[200px] truncate block">{row.original.endpoint ?? '—'}</span>
         ),
         meta: { className: 'hidden lg:table-cell' },
       },
@@ -294,7 +294,7 @@ export default function ClustersPage() {
         accessorFn: (row) => row.updatedAt,
         header: 'Last Seen',
         cell: ({ row }) => (
-          <span className="text-xs text-[var(--color-text-muted)]" suppressHydrationWarning>
+          <span className="text-xs text-[var(--color-text-secondary)]" suppressHydrationWarning>
             {formatLastSeen(row.original.updatedAt, isClient)}
           </span>
         ),
@@ -392,16 +392,16 @@ export default function ClustersPage() {
               return <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>
             })()}
             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-              <span className="text-[var(--color-text-muted)]">Provider</span>
+              <span className="text-[var(--color-text-secondary)]">Provider</span>
               <span className="text-[var(--color-text-primary)] flex items-center gap-1.5">
                 <ProviderLogo provider={row.provider ?? 'default'} />
                 <span className="font-mono uppercase">{row.provider}</span>
               </span>
-              <span className="text-[var(--color-text-muted)]">Version</span>
+              <span className="text-[var(--color-text-secondary)]">Version</span>
               <span className="text-[var(--color-text-primary)] font-mono">{row.version ?? '—'}</span>
-              <span className="text-[var(--color-text-muted)]">Nodes</span>
+              <span className="text-[var(--color-text-secondary)]">Nodes</span>
               <span className="text-[var(--color-text-primary)] font-mono tabular-nums">{row.nodeCount}</span>
-              <span className="text-[var(--color-text-muted)]">Last Seen</span>
+              <span className="text-[var(--color-text-secondary)]">Last Seen</span>
               <span className="text-[var(--color-text-primary)]" suppressHydrationWarning>
                 {formatLastSeen(row.updatedAt, isClient)}
               </span>

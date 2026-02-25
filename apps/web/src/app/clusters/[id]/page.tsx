@@ -132,7 +132,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
     cell: ({ getValue }) => {
       const ts = getValue<string | null>()
       return (
-        <span className="text-[var(--color-text-dim)] font-mono text-[11px] whitespace-nowrap">
+        <span className="text-[var(--color-text-dim)] font-mono text-[11px] whitespace-nowrap" suppressHydrationWarning>
           {ts ? timeAgo(ts) : '—'}
         </span>
       )
@@ -359,6 +359,7 @@ export default function ClusterDetailPage() {
                 className={`h-2.5 w-2.5 rounded-full ${connectivity.dot}`}
                 title={connectivity.label}
                 aria-label={`Connectivity: ${connectivity.label}`}
+                suppressHydrationWarning
               />
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
                 {statusLabel}
@@ -371,6 +372,11 @@ export default function ClusterDetailPage() {
               {liveFailed && (
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)] border border-[var(--color-status-warning)]/20">
                   STORED (live unavailable)
+                </span>
+              )}
+              {!effectiveIsLive && !liveFailed && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-text-secondary)]/10 text-[var(--color-text-secondary)] border border-[var(--color-text-secondary)]/20">
+                  STORED
                 </span>
               )}
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20">
@@ -469,7 +475,7 @@ export default function ClusterDetailPage() {
                     </span>
                     <span className="text-[var(--color-text-primary)] text-xs font-medium">{event.reason}</span>
                   </div>
-                  <span className="text-[var(--color-text-dim)] font-mono text-[10px] shrink-0">
+                  <span className="text-[var(--color-text-dim)] font-mono text-[10px] shrink-0" suppressHydrationWarning>
                     {event.timestamp ? timeAgo(event.timestamp) : '—'}
                   </span>
                 </div>
