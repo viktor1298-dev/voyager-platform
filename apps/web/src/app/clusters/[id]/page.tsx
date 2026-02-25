@@ -6,6 +6,7 @@ import { DataTable } from '@/components/DataTable'
 import { LoadingState } from '@/components/LoadingState'
 import { QueryError } from '@/components/ErrorBoundary'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { Icon } from '@iconify/react'
@@ -385,21 +386,21 @@ export default function ClusterDetailPage() {
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
                 {statusLabel}
               </span>
-              {effectiveIsLive && (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-status-active)]/10 text-[var(--color-status-active)] border border-[var(--color-status-active)]/20">
-                  LIVE
-                </span>
-              )}
-              {liveFailed && (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)] border border-[var(--color-status-warning)]/20">
-                  STORED (live unavailable)
-                </span>
-              )}
-              {!effectiveIsLive && !liveFailed && (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-text-secondary)]/10 text-[var(--color-text-secondary)] border border-[var(--color-text-secondary)]/20">
-                  STORED
-                </span>
-              )}
+              <Tabs value={effectiveIsLive ? 'live' : 'stored'} className="w-auto">
+                <TabsList className="h-7 px-0.5 py-0.5">
+                  <TabsTrigger
+                    value="live"
+                    disabled={!effectiveIsLive}
+                    title={!effectiveIsLive ? 'Live data unavailable for this cluster' : 'Live data'}
+                    className="h-6 px-2 text-[10px] font-mono"
+                  >
+                    Live Data
+                  </TabsTrigger>
+                  <TabsTrigger value="stored" className="h-6 px-2 text-[10px] font-mono">
+                    Stored Data
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20">
                 {cluster.provider}
               </span>
