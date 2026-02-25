@@ -1,6 +1,7 @@
 import * as k8s from '@kubernetes/client-node'
 import { clusters, db } from '@voyager/db'
 import { eq } from 'drizzle-orm'
+import { ZodError } from 'zod'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 
 type SyncHealthStatus = 'healthy' | 'warning' | 'error' | 'unknown'
@@ -49,7 +50,11 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
       })
       .where(eq(clusters.id, clusterId))
   } catch (error) {
-    console.error(`[health-sync] cluster ${clusterId} sync failed`, error)
+    if (error instanceof ZodError) {
+      console.warn(`[health-sync] cluster ${clusterId} skipped — invalid connectionConfig`, error.issues)
+    } else {
+      console.error(`[health-sync] cluster ${clusterId} sync failed`, error)
+    }
 
     await db
       .update(clusters)

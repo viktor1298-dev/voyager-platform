@@ -1,5 +1,6 @@
 import { auditLog } from '@voyager/db'
 import { and, count, desc, eq, gte, lte } from 'drizzle-orm'
+import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
@@ -58,23 +59,31 @@ export const auditRouter = router({
 
       const where = conditions.length > 0 ? and(...conditions) : undefined
 
-      const [rows, totalResult] = await Promise.all([
-        ctx.db
-          .select()
-          .from(auditLog)
-          .where(where)
-          .orderBy(desc(auditLog.timestamp))
-          .limit(limit)
-          .offset(offset),
-        ctx.db
-          .select({ count: count() })
-          .from(auditLog)
-          .where(where),
-      ])
+      try {
+        const [rows, totalResult] = await Promise.all([
+          ctx.db
+            .select()
+            .from(auditLog)
+            .where(where)
+            .orderBy(desc(auditLog.timestamp))
+            .limit(limit)
+            .offset(offset),
+          ctx.db
+            .select({ count: count() })
+            .from(auditLog)
+            .where(where),
+        ])
 
-      const total = totalResult[0]?.count ?? 0
+        const total = totalResult[0]?.count ?? 0
 
-      return { items: rows, page, limit, total }
+        return { items: rows, page, limit, total }
+      } catch (err) {
+        console.error('[audit.list] DB query failed:', err)
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to load audit entries',
+        })
+      }
     }),
 
   getByResource: protectedProcedure
@@ -89,10 +98,18 @@ export const auditRouter = router({
     .input(z.object({ resourceId: z.string() }))
     .output(z.array(auditLogItemSchema))
     .query(async ({ ctx, input }) => {
-      return ctx.db
-        .select()
-        .from(auditLog)
-        .where(eq(auditLog.resourceId, input.resourceId))
-        .orderBy(desc(auditLog.timestamp))
+      try {
+        return await ctx.db
+          .select()
+          .from(auditLog)
+          .where(eq(auditLog.resourceId, input.resourceId))
+          .orderBy(desc(auditLog.timestamp))
+      } catch (err) {
+        console.error('[audit.getByResource] DB query failed:', err)
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to load audit entries',
+        })
+      }
     }),
 })

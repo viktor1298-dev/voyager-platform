@@ -176,7 +176,7 @@ export default function AuditPage() {
       <PageTransition>
         <Breadcrumbs />
 
-        {query.error && <QueryError message={query.error.message} onRetry={() => query.refetch()} />}
+        {query.error && <QueryError message="Failed to load audit entries. Please try again." onRetry={() => query.refetch()} />}
 
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Audit Log</h1>
