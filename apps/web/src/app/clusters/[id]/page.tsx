@@ -50,7 +50,7 @@ function timeAgo(ts: string): string {
 function asText(value: unknown, fallback = '—'): string {
   if (typeof value === 'string') {
     const trimmed = value.trim()
-    return trimmed.length > 0 ? value : fallback
+    return trimmed.length > 0 ? trimmed : fallback
   }
   if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') return String(value)
   return fallback
