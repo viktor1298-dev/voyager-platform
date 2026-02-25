@@ -47,6 +47,15 @@ function timeAgo(ts: string): string {
   return `${days}d ago`
 }
 
+function asText(value: unknown, fallback = '—'): string {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? value : fallback
+  }
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') return String(value)
+  return fallback
+}
+
 interface NodeRow {
   id: string
   name: string
@@ -132,7 +141,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
     cell: ({ getValue }) => {
       const ts = getValue<string | null>()
       return (
-        <span className="text-[var(--color-text-dim)] font-mono text-[11px] whitespace-nowrap" suppressHydrationWarning>
+        <span className="text-[var(--color-text-dim)] font-mono text-[11px] whitespace-nowrap">
           {ts ? timeAgo(ts) : '—'}
         </span>
       )
@@ -278,41 +287,46 @@ export default function ClusterDetailPage() {
   const nodes: NodeRow[] = effectiveIsLive
     ? (liveData?.nodes ?? []).map((n, i: number) => ({
         id: `node-${i}`,
-        name: n.name ?? '',
-        status: n.status === 'ready' ? 'Ready' : n.status === 'notready' ? 'NotReady' : (n.status ?? 'Unknown'),
-        role: n.role ?? 'worker',
-        kubeletVersion: n.kubeletVersion ?? '—',
-        os: n.os ?? '—',
-        cpu: n.cpu ?? '—',
-        memory: n.memory ? formatMemoryKi(n.memory) : '—',
+        name: asText(n.name, ''),
+        status:
+          n.status === 'ready'
+            ? 'Ready'
+            : n.status === 'notready'
+              ? 'NotReady'
+              : asText(n.status, 'Unknown'),
+        role: asText(n.role, 'worker'),
+        kubeletVersion: asText(n.kubeletVersion),
+        os: asText(n.os),
+        cpu: asText(n.cpu),
+        memory: typeof n.memory === 'string' ? formatMemoryKi(n.memory) : '—',
       }))
-    : (dbNodes.data ?? []).map((n: Record<string, unknown>) => ({
-        id: n.id as string,
-        name: n.name as string,
-        status: n.status as string,
-        role: n.role as string ?? 'worker',
-        kubeletVersion: (n.k8sVersion as string) ?? '—',
-        os: (n.os as string) ?? '—',
-        cpu: `${n.cpuAllocatable ?? '—'} / ${n.cpuCapacity ?? '—'}`,
-        memory: `${n.memoryAllocatable ?? '—'} / ${n.memoryCapacity ?? '—'}`,
+    : (dbNodes.data ?? []).map((n: Record<string, unknown>, i: number) => ({
+        id: asText(n.id, `node-db-${i}`),
+        name: asText(n.name),
+        status: asText(n.status, 'Unknown'),
+        role: asText(n.role, 'worker'),
+        kubeletVersion: asText(n.k8sVersion),
+        os: asText(n.os),
+        cpu: `${asText(n.cpuAllocatable)} / ${asText(n.cpuCapacity)}`,
+        memory: `${asText(n.memoryAllocatable)} / ${asText(n.memoryCapacity)}`,
       }))
 
   const events: EventRow[] = effectiveIsLive
     ? (liveData?.events ?? []).slice(0, 20).map((e: Record<string, unknown>, i: number) => ({
         id: `ev-${i}`,
-        type: (e.type as string) ?? 'Normal',
-        reason: (e.reason as string) ?? '—',
-        message: (e.message as string) ?? '',
-        namespace: (e.namespace as string) ?? '',
-        timestamp: (e.lastTimestamp as string) ?? null,
+        type: asText(e.type, 'Normal'),
+        reason: asText(e.reason),
+        message: asText(e.message, ''),
+        namespace: asText(e.namespace, ''),
+        timestamp: typeof e.lastTimestamp === 'string' ? e.lastTimestamp : null,
       }))
-    : (dbEvents.data ?? []).slice(0, 20).map((e: Record<string, unknown>) => ({
-        id: e.id as string,
-        type: (e.kind as string) ?? 'Normal',
-        reason: (e.reason as string) ?? '—',
-        message: (e.message as string) ?? '',
-        namespace: (e.namespace as string) ?? '',
-        timestamp: e.timestamp instanceof Date ? e.timestamp.toISOString() : ((e.timestamp as string) ?? null),
+    : (dbEvents.data ?? []).slice(0, 20).map((e: Record<string, unknown>, i: number) => ({
+        id: asText(e.id, `ev-db-${i}`),
+        type: asText(e.kind, 'Normal'),
+        reason: asText(e.reason),
+        message: asText(e.message, ''),
+        namespace: asText(e.namespace, ''),
+        timestamp: e.timestamp instanceof Date ? e.timestamp.toISOString() : (typeof e.timestamp === 'string' ? e.timestamp : null),
       }))
 
   const connectivity = useMemo(() => {
@@ -359,7 +373,6 @@ export default function ClusterDetailPage() {
                 className={`h-2.5 w-2.5 rounded-full ${connectivity.dot}`}
                 title={connectivity.label}
                 aria-label={`Connectivity: ${connectivity.label}`}
-                suppressHydrationWarning
               />
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
                 {statusLabel}
@@ -475,7 +488,7 @@ export default function ClusterDetailPage() {
                     </span>
                     <span className="text-[var(--color-text-primary)] text-xs font-medium">{event.reason}</span>
                   </div>
-                  <span className="text-[var(--color-text-dim)] font-mono text-[10px] shrink-0" suppressHydrationWarning>
+                  <span className="text-[var(--color-text-dim)] font-mono text-[10px] shrink-0">
                     {event.timestamp ? timeAgo(event.timestamp) : '—'}
                   </span>
                 </div>

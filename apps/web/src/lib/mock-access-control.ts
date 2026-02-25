@@ -143,17 +143,32 @@ export function getTeamMemberUserOptions() {
 }
 
 export function getBestRelationForUser(userId: string, resourceId: string): Relation | null {
+  const normalizedUserId = userId.trim()
+  if (!normalizedUserId) return null
+
   const direct = grants
-    .filter((grant) => grant.resourceId === resourceId && grant.principalType === 'user' && grant.principalId === userId)
+    .filter((grant) => grant.resourceId === resourceId && grant.principalType === 'user' && grant.principalId === normalizedUserId)
     .map((grant) => grant.relation)
-  const userTeamIds = teams.filter((team) => team.members.some((member) => member.userId === userId)).map((team) => team.id)
+
+  const userTeamIds = teams
+    .filter((team) => team.members.some((member) => member.userId === normalizedUserId))
+    .map((team) => team.id)
+
   const viaTeams = grants
     .filter((grant) => grant.resourceId === resourceId && grant.principalType === 'team' && userTeamIds.includes(grant.principalId))
     .map((grant) => grant.relation)
 
   const all = [...direct, ...viaTeams]
-  if (all.length === 0) return null
-  return all.sort((a, b) => RELATION_RANK[b] - RELATION_RANK[a])[0] ?? null
+  if (all.length > 0) {
+    return all.sort((a, b) => RELATION_RANK[b] - RELATION_RANK[a])[0] ?? null
+  }
+
+  const isTeamAdmin = teams.some((team) =>
+    team.members.some((member) => member.userId === normalizedUserId && member.role === 'admin'),
+  )
+  if (isTeamAdmin) return 'admin'
+
+  return 'viewer'
 }
 
 export const mockAccessControlApi = {
