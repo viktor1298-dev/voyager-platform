@@ -367,7 +367,7 @@ export default function ClusterDetailPage() {
       ? 'bg-[var(--color-status-warning)]'
       : normalizedStatus === 'error'
         ? 'bg-[var(--color-status-error)]'
-        : 'bg-[var(--color-status-warning)]'
+        : 'bg-gray-400'
 
   const statusLabel = healthBadgeLabel(normalizedStatus)
 

@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { clusters, nodes } from '@voyager/db'
-import { count, eq, or } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { encryptCredential } from '../lib/credential-crypto.js'
