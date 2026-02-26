@@ -185,7 +185,7 @@ export default function ClustersPage() {
     const tags = new Set<string>()
 
     for (const cluster of clusterList) {
-      statuses.add((cluster.status ?? 'unknown').toLowerCase())
+      statuses.add((cluster.healthStatus ?? cluster.status ?? 'unknown').toLowerCase())
       providers.add(cluster.provider ?? 'unknown')
       health.add(liveHealthByClusterId.get(cluster.id) ?? normalizeLiveHealthStatus(cluster.healthStatus ?? cluster.status))
       for (const tag of getClusterTags({ name: cluster.name, provider: cluster.provider ?? undefined, source: 'db' })) {
@@ -207,7 +207,7 @@ export default function ClustersPage() {
     return clusterList.filter((cluster) => {
       const env = getClusterEnvironment(cluster.name, cluster.provider)
       if (filters.environment !== 'all' && env !== filters.environment) return false
-      const statusValue = (cluster.status ?? 'unknown').toLowerCase()
+      const statusValue = (cluster.healthStatus ?? cluster.status ?? 'unknown').toLowerCase()
       if (filters.status !== 'all' && statusValue !== filters.status) return false
       if (filters.provider !== 'all' && (cluster.provider ?? 'unknown') !== filters.provider) return false
       const healthValue = liveHealthByClusterId.get(cluster.id) ?? normalizeLiveHealthStatus(cluster.healthStatus ?? cluster.status)
