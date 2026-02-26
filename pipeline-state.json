@@ -1,10 +1,13 @@
 {
   "version": "v121",
   "status": "running",
-  "currentStage": "DEV",
-  "timestamp": "2026-02-26T21:50:00+02:00",
+  "currentStage": "DEV-FIXLOOP",
+  "timestamp": "2026-02-26T22:23:00+02:00",
   "phase": "D-bugfix-r2",
-  "deployedInK8s": "v120",
-  "gitLatestTag": "v120",
-  "targetVersion": "v121"
+  "deployedInK8s": "v121",
+  "gitLatestTag": "v121",
+  "targetVersion": "v122",
+  "fixLoopIteration": 1,
+  "qaScore": 4,
+  "qaVerdict": "FAIL"
 }

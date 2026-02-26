@@ -1,0 +1,70 @@
+{
+  "version": "v121",
+  "timestamp": "2026-02-26T20:22:00+02:00",
+  "score": 4,
+  "verdict": "FAIL",
+  "resolution": "1920x1080",
+  "findings": [
+    {
+      "id": "QA-1",
+      "severity": "high",
+      "description": "CRITICAL: prod-cluster-eks shows DIFFERENT status across all 4 views — Dashboard: 'Degraded', Clusters list: 'Error', Detail page: 'Unreachable', Settings: 'unreachable'. v121's main fix (status consistency) is STILL BROKEN for this cluster."
+    },
+    {
+      "id": "QA-2",
+      "severity": "high",
+      "description": "Settings page shows raw lowercase VARCHAR values ('unreachable', 'degraded') instead of proper capitalized enum display. v121 specifically claimed to fix this — fix is NOT applied."
+    },
+    {
+      "id": "QA-3",
+      "severity": "medium",
+      "description": "Navbar cluster selector shows '⚪ prod-cluster-eks' (white/offline indicator) while Dashboard shows it as 'Degraded' — yet another inconsistency in status representation."
+    },
+    {
+      "id": "QA-4",
+      "severity": "medium",
+      "description": "Navigating to /clusters/prod-cluster-eks (slug URL) throws 'Invalid UUID' error. Cluster detail pages require UUID-based URLs. Sidebar cluster links incorrectly link to /clusters instead of individual detail pages."
+    },
+    {
+      "id": "QA-5",
+      "severity": "low",
+      "description": "Recent Events table on cluster detail page has empty ghost rows at the bottom — likely a rendering/loading artifact."
+    }
+  ],
+  "statusConsistencyCheck": {
+    "prodClusterEks": {
+      "dashboard": "Degraded",
+      "clustersList": "Error",
+      "detailPage": "Unreachable",
+      "settingsPage": "unreachable (raw lowercase)",
+      "consistent": false
+    },
+    "testClusterMinikube": {
+      "dashboard": "Degraded",
+      "clustersList": "Degraded",
+      "detailPage": "Degraded",
+      "settingsPage": "degraded (raw lowercase, formatting issue)",
+      "consistent": false
+    },
+    "dashboard": "Degraded (both clusters)",
+    "clustersList": "Error (prod-cluster-eks), Degraded (test-cluster-minikube)",
+    "detailPage": "Unreachable (prod-cluster-eks), Degraded (test-cluster-minikube)",
+    "settingsPage": "unreachable (prod-cluster-eks), degraded (test-cluster-minikube)",
+    "consistent": false
+  },
+  "v121FixVerification": {
+    "statusConsistency": "FAIL — prod-cluster-eks shows 3 different statuses across views",
+    "normalizeLiveHealthStatusDegraded": "PARTIAL — test-cluster-minikube shows 'Degraded' correctly; prod-cluster-eks shows 'Error'/'Unreachable'",
+    "detailPageReadFromDB": "FAIL — detail page shows 'Unreachable' while Dashboard shows 'Degraded'",
+    "settingsHealthStatusEnum": "FAIL — Settings shows raw lowercase 'unreachable'/'degraded' not capitalized enum"
+  },
+  "passedChecks": [
+    "Login works (auto-authenticated)",
+    "Dashboard loads with cluster cards",
+    "Clusters list page loads with table data",
+    "test-cluster-minikube detail page loads successfully with real data",
+    "Navigation sidebar works",
+    "Settings page loads",
+    "Dark mode theme is applied correctly"
+  ]
+}

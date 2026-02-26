@@ -7,6 +7,7 @@ import { LoadingState } from '@/components/LoadingState'
 import { QueryError } from '@/components/ErrorBoundary'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { normalizeLiveHealthStatus, healthBadgeLabel } from '@/lib/cluster-status'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { Icon } from '@iconify/react'
@@ -210,10 +211,11 @@ export default function ClusterDetailPage() {
   const router = useRouter()
 
   const dbCluster = trpc.clusters.get.useQuery({ id })
+  const resolvedId = dbCluster.data?.id ?? id
   const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
   const isLive = hasCredentials
 
-  const liveQuery = trpc.clusters.live.useQuery({ clusterId: id }, {
+  const liveQuery = trpc.clusters.live.useQuery({ clusterId: resolvedId }, {
     enabled: isLive,
     refetchInterval: 30000,
     retry: false,
@@ -229,8 +231,8 @@ export default function ClusterDetailPage() {
     setActiveTab(effectiveIsLive ? 'live' : 'stored')
   }, [effectiveIsLive])
 
-  const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !effectiveIsLive })
-  const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !effectiveIsLive })
+  const dbNodes = trpc.nodes.list.useQuery({ clusterId: resolvedId }, { enabled: !effectiveIsLive })
+  const dbEvents = trpc.events.list.useQuery({ clusterId: resolvedId, limit: 20 }, { enabled: !effectiveIsLive })
 
   const isLoading = effectiveIsLive ? liveQuery.isLoading : dbCluster.isLoading
 
@@ -356,15 +358,18 @@ export default function ClusterDetailPage() {
         timestamp: e.timestamp instanceof Date ? e.timestamp.toISOString() : (typeof e.timestamp === 'string' ? e.timestamp : null),
       }))
 
-  const clusterStatus = typeof (cluster.healthStatus ?? cluster.status) === 'string' ? (cluster.healthStatus ?? cluster.status) : 'unknown'
+  const rawStatus = typeof (cluster.healthStatus ?? cluster.status) === 'string' ? (cluster.healthStatus ?? cluster.status) : 'unknown'
+  const normalizedStatus = normalizeLiveHealthStatus(rawStatus)
 
-  const statusDotClass = clusterStatus === 'healthy'
+  const statusDotClass = normalizedStatus === 'healthy'
     ? 'bg-[var(--color-status-active)]'
-    : clusterStatus === 'warning' || clusterStatus === 'degraded'
+    : normalizedStatus === 'degraded'
       ? 'bg-[var(--color-status-warning)]'
-      : 'bg-[var(--color-status-error)]'
+      : normalizedStatus === 'error'
+        ? 'bg-[var(--color-status-error)]'
+        : 'bg-[var(--color-status-warning)]'
 
-  const statusLabel = clusterStatus.charAt(0).toUpperCase() + clusterStatus.slice(1)
+  const statusLabel = healthBadgeLabel(normalizedStatus)
 
   return (
     <AppLayout>

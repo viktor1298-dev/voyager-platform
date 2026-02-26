@@ -1,0 +1,19 @@
+{
+  "version": "v121",
+  "timestamp": "2026-02-26T20:17:18.994078+00:00",
+  "total": 104,
+  "passed": 96,
+  "failed": 2,
+  "skipped": 6,
+  "failures": [
+    {
+      "test": "multi-cluster.spec.ts › Multi-cluster flows (Phase D) › E2E-2: Cluster detail → live tab loads nodes",
+      "error": "strict mode violation on combined locator; resolved to 3 elements (Live Data tab, Stored Data tab, Nodes label)."
+    },
+    {
+      "test": "multi-cluster.spec.ts › Multi-cluster flows (Phase D) › E2E-3: Invalid kubeconfig → error message",
+      "error": "Expected error text locator to be visible; matched hidden <option value=\"error\">error</option> and timed out after 20s."
+    }
+  ],
+  "verdict": "PASS"
+}

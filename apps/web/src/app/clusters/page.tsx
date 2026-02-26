@@ -15,6 +15,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { usePermission } from '@/hooks/usePermission'
 import { getClusterEnvironment, getClusterTags } from '@/lib/cluster-meta'
+import { normalizeLiveHealthStatus, healthBadgeVariant, healthBadgeLabel, type LiveHealthStatus } from '@/lib/cluster-status'
 import { getBestRelationForUser, getRelationBadgeClass, type Relation } from '@/lib/mock-access-control'
 import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
@@ -23,30 +24,6 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Database, Plus, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-
-type LiveHealthStatus = 'healthy' | 'degraded' | 'error' | 'unknown'
-
-function normalizeLiveHealthStatus(status: string | null | undefined): LiveHealthStatus {
-  const value = (status ?? '').toLowerCase()
-  if (value === 'healthy' || value === 'ready' || value === 'active' || value === 'ok') return 'healthy'
-  if (value === 'degraded' || value === 'warning') return 'degraded'
-  if (value === 'error' || value === 'critical' || value === 'unreachable') return 'error'
-  return 'unknown'
-}
-
-function healthBadgeVariant(status: LiveHealthStatus) {
-  if (status === 'healthy') return 'success' as const
-  if (status === 'degraded') return 'warning' as const
-  if (status === 'error') return 'destructive' as const
-  return 'outline' as const
-}
-
-function healthBadgeLabel(status: LiveHealthStatus) {
-  if (status === 'healthy') return 'Healthy'
-  if (status === 'degraded') return 'Degraded'
-  if (status === 'error') return 'Error'
-  return 'Unknown'
-}
 
 function formatLastSeen(date: Date | string | null | undefined, isClient: boolean) {
   if (!date) return '—'

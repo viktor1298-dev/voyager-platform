@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { clusters, nodes } from '@voyager/db'
-import { count, eq } from 'drizzle-orm'
+import { count, eq, or } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { encryptCredential } from '../lib/credential-crypto.js'
@@ -199,12 +199,15 @@ export const clustersRouter = router({
     .meta({
       openapi: { method: 'GET', path: '/api/clusters/{id}', protect: true, tags: ['clusters'] },
     })
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.string().min(1) }))
     .output(clusterSchema.omit({ connectionConfig: true }).extend({ hasCredentials: z.boolean(), nodes: z.array(nodeSchema) }))
     .query(async ({ ctx, input }) => {
-      const [cluster] = await ctx.db.select().from(clusters).where(eq(clusters.id, input.id))
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.id)
+      const [cluster] = isUUID
+        ? await ctx.db.select().from(clusters).where(eq(clusters.id, input.id))
+        : await ctx.db.select().from(clusters).where(eq(clusters.name, input.id))
       if (!cluster) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
-      const clusterNodes = await ctx.db.select().from(nodes).where(eq(nodes.clusterId, input.id))
+      const clusterNodes = await ctx.db.select().from(nodes).where(eq(nodes.clusterId, cluster.id))
       const { connectionConfig, ...rest } = cluster
       return { ...rest, hasCredentials: connectionConfig != null && Object.keys(connectionConfig).length > 0, nodes: clusterNodes }
     }),

@@ -173,7 +173,7 @@
             - combobox [ref=e196]:
               - option "health" [selected]
               - option "error"
-              - option "warning"
+              - option "degraded"
         - generic [ref=e197]:
           - button "#dev" [ref=e198] [cursor=pointer]
           - button "#minikube" [ref=e199] [cursor=pointer]
@@ -213,7 +213,7 @@
                   - img [ref=e247]
               - columnheader "Actions" [ref=e250]
           - rowgroup [ref=e251]:
-            - row "prod-cluster-eks aws Error viewer v1.32.0 0 — 3m ago Delete cluster" [ref=e252] [cursor=pointer]:
+            - row "prod-cluster-eks aws Error viewer v1.32.0 0 — 4m ago Delete cluster" [ref=e252] [cursor=pointer]:
               - cell "prod-cluster-eks" [ref=e253]
               - cell "aws" [ref=e254]:
                 - generic [ref=e255]:
@@ -228,26 +228,26 @@
               - cell "0" [ref=e264]
               - cell "—" [ref=e265]:
                 - generic [ref=e266]: —
-              - cell "3m ago" [ref=e267]
+              - cell "4m ago" [ref=e267]
               - cell "Delete cluster" [ref=e268]:
                 - button "Delete cluster" [ref=e269]:
                   - img [ref=e270]
-            - row "test-cluster-minikube minikube Warning viewer v1.33 0 — 3m ago Delete cluster" [ref=e273] [cursor=pointer]:
+            - row "test-cluster-minikube minikube Degraded viewer v1.33 0 — 4m ago Delete cluster" [ref=e273] [cursor=pointer]:
               - cell "test-cluster-minikube" [ref=e274]
               - cell "minikube" [ref=e275]:
                 - generic [ref=e276]:
                   - generic:
                     - img
                   - generic [ref=e277]: minikube
-              - cell "Warning" [ref=e278]:
-                - generic [ref=e281]: Warning
+              - cell "Degraded" [ref=e278]:
+                - generic [ref=e281]: Degraded
               - cell "viewer" [ref=e282]:
                 - generic [ref=e283]: viewer
               - cell "v1.33" [ref=e284]
               - cell "0" [ref=e285]
               - cell "—" [ref=e286]:
                 - generic [ref=e287]: —
-              - cell "3m ago" [ref=e288]
+              - cell "4m ago" [ref=e288]
               - cell "Delete cluster" [ref=e289]:
                 - button "Delete cluster" [ref=e290]:
                   - img [ref=e291]

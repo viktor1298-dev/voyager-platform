@@ -17,6 +17,7 @@ import {
   testAiKeyConnection,
   upsertAiKeySettings,
 } from '@/lib/ai-keys-client'
+import { normalizeLiveHealthStatus, healthBadgeLabel } from '@/lib/cluster-status'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
 
@@ -612,7 +613,7 @@ function ClusterTable({
         name: (c.name as string) ?? '',
         provider: (c.provider as string) ?? '',
         endpoint: (c.endpoint as string) ?? '—',
-        status: ((c as Record<string, unknown>).healthStatus as string) ?? (c.status as string) ?? 'Unknown',
+        status: healthBadgeLabel(normalizeLiveHealthStatus(((c as Record<string, unknown>).healthStatus as string) ?? (c.status as string))),
       })
     }
     return result
