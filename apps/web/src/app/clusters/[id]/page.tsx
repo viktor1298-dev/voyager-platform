@@ -294,7 +294,7 @@ export default function ClusterDetailPage() {
         name: String(dbCluster.data?.name ?? ''),
         provider: String(dbCluster.data?.provider ?? ''),
         version: String(dbCluster.data?.version ?? '—'),
-        status: String(dbCluster.data?.status ?? 'unknown'),
+        status: String((dbCluster.data as Record<string, unknown>)?.healthStatus ?? dbCluster.data?.status ?? 'unknown'),
         endpoint: String((dbCluster.data as Record<string, unknown>)?.endpoint ?? '—'),
         lastConnectedAt: (() => {
           const v = dbCluster.data?.lastConnectedAt

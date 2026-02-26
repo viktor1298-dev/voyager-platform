@@ -76,6 +76,7 @@ type ClusterRow = {
   name: string
   provider: string | null
   status?: string | null
+  healthStatus?: string | null
   version?: string | null
   nodeCount: number
   endpoint?: string | null
@@ -186,7 +187,7 @@ export default function ClustersPage() {
     for (const cluster of clusterList) {
       statuses.add((cluster.status ?? 'unknown').toLowerCase())
       providers.add(cluster.provider ?? 'unknown')
-      health.add(liveHealthByClusterId.get(cluster.id) ?? normalizeLiveHealthStatus(cluster.status))
+      health.add(liveHealthByClusterId.get(cluster.id) ?? normalizeLiveHealthStatus(cluster.healthStatus ?? cluster.status))
       for (const tag of getClusterTags({ name: cluster.name, provider: cluster.provider ?? undefined, source: 'db' })) {
         tags.add(tag)
       }
@@ -209,7 +210,7 @@ export default function ClustersPage() {
       const statusValue = (cluster.status ?? 'unknown').toLowerCase()
       if (filters.status !== 'all' && statusValue !== filters.status) return false
       if (filters.provider !== 'all' && (cluster.provider ?? 'unknown') !== filters.provider) return false
-      const healthValue = liveHealthByClusterId.get(cluster.id) ?? normalizeLiveHealthStatus(cluster.status)
+      const healthValue = liveHealthByClusterId.get(cluster.id) ?? normalizeLiveHealthStatus(cluster.healthStatus ?? cluster.status)
       if (filters.health !== 'all' && healthValue !== filters.health) return false
       const clusterTags = getClusterTags({ name: cluster.name, provider: cluster.provider ?? undefined, source: 'db' })
       if (filters.tags.length > 0 && !filters.tags.every((tag) => clusterTags.includes(tag))) return false
@@ -247,7 +248,7 @@ export default function ClustersPage() {
         id: 'healthStatus',
         header: 'Health',
         cell: ({ row }) => {
-          const liveStatus = liveHealthByClusterId.get(row.original.id) ?? normalizeLiveHealthStatus(row.original.status)
+          const liveStatus = liveHealthByClusterId.get(row.original.id) ?? normalizeLiveHealthStatus(row.original.healthStatus ?? row.original.status)
           return (
             <div className="flex items-center gap-2">
               <span className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`} />
@@ -376,7 +377,7 @@ export default function ClustersPage() {
               <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm">{row.name}</span>
               <div className="flex items-center gap-2 shrink-0">
                 {(() => {
-                  const liveStatus = liveHealthByClusterId.get(row.id) ?? normalizeLiveHealthStatus(row.status)
+                  const liveStatus = liveHealthByClusterId.get(row.id) ?? normalizeLiveHealthStatus(row.healthStatus ?? row.status)
                   return (
                     <>
                       <span className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`} />
