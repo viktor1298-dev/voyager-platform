@@ -200,7 +200,7 @@ export default function ClustersPage() {
       health: Array.from(health),
       tags: Array.from(tags).sort(),
     }
-  }, [clusterList, liveHealthByClusterId])
+  }, [clusterList])
 
   const filteredClusters = useMemo(() => {
     const q = filters.q.trim().toLowerCase()
@@ -219,7 +219,7 @@ export default function ClustersPage() {
       }
       return true
     })
-  }, [clusterList, filters, liveHealthByClusterId])
+  }, [clusterList, filters])
 
   const onFiltersChange = useCallback((next: FilterValue) => setFilters(next), [])
 
@@ -317,7 +317,7 @@ export default function ClustersPage() {
           ]
         : []),
     ],
-    [getPermissionForCluster, isAdmin, isClient, liveHealthByClusterId],
+    [getPermissionForCluster, isAdmin, isClient],
   )
 
   const toCreateClusterInput = useCallback((payload: AddClusterWizardPayload): CreateClusterInput => {
