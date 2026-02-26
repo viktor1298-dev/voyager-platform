@@ -612,7 +612,7 @@ function ClusterTable({
         name: (c.name as string) ?? '',
         provider: (c.provider as string) ?? '',
         endpoint: (c.endpoint as string) ?? '—',
-        status: (c.status as string) ?? 'Unknown',
+        status: ((c as Record<string, unknown>).healthStatus as string) ?? (c.status as string) ?? 'Unknown',
       })
     }
     return result

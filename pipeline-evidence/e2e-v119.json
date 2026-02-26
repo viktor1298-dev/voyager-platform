@@ -1,0 +1,20 @@
+{
+  "version": "v119",
+  "timestamp": "2026-02-26T19:12:50.219726+00:00",
+  "passed": 95,
+  "failed": 2,
+  "skipped": 7,
+  "total": 104,
+  "gate": "FAIL",
+  "failures": [
+    {
+      "test": "multi-cluster.spec.ts > Multi-cluster flows (Phase D) > E2E-2: Cluster detail \u2192 live tab loads nodes",
+      "error": "Error: expect(locator).toBeVisible() failed"
+    },
+    {
+      "test": "multi-cluster.spec.ts > Multi-cluster flows (Phase D) > E2E-3: Invalid kubeconfig \u2192 error message",
+      "error": "Error: expect(locator).toBeVisible() failed"
+    }
+  ],
+  "agent": "testing"
+}

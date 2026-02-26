@@ -1,0 +1,14 @@
+{
+  "version": "v118",
+  "timestamp": "2026-02-26T18:15:33.499513+00:00",
+  "total": 104,
+  "passed": 94,
+  "failed": 3,
+  "skipped": 7,
+  "failingTests": [
+    "[chromium] › tests/e2e/keyboard-shortcuts.spec.ts:19:7 › Keyboard Shortcuts › shortcuts modal shows common shortcuts",
+    "[chromium] › tests/e2e/multi-cluster.spec.ts:43:7 › Multi-cluster flows (Phase D) › E2E-2: Cluster detail → live tab loads nodes",
+    "[chromium] › tests/e2e/qa3.spec.ts:4:5 › Phase D QA R3"
+  ],
+  "agent": "testing"
+}

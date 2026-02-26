@@ -1,0 +1,19 @@
+{
+  "agent": "e2e",
+  "agentId": "agent:e2e",
+  "version": "v116",
+  "timestamp": "2026-02-25T16:17:46Z",
+  "passed": 98,
+  "failed": 3,
+  "skipped": 6,
+  "total": 107,
+  "passRate": 91.58878504672897,
+  "verdict": "PASS",
+  "gate": 88,
+  "sha": "f500317fc67caca9c1b7bfb75f60360f7a22c8ec",
+  "failedTests": [
+    "tests/e2e/multi-cluster.spec.ts:43:7 - E2E-2: Cluster detail → live tab loads nodes",
+    "tests/e2e/multi-cluster.spec.ts:95:7 - E2E-5: Delete cluster → removed from list",
+    "tests/e2e/responsive.spec.ts:71:7 - should render BYOK actions as full-width touch targets on mobile"
+  ]
+}
