@@ -13,6 +13,7 @@ import {
   normalizeHealth,
   type ClusterEnvironment,
 } from '@/lib/cluster-meta'
+import { normalizeLiveHealthStatus, healthBadgeLabel } from '@/lib/cluster-status'
 import {
   getStatusColor,
   getStatusDotClass,
@@ -60,10 +61,10 @@ const HEALTH_GROUP_META: Record<HealthGroup, { label: string; dotColor: string }
 }
 
 function getHealthGroup(status: string | null | undefined): HealthGroup {
-  const s = (status ?? 'unknown').toLowerCase()
-  if (s === 'healthy' || s === 'active' || s === 'ready') return 'healthy'
-  if (s === 'warning' || s === 'degraded') return 'degraded'
-  return 'critical'
+  const normalized = normalizeLiveHealthStatus(status)
+  if (normalized === 'healthy') return 'healthy'
+  if (normalized === 'degraded') return 'degraded'
+  return 'critical' // 'error' and 'unknown' → critical
 }
 
 function DashboardContent() {
@@ -119,13 +120,19 @@ function DashboardContent() {
   const clusterList: ClusterCardData[] = []
 
   if (liveData) {
+    // Find matching DB cluster to use its persisted healthStatus
+    const matchingDbCluster = dbClusters.find(c => c.name === liveData.name || c.name === 'minikube-dev')
     clusterList.push({
       id: activeClusterId ?? 'live',
       name: liveData.name,
       provider: liveData.provider,
       version: liveData.version,
       status: liveData.status,
-      healthStatus: liveData.status,
+      healthStatus: matchingDbCluster
+        ? (typeof (matchingDbCluster as Record<string, unknown>).healthStatus === 'string'
+            ? (matchingDbCluster as Record<string, unknown>).healthStatus as string
+            : liveData.status)
+        : liveData.status,
       nodeCount: liveData.nodes.length,
       source: 'live',
       environment: getClusterEnvironment(liveData.name, liveData.provider),
@@ -466,7 +473,8 @@ function ClusterCard({
   totalPods: number
 }) {
   const status = cluster.healthStatus ?? cluster.status ?? 'unknown'
-  const statusMeta = STATUS_META[normalizeHealth(status)]
+  const normalizedStatus = normalizeLiveHealthStatus(status)
+  const statusLabel = healthBadgeLabel(normalizedStatus)
   const envMeta = ENV_META[cluster.environment]
 
   return (
@@ -531,7 +539,7 @@ function ClusterCard({
             </span>
             <ProviderLogo provider={cluster.provider ?? 'default'} />
           </div>
-          <span className="text-[9px] text-[var(--color-text-dim)]">{statusMeta.label}</span>
+          <span className="text-[9px] text-[var(--color-text-dim)]">{statusLabel}</span>
         </div>
       </div>
     </Link>
