@@ -13,7 +13,7 @@ import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { ArrowLeft, Server, Box, Globe, Cpu } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 function providerIcon(provider: string): string {
   const map: Record<string, string> = {
@@ -225,6 +225,10 @@ export default function ClusterDetailPage() {
   const effectiveIsLive = isLive && !liveFailed
   const [activeTab, setActiveTab] = useState(effectiveIsLive ? 'live' : 'stored')
 
+  useEffect(() => {
+    setActiveTab(effectiveIsLive ? 'live' : 'stored')
+  }, [effectiveIsLive])
+
   const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !effectiveIsLive })
   const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !effectiveIsLive })
 
@@ -232,7 +236,7 @@ export default function ClusterDetailPage() {
 
   // useMemo MUST be called before any early return to satisfy Rules of Hooks
   const lastConnectedAtRaw = (() => {
-    const v = (dbCluster.data as Record<string, unknown> | undefined)?.lastConnectedAt
+    const v = dbCluster.data?.lastConnectedAt
     if (!v) return null
     if (v instanceof Date) return v.toISOString()
     return String(v)
@@ -280,7 +284,7 @@ export default function ClusterDetailPage() {
         runningPods: liveData?.runningPods ?? 0,
         namespaceCount: liveData?.namespaces?.length ?? 0,
         lastConnectedAt: (() => {
-          const v = (dbCluster.data as Record<string, unknown> | undefined)?.lastConnectedAt
+          const v = dbCluster.data?.lastConnectedAt
           if (!v) return null
           if (v instanceof Date) return v.toISOString()
           return String(v)
@@ -293,7 +297,7 @@ export default function ClusterDetailPage() {
         status: String(dbCluster.data?.status ?? 'unknown'),
         endpoint: String((dbCluster.data as Record<string, unknown>)?.endpoint ?? '—'),
         lastConnectedAt: (() => {
-          const v = (dbCluster.data as Record<string, unknown>)?.lastConnectedAt
+          const v = dbCluster.data?.lastConnectedAt
           if (!v) return null
           if (v instanceof Date) return v.toISOString()
           return String(v)

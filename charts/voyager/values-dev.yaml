@@ -34,3 +34,5 @@ secret:
   adminPassword: admin123
   # AES-256 dev key for BYOK encryption (dev only — not for production)
   aiKeysEncryptionKey: "1a67454d08771cb9c3270657401a721e9aff5630f83b8754842c82ccc2d1a3b4"
+  # AES-256 dev key for cluster credential encryption (dev only — not for production)
+  clusterCredEncryptionKey: "b3f8a2d1e7c94056ab12cd34ef567890fedcba9876543210abcdef0123456789"
