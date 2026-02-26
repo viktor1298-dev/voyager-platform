@@ -278,6 +278,7 @@ export default function ClusterDetailPage() {
         provider: String(liveData?.provider ?? 'minikube'),
         version: String(liveData?.version ?? '—'),
         status: liveData?.status ?? 'unknown',
+        healthStatus: liveData?.status ?? 'unknown',
         endpoint: liveData?.endpoint ?? '—',
         nodeCount: liveData?.nodes?.length ?? 0,
         podCount: liveData?.totalPods ?? 0,
@@ -294,7 +295,8 @@ export default function ClusterDetailPage() {
         name: String(dbCluster.data?.name ?? ''),
         provider: String(dbCluster.data?.provider ?? ''),
         version: String(dbCluster.data?.version ?? '—'),
-        status: String((dbCluster.data as Record<string, unknown>)?.healthStatus ?? dbCluster.data?.status ?? 'unknown'),
+        status: String(dbCluster.data?.status ?? 'unknown'),
+        healthStatus: String((dbCluster.data as Record<string, unknown>)?.healthStatus ?? dbCluster.data?.status ?? 'unknown'),
         endpoint: String((dbCluster.data as Record<string, unknown>)?.endpoint ?? '—'),
         lastConnectedAt: (() => {
           const v = dbCluster.data?.lastConnectedAt
@@ -353,7 +355,7 @@ export default function ClusterDetailPage() {
         timestamp: e.timestamp instanceof Date ? e.timestamp.toISOString() : (typeof e.timestamp === 'string' ? e.timestamp : null),
       }))
 
-  const clusterStatus = typeof cluster.status === 'string' ? cluster.status : 'unknown'
+  const clusterStatus = typeof (cluster.healthStatus ?? cluster.status) === 'string' ? (cluster.healthStatus ?? cluster.status) : 'unknown'
 
   const statusDotClass = clusterStatus === 'healthy'
     ? 'bg-[var(--color-status-active)]'

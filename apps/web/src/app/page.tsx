@@ -34,6 +34,7 @@ interface ClusterCardData {
   provider: string
   version: string | null
   status: string | null
+  healthStatus: string | null
   nodeCount: number
   source: 'live' | 'db'
   environment: ClusterEnvironment
@@ -124,6 +125,7 @@ function DashboardContent() {
       provider: liveData.provider,
       version: liveData.version,
       status: liveData.status,
+      healthStatus: liveData.status,
       nodeCount: liveData.nodes.length,
       source: 'live',
       environment: getClusterEnvironment(liveData.name, liveData.provider),
@@ -140,7 +142,8 @@ function DashboardContent() {
         name: c.name,
         provider: typeof c.provider === 'string' ? c.provider : 'unknown',
         version: typeof c.version === 'string' ? c.version : null,
-        status: typeof (c as Record<string, unknown>).healthStatus === 'string' ? ((c as Record<string, unknown>).healthStatus as string) : (typeof c.status === 'string' ? c.status : null),
+        status: typeof c.status === 'string' ? c.status : null,
+        healthStatus: typeof (c as Record<string, unknown>).healthStatus === 'string' ? ((c as Record<string, unknown>).healthStatus as string) : (typeof c.status === 'string' ? c.status : null),
         nodeCount: c.nodeCount,
         source: 'db',
         environment: getClusterEnvironment(c.name, c.provider),
@@ -164,9 +167,9 @@ function DashboardContent() {
     const tags = new Set<string>()
 
     for (const cluster of clusterList) {
-      statuses.add((cluster.status ?? 'unknown').toLowerCase())
+      statuses.add((cluster.healthStatus ?? cluster.status ?? 'unknown').toLowerCase())
       providers.add(cluster.provider)
-      health.add(normalizeHealth(cluster.status))
+      health.add(normalizeHealth(cluster.healthStatus ?? cluster.status))
       for (const tag of cluster.tags) tags.add(tag)
     }
 
@@ -183,10 +186,10 @@ function DashboardContent() {
     const q = filters.q.trim().toLowerCase()
     return clusterList.filter((cluster) => {
       if (filters.environment !== 'all' && cluster.environment !== filters.environment) return false
-      const statusValue = (cluster.status ?? 'unknown').toLowerCase()
+      const statusValue = (cluster.healthStatus ?? cluster.status ?? 'unknown').toLowerCase()
       if (filters.status !== 'all' && statusValue !== filters.status) return false
       if (filters.provider !== 'all' && cluster.provider !== filters.provider) return false
-      const healthValue = normalizeHealth(cluster.status)
+      const healthValue = normalizeHealth(cluster.healthStatus ?? cluster.status)
       if (filters.health !== 'all' && healthValue !== filters.health) return false
       if (filters.tags.length > 0 && !filters.tags.every((tag) => cluster.tags.includes(tag))) return false
       if (
@@ -208,7 +211,7 @@ function DashboardContent() {
     }
 
     for (const cluster of visibleClusters) {
-      grouped[cluster.environment][getHealthGroup(cluster.status)].push(cluster)
+      grouped[cluster.environment][getHealthGroup(cluster.healthStatus ?? cluster.status)].push(cluster)
     }
 
     return grouped
@@ -278,7 +281,7 @@ function DashboardContent() {
             <div>
               <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
               <p className="text-[11px] text-[var(--color-table-meta)] font-mono uppercase tracking-wider mt-0.5">
-                {clusterList.filter((c) => c.source === 'live' || ['healthy', 'degraded'].includes(c.healthStatus)).length} live ·{' '}
+                {clusterList.filter((c) => c.source === 'live' || ['healthy', 'degraded'].includes(c.healthStatus ?? '')).length} live ·{' '}
                 {clusterList.length} registered
               </p>
             </div>
@@ -462,7 +465,7 @@ function ClusterCard({
   runningPods: number
   totalPods: number
 }) {
-  const status = cluster.status ?? 'unknown'
+  const status = cluster.healthStatus ?? cluster.status ?? 'unknown'
   const statusMeta = STATUS_META[normalizeHealth(status)]
   const envMeta = ENV_META[cluster.environment]
 
