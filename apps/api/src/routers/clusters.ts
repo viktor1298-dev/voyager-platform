@@ -74,6 +74,7 @@ const clusterSchema = z
     lastHealthCheck: z.union([z.string(), z.date()]).nullable().optional(),
     version: z.string().nullable().optional(),
     nodesCount: z.number().int().nullable().optional(),
+    lastConnectedAt: z.union([z.string(), z.date()]).nullable().optional(),
     createdAt: z.union([z.string(), z.date()]).optional(),
     updatedAt: z.union([z.string(), z.date()]).optional(),
   })

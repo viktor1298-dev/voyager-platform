@@ -4,8 +4,9 @@ export const kubeconfigConnectionConfigSchema = z
   .object({
     kubeconfig: z.string().min(1),
     context: z.string().optional(),
+    contextName: z.string().optional(),
   })
-  .passthrough()
+  .strict()
 
 export const awsConnectionConfigSchema = z
   .object({
@@ -18,7 +19,7 @@ export const awsConnectionConfigSchema = z
     endpoint: z.string().url().optional(),
     caCert: z.string().optional(),
   })
-  .passthrough()
+  .strict()
 
 export const azureConnectionConfigSchema = z
   .object({
@@ -29,7 +30,7 @@ export const azureConnectionConfigSchema = z
     clientId: z.string().optional(),
     clientSecret: z.string().optional(),
   })
-  .passthrough()
+  .strict()
 
 export const gkeConnectionConfigSchema = z
   .object({
@@ -37,17 +38,18 @@ export const gkeConnectionConfigSchema = z
     endpoint: z.string().url().optional(),
     caCert: z.string().optional(),
   })
-  .passthrough()
+  .strict()
 
 export const minikubeConnectionConfigSchema = z
   .object({
     context: z.string().optional(),
+    contextName: z.string().optional(),
     caCert: z.string().optional(),
     clientCert: z.string().optional(),
     clientKey: z.string().optional(),
     endpoint: z.string().optional(),
   })
-  .passthrough()
+  .strict()
 
 export const connectionConfigSchema = z.union([
   kubeconfigConnectionConfigSchema,

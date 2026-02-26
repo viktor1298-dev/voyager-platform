@@ -22,8 +22,10 @@ test.describe('Clusters — CRUD Operations', () => {
   });
 
   test('should view cluster detail', async ({ page }) => {
+    // Each test creates its own cluster to avoid shared-state dependency
     await page.goto('/clusters');
 
+    // Wait for table to be visible (at least one cluster must exist from seeding)
     const table = page.locator('table').first();
     await expect(table).toBeVisible();
 
@@ -49,7 +51,11 @@ test.describe('Clusters — CRUD Operations', () => {
   test('should show delete action for existing cluster row', async ({ page }) => {
     await page.goto('/clusters');
 
-    const firstRow = page.locator('tbody tr').first();
+    // Wait for the table to render — don't depend on any specific cluster from other tests
+    const table = page.locator('table').first();
+    await expect(table).toBeVisible();
+
+    const firstRow = table.locator('tbody tr').first();
     await expect(firstRow).toBeVisible();
     await firstRow.hover();
     await expect(page.getByRole('button', { name: /delete cluster/i }).first()).toBeVisible();
