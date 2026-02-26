@@ -35,20 +35,28 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
     const totalPods = podsRes.items.length
     const healthStatus = deriveHealthStatus(totalNodes, totalPods, runningPods)
 
+    // Only update status to 'active' if currently 'unreachable' or 'unknown' — don't overwrite 'maintenance' or 'paused'
+    const [currentCluster] = await db.select({ status: clusters.status }).from(clusters).where(eq(clusters.id, clusterId))
+    const shouldActivate = !currentCluster || currentCluster.status === 'unreachable' || currentCluster.status === 'unknown'
+
+    const updatePayload: Record<string, unknown> = {
+      healthStatus: (healthStatus === 'warning' ? 'degraded' : healthStatus === 'error' ? 'unreachable' : healthStatus) as
+        | 'healthy'
+        | 'degraded'
+        | 'unreachable'
+        | 'unknown',
+      version: `v${versionRes.major}.${versionRes.minor}`,
+      nodesCount: totalNodes,
+      lastHealthCheck: now,
+      lastConnectedAt: now,
+    }
+    if (shouldActivate) {
+      updatePayload.status = 'active'
+    }
+
     await db
       .update(clusters)
-      .set({
-        healthStatus: (healthStatus === 'warning' ? 'degraded' : healthStatus === 'error' ? 'unreachable' : healthStatus) as
-          | 'healthy'
-          | 'degraded'
-          | 'unreachable'
-          | 'unknown',
-        status: 'active',
-        version: `v${versionRes.major}.${versionRes.minor}`,
-        nodesCount: totalNodes,
-        lastHealthCheck: now,
-        lastConnectedAt: now,
-      })
+      .set(updatePayload)
       .where(eq(clusters.id, clusterId))
   } catch (error) {
     if (error instanceof ZodError) {

@@ -13,7 +13,7 @@ import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { ArrowLeft, Server, Box, Globe, Cpu } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 function providerIcon(provider: string): string {
   const map: Record<string, string> = {
@@ -224,6 +224,10 @@ export default function ClusterDetailPage() {
   const liveFailed = isLive && liveQuery.isError
   const effectiveIsLive = isLive && !liveFailed
   const [activeTab, setActiveTab] = useState(effectiveIsLive ? 'live' : 'stored')
+
+  useEffect(() => {
+    setActiveTab(effectiveIsLive ? 'live' : 'stored')
+  }, [effectiveIsLive])
 
   const dbNodes = trpc.nodes.list.useQuery({ clusterId: id }, { enabled: !effectiveIsLive })
   const dbEvents = trpc.events.list.useQuery({ clusterId: id, limit: 20 }, { enabled: !effectiveIsLive })
