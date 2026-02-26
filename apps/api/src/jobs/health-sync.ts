@@ -43,6 +43,7 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
           | 'degraded'
           | 'unreachable'
           | 'unknown',
+        status: 'active',
         version: `v${versionRes.major}.${versionRes.minor}`,
         nodesCount: totalNodes,
         lastHealthCheck: now,
@@ -60,6 +61,7 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
       .update(clusters)
       .set({
         healthStatus: 'unreachable',
+        status: 'unreachable',
         lastHealthCheck: now,
       })
       .where(eq(clusters.id, clusterId))

@@ -232,7 +232,7 @@ export default function ClusterDetailPage() {
 
   // useMemo MUST be called before any early return to satisfy Rules of Hooks
   const lastConnectedAtRaw = (() => {
-    const v = (dbCluster.data as Record<string, unknown> | undefined)?.lastConnectedAt
+    const v = dbCluster.data?.lastConnectedAt
     if (!v) return null
     if (v instanceof Date) return v.toISOString()
     return String(v)
@@ -280,7 +280,7 @@ export default function ClusterDetailPage() {
         runningPods: liveData?.runningPods ?? 0,
         namespaceCount: liveData?.namespaces?.length ?? 0,
         lastConnectedAt: (() => {
-          const v = (dbCluster.data as Record<string, unknown> | undefined)?.lastConnectedAt
+          const v = dbCluster.data?.lastConnectedAt
           if (!v) return null
           if (v instanceof Date) return v.toISOString()
           return String(v)
@@ -293,7 +293,7 @@ export default function ClusterDetailPage() {
         status: String(dbCluster.data?.status ?? 'unknown'),
         endpoint: String((dbCluster.data as Record<string, unknown>)?.endpoint ?? '—'),
         lastConnectedAt: (() => {
-          const v = (dbCluster.data as Record<string, unknown>)?.lastConnectedAt
+          const v = dbCluster.data?.lastConnectedAt
           if (!v) return null
           if (v instanceof Date) return v.toISOString()
           return String(v)
