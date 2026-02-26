@@ -278,8 +278,8 @@ function DashboardContent() {
             <div>
               <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
               <p className="text-[11px] text-[var(--color-table-meta)] font-mono uppercase tracking-wider mt-0.5">
-                {clusterList.filter((c) => c.source === 'live').length} live ·{' '}
-                {clusterList.filter((c) => c.source === 'db').length} registered
+                {clusterList.filter((c) => c.source === 'live' || ['healthy', 'degraded'].includes(c.healthStatus)).length} live ·{' '}
+                {clusterList.length} registered
               </p>
             </div>
 
