@@ -82,6 +82,21 @@ app.register(fastifyTRPCPlugin, {
   } satisfies FastifyTRPCPluginOptions<AppRouter>['trpcOptions'],
 })
 
+// Fix SSE Content-Type for tRPC subscription routes (presence.subscribe, podEvents, etc.)
+// The tRPC Fastify adapter may default to text/plain for SSE streams.
+app.addHook('onSend', async (request, reply, payload) => {
+  if (
+    request.url.startsWith('/trpc/') &&
+    /\.subscribe(\?|$)/.test(request.url) &&
+    reply.getHeader('content-type')?.toString().startsWith('text/plain')
+  ) {
+    reply.header('content-type', 'text/event-stream')
+    reply.header('cache-control', 'no-cache')
+    reply.header('connection', 'keep-alive')
+  }
+  return payload
+})
+
 app.register(fastifyTRPCOpenApiPlugin, {
   basePath: '/api',
   router: appRouter,

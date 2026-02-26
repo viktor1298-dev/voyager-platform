@@ -147,6 +147,8 @@ export const healthRouter = router({
       const allClusters = await ctx.db.select().from(clusters)
       if (allClusters.length === 0) return []
 
+      // Read canonical healthStatus from clusters table (updated by health-sync job)
+      // and optionally enrich with latest responseTimeMs from healthHistory.
       const allLatest = await ctx.db
         .selectDistinctOn([healthHistory.clusterId])
         .from(healthHistory)
@@ -165,8 +167,8 @@ export const healthRouter = router({
           clusterId: cluster.id,
           clusterName: cluster.name,
           provider: cluster.provider,
-          status: (latest?.status ?? 'unknown') as HealthStatus,
-          checkedAt: latest?.checkedAt ?? null,
+          status: cluster.healthStatus ?? 'unknown',
+          checkedAt: cluster.lastHealthCheck ?? latest?.checkedAt ?? null,
           responseTimeMs: latest?.responseTimeMs ?? null,
         }
       })
