@@ -65,9 +65,8 @@ export function getClusterTags(input: {
   return Array.from(tags)
 }
 
-export function normalizeHealth(status: string | null | undefined): 'healthy' | 'warning' | 'degraded' {
+export function normalizeHealth(status: string | null | undefined): 'healthy' | 'degraded' {
   const s = (status ?? 'unknown').toLowerCase()
-  if (s === 'healthy' || s === 'active' || s === 'ready') return 'healthy'
-  if (s === 'warning') return 'warning'
+  if (s === 'healthy' || s === 'active' || s === 'ready' || s === 'ok') return 'healthy'
   return 'degraded'
 }
