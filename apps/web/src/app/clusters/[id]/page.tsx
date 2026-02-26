@@ -412,6 +412,9 @@ export default function ClusterDetailPage() {
             </div>
             <p className="text-[12px] text-[var(--color-text-dim)] font-mono mt-1 break-all">
               Kubernetes {cluster.version} • {cluster.endpoint}
+              {cluster.lastConnectedAt && (
+                <span className="ml-2 text-[var(--color-text-dim)]">• Last seen: {timeAgo(cluster.lastConnectedAt)}</span>
+              )}
             </p>
           </div>
         </div>

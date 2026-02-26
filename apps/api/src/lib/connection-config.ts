@@ -4,6 +4,7 @@ export const kubeconfigConnectionConfigSchema = z
   .object({
     kubeconfig: z.string().min(1),
     context: z.string().optional(),
+    contextName: z.string().optional(),
   })
   .strict()
 
@@ -42,6 +43,7 @@ export const gkeConnectionConfigSchema = z
 export const minikubeConnectionConfigSchema = z
   .object({
     context: z.string().optional(),
+    contextName: z.string().optional(),
     caCert: z.string().optional(),
     clientCert: z.string().optional(),
     clientKey: z.string().optional(),
