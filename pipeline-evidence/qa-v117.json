@@ -1,0 +1,101 @@
+{
+  "version": "v117",
+  "timestamp": "2026-02-26T17:43:00.000Z",
+  "score": 6.5,
+  "resolution": "1920x1080",
+  "verdict": "CHANGES_REQUESTED",
+  "agent": "qa",
+  "gate": 8.5,
+  "bug_verification": {
+    "BUG-1": {
+      "description": "lastConnectedAt visible in cluster detail page (no type cast needed)",
+      "status": "PARTIAL",
+      "details": "API returns lastConnectedAt correctly (2026-02-26T17:26:05.103Z). Cluster LIST page shows 'Last Seen: 3m ago' derived from lastConnectedAt. However, cluster DETAIL page does NOT display lastConnectedAt as an explicit field. The 'Kubernetes v1.33 • —' header shows endpoint (null) not lastConnectedAt."
+    },
+    "BUG-2": {
+      "description": "After health-sync: status field reflects actual health (not stuck at unreachable)",
+      "status": "AMBIGUOUS",
+      "details": "Both clusters show status='unreachable'. health-sync logs show clusters are being SKIPPED due to invalid connectionConfig (test-cluster-minikube: unrecognized key 'contextName'; prod-cluster-eks: missing accessKeyId/secretAccessKey). No actual health checks are being performed. Status may be correct (clusters unreachable) but health-sync is not functioning properly for either cluster."
+    },
+    "BUG-3": {
+      "description": "API starts with zero warnings about CLUSTER_CRED_ENCRYPTION_KEY",
+      "status": "NOT_FIXED",
+      "details": "API startup log line 1: '⚠️  CLUSTER_CRED_ENCRYPTION_KEY is missing or invalid (expected 64-char hex string). Credential encryption will fail.' This warning is still present at startup. CRITICAL regression."
+    },
+    "BUG-4": {
+      "description": "E2E cluster tests pass (93/104)",
+      "status": "PRE_VERIFIED",
+      "details": "Already verified by pipeline, not re-run in this QA session."
+    }
+  },
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "category": "security",
+      "title": "BUG-3 NOT FIXED: CLUSTER_CRED_ENCRYPTION_KEY missing warning at API startup",
+      "details": "API logs first line: '⚠️  CLUSTER_CRED_ENCRYPTION_KEY is missing or invalid (expected 64-char hex string). Credential encryption will fail.' This was supposed to be fixed in Phase D but is still present.",
+      "impact": "Credential encryption will fail for all clusters"
+    },
+    {
+      "severity": "HIGH",
+      "category": "functionality",
+      "title": "health-sync skipping ALL clusters due to invalid connectionConfig",
+      "details": "test-cluster-minikube skipped: unrecognized key 'contextName'. prod-cluster-eks skipped: missing accessKeyId/secretAccessKey. Both clusters never get health-checked.",
+      "impact": "BUG-2 cannot be verified as fixed since no health checks succeed"
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "ui",
+      "title": "BUG-1 PARTIAL: lastConnectedAt not displayed in cluster detail page",
+      "details": "API correctly returns lastConnectedAt. Cluster list shows 'Last Seen: 3m ago'. However, cluster detail page does not show lastConnectedAt as a dedicated UI field.",
+      "impact": "Users cannot see last connection time on cluster detail page"
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "sse",
+      "title": "SSE/EventSource MIME type error on cluster detail page",
+      "details": "Console error: 'EventSource response has MIME type text/plain not text/event-stream'. presence.subscribe endpoint returns wrong content-type. Also ERR_INCOMPLETE_CHUNKED_ENCODING.",
+      "impact": "Real-time updates may not work on cluster detail page"
+    },
+    {
+      "severity": "LOW",
+      "category": "ui",
+      "title": "Input fields missing autocomplete attributes on Settings page",
+      "details": "DOM warning: Input elements should have autocomplete attributes (suggested: 'new-password')",
+      "impact": "Accessibility/UX minor issue"
+    }
+  ],
+  "pages_tested": {
+    "login": "PASS",
+    "dashboard": "PASS",
+    "clusters_list": "PASS",
+    "cluster_detail": "PARTIAL - status unreachable, no live data available",
+    "settings_byok": "PASS",
+    "feature_flags": "PASS",
+    "audit_log": "PASS",
+    "teams": "PASS",
+    "light_mode": "PASS",
+    "dark_mode": "PASS"
+  },
+  "what_works": [
+    "Login flow works correctly with auth redirect",
+    "Dashboard shows stat cards and cluster cards with environment grouping",
+    "Cluster list shows all columns including 'Last Seen' (lastConnectedAt) correctly",
+    "Settings page with BYOK configured (Claude Anthropic)",
+    "API Tokens management (list, revoke, create)",
+    "Feature Flags page with toggle, targeting rules, activity log",
+    "Audit Log with 234 entries, pagination working",
+    "Teams page with member management",
+    "Light mode: good contrast and readability",
+    "Dark mode: default, well styled",
+    "Navigation sidebar working correctly",
+    "MCP Integration snippet on settings page",
+    "Registered Clusters visible in settings"
+  ],
+  "screenshots": [
+    "/home/vkzone/.openclaw/workspace-qa/screenshots/v117-login.png",
+    "/home/vkzone/.openclaw/workspace-qa/screenshots/v117-dashboard.png",
+    "/home/vkzone/.openclaw/workspace-qa/screenshots/v117-cluster-detail.png",
+    "/home/vkzone/.openclaw/workspace-qa/screenshots/v117-settings.jpg"
+  ]
+}
