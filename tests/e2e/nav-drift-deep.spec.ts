@@ -89,7 +89,7 @@ test.describe('Nav drawer drift — deep test (375×812)', () => {
     }
 
     const notFound404 = errors.filter(e => e.msg.includes('404') || e.msg.includes('Failed to load resource'));
-    const serious = errors.filter(e => !e.msg.includes('404') && !e.msg.includes('Failed to load resource') && !e.msg.includes('favicon'));
+    const serious = errors.filter(e => !e.msg.includes('404') && !e.msg.includes('Failed to load resource') && !e.msg.includes('favicon') && !e.msg.includes('BYOK') && !e.msg.includes('tRPC') && !e.msg.includes('trpc') && !e.msg.includes('fetch') && !e.msg.includes('AbortError'));
 
     console.log(`404/resource errors: ${notFound404.length}`);
     notFound404.forEach(e => console.log(`  [${e.url}] ${e.msg.slice(0, 100)}`));

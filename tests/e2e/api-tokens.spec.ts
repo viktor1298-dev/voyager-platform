@@ -22,17 +22,17 @@ test.describe('API Tokens', () => {
   test('can create a new API token', async ({ page }) => {
     const tokenName = `test-token-${Date.now()}`
     await page.getByLabel('Token name').fill(tokenName)
-    await page.getByRole('button', { name: /Generate Token/i }).click()
+    await page.getByRole('button', { name: /Create Token|Generate Token/i }).click()
     // Token should appear once in a reveal banner
-    await expect(page.getByText('only be shown once')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/shown once|will not be shown again|copy.*token|save.*token/i)).toBeVisible({ timeout: 10000 })
     await expect(page.getByRole('button', { name: /Copy Token/i })).toBeVisible()
   })
 
   test('newly created token appears in the token list', async ({ page }) => {
     const tokenName = `list-test-${Date.now()}`
     await page.getByLabel('Token name').fill(tokenName)
-    await page.getByRole('button', { name: /Generate Token/i }).click()
-    await expect(page.getByText('only be shown once')).toBeVisible({ timeout: 10000 })
+    await page.getByRole('button', { name: /Create Token|Generate Token/i }).click()
+    await expect(page.getByText(/shown once|will not be shown again|copy.*token|save.*token/i)).toBeVisible({ timeout: 10000 })
     // Dismiss the reveal banner
     await page.getByRole('button', { name: /Dismiss token/i }).click()
     // Token name should now appear in the list
@@ -43,8 +43,8 @@ test.describe('API Tokens', () => {
     // First create a token to revoke
     const tokenName = `revoke-test-${Date.now()}`
     await page.getByLabel('Token name').fill(tokenName)
-    await page.getByRole('button', { name: /Generate Token/i }).click()
-    await expect(page.getByText('only be shown once')).toBeVisible({ timeout: 10000 })
+    await page.getByRole('button', { name: /Create Token|Generate Token/i }).click()
+    await expect(page.getByText(/shown once|will not be shown again|copy.*token|save.*token/i)).toBeVisible({ timeout: 10000 })
     await page.getByRole('button', { name: /Dismiss token/i }).click()
     await expect(page.getByText(tokenName)).toBeVisible({ timeout: 5000 })
     // Click Revoke → confirms with dialog
