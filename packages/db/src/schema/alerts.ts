@@ -8,6 +8,9 @@ export const alerts = pgTable('alerts', {
   threshold: numeric('threshold').notNull(),
   clusterFilter: varchar('cluster_filter', { length: 255 }),
   enabled: boolean('enabled').notNull().default(true),
+  webhookUrl: varchar('webhook_url', { length: 1000 }),
+  lastTriggeredAt: timestamp('last_triggered_at', { withTimezone: true }),
+  lastValue: numeric('last_value'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

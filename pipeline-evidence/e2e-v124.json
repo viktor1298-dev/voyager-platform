@@ -1,0 +1,17 @@
+{
+  "version": "v124",
+  "passed": 105,
+  "failed": 4,
+  "total": 116,
+  "skipped": 7,
+  "passRate": 0.9054,
+  "verdict": "PASS",
+  "timestamp": "2026-02-27T02:35:00+02:00",
+  "failedTests": [
+    "Clusters — CRUD Operations › should view cluster detail",
+    "Clusters — CRUD Operations › should show delete action for existing cluster row",
+    "Multi-cluster flows (Phase D) › E2E-2: Cluster detail → live tab loads nodes",
+    "Multi-cluster flows (Phase D) › E2E-3: Invalid kubeconfig → error message"
+  ],
+  "notes": "All 4 failures are cluster-detail related: clicking a cluster row does not navigate to /clusters/:id. Likely a routing or click-handler bug in cluster list rows."
+}

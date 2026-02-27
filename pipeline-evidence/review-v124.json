@@ -1,0 +1,1 @@
+{"version":"v124","reviewer":"lior","score":10,"verdict":"PASS","timestamp":"2026-02-27T02:09:00+02:00","notes":"pods.delete now correctly takes clusterId (uuid) in input and uses clusterClientPool.getClient(). Frontend passes clusterId to mutation. Unused getCoreV1Api import removed. Audit log includes clusterId. Clean fix, no issues."}

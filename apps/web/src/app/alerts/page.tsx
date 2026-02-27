@@ -46,11 +46,11 @@ function timeAgo(ts: string): string {
 }
 
 interface CreateFormData {
-  name: string; metric: Metric; operator: Operator; threshold: string; clusterFilter: string
+  name: string; metric: Metric; operator: Operator; threshold: string; clusterFilter: string; webhookUrl: string
 }
-const INITIAL_FORM: CreateFormData = { name: '', metric: 'cpu', operator: 'gt', threshold: '', clusterFilter: '' }
+const INITIAL_FORM: CreateFormData = { name: '', metric: 'cpu', operator: 'gt', threshold: '', clusterFilter: '', webhookUrl: '' }
 
-type AlertRow = { id: string; name: string; metric: string; operator: string; threshold: string | number; clusterFilter: string | null; enabled: boolean }
+type AlertRow = { id: string; name: string; metric: string; operator: string; threshold: string | number; clusterFilter: string | null; enabled: boolean; webhookUrl?: string | null; lastTriggeredAt?: string | null; lastValue?: string | number | null }
 
 export default function AlertsPage() {
   const [showCreate, setShowCreate] = useState(false)
@@ -63,10 +63,10 @@ export default function AlertsPage() {
   const historyQueryKey: unknown[] = [['alerts', 'history'], { input: { limit: 20 }, type: 'query' }]
 
   const createMut = trpc.alerts.create.useMutation(
-    useOptimisticOptions<AlertRow[], { name: string; metric: string; operator: string; threshold: number; clusterFilter?: string }>({
+    useOptimisticOptions<AlertRow[], { name: string; metric: string; operator: string; threshold: number; clusterFilter?: string; webhookUrl?: string | null }>({
       queryKey: alertQueryKey,
       updater: (old, vars) => [
-        { id: `temp-${Date.now()}`, name: vars.name, metric: vars.metric, operator: vars.operator, threshold: vars.threshold, clusterFilter: vars.clusterFilter ?? null, enabled: true },
+        { id: `temp-${Date.now()}`, name: vars.name, metric: vars.metric, operator: vars.operator, threshold: vars.threshold, clusterFilter: vars.clusterFilter ?? null, enabled: true, webhookUrl: vars.webhookUrl ?? null },
         ...(old ?? []),
       ],
       successMessage: 'Alert rule created',
@@ -105,14 +105,23 @@ export default function AlertsPage() {
   const handleCreate = useCallback(() => {
     const threshold = Number(form.threshold)
     if (!form.name || Number.isNaN(threshold)) return
-    createMut.mutate({ name: form.name, metric: form.metric, operator: form.operator, threshold, clusterFilter: form.clusterFilter || undefined })
+    createMut.mutate({ name: form.name, metric: form.metric, operator: form.operator, threshold, clusterFilter: form.clusterFilter || undefined, webhookUrl: form.webhookUrl || undefined })
   }, [form, createMut])
 
   const alerts: AlertRow[] = alertsQuery.data ?? []
   const history = historyQuery.data ?? []
 
   const alertColumns = useMemo<ColumnDef<AlertRow, unknown>[]>(() => [
-    { accessorKey: 'name', header: 'Name', cell: ({ row }) => <span className="text-[var(--color-text-primary)]">{row.original.name}</span> },
+    { accessorKey: 'name', header: 'Name', cell: ({ row }) => {
+      const triggered = row.original.lastTriggeredAt
+      const isRecent = triggered ? Date.now() - new Date(triggered).getTime() < 10 * 60 * 1000 : false
+      return (
+        <span className="text-[var(--color-text-primary)] flex items-center gap-1.5">
+          {isRecent && <span className="inline-block h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
+          {row.original.name}
+        </span>
+      )
+    } },
     { accessorKey: 'metric', header: 'Metric', cell: ({ row }) => <span className="text-[var(--color-text-secondary)]">{metricLabel(row.original.metric)}</span> },
     { id: 'condition', header: 'Condition', cell: ({ row }) => <span className="text-[var(--color-text-secondary)]">{operatorLabel(row.original.operator)} {row.original.threshold}</span>, enableSorting: false },
     { id: 'cluster', header: 'Cluster', accessorFn: (r) => r.clusterFilter, cell: ({ row }) => <span className="text-[var(--color-text-muted)]">{row.original.clusterFilter ?? 'All'}</span> },
@@ -125,6 +134,28 @@ export default function AlertsPage() {
           {row.original.enabled ? 'ON' : 'OFF'}
         </button>
       ),
+    },
+    {
+      accessorKey: 'lastTriggeredAt', header: 'Last Triggered',
+      cell: ({ row }) => {
+        const val = row.original.lastTriggeredAt
+        if (!val) return <span className="text-[var(--color-text-muted)]">Never</span>
+        const date = new Date(val)
+        const isRecent = Date.now() - date.getTime() < 10 * 60 * 1000
+        return (
+          <span className={isRecent ? 'text-red-500 font-medium' : 'text-[var(--color-text-secondary)]'}>
+            {date.toLocaleString()}
+          </span>
+        )
+      },
+    },
+    {
+      accessorKey: 'lastValue', header: 'Current Value',
+      cell: ({ row }) => {
+        const val = row.original.lastValue
+        if (val == null) return <span className="text-[var(--color-text-muted)]">—</span>
+        return <span className="text-[var(--color-text-secondary)]">{val}</span>
+      },
     },
     {
       id: 'actions', header: '', enableSorting: false,
@@ -163,6 +194,8 @@ export default function AlertsPage() {
             </select>
             <input type="number" placeholder="Threshold value" aria-label="Threshold value" value={form.threshold} onChange={(e) => setForm((f) => ({ ...f, threshold: e.target.value }))} className={inputClass} />
             <input type="text" placeholder="Cluster filter (optional)" aria-label="Cluster filter" value={form.clusterFilter} onChange={(e) => setForm((f) => ({ ...f, clusterFilter: e.target.value }))} className={inputClass} />
+            <input type="text" placeholder="https://..." aria-label="Webhook URL (optional)" value={form.webhookUrl} onChange={(e) => setForm((f) => ({ ...f, webhookUrl: e.target.value }))} className={inputClass} />
+            <label className="text-xs text-[var(--color-text-muted)] -mt-2">Webhook URL (optional)</label>
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <button type="button" onClick={() => { setShowCreate(false); setForm(INITIAL_FORM) }} className={btnSecondary}>Cancel</button>
