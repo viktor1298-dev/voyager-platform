@@ -15,7 +15,7 @@ import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-
 import { generateOpenApiSpec } from './lib/openapi.js'
 import { startAlertEvaluator } from './jobs/alert-evaluator.js'
 import { startHealthSync } from './jobs/health-sync.js'
-import { startAlertEvaluator } from './jobs/alert-evaluator.js'
+import { startAlertEvaluator, stopAlertEvaluator } from './jobs/alert-evaluator.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
 import { shutdownTelemetry } from './lib/telemetry.js'
 import { type AppRouter, appRouter } from './routers/index.js'
@@ -224,6 +224,7 @@ const start = async () => {
 
     startHealthSync()
     startAlertEvaluator()
+    app.log.info('Alert evaluator background job started (60s interval)')
     app.log.info('Health sync background job started (5 minute interval)')
 
     startAlertEvaluator()
@@ -234,6 +235,7 @@ const start = async () => {
       process.on(signal, async () => {
         app.log.info(`${signal} received, shutting down gracefully`)
         stopAllWatchers()
+        stopAlertEvaluator()
         await flushSentry()
         await shutdownTelemetry()
         await app.close()
