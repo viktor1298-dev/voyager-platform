@@ -98,11 +98,7 @@ test.describe('Alerts — CRUD + History', () => {
     // Just verify the page doesn't crash and the table/empty state renders
     const table = page.locator('table').first();
     const emptyState = page.getByText(/no alert rules configured/i);
-    const eitherVisible = await Promise.race([
-      table.isVisible().then(() => true).catch(() => false),
-      emptyState.isVisible().then(() => true).catch(() => false),
-    ]);
-    expect(eitherVisible).toBeTruthy();
+    await expect(table.or(emptyState)).toBeVisible({ timeout: 10_000 });
   });
 
   test('should display history section with triggers or empty message', async ({ page }) => {
