@@ -99,17 +99,26 @@ test.describe('Multi-cluster flows (Phase D)', () => {
 
   test('E2E-5: Delete cluster → removed from list', async ({ page }) => {
     await page.goto('/clusters');
+    await page.waitForLoadState('networkidle');
 
     const rows = page.locator('tbody tr');
     await expect(rows.first()).toBeVisible();
 
+    // Wait for table data to fully load (no skeleton rows)
+    await expect(rows.first().locator('td').first()).not.toHaveClass(/skeleton/, { timeout: 10_000 });
+    await expect(rows.first().locator('td').first()).not.toBeEmpty({ timeout: 10_000 });
+    await page.waitForTimeout(500); // stabilize after render
+
     // Only delete clusters created by E2E tests (e2e-kube- prefix) to preserve real data
     const rowCount = await rows.count();
+    if (rowCount === 0) {
+      test.skip(true, 'No rows in cluster table');
+    }
     let row = rows.first();
     let clusterName = '';
     for (let i = rowCount - 1; i >= 0; i--) {
       const candidate = rows.nth(i);
-      const name = (await candidate.locator('td').first().innerText()).trim();
+      const name = (await candidate.locator('td').first().innerText({ timeout: 5_000 })).trim();
       if (name && /^e2e-kube-/.test(name)) {
         row = candidate;
         clusterName = name;
