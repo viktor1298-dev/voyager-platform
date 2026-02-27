@@ -61,13 +61,24 @@ test.describe('Clusters — CRUD Operations', () => {
   test('should show delete action for existing cluster row', async ({ page }) => {
     await page.goto('/clusters');
 
-    // Wait for the table to render — don't depend on any specific cluster from other tests
+    // Wait for the table to render
     const table = page.locator('table').first();
     await expect(table).toBeVisible();
 
     const firstRow = table.locator('tbody tr').first();
     await expect(firstRow).toBeVisible();
-    await firstRow.hover();
-    await expect(page.getByRole('button', { name: /delete cluster/i }).first()).toBeVisible();
+    // Wait for data to load (not skeleton)
+    await expect(firstRow).toContainText(/.+/, { timeout: 10_000 });
+
+    // Hypothesis: Delete button has aria-label="Delete cluster" (exact, no cluster name),
+    // rendered in actions column only when user isAdmin. No hover needed — it's always visible.
+    // Also try title attribute as fallback since component uses title="Delete cluster".
+    const deleteBtn = page.getByRole('button', { name: /delete cluster/i }).first()
+      .or(page.locator('button[title="Delete cluster"]').first());
+
+    // The button might be outside viewport in the actions column — scroll to it
+    await expect(deleteBtn).toBeAttached({ timeout: 10_000 });
+    await deleteBtn.scrollIntoViewIfNeeded();
+    await expect(deleteBtn).toBeVisible({ timeout: 5_000 });
   });
 });
