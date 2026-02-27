@@ -53,6 +53,29 @@ They must be fixed and verified at 0 failures before ANY Phase E feature work be
 
 ---
 
+## ⚡ Environment-Blocked Completion Policy
+
+When a feature is code-complete but QA is blocked by missing K8s environment:
+
+**Requirements for Conditional COMPLETE:**
+- [ ] Code Review = 10/10 (no exceptions)
+- [ ] E2E tests written and PASSING for all non-environment-blocked flows
+- [ ] QA documents EXACTLY which features are blocked and why
+- [ ] QA scores accessible parts ≥ 8.5/10
+- [ ] Vik explicitly approves conditional COMPLETE via Discord
+
+**What gets flagged:**
+- `environmentBlocked: true` in pipeline-state.json
+- List of blocked features with reason
+- These features become PRIORITY 0 for next phase (must have live cluster test)
+
+**Gate changes rule:**
+- Gate thresholds (E2E pass rate, QA score) CANNOT be changed during active development
+- Gate changes only between phases, with Vik approval
+- No retroactive gate tightening on in-progress versions
+
+---
+
 ## 📋 Phase E — After LEGACY bugs are fixed
 
 ### E1: K8s RBAC + Pod Actions ← NEXT after legacy fixes

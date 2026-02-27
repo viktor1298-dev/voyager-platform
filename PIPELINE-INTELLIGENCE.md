@@ -1,5 +1,5 @@
 # Pipeline Intelligence — Living Document
-Last updated: 2026-02-24
+Last updated: 2026-02-27
 
 ## 🔄 How Intelligence Grows
 
@@ -39,6 +39,30 @@ All agents also read `~/.openclaw/workspace/.learnings/SHARED-PIPELINE-LEARNINGS
 ### Pattern: pnpm install fails in worktree
 - Symptom: node_modules empty after merge
 - Fix: `pnpm install --frozen-lockfile` from repo root, not worktree
+
+### Pattern: Trial-and-Error E2E Fixes (FIX LOOP)
+- Symptom: Same test fails 3+ versions, different error each time
+- Root cause: No local testing, no root cause analysis
+- Prevention: Run failing test locally FIRST. Write hypothesis BEFORE touching code.
+- Escalation: After 3 versions → HALT, escalate to Morpheus
+
+### Pattern: Gate Change Mid-Sprint
+- Symptom: Pipeline suddenly has new failures after gate was tightened
+- Root cause: Gate thresholds changed during active development
+- Prevention: Gate changes ONLY between phases, ONLY with Vik approval
+- Detection: Compare pipeline-state.json gateThresholds across versions
+
+### Pattern: Skills Not Read
+- Symptom: Agent makes mistakes documented in its SKILL.md
+- Root cause: Agent skips skill reading, operates on memory only
+- Prevention: Every spawn template must include "FIRST ACTION: read SKILL.md at [path]"
+- Verification: Foreman checks agent session for "read" tool call to skill file
+
+### Pattern: E2E Yuval Flying Blind
+- Symptom: E2E runs full suite with no context, reports numbers only
+- Root cause: Task template doesn't include changed features, previous failures
+- Prevention: Always include git log -5, previous failures, which files to watch
+- Enhancement: Yuval is authorized to flag broken tests — Foreman MUST act on flags
 
 ## Pipeline Metrics (last 5 runs)
 | Run | Version | Total Time | Failures | Fixed Auto | Notes |
@@ -80,3 +104,26 @@ All agents also read `~/.openclaw/workspace/.learnings/SHARED-PIPELINE-LEARNINGS
 - [ ] BASE_URL responds (curl -I → 200)
 - [ ] Login works (smoke test)
 - [ ] All pods Running (0 restarts)
+
+## Pipeline Efficiency Benchmarks (updated 2026-02-27)
+
+### Target Metrics (post-improvements)
+| Metric | Current (audit) | Target |
+|--------|----------------|--------|
+| E2E fix iterations | 6 avg | ≤2 |
+| Skill compliance rate | 43% | 100% |
+| Loop detection threshold | None | 3 failures → HALT |
+| Local test validation | 0% | 100% of dev fixes |
+| Feature dev time | 35 min | 30 min (maintain) |
+| E2E fix time | 2.5 hrs | 30 min |
+| Pipeline efficiency | 5.5/10 | 8/10 |
+
+### Improvements Applied (2026-02-27)
+- ✅ Loop detection added to Foreman (3 failures → HALT + escalate)
+- ✅ Skill reading enforced in all spawn templates
+- ✅ E2E tasks now include change context + previous failures
+- ✅ Yuval empowered to flag broken tests
+- ✅ Dev tasks mandate local E2E validation before push
+- ✅ Environment-blocked policy defined
+- ✅ Gate change policy (between phases only)
+- ✅ Test coverage checks added to Lior's review
