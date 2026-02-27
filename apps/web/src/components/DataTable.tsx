@@ -277,8 +277,6 @@ export function DataTable<TData>({
                 {sortedRows.map((row, i) => (
                   <div
                     key={row.id}
-                    style={{ animationDelay: `${i * staggerMs}ms` }}
-                    className="animate-slide-up"
                   >
                     {mobileCard(row.original, i)}
                   </div>
@@ -294,8 +292,7 @@ export function DataTable<TData>({
                   <tr
                     key={row.id}
                     onClick={() => onRowClick?.(row.original)}
-                    className={`border-b border-[var(--color-table-separator)] transition-colors hover:bg-white/[0.03] animate-slide-up ${onRowClick ? 'cursor-pointer' : ''}`}
-                    style={{ animationDelay: `${i * staggerMs}ms` }}
+                    className={`border-b border-[var(--color-table-separator)] transition-colors hover:bg-white/[0.03] ${onRowClick ? 'cursor-pointer' : ''}`}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="py-2.5 px-3">

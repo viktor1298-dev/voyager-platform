@@ -1,0 +1,45 @@
+{
+  "version": "v145",
+  "timestamp": "2026-02-27T20:29:00Z",
+  "base_url": "http://voyager-platform.voyagerlabs.co",
+  "total": 96,
+  "passed": 85,
+  "failed": 1,
+  "skipped": 10,
+  "duration_minutes": 4.2,
+  "previous_version": "v144",
+  "previous_result": "86/0/10",
+  "v145_changes": ["DataTable.tsx", "clusters/[id]/page.tsx", "cluster-meta.ts"],
+  "failures": [
+    {
+      "test": "API Tokens › can create a new API token",
+      "file": "tests/e2e/api-tokens.spec.ts",
+      "line": 22,
+      "error": "getByRole('button', { name: /Copy Token/i }) - element(s) not found within 5000ms",
+      "hypothesis": "The token reveal banner appeared (step 3 passed with 10s timeout), but the 'Copy Token' button was not found. The actual button label in the UI likely does not match '/Copy Token/i'. The DOM snapshot shows the settings page accumulated 100+ test tokens from previous runs, making the page extremely long. The button may be labeled 'Copy' without 'Token', or the page scroll state prevents detection. This failure is UNRELATED to v145 changes (DataTable.tsx, clusters/[id]/page.tsx, cluster-meta.ts which affect cluster detail, not settings).",
+      "classification": "test-bug",
+      "related_to_v145_changes": false,
+      "suggested_fix": "1. Inspect actual button label in settings page token reveal banner UI. 2. Update regex to match actual button text (likely /Copy/i or /Copy.*token/i with different casing). 3. Add token cleanup in afterEach to avoid accumulated test data. 4. Consider adding .scrollIntoViewIfNeeded() before assertion.",
+      "evidence": {
+        "screenshot": "test-results/api-tokens-API-Tokens-can-create-a-new-API-token-chromium/test-failed-1.png",
+        "error_context": "test-results/api-tokens-API-Tokens-can-create-a-new-API-token-chromium/error-context.md",
+        "accumulated_tokens": "100+",
+        "step3_passed": true,
+        "step4_failed": true,
+        "step3_selector": "/shown once|will not be shown again|copy.*token|save.*token/i",
+        "step4_selector": "getByRole('button', { name: /Copy Token/i })"
+      }
+    }
+  ],
+  "flagged_tests": [
+    {
+      "file": "tests/e2e/api-tokens.spec.ts",
+      "reason": "Button selector /Copy Token/i does not match actual UI. Additionally, 100+ accumulated test tokens in DB pollute the settings page. Tests have no cleanup (afterEach revoke).",
+      "recommendation": "fix",
+      "priority": "medium"
+    }
+  ],
+  "verdict": "FAIL - 1 test-bug unrelated to v145 changes",
+  "recommendation": "Fix api-tokens.spec.ts button selector. v145 code changes are clean - no regression introduced.",
+  "notes": "Test count: 96 total | 85 passed | 1 failed | 10 skipped. Count matches v144 (96 total). No count regression."
+}

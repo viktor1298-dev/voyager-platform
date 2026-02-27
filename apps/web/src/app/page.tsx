@@ -480,14 +480,12 @@ function ClusterCard({
   return (
     <Link href={`/clusters/${cluster.id}`}>
       <div
-        className="cluster-card relative group rounded-xl min-h-[90px] cursor-pointer bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 overflow-hidden"
+        className="cluster-card relative group rounded-xl min-h-[90px] cursor-pointer bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 overflow-hidden"
         style={
           {
             '--status-color': getStatusColor(status),
             boxShadow: getStatusGlow(status),
             transition: 'all var(--duration-normal) ease',
-            animationDelay: `${index * 50}ms`,
-            animationFillMode: 'both',
           } as React.CSSProperties
         }
         onMouseEnter={(e) => {
@@ -588,7 +586,7 @@ function SummaryCard({
         <SkeletonText width="3rem" height="2rem" />
       ) : (
         <div
-          className={cn('text-2xl font-extrabold tracking-tight animate-count-up', gradient !== 'none' && 'gradient-text')}
+          className={cn('text-2xl font-extrabold tracking-tight animate-count-up', gradient !== 'none' && 'gradient-text', gradient === 'none' && 'opacity-50')}
           style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
         >
           {value}
