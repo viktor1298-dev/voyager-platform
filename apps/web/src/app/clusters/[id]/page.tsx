@@ -500,7 +500,7 @@ export default function ClusterDetailPage() {
                 <stat.icon className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
                 <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{stat.label}</span>
               </div>
-              <p className="text-lg font-bold text-[var(--color-text-primary)]">{stat.value}</p>
+              <p className={`text-lg font-bold ${stat.value === '—' || stat.value === '0' || stat.value === '0 / 0' ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>{stat.value}</p>
             </div>
           ))}
         </div>
