@@ -331,5 +331,35 @@
     ],
     "was_corrected": false,
     "note": "Pipeline PAUSED by Vik. E2E PASS. Mai QA complete 9/10 but evidence file not written. Awaiting Vik instruction."
+  },
+  {
+    "timestamp": "2026-02-27T23:44:48.253545",
+    "version": "v147",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "Pipeline PAUSED. E2E PASS (86/0/10). Mai QA 9/10 PASS but qa-v147.json missing from disk. Awaiting Vik."
+  },
+  {
+    "timestamp": "2026-02-27T23:54:00+02:00",
+    "version": "v147",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "missing": [
+      "qa-v147.json"
+    ],
+    "was_corrected": false,
+    "notes": "Pipeline paused by Vik. QA evidence missing despite Mai reporting write."
+  },
+  {
+    "timestamp": "2026-02-28T00:04:00+02:00",
+    "version": "v147",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 2,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "Pipeline paused by Vik. QA evidence missing (qa-v147.json). E2E passed."
   }
 ]
