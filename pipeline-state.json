@@ -14,11 +14,11 @@
     "review": "approved-9",
     "merge": "complete",
     "deploy": "complete",
-    "e2e": "pending",
-    "qa": "pending"
+    "e2e": "passed",
+    "qa": "failed-7.5"
   },
-  "e2eResults": null,
-  "qaResults": null,
+  "e2eResults": {"passed": 86, "failed": 0, "skipped": 10},
+  "qaResults": {"functional_score": 7.5, "visual_score": 7.0, "effective_score": 7.5, "verdict": "CHANGES_REQUESTED"},
   "fixLoops": {},
   "foremanNotes": "v144: Phase F (17 UI items) + P0 (5 items from UI-UX-RESEARCH-2026.md). Combined visual polish pass. Deployed 2026-02-27T21:47:00+02:00 by Uri."
 }
