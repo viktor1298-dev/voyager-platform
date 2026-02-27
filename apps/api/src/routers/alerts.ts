@@ -1,5 +1,6 @@
 import { alertHistory, alerts } from '@voyager/db'
-import { desc, eq } from 'drizzle-orm'
+import { TRPCError } from '@trpc/server'
+import { desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
@@ -96,6 +97,13 @@ export const alertsRouter = router({
         .set({ acknowledged: true })
         .where(eq(alertHistory.id, input.id))
         .returning()
+      if (!updated) throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert history entry not found' })
+      await logAudit(ctx, 'alert.acknowledge', 'alertHistory', input.id)
       return updated
     }),
+
+  unacknowledgedCount: protectedProcedure.query(async ({ ctx }) => {
+    const result = await ctx.db.select({ count: sql<number>`count(*)::int` }).from(alertHistory).where(eq(alertHistory.acknowledged, false))
+    return result[0]?.count ?? 0
+  }),
 })
