@@ -25,7 +25,7 @@ test.describe('API Tokens', () => {
     await page.getByRole('button', { name: /Create Token|Generate Token/i }).click()
     // Token should appear once in a reveal banner
     await expect(page.getByText(/shown once|will not be shown again|copy.*token|save.*token/i)).toBeVisible({ timeout: 10000 })
-    await expect(page.getByRole('button', { name: /Copy Token/i })).toBeVisible()
+    await expect(page.locator('button', { hasText: /copy token/i })).toBeVisible()
   })
 
   test('newly created token appears in the token list', async ({ page }) => {
