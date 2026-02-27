@@ -1,13 +1,27 @@
 {
-  "version": "v121",
-  "status": "running",
-  "currentStage": "DEV-FIXLOOP",
-  "timestamp": "2026-02-26T22:23:00+02:00",
+  "version": "v123",
+  "status": "complete",
+  "currentStage": "COMPLETE-PENDING-GUARDIAN",
+  "timestamp": "2026-02-26T23:26:00+02:00",
   "phase": "D-bugfix-r2",
-  "deployedInK8s": "v121",
-  "gitLatestTag": "v121",
-  "targetVersion": "v122",
-  "fixLoopIteration": 1,
-  "qaScore": 4,
-  "qaVerdict": "FAIL"
+  "deployedInK8s": "v123",
+  "gitLatestTag": "v123",
+  "evidenceReady": true,
+  "qaScore": 9.5,
+  "qaVerdict": "PASS",
+  "e2ePassed": 94,
+  "e2eTotal": 104,
+  "e2eVerdict": "PASS",
+  "fixLoopIterations": 2,
+  "versionsUsed": [
+    "v121",
+    "v122",
+    "v123"
+  ],
+  "completedAt": "2026-02-26T23:35:18.600179",
+  "verifiedBy": "guardian",
+  "evidenceFiles": [
+    "qa-v123.json",
+    "e2e-v123.json"
+  ]
 }
