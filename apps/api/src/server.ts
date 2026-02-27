@@ -13,7 +13,6 @@ import { mapAuthRouteErrorToBody, mapAuthRouteErrorToStatus } from './lib/auth-e
 import { ensureAdminUser } from './lib/ensure-admin-user.js'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
-import { startAlertEvaluator } from './jobs/alert-evaluator.js'
 import { startHealthSync } from './jobs/health-sync.js'
 import { startAlertEvaluator, stopAlertEvaluator } from './jobs/alert-evaluator.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
@@ -227,8 +226,6 @@ const start = async () => {
     app.log.info('Alert evaluator background job started (60s interval)')
     app.log.info('Health sync background job started (5 minute interval)')
 
-    startAlertEvaluator()
-    app.log.info('Alert evaluator background job started (5 minute interval)')
 
     const signals = ['SIGTERM', 'SIGINT'] as const
     for (const signal of signals) {
