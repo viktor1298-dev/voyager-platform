@@ -1,0 +1,6 @@
+{
+  "lastUpdated": "2026-02-27",
+  "quarantinedTests": [],
+  "flakyRateThreshold": 0.2,
+  "notes": "Tests with >20% flaky rate should be quarantined"
+}

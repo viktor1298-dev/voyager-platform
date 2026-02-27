@@ -1,0 +1,19 @@
+{
+  "version": "v133",
+  "sha": "447f91b",
+  "timestamp": "2026-02-27T12:25:22+02:00",
+  "deployer": "uri",
+  "namespace": "voyager",
+  "helmRevision": 32,
+  "images": { "api": "voyager-api:v133", "web": "voyager-web:v133" },
+  "imageSizes": { "api": "245MB", "web": "82.6MB" },
+  "pods": {
+    "voyager-api": { "status": "Running", "restarts": 0 },
+    "voyager-web": { "status": "Running", "restarts": 0 }
+  },
+  "health": { "endpoint": "/health", "response": "{\"status\":\"ok\"}", "code": 200 },
+  "trpc": { "endpoint": "/api/trpc", "code": 401 },
+  "logs": "clean",
+  "migration": "skipped — test-only changes",
+  "status": "success"
+}

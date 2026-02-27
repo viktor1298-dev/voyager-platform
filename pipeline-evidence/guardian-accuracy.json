@@ -1,0 +1,148 @@
+[
+  {
+    "timestamp": "2026-02-27T11:34:00+02:00",
+    "cycle": "health+compliance",
+    "pipeline": {
+      "version": "v132",
+      "stage": "deploy",
+      "status": "running"
+    },
+    "versionDrift": false,
+    "foremanAlive": true,
+    "stateAgeMins": 14,
+    "compliance": {
+      "dima-alert-evaluator-v132": "compliant",
+      "dima-review-fixes-v132": "partial",
+      "lior-review-v132": "compliant",
+      "uri-deploy-v132": "compliant",
+      "yuval-e2e-v132": "running",
+      "yuval-e2e-v132-r2": "running"
+    },
+    "score": "3/4 (75%)",
+    "action": "none"
+  },
+  {
+    "timestamp": "2026-02-27T11:44:00+02:00",
+    "pipeline": {
+      "version": "v132",
+      "stage": "e2e+smoke",
+      "status": "running"
+    },
+    "versionDrift": false,
+    "foremanAlive": true,
+    "stateAgeMins": 9,
+    "e2eStatus": "r3-running-workers1",
+    "e2ePrevResult": {
+      "total": 107,
+      "passed": 94,
+      "failed": 13,
+      "codeBugs": 7,
+      "envBlocked": 6
+    },
+    "compliance": {
+      "dima-alert-evaluator-v132": "compliant",
+      "dima-review-fixes-v132": "partial",
+      "lior-review-v132": "compliant",
+      "uri-deploy-v132": "compliant",
+      "yuval-e2e-v132-r3": "running"
+    },
+    "score": "3/4 (75%)",
+    "action": "none"
+  },
+  {
+    "cycle": "2026-02-27T11:54:56.042878",
+    "version": "v132",
+    "status": "running",
+    "stage": "e2e+smoke",
+    "k8s_ver": "v132",
+    "drift": false,
+    "e2e_running": true,
+    "e2e_session": "yuval-e2e-v132-r3",
+    "e2e_evidence_complete": false,
+    "e2e_evidence_issues": [
+      "missing agentId",
+      "missing verdict"
+    ],
+    "foreman_alive": true,
+    "actions": [
+      "E2E r3 still running \u2014 monitoring"
+    ]
+  },
+  {
+    "cycle": "2026-02-27T12:04:00+02:00",
+    "version": "v132",
+    "status": "running",
+    "stage": "fix-loop",
+    "k8s_ver": "v132",
+    "drift": false,
+    "foreman_alive": true,
+    "state_age_mins": 9,
+    "active_agents": {
+      "dima-fix-test-v132": "completed",
+      "yuval-e2e-v132-r3": "aborted-polling",
+      "foreman": "sleeping-waiting-r3"
+    },
+    "fix_loops": {
+      "users-admin-sees-user-list": "pending-dev-fix",
+      "multi-cluster-e2e3": "fixed-by-dima (commit f95c863)"
+    },
+    "compliance": {
+      "dima-fix-test-v132": "partial (no Hypothesis: label)",
+      "yuval-e2e-v132-r3": "aborted",
+      "uri-deploy-v132": "compliant"
+    },
+    "score": "1/2 (50%) completed agents",
+    "actions": [
+      "yuval-e2e-v132-r3 abortedLastRun \u2014 monitoring",
+      "users-admin code bug fix not yet spawned"
+    ]
+  },
+  {
+    "cycle": "2026-02-27T12:14:00+02:00",
+    "version": "v132",
+    "git_tag": "v133",
+    "status": "running",
+    "stage": "e2e-fix-loop",
+    "k8s_ver": "v132",
+    "drift": false,
+    "foreman_alive": true,
+    "foreman_session": "7fd022ed (empty transcript - recently spawned)",
+    "active_agents": {
+      "dima-fix-e2e-bugs-v132": "completed (3 bugs fixed, branch pushed)",
+      "dima-fix-test-v132": "completed (multi-cluster E2E-3 selector fix)",
+      "yuval-e2e-v132-r3": "completed (92/107 passed, evidence written)",
+      "gil-merge-v133": "completed (merged fix/e2e-test-bugs-v132 \u2192 main, tagged v133)"
+    },
+    "e2e_evidence": {
+      "passed": 92,
+      "failed": 9,
+      "total": 107,
+      "gate": 88,
+      "gate_met": true,
+      "verdict_field": "missing",
+      "agentId_field": "missing"
+    },
+    "compliance": {
+      "dima-fix-e2e-bugs-v132": "partial - no SKILL.md read confirmed, has completion signals, learnings written",
+      "dima-fix-test-v132": "partial - no SKILL.md read confirmed, has completion signals, learnings written",
+      "yuval-e2e-v132-r3": "partial - no SKILL.md read confirmed, hypothesis field present in failures, learnings written",
+      "gil-merge-v133": "partial - no SKILL.md read confirmed, learnings written"
+    },
+    "compliance_score": "4/4 agents (100% partial - SKILL.md read unconfirmed)",
+    "alerts": [
+      "e2e-v132.json missing agentId and verdict fields - cannot pass Guardian final verification",
+      "pipeline-state.json still at v132 but git tag is v133 - Foreman needs to update state after new E2E run"
+    ]
+  },
+  {
+    "timestamp": "2026-02-27T13:01:00+02:00",
+    "cycle": "health-check",
+    "status": "running",
+    "version": "v134",
+    "stage": "e2e",
+    "foreman_alive": true,
+    "drift": false,
+    "action": "none",
+    "assessment": "healthy"
+  }
+]

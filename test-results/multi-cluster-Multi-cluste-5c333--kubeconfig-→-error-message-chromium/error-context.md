@@ -1,0 +1,385 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: 🚀
+      - generic [ref=e5]:
+        - generic [ref=e6]: Voyager
+        - generic [ref=e7]: PLATFORM
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]: Cluster
+        - combobox "Active cluster" [ref=e11]:
+          - option "Select Cluster" [selected]
+          - option "⚪ staging-aks"
+          - option "⚪ prod-cluster-eks"
+          - option "⚪ production-eks"
+          - option "⚪ analytics-gke"
+          - option "⚪ test-cluster-minikube"
+          - option "⚪ minikube-dev"
+          - option "⚪ dev-k3s"
+      - generic [ref=e12]:
+        - generic [ref=e13]: —
+        - generic [ref=e14]: Total Pods
+      - generic [ref=e15]:
+        - generic [ref=e16]: 0%
+        - generic [ref=e17]: CPU Usage
+      - generic [ref=e18]:
+        - generic [ref=e19]: —
+        - generic [ref=e20]: Alerts
+    - generic [ref=e21]:
+      - generic [ref=e22]: Voyager Admin
+      - 'button "Current theme: Dark. Click to switch." [ref=e23]':
+        - img [ref=e24]
+      - button "15" [ref=e27]:
+        - img [ref=e28]
+        - generic [ref=e31]: "15"
+      - button "Logout" [ref=e32]:
+        - img [ref=e33]
+        - generic [ref=e36]: Logout
+      - generic [ref=e37]:
+        - generic [ref=e39]: Connected
+        - generic [ref=e40]:
+          - generic [ref=e41]: ·
+          - generic [ref=e42]: Synced just now
+  - complementary [ref=e43]:
+    - generic [ref=e44]:
+      - navigation [ref=e45]:
+        - link "Dashboard" [ref=e46] [cursor=pointer]:
+          - /url: /
+          - img [ref=e47]
+          - generic [ref=e52]: Dashboard
+        - link "Clusters" [ref=e53] [cursor=pointer]:
+          - /url: /clusters
+          - img [ref=e54]
+          - generic [ref=e57]: Clusters
+        - link "Shared Dashboards" [ref=e58] [cursor=pointer]:
+          - /url: /dashboards
+          - img [ref=e59]
+          - generic [ref=e64]: Shared Dashboards
+        - link "Health" [ref=e65] [cursor=pointer]:
+          - /url: /health
+          - img [ref=e66]
+          - generic [ref=e69]: Health
+        - link "Deployments" [ref=e70] [cursor=pointer]:
+          - /url: /deployments
+          - img [ref=e71]
+          - generic [ref=e74]: Deployments
+        - link "Events" [ref=e75] [cursor=pointer]:
+          - /url: /events
+          - img [ref=e76]
+          - generic [ref=e78]: Events
+        - link "Alerts" [ref=e79] [cursor=pointer]:
+          - /url: /alerts
+          - img [ref=e80]
+          - generic [ref=e83]: Alerts
+        - link "⚠️ Anomalies" [ref=e84] [cursor=pointer]:
+          - /url: /anomalies
+          - img [ref=e85]
+          - generic [ref=e87]: ⚠️ Anomalies
+        - link "Logs" [ref=e88] [cursor=pointer]:
+          - /url: /logs
+          - img [ref=e89]
+          - generic [ref=e92]: Logs
+        - link "🤖 AI Assistant" [ref=e93] [cursor=pointer]:
+          - /url: /ai
+          - img [ref=e94]
+          - generic [ref=e97]: 🤖 AI Assistant
+        - link "Feature Flags" [ref=e98] [cursor=pointer]:
+          - /url: /features
+          - img [ref=e99]
+          - generic [ref=e101]: Feature Flags
+        - link "Webhooks" [ref=e102] [cursor=pointer]:
+          - /url: /webhooks
+          - img [ref=e103]
+          - generic [ref=e107]: Webhooks
+        - link "Users" [ref=e108] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e109]
+          - generic [ref=e114]: Users
+        - link "Audit Log" [ref=e115] [cursor=pointer]:
+          - /url: /audit
+          - img [ref=e116]
+          - generic [ref=e119]: Audit Log
+        - link "Settings" [ref=e120] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e121]
+          - generic [ref=e124]: Settings
+      - generic [ref=e125]:
+        - paragraph [ref=e126]: Autoscaling
+        - navigation [ref=e127]:
+          - link "Karpenter" [ref=e128] [cursor=pointer]:
+            - /url: /karpenter
+            - img [ref=e129]
+            - generic [ref=e133]: Karpenter
+      - generic [ref=e134]:
+        - paragraph [ref=e135]: Access Control
+        - navigation [ref=e136]:
+          - link "Teams" [ref=e137] [cursor=pointer]:
+            - /url: /teams
+            - img [ref=e138]
+            - generic [ref=e142]: Teams
+          - link "Permissions" [ref=e143] [cursor=pointer]:
+            - /url: /permissions
+            - img [ref=e144]
+            - generic [ref=e146]: Permissions
+      - generic [ref=e147]:
+        - paragraph [ref=e148]: Clusters
+        - generic [ref=e149]:
+          - link "staging-aks" [ref=e150] [cursor=pointer]:
+            - /url: /clusters
+            - generic [ref=e152]: staging-aks
+          - link "prod-cluster-eks" [ref=e153] [cursor=pointer]:
+            - /url: /clusters
+            - generic [ref=e155]: prod-cluster-eks
+          - link "production-eks" [ref=e156] [cursor=pointer]:
+            - /url: /clusters
+            - generic [ref=e158]: production-eks
+          - link "analytics-gke" [ref=e159] [cursor=pointer]:
+            - /url: /clusters
+            - generic [ref=e161]: analytics-gke
+          - link "test-cluster-minikube" [ref=e162] [cursor=pointer]:
+            - /url: /clusters
+            - generic [ref=e164]: test-cluster-minikube
+          - link "minikube-dev" [ref=e165] [cursor=pointer]:
+            - /url: /clusters
+            - generic [ref=e167]: minikube-dev
+    - button [ref=e168]:
+      - img [ref=e169]
+    - generic [ref=e172]: Voyager v0.1.0
+  - main [ref=e173]:
+    - generic [ref=e175]:
+      - generic [ref=e177]: Online
+      - generic "0 users online" [ref=e178]: "0"
+    - generic [ref=e180]:
+      - navigation [ref=e181]:
+        - link "Dashboard" [ref=e183] [cursor=pointer]:
+          - /url: /
+          - img [ref=e184]
+        - generic [ref=e187]:
+          - img [ref=e188]
+          - generic "Clusters" [ref=e190]
+      - generic [ref=e191]:
+        - generic [ref=e192]:
+          - heading "Clusters" [level=1] [ref=e193]
+          - paragraph [ref=e194]: 7/7 visible
+        - button "Add Cluster" [ref=e195] [cursor=pointer]:
+          - generic [ref=e196]:
+            - img [ref=e197]
+            - text: Add Cluster
+      - generic [ref=e198]:
+        - generic [ref=e199]:
+          - generic [ref=e200]:
+            - img [ref=e201]
+            - textbox "Search clusters… (press /)" [ref=e204]
+          - generic [ref=e205]:
+            - combobox [ref=e206]:
+              - option "environment" [selected]
+              - option "prod"
+              - option "staging"
+              - option "dev"
+            - combobox [ref=e207]:
+              - option "status" [selected]
+              - option "unreachable"
+            - combobox [ref=e208]:
+              - option "provider" [selected]
+              - option "aws"
+              - option "azure"
+              - option "gke"
+              - option "kubeconfig"
+              - option "minikube"
+            - combobox [ref=e209]:
+              - option "health" [selected]
+              - option "error"
+        - generic [ref=e210]:
+          - button "#dev" [ref=e211] [cursor=pointer]
+          - button "#k3s" [ref=e212] [cursor=pointer]
+          - button "#minikube" [ref=e213] [cursor=pointer]
+          - button "#prod" [ref=e214] [cursor=pointer]
+          - button "#staging" [ref=e215] [cursor=pointer]
+      - generic [ref=e216]:
+        - generic [ref=e218]:
+          - img [ref=e219]
+          - textbox "Search clusters…" [ref=e222]
+        - table [ref=e224]:
+          - rowgroup [ref=e225]:
+            - row "Name Provider Health Access Version Nodes Endpoint Last Seen Actions" [ref=e226]:
+              - columnheader "Name" [ref=e227]:
+                - button "Sort by Name" [ref=e228] [cursor=pointer]:
+                  - text: Name
+                  - img [ref=e230]
+              - columnheader "Provider" [ref=e233]:
+                - button "Sort by Provider" [ref=e234] [cursor=pointer]:
+                  - text: Provider
+                  - img [ref=e236]
+              - columnheader "Health" [ref=e239]
+              - columnheader "Access" [ref=e240]
+              - columnheader "Version" [ref=e241]:
+                - button "Sort by Version" [ref=e242] [cursor=pointer]:
+                  - text: Version
+                  - img [ref=e244]
+              - columnheader "Nodes" [ref=e247]:
+                - button "Sort by Nodes" [ref=e248] [cursor=pointer]:
+                  - text: Nodes
+                  - img [ref=e250]
+              - columnheader "Endpoint" [ref=e253]:
+                - button "Sort by Endpoint" [ref=e254] [cursor=pointer]:
+                  - text: Endpoint
+                  - img [ref=e256]
+              - columnheader "Last Seen" [ref=e259]:
+                - button "Sort by Last Seen" [ref=e260] [cursor=pointer]:
+                  - text: Last Seen
+                  - img [ref=e262]
+              - columnheader "Actions" [ref=e265]
+          - rowgroup [ref=e266]:
+            - row "staging-aks azure Error viewer v1.30 6 https://staging-aks.westeurope.azmk8s.io 1m ago Delete cluster" [ref=e267] [cursor=pointer]:
+              - cell "staging-aks" [ref=e268]
+              - cell "azure" [ref=e269]:
+                - generic [ref=e270]:
+                  - generic:
+                    - img
+                  - generic [ref=e271]: azure
+              - cell "Error" [ref=e272]:
+                - generic [ref=e275]: Error
+              - cell "viewer" [ref=e276]:
+                - generic [ref=e277]: viewer
+              - cell "v1.30" [ref=e278]
+              - cell "6" [ref=e279]
+              - cell "https://staging-aks.westeurope.azmk8s.io" [ref=e280]:
+                - generic [ref=e281]: https://staging-aks.westeurope.azmk8s.io
+              - cell "1m ago" [ref=e282]
+              - cell "Delete cluster" [ref=e283]:
+                - button "Delete cluster" [ref=e284]:
+                  - img [ref=e285]
+            - row "prod-cluster-eks aws Error viewer v1.32.0 0 — 1m ago Delete cluster" [ref=e288] [cursor=pointer]:
+              - cell "prod-cluster-eks" [ref=e289]
+              - cell "aws" [ref=e290]:
+                - generic [ref=e291]:
+                  - generic:
+                    - img
+                  - generic [ref=e292]: aws
+              - cell "Error" [ref=e293]:
+                - generic [ref=e296]: Error
+              - cell "viewer" [ref=e297]:
+                - generic [ref=e298]: viewer
+              - cell "v1.32.0" [ref=e299]
+              - cell "0" [ref=e300]
+              - cell "—" [ref=e301]:
+                - generic [ref=e302]: —
+              - cell "1m ago" [ref=e303]
+              - cell "Delete cluster" [ref=e304]:
+                - button "Delete cluster" [ref=e305]:
+                  - img [ref=e306]
+            - row "production-eks aws Error viewer v1.31 12 https://eks.us-east-1.amazonaws.com 1m ago Delete cluster" [ref=e309] [cursor=pointer]:
+              - cell "production-eks" [ref=e310]
+              - cell "aws" [ref=e311]:
+                - generic [ref=e312]:
+                  - generic:
+                    - img
+                  - generic [ref=e313]: aws
+              - cell "Error" [ref=e314]:
+                - generic [ref=e317]: Error
+              - cell "viewer" [ref=e318]:
+                - generic [ref=e319]: viewer
+              - cell "v1.31" [ref=e320]
+              - cell "12" [ref=e321]
+              - cell "https://eks.us-east-1.amazonaws.com" [ref=e322]:
+                - generic [ref=e323]: https://eks.us-east-1.amazonaws.com
+              - cell "1m ago" [ref=e324]
+              - cell "Delete cluster" [ref=e325]:
+                - button "Delete cluster" [ref=e326]:
+                  - img [ref=e327]
+            - row "analytics-gke gke Error viewer v1.32 8 https://gke.europe-west1.gcp.com 1m ago Delete cluster" [ref=e330] [cursor=pointer]:
+              - cell "analytics-gke" [ref=e331]
+              - cell "gke" [ref=e332]:
+                - generic [ref=e333]:
+                  - generic:
+                    - img
+                  - generic [ref=e334]: gke
+              - cell "Error" [ref=e335]:
+                - generic [ref=e338]: Error
+              - cell "viewer" [ref=e339]:
+                - generic [ref=e340]: viewer
+              - cell "v1.32" [ref=e341]
+              - cell "8" [ref=e342]
+              - cell "https://gke.europe-west1.gcp.com" [ref=e343]:
+                - generic [ref=e344]: https://gke.europe-west1.gcp.com
+              - cell "1m ago" [ref=e345]
+              - cell "Delete cluster" [ref=e346]:
+                - button "Delete cluster" [ref=e347]:
+                  - img [ref=e348]
+            - row "test-cluster-minikube minikube Error viewer v1.33 0 — 1m ago Delete cluster" [ref=e351] [cursor=pointer]:
+              - cell "test-cluster-minikube" [ref=e352]
+              - cell "minikube" [ref=e353]:
+                - generic [ref=e354]:
+                  - generic:
+                    - img
+                  - generic [ref=e355]: minikube
+              - cell "Error" [ref=e356]:
+                - generic [ref=e359]: Error
+              - cell "viewer" [ref=e360]:
+                - generic [ref=e361]: viewer
+              - cell "v1.33" [ref=e362]
+              - cell "0" [ref=e363]
+              - cell "—" [ref=e364]:
+                - generic [ref=e365]: —
+              - cell "1m ago" [ref=e366]
+              - cell "Delete cluster" [ref=e367]:
+                - button "Delete cluster" [ref=e368]:
+                  - img [ref=e369]
+            - row "minikube-dev minikube Error viewer v1.33.0 1 https://192.168.49.2:8443 1m ago Delete cluster" [ref=e372] [cursor=pointer]:
+              - cell "minikube-dev" [ref=e373]
+              - cell "minikube" [ref=e374]:
+                - generic [ref=e375]:
+                  - generic:
+                    - img
+                  - generic [ref=e376]: minikube
+              - cell "Error" [ref=e377]:
+                - generic [ref=e380]: Error
+              - cell "viewer" [ref=e381]:
+                - generic [ref=e382]: viewer
+              - cell "v1.33.0" [ref=e383]
+              - cell "1" [ref=e384]
+              - cell "https://192.168.49.2:8443" [ref=e385]:
+                - generic [ref=e386]: https://192.168.49.2:8443
+              - cell "1m ago" [ref=e387]
+              - cell "Delete cluster" [ref=e388]:
+                - button "Delete cluster" [ref=e389]:
+                  - img [ref=e390]
+            - row "dev-k3s kubeconfig Error viewer v1.29 3 https://k3s.internal.local 1m ago Delete cluster" [ref=e393] [cursor=pointer]:
+              - cell "dev-k3s" [ref=e394]
+              - cell "kubeconfig" [ref=e395]:
+                - generic [ref=e396]:
+                  - generic:
+                    - img
+                  - generic [ref=e397]: kubeconfig
+              - cell "Error" [ref=e398]:
+                - generic [ref=e401]: Error
+              - cell "viewer" [ref=e402]:
+                - generic [ref=e403]: viewer
+              - cell "v1.29" [ref=e404]
+              - cell "3" [ref=e405]
+              - cell "https://k3s.internal.local" [ref=e406]:
+                - generic [ref=e407]: https://k3s.internal.local
+              - cell "1m ago" [ref=e408]
+              - cell "Delete cluster" [ref=e409]:
+                - button "Delete cluster" [ref=e410]:
+                  - img [ref=e411]
+      - generic [ref=e416]:
+        - generic [ref=e417]:
+          - heading "Add Cluster" [level=2] [ref=e418]
+          - button [ref=e419] [cursor=pointer]:
+            - img [ref=e420]
+        - generic [ref=e423]:
+          - generic [ref=e424]:
+            - generic [ref=e425]: Step 3/4
+            - generic [ref=e426]: Kubeconfig
+          - paragraph [ref=e431]: "Cluster connection validation failed: No active cluster!"
+          - generic [ref=e432]:
+            - button "Go back to previous step" [ref=e433] [cursor=pointer]: Back
+            - button "Go to next step" [disabled] [ref=e434] [cursor=pointer]: Next
+  - region "Notifications alt+T"
+  - alert [ref=e435]
+```

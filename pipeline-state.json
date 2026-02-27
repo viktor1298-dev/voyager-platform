@@ -1,11 +1,33 @@
 {
-  "version": "v133",
-  "status": "running",
-  "currentStage": "deploy",
+  "version": "v139",
+  "status": "stopped",
+  "currentStage": "e2e",
   "phase": "E",
-  "timestamp": "2026-02-27T12:15:00+02:00",
+  "timestamp": "2026-02-27T14:32:00+02:00",
   "fixLoops": {
-    "e2e-test-fixes": {"count": 1, "lastVersion": "v132"}
+    "e2e-test-fixes": {
+      "count": 1,
+      "lastVersion": "v132"
+    }
   },
-  "canonicalPath": "/home/vkzone/.openclaw/workspace/voyager-platform/pipeline-state.json"
+  "canonicalPath": "/home/vkzone/.openclaw/workspace/voyager-platform/pipeline-state.json",
+  "tokenUsage": {
+    "grandTotal": 734767,
+    "byAgent": {
+      "yuval": 242277,
+      "uri": 154743,
+      "dima": 169667,
+      "foreman": 128382,
+      "gil": 39698
+    },
+    "lastUpdated": "14:21"
+  },
+  "stoppedAt": "2026-02-27T14:22:00+02:00",
+  "stoppedBy": "vik",
+  "resumeFrom": {
+    "stage": "e2e",
+    "version": "v138",
+    "notes": "Stopped by Vik at E2E stage (yuval-e2e-v138 was running). Resume: spawn Foreman with version v138 and stage e2e. Yuval was mid-run on E2E tests."
+  },
+  "stopReason": "Vik stop order"
 }
