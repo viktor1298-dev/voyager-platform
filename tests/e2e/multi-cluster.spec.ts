@@ -66,7 +66,7 @@ test.describe('Multi-cluster flows (Phase D)', () => {
     // Verify cluster detail content is meaningful — check any one indicator
     const hasLiveTab = page.getByRole('tab', { name: /live/i }).first();
     const hasStoredTab = page.getByRole('tab', { name: /stored/i }).first();
-    await expect(hasLiveTab.or(hasStoredTab).or(errorState).first()).toBeVisible({ timeout: 10_000 });
+    await expect(hasLiveTab.or(hasStoredTab).or(errorState)).toBeVisible({ timeout: 10_000 });
   });
 
   test('E2E-3: Invalid kubeconfig → error message', async ({ page }) => {
