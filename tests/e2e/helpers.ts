@@ -1,5 +1,17 @@
 import { type Page, expect } from '@playwright/test';
 
+/**
+ * Wait for page to be interactive — replaces networkidle.
+ * Use when you need a generic page-load wait without a specific element to target.
+ * Prefer waiting for a specific selector/heading when possible.
+ */
+export async function waitForPageReady(page: Page, options?: { timeout?: number }) {
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForLoadState('load');
+  // Small buffer for React hydration
+  await page.waitForTimeout(100);
+}
+
 export const TEST_ADMIN = {
   email: 'admin@voyager.local',
   password: 'admin123',
