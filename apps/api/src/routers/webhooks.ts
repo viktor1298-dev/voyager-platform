@@ -5,9 +5,43 @@ import { desc, eq } from 'drizzle-orm'
 import { logAudit } from '../lib/audit.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 import crypto from 'node:crypto'
+import dns from 'node:dns/promises'
+import net from 'node:net'
+
+function isPrivateIP(ip: string): boolean {
+  const parts = ip.split('.').map(Number)
+  if (parts.length !== 4) return !net.isIPv4(ip) // block non-IPv4 (incl. IPv6)
+  return (
+    parts[0] === 10 ||
+    parts[0] === 127 ||
+    (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
+    (parts[0] === 192 && parts[1] === 168) ||
+    (parts[0] === 169 && parts[1] === 254) ||
+    (parts[0] === 0 && parts[1] === 0 && parts[2] === 0 && parts[3] === 0)
+  )
+}
+
+async function validateWebhookUrl(url: string): Promise<void> {
+  const parsed = new URL(url)
+  const hostname = parsed.hostname
+  if (hostname === 'localhost' || hostname === '[::1]') {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Webhook URL cannot target localhost' })
+  }
+  if (net.isIP(hostname)) {
+    if (isPrivateIP(hostname)) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Webhook URL cannot target private/internal IPs' })
+    }
+    return
+  }
+  // Resolve DNS and check resolved IPs
+  const { address } = await dns.lookup(hostname)
+  if (isPrivateIP(address)) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Webhook URL resolves to a private/internal IP' })
+  }
+}
 
 export const webhooksRouter = router({
-  list: protectedProcedure.query(async ({ ctx }) => {
+  list: adminProcedure.query(async ({ ctx }) => {
     const rows = await ctx.db.select().from(webhooks).orderBy(desc(webhooks.createdAt))
     const result = await Promise.all(rows.map(async (w) => {
       const deliveries = await ctx.db.select().from(webhookDeliveries)
@@ -16,8 +50,10 @@ export const webhooksRouter = router({
         .limit(10)
       const total = deliveries.length
       const successes = deliveries.filter(d => d.success).length
+      const { secret: _secret, ...safeWebhook } = w
       return {
-        ...w,
+        ...safeWebhook,
+        secret: w.secret ? 'wh_****' : null,
         deliveries,
         successRate: total > 0 ? Math.round((successes / total) * 100) : 100,
       }
@@ -58,6 +94,8 @@ export const webhooksRouter = router({
     .mutation(async ({ ctx, input }) => {
       const [webhook] = await ctx.db.select().from(webhooks).where(eq(webhooks.id, input.id))
       if (!webhook) throw new TRPCError({ code: 'NOT_FOUND', message: 'Webhook not found' })
+
+      await validateWebhookUrl(webhook.url)
 
       const testPayload = {
         event: 'webhook.test',
