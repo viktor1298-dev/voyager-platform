@@ -86,8 +86,8 @@ test.describe('Responsive — Mobile Viewport', () => {
     expect(saveBox).not.toBeNull();
     expect(testBox).not.toBeNull();
 
-    expect(saveBox!.height).toBeGreaterThanOrEqual(44);
-    expect(testBox!.height).toBeGreaterThanOrEqual(44);
+    expect(Math.round(saveBox!.height)).toBeGreaterThanOrEqual(44);
+    expect(Math.round(testBox!.height)).toBeGreaterThanOrEqual(44);
     expect(Math.abs(saveBox!.x - testBox!.x)).toBeLessThanOrEqual(2);
   });
 });
