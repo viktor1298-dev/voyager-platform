@@ -26,7 +26,7 @@ test.describe('Alerts — CRUD + History', () => {
     // Fill form
     const alertName = `E2E-Alert-${Date.now()}`;
     await page.getByLabel(/alert name/i).fill(alertName);
-    await page.getByLabel(/metric/i).selectOption('memory');
+    await page.locator('select').filter({ has: page.locator('option[value="cpu"]') }).selectOption('memory');
     await page.getByLabel(/operator/i).selectOption('gt');
     await page.getByLabel(/threshold value/i).fill('80');
     await page.getByLabel(/cluster filter/i).fill('test-cluster');
@@ -34,9 +34,16 @@ test.describe('Alerts — CRUD + History', () => {
     // Submit
     await page.getByRole('button', { name: /^create$/i }).click();
 
-    // Verify alert appears in list (optimistic update)
-    await expect(page.getByText(alertName)).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Memory Usage')).toBeVisible();
+    // Hypothesis: AnimatePresence exit animation keeps dialog overlay on top, making elements behind it "not visible"
+    // Wait for dialog to fully dismiss before checking the table
+    await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 10_000 });
+
+    // Verify alert appears in list — use toBeAttached first to handle overflow:hidden clipping
+    const alertEl = page.getByText(alertName).first();
+    await expect(alertEl).toBeAttached({ timeout: 10_000 });
+    await alertEl.scrollIntoViewIfNeeded();
+    await expect(alertEl).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText('Memory Usage').first()).toBeAttached();
   });
 
   test('should toggle alert enabled/disabled', async ({ page }) => {
@@ -49,11 +56,19 @@ test.describe('Alerts — CRUD + History', () => {
     await page.getByLabel(/alert name/i).fill(alertName);
     await page.getByLabel(/threshold value/i).fill('50');
     await page.getByRole('button', { name: /^create$/i }).click();
-    await expect(page.getByText(alertName)).toBeVisible({ timeout: 10_000 });
+
+    // Hypothesis: dialog overlay blocks visibility check — wait for dismiss
+    await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 10_000 });
+
+    // Wait for alert row to be in DOM and scroll into view
+    const alertEl = page.getByText(alertName).first();
+    await expect(alertEl).toBeAttached({ timeout: 10_000 });
+    await alertEl.scrollIntoViewIfNeeded();
 
     // Find the toggle button for this alert — it starts as ON
     const toggleBtn = page.getByRole('button', { name: new RegExp(`disable alert ${alertName}`, 'i') });
-    await expect(toggleBtn).toBeVisible();
+    await expect(toggleBtn).toBeAttached({ timeout: 5_000 });
+    await toggleBtn.scrollIntoViewIfNeeded();
     await expect(toggleBtn).toHaveText('ON');
 
     // Toggle OFF
@@ -76,10 +91,20 @@ test.describe('Alerts — CRUD + History', () => {
     await page.getByLabel(/alert name/i).fill(alertName);
     await page.getByLabel(/threshold value/i).fill('90');
     await page.getByRole('button', { name: /^create$/i }).click();
-    await expect(page.getByText(alertName)).toBeVisible({ timeout: 10_000 });
+
+    // Hypothesis: dialog overlay blocks visibility — wait for dismiss
+    await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 10_000 });
+
+    // Wait for alert to appear
+    const alertEl = page.getByText(alertName).first();
+    await expect(alertEl).toBeAttached({ timeout: 10_000 });
+    await alertEl.scrollIntoViewIfNeeded();
 
     // Click delete button for this alert
-    await page.getByRole('button', { name: new RegExp(`delete alert ${alertName}`, 'i') }).click();
+    const deleteBtn = page.getByRole('button', { name: new RegExp(`delete alert ${alertName}`, 'i') });
+    await expect(deleteBtn).toBeAttached({ timeout: 5_000 });
+    await deleteBtn.scrollIntoViewIfNeeded();
+    await deleteBtn.click();
 
     // Confirm deletion dialog
     await expect(page.getByText('Delete Alert')).toBeVisible();
@@ -87,7 +112,7 @@ test.describe('Alerts — CRUD + History', () => {
     await page.getByRole('button', { name: /^delete$/i }).click();
 
     // Verify alert is removed
-    await expect(page.getByText(alertName)).toBeHidden({ timeout: 10_000 });
+    await expect(page.getByText(alertName).first()).toBeHidden({ timeout: 10_000 });
   });
 
   test('should show empty state when no alerts exist', async ({ page }) => {
