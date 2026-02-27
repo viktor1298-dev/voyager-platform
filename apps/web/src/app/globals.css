@@ -75,7 +75,7 @@
   --color-text-primary: #e8ecf4;
   --color-text-secondary: #a0aec0;
   --color-text-muted: #6b7994;
-  --color-text-dim: #4a5568;
+  --color-text-dim: #718096;
   --color-text-secondary-strong: #b7c3d8;
   --color-table-header: #8f9bb0;
   --color-table-meta: #a9b6cb;
@@ -113,8 +113,8 @@
   --border-glow-opacity: 0.25;
   --border-glow-opacity-hover: 0.4;
 
-  /* Watermark */
-  --watermark-opacity: 0.15;
+  /* Watermark — disabled, using inline provider badges */
+  --watermark-opacity: 1;
 
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.03);
@@ -143,12 +143,12 @@ html.light {
   --color-bg-secondary: #edf0f5;
   --color-bg-card: #ffffff;
   --color-bg-card-hover: #f0f2f7;
-  --color-border: rgba(0, 0, 0, 0.16);
-  --color-border-hover: rgba(0, 0, 0, 0.3);
+  --color-border: rgba(0, 0, 0, 0.22);
+  --color-border-hover: rgba(0, 0, 0, 0.35);
   --color-text-primary: #1a202c;
   --color-text-secondary: #243246;
   --color-text-muted: #2f4158;
-  --color-text-dim: #435673;
+  --color-text-dim: #3d4f66;
   --color-text-secondary-strong: #1e2d44;
   --color-table-header: #1b2b42;
   --color-table-meta: #223652;
@@ -178,7 +178,7 @@ html.light {
 
   --border-glow-opacity: 0.15;
   --border-glow-opacity-hover: 0.3;
-  --watermark-opacity: 0.06;
+  --watermark-opacity: 1;
 
   --gradient-text-default: linear-gradient(135deg, var(--color-text-primary), var(--color-accent));
 }
