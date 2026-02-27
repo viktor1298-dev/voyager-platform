@@ -48,6 +48,13 @@ test.describe('Clusters — CRUD Operations', () => {
       return;
     }
 
+    // Check for empty state row (e.g. "No clusters found")
+    const firstRowText = await firstRow.innerText();
+    if (/no clusters found/i.test(firstRowText)) {
+      test.skip(true, 'Table shows "No clusters found" — no data to navigate to');
+      return;
+    }
+
     const cells = firstRow.locator('td');
     const cellCount = await cells.count();
     let nameCell = cells.first();
