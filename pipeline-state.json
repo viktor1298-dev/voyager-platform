@@ -1,9 +1,13 @@
 {
-  "version": "v125",
-  "status": "running",
-  "currentStage": "E2-deployed",
-  "timestamp": "2026-02-27T02:45:00+02:00",
+  "version": "v131",
+  "status": "complete",
+  "currentStage": "e1-complete",
   "phase": "E",
-  "deployedInK8s": "v125",
-  "gitLatestTag": "v125"
+  "timestamp": "2026-02-27T10:30:00+02:00",
+  "deployedInK8s": "v131",
+  "gitLatestTag": "v132",
+  "e2eResult": "PASS — 0 failures (79 passed, 11 skipped)",
+  "qaResult": "7.5/10 — env-blocked (no live K8s clusters)",
+  "pendingPhases": ["E2-v132", "E3-v133", "E4-v134", "E5-v135"],
+  "canonicalPath": "/home/vkzone/.openclaw/workspace/voyager-platform/pipeline-state.json"
 }
