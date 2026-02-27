@@ -1,0 +1,11 @@
+{
+  "version": "v140",
+  "timestamp": "2026-02-27T16:30:00+02:00",
+  "passed": 85,
+  "failed": 0,
+  "skipped": 11,
+  "total": 96,
+  "gate": "PASS",
+  "deploySkipped": true,
+  "note": "Test-only changes. E2E ran against existing v139 deployment."
+}

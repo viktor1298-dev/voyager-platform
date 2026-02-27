@@ -52,6 +52,18 @@ All agents also read `~/.openclaw/workspace/.learnings/SHARED-PIPELINE-LEARNINGS
 - Prevention: Gate changes ONLY between phases, ONLY with Vik approval
 - Detection: Compare pipeline-state.json gateThresholds across versions
 
+### Pattern: Opus Waste on Structured Tasks
+- Symptom: High token cost for routine tasks (deploy, E2E, QA)
+- Root cause: Foreman/Mai spawned on Opus when Sonnet suffices
+- Fix: Use `model: "anthropic/claude-sonnet-4-6"` for E2E, deploy, QA, and simple dev tasks
+- Savings: ~$2.73 per pipeline run
+
+### Pattern: Agent Drift from Documented Patterns
+- Symptom: Agents make decisions not aligned with skill docs
+- Root cause: SKILL.md not read at session start
+- Fix: Every spawn template includes mandatory SKILL.md read as first action
+- Verification: v142+ pipelines should show 100% compliance
+
 ### Pattern: Skills Not Read
 - Symptom: Agent makes mistakes documented in its SKILL.md
 - Root cause: Agent skips skill reading, operates on memory only
@@ -68,12 +80,42 @@ All agents also read `~/.openclaw/workspace/.learnings/SHARED-PIPELINE-LEARNINGS
 | Run | Version | Total Time | Failures | Fixed Auto | Notes |
 |-----|---------|------------|----------|-----------|-------|
 | Phase D | v110 | ~3h | BASE_URL wrong, migration missing, Foreman spawn-exit, Gateway restart by QA | 4/4 auto | First Phase D run — many new patterns logged |
+| Phase E2 | v141 | ~80 min | 3 E2E failures (all fixed) | 3/3 auto | Alerts backend. 11 spawns, all Sonnet. Token waste investigation run. |
+
+## 🔍 Pipeline Investigation — v141 (2026-02-27)
+
+### Token Waste Analysis
+- **Total cost:** $4.67 — **58% was overhead** ($2.73 wasted)
+- **Root cause #1:** Foreman + Mai running on Opus instead of Sonnet → $2.73 in model overhead
+- **Root cause #2:** SKILL.md compliance: **0 out of 5 agents** read their SKILL.md (0% compliance)
+- **Root cause #3:** Agents operated on memory/habits instead of reading documented patterns
+
+### Skill Compliance Audit Results
+| Agent | SKILL.md Read? | Quality | Notes |
+|-------|---------------|---------|-------|
+| Dima | ❌ No | Good | Habits carried from training, not docs |
+| Ron | ❌ No | Good | Same — memory-driven |
+| Yuval | ❌ No | Good | Ran E2E by instinct |
+| Mai | ❌ No | Good | QA done from memory |
+| Foreman | ❌ No | Good | Orchestration on auto-pilot |
+
+- **Score:** 0/5 agents compliant (0%)
+- **Quality score:** Still 9.5/10 (agents have strong habits)
+- **Risk:** Without skill reading, new patterns/rules don't propagate to agents
+- **Long-term risk:** Agent drift — each run diverges further from documented best practices
+
+### Fixes Applied (same day — 2026-02-27)
+- ✅ All agent SOUL.md files updated with mandatory SKILL.md read instruction
+- ✅ `pipeline-orchestrator` skill updated: every spawn template now starts with SKILL.md read
+- ✅ `agent-factory` skill updated: new agents created with compliance built-in
+- ✅ Self-improvement protocol added as mandatory last step for all agents
+- ✅ v142 pipeline is the first test of these compliance fixes
 
 ## ✅ Pipeline Gate Thresholds (updated 2026-02-24)
 | Gate | Threshold | Hard? | Notes |
 |------|-----------|-------|-------|
 | Code Review (Lior) | 10/10 | ✅ Yes | No merge without 10/10 |
-| E2E (Yuval) | 88+/96 | ✅ Yes | 0 new failures (4 skips OK) |
+| E2E (Yuval) | 0 failures (absolute — Vik mandate 2026-02-27) | ✅ Yes | Zero tolerance — no skips, no partial passes |
 | Desktop QA (Mai) | 8.5+/10 | ✅ Yes | 1920×1080, Playwright fallback |
 | Mobile QA (Noa) | **REMOVED** | — | K8s ops tool = desktop-primary. Re-add if needed. |
 
