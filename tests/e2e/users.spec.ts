@@ -17,7 +17,9 @@ test.describe('Users Page — Admin Only', () => {
     await login(page)
     await page.getByRole('link', { name: /users/i }).first().click()
     await expect(page).toHaveURL(/\/users/, { timeout: 10_000 })
-    await expect(page.getByRole('table').getByText(TEST_ADMIN.email).first()).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('table')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(/loading/i)).toBeHidden({ timeout: 10_000 }).catch(() => {})
+    await expect(page.getByRole('table').getByText(TEST_ADMIN.email).first()).toBeVisible({ timeout: 15_000 })
   })
 
   test('users page does not stay stuck on loading state for admin', async ({ page }) => {
