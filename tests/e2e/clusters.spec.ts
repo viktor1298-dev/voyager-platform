@@ -31,6 +31,10 @@ test.describe('Clusters — CRUD Operations', () => {
 
     const firstRow = table.locator('tbody tr').first();
     await expect(firstRow).toBeVisible();
+    // Wait for actual data (not skeleton)
+    await expect(firstRow.locator('td').first()).not.toHaveClass(/skeleton/);
+    await expect(firstRow.locator('td').first()).not.toBeEmpty();
+    await page.waitForTimeout(500);
 
     const clusterName = (await firstRow.locator('td').first().innerText()).trim();
 

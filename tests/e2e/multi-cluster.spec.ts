@@ -42,8 +42,14 @@ test.describe('Multi-cluster flows (Phase D)', () => {
 
   test('E2E-2: Cluster detail → live tab loads nodes', async ({ page }) => {
     await page.goto('/clusters');
-    const firstRow = page.locator('tbody tr').first();
+    const table = page.locator('table').first();
+    await expect(table).toBeVisible();
+    const firstRow = table.locator('tbody tr').first();
     await expect(firstRow).toBeVisible();
+    // Wait for actual data (not skeleton)
+    await expect(firstRow.locator('td').first()).not.toHaveClass(/skeleton/);
+    await expect(firstRow.locator('td').first()).not.toBeEmpty();
+    await page.waitForTimeout(500);
     await firstRow.click();
 
     await expect(page).toHaveURL(/\/clusters\/.+/);
