@@ -103,10 +103,9 @@ test.describe('Multi-cluster flows (Phase D)', () => {
 
   test('E2E-5: Delete cluster → removed from list', async ({ page }) => {
     await page.goto('/clusters');
-    await page.waitForLoadState('networkidle');
 
     const rows = page.locator('tbody tr');
-    await expect(rows.first()).toBeVisible();
+    await expect(rows.first()).toBeVisible({ timeout: 15_000 });
 
     // Wait for table data to fully load (no skeleton rows)
     await expect(rows.first().locator('td').first()).not.toHaveClass(/skeleton/, { timeout: 10_000 });
