@@ -144,5 +144,60 @@
     "drift": false,
     "action": "none",
     "assessment": "healthy"
+  },
+  {
+    "timestamp": "2026-02-27T19:55:00.193352",
+    "version": "v142",
+    "verdict": "COMPLETE",
+    "pipeline_type": "docs-only",
+    "gates_checked": 3,
+    "gates": {
+      "review_score_10": true,
+      "merge_to_main": true,
+      "skill_compliance_3of3": true
+    },
+    "was_corrected": false
+  },
+  {
+    "timestamp": "2026-02-27T20:04:41.001887",
+    "version": "v143",
+    "verdict": "IN_PROGRESS",
+    "stage": "dev",
+    "gates_checked": 0,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "Foreman alive, Dima polling exec. No evidence files yet - dev stage."
+  },
+  {
+    "timestamp": "2026-02-27T20:14:00+02:00",
+    "version": "v143",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 0,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "E2E in-progress, evidence pending"
+  },
+  {
+    "timestamp": "2026-02-27T20:25:20.004721",
+    "version": "v143",
+    "verdict": "IN_PROGRESS",
+    "gates_checked": 2,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "notes": "QA just completed by Mai, evidence pending write. E2E clean 86/96."
+  },
+  {
+    "timestamp": "2026-02-27T20:36:42.392099",
+    "version": "v143",
+    "verdict": "COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [
+      "live-cluster-connectivity",
+      "pod-management",
+      "node-data",
+      "running-pods"
+    ],
+    "was_corrected": false,
+    "note": "All 5 gates passed. QA evidence path fixed (wrong dir). E2E author metadata fixed. Results verified authentic."
   }
 ]

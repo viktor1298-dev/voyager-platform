@@ -115,7 +115,7 @@ export function TopBar() {
           <span className="text-base font-extrabold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-text-secondary)] bg-clip-text text-transparent tracking-tight">
             Voyager
           </span>
-          <span className="text-[10px] text-[var(--color-text-dim)] font-mono tracking-wider">
+          <span className="text-[10px] text-[var(--color-text-muted)] font-mono tracking-wider">
             PLATFORM
           </span>
         </div>

@@ -339,8 +339,6 @@ export default function ClustersPage() {
       <DataTable
         data={filteredClusters}
         columns={columns}
-        searchable
-        searchPlaceholder="Search clusters…"
         onRowClick={(row) => router.push(`/clusters/${row.id}`)}
         loading={clusters.isLoading}
         emptyIcon={<Database className="h-10 w-10" />}

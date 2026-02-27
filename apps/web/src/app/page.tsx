@@ -24,7 +24,7 @@ import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
 import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS, HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
-import { AlertTriangle, Box, Database, Server } from 'lucide-react'
+import { AlertTriangle, Container, LayoutGrid, Network, Server } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
@@ -244,37 +244,37 @@ function DashboardContent() {
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
         </header>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}>
           <SummaryCard
-            icon={<Server className="h-4 w-4" />}
+            icon={<Network className="h-4 w-4" />}
             label="Total Nodes"
             value={String(totalNodes)}
-            color="var(--color-accent)"
-            gradient="var(--gradient-text-default)"
+            color={totalNodes > 0 ? 'var(--color-accent)' : 'var(--color-text-muted)'}
+            gradient={totalNodes > 0 ? 'var(--gradient-text-default)' : 'none'}
             isLoading={isLoading}
           />
           <SummaryCard
-            icon={<Box className="h-4 w-4" />}
+            icon={<Container className="h-4 w-4" />}
             label="Running Pods"
             value={`${runningPods}/${liveData?.totalPods ?? 0}`}
-            color="var(--color-status-active)"
-            gradient="var(--gradient-text-healthy)"
+            color={runningPods > 0 ? 'var(--color-status-active)' : 'var(--color-text-muted)'}
+            gradient={runningPods > 0 ? 'var(--gradient-text-healthy)' : 'none'}
             isLoading={isLoading}
           />
           <SummaryCard
-            icon={<Database className="h-4 w-4" />}
+            icon={<LayoutGrid className="h-4 w-4" />}
             label="Clusters"
             value={String(clusterList.length)}
-            color="var(--color-accent)"
-            gradient="var(--gradient-text-default)"
+            color={clusterList.length > 0 ? 'var(--color-accent)' : 'var(--color-text-muted)'}
+            gradient={clusterList.length > 0 ? 'var(--gradient-text-default)' : 'none'}
             isLoading={isLoading}
           />
           <SummaryCard
             icon={<AlertTriangle className="h-4 w-4" />}
             label="Warning Events"
             value={String(warningEvents)}
-            color="var(--color-status-warning)"
-            gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'var(--gradient-text-default)'}
+            color={warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'}
+            gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'none'}
             isLoading={isLoading}
           />
         </div>
@@ -480,7 +480,7 @@ function ClusterCard({
   return (
     <Link href={`/clusters/${cluster.id}`}>
       <div
-        className="cluster-card relative group rounded-xl min-h-[90px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 overflow-hidden"
+        className="cluster-card relative group rounded-xl min-h-[90px] cursor-pointer bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 overflow-hidden"
         style={
           {
             '--status-color': getStatusColor(status),
@@ -588,8 +588,8 @@ function SummaryCard({
         <SkeletonText width="3rem" height="2rem" />
       ) : (
         <div
-          className="text-2xl font-extrabold tracking-tight animate-count-up gradient-text"
-          style={{ backgroundImage: gradient }}
+          className={cn('text-2xl font-extrabold tracking-tight animate-count-up', gradient !== 'none' && 'gradient-text')}
+          style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
         >
           {value}
         </div>
