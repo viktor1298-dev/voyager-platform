@@ -1,0 +1,363 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: 🚀
+      - generic [ref=e5]:
+        - generic [ref=e6]: Voyager
+        - generic [ref=e7]: PLATFORM
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]: Cluster
+        - combobox "Active cluster" [ref=e11]:
+          - option "Select Cluster" [selected]
+          - option "⚪ prod-cluster-eks"
+          - option "🟢 test-cluster-minikube"
+      - generic [ref=e12]:
+        - generic [ref=e13]: —
+        - generic [ref=e14]: Total Pods
+      - generic [ref=e15]:
+        - generic [ref=e16]: 0%
+        - generic [ref=e17]: CPU Usage
+      - generic [ref=e18]:
+        - generic [ref=e19]: —
+        - generic [ref=e20]: Alerts
+    - generic [ref=e21]:
+      - generic [ref=e22]: Voyager Admin
+      - 'button "Current theme: Dark. Click to switch." [ref=e23]':
+        - img [ref=e24]
+      - button [ref=e27]:
+        - img [ref=e28]
+      - button "Logout" [ref=e31]:
+        - img [ref=e32]
+        - generic [ref=e35]: Logout
+      - generic [ref=e36]:
+        - generic [ref=e38]: Connected
+        - generic [ref=e39]:
+          - generic [ref=e40]: ·
+          - generic [ref=e41]: Synced just now
+  - complementary [ref=e42]:
+    - generic [ref=e43]:
+      - navigation [ref=e44]:
+        - link "Dashboard" [ref=e45] [cursor=pointer]:
+          - /url: /
+          - img [ref=e46]
+          - generic [ref=e51]: Dashboard
+        - link "Clusters" [ref=e52] [cursor=pointer]:
+          - /url: /clusters
+          - img [ref=e53]
+          - generic [ref=e56]: Clusters
+        - link "Shared Dashboards" [ref=e57] [cursor=pointer]:
+          - /url: /dashboards
+          - img [ref=e58]
+          - generic [ref=e63]: Shared Dashboards
+        - link "Health" [ref=e64] [cursor=pointer]:
+          - /url: /health
+          - img [ref=e65]
+          - generic [ref=e68]: Health
+        - link "Deployments" [ref=e69] [cursor=pointer]:
+          - /url: /deployments
+          - img [ref=e70]
+          - generic [ref=e73]: Deployments
+        - link "Events" [ref=e74] [cursor=pointer]:
+          - /url: /events
+          - img [ref=e75]
+          - generic [ref=e77]: Events
+        - link "Alerts" [ref=e78] [cursor=pointer]:
+          - /url: /alerts
+          - img [ref=e79]
+          - generic [ref=e82]: Alerts
+        - link "⚠️ Anomalies" [ref=e83] [cursor=pointer]:
+          - /url: /anomalies
+          - img [ref=e84]
+          - generic [ref=e86]: ⚠️ Anomalies
+        - link "Logs" [ref=e87] [cursor=pointer]:
+          - /url: /logs
+          - img [ref=e88]
+          - generic [ref=e91]: Logs
+        - link "🤖 AI Assistant" [ref=e92] [cursor=pointer]:
+          - /url: /ai
+          - img [ref=e93]
+          - generic [ref=e96]: 🤖 AI Assistant
+        - link "Feature Flags" [ref=e97] [cursor=pointer]:
+          - /url: /features
+          - img [ref=e98]
+          - generic [ref=e100]: Feature Flags
+        - link "Webhooks" [ref=e101] [cursor=pointer]:
+          - /url: /webhooks
+          - img [ref=e102]
+          - generic [ref=e106]: Webhooks
+        - link "Users" [ref=e107] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e108]
+          - generic [ref=e113]: Users
+        - link "Audit Log" [ref=e114] [cursor=pointer]:
+          - /url: /audit
+          - img [ref=e115]
+          - generic [ref=e118]: Audit Log
+        - link "Settings" [ref=e119] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e120]
+          - generic [ref=e123]: Settings
+      - generic [ref=e124]:
+        - paragraph [ref=e125]: Autoscaling
+        - navigation [ref=e126]:
+          - link "Karpenter" [ref=e127] [cursor=pointer]:
+            - /url: /karpenter
+            - img [ref=e128]
+            - generic [ref=e132]: Karpenter
+      - generic [ref=e133]:
+        - paragraph [ref=e134]: Access Control
+        - navigation [ref=e135]:
+          - link "Teams" [ref=e136] [cursor=pointer]:
+            - /url: /teams
+            - img [ref=e137]
+            - generic [ref=e141]: Teams
+          - link "Permissions" [ref=e142] [cursor=pointer]:
+            - /url: /permissions
+            - img [ref=e143]
+            - generic [ref=e145]: Permissions
+      - generic [ref=e146]:
+        - paragraph [ref=e147]: Clusters
+        - generic [ref=e148]:
+          - link "prod-cluster-eks" [ref=e149] [cursor=pointer]:
+            - /url: /clusters
+            - generic [ref=e151]: prod-cluster-eks
+          - link "test-cluster-minikube" [ref=e152] [cursor=pointer]:
+            - /url: /clusters
+            - generic [ref=e154]: test-cluster-minikube
+    - button [ref=e155]:
+      - img [ref=e156]
+    - generic [ref=e159]: Voyager v0.1.0
+  - main [ref=e160]:
+    - generic [ref=e162]:
+      - generic [ref=e164]: Online
+      - generic "0 users online" [ref=e165]: "0"
+    - generic [ref=e167]:
+      - navigation [ref=e168]:
+        - link "Dashboard" [ref=e170] [cursor=pointer]:
+          - /url: /
+          - img [ref=e171]
+        - generic [ref=e174]:
+          - img [ref=e175]
+          - generic "Audit Logs" [ref=e177]
+      - generic [ref=e178]:
+        - heading "Audit Log" [level=1] [ref=e179]
+        - paragraph [ref=e180]: 1239 entries
+      - generic [ref=e181]:
+        - generic [ref=e182]:
+          - img [ref=e183]
+          - textbox "Search by email…" [ref=e186]
+        - combobox [ref=e187]:
+          - option "All Actions" [selected]
+          - option "Create"
+          - option "Update"
+          - option "Delete"
+          - option "Restart"
+          - option "Scale"
+          - option "Login"
+          - option "Logout"
+        - textbox "From date" [ref=e188]
+        - textbox "To date" [ref=e189]
+      - table [ref=e192]:
+        - rowgroup [ref=e193]:
+          - row "Timestamp ↓ User Action Resource Resource ID IP Address" [ref=e194]:
+            - columnheader [ref=e195]
+            - columnheader "Timestamp ↓" [ref=e196]:
+              - generic [ref=e197] [cursor=pointer]: Timestamp ↓
+            - columnheader "User" [ref=e198]
+            - columnheader "Action" [ref=e199]
+            - columnheader "Resource" [ref=e200]
+            - columnheader "Resource ID" [ref=e201]
+            - columnheader "IP Address" [ref=e202]
+        - rowgroup [ref=e203]:
+          - row "2/27/2026, 2:57:48 AM admin@voyager.local user.login session QKs95cWwhKnqbg5NefdgJSZNxMOnkLC7 192.168.49.1" [ref=e204]:
+            - cell [ref=e205]
+            - cell "2/27/2026, 2:57:48 AM" [ref=e206]
+            - cell "admin@voyager.local" [ref=e207]
+            - cell "user.login" [ref=e208]:
+              - generic [ref=e209]: user.login
+            - cell "session" [ref=e210]
+            - cell "QKs95cWwhKnqbg5NefdgJSZNxMOnkLC7" [ref=e211]
+            - cell "192.168.49.1" [ref=e212]
+          - row "2/27/2026, 2:57:45 AM admin@voyager.local user.login session uakALGJeKwmzkbMVSUuGhn4jIVjMam1j 192.168.49.1" [ref=e213]:
+            - cell [ref=e214]
+            - cell "2/27/2026, 2:57:45 AM" [ref=e215]
+            - cell "admin@voyager.local" [ref=e216]
+            - cell "user.login" [ref=e217]:
+              - generic [ref=e218]: user.login
+            - cell "session" [ref=e219]
+            - cell "uakALGJeKwmzkbMVSUuGhn4jIVjMam1j" [ref=e220]
+            - cell "192.168.49.1" [ref=e221]
+          - row "2/27/2026, 2:57:40 AM admin@voyager.local user.login session Ncc2H8MduNmPnxfu6mnLY039VxswWVmj 192.168.49.1" [ref=e222]:
+            - cell [ref=e223]
+            - cell "2/27/2026, 2:57:40 AM" [ref=e224]
+            - cell "admin@voyager.local" [ref=e225]
+            - cell "user.login" [ref=e226]:
+              - generic [ref=e227]: user.login
+            - cell "session" [ref=e228]
+            - cell "Ncc2H8MduNmPnxfu6mnLY039VxswWVmj" [ref=e229]
+            - cell "192.168.49.1" [ref=e230]
+          - row "2/27/2026, 2:57:38 AM admin@voyager.local user.login session cilo9oExgBa8EUs8etj67w4An2Sdqu7H 192.168.49.1" [ref=e231]:
+            - cell [ref=e232]
+            - cell "2/27/2026, 2:57:38 AM" [ref=e233]
+            - cell "admin@voyager.local" [ref=e234]
+            - cell "user.login" [ref=e235]:
+              - generic [ref=e236]: user.login
+            - cell "session" [ref=e237]
+            - cell "cilo9oExgBa8EUs8etj67w4An2Sdqu7H" [ref=e238]
+            - cell "192.168.49.1" [ref=e239]
+          - row "2/27/2026, 2:57:15 AM admin@voyager.local user.login session WnZaDpg7MaJjNh2gHPr2wWWJS7UkZDx6 192.168.49.1" [ref=e240]:
+            - cell [ref=e241]
+            - cell "2/27/2026, 2:57:15 AM" [ref=e242]
+            - cell "admin@voyager.local" [ref=e243]
+            - cell "user.login" [ref=e244]:
+              - generic [ref=e245]: user.login
+            - cell "session" [ref=e246]
+            - cell "WnZaDpg7MaJjNh2gHPr2wWWJS7UkZDx6" [ref=e247]
+            - cell "192.168.49.1" [ref=e248]
+          - row "2/27/2026, 2:57:13 AM admin@voyager.local user.login session p7aNRlpx1ht6WtOd3aVxeP0KGca8u0Hw 192.168.49.1" [ref=e249]:
+            - cell [ref=e250]
+            - cell "2/27/2026, 2:57:13 AM" [ref=e251]
+            - cell "admin@voyager.local" [ref=e252]
+            - cell "user.login" [ref=e253]:
+              - generic [ref=e254]: user.login
+            - cell "session" [ref=e255]
+            - cell "p7aNRlpx1ht6WtOd3aVxeP0KGca8u0Hw" [ref=e256]
+            - cell "192.168.49.1" [ref=e257]
+          - row "2/27/2026, 2:57:11 AM admin@voyager.local user.login session slnSo3GfP1rz6Zapu9tUjdBoWpZwfkzB 192.168.49.1" [ref=e258]:
+            - cell [ref=e259]
+            - cell "2/27/2026, 2:57:11 AM" [ref=e260]
+            - cell "admin@voyager.local" [ref=e261]
+            - cell "user.login" [ref=e262]:
+              - generic [ref=e263]: user.login
+            - cell "session" [ref=e264]
+            - cell "slnSo3GfP1rz6Zapu9tUjdBoWpZwfkzB" [ref=e265]
+            - cell "192.168.49.1" [ref=e266]
+          - row "2/27/2026, 2:57:08 AM admin@voyager.local user.login session VSfS1KOoE0BhEsgcFhx8kEoYRB6gFxhy 192.168.49.1" [ref=e267]:
+            - cell [ref=e268]
+            - cell "2/27/2026, 2:57:08 AM" [ref=e269]
+            - cell "admin@voyager.local" [ref=e270]
+            - cell "user.login" [ref=e271]:
+              - generic [ref=e272]: user.login
+            - cell "session" [ref=e273]
+            - cell "VSfS1KOoE0BhEsgcFhx8kEoYRB6gFxhy" [ref=e274]
+            - cell "192.168.49.1" [ref=e275]
+          - row "2/27/2026, 2:57:06 AM admin@voyager.local user.login session I0Ys5gLEUB0v8NOhutP3p9m7TEhe9Upe 192.168.49.1" [ref=e276]:
+            - cell [ref=e277]
+            - cell "2/27/2026, 2:57:06 AM" [ref=e278]
+            - cell "admin@voyager.local" [ref=e279]
+            - cell "user.login" [ref=e280]:
+              - generic [ref=e281]: user.login
+            - cell "session" [ref=e282]
+            - cell "I0Ys5gLEUB0v8NOhutP3p9m7TEhe9Upe" [ref=e283]
+            - cell "192.168.49.1" [ref=e284]
+          - row "2/27/2026, 2:57:04 AM admin@voyager.local user.login session OUZ8rcxc5i8YBUD7Bz3tSMQOWmwR7gTu 192.168.49.1" [ref=e285]:
+            - cell [ref=e286]
+            - cell "2/27/2026, 2:57:04 AM" [ref=e287]
+            - cell "admin@voyager.local" [ref=e288]
+            - cell "user.login" [ref=e289]:
+              - generic [ref=e290]: user.login
+            - cell "session" [ref=e291]
+            - cell "OUZ8rcxc5i8YBUD7Bz3tSMQOWmwR7gTu" [ref=e292]
+            - cell "192.168.49.1" [ref=e293]
+          - row "2/27/2026, 2:57:01 AM admin@voyager.local user.login session PLpi1ELuwkReWvZ1ubI3qpzY6WNjas7b 192.168.49.1" [ref=e294]:
+            - cell [ref=e295]
+            - cell "2/27/2026, 2:57:01 AM" [ref=e296]
+            - cell "admin@voyager.local" [ref=e297]
+            - cell "user.login" [ref=e298]:
+              - generic [ref=e299]: user.login
+            - cell "session" [ref=e300]
+            - cell "PLpi1ELuwkReWvZ1ubI3qpzY6WNjas7b" [ref=e301]
+            - cell "192.168.49.1" [ref=e302]
+          - row "2/27/2026, 2:56:57 AM admin@voyager.local user.login session rMaIG4aMtOdkxXIPgWLqB5Js3sYAyb5z 192.168.49.1" [ref=e303]:
+            - cell [ref=e304]
+            - cell "2/27/2026, 2:56:57 AM" [ref=e305]
+            - cell "admin@voyager.local" [ref=e306]
+            - cell "user.login" [ref=e307]:
+              - generic [ref=e308]: user.login
+            - cell "session" [ref=e309]
+            - cell "rMaIG4aMtOdkxXIPgWLqB5Js3sYAyb5z" [ref=e310]
+            - cell "192.168.49.1" [ref=e311]
+          - row "2/27/2026, 2:56:56 AM admin@voyager.local user.login session OgCOrTbIbPeIxJqqHeDXHzTTsuxeuSmL 192.168.49.1" [ref=e312]:
+            - cell [ref=e313]
+            - cell "2/27/2026, 2:56:56 AM" [ref=e314]
+            - cell "admin@voyager.local" [ref=e315]
+            - cell "user.login" [ref=e316]:
+              - generic [ref=e317]: user.login
+            - cell "session" [ref=e318]
+            - cell "OgCOrTbIbPeIxJqqHeDXHzTTsuxeuSmL" [ref=e319]
+            - cell "192.168.49.1" [ref=e320]
+          - row "2/27/2026, 2:56:54 AM admin@voyager.local user.login session s0B2Vxkc56fWVejCm4dCwH5yPHaUcK2x 192.168.49.1" [ref=e321]:
+            - cell [ref=e322]
+            - cell "2/27/2026, 2:56:54 AM" [ref=e323]
+            - cell "admin@voyager.local" [ref=e324]
+            - cell "user.login" [ref=e325]:
+              - generic [ref=e326]: user.login
+            - cell "session" [ref=e327]
+            - cell "s0B2Vxkc56fWVejCm4dCwH5yPHaUcK2x" [ref=e328]
+            - cell "192.168.49.1" [ref=e329]
+          - row "2/27/2026, 2:56:52 AM admin@voyager.local user.login session 8BUFFWpOMvVYCPWgU8x4EfA34VeJd7g2 192.168.49.1" [ref=e330]:
+            - cell [ref=e331]
+            - cell "2/27/2026, 2:56:52 AM" [ref=e332]
+            - cell "admin@voyager.local" [ref=e333]
+            - cell "user.login" [ref=e334]:
+              - generic [ref=e335]: user.login
+            - cell "session" [ref=e336]
+            - cell "8BUFFWpOMvVYCPWgU8x4EfA34VeJd7g2" [ref=e337]
+            - cell "192.168.49.1" [ref=e338]
+          - row "2/27/2026, 2:56:50 AM admin@voyager.local user.login session v5kHeXwJE9g5Qu9X7QC2csOHRRAQTBZn 192.168.49.1" [ref=e339]:
+            - cell [ref=e340]
+            - cell "2/27/2026, 2:56:50 AM" [ref=e341]
+            - cell "admin@voyager.local" [ref=e342]
+            - cell "user.login" [ref=e343]:
+              - generic [ref=e344]: user.login
+            - cell "session" [ref=e345]
+            - cell "v5kHeXwJE9g5Qu9X7QC2csOHRRAQTBZn" [ref=e346]
+            - cell "192.168.49.1" [ref=e347]
+          - row "2/27/2026, 2:56:48 AM admin@voyager.local user.login session ZIF09OWAeztOQvQTo0ArNeRBPwH0oZ5d 192.168.49.1" [ref=e348]:
+            - cell [ref=e349]
+            - cell "2/27/2026, 2:56:48 AM" [ref=e350]
+            - cell "admin@voyager.local" [ref=e351]
+            - cell "user.login" [ref=e352]:
+              - generic [ref=e353]: user.login
+            - cell "session" [ref=e354]
+            - cell "ZIF09OWAeztOQvQTo0ArNeRBPwH0oZ5d" [ref=e355]
+            - cell "192.168.49.1" [ref=e356]
+          - row "2/27/2026, 2:56:41 AM admin@voyager.local user.login session e4sNLpIoGtH8yQNs40zevIoqnBfmxp2O 192.168.49.1" [ref=e357]:
+            - cell [ref=e358]
+            - cell "2/27/2026, 2:56:41 AM" [ref=e359]
+            - cell "admin@voyager.local" [ref=e360]
+            - cell "user.login" [ref=e361]:
+              - generic [ref=e362]: user.login
+            - cell "session" [ref=e363]
+            - cell "e4sNLpIoGtH8yQNs40zevIoqnBfmxp2O" [ref=e364]
+            - cell "192.168.49.1" [ref=e365]
+          - row "2/27/2026, 2:56:39 AM admin@voyager.local user.login session vk4xqDAv9yulVB5D7kZPnLpqCffi8uO9 192.168.49.1" [ref=e366]:
+            - cell [ref=e367]
+            - cell "2/27/2026, 2:56:39 AM" [ref=e368]
+            - cell "admin@voyager.local" [ref=e369]
+            - cell "user.login" [ref=e370]:
+              - generic [ref=e371]: user.login
+            - cell "session" [ref=e372]
+            - cell "vk4xqDAv9yulVB5D7kZPnLpqCffi8uO9" [ref=e373]
+            - cell "192.168.49.1" [ref=e374]
+          - row "2/27/2026, 2:56:34 AM admin@voyager.local user.login session GT755RhzQZkQJZIMcjoWK9pmG0ykmmu8 192.168.49.1" [ref=e375]:
+            - cell [ref=e376]
+            - cell "2/27/2026, 2:56:34 AM" [ref=e377]
+            - cell "admin@voyager.local" [ref=e378]
+            - cell "user.login" [ref=e379]:
+              - generic [ref=e380]: user.login
+            - cell "session" [ref=e381]
+            - cell "GT755RhzQZkQJZIMcjoWK9pmG0ykmmu8" [ref=e382]
+            - cell "192.168.49.1" [ref=e383]
+      - generic [ref=e384]:
+        - generic [ref=e385]: Page 1 of 62 · 1239 total
+        - generic [ref=e386]:
+          - button "Previous" [disabled] [ref=e387]
+          - button "Next" [ref=e388] [cursor=pointer]
+  - region "Notifications alt+T"
+  - alert [ref=e389]
+```

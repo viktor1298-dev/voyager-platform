@@ -22,6 +22,7 @@ import { subscriptionsRouter } from './subscriptions.js'
 import { ssoRouter } from './sso.js'
 import { usersRouter } from './users.js'
 import { tokensRouter } from './tokens.js'
+import { webhooksRouter } from './webhooks.js'
 
 export const appRouter = router({
   ai: aiRouter,
@@ -48,6 +49,7 @@ export const appRouter = router({
   teams: teamsRouter,
   users: usersRouter,
   tokens: tokensRouter,
+  webhooks: webhooksRouter,
 })
 
 export type AppRouter = typeof appRouter

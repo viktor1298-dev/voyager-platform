@@ -1,5 +1,6 @@
-import { alerts, alertHistory, db } from '@voyager/db'
+import { alerts, alertHistory, db, webhooks, webhookDeliveries } from '@voyager/db'
 import { eq } from 'drizzle-orm'
+import crypto from 'node:crypto'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { clusters } from '@voyager/db'
 import * as k8s from '@kubernetes/client-node'
@@ -73,6 +74,26 @@ async function evaluateAlert(alert: typeof alerts.$inferSelect): Promise<void> {
             })
           } catch (e) {
             console.error(`[alert-evaluator] webhook POST failed for alert ${alert.id}:`, e)
+          }
+        }
+
+        // Also dispatch to registered webhooks with 'alert.triggered' event
+        const matchingWebhooks = await db.select().from(webhooks).where(eq(webhooks.enabled, true))
+        for (const wh of matchingWebhooks) {
+          const whEvents = (wh.events as string[]) || []
+          if (!whEvents.includes('alert.triggered')) continue
+          const whPayload = { event: 'alert.triggered', alert: alert.name, metric: alert.metric, value: currentValue, threshold, message, cluster: cluster.name, timestamp: new Date().toISOString() }
+          try {
+            const whHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
+            if (wh.secret) {
+              whHeaders['X-Webhook-Signature'] = crypto.createHmac('sha256', wh.secret).update(JSON.stringify(whPayload)).digest('hex')
+            }
+            const res = await fetch(wh.url, { method: 'POST', headers: whHeaders, body: JSON.stringify(whPayload), signal: AbortSignal.timeout(10000) })
+            await db.insert(webhookDeliveries).values({ webhookId: wh.id, event: 'alert.triggered', payload: whPayload, responseStatus: String(res.status), success: res.ok })
+            await db.update(webhooks).set({ lastTriggeredAt: new Date() }).where(eq(webhooks.id, wh.id))
+          } catch (e) {
+            await db.insert(webhookDeliveries).values({ webhookId: wh.id, event: 'alert.triggered', payload: whPayload, responseStatus: 'error', success: false })
+            console.error(`[alert-evaluator] webhook dispatch to ${wh.url} failed:`, e)
           }
         }
 
