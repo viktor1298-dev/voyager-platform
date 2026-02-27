@@ -1,23 +1,39 @@
 {
-  "version": "v141",
-  "status": "pending-final-verification",
+  "version": "v143",
+  "status": "complete",
   "currentStage": "done",
-  "phase": "E2",
-  "feature": "Alerts Real Backend",
-  "startedAt": "2026-02-27T17:30:00+02:00",
-  "completedAt": "2026-02-27T18:50:00+02:00",
-  "evidenceReady": true,
-  "timestamp": "2026-02-27T18:50:00+02:00",
+  "phase": "legacy-e2e-bug-fixes",
+  "feature": "Legacy E2E Bug Fixes \u2014 clusters.spec.ts empty state handling",
+  "startedAt": "2026-02-27T19:52:00+02:00",
+  "completedAt": "2026-02-27T20:36:42.390982",
+  "timestamp": "2026-02-27T20:25:00+02:00",
   "reviewScore": 10,
-  "e2eResult": {"passed": 83, "failed": 0, "skipped": 13, "gate": "PASS"},
-  "qaScore": 8.6,
+  "evidenceReady": true,
   "stages": {
-    "dev-backend": "complete",
-    "dev-frontend": "complete",
+    "assess": "complete",
+    "dev": "complete",
     "review": "complete",
-    "deploy": "complete",
-    "e2e": "complete",
-    "qa": "complete"
+    "merge": "complete",
+    "deploy": "skipped-test-only",
+    "e2e": "passed",
+    "qa": "passed"
   },
-  "foremanNotes": "All gates passed. Evidence written. Awaiting Guardian verification."
+  "e2eResults": {
+    "passed": 86,
+    "failed": 0,
+    "skipped": 10
+  },
+  "qaResults": {
+    "functional_score": 8.5,
+    "effective_score": 9.0,
+    "verdict": "PASS",
+    "code_bugs": 0
+  },
+  "fixLoops": {},
+  "foremanNotes": "Test-only pipeline. Deploy skipped (test-only deploy guard). All legacy bugs resolved: LEGACY-1 fixed (empty-state skip), LEGACY-2+3 already passing, CLEANUP-1+2 already done. Total pipeline time: ~33 min.",
+  "verifiedBy": "guardian",
+  "evidenceFiles": [
+    "qa-v143.json",
+    "e2e-v143.json"
+  ]
 }

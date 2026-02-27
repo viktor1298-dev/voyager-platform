@@ -102,6 +102,37 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ---
 
+## 🎨 UI/UX Issues — Phase F (Visual Polish)
+> Source: Vik visual review 2026-02-27
+> Priority: Medium (non-blocking, but affects UX quality)
+
+### F1: Dashboard Color & Contrast Fixes
+- [ ] **UI-1: Color imbalance** — Cluster cards background too high-contrast against dark background. Use subtler, harmonious card background color.
+- [ ] **UI-2: Environment badge colors** — "Production", "Staging/QA", "Dev/Minikube" tags are too bright/saturated against dark background. Tone down to muted semantic colors.
+- [ ] **UI-3: Sidebar scroll missing** — "CLUSTERS" section at bottom of sidebar has no scroll indicator. Bottom nav items are inaccessible.
+- [ ] **UI-4: Anomalies section typography** — "Critical" (orange-red), "Warning" (yellow), "Info" (teal-green) colored fonts clash with design system. Use muted semantic colors.
+- [ ] **UI-5: "Error" text near-invisible on cluster cards** — "Error" label at bottom-right is nearly same luminance as card background in dark mode. Increase contrast.
+- [ ] **UI-6: Running Pods "0/0" shown in green** — Green for 0/0 is semantically wrong (green = healthy, 0 pods = nothing). Use neutral/muted color.
+- [ ] **UI-7: Mixed icon families in sidebar** — Outline icons mixed with emoji-style icons (⚠️, 🤖). Unify to same icon family/weight.
+
+### F2: Clusters Page Cleanup
+- [ ] **UI-8: Typography inconsistency in table** — "HEALTH"/"ACCESS" are uppercase, "Name"/"Provider" are title-case. Pick one convention.
+- [ ] **UI-9: "Error" health badge too aggressive** — Solid red badge with white text is too alarming for connectivity errors. Use softer/muted red.
+- [ ] **UI-10: Provider icons inconsistent quality** — MINIKUBE/KUBECONFIG show as generic circles vs proper AWS/GKE logos. Standardize icon quality.
+- [ ] **UI-11: Duplicate search bars** — Two "Search clusters..." inputs on the same page. Remove one.
+
+### F3: Light Mode Polish
+- [ ] **UI-12: Low contrast throughout light mode** — Text barely readable, sidebar items have insufficient contrast against white background.
+- [ ] **UI-13: Stat card icons inconsistent** — Total Nodes and Clusters both use server/grid icon (confusing). Running Pods uses green circle (misleading). Warning Events uses orange triangle even when count is 0.
+- [ ] **UI-14: Cluster card borders near-invisible** — Very subtle borders make cards hard to distinguish from page background in light mode.
+- [ ] **UI-15: Stat cards unequal width** — 4 stat cards don't divide equally across the row in light mode.
+
+### F4: Cross-cutting Typography & Icons
+- [ ] **UI-16: Sidebar section headers unreadable** — "AUTOSCALING", "ACCESS CONTROL", "CLUSTERS" labels too small and low contrast in both modes.
+- [ ] **UI-17: "PLATFORM" text in header low contrast** — Very faint against dark header bar.
+
+---
+
 ## Pipeline Gates (ALL stages)
 - Code Review (Lior): 10/10
 - E2E (Yuval): **0 failures** (non-negotiable — Vik mandate 2026-02-27)
