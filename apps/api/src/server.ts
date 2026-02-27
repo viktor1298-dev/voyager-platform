@@ -14,6 +14,7 @@ import { ensureAdminUser } from './lib/ensure-admin-user.js'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
 import { startHealthSync } from './jobs/health-sync.js'
+import { startAlertEvaluator } from './jobs/alert-evaluator.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
 import { shutdownTelemetry } from './lib/telemetry.js'
 import { type AppRouter, appRouter } from './routers/index.js'
@@ -206,6 +207,7 @@ const start = async () => {
     }
 
     startHealthSync()
+    startAlertEvaluator()
     app.log.info('Health sync background job started (5 minute interval)')
 
     const signals = ['SIGTERM', 'SIGINT'] as const
