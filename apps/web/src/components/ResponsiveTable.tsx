@@ -67,8 +67,7 @@ export function ResponsiveTable<T>({
               <tr
                 key={keyExtractor(row, i)}
                 onClick={() => onRowClick?.(row)}
-                className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.03] animate-slide-up ${onRowClick ? 'cursor-pointer' : ''}`}
-                style={{ animationDelay: `${i * staggerMs}ms`, animationFillMode: 'both' }}
+                className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.03] ${onRowClick ? 'cursor-pointer' : ''}`}
               >
                 {desktopCols.map((col) => (
                   <td key={col.key} className="py-2.5 px-3">
@@ -92,8 +91,7 @@ export function ResponsiveTable<T>({
             <div
               key={keyExtractor(row, i)}
               onClick={() => onRowClick?.(row)}
-              className={`rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2 animate-slide-up ${onRowClick ? 'cursor-pointer active:bg-white/[0.03]' : ''}`}
-              style={{ animationDelay: `${i * staggerMs}ms`, animationFillMode: 'both' }}
+              className={`rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2 ${onRowClick ? 'cursor-pointer active:bg-white/[0.03]' : ''}`}
             >
               {/* Card header */}
               <div className="flex justify-between items-center gap-2">

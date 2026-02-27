@@ -199,5 +199,103 @@
     ],
     "was_corrected": false,
     "note": "All 5 gates passed. QA evidence path fixed (wrong dir). E2E author metadata fixed. Results verified authentic."
+  },
+  {
+    "timestamp": "2026-02-27T21:34:52.772438",
+    "version": "v144",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 0,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "Pipeline in-progress dev stage, Ron active"
+  },
+  {
+    "timestamp": "2026-02-27T21:44:00+02:00",
+    "version": "v144",
+    "verdict": "NOT_COMPLETE",
+    "stage": "deploy",
+    "gates_checked": 0,
+    "env_blocked_items": [],
+    "notes": "Deploy in progress by Uri. No evidence files yet. Pipeline healthy.",
+    "was_corrected": false
+  },
+  {
+    "timestamp": "2026-02-27T21:54:33.619863",
+    "version": "v144",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 1,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "e2e+qa pending, foreman alive, no intervention"
+  },
+  {
+    "timestamp": "2026-02-27T22:04:50.035945",
+    "version": "v144",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 1,
+    "env_blocked_items": [],
+    "note": "E2E running, evidence pending",
+    "was_corrected": false
+  },
+  {
+    "timestamp": "2026-02-27T22:14:00+02:00",
+    "version": "v144",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 3,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "QA pending \u2014 Mai active, Foreman alive, no intervention"
+  },
+  {
+    "timestamp": "2026-02-27T22:25:02.412842",
+    "version": "v144",
+    "verdict": "NOT_COMPLETE",
+    "stage": "fix-loop-v145",
+    "gates_checked": 0,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "v144 QA failed 7.5/10. v145 fix loop active: Ron complete, Gil merged, Uri deploying. Foreman alive."
+  },
+  {
+    "timestamp": "2026-02-27T22:35:19.092427+02:00",
+    "version": "v145",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 1,
+    "note": "Version drift detected and fixed (v144->v145). E2E in progress.",
+    "env_blocked_items": [],
+    "was_corrected": false
+  },
+  {
+    "timestamp": "2026-02-27T22:44:46.019398",
+    "version": "v145",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "notes": "QA pending (Mai active). E2E 1 test-bug failure (Ron fixed). Foreman alive."
+  },
+  {
+    "timestamp": "2026-02-27T22:55:23.963652",
+    "version": "v145",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 5,
+    "gate_failures": [
+      "e2e_failures=1 (test-bug)"
+    ],
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "v146 hotfix in progress, Foreman alive"
+  },
+  {
+    "timestamp": "2026-02-27T23:05:13+02:00",
+    "version": "v145",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 5,
+    "gate_failures": [
+      "e2e_failures=1 (test-bug api-tokens)"
+    ],
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "Pipeline advanced to v147. v146 e2e PASS, qa FAIL 7.0. Ron v147 fix active. No intervention."
   }
 ]
