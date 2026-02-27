@@ -87,4 +87,15 @@ export const alertsRouter = router({
       const limit = input?.limit ?? 50
       return ctx.db.select().from(alertHistory).orderBy(desc(alertHistory.triggeredAt)).limit(limit)
     }),
+
+  acknowledge: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const [updated] = await ctx.db
+        .update(alertHistory)
+        .set({ acknowledged: true })
+        .where(eq(alertHistory.id, input.id))
+        .returning()
+      return updated
+    }),
 })

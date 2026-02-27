@@ -112,9 +112,16 @@ function SidebarContent({
   const autoscalingItems = filteredItems.filter((item) => item.section === 'autoscaling')
   const accessControlItems = filteredItems.filter((item) => item.section === 'access-control')
 
+  const { data: alertHistoryData } = trpc.alerts.history.useQuery(
+    { limit: 100 },
+    { refetchInterval: 30000 },
+  )
+  const unacknowledgedCount = (alertHistoryData ?? []).filter((h) => !h.acknowledged).length
+
   const renderNavItem = (item: (typeof navItems)[number]) => {
     const active = isActive(item.id)
     const Icon = item.icon
+    const showAlertsBadge = item.id === '/alerts' && unacknowledgedCount > 0
     return (
       <Link
         key={item.id}
@@ -132,6 +139,11 @@ function SidebarContent({
       >
         <Icon className="sidebar-icon h-4 w-4 shrink-0" />
         {showLabels && <span className="sidebar-label text-[13px] font-medium">{item.label}</span>}
+        {showAlertsBadge && (
+          <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
+            {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
+          </span>
+        )}
       </Link>
     )
   }
