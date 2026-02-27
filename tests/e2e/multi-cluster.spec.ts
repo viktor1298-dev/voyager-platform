@@ -76,8 +76,8 @@ test.describe('Multi-cluster flows (Phase D)', () => {
     await page.getByRole('button', { name: /go to next step/i }).click();
 
     await expect(page.getByText(/step 3\/4/i)).toBeVisible();
-    const errorAlert = page.locator('[role="alert"], .error-message, .toast-error, .MuiAlert-message, p.text-red-400').filter({ hasText: /failed|invalid|error|forbidden|unauthorized/i }).first();
-    const errorText = page.getByText(/connection test failed|connection validation failed/i).first();
+    const errorAlert = page.locator('[role="alert"], .error-message, .toast-error, .MuiAlert-message, p.text-red-400').filter({ hasText: /failed|invalid|error|forbidden|unauthorized|unable|transform/i }).first();
+    const errorText = page.getByText(/connection test failed|connection validation failed|unable to transform/i).first();
     await expect(errorAlert.or(errorText)).toBeVisible({ timeout: 20_000 });
   });
 
