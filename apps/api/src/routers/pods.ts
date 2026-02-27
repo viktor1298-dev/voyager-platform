@@ -2,7 +2,6 @@ import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
-import { getCoreV1Api } from '../lib/k8s.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { cached } from '../lib/cache.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
@@ -37,14 +36,17 @@ export const podsRouter = router({
 
   delete: adminProcedure
     .input(z.object({
+      clusterId: z.string().uuid(),
       namespace: z.string(),
       podName: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const coreApi = getCoreV1Api()
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreApi = kc.makeApiClient(k8s.CoreV1Api)
         await coreApi.deleteNamespacedPod({ name: input.podName, namespace: input.namespace })
         await logAudit(ctx, 'pod.delete', 'pod', `${input.namespace}/${input.podName}`, {
+          clusterId: input.clusterId,
           namespace: input.namespace,
           podName: input.podName,
         })

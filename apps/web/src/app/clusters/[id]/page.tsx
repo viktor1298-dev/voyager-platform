@@ -229,7 +229,7 @@ function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: 
           <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] text-[var(--color-badge-label)] hover:bg-white/[0.04] transition-colors">Cancel</button>
           <button
             type="button"
-            onClick={() => deleteMutation.mutate({ namespace: pod.namespace, podName: pod.name })}
+            onClick={() => deleteMutation.mutate({ clusterId, namespace: pod.namespace, podName: pod.name })}
             disabled={deleteMutation.isPending}
             className="px-3 py-1.5 rounded-lg text-[12px] font-medium bg-red-600 text-white hover:opacity-90 transition-opacity disabled:opacity-50"
           >
