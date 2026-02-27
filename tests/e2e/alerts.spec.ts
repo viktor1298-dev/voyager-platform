@@ -26,7 +26,7 @@ test.describe('Alerts — CRUD + History', () => {
     // Fill form
     const alertName = `E2E-Alert-${Date.now()}`;
     await page.getByLabel(/alert name/i).fill(alertName);
-    await page.getByLabel(/metric/i).selectOption('memory');
+    await page.locator('select').filter({ has: page.locator('option[value="cpu"]') }).selectOption('memory');
     await page.getByLabel(/operator/i).selectOption('gt');
     await page.getByLabel(/threshold value/i).fill('80');
     await page.getByLabel(/cluster filter/i).fill('test-cluster');
@@ -35,7 +35,7 @@ test.describe('Alerts — CRUD + History', () => {
     await page.getByRole('button', { name: /^create$/i }).click();
 
     // Verify alert appears in list (optimistic update)
-    await expect(page.getByText(alertName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(alertName).first()).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText('Memory Usage')).toBeVisible();
   });
 
@@ -49,7 +49,7 @@ test.describe('Alerts — CRUD + History', () => {
     await page.getByLabel(/alert name/i).fill(alertName);
     await page.getByLabel(/threshold value/i).fill('50');
     await page.getByRole('button', { name: /^create$/i }).click();
-    await expect(page.getByText(alertName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(alertName).first()).toBeVisible({ timeout: 10_000 });
 
     // Find the toggle button for this alert — it starts as ON
     const toggleBtn = page.getByRole('button', { name: new RegExp(`disable alert ${alertName}`, 'i') });
@@ -76,7 +76,7 @@ test.describe('Alerts — CRUD + History', () => {
     await page.getByLabel(/alert name/i).fill(alertName);
     await page.getByLabel(/threshold value/i).fill('90');
     await page.getByRole('button', { name: /^create$/i }).click();
-    await expect(page.getByText(alertName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(alertName).first()).toBeVisible({ timeout: 10_000 });
 
     // Click delete button for this alert
     await page.getByRole('button', { name: new RegExp(`delete alert ${alertName}`, 'i') }).click();
@@ -87,7 +87,7 @@ test.describe('Alerts — CRUD + History', () => {
     await page.getByRole('button', { name: /^delete$/i }).click();
 
     // Verify alert is removed
-    await expect(page.getByText(alertName)).toBeHidden({ timeout: 10_000 });
+    await expect(page.getByText(alertName).first()).toBeHidden({ timeout: 10_000 });
   });
 
   test('should show empty state when no alerts exist', async ({ page }) => {
