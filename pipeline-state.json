@@ -1,13 +1,13 @@
 {
-  "version": "v145",
-  "status": "pending-final-verification",
-  "currentStage": "complete",
+  "version": "v147",
+  "status": "paused-after-e2e",
+  "currentStage": "qa",
   "phase": "phase-f-visual-polish",
   "feature": "Phase F + P0 UI/UX Visual Polish — Color, Contrast, Consistency, Sidebar Scroll, Icons",
   "startedAt": "2026-02-27T21:31:00+02:00",
-  "timestamp": "2026-02-27T22:49:00+02:00",
+  "timestamp": "2026-02-27T23:29:00+02:00",
   "reviewScore": 9,
-  "evidenceReady": true,
+  "evidenceReady": false,
   "stages": {
     "assess": "complete",
     "dev": "complete",
@@ -15,19 +15,13 @@
     "merge": "complete",
     "deploy": "complete",
     "e2e": "passed",
-    "qa": "passed-9"
+    "qa": "in-progress-mai-already-spawned"
   },
-  "e2eResults": {
-    "passed": 86,
-    "failed": 0,
-    "skipped": 10
+  "e2eResults": {"passed": 86, "failed": 0, "skipped": 10},
+  "qaResults": null,
+  "fixLoops": {
+    "table-row-fade": {"count": 2, "history": [{"version": "v145", "error": "rows 3+ faded", "fix": "removed animationFillMode from DataTable"}, {"version": "v147", "error": "still faded in ResponsiveTable+page.tsx", "fix": "removed ALL animate-slide-up from 3 components + opacity muting"}]},
+    "zero-value-muting": {"count": 2, "history": [{"version": "v145", "error": "0/0 still bright", "fix": "added conditional muted class"}, {"version": "v147", "error": "color too subtle", "fix": "added opacity-50/60 on zero values"}]}
   },
-  "qaResults": {
-    "functional_score": 9,
-    "visual_score": 9,
-    "effective_score": 9,
-    "verdict": "PASS"
-  },
-  "fixLoops": {},
-  "foremanNotes": "v145 complete. Ron fix loop #1 fixed all 5 Mai bugs. QA rerun: 9/10 PASS. Smart skip of unnecessary fix loop #2 saved ~20min."
+  "foremanNotes": "PAUSED by Vik after E2E. Mai was already spawned before pause request — her result will be captured but no further agents will be spawned without Vik's instruction."
 }

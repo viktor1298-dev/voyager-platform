@@ -297,5 +297,39 @@
     "env_blocked_items": [],
     "was_corrected": false,
     "note": "Pipeline advanced to v147. v146 e2e PASS, qa FAIL 7.0. Ron v147 fix active. No intervention."
+  },
+  {
+    "timestamp": "2026-02-27T23:16:15.175498",
+    "version": "v147",
+    "verdict": "IN_PROGRESS",
+    "gates_checked": 2,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "Version drift corrected: state v145\u2192v147. Uri deploy confirmed healthy. Awaiting Yuval E2E + Mai QA. Pipeline advancing."
+  },
+  {
+    "timestamp": "2026-02-27T23:25:02.546989",
+    "version": "v147",
+    "verdict": "IN_PROGRESS",
+    "gates_checked": 1,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "E2E running (Yuval active). No drift. Foreman alive. Awaiting e2e+qa evidence."
+  },
+  {
+    "timestamp": "2026-02-27T23:35:01.395040",
+    "version": "v147",
+    "verdict": "NOT_COMPLETE",
+    "stage": "paused-after-e2e",
+    "gates_checked": 3,
+    "gate_failures": [
+      "qa-v147.json missing from disk",
+      "e2e-v147.json missing author field"
+    ],
+    "env_blocked_items": [
+      "live-cluster-connectivity"
+    ],
+    "was_corrected": false,
+    "note": "Pipeline PAUSED by Vik. E2E PASS. Mai QA complete 9/10 but evidence file not written. Awaiting Vik instruction."
   }
 ]
