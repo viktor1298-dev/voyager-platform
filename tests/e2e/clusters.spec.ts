@@ -31,12 +31,18 @@ test.describe('Clusters — CRUD Operations', () => {
 
     const firstRow = table.locator('tbody tr').first();
     await expect(firstRow).toBeVisible();
-    // Wait for actual data (not skeleton)
-    await expect(firstRow.locator('td').first()).not.toHaveClass(/skeleton/);
-    await expect(firstRow.locator('td').first()).not.toBeEmpty();
-    await page.waitForTimeout(500);
+    // Wait for actual data (not skeleton) — first td may be an empty checkbox column
+    await expect(firstRow).toContainText(/.+/, { timeout: 10_000 });
+    const cells = firstRow.locator('td');
+    const cellCount = await cells.count();
+    let nameCell = cells.first();
+    for (let i = 0; i < cellCount; i++) {
+      const text = await cells.nth(i).innerText({ timeout: 2_000 }).catch(() => '');
+      if (text.trim()) { nameCell = cells.nth(i); break; }
+    }
+    await expect(nameCell).not.toBeEmpty();
 
-    const clusterName = (await firstRow.locator('td').first().innerText()).trim();
+    const clusterName = (await nameCell.innerText()).trim();
 
     await firstRow.click();
     await expect(page).toHaveURL(/\/clusters\/.+/);

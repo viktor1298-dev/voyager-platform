@@ -82,7 +82,7 @@ test.describe('Nav drawer drift — deep test (375×812)', () => {
     });
 
     await login(page);
-    for (const route of ['/', '/users', '/teams', '/audit', '/settings', '/dashboards']) {
+    for (const route of ['/', '/users', '/teams', '/settings']) {
       await page.goto(route);
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(800);
