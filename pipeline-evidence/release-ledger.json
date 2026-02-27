@@ -68,5 +68,14 @@
     "timestamp": "2026-02-27T15:53:49.650Z",
     "deployer": "uri",
     "status": "success"
+  },
+  {
+    "version": "v144",
+    "sha": "dc5464c",
+    "timestamp": "2026-02-27T21:47:00+02:00",
+    "deployer": "uri",
+    "status": "success",
+    "helmRevision": 41,
+    "notes": "CSS/UI-only: color contrast, icons, sidebar scroll, badge variants, watermark removal. Web build: 45s, API build: 2s (cached)."
   }
 ]
