@@ -63,13 +63,9 @@ test.describe('Multi-cluster flows (Phase D)', () => {
     const errorState = page.getByText(/failed to load data/i);
     await expect(heading.or(errorState)).toBeVisible();
 
-    // Verify cluster detail content is meaningful
-    const hasNodes = page.getByText(/nodes/i).first();
-    const hasLiveTab = page.getByRole('tab', { name: /live data/i });
-    const hasStoredTab = page.getByRole('tab', { name: /stored data/i });
-    const hasHeading = page.locator("h1").first();
-    const hasDetailContent = hasNodes.or(hasLiveTab).or(hasStoredTab).or(errorState).or(hasHeading);
-    await expect(hasDetailContent).toBeVisible({ timeout: 10_000 });
+    // Verify cluster detail content loaded — check h1 has a real cluster name
+    await expect(page.locator('h1').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('h1').first()).not.toBeEmpty();
   });
 
   test('E2E-3: Invalid kubeconfig → error message', async ({ page }) => {
