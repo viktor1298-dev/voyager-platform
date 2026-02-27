@@ -77,5 +77,12 @@
     "status": "success",
     "helmRevision": 41,
     "notes": "CSS/UI-only: color contrast, icons, sidebar scroll, badge variants, watermark removal. Web build: 45s, API build: 2s (cached)."
+  },
+  {
+    "version": "v145",
+    "sha": "d8f0525",
+    "timestamp": "2026-02-27T20:27:00Z",
+    "deployer": "uri",
+    "status": "success"
   }
 ]
