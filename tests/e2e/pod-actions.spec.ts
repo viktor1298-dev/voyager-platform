@@ -1,6 +1,11 @@
 import { test, expect, type Locator, type Page } from '@playwright/test'
 import { login } from './helpers'
 
+/** Escape special regex characters in a string for safe use in `new RegExp()` */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 async function openFirstClusterDetails(page: Page) {
   await page.goto('/clusters')
 
@@ -21,12 +26,8 @@ async function getFirstPodRow(page: Page): Promise<Locator> {
   const podsHeading = page.getByRole('heading', { name: /pods/i }).first()
   await expect(podsHeading).toBeVisible({ timeout: 10_000 })
 
-  // Get any table that follows the pods heading (sibling or descendant)
-  const podsSection = podsHeading.locator('..').locator('table').first()
-  // Fallback: if no sibling table, try page-level tables after the heading
-  const podsTable = (await podsSection.count()) > 0
-    ? podsSection
-    : page.locator('table').last()
+  // Walk up to the section/container wrapping the heading, then find its table
+  const podsTable = podsHeading.locator('xpath=ancestor::section | ancestor::div[.//table]').first().locator('table').first()
   const firstPodRow = podsTable.locator('tbody tr').first()
   await expect(firstPodRow).toBeVisible({ timeout: 10_000 })
   return firstPodRow
@@ -96,7 +97,7 @@ test.describe('destructive', () => {
     await dialog.getByRole('button', { name: /^delete$/i }).click()
 
     // Verify success toast appears (pod may be recreated by K8s controller quickly)
-    await expect(page.getByText(new RegExp(`Pod\\s+${podName}\\s+deleted`, 'i'))).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(new RegExp(`Pod\\s+${escapeRegex(podName)}\\s+deleted`, 'i'))).toBeVisible({ timeout: 10_000 })
 
     // Dialog should close after successful deletion
     await expect(dialog).toBeHidden({ timeout: 10_000 })
@@ -114,7 +115,7 @@ test.describe('destructive', () => {
     await replicasInput.fill(String(nextValue))
     await dialog.getByRole('button', { name: /^apply$/i }).click()
 
-    await expect(page.getByText(new RegExp(`Scaled\\s+${deploymentName}`, 'i'))).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(new RegExp(`Scaled\\s+${escapeRegex(deploymentName)}`, 'i'))).toBeVisible({ timeout: 10_000 })
   })
 })
 
