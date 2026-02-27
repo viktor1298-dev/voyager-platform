@@ -1,0 +1,1 @@
+{"score":10,"verdict":"APPROVED","test_coverage_checked":true,"files_reviewed":["apps/api/src/routers/alerts.ts","apps/web/src/components/Sidebar.tsx"],"lines_changed":28,"env_blocked_items":[],"findings":[{"severity":"ACCEPTED","description":"No E2E for acknowledge/badge — accepted as known gap (new features require triggered alerts to test)","file":"tests/e2e/","line":0}]}
