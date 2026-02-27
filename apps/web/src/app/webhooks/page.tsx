@@ -7,9 +7,9 @@ import { DataTable } from '@/components/DataTable'
 import { AnimatedList, PageTransition } from '@/components/animations'
 import { Dialog } from '@/components/ui/dialog'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
-import { type WebhookRow, mockAdminApi } from '@/lib/mock-admin-api'
+import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
-import { ChevronDown, ChevronUp, Copy, Link2, Plus, Trash2, Webhook } from 'lucide-react'
+import { ChevronDown, ChevronUp, Copy, Link2, Play, Plus, Trash2, Webhook } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -22,7 +22,29 @@ const WEBHOOK_EVENTS = [
   'user.created',
 ] as const
 
-function formatDate(date: string | null) {
+// Infer webhook item type from the tRPC router output
+type WebhookItem = {
+  id: string
+  name: string
+  url: string
+  secret: string | null
+  events: string[]
+  enabled: boolean
+  lastTriggeredAt: Date | string | null
+  createdAt: Date | string
+  deliveries: Array<{
+    id: string
+    webhookId: string
+    event: string
+    payload: Record<string, unknown>
+    responseStatus: string | null
+    success: boolean
+    deliveredAt: Date | string
+  }>
+  successRate: number
+}
+
+function formatDate(date: string | Date | null) {
   if (!date) return '—'
   return new Date(date).toLocaleString('en-US', {
     month: 'short',
@@ -59,8 +81,40 @@ function WebhooksPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [webhooks, setWebhooks] = useState<WebhookRow[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { data: webhooks = [], isLoading, refetch } = trpc.webhooks.list.useQuery(undefined, {
+    enabled: isAdmin === true,
+  })
+
+  const createMutation = trpc.webhooks.create.useMutation({
+    onSuccess: () => {
+      void refetch()
+      toast.success('Webhook created')
+      setShowAdd(false)
+      resetForm()
+    },
+    onError: (err) => toast.error(err.message),
+  })
+
+  const deleteMutation = trpc.webhooks.delete.useMutation({
+    onSuccess: () => {
+      void refetch()
+      toast.success('Webhook deleted')
+      setDeleteTarget(null)
+    },
+    onError: (err) => toast.error(err.message),
+  })
+
+  const testMutation = trpc.webhooks.test.useMutation({
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success(`Test delivery succeeded (HTTP ${result.status})`)
+      } else {
+        toast.error(`Test delivery failed${result.status ? ` (HTTP ${result.status})` : ''}`)
+      }
+    },
+    onError: (err) => toast.error(err.message),
+  })
+
   const [showAdd, setShowAdd] = useState(false)
   const [expandedWebhookId, setExpandedWebhookId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; url: string } | null>(null)
@@ -73,24 +127,6 @@ function WebhooksPageContent() {
   useEffect(() => {
     if (isAdmin === false) router.replace('/')
   }, [isAdmin, router])
-
-  useEffect(() => {
-    if (!isAdmin) return
-    let mounted = true
-    const run = async () => {
-      setIsLoading(true)
-      try {
-        const data = await mockAdminApi.webhooks.listWithDeliveries()
-        if (mounted) setWebhooks(data)
-      } finally {
-        if (mounted) setIsLoading(false)
-      }
-    }
-    void run()
-    return () => {
-      mounted = false
-    }
-  }, [isAdmin])
 
   useEffect(() => {
     const onNew = () => setShowAdd(true)
@@ -111,7 +147,7 @@ function WebhooksPageContent() {
     setActive(true)
   }
 
-  const columns = useMemo<ColumnDef<WebhookRow, unknown>[]>(
+  const columns = useMemo<ColumnDef<WebhookItem, unknown>[]>(
     () => [
       {
         accessorKey: 'url',
@@ -132,13 +168,13 @@ function WebhooksPageContent() {
         ),
       },
       {
-        accessorKey: 'active',
+        accessorKey: 'enabled',
         header: 'Status',
         cell: ({ row }) => (
           <span
-            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.original.active ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}
+            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.original.enabled ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}
           >
-            {row.original.active ? 'Active' : 'Inactive'}
+            {row.original.enabled ? 'Active' : 'Inactive'}
           </span>
         ),
       },
@@ -168,6 +204,15 @@ function WebhooksPageContent() {
           <div className="flex justify-end gap-2">
             <button
               type="button"
+              onClick={() => testMutation.mutate({ id: row.original.id })}
+              disabled={testMutation.isPending}
+              className="rounded-md p-1.5 text-[var(--color-text-muted)] hover:bg-white/[0.08] hover:text-[var(--color-text-primary)] cursor-pointer disabled:opacity-50"
+              aria-label="Test webhook"
+            >
+              <Play className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
               onClick={() =>
                 setExpandedWebhookId((prev) => (prev === row.original.id ? null : row.original.id))
               }
@@ -192,7 +237,7 @@ function WebhooksPageContent() {
         ),
       },
     ],
-    [expandedWebhookId],
+    [expandedWebhookId, testMutation],
   )
 
   const btnPrimary =
@@ -243,9 +288,9 @@ function WebhooksPageContent() {
                   {hook.url}
                 </span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] ${hook.active ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}
+                  className={`rounded-full px-2 py-0.5 text-[10px] ${hook.enabled ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}
                 >
-                  {hook.active ? 'Active' : 'Inactive'}
+                  {hook.enabled ? 'Active' : 'Inactive'}
                 </span>
               </div>
               <p className="text-xs text-[var(--color-text-muted)]">{hook.events.join(', ')}</p>
@@ -280,12 +325,12 @@ function WebhooksPageContent() {
                       className="grid grid-cols-3 gap-2 rounded-md border border-[var(--color-border)]/70 bg-[var(--color-bg-surface)] px-3 py-2 text-xs"
                     >
                       <span className="text-[var(--color-text-secondary)]">
-                        Status: {d.statusCode}
+                        {d.success ? '✅' : '❌'} {d.responseStatus ?? '—'}
                       </span>
                       <span className="text-[var(--color-text-muted)]">
-                        {formatDate(d.timestamp)}
+                        {formatDate(d.deliveredAt)}
                       </span>
-                      <span className="text-[var(--color-text-muted)]">Retry: {d.retryCount}</span>
+                      <span className="text-[var(--color-text-muted)]">{d.event}</span>
                     </div>
                   ))}
                 </div>
@@ -297,7 +342,7 @@ function WebhooksPageContent() {
         <Dialog open={showAdd} onClose={() => setShowAdd(false)} title="Add Webhook">
           <form
             className="space-y-4"
-            onSubmit={async (e) => {
+            onSubmit={(e) => {
               e.preventDefault()
               let parsed: URL
               try {
@@ -315,17 +360,7 @@ function WebhooksPageContent() {
                 return
               }
 
-              try {
-                // Placeholder for: trpc.webhooks.create.useMutation()
-                await mockAdminApi.webhooks.create({ url, events, secret, active })
-                const updated = await mockAdminApi.webhooks.listWithDeliveries()
-                setWebhooks(updated)
-                toast.success('Webhook created')
-                setShowAdd(false)
-                resetForm()
-              } catch {
-                toast.error('Failed to create webhook')
-              }
+              createMutation.mutate({ url, events, secret, active })
             }}
           >
             <label className="block">
@@ -401,9 +436,9 @@ function WebhooksPageContent() {
               >
                 Cancel
               </button>
-              <button type="submit" className={btnPrimary}>
+              <button type="submit" disabled={createMutation.isPending} className={btnPrimary}>
                 <Link2 className="h-4 w-4" />
-                Create
+                {createMutation.isPending ? 'Creating…' : 'Create'}
               </button>
             </div>
           </form>
@@ -412,17 +447,9 @@ function WebhooksPageContent() {
         <ConfirmDialog
           open={deleteTarget !== null}
           onClose={() => setDeleteTarget(null)}
-          onConfirm={async () => {
+          onConfirm={() => {
             if (!deleteTarget) return
-            try {
-              // Placeholder for: trpc.webhooks.delete.useMutation()
-              await mockAdminApi.webhooks.delete({ id: deleteTarget.id })
-              setWebhooks((prev) => prev.filter((item) => item.id !== deleteTarget.id))
-              toast.success('Webhook deleted')
-              setDeleteTarget(null)
-            } catch {
-              toast.error('Failed to delete webhook')
-            }
+            deleteMutation.mutate({ id: deleteTarget.id })
           }}
           title="Delete webhook"
           description={

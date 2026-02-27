@@ -15,12 +15,14 @@ import { healthRouter } from './health.js'
 import { logsRouter } from './logs.js'
 import { metricsRouter } from './metrics.js'
 import { nodesRouter } from './nodes.js'
+import { podsRouter } from './pods.js'
 import { karpenterRouter } from './karpenter.js'
 import { presenceRouter } from './presence.js'
 import { subscriptionsRouter } from './subscriptions.js'
 import { ssoRouter } from './sso.js'
 import { usersRouter } from './users.js'
 import { tokensRouter } from './tokens.js'
+import { webhooksRouter } from './webhooks.js'
 
 export const appRouter = router({
   ai: aiRouter,
@@ -35,6 +37,7 @@ export const appRouter = router({
   dashboard: dashboardRouter,
   health: healthRouter,
   nodes: nodesRouter,
+  pods: podsRouter,
   events: eventsRouter,
   features: featuresRouter,
   logs: logsRouter,
@@ -46,6 +49,7 @@ export const appRouter = router({
   teams: teamsRouter,
   users: usersRouter,
   tokens: tokensRouter,
+  webhooks: webhooksRouter,
 })
 
 export type AppRouter = typeof appRouter

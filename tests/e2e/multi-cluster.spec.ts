@@ -42,8 +42,14 @@ test.describe('Multi-cluster flows (Phase D)', () => {
 
   test('E2E-2: Cluster detail → live tab loads nodes', async ({ page }) => {
     await page.goto('/clusters');
-    const firstRow = page.locator('tbody tr').first();
+    const table = page.locator('table').first();
+    await expect(table).toBeVisible();
+    const firstRow = table.locator('tbody tr').first();
     await expect(firstRow).toBeVisible();
+    // Wait for actual data (not skeleton)
+    await expect(firstRow.locator('td').first()).not.toHaveClass(/skeleton/);
+    await expect(firstRow.locator('td').first()).not.toBeEmpty();
+    await page.waitForTimeout(500);
     await firstRow.click();
 
     await expect(page).toHaveURL(/\/clusters\/.+/);
@@ -53,12 +59,10 @@ test.describe('Multi-cluster flows (Phase D)', () => {
     const errorState = page.getByText(/failed to load data/i);
     await expect(heading.or(errorState)).toBeVisible();
 
-    // Verify cluster detail content is meaningful
-    const hasNodes = page.getByText(/node|ready|status|running/i).first();
-    const hasLiveTab = page.getByRole('tab', { name: /live/i });
-    const hasStoredTab = page.getByRole('tab', { name: /stored/i });
-    const hasDetailContent = hasNodes.or(hasLiveTab).or(hasStoredTab).or(errorState);
-    await expect(hasDetailContent).toBeVisible({ timeout: 10_000 });
+    // Verify cluster detail content is meaningful — check any one indicator
+    const hasLiveTab = page.getByRole('tab', { name: /live/i }).first();
+    const hasStoredTab = page.getByRole('tab', { name: /stored/i }).first();
+    await expect(hasLiveTab.or(hasStoredTab).or(errorState).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('E2E-3: Invalid kubeconfig → error message', async ({ page }) => {
@@ -69,7 +73,8 @@ test.describe('Multi-cluster flows (Phase D)', () => {
     await page.getByRole('button', { name: /go to next step/i }).click();
 
     await expect(page.getByText(/step 3\/4/i)).toBeVisible();
-    await expect(page.getByText(/failed|invalid|error|forbidden|unauthorized/i).first()).toBeVisible({ timeout: 20_000 });
+    // Wait for validation result — match the specific error text from the wizard
+    await expect(page.getByText(/connection.*failed|validation.*failed|invalid.*kubeconfig|no active cluster/i).first()).toBeVisible({ timeout: 20_000 });
   });
 
   test('E2E-4: TopBar cluster selector → switch context', async ({ page }) => {

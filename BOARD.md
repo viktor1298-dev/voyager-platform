@@ -1,52 +1,86 @@
-# BOARD.md — Phase D Bug Fixes Round 2 (v121)
+# BOARD.md — E2E Legacy Bug Fix + Phase E (v126+)
 
 **Status:** READY
-**Phase:** D-bugfix-r2
-**Target version:** v121
-**Base:** v120 (deployed, QA 5.5/10 — root cause identified)
+**Base:** v125 (deployed)
+
+> ⚠️ NEW RULE (Vik mandate 2026-02-27): E2E gate = 0 failures. Always. No exceptions.
+> A stage is NOT complete until E2E shows failed=0.
 
 ---
 
-## 🐛 Bug Fixes — Status Inconsistency (Root Cause Found by QA)
+## 🔴 PRIORITY 0 — E2E Legacy Bugs (fix FIRST before any Phase E work)
 
-### BUG-STATUS-1: `normalizeLiveHealthStatus()` מפה לא נכון
-**File:** `apps/web/src/` — search for `normalizeLiveHealthStatus`
-**Problem:** The function maps `'degraded'` → `'Warning'` label. Should map `'degraded'` → `'Degraded'`.
-DB has `health_status = 'degraded'` for minikube. Clusters list uses this function → shows 'Warning' (wrong).
-**Fix:** Correct the mapping. `degraded` → `Degraded` (same label, consistent with enum).
-**Expected:** Clusters list shows same status as dashboard.
+These 3 bugs have been failing since v119 and were incorrectly allowed through the gate.
+They must be fixed and verified at 0 failures before ANY Phase E feature work begins.
 
-### BUG-STATUS-2: Cluster detail page overrides DB `healthStatus` with live K8s query
-**File:** `apps/web/src/app/clusters/[id]/page.tsx` + live tRPC query
-**Problem:** Detail page fires live K8s query → receives `'Healthy'` from real cluster → displays that instead of DB `healthStatus`. This creates a different status than all other views.
-**Fix:** Live query result should:
-1. Update the DB `healthStatus` (via mutation or background update)
-2. BUT display should still read from DB first — use the live result only to show a "live refresh" indicator, not override the primary status badge.
-**Expected:** Detail page status badge = DB `healthStatus`. Live data shown in a separate "live" section.
+### LEGACY-1: `clusters.spec.ts` — should view cluster detail (failing since v119)
+**File:** `tests/e2e/clusters.spec.ts` line ~24
+**Error:** `expect(locator).toBeVisible()` failed
+**Root cause:** Cluster detail page navigation or a selector changed. Test expects element that no longer exists at that selector.
+**Fix:** 
+1. Run the test locally with `--headed` to see what's happening
+2. Find the broken selector — check if element was renamed/removed in recent UI changes
+3. Fix the selector OR fix the underlying UI bug that hides the element
+4. The fix must make the element ACTUALLY visible, not just update the selector to skip it
 
-### BUG-STATUS-3: `status` field vs `healthStatus` field — 4 views use different fields
-**Problem:** 
-- Dashboard → reads `healthStatus` from DB ✓
-- Clusters list → reads `healthStatus` but passes through broken normalize function
-- Detail page → reads from live K8s query (overrides)
-- Settings → reads `status` field (VARCHAR, not the enum `health_status`)
+### LEGACY-2: `multi-cluster.spec.ts` — E2E-2: Cluster detail → live tab loads nodes (failing since v119)  
+**File:** `tests/e2e/multi-cluster.spec.ts` — E2E-2
+**Error:** `expect(locator).toBeVisible()` failed — live tab nodes not visible
+**Root cause:** Live tab may not be loading node data correctly, or selector doesn't match actual DOM
+**Fix:**
+1. Check if live K8s data is actually available for the test cluster
+2. Check selector for the nodes table/list in the live tab
+3. May need to ensure test cluster has `connectionConfig` set (real minikube kubeconfig)
+4. Fix so nodes actually appear when live tab is opened
 
-**Fix:** Define ONE rule for status display across ALL views:
-> **Rule:** All status badges/chips read from DB `healthStatus` (enum). The `status` VARCHAR field is internal only (not displayed).
-> Live K8s data → updates DB `healthStatus` in background → all views auto-refresh via React Query invalidation.
+### LEGACY-3: `multi-cluster.spec.ts` — E2E-3: Invalid kubeconfig → error message (failing since v119)
+**File:** `tests/e2e/multi-cluster.spec.ts` — E2E-3
+**Error:** `expect(locator).toBeVisible()` failed — error message not shown
+**Root cause:** When invalid kubeconfig is added, the error message UI element is not appearing
+**Fix:**
+1. Verify the API actually returns an error for invalid kubeconfig
+2. Check if error is displayed in the UI (may be hidden behind a toast that disappears too fast)
+3. Fix the UI to show a persistent error state, OR wait for the toast before assertion
+
+### CLEANUP-1: Remove `qa-v106.spec.ts`
+**File:** `tests/e2e/qa-v106.spec.ts`
+**Action:** Delete this file — it's from v106 and shouldn't be in the suite anymore
+
+### CLEANUP-2: Fix `qa-v125.spec.ts` missing module import
+**File:** `tests/e2e/qa-v125.spec.ts`  
+**Error:** missing module import
+**Fix:** Fix the broken import OR delete if this is a temporary QA test file
 
 ---
 
-## Acceptance Criteria
-- [ ] Dashboard status = Clusters list status = Detail page status (all same value)
-- [ ] `normalizeLiveHealthStatus('degraded')` returns `'Degraded'` (not 'Warning')
-- [ ] Detail page primary status badge reads from DB, not live query
-- [ ] Settings page doesn't show raw `status` VARCHAR — shows `healthStatus` enum
-- [ ] E2E: ≥88/107 pass (0 new failures from status changes)
-- [ ] QA Desktop: ≥8.5/10
-- [ ] **VERSION CONTRACT:** git tag v121 → docker v121 → state.json v121 (all must match)
+## 📋 Phase E — After LEGACY bugs are fixed
 
-## Pipeline Gates
+### E1: K8s RBAC + Pod Actions ← NEXT after legacy fixes
+- ClusterRole: add delete pods + patch deployments
+- Pod delete tRPC endpoint + UI
+- Scale deployment UI (endpoint exists, needs UI wiring)
+- Target: v126
+
+### E2: Alerts Real Backend
+- tRPC router + DB schema + evaluator job + UI
+- Target: v127
+
+### E3: Webhooks Real Backend  
+- tRPC + DB + UI + Alerts integration
+- Target: v128
+
+### E4: AI Assistant Backend
+- OpenAI tRPC + cluster context + UI
+- Target: v129
+
+### E5: Permissions Real Backend
+- tRPC + DB enforcement + UI
+- Target: v130
+
+---
+
+## Pipeline Gates (ALL stages)
 - Code Review (Lior): 10/10
-- E2E (Yuval): ≥88/107
+- E2E (Yuval): **0 failures** (non-negotiable — Vik mandate 2026-02-27)
 - Desktop QA (Mai): ≥8.5/10
+- VERSION CONTRACT: git tag → docker → helm → state.json (all must match)

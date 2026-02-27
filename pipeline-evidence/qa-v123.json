@@ -1,0 +1,74 @@
+{
+  "agentId": "agent:qa",
+  "sha": "v123",
+  "version": "v123",
+  "timestamp": "2026-02-26T21:33:55Z",
+  "score": 9.5,
+  "verdict": "PASS",
+  "gate": 8.5,
+  "resolution": "1920x1080",
+  "testedUrl": "http://voyager-platform.voyagerlabs.co",
+  "deployVerified": {
+    "voyagerApi": "voyager-api:v123",
+    "voyagerWeb": "voyager-web:v123",
+    "namespace": "voyager",
+    "podsReady": true
+  },
+  "statusConsistencyCheck": {
+    "prodClusterEks": {
+      "clustersList": "Error",
+      "detailPage": "Error",
+      "apiHealthStatus": "unreachable",
+      "apiClusterStatus": "unreachable",
+      "consistent": true
+    },
+    "testClusterMinikube": {
+      "clustersList": "Degraded",
+      "detailPage": "Degraded",
+      "apiHealthStatus": "degraded",
+      "apiClusterStatus": "active",
+      "consistent": true
+    }
+  },
+  "checks": [
+    "k8s pods running voyager-api:v123 and voyager-web:v123 ✅",
+    "Login auth working (admin@voyager.local) ✅",
+    "Dashboard page loads (H1: Dashboard, Connected·Synced) ✅",
+    "Clusters list shows both clusters with correct statuses ✅",
+    "prod-cluster-eks: status=Error on clusters list and detail page ✅ (consistent)",
+    "test-cluster-minikube: status=Degraded on clusters list and detail page ✅ (consistent)",
+    "Slug navigation /clusters/prod-cluster-eks works (no infinite loading) ✅",
+    "Slug navigation /clusters/test-cluster-minikube works (no infinite loading) ✅",
+    "Cluster detail page URLs use slug format ✅",
+    "Layout at 1920x1080 renders correctly ✅",
+    "Phase D Playwright e2e test passed (1/1) ✅",
+    "Add cluster wizard accessible ✅",
+    "AWS/Azure/GKE provider options visible in wizard ✅",
+    "Live/Stored tabs visible on cluster detail ✅",
+    "Connectivity indicator visible on cluster detail ✅"
+  ],
+  "findings": [
+    {
+      "severity": "INFO",
+      "description": "API REST endpoints (e.g. GET /api/clusters) return 404 via ingress; TRPC endpoints at /trpc/* work correctly. This is a known routing quirk — the OpenAPI REST layer only works via direct API server access.",
+      "impact": "None for UI — frontend uses TRPC directly"
+    },
+    {
+      "severity": "INFO",
+      "description": "test-cluster-minikube has active Warning events for probe failures (readiness/liveness probes timing out). This is expected behavior for a degraded cluster state.",
+      "impact": "Cosmetic — expected given cluster health=degraded"
+    },
+    {
+      "severity": "INFO",
+      "description": "API tokens list has accumulated test tokens in settings page. Not a regression.",
+      "impact": "Minor maintenance note"
+    }
+  ],
+  "failures": [],
+  "screenshots": [
+    "screenshots/qa-dashboard-v123.png",
+    "screenshots/qa-clusters-v123.png",
+    "screenshots/qa-prod-detail-v123.png",
+    "screenshots/qa-test-detail-v123.png"
+  ]
+}

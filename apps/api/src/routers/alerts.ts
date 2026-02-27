@@ -13,6 +13,7 @@ const createAlertSchema = z.object({
   operator: z.enum(OPERATOR_VALUES),
   threshold: z.number(),
   clusterFilter: z.string().max(255).optional(),
+  webhookUrl: z.string().url().max(1000).nullable().optional(),
 })
 
 const updateAlertSchema = z.object({
@@ -23,6 +24,7 @@ const updateAlertSchema = z.object({
   threshold: z.number().optional(),
   clusterFilter: z.string().max(255).nullable().optional(),
   enabled: z.boolean().optional(),
+  webhookUrl: z.string().url().max(1000).nullable().optional(),
 })
 
 export const alertsRouter = router({
@@ -39,6 +41,7 @@ export const alertsRouter = router({
         operator: input.operator,
         threshold: String(input.threshold),
         clusterFilter: input.clusterFilter ?? null,
+        webhookUrl: input.webhookUrl ?? null,
       })
       .returning()
     await logAudit(ctx, 'alert.create', 'alert', created.id, { name: input.name })
@@ -54,6 +57,7 @@ export const alertsRouter = router({
     if (fields.threshold !== undefined) updateData.threshold = String(fields.threshold)
     if (fields.clusterFilter !== undefined) updateData.clusterFilter = fields.clusterFilter
     if (fields.enabled !== undefined) updateData.enabled = fields.enabled
+    if (fields.webhookUrl !== undefined) updateData.webhookUrl = fields.webhookUrl
 
     const [updated] = await ctx.db
       .update(alerts)
@@ -71,6 +75,11 @@ export const alertsRouter = router({
       await logAudit(ctx, 'alert.delete', 'alert', input.id)
       return { success: true }
     }),
+
+  evaluate: adminProcedure.mutation(async ({ ctx }) => {
+    const enabledAlerts = await ctx.db.select().from(alerts).where(eq(alerts.enabled, true))
+    return { alerts: enabledAlerts, count: enabledAlerts.length }
+  }),
 
   history: protectedProcedure
     .input(z.object({ limit: z.number().min(1).max(100).default(50) }).optional())
