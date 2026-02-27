@@ -39,10 +39,9 @@ test.describe('Alerts — CRUD + History', () => {
     await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 10_000 });
 
     // Verify alert appears in list — use toBeAttached first to handle overflow:hidden clipping
-    const alertEl = page.getByText(alertName).first();
-    await expect(alertEl).toBeAttached({ timeout: 10_000 });
-    await alertEl.scrollIntoViewIfNeeded();
-    await expect(alertEl).toBeVisible({ timeout: 5_000 });
+    const alertEl = page.locator('table').getByText(alertName).first();
+    await expect(alertEl).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('table').getByText('Memory Usage').first()).toBeVisible();
     await expect(page.getByText('Memory Usage').first()).toBeAttached();
   });
 
@@ -61,9 +60,8 @@ test.describe('Alerts — CRUD + History', () => {
     await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 10_000 });
 
     // Wait for alert row to be in DOM and scroll into view
-    const alertEl = page.getByText(alertName).first();
-    await expect(alertEl).toBeAttached({ timeout: 10_000 });
-    await alertEl.scrollIntoViewIfNeeded();
+    const alertEl = page.locator('table').getByText(alertName).first();
+    await expect(alertEl).toBeVisible({ timeout: 10_000 });
 
     // Find the toggle button for this alert — it starts as ON
     const toggleBtn = page.getByRole('button', { name: new RegExp(`disable alert ${alertName}`, 'i') });
@@ -96,9 +94,8 @@ test.describe('Alerts — CRUD + History', () => {
     await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 10_000 });
 
     // Wait for alert to appear
-    const alertEl = page.getByText(alertName).first();
-    await expect(alertEl).toBeAttached({ timeout: 10_000 });
-    await alertEl.scrollIntoViewIfNeeded();
+    const alertEl = page.locator('table').getByText(alertName).first();
+    await expect(alertEl).toBeVisible({ timeout: 10_000 });
 
     // Click delete button for this alert
     const deleteBtn = page.getByRole('button', { name: new RegExp(`delete alert ${alertName}`, 'i') });
@@ -112,7 +109,7 @@ test.describe('Alerts — CRUD + History', () => {
     await page.getByRole('button', { name: /^delete$/i }).click();
 
     // Verify alert is removed
-    await expect(page.getByText(alertName).first()).toBeHidden({ timeout: 10_000 });
+    await expect(page.locator('table').getByText(alertName).first()).toBeHidden({ timeout: 10_000 });
   });
 
   test('should show empty state when no alerts exist', async ({ page }) => {

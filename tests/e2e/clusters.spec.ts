@@ -73,8 +73,7 @@ test.describe('Clusters — CRUD Operations', () => {
     // Hypothesis: Delete button has aria-label="Delete cluster" (exact, no cluster name),
     // rendered in actions column only when user isAdmin. No hover needed — it's always visible.
     // Also try title attribute as fallback since component uses title="Delete cluster".
-    const deleteBtn = page.getByRole('button', { name: /delete cluster/i }).first()
-      .or(page.locator('button[title="Delete cluster"]').first());
+    const deleteBtn = page.getByRole('button', { name: /delete cluster/i }).first();
 
     // The button might be outside viewport in the actions column — scroll to it
     await expect(deleteBtn).toBeAttached({ timeout: 10_000 });
