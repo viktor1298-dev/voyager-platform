@@ -205,9 +205,9 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [x] **I0-002** Verify minikube cluster connects after fix — clusters.list returns 401 Unauthorized (auth required, connectionConfig fix in place) 2026-02-28
 
 ### I-Phase1: Critical Backend Fixes (1-2 days)
-- [ ] **IP1-001** Fix `health.check` — use ClusterClientPool for ALL providers (not just minikube)
-- [ ] **IP1-002** Remove `metrics.requestRates` — no real data source, shows fake data
-- [ ] **IP1-003** Add integration test: health check returns real status for kubeconfig cluster
+- [x] **IP1-001** Fix `health.check` — use ClusterClientPool for ALL providers (not just minikube)
+- [x] **IP1-002** Remove `metrics.requestRates` — no real data source, shows fake data
+- [x] **IP1-003** Add integration test: health check returns real status for kubeconfig cluster
 
 ### I-Phase3: Streaming Infrastructure (1-2 weeks — build FIRST before real data)
 - [ ] **IP3-001** Replace raw `k8s.Watch` with `k8s.makeInformer` (LIST+WATCH+resync)
