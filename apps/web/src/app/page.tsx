@@ -489,13 +489,13 @@ function ClusterTable({ clusters }: { clusters: ClusterCardData[] }) {
   const router = useRouter()
   return (
     <div className="rounded-xl border border-[var(--color-border)] overflow-hidden">
-      <table className="w-full text-xs">
+      <table className="w-full">
         <thead>
           <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50">
             {['Name', 'Provider', 'Health', 'Environment', 'Version', 'Nodes', 'CPU'].map((h) => (
               <th
                 key={h}
-                className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-dim)] font-mono"
+                className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-dim)] font-mono"
               >
                 {h}
               </th>
@@ -514,39 +514,39 @@ function ClusterTable({ clusters }: { clusters: ClusterCardData[] }) {
               <tr
                 key={cluster.id}
                 onClick={() => router.push(`/clusters/${cluster.id}`)}
-                className="cursor-pointer hover:bg-white/[0.03] transition-colors"
+                className="cursor-pointer hover:bg-white/[0.03] transition-all duration-200 hover:shadow-[inset_0_0_0_1px_var(--color-border-hover),0_2px_8px_rgba(0,0,0,0.15)]"
               >
-                <td className="px-3 py-2.5">
+                <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${getStatusDotClass(status)}`} />
-                    <span className="font-semibold text-[var(--color-text-primary)]">{cluster.name}</span>
+                    <span className={`h-2 w-2 rounded-full shrink-0 ${getStatusDotClass(status)}`} />
+                    <span className="text-sm font-bold text-[var(--color-text-primary)]">{cluster.name}</span>
                     {cluster.source === 'live' && (
                       <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-[var(--color-accent)]/10 text-[var(--color-accent)]">LIVE</span>
                     )}
                   </div>
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5">
                     <ProviderLogo provider={cluster.provider} />
-                    <span className="font-mono uppercase text-[var(--color-text-secondary)]">{cluster.provider}</span>
+                    <span className="text-[11px] font-mono uppercase text-[var(--color-text-secondary)]">{cluster.provider}</span>
                   </div>
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="px-4 py-3">
                   <span
-                    className="font-semibold px-1.5 py-0.5 rounded text-[10px]"
+                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
                     style={{ color: statusColor, background: `color-mix(in srgb, ${statusColor} 12%, transparent)` }}
                   >
                     {statusLabel}
                   </span>
                 </td>
-                <td className="px-3 py-2.5">
-                  <span className={cn('text-[10px] font-mono px-1.5 py-0.5 rounded border', envMeta.badgeClass)}>
+                <td className="px-4 py-3">
+                  <span className={cn('text-[10px] font-mono px-2 py-0.5 rounded-md border', envMeta.badgeClass)}>
                     {envMeta.label}
                   </span>
                 </td>
-                <td className="px-3 py-2.5 font-mono text-[var(--color-text-secondary)]">{cluster.version ?? '—'}</td>
-                <td className="px-3 py-2.5 font-mono tabular-nums text-[var(--color-text-secondary)]">{cluster.nodeCount}</td>
-                <td className="px-3 py-2.5 min-w-[80px]">
+                <td className="px-4 py-3 text-[11px] font-mono text-[var(--color-text-secondary)]">{cluster.version ?? '—'}</td>
+                <td className="px-4 py-3 text-[11px] font-mono tabular-nums text-[var(--color-text-secondary)]">{cluster.nodeCount}</td>
+                <td className="px-4 py-3 min-w-[80px]">
                   {cluster.cpuPercent != null ? (
                     <ResourceBar
                       value={cluster.cpuPercent}

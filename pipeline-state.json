@@ -1,7 +1,7 @@
 {
-  "status": "in-progress",
-  "version": "v152",
-  "currentStage": "dev",
+  "status": "e2e-pending",
+  "version": "v156",
+  "currentStage": "E2E",
   "phase": "phase-h2-p1-ux-improvements",
   "startedAt": "2026-02-28T10:18:00Z",
   "stages": {
@@ -13,5 +13,8 @@
     "qa": "pending"
   },
   "foremanNotes": "Auto-Continue from Phase H P0. Now tackling H2 P1 UX improvements.",
-  "scope": "P1-001 to P1-008, P1-010 (8 items)"
+  "scope": "P1-001 to P1-008, P1-010 (8 items)",
+  "deployedInK8s": "v156",
+  "timestamp": "2026-02-28T14:09:14.171336",
+  "stage": "e2e"
 }
