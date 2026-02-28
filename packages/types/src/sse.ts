@@ -5,7 +5,7 @@ export type PodEventType = 'added' | 'modified' | 'deleted'
 export type PodPhase = 'Pending' | 'Running' | 'Succeeded' | 'Failed' | 'Unknown'
 
 export interface PodEvent {
-  clusterId?: string
+  clusterId: string
   type: PodEventType
   name: string
   namespace: string
@@ -27,6 +27,7 @@ export interface ContainerStatusSummary {
 
 // ── Deployment Progress ─────────────────────────────────────
 export interface DeploymentProgressEvent {
+  clusterId?: string
   name: string
   namespace: string
   replicas: number
@@ -48,7 +49,7 @@ export interface DeploymentConditionSummary {
 
 // ── Metrics Stream ──────────────────────────────────────────
 export interface MetricsEvent {
-  clusterId?: string
+  clusterId: string
   cpuPercent: number | null
   memoryPercent: number | null
   memoryBytes: number

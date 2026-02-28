@@ -128,11 +128,11 @@ export const deploymentsRouter = router({
     .meta({
       openapi: { method: 'GET', path: '/api/deployments', protect: true, tags: ['deployments'] },
     })
-    .input(z.void())
+    .input(z.object({ clusterId: z.string().uuid().optional() }).optional())
     .output(z.array(deploymentInfoSchema))
-    .query(async (): Promise<DeploymentInfo[]> => {
+    .query(async ({ input }): Promise<DeploymentInfo[]> => {
       return cached(DEPLOYMENTS_CACHE_KEY, K8S_DEPLOYMENTS_CACHE_TTL, async () => {
-        const { kc, clusterId, clusterName } = await getClusterContextFromPool()
+        const { kc, clusterId, clusterName } = await getClusterContextFromPool(input?.clusterId)
         const api = kc.makeApiClient(k8s.AppsV1Api)
         const [{ items: deployments }, { items: replicaSets }] = await Promise.all([
           api.listDeploymentForAllNamespaces(),
@@ -203,11 +203,11 @@ export const deploymentsRouter = router({
     .meta({
       openapi: { method: 'POST', path: '/api/deployments/restart', protect: true, tags: ['deployments'] },
     })
-    .input(z.object({ name: z.string(), namespace: z.string() }))
+    .input(z.object({ name: z.string(), namespace: z.string(), clusterId: z.string().uuid().optional() }))
     .output(z.object({ success: z.boolean(), restartedAt: z.string() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const { kc } = await getClusterContextFromPool()
+        const { kc } = await getClusterContextFromPool(input.clusterId)
         const api = kc.makeApiClient(k8s.AppsV1Api)
         const now = new Date().toISOString()
         await api.patchNamespacedDeployment({
@@ -245,13 +245,14 @@ export const deploymentsRouter = router({
       z.object({
         name: z.string(),
         namespace: z.string(),
+        clusterId: z.string().uuid().optional(),
         replicas: z.number().int().min(0).max(50),
       }),
     )
     .output(z.object({ success: z.boolean(), replicas: z.number().int() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const { kc } = await getClusterContextFromPool()
+        const { kc } = await getClusterContextFromPool(input.clusterId)
         const api = kc.makeApiClient(k8s.AppsV1Api)
         await api.patchNamespacedDeployment({
           name: input.name,

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { clusters as clustersTable, db } from '@voyager/db'
 import { protectedProcedure, router } from '../trpc.js'
+import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
 
 const timeRangeSchema = z.enum(['24h', '7d', '30d']).default('24h')
 
@@ -98,21 +99,7 @@ function seededRandom(seed: number): number {
   return x - Math.floor(x)
 }
 
-// ── CPU/Memory helpers (mirrored from k8s-watchers for direct endpoint use) ──
 
-function parseCpuToNanoMetrics(cpu: string): number {
-  if (cpu.endsWith('n')) return Number.parseInt(cpu, 10)
-  if (cpu.endsWith('u')) return Number.parseInt(cpu, 10) * 1000
-  if (cpu.endsWith('m')) return Number.parseInt(cpu, 10) * 1e6
-  return Number.parseFloat(cpu) * 1e9
-}
-
-function parseMemToBytesMetrics(mem: string): number {
-  if (mem.endsWith('Ki')) return Number.parseInt(mem, 10) * 1024
-  if (mem.endsWith('Mi')) return Number.parseInt(mem, 10) * 1024 * 1024
-  if (mem.endsWith('Gi')) return Number.parseInt(mem, 10) * 1024 * 1024 * 1024
-  return Number.parseInt(mem, 10)
-}
 
 export const metricsRouter = router({
   clusterHealth: protectedProcedure
@@ -221,15 +208,15 @@ export const metricsRouter = router({
               const name = node.metadata?.name
               if (name) {
                 capacityMap.set(name, {
-                  cpuNano: parseCpuToNanoMetrics(node.status?.allocatable?.cpu ?? '0'),
-                  memBytes: parseMemToBytesMetrics(node.status?.allocatable?.memory ?? '0'),
+                  cpuNano: parseCpuToNano(node.status?.allocatable?.cpu ?? '0'),
+                  memBytes: parseMemToBytes(node.status?.allocatable?.memory ?? '0'),
                 })
               }
             }
 
             for (const node of nodeMetrics.items) {
-              totalCpuNano += parseCpuToNanoMetrics(node.usage?.cpu ?? '0')
-              totalMemBytes += parseMemToBytesMetrics(node.usage?.memory ?? '0')
+              totalCpuNano += parseCpuToNano(node.usage?.cpu ?? '0')
+              totalMemBytes += parseMemToBytes(node.usage?.memory ?? '0')
               const cap = capacityMap.get(node.metadata?.name ?? '')
               if (cap) {
                 totalCpuAllocatable += cap.cpuNano

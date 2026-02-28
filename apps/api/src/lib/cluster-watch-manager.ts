@@ -13,22 +13,11 @@ import type {
 import { connectionState } from './cluster-connection-state.js'
 import { clusterClientPool } from './cluster-client-pool.js'
 import { voyagerEmitter } from './event-emitter.js'
+import { parseCpuToNano, parseMemToBytes } from './k8s-units.js'
 
 // ── Helpers ─────────────────────────────────────────────────
 
-function parseCpuToNano(cpu: string): number {
-  if (cpu.endsWith('n')) return Number.parseInt(cpu, 10)
-  if (cpu.endsWith('u')) return Number.parseInt(cpu, 10) * 1000
-  if (cpu.endsWith('m')) return Number.parseInt(cpu, 10) * 1e6
-  return Number.parseFloat(cpu) * 1e9
-}
 
-function parseMemoryToBytes(mem: string): number {
-  if (mem.endsWith('Ki')) return Number.parseInt(mem, 10) * 1024
-  if (mem.endsWith('Mi')) return Number.parseInt(mem, 10) * 1024 * 1024
-  if (mem.endsWith('Gi')) return Number.parseInt(mem, 10) * 1024 * 1024 * 1024
-  return Number.parseInt(mem, 10)
-}
 
 function mapContainerStatuses(
   statuses: k8s.V1ContainerStatus[] | undefined,
@@ -161,8 +150,18 @@ class ClusterWatchManager {
         connectionState.onWatchError(clusterId, err)
       })
 
-      // Start all informers
-      await Promise.all([pods.start(), deployments.start(), nodes.start()])
+      // Start all informers — clean up on partial failure
+      const informers = [pods, deployments, nodes]
+      const started: k8s.Informer<k8s.KubernetesObject>[] = []
+      for (const informer of informers) {
+        try {
+          await informer.start()
+          started.push(informer as k8s.Informer<k8s.KubernetesObject>)
+        } catch (startErr) {
+          for (const s of started) s.stop()
+          throw startErr
+        }
+      }
 
       // Metrics polling (Metrics API is not watchable)
       const metricsInterval = setInterval(
@@ -224,7 +223,7 @@ class ClusterWatchManager {
         if (name) {
           capacityMap.set(name, {
             cpuNano: parseCpuToNano(node.status?.allocatable?.cpu ?? '0'),
-            memBytes: parseMemoryToBytes(node.status?.allocatable?.memory ?? '0'),
+            memBytes: parseMemToBytes(node.status?.allocatable?.memory ?? '0'),
           })
         }
       }
@@ -236,7 +235,7 @@ class ClusterWatchManager {
 
       for (const node of nodeMetrics.items) {
         totalCpuNano += parseCpuToNano(node.usage?.cpu ?? '0')
-        totalMemBytes += parseMemoryToBytes(node.usage?.memory ?? '0')
+        totalMemBytes += parseMemToBytes(node.usage?.memory ?? '0')
         const cap = capacityMap.get(node.metadata?.name ?? '')
         if (cap) {
           totalCpuAllocatable += cap.cpuNano
