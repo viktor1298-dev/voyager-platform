@@ -10,7 +10,7 @@ import {
 } from '@voyager/db'
 import { protectedProcedure, router } from '../trpc.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
-import { eq, gte, and } from 'drizzle-orm'
+import { eq, gte, and, sql, avg, sum } from 'drizzle-orm'
 
 /** Shared constant for health-check polling interval (minutes) */
 const HEALTH_CHECK_INTERVAL_MINUTES = 5
@@ -277,6 +277,55 @@ export const metricsRouter = router({
           cpuCores: null, memoryBytes: null,
           podCount: 0, timestamp: new Date().toISOString(),
         }
+      }
+    }),
+
+  /** IP4-004: Multi-cluster metrics aggregation for dashboard */
+  aggregatedMetrics: protectedProcedure
+    .input(z.object({ range: timeRangeSchema }))
+    .query(async ({ input }) => {
+      const start = getTimeRangeStart(input.range)
+
+      const rows = await db
+        .select({
+          clusterId: metricsHistory.clusterId,
+          avgCpu: sql<number>`avg(${metricsHistory.cpuPercent})`.as('avg_cpu'),
+          avgMem: sql<number>`avg(${metricsHistory.memPercent})`.as('avg_mem'),
+          totalPods: sql<number>`max(${metricsHistory.podCount})`.as('total_pods'),
+          totalNodes: sql<number>`max(${metricsHistory.nodeCount})`.as('total_nodes'),
+        })
+        .from(metricsHistory)
+        .where(gte(metricsHistory.timestamp, start))
+        .groupBy(metricsHistory.clusterId)
+
+      // Get cluster names
+      const clusterList = await db
+        .select({ id: clustersTable.id, name: clustersTable.name })
+        .from(clustersTable)
+      const nameMap = new Map(clusterList.map((c) => [c.id, c.name]))
+
+      const perCluster = rows.map((row) => ({
+        clusterId: row.clusterId,
+        clusterName: nameMap.get(row.clusterId) ?? row.clusterId,
+        avgCpu: Math.round(Number(row.avgCpu) * 10) / 10,
+        avgMem: Math.round(Number(row.avgMem) * 10) / 10,
+        totalPods: Number(row.totalPods),
+        totalNodes: Number(row.totalNodes),
+      }))
+
+      const totalClusters = perCluster.length
+      const totalCpuAvg = totalClusters > 0
+        ? Math.round(perCluster.reduce((s, c) => s + c.avgCpu, 0) / totalClusters * 10) / 10
+        : 0
+      const totalMemAvg = totalClusters > 0
+        ? Math.round(perCluster.reduce((s, c) => s + c.avgMem, 0) / totalClusters * 10) / 10
+        : 0
+      const totalPods = perCluster.reduce((s, c) => s + c.totalPods, 0)
+      const totalNodes = perCluster.reduce((s, c) => s + c.totalNodes, 0)
+
+      return {
+        summary: { totalCpuAvg, totalMemAvg, totalPods, totalNodes, clusterCount: totalClusters },
+        perCluster,
       }
     }),
 })

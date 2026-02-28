@@ -705,4 +705,55 @@ export const clustersRouter = router({
       await logAudit(ctx, 'cluster.delete', 'cluster', input.id, { name: deleted.name })
       return deleted
     }),
+
+  /** IP4-005: Cluster auto-discovery from kubeconfig contexts */
+  discover: adminProcedure
+    .input(z.void())
+    .output(
+      z.array(
+        z.object({
+          contextName: z.string(),
+          clusterName: z.string(),
+          server: z.string().nullable().optional(),
+          user: z.string().nullable().optional(),
+        }),
+      ),
+    )
+    .query(async ({ ctx }) => {
+      try {
+        const kc = new k8s.KubeConfig()
+        kc.loadFromDefault() // reads KUBECONFIG env or ~/.kube/config
+
+        const existingClusters = await ctx.db.select({ name: clusters.name, endpoint: clusters.endpoint }).from(clusters)
+        const existingNames = new Set(existingClusters.map((c) => c.name.toLowerCase()))
+        const existingEndpoints = new Set(existingClusters.map((c) => c.endpoint).filter(Boolean))
+
+        const contexts = kc.getContexts()
+        const discovered: Array<{ contextName: string; clusterName: string; server: string | null; user: string | null }> = []
+
+        for (const context of contexts) {
+          const clusterInfo = kc.getCluster(context.cluster)
+          const server = clusterInfo?.server ?? null
+
+          // Skip if already in DB (match by name or endpoint)
+          if (existingNames.has(context.cluster.toLowerCase())) continue
+          if (existingNames.has(context.name.toLowerCase())) continue
+          if (server && existingEndpoints.has(server)) continue
+
+          discovered.push({
+            contextName: context.name,
+            clusterName: context.cluster,
+            server,
+            user: context.user ?? null,
+          })
+        }
+
+        return discovered
+      } catch (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to read kubeconfig: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        })
+      }
+    }),
 })

@@ -23,6 +23,8 @@ import { ssoRouter } from './sso.js'
 import { usersRouter } from './users.js'
 import { tokensRouter } from './tokens.js'
 import { webhooksRouter } from './webhooks.js'
+import { servicesRouter } from './services.js'
+import { namespacesRouter } from './namespaces.js'
 
 export const appRouter = router({
   ai: aiRouter,
@@ -50,6 +52,8 @@ export const appRouter = router({
   users: usersRouter,
   tokens: tokensRouter,
   webhooks: webhooksRouter,
+  services: servicesRouter,
+  namespaces: namespacesRouter,
 })
 
 export type AppRouter = typeof appRouter
