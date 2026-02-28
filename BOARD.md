@@ -183,17 +183,17 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [x] **I1-003** Deploy v157 with connection fix (needs build+deploy)
 - [x] **I1-004** Verify minikube cluster actually connects after fix
 
-### I2: Replace Mock Data with Real K8s (P1)
-- [ ] **I2-001** `clusterHealth` — replace seededRandom with real K8s metrics
-- [ ] **I2-002** `resourceUsage` — replace seededRandom with real node metrics
-- [ ] **I2-003** `requestRates` / `uptimeHistory` / `alertsTimeline` — replace mock charts
-- [ ] **I2-004** Alerts evaluation loop — implement real K8s threshold evaluation
-- [ ] **I2-005** Validate: every dashboard widget shows real data
+### I2: Replace Mock Data with Real K8s (P1) — ✅ DONE (duplicates of IP2, v160)
+- [x] **I2-001** `clusterHealth` — replace seededRandom with real K8s metrics
+- [x] **I2-002** `resourceUsage` — replace seededRandom with real node metrics
+- [x] **I2-003** `requestRates` / `uptimeHistory` / `alertsTimeline` — replace mock charts
+- [x] **I2-004** Alerts evaluation loop — implement real K8s threshold evaluation
+- [x] **I2-005** Validate: every dashboard widget shows real data
 
-### I3: Streaming & Multi-Cluster (P2)
-- [ ] **I3-001** Add Informer pattern (LIST+WATCH+resync) replacing raw Watch
-- [ ] **I3-002** Multi-cluster streaming — independent watcher per cluster
-- [ ] **I3-003** Connection state machine (connected→disconnected→error→reconnecting)
+### I3: Streaming & Multi-Cluster (P2) — ✅ DONE (duplicates of IP3, v159)
+- [x] **I3-001** Add Informer pattern (LIST+WATCH+resync) replacing raw Watch
+- [x] **I3-002** Multi-cluster streaming — independent watcher per cluster
+- [x] **I3-003** Connection state machine (connected→disconnected→error→reconnecting)
 - [ ] **I3-004** Real-time pod/node updates via SSE to frontend
 
 ---
@@ -219,15 +219,15 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [x] **IP3-007** Consolidate all K8s ops through ClusterClientPool (remove global kubeconfig path)
 
 ### I-Phase2: Replace Mock Data with Real K8s (3-5 days — after Phase3)
-- [ ] **IP2-001** Create `metricsHistory` DB table + migration
-- [ ] **IP2-002** Create `MetricsHistoryCollector` background job (snapshot every 60s)
-- [ ] **IP2-003** Replace `metrics.clusterHealth` with real healthHistory data
-- [ ] **IP2-004** Replace `metrics.resourceUsage` with real metricsHistory data
-- [ ] **IP2-005** Replace `metrics.uptimeHistory` with real healthHistory uptime
-- [ ] **IP2-006** Replace `metrics.alertsTimeline` with real K8s Events (Warning type)
-- [ ] **IP2-007** Implement `alerts.evaluate` — real threshold evaluation loop
-- [ ] **IP2-008** Background sync: nodes K8s → DB every 5 min
-- [ ] **IP2-009** Background sync: K8s events → DB every 2 min
+- [x] **IP2-001** Create `metricsHistory` DB table + migration
+- [x] **IP2-002** Create `MetricsHistoryCollector` background job (snapshot every 60s)
+- [x] **IP2-003** Replace `metrics.clusterHealth` with real healthHistory data
+- [x] **IP2-004** Replace `metrics.resourceUsage` with real metricsHistory data
+- [x] **IP2-005** Replace `metrics.uptimeHistory` with real healthHistory uptime
+- [x] **IP2-006** Replace `metrics.alertsTimeline` with real K8s Events (Warning type)
+- [x] **IP2-007** Implement `alerts.evaluate` — real threshold evaluation loop
+- [x] **IP2-008** Background sync: nodes K8s → DB every 5 min
+- [x] **IP2-009** Background sync: K8s events → DB every 2 min
 
 ### I-Phase4: Production Ready (2-3 weeks)
 - [ ] **IP4-001** Alert evaluation engine (rules vs live metrics)

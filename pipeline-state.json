@@ -1,13 +1,20 @@
 {
   "status": "running",
   "version": "v160",
-  "phase": "IP2",
-  "currentStage": "deploy-v160",
-  "startedAt": "2026-02-28T23:31:00Z",
+  "phase": "IP2-complete",
+  "currentStage": "starting-IP4",
   "stages": {
     "dev-ip2": "complete",
     "review-ip2": "complete",
-    "deploy-v160": "complete"
+    "deploy-v160": "complete",
+    "e2e-v160": "complete",
+    "qa-v160": "complete"
   },
-  "deployedInK8s": "v160"
+  "deployedInK8s": "v160",
+  "e2eVerdict": "PASS",
+  "e2eStats": {"total": 96, "passed": 85, "failed": 0, "skipped": 11},
+  "qaVerdict": "PASS",
+  "qaScore": 9,
+  "reviewScore": 10,
+  "next_phase": "IP4"
 }
