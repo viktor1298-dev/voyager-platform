@@ -1,5 +1,10 @@
 # Shared Pipeline Learnings
 
+## v147 — 2026-02-28 (Foreman)
+1. **Resume-from-checkpoint works** — pipeline paused after E2E, resumed cleanly with foreman-resume skill. No stages re-run.
+2. **Fix loops resolve in ≤2 iterations** — both table-row-fade and zero-value-muting took exactly 2 fix cycles across v145→v147. The circuit breaker cap of 2 is appropriate.
+3. **Mai QA is fast and reliable** — 9.0/10 in ~6min, zero false positives. ENV_BLOCKED items (deployments, console) correctly identified as infra limitations, not bugs.
+
 All agents read this file at session start. Write learnings here that affect the whole team.
 
 ## Format

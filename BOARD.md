@@ -73,11 +73,10 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ## 📋 Phase E — After LEGACY bugs are fixed
 
-### E1: K8s RBAC + Pod Actions ← NEXT after legacy fixes
-- ClusterRole: add delete pods + patch deployments
-- Pod delete tRPC endpoint + UI
-- Scale deployment UI (endpoint exists, needs UI wiring)
-- Target: v126
+### ~~E1: K8s RBAC + Pod Actions~~ ✅ DONE (verified v150 — already implemented)
+- ~~ClusterRole: add delete pods + patch deployments~~ ✅
+- ~~Pod delete tRPC endpoint + UI~~ ✅
+- ~~Scale deployment UI~~ ✅
 
 ### E2: Alerts Real Backend
 - tRPC router + DB schema + evaluator job + UI

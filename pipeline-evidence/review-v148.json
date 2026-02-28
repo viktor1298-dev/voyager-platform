@@ -1,0 +1,1 @@
+{"score":10,"verdict":"APPROVED","test_coverage_checked":true,"files_reviewed":["apps/web/src/app/page.tsx","apps/web/src/components/ProviderLogo.tsx","apps/web/src/components/Sidebar.tsx","apps/web/src/components/TopBar.tsx","apps/web/src/components/ui/badge.tsx","apps/web/src/lib/cluster-meta.ts"],"lines_changed":25,"env_blocked_items":[],"findings":[]}

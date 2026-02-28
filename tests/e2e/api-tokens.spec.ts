@@ -22,17 +22,21 @@ test.describe('API Tokens', () => {
   test('can create a new API token', async ({ page }) => {
     const tokenName = `test-token-${Date.now()}`
     await page.getByLabel('Token name').fill(tokenName)
+    const createPromise = page.waitForResponse((r) => r.url().includes('trpc') && r.ok(), { timeout: 15000 })
     await page.getByRole('button', { name: /Create Token|Generate Token/i }).click()
+    await createPromise
     // Token should appear once in a reveal banner
-    await expect(page.getByText(/shown once|will not be shown again|copy.*token|save.*token/i)).toBeVisible({ timeout: 10000 })
-    await expect(page.locator('button', { hasText: /copy token/i })).toBeVisible()
+    await expect(page.locator('p', { hasText: /shown once|will not be shown again/i }).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('button', { hasText: /copy token/i }).first()).toBeVisible({ timeout: 5000 })
   })
 
   test('newly created token appears in the token list', async ({ page }) => {
     const tokenName = `list-test-${Date.now()}`
     await page.getByLabel('Token name').fill(tokenName)
+    const createPromise = page.waitForResponse((r) => r.url().includes('trpc') && r.ok(), { timeout: 15000 })
     await page.getByRole('button', { name: /Create Token|Generate Token/i }).click()
-    await expect(page.getByText(/shown once|will not be shown again|copy.*token|save.*token/i)).toBeVisible({ timeout: 10000 })
+    await createPromise
+    await expect(page.locator('p', { hasText: /shown once|will not be shown again/i }).first()).toBeVisible({ timeout: 10000 })
     // Dismiss the reveal banner
     // Wait for dismiss button to be accessible
     await page.getByRole('button', { name: /Dismiss token/i }).waitFor({ state: 'visible', timeout: 10000 });
@@ -45,8 +49,10 @@ test.describe('API Tokens', () => {
     // First create a token to revoke
     const tokenName = `revoke-test-${Date.now()}`
     await page.getByLabel('Token name').fill(tokenName)
+    const createPromise = page.waitForResponse((r) => r.url().includes('trpc') && r.ok(), { timeout: 15000 })
     await page.getByRole('button', { name: /Create Token|Generate Token/i }).click()
-    await expect(page.getByText(/shown once|will not be shown again|copy.*token|save.*token/i)).toBeVisible({ timeout: 10000 })
+    await createPromise
+    await expect(page.locator('p', { hasText: /shown once|will not be shown again/i }).first()).toBeVisible({ timeout: 10000 })
     // Wait for dismiss button to be accessible
     await page.getByRole('button', { name: /Dismiss token/i }).waitFor({ state: 'visible', timeout: 10000 });
     await page.getByRole('button', { name: /Dismiss token/i }).click()

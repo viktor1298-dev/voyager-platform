@@ -75,14 +75,14 @@ export function Sidebar({
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="mt-auto mx-2 mb-2 flex items-center justify-center h-8 rounded-lg text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)] hover:bg-white/[0.04] transition-colors"
+            className="mt-auto mx-2 mb-2 flex items-center justify-center h-8 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors"
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
         )}
         {(!collapsed || mobileOpen) && (
           <div className="px-3 py-2 mt-auto md:mt-0">
-            <div className="text-[9px] text-[var(--color-text-dim)] font-mono text-left">
+            <div className="text-[10px] text-[var(--color-text-muted)] font-mono text-left">
               Voyager {APP_VERSION}
             </div>
           </div>

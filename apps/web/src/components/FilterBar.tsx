@@ -172,7 +172,7 @@ export function FilterBar({
                   chipClass,
                   active
                     ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)] text-[var(--color-text-primary)]'
-                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]',
+                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
                 )}
               >
                 #{tag}
@@ -203,7 +203,7 @@ export function FilterBar({
             <button
               type="button"
               onClick={clearAll}
-              className="inline-flex items-center gap-1 rounded-full px-3 py-1 min-h-[44px] text-xs text-[var(--color-text-dim)] hover:text-[var(--color-text-primary)]"
+              className="inline-flex items-center gap-1 rounded-full px-3 py-1 min-h-[44px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             >
               <X className="h-3 w-3" />
               Clear

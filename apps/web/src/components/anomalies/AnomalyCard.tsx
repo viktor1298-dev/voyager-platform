@@ -14,26 +14,25 @@ interface AnomalyCardProps {
 const SEVERITY_META = {
   critical: {
     icon: AlertOctagon,
-    badgeClass: 'bg-red-500/10 text-red-300 border-red-500/30 dark:bg-red-500/20 dark:text-red-200',
-    dotClass: 'bg-red-400',
+    badgeClass: 'bg-red-50 text-red-600 border-red-300 dark:bg-red-500/20 dark:text-red-200 dark:border-red-500/30',
+    dotClass: 'bg-red-500 dark:bg-red-400',
   },
   warning: {
     icon: AlertTriangle,
-    badgeClass:
-      'bg-amber-500/10 text-amber-300 border-amber-500/30 dark:bg-amber-500/20 dark:text-amber-200',
-    dotClass: 'bg-amber-400',
+    badgeClass: 'bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-500/20 dark:text-amber-200 dark:border-amber-500/30',
+    dotClass: 'bg-amber-500 dark:bg-amber-400',
   },
   info: {
     icon: Info,
-    badgeClass: 'bg-sky-500/10 text-sky-300 border-sky-500/30 dark:bg-sky-500/20 dark:text-sky-200',
-    dotClass: 'bg-sky-400',
+    badgeClass: 'bg-sky-50 text-sky-600 border-sky-300 dark:bg-sky-500/20 dark:text-sky-200 dark:border-sky-500/30',
+    dotClass: 'bg-sky-500 dark:bg-sky-400',
   },
 } as const
 
 const STATUS_STYLE: Record<Anomaly['status'], string> = {
-  open: 'text-red-300',
-  acknowledged: 'text-amber-300',
-  resolved: 'text-emerald-300',
+  open: 'text-red-500 dark:text-red-300',
+  acknowledged: 'text-amber-600 dark:text-amber-300',
+  resolved: 'text-emerald-600 dark:text-emerald-300',
 }
 
 export function AnomalyCard({ anomaly, onAcknowledge, onResolve }: AnomalyCardProps) {
