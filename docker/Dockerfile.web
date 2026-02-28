@@ -44,7 +44,8 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodejs && adduser -S voyager -u 1001
 
 # Next.js standalone output includes everything needed
-COPY --from=builder /app/apps/web/public ./public
+# public must be alongside server.js (apps/web/public) for standalone to serve static files
+COPY --from=builder /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=voyager:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=voyager:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 
