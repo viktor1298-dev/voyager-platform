@@ -25,8 +25,6 @@ const SEED = {
   HEALTH_DEGRADED: 2,
   RESOURCE_CPU: 7,
   RESOURCE_MEM: 11,
-  REQUEST_SUCCESS: 13,
-  REQUEST_ERROR: 17,
   UPTIME: 31,
   UPTIME_DOWNTIME: 37,
   ALERT_TIMESTAMP: 41,
@@ -64,12 +62,6 @@ const MEMORY_BASE = 55
 const MEMORY_AMPLITUDE = 10
 const MEMORY_NOISE_RANGE = 8
 
-/** Request rate baseline ranges */
-const REQUEST_BASE = 200
-const REQUEST_AMPLITUDE = 100
-const REQUEST_SUCCESS_NOISE = 50
-const REQUEST_ERROR_BASE = 5
-const REQUEST_ERROR_NOISE = 15
 
 /** Uptime baseline */
 const UPTIME_BASE = 99.0
@@ -149,21 +141,6 @@ export const metricsRouter = router({
       })
     }),
 
-  requestRates: protectedProcedure
-    .input(z.object({ range: timeRangeSchema }))
-    .query(({ input }) => {
-      return generateTimeSeries(input.range, (i) => {
-        const base = REQUEST_BASE + Math.sin(i * 0.4) * REQUEST_AMPLITUDE
-        return {
-          success: Math.round(
-            base + seededRandom(i * SEED.REQUEST_SUCCESS) * REQUEST_SUCCESS_NOISE,
-          ),
-          error: Math.round(
-            REQUEST_ERROR_BASE + seededRandom(i * SEED.REQUEST_ERROR) * REQUEST_ERROR_NOISE,
-          ),
-        }
-      })
-    }),
 
   uptimeHistory: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))

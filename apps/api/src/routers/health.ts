@@ -1,8 +1,9 @@
+import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
 import { clusters, healthHistory } from '@voyager/db'
 import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { getCoreV1Api } from '../lib/k8s.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { protectedProcedure, router } from '../trpc.js'
 
 const HEALTH_STATUS = ['healthy', 'degraded', 'critical', 'unknown'] as const
@@ -19,14 +20,15 @@ const healthHistorySchema = z
   })
   .passthrough()
 
-async function performK8sHealthCheck(): Promise<{
+export async function performK8sHealthCheck(clusterId: string): Promise<{
   status: HealthStatus
   responseTimeMs: number
   details: Record<string, unknown>
 }> {
   const start = Date.now()
   try {
-    const coreApi = getCoreV1Api()
+    const kc = await clusterClientPool.getClient(clusterId)
+    const coreApi = kc.makeApiClient(k8s.CoreV1Api)
     const [nodesRes, podsRes] = await Promise.all([coreApi.listNode(), coreApi.listPodForAllNamespaces()])
 
     const responseTimeMs = Date.now() - start
@@ -81,14 +83,7 @@ export const healthRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
       }
 
-      const isMinikube = cluster.provider === 'minikube'
-      const result = isMinikube
-        ? await performK8sHealthCheck()
-        : {
-            status: 'unknown' as HealthStatus,
-            responseTimeMs: 0,
-            details: { reason: 'No live connection for DB-only clusters' },
-          }
+      const result = await performK8sHealthCheck(input.clusterId)
 
       const [entry] = await ctx.db
         .insert(healthHistory)
@@ -147,8 +142,6 @@ export const healthRouter = router({
       const allClusters = await ctx.db.select().from(clusters)
       if (allClusters.length === 0) return []
 
-      // Read canonical healthStatus from clusters table (updated by health-sync job)
-      // and optionally enrich with latest responseTimeMs from healthHistory.
       const allLatest = await ctx.db
         .selectDistinctOn([healthHistory.clusterId])
         .from(healthHistory)
