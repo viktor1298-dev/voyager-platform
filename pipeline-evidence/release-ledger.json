@@ -109,5 +109,16 @@
     "status": "success",
     "helmRevision": 45,
     "notes": "Full build API+Web. Pods running, health OK."
+  },
+  {
+    "version": "v150",
+    "timestamp": "2026-02-28T09:26:40.730Z",
+    "helmRevision": 46,
+    "images": [
+      "voyager-api:v150",
+      "voyager-web:v150"
+    ],
+    "health": "ok",
+    "branch": "feat/init-monorepo"
   }
 ]
