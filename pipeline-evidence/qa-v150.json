@@ -1,0 +1,80 @@
+{
+  "version": "v150",
+  "branch": "feat/init-monorepo",
+  "qa_date": "2026-02-28",
+  "author": "mai",
+  "url": "http://voyager-platform.voyagerlabs.co",
+  "modes_tested": ["dark", "light"],
+  "functional_score": 7.5,
+  "effective_score": 7.5,
+  "gate": 8.5,
+  "verdict": "CHANGES_REQUESTED",
+  "p0_fixes_verified": {
+    "health_badge_visibility_card_view": {
+      "status": "PASS",
+      "details": "Error badges use rgb(255, 77, 106) on semi-transparent red bg (~6:1 contrast). Clearly visible bottom-right of each card. Consistent in both dark and light mode.",
+      "contrast_ratio": "~6:1"
+    },
+    "zero_state_color_semantics": {
+      "status": "PASS",
+      "details": "0/0 Running Pods uses muted gray-blue rgb(107, 121, 148) with opacity-50 class. Total Nodes '30' uses gradient-text (vibrant purple gradient). Clear visual differentiation — 0/0 is NOT green, visually dimmed vs active metrics.",
+      "class": "text-2xl font-extrabold tracking-tight animate-count-up opacity-50"
+    },
+    "contrast_tags_subtitles_metadata": {
+      "status": "PARTIAL",
+      "details": {
+        "filter_tags": "PASS - #dev, #k3s etc use rgb(160, 174, 192) on rgb(13, 15, 25) bg = ~8.8:1 contrast (AAA)",
+        "card_subtitle": "PASS - K8s v1.xx · Nodes: N uses rgb(160, 174, 192) at 11px = ~8.8:1 contrast (WCAG AA pass)",
+        "sidebar_section_headers": "FAIL - AUTOSCALING/ACCESS CONTROL use lab(48.0876 -2.03595 -16.5814) ≈ slate-500 on dark bg (3.8:1) and light bg (4.09:1). Both fail WCAG AA (requires 4.5:1 at 11px). dark:text-slate-300 class not computing correctly.",
+        "environment_badges": "MARGINAL - Production/Dev/Minikube badges use monochromatic scheme (same hue for text and bg). Low but borderline contrast."
+      }
+    },
+    "provider_logos_dark_mode": {
+      "status": "PASS",
+      "details": "AWS, Azure, GKE, Minikube, kubeconfig logos render without text overlap. Icon+label pairs are properly spaced. No layout compression observed at 1200px viewport. Minor: kubeconfig text is small (11px) but readable."
+    },
+    "sidebar_section_headers_visibility": {
+      "status": "FAIL",
+      "details": "AUTOSCALING and ACCESS CONTROL section headers are visible but fail WCAG AA contrast. Dark mode: ~3.8:1 (bg rgb(20,24,37), text ≈ slate-500). Light mode: ~4.09:1 (bg rgb(237,240,245), text ≈ slate-500). Required: 4.5:1 at 11px. dark:text-slate-300 variant appears not applied.",
+      "dark_contrast": "3.8:1",
+      "light_contrast": "4.09:1",
+      "wcag_required": "4.5:1"
+    }
+  },
+  "env_blocked_items": [],
+  "code_bugs": [
+    {
+      "severity": "medium",
+      "component": "Sidebar section headers",
+      "description": "dark:text-slate-300 Tailwind class not applied in dark mode — computed color is lab(48.0876 -2.03595 -16.5814) (≈ slate-500) in BOTH dark and light mode. Result: sidebar section headers fail WCAG AA in both modes.",
+      "file_hint": "sidebar navigation component",
+      "fix": "Ensure dark:text-slate-300 overrides text-slate-500 in dark mode, or use CSS custom property that properly applies dark variant"
+    },
+    {
+      "severity": "low",
+      "component": "Environment label badges",
+      "description": "Production/Dev/Minikube environment badges use monochromatic color scheme (same hue for text and background). Borderline contrast ratios, particularly for Production (red-on-pink) and Dev (green-on-green).",
+      "fix": "Increase contrast between badge text and badge background, or use white/dark text on colored badge background"
+    }
+  ],
+  "what_works_well": [
+    "Health badges (Error) are bright, visible, consistently positioned bottom-right",
+    "Zero-state 0/0 pods correctly dimmed vs active metrics (opacity-50 + muted color)",
+    "Provider logos clean in dark mode — no text overlap anywhere",
+    "Filter tags (#dev, #k3s etc) have excellent contrast (~8.8:1, AAA)",
+    "Card subtitle metadata is readable at 11px with good contrast",
+    "Login/auth flow works correctly",
+    "Dark mode toggle works (System → Dark → System cycle)",
+    "Anomalies section with Critical/Warning/Info correctly color-coded"
+  ],
+  "ux_recommendations": [
+    "Fix sidebar section headers contrast — must reach 4.5:1 for WCAG AA at 11px",
+    "Improve environment badge contrast using white text on colored background instead of monochromatic",
+    "Consider adding a health indicator to the sidebar section for clusters (not just in cards)",
+    "Karpenter and Teams navigation items should remain visible after sidebar collapse"
+  ],
+  "screenshots": [
+    "~/workspace-mai/screenshots/v150-dark-dashboard.png",
+    "~/workspace-mai/screenshots/v150-light-dashboard.png"
+  ]
+}
