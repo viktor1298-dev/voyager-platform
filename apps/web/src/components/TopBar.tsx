@@ -30,7 +30,7 @@ function statusDot(status: ClusterStatus): string {
 export function TopBar() {
   const router = useRouter()
   const { resolvedTheme } = useTheme()
-  const logoSrc = resolvedTheme === 'light' ? '/logo-mark-light.svg' : '/logo-mark.svg'
+  const logoSrc = '/logo-mark.png'
   const user = useAuthStore((s) => s.user)
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
@@ -114,7 +114,7 @@ export function TopBar() {
         <img
           src={logoSrc}
           alt="Voyager"
-          className="h-7 w-7 drop-shadow-[0_0_6px_rgba(99,102,241,0.5)]"
+          className="h-8 w-8 object-contain"
           aria-hidden="true"
         />
         <span className="font-semibold text-sm tracking-wide text-foreground text-[var(--color-text-primary)]">
