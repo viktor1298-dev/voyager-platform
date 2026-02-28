@@ -171,3 +171,27 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - E2E (Yuval): **0 failures** (non-negotiable — Vik mandate 2026-02-27)
 - Desktop QA (Mai): ≥8.5/10
 - VERSION CONTRACT: git tag → docker → helm → state.json (all must match)
+
+---
+
+## 🔧 Phase I — Backend Real Data (from BACKEND-RESEARCH-2026.md)
+> Added 2026-02-28. Full details in BACKEND-RESEARCH-2026.md
+
+### I1: Critical Fixes (P0)
+- [x] **I1-001** connectionConfig kubeconfig not saved on create — fixed (e208b2d)
+- [x] **I1-002** Endpoint shows `kubernetes.default.svc` instead of real server — fixed (e208b2d)
+- [ ] **I1-003** Deploy v157 with connection fix (needs build+deploy)
+- [ ] **I1-004** Verify minikube cluster actually connects after fix
+
+### I2: Replace Mock Data with Real K8s (P1)
+- [ ] **I2-001** `clusterHealth` — replace seededRandom with real K8s metrics
+- [ ] **I2-002** `resourceUsage` — replace seededRandom with real node metrics
+- [ ] **I2-003** `requestRates` / `uptimeHistory` / `alertsTimeline` — replace mock charts
+- [ ] **I2-004** Alerts evaluation loop — implement real K8s threshold evaluation
+- [ ] **I2-005** Validate: every dashboard widget shows real data
+
+### I3: Streaming & Multi-Cluster (P2)
+- [ ] **I3-001** Add Informer pattern (LIST+WATCH+resync) replacing raw Watch
+- [ ] **I3-002** Multi-cluster streaming — independent watcher per cluster
+- [ ] **I3-003** Connection state machine (connected→disconnected→error→reconnecting)
+- [ ] **I3-004** Real-time pod/node updates via SSE to frontend
