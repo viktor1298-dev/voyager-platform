@@ -6,7 +6,6 @@ import { trpc } from '@/lib/trpc'
 import { CHART_HEIGHT, METRICS_GC_TIME, METRICS_STALE_TIME, type TimeRange } from './chart-theme'
 import { ClusterHealthChart } from './ClusterHealthChart'
 import { ResourceUsageChart } from './ResourceUsageChart'
-import { RequestRateChart } from './RequestRateChart'
 import { UptimeChart } from './UptimeChart'
 import { AlertsTimelineChart } from './AlertsTimelineChart'
 
@@ -27,7 +26,6 @@ export function DashboardCharts() {
 
   const health = trpc.metrics.clusterHealth.useQuery({ range }, queryOpts)
   const resources = trpc.metrics.resourceUsage.useQuery({ range }, queryOpts)
-  const requests = trpc.metrics.requestRates.useQuery({ range }, queryOpts)
   const uptime = trpc.metrics.uptimeHistory.useQuery({ range }, queryOpts)
   const alerts = trpc.metrics.alertsTimeline.useQuery({ range }, queryOpts)
 
@@ -41,11 +39,6 @@ export function DashboardCharts() {
     timestamp: p.timestamp,
     cpu: Number(p.cpu ?? 0),
     memory: Number(p.memory ?? 0),
-  }))
-  const requestData = (requests.data ?? []).map((p) => ({
-    timestamp: p.timestamp,
-    success: Number(p.success ?? 0),
-    error: Number(p.error ?? 0),
   }))
 
   return (
@@ -84,8 +77,13 @@ export function DashboardCharts() {
         </SlideIn>
 
         <SlideIn delay={0.1}>
-          <ChartCard title="Request Rates" loading={requests.isLoading} error={requests.error?.message}>
-            {requests.data && <RequestRateChart data={requestData} range={range} />}
+          <ChartCard title="Request Rates" loading={false}>
+            <div
+              className="flex items-center justify-center text-sm text-muted-foreground"
+              style={{ height: CHART_HEIGHT }}
+            >
+              🚧 Coming Soon — Real request rate metrics
+            </div>
           </ChartCard>
         </SlideIn>
 
