@@ -68,6 +68,7 @@ export function watchDeploymentProgress(
       if (progressing?.reason === 'ProgressDeadlineExceeded') status = 'stalled'
 
       const event: DeploymentProgressEvent = {
+        clusterId,
         name,
         namespace,
         replicas,

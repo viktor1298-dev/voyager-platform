@@ -36,9 +36,9 @@ export class ClusterClientPool {
     if (cached) {
       // IP3-006: Proactive token refresh at 80% of TTL
       if (cached.tokenExpiresAt) {
-        const refreshAt = cached.tokenExpiresAt * TOKEN_REFRESH_THRESHOLD_RATIO +
-          (now - (cached.expiresAt - TTL_MS)) * (1 - TOKEN_REFRESH_THRESHOLD_RATIO)
-        if (now >= cached.tokenExpiresAt * TOKEN_REFRESH_THRESHOLD_RATIO) {
+        const ttl = cached.tokenExpiresAt - (cached.expiresAt - TTL_MS)
+        const refreshAt = cached.tokenExpiresAt - (ttl * (1 - TOKEN_REFRESH_THRESHOLD_RATIO))
+        if (now >= refreshAt) {
           console.log(`[ClusterClientPool] Proactive token refresh for ${clusterId}`)
           this.cache.delete(clusterId)
           return this.getClient(clusterId)
