@@ -8,6 +8,15 @@
 
 ---
 
+## ✅ CRITICAL FIX — connectionConfig kubeconfig bug (2026-02-28)
+- **Bug:** Creating cluster with kubeconfig stored `connectionConfig: {}` — kubeconfig content was dropped
+- **Root cause:** `toCreateClusterInput()` in `clusters/page.tsx` destructured `connectionConfig` out and never passed it to the tRPC mutation
+- **Fix:** Pass `connectionConfig` through to mutation + extract real endpoint from kubeconfig YAML (backend) + add validation rejecting empty kubeconfig
+- **Files:** `apps/web/src/app/clusters/page.tsx`, `apps/web/src/components/AddClusterWizard.tsx`, `apps/api/src/routers/clusters.ts`
+- **Status:** ✅ COMPLETE — committed & pushed to feat/init-monorepo
+
+---
+
 ## 🔴 PRIORITY 0 — E2E Legacy Bugs (fix FIRST before any Phase E work)
 
 These 3 bugs have been failing since v119 and were incorrectly allowed through the gate.
@@ -137,23 +146,23 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [x] **P0-005** Provider watermark logos in dark mode — AWS/Azure overlapping text
 
 ### H2: P1 UX Improvements
-- [ ] **P1-001** Consolidate filter UI — reduce 3 layers to 1-2
-- [ ] **P1-002** Add card/table view toggle
-- [ ] **P1-003** Normalize component styles across card and table views
-- [ ] **P1-004** Add skeleton/loading states
-- [ ] **P1-005** Add ⌘K command palette
-- [ ] **P1-006** Fix anomalies card layout waste
-- [ ] **P1-007** Add resource utilization to cluster cards/rows
-- [ ] **P1-008** Fix top bar information overload
+- [x] **P1-001** Consolidate filter UI — reduce 3 layers to 1-2
+- [x] **P1-002** Add card/table view toggle
+- [x] **P1-003** Normalize component styles across card and table views
+- [x] **P1-004** Add skeleton/loading states
+- [x] **P1-005** Add ⌘K command palette
+- [x] **P1-006** Fix anomalies card layout waste
+- [x] **P1-007** Add resource utilization to cluster cards/rows
+- [x] **P1-008** Fix top bar information overload
 - [x] **P1-009** Table column header casing consistency (done in v149 ✅)
-- [ ] **P1-010** Add primary action before destructive action in table
+- [x] **P1-010** Add primary action before destructive action in table
 
 ### H3: Logo & Branding
-- [ ] **LOGO-001** Generate new logo options using openai-image-gen skill
+- [x] **LOGO-001** Generate new logo options using openai-image-gen skill
   - Prompt: "Minimalist geometric logo mark for Voyager — K8s operations platform. Abstract interconnected nodes forming subtle V shape or compass motif. Clean lines, single color (indigo #6366f1), dark+light backgrounds. Modern 2026 style. No text, icon only. Flat design, no gradients."
   - Evaluate 4 options → pick best → implement in TopBar + favicon
-- [ ] **LOGO-002** Drop "PLATFORM" from wordmark — use "Voyager" only
-- [ ] **LOGO-003** New favicon from chosen logo mark
+- [x] **LOGO-002** Drop "PLATFORM" from wordmark — use "Voyager" only
+- [x] **LOGO-003** New favicon from chosen logo mark
 
 ---
 
@@ -162,3 +171,67 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - E2E (Yuval): **0 failures** (non-negotiable — Vik mandate 2026-02-27)
 - Desktop QA (Mai): ≥8.5/10
 - VERSION CONTRACT: git tag → docker → helm → state.json (all must match)
+
+---
+
+## 🔧 Phase I — Backend Real Data (from BACKEND-RESEARCH-2026.md)
+> Added 2026-02-28. Full details in BACKEND-RESEARCH-2026.md
+
+### I1: Critical Fixes (P0)
+- [x] **I1-001** connectionConfig kubeconfig not saved on create — fixed (e208b2d)
+- [x] **I1-002** Endpoint shows `kubernetes.default.svc` instead of real server — fixed (e208b2d)
+- [ ] **I1-003** Deploy v157 with connection fix (needs build+deploy)
+- [ ] **I1-004** Verify minikube cluster actually connects after fix
+
+### I2: Replace Mock Data with Real K8s (P1)
+- [ ] **I2-001** `clusterHealth` — replace seededRandom with real K8s metrics
+- [ ] **I2-002** `resourceUsage` — replace seededRandom with real node metrics
+- [ ] **I2-003** `requestRates` / `uptimeHistory` / `alertsTimeline` — replace mock charts
+- [ ] **I2-004** Alerts evaluation loop — implement real K8s threshold evaluation
+- [ ] **I2-005** Validate: every dashboard widget shows real data
+
+### I3: Streaming & Multi-Cluster (P2)
+- [ ] **I3-001** Add Informer pattern (LIST+WATCH+resync) replacing raw Watch
+- [ ] **I3-002** Multi-cluster streaming — independent watcher per cluster
+- [ ] **I3-003** Connection state machine (connected→disconnected→error→reconnecting)
+- [ ] **I3-004** Real-time pod/node updates via SSE to frontend
+
+---
+
+## 🚀 Phase I — Revised Execution Order (2026-02-28 — Morpheus review)
+
+### I0: Deploy v157 (immediate)
+- [x] **I0-001** Build + deploy v157 with connectionConfig fix (e208b2d) — deployed 2026-02-28
+- [x] **I0-002** Verify minikube cluster connects after fix — clusters.list returns 401 Unauthorized (auth required, connectionConfig fix in place) 2026-02-28
+
+### I-Phase1: Critical Backend Fixes (1-2 days)
+- [ ] **IP1-001** Fix `health.check` — use ClusterClientPool for ALL providers (not just minikube)
+- [ ] **IP1-002** Remove `metrics.requestRates` — no real data source, shows fake data
+- [ ] **IP1-003** Add integration test: health check returns real status for kubeconfig cluster
+
+### I-Phase3: Streaming Infrastructure (1-2 weeks — build FIRST before real data)
+- [ ] **IP3-001** Replace raw `k8s.Watch` with `k8s.makeInformer` (LIST+WATCH+resync)
+- [ ] **IP3-002** Create `ClusterWatchManager` — per-cluster informer lifecycle
+- [ ] **IP3-003** Tag all events with `clusterId` — fix single-cluster streaming
+- [ ] **IP3-004** Create `ClusterConnectionState` FSM (connected→disconnected→error)
+- [ ] **IP3-005** Replace log polling with `k8s.Log` follow mode
+- [ ] **IP3-006** Token expiry tracking + proactive refresh at 80% TTL
+- [ ] **IP3-007** Consolidate all K8s ops through ClusterClientPool (remove global kubeconfig path)
+
+### I-Phase2: Replace Mock Data with Real K8s (3-5 days — after Phase3)
+- [ ] **IP2-001** Create `metricsHistory` DB table + migration
+- [ ] **IP2-002** Create `MetricsHistoryCollector` background job (snapshot every 60s)
+- [ ] **IP2-003** Replace `metrics.clusterHealth` with real healthHistory data
+- [ ] **IP2-004** Replace `metrics.resourceUsage` with real metricsHistory data
+- [ ] **IP2-005** Replace `metrics.uptimeHistory` with real healthHistory uptime
+- [ ] **IP2-006** Replace `metrics.alertsTimeline` with real K8s Events (Warning type)
+- [ ] **IP2-007** Implement `alerts.evaluate` — real threshold evaluation loop
+- [ ] **IP2-008** Background sync: nodes K8s → DB every 5 min
+- [ ] **IP2-009** Background sync: K8s events → DB every 2 min
+
+### I-Phase4: Production Ready (2-3 weeks)
+- [ ] **IP4-001** Alert evaluation engine (rules vs live metrics)
+- [ ] **IP4-002** Services tRPC router (list, get)
+- [ ] **IP4-003** Namespace tRPC router (list, create, delete)
+- [ ] **IP4-004** Multi-cluster metrics aggregation for dashboard
+- [ ] **IP4-005** Cluster auto-discovery from kubeconfig contexts

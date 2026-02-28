@@ -1,20 +1,16 @@
 {
-  "status": "e2e-pending",
-  "version": "v156",
-  "currentStage": "E2E",
-  "phase": "phase-h2-p1-ux-improvements",
-  "startedAt": "2026-02-28T10:18:00Z",
+  "status": "running",
+  "version": "v157",
+  "phase": "phase-i-backend-real-data",
+  "currentStage": "e2e",
+  "startedAt": "2026-02-28T14:39:00Z",
   "stages": {
-    "dev": "in-progress",
-    "review": "pending",
-    "merge": "pending",
-    "deploy": "pending",
+    "deploy": "complete",
     "e2e": "pending",
     "qa": "pending"
   },
-  "foremanNotes": "Auto-Continue from Phase H P0. Now tackling H2 P1 UX improvements.",
-  "scope": "P1-001 to P1-008, P1-010 (8 items)",
-  "deployedInK8s": "v156",
-  "timestamp": "2026-02-28T14:09:14.171336",
-  "stage": "e2e"
+  "foremanNotes": "Phase I \u2014 deploying v157 with connectionConfig fix (e208b2d)",
+  "scope": "I0-001, I0-002",
+  "deployedInK8s": "v157",
+  "timestamp": "2026-02-28T16:49:12.863626"
 }

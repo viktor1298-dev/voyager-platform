@@ -281,8 +281,17 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
     if (provider === 'aws') return awsEndpoint.trim() || (awsRegion.trim() ? `https://eks.${awsRegion.trim()}.amazonaws.com` : '')
     if (provider === 'azure') return 'https://management.azure.com'
     if (provider === 'gke') return gkeEndpoint.trim() || 'https://container.googleapis.com'
+    // Extract server URL from kubeconfig YAML
+    if (provider === 'kubeconfig') {
+      const text = kubeText.trim()
+      if (text) {
+        const match = text.match(/server:\s*(https?:\/\/\S+)/)
+        if (match?.[1]) return match[1]
+      }
+      return 'https://kubernetes.default.svc'
+    }
     return 'https://kubernetes.default.svc'
-  }, [provider, minikubeEndpoint, awsRegion, awsEndpoint, gkeEndpoint])
+  }, [provider, minikubeEndpoint, awsRegion, awsEndpoint, gkeEndpoint, kubeText])
 
   const endpointValid = useMemo(() => {
     try {

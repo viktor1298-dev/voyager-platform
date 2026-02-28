@@ -553,6 +553,13 @@ export const clustersRouter = router({
     )
     .output(clusterSchema)
     .mutation(async ({ ctx, input }) => {
+      if (input.provider === 'kubeconfig' && (!input.connectionConfig || !('kubeconfig' in input.connectionConfig) || !(input.connectionConfig as Record<string, unknown>).kubeconfig)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'kubeconfig content is required when provider is kubeconfig',
+        })
+      }
+
       if (input.connectionConfig !== undefined) {
         const parsed = providerConnectionInputSchema.safeParse({
           provider: input.provider,
@@ -566,6 +573,21 @@ export const clustersRouter = router({
         }
       }
 
+      // Extract real endpoint from kubeconfig if not explicitly provided
+      let effectiveEndpoint = input.endpoint ?? null
+      if (input.provider === 'kubeconfig' && input.connectionConfig && 'kubeconfig' in input.connectionConfig) {
+        try {
+          const kc = new k8s.KubeConfig()
+          kc.loadFromString((input.connectionConfig as { kubeconfig: string }).kubeconfig)
+          const cluster = kc.getCurrentCluster()
+          if (cluster?.server && (!effectiveEndpoint || effectiveEndpoint === 'https://kubernetes.default.svc')) {
+            effectiveEndpoint = cluster.server
+          }
+        } catch {
+          // If parsing fails here, it will be caught during validation anyway
+        }
+      }
+
       const parsedLastHealthCheck = parseOptionalDateInput(input.lastHealthCheck, 'lastHealthCheck')
 
       const [created] = await ctx.db
@@ -574,7 +596,7 @@ export const clustersRouter = router({
           name: input.name,
           provider: normalizeProvider(input.provider),
           environment: input.environment ?? 'development',
-          endpoint: input.endpoint ?? null,
+          endpoint: effectiveEndpoint,
           connectionConfig: encryptConnectionConfig(input.connectionConfig ?? {}),
           status: input.status ?? 'unreachable',
           healthStatus: input.healthStatus ?? 'unknown',
@@ -612,8 +634,16 @@ export const clustersRouter = router({
       const [existing] = await ctx.db.select().from(clusters).where(eq(clusters.id, id))
       if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
 
+      const effectiveProvider = data.provider ?? existing.provider
+
+      if (effectiveProvider === 'kubeconfig' && data.connectionConfig !== undefined && (!('kubeconfig' in data.connectionConfig) || !(data.connectionConfig as Record<string, unknown>).kubeconfig)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'kubeconfig content is required when provider is kubeconfig',
+        })
+      }
+
       if (data.connectionConfig !== undefined) {
-        const effectiveProvider = data.provider ?? existing.provider
         const parsed = providerConnectionInputSchema.safeParse({
           provider: effectiveProvider,
           connectionConfig: data.connectionConfig,
@@ -633,6 +663,20 @@ export const clustersRouter = router({
       if (data.endpoint !== undefined) updates.endpoint = data.endpoint
       if (data.connectionConfig !== undefined) {
         updates.connectionConfig = encryptConnectionConfig(data.connectionConfig)
+
+        // Extract real endpoint from kubeconfig
+        if (effectiveProvider === 'kubeconfig' && 'kubeconfig' in data.connectionConfig) {
+          try {
+            const kc = new k8s.KubeConfig()
+            kc.loadFromString((data.connectionConfig as { kubeconfig: string }).kubeconfig)
+            const cluster = kc.getCurrentCluster()
+            if (cluster?.server) {
+              updates.endpoint = cluster.server
+            }
+          } catch {
+            // Will be caught during actual connection
+          }
+        }
       }
       if (data.status !== undefined) updates.status = data.status
       if (data.healthStatus !== undefined) updates.healthStatus = data.healthStatus
