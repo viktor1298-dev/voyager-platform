@@ -1,18 +1,20 @@
 import * as k8s from '@kubernetes/client-node'
 import { z } from 'zod'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
-import { clusters as clustersTable, db } from '@voyager/db'
+import {
+  clusters as clustersTable,
+  db,
+  healthHistory,
+  metricsHistory,
+  events,
+} from '@voyager/db'
 import { protectedProcedure, router } from '../trpc.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
+import { eq, gte, and, sql, desc } from 'drizzle-orm'
 
 const timeRangeSchema = z.enum(['24h', '7d', '30d']).default('24h')
 
 type TimeRange = z.infer<typeof timeRangeSchema>
-
-interface MultiSeriesPoint {
-  timestamp: string
-  [key: string]: string | number
-}
 
 /** Interval configuration per time range */
 const TIME_RANGE_CONFIG: Record<TimeRange, { intervalMs: number; points: number }> = {
@@ -21,148 +23,160 @@ const TIME_RANGE_CONFIG: Record<TimeRange, { intervalMs: number; points: number 
   '30d': { intervalMs: 24 * 60 * 60 * 1000, points: 30 },
 } as const
 
-/** Mock data seed multipliers for deterministic generation */
-const SEED = {
-  HEALTH_BASE: 1,
-  HEALTH_DEGRADED: 2,
-  RESOURCE_CPU: 7,
-  RESOURCE_MEM: 11,
-  UPTIME: 31,
-  UPTIME_DOWNTIME: 37,
-  ALERT_TIMESTAMP: 41,
-  ALERT_SEVERITY: 43,
-  ALERT_TYPE: 47,
-  ALERT_COUNT: 53,
-} as const
-
-/** Mock cluster names — will be replaced with DB queries */
-const MOCK_CLUSTER_NAMES = ['prod-us-east', 'prod-eu-west', 'staging', 'dev-local'] as const
-
-/** Mock alert types — will be replaced with DB queries */
-const MOCK_ALERT_TYPES = [
-  'HighCPU',
-  'HighMemory',
-  'PodCrashLoop',
-  'NodeNotReady',
-  'DiskPressure',
-  'CertExpiring',
-] as const
-
-const SEVERITIES = ['critical', 'warning', 'info'] as const
-
-/** Health baseline ranges */
-const HEALTH_BASE_MIN = 70
-const HEALTH_BASE_RANGE = 25
-const HEALTH_DEGRADED_MIN = 5
-const HEALTH_DEGRADED_RANGE = 15
-
-/** Resource usage baseline ranges */
-const CPU_BASE = 35
-const CPU_AMPLITUDE = 15
-const CPU_NOISE_RANGE = 10
-const MEMORY_BASE = 55
-const MEMORY_AMPLITUDE = 10
-const MEMORY_NOISE_RANGE = 8
-
-
-/** Uptime baseline */
-const UPTIME_BASE = 99.0
-const UPTIME_RANGE = 0.99
-const MAX_DOWNTIME_MINUTES = 30
-
-/** Alert count range */
-const MIN_ALERTS = 8
-const ALERT_COUNT_RANGE = 12
-const MIN_ALERT_OCCURRENCES = 1
-const MAX_ALERT_OCCURRENCES = 5
-
-function getIntervalConfig(range: TimeRange): { intervalMs: number; points: number } {
-  return TIME_RANGE_CONFIG[range]
+function getTimeRangeStart(range: TimeRange): Date {
+  const { intervalMs, points } = TIME_RANGE_CONFIG[range]
+  return new Date(Date.now() - intervalMs * points)
 }
 
-function generateTimeSeries(
-  range: TimeRange,
-  generator: (i: number, total: number) => Record<string, number>,
-): MultiSeriesPoint[] {
-  const { intervalMs, points } = getIntervalConfig(range)
-  const now = Date.now()
-  const start = now - intervalMs * points
-
-  return Array.from({ length: points }, (_, i) => {
-    const timestamp = new Date(start + intervalMs * (i + 1)).toISOString()
-    return { timestamp, ...generator(i, points) }
-  })
+function bucketTimestamp(ts: Date, intervalMs: number, start: number): string {
+  const bucket = Math.floor((ts.getTime() - start) / intervalMs)
+  return new Date(start + (bucket + 1) * intervalMs).toISOString()
 }
-
-function seededRandom(seed: number): number {
-  const x = Math.sin(seed) * 10000
-  return x - Math.floor(x)
-}
-
-
 
 export const metricsRouter = router({
+  /** IP2-003: Cluster health timeline from healthHistory table */
   clusterHealth: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
-    .query(({ input }) => {
-      return generateTimeSeries(input.range, (i) => {
-        const base = seededRandom(i * 3 + SEED.HEALTH_BASE)
-        const healthy = Math.round(HEALTH_BASE_MIN + base * HEALTH_BASE_RANGE)
-        const degraded = Math.round(
-          HEALTH_DEGRADED_MIN + seededRandom(i * 3 + SEED.HEALTH_DEGRADED) * HEALTH_DEGRADED_RANGE,
-        )
-        const offline = Math.max(0, 100 - healthy - degraded)
-        return { healthy, degraded, offline }
-      })
+    .query(async ({ input }) => {
+      const { intervalMs, points } = TIME_RANGE_CONFIG[input.range]
+      const start = getTimeRangeStart(input.range)
+
+      const rows = await db
+        .select()
+        .from(healthHistory)
+        .where(gte(healthHistory.checkedAt, start))
+        .orderBy(healthHistory.checkedAt)
+
+      if (rows.length === 0) return []
+
+      const startMs = start.getTime()
+      const buckets = new Map<string, { healthy: number; degraded: number; offline: number; total: number }>()
+
+      for (const row of rows) {
+        const ts = bucketTimestamp(new Date(row.checkedAt), intervalMs, startMs)
+        if (!buckets.has(ts)) buckets.set(ts, { healthy: 0, degraded: 0, offline: 0, total: 0 })
+        const b = buckets.get(ts)!
+        b.total++
+        if (row.status === 'healthy') b.healthy++
+        else if (row.status === 'degraded') b.degraded++
+        else b.offline++
+      }
+
+      return Array.from(buckets.entries()).map(([timestamp, b]) => ({
+        timestamp,
+        healthy: b.total > 0 ? Math.round((b.healthy / b.total) * 100) : 0,
+        degraded: b.total > 0 ? Math.round((b.degraded / b.total) * 100) : 0,
+        offline: b.total > 0 ? Math.round((b.offline / b.total) * 100) : 0,
+      }))
     }),
 
+  /** IP2-004: Resource usage timeline from metricsHistory table */
   resourceUsage: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
-    .query(({ input }) => {
-      return generateTimeSeries(input.range, (i) => {
-        const cpuBase = CPU_BASE + Math.sin(i * 0.5) * CPU_AMPLITUDE
-        const memBase = MEMORY_BASE + Math.cos(i * 0.3) * MEMORY_AMPLITUDE
+    .query(async ({ input }) => {
+      const { intervalMs } = TIME_RANGE_CONFIG[input.range]
+      const start = getTimeRangeStart(input.range)
+
+      const rows = await db
+        .select()
+        .from(metricsHistory)
+        .where(gte(metricsHistory.timestamp, start))
+        .orderBy(metricsHistory.timestamp)
+
+      if (rows.length === 0) return []
+
+      const startMs = start.getTime()
+      const buckets = new Map<string, { cpuSum: number; memSum: number; count: number }>()
+
+      for (const row of rows) {
+        const ts = bucketTimestamp(new Date(row.timestamp), intervalMs, startMs)
+        if (!buckets.has(ts)) buckets.set(ts, { cpuSum: 0, memSum: 0, count: 0 })
+        const b = buckets.get(ts)!
+        b.cpuSum += row.cpuPercent
+        b.memSum += row.memPercent
+        b.count++
+      }
+
+      return Array.from(buckets.entries()).map(([timestamp, b]) => ({
+        timestamp,
+        cpu: Math.round(b.cpuSum / b.count),
+        memory: Math.round(b.memSum / b.count),
+      }))
+    }),
+
+  /** IP2-005: Uptime history from healthHistory records */
+  uptimeHistory: protectedProcedure
+    .input(z.object({ range: timeRangeSchema }))
+    .query(async ({ input }) => {
+      const start = getTimeRangeStart(input.range)
+
+      const rows = await db
+        .select({
+          clusterId: healthHistory.clusterId,
+          status: healthHistory.status,
+        })
+        .from(healthHistory)
+        .where(gte(healthHistory.checkedAt, start))
+
+      if (rows.length === 0) return []
+
+      // Group by cluster
+      const clusterStats = new Map<string, { total: number; healthy: number }>()
+      for (const row of rows) {
+        if (!clusterStats.has(row.clusterId)) clusterStats.set(row.clusterId, { total: 0, healthy: 0 })
+        const s = clusterStats.get(row.clusterId)!
+        s.total++
+        if (row.status === 'healthy') s.healthy++
+      }
+
+      // Get cluster names
+      const clusterList = await db
+        .select({ id: clustersTable.id, name: clustersTable.name })
+        .from(clustersTable)
+
+      const nameMap = new Map(clusterList.map((c) => [c.id, c.name]))
+
+      return Array.from(clusterStats.entries()).map(([clusterId, stats]) => {
+        const uptime = +(stats.healthy / stats.total * 100).toFixed(2)
+        const totalMinutes = stats.total * 5 // assuming 5-min check interval
+        const downMinutes = Math.round((stats.total - stats.healthy) * 5)
         return {
-          cpu: Math.round(cpuBase + seededRandom(i * SEED.RESOURCE_CPU) * CPU_NOISE_RANGE),
-          memory: Math.round(memBase + seededRandom(i * SEED.RESOURCE_MEM) * MEMORY_NOISE_RANGE),
+          cluster: nameMap.get(clusterId) ?? clusterId,
+          uptime,
+          downtime: downMinutes,
         }
       })
     }),
 
-
-  uptimeHistory: protectedProcedure
-    .input(z.object({ range: timeRangeSchema }))
-    .query(({ input }) => {
-      return MOCK_CLUSTER_NAMES.map((name, idx) => ({
-        cluster: name,
-        uptime: +(
-          UPTIME_BASE +
-          seededRandom(idx * SEED.UPTIME + input.range.length) * UPTIME_RANGE
-        ).toFixed(2),
-        downtime: Math.round(seededRandom(idx * SEED.UPTIME_DOWNTIME) * MAX_DOWNTIME_MINUTES),
-      }))
-    }),
-
+  /** IP2-006: Alerts timeline from events table (Warning-type K8s events) */
   alertsTimeline: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
-    .query(({ input }) => {
-      const { intervalMs, points } = getIntervalConfig(input.range)
-      const now = Date.now()
-      const start = now - intervalMs * points
+    .query(async ({ input }) => {
+      const start = getTimeRangeStart(input.range)
 
-      const alertCount = Math.round(MIN_ALERTS + seededRandom(points) * ALERT_COUNT_RANGE)
-      return Array.from({ length: alertCount }, (_, i) => ({
-        timestamp: new Date(
-          start + seededRandom(i * SEED.ALERT_TIMESTAMP) * (now - start),
-        ).toISOString(),
-        severity: SEVERITIES[Math.floor(seededRandom(i * SEED.ALERT_SEVERITY) * SEVERITIES.length)],
-        type: MOCK_ALERT_TYPES[
-          Math.floor(seededRandom(i * SEED.ALERT_TYPE) * MOCK_ALERT_TYPES.length)
-        ],
-        count: Math.round(
-          MIN_ALERT_OCCURRENCES + seededRandom(i * SEED.ALERT_COUNT) * MAX_ALERT_OCCURRENCES,
-        ),
-      })).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+      const rows = await db
+        .select()
+        .from(events)
+        .where(and(eq(events.kind, 'Warning'), gte(events.timestamp, start)))
+        .orderBy(events.timestamp)
+
+      if (rows.length === 0) return []
+
+      // Map reason → severity heuristic
+      const getSeverity = (reason: string | null): string => {
+        if (!reason) return 'warning'
+        const r = reason.toLowerCase()
+        if (r.includes('oom') || r.includes('crashloop') || r.includes('failed')) return 'critical'
+        if (r.includes('backoff') || r.includes('unhealthy') || r.includes('evict')) return 'warning'
+        return 'info'
+      }
+
+      return rows.map((row) => ({
+        timestamp: new Date(row.timestamp).toISOString(),
+        severity: getSeverity(row.reason),
+        type: row.reason ?? 'Unknown',
+        count: 1,
+      }))
     }),
 
   /**
@@ -182,7 +196,6 @@ export const metricsRouter = router({
     )
     .query(async () => {
       try {
-        // IP3-003/IP3-007: Query ALL connected clusters, aggregate metrics
         const allClusters = await db.select({ id: clustersTable.id }).from(clustersTable)
 
         let totalCpuNano = 0
@@ -231,7 +244,7 @@ export const metricsRouter = router({
 
             hasData = true
           } catch {
-            // Skip clusters that fail — don't break aggregation
+            // Skip clusters that fail
           }
         }
 

@@ -38,6 +38,7 @@ export {
 export { featureFlags } from './feature-flags.js'
 export { healthHistory } from './health-history.js'
 export { karpenterCache } from './karpenter-cache.js'
+export { metricsHistory } from './metrics-history.js'
 export { nodes } from './nodes.js'
 export { ssoProviders } from './sso.js'
 export { userTokens } from './user-tokens.js'
