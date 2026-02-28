@@ -150,7 +150,7 @@ function SidebarContent({
 
       {showLabels && autoscalingItems.length > 0 && (
         <div className="mt-1 border-t border-[var(--color-border)]/60 pt-2">
-          <p className="px-2 mb-1 text-[11px] uppercase tracking-widest font-mono font-semibold text-[var(--color-text-secondary)]">
+          <p className="px-2 mb-1 text-[11px] uppercase tracking-widest font-mono font-bold text-slate-500 dark:text-slate-300">
             Autoscaling
           </p>
           <nav className="flex flex-col gap-1">{autoscalingItems.map(renderNavItem)}</nav>
@@ -159,7 +159,7 @@ function SidebarContent({
 
       {showLabels && accessControlItems.length > 0 && (
         <div className="mt-1 border-t border-[var(--color-border)]/60 pt-2">
-          <p className="px-2 mb-1 text-[11px] uppercase tracking-widest font-mono font-semibold text-[var(--color-text-secondary)]">
+          <p className="px-2 mb-1 text-[11px] uppercase tracking-widest font-mono font-bold text-slate-500 dark:text-slate-300">
             Access Control
           </p>
           <nav className="flex flex-col gap-1">{accessControlItems.map(renderNavItem)}</nav>
@@ -168,7 +168,7 @@ function SidebarContent({
 
       {showLabels && clusters.length > 0 && (
         <div className="mt-2 border-t border-[var(--color-border)]/60 pt-2">
-          <p className="px-2 mb-1 text-[11px] uppercase tracking-widest font-mono font-semibold text-[var(--color-text-secondary)]">
+          <p className="px-2 mb-1 text-[11px] uppercase tracking-widest font-mono font-bold text-slate-500 dark:text-slate-300">
             Clusters
           </p>
           <div className="space-y-1">

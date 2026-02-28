@@ -13,7 +13,7 @@ export const ENV_META: Record<
     label: 'Production',
     sectionLabel: 'Production',
     color: 'rgb(180 120 130)',
-    badgeClass: 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-300 border-rose-200 dark:border-rose-800/40',
+    badgeClass: 'bg-rose-50/60 dark:bg-rose-950/20 text-rose-500/90 dark:text-rose-300/80 border-rose-200/60 dark:border-rose-800/30',
   },
   staging: {
     label: 'Staging / QA',
