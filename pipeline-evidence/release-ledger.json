@@ -100,5 +100,14 @@
     "status": "success",
     "helmRevision": 44,
     "notes": "Full build both API+Web. All pods running, health OK."
+  },
+  {
+    "version": "v149",
+    "sha": "939f457",
+    "timestamp": "2026-02-28T07:17:00Z",
+    "deployer": "uri",
+    "status": "success",
+    "helmRevision": 45,
+    "notes": "Full build API+Web. Pods running, health OK."
   }
 ]

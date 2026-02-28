@@ -9,7 +9,7 @@ const badgeVariants = cva(
       variant: {
         default: 'border-transparent bg-zinc-50 text-zinc-900',
         secondary: 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-badge-label)]',
-        destructive: 'border-red-200 bg-red-100 text-red-700 dark:border-red-800/40 dark:bg-red-900/30 dark:text-red-400',
+        destructive: 'border-red-200/80 bg-red-50 text-red-500 dark:border-red-800/30 dark:bg-red-950/40 dark:text-red-400/90',
         success: 'border-emerald-800/40 bg-emerald-950/60 text-emerald-300',
         warning: 'border-amber-800/40 bg-amber-950/60 text-amber-300',
         outline: 'border-[var(--color-border)] text-[var(--color-badge-label)]',

@@ -561,7 +561,7 @@ function SummaryCard({
 }) {
   return (
     <div
-      className="rounded-2xl p-4 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 w-full"
+      className="rounded-2xl p-4 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 w-full"
       style={{
         background: 'var(--glass-bg)',
         backdropFilter: 'blur(var(--glass-blur))',
