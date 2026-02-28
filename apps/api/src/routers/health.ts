@@ -20,7 +20,7 @@ const healthHistorySchema = z
   })
   .passthrough()
 
-async function performK8sHealthCheck(clusterId: string): Promise<{
+export async function performK8sHealthCheck(clusterId: string): Promise<{
   status: HealthStatus
   responseTimeMs: number
   details: Record<string, unknown>

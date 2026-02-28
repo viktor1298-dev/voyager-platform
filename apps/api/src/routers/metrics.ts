@@ -25,8 +25,6 @@ const SEED = {
   HEALTH_DEGRADED: 2,
   RESOURCE_CPU: 7,
   RESOURCE_MEM: 11,
-  REQUEST_SUCCESS: 13,
-  REQUEST_ERROR: 17,
   UPTIME: 31,
   UPTIME_DOWNTIME: 37,
   ALERT_TIMESTAMP: 41,
@@ -64,7 +62,6 @@ const MEMORY_BASE = 55
 const MEMORY_AMPLITUDE = 10
 const MEMORY_NOISE_RANGE = 8
 
-/** Request rate baseline ranges */
 
 /** Uptime baseline */
 const UPTIME_BASE = 99.0
