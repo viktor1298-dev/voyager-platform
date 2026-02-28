@@ -230,8 +230,8 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [x] **IP2-009** Background sync: K8s events → DB every 2 min
 
 ### I-Phase4: Production Ready (2-3 weeks)
-- [ ] **IP4-001** Alert evaluation engine (rules vs live metrics)
-- [ ] **IP4-002** Services tRPC router (list, get)
-- [ ] **IP4-003** Namespace tRPC router (list, create, delete)
-- [ ] **IP4-004** Multi-cluster metrics aggregation for dashboard
-- [ ] **IP4-005** Cluster auto-discovery from kubeconfig contexts
+- [x] **IP4-001** Alert evaluation engine (rules vs live metrics)
+- [x] **IP4-002** Services tRPC router (list, get)
+- [x] **IP4-003** Namespace tRPC router (list, create, delete)
+- [x] **IP4-004** Multi-cluster metrics aggregation for dashboard
+- [x] **IP4-005** Cluster auto-discovery from kubeconfig contexts
