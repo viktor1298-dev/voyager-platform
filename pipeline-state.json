@@ -1,8 +1,8 @@
 {
   "status": "complete",
-  "version": "v158",
+  "version": "v159",
   "phase": "phase-i-backend-real-data",
-  "currentStage": "complete-phase1",
+  "currentStage": "DEPLOYED",
   "startedAt": "2026-02-28T14:39:00Z",
   "stages": {
     "deploy-v157": "complete",
@@ -14,7 +14,7 @@
     "e2e-v158": "complete",
     "qa-v158": "complete"
   },
-  "deployedInK8s": "v158",
+  "deployedInK8s": "v159",
   "e2eVerdict": "PASS",
   "qaVerdict": "PASS",
   "qaScore": 9.0,
@@ -43,7 +43,7 @@
     "qa-v158.json",
     "review-v158.json"
   ],
-  "timestamp": "2026-02-28T15:34:00Z",
+  "timestamp": "2026-02-28T22:31:43.957602",
   "completedAt": "2026-02-28T15:45:00Z",
   "verifiedBy": "guardian",
   "verificationNotes": "Gate 4 (E2E failures=0) PASS. Gate 5 (QA 9.0>=8.5) PASS. Gate 2/3 (e2e author/timestamp null) - metadata gap, core data valid. Signed off by Guardian."

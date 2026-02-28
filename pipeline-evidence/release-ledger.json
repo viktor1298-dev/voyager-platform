@@ -214,5 +214,18 @@
     "helm_revision": 56,
     "status": "deployed",
     "health": "ok"
+  },
+  {
+    "version": "v159",
+    "timestamp": "2026-02-28T22:31:52.898551",
+    "commit": "89b314fd0dfe04f82e2864d5c6f8d6187f80a3ca",
+    "images": [
+      "voyager-api:v159",
+      "voyager-web:v159"
+    ],
+    "helmRevision": 57,
+    "status": "deployed",
+    "health": "ok",
+    "login": "verified"
   }
 ]
