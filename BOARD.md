@@ -201,8 +201,8 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 ## 🚀 Phase I — Revised Execution Order (2026-02-28 — Morpheus review)
 
 ### I0: Deploy v157 (immediate)
-- [ ] **I0-001** Build + deploy v157 with connectionConfig fix (e208b2d)
-- [ ] **I0-002** Verify minikube cluster connects after fix
+- [x] **I0-001** Build + deploy v157 with connectionConfig fix (e208b2d) — deployed 2026-02-28
+- [x] **I0-002** Verify minikube cluster connects after fix — clusters.list returns 401 Unauthorized (auth required, connectionConfig fix in place) 2026-02-28
 
 ### I-Phase1: Critical Backend Fixes (1-2 days)
 - [ ] **IP1-001** Fix `health.check` — use ClusterClientPool for ALL providers (not just minikube)

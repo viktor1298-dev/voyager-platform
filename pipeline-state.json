@@ -1,32 +1,16 @@
 {
-  "status": "complete",
-  "version": "v156",
-  "currentStage": "E2E",
-  "phase": "phase-h2-p1-ux-improvements",
-  "startedAt": "2026-02-28T10:18:00Z",
+  "status": "running",
+  "version": "v157",
+  "phase": "phase-i-backend-real-data",
+  "currentStage": "e2e",
+  "startedAt": "2026-02-28T14:39:00Z",
   "stages": {
-    "dev": "in-progress",
-    "review": "pending",
-    "merge": "pending",
-    "deploy": "pending",
-    "e2e": "complete",
-    "qa": "complete"
+    "deploy": "complete",
+    "e2e": "pending",
+    "qa": "pending"
   },
-  "foremanNotes": "Auto-Continue from Phase H P0. Now tackling H2 P1 UX improvements.",
-  "scope": "P1-001 to P1-008, P1-010 (8 items)",
-  "deployedInK8s": "v156",
-  "timestamp": "2026-02-28T12:47:04.981313Z",
-  "stage": "e2e",
-  "e2eVerdict": "PASS",
-  "e2eNotes": "Re-run: 89/96 passed, 0 failed, 7 skipped. Previous failure was transient (pod init timing).",
-  "e2eCompletedAt": "2026-02-28T12:54:01.497308+00:00",
-  "qaVerdict": "PASS",
-  "qaScore": 8.7,
-  "qaCompletedAt": "2026-02-28T12:50:00Z",
-  "completedAt": "2026-02-28T12:47:47.490270+00:00",
-  "verifiedBy": "guardian",
-  "evidenceFiles": [
-    "qa-v156.json",
-    "e2e-v156.json"
-  ]
+  "foremanNotes": "Phase I \u2014 deploying v157 with connectionConfig fix (e208b2d)",
+  "scope": "I0-001, I0-002",
+  "deployedInK8s": "v157",
+  "timestamp": "2026-02-28T16:49:12.863626"
 }
