@@ -30,7 +30,7 @@ function statusDot(status: ClusterStatus): string {
 export function TopBar() {
   const router = useRouter()
   const { resolvedTheme } = useTheme()
-  const logoSrc = '/logo-mark.png'
+  const logoSrc = '/logo-mark.svg'
   const user = useAuthStore((s) => s.user)
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
