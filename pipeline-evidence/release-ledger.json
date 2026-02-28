@@ -166,5 +166,15 @@
       "voyager-web:v152"
     ],
     "health": "ok"
+  },
+  {
+    "version": "v153",
+    "timestamp": "2026-02-28T10:58:06.020695Z",
+    "helm_revision": 52,
+    "images": [
+      "voyager-api:v153",
+      "voyager-web:v153"
+    ],
+    "health": "ok"
   }
 ]

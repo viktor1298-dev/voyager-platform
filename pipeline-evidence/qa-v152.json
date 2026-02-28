@@ -1,0 +1,76 @@
+{
+  "version": "v152",
+  "tested_at": "2026-02-28T12:45:00+02:00",
+  "branch": "feat/init-monorepo",
+  "url": "http://voyager-platform.voyagerlabs.co",
+  "author": "mai",
+  "functional_score": 7.5,
+  "effective_score": 7.5,
+  "gate": 8.5,
+  "verdict": "CHANGES_REQUESTED",
+  "env_blocked_items": [
+    "resource_utilization_bars_on_cards",
+    "skeleton_loading_states_verification",
+    "deployments_page_data"
+  ],
+  "code_bugs": [
+    {
+      "id": "BUG-001",
+      "severity": "high",
+      "title": "Env filter tabs (All/Prod/Staging/Dev) do NOT filter clusters",
+      "page": "Dashboard (Clusters section)",
+      "description": "Clicking 'Prod 2', 'Staging 1', or 'Dev 4' tab does not filter the cluster list. All 7 clusters remain visible ('7/7 visible' shown). The active tab highlight may not be updating either.",
+      "expected": "Clicking 'Prod 2' should show only 2 Production clusters; Staging and Dev groups should be hidden",
+      "actual": "All 7 clusters remain visible regardless of which env tab is clicked",
+      "feature": "Consolidated filter UI (env tabs + FilterBar merged)",
+      "priority": "P1"
+    }
+  ],
+  "features_tested": {
+    "consolidated_filter_ui": {
+      "status": "PARTIAL",
+      "notes": "FilterBar (status/provider/health) works. Env tabs UI present but filtering broken."
+    },
+    "card_table_view_toggle": {
+      "status": "PASS",
+      "notes": "Toggle works in both directions. Table shows Name/Provider/Health/Environment/Version/Nodes/CPU. Card view groups by env."
+    },
+    "skeleton_loading_states": {
+      "status": "ENV_BLOCKED",
+      "notes": "Could not verify without network throttling. No flash of unstyled content observed."
+    },
+    "resource_utilization_bars": {
+      "status": "ENV_BLOCKED",
+      "notes": "All clusters in Error/unreachable state. CPU shows '—'. Cannot verify bars with live data."
+    },
+    "simplified_top_bar": {
+      "status": "PASS",
+      "notes": "Clean minimal bar: Logo, Cluster selector, CPU%, User, Theme toggle, Notifications, Logout, Live status."
+    },
+    "compact_anomaly_cards": {
+      "status": "PASS",
+      "notes": "Compact expandable table rows. Expand shows severity/time/title/description/cluster/actions/metadata grid."
+    },
+    "view_before_delete_ordering": {
+      "status": "PASS",
+      "notes": "Clusters table: 'View cluster X' button appears BEFORE 'Delete cluster X'. Correct P1 ordering."
+    }
+  },
+  "theme_testing": {
+    "dark_mode": "PASS",
+    "light_mode": "PASS",
+    "toggle_works": true
+  },
+  "console_errors": [
+    {
+      "type": "recurring",
+      "message": "EventSource MIME type mismatch on presence.subscribe SSE endpoint",
+      "severity": "low",
+      "notes": "Pre-existing infra issue, not v152 regression"
+    }
+  ],
+  "pages_tested": ["Dashboard", "Clusters", "Anomalies", "Deployments", "Feature Flags"],
+  "issues_summary": [
+    "BUG-001 [HIGH]: Env filter tabs non-functional — core P1 feature broken"
+  ]
+}
