@@ -246,13 +246,12 @@ function DashboardContent() {
   }, [visibleClusters])
 
   const onFiltersChange = useCallback((next: FilterValue) => {
-    // P1-001: sync environment filter from FilterBar
-    if (next.environment !== filters.environment) {
-      setEnvironmentFilter(next.environment)
-    } else {
-      setFilters(next)
-    }
-  }, [filters.environment])
+    // BUG-001 fix: env tabs are the sole controller of `filters.environment`.
+    // FilterBar's onChange fires with stale URL-parsed env before the router
+    // updates searchParams, which caused it to reset environment back to 'all'.
+    // Solution: always preserve the current environment from state.
+    setFilters((prev) => ({ ...next, environment: prev.environment }))
+  }, [])
 
   let cardIndex = 0
 
