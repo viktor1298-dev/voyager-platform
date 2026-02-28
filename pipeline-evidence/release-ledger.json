@@ -185,5 +185,17 @@
     "helmRevision": 53,
     "changes": "feat(logo): replace PNG with indigo v2 SVG cloud-network logo",
     "status": "deployed"
+  },
+  {
+    "version": "v156",
+    "commit": "8ff98f6",
+    "branch": "feat/init-monorepo",
+    "deployedAt": "2026-02-28T14:09:10.310568",
+    "helmRevision": 54,
+    "features": [
+      "P1-003 normalize card/table styles",
+      "P1-005 command palette"
+    ],
+    "status": "deployed"
   }
 ]
