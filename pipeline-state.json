@@ -1,12 +1,13 @@
 {
   "status": "running",
-  "version": "v161",
+  "version": "v162",
   "phase": "IP4",
-  "currentStage": "deploy-v161",
+  "currentStage": "deploy-v162",
   "stages": {
     "dev-ip4": "complete",
     "review-ip4": "complete",
-    "deploy-v161": "complete"
+    "deploy-v161": "complete",
+    "deploy-v162": "complete"
   },
-  "deployedInK8s": "v161"
+  "deployedInK8s": "v162"
 }
