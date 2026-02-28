@@ -1,21 +1,13 @@
 {
-  "status": "pending-final-verification",
-  "version": "v159",
-  "phase": "phase-i-phase3",
-  "currentStage": "complete-phase3",
-  "startedAt": "2026-02-28T21:42:00Z",
+  "status": "running",
+  "version": "v160",
+  "phase": "IP2",
+  "currentStage": "deploy-v160",
+  "startedAt": "2026-02-28T23:31:00Z",
   "stages": {
-    "dev-phase3": "complete",
-    "review-phase3": "complete",
-    "deploy-v159": "complete",
-    "e2e-v159": "complete",
-    "qa-v159": "complete"
+    "dev-ip2": "complete",
+    "review-ip2": "complete",
+    "deploy-v160": "complete"
   },
-  "deployedInK8s": "v159",
-  "e2eVerdict": "PASS",
-  "e2eStats": {"total": 96, "passed": 85, "failed": 0, "skipped": 11},
-  "qaVerdict": "PASS",
-  "qaScore": 8.8,
-  "reviewScore": 10,
-  "completedAt": "2026-02-28T22:50:00Z"
+  "deployedInK8s": "v160"
 }
