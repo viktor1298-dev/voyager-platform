@@ -1,0 +1,23 @@
+{
+  "version": "v151",
+  "branch": "feat/init-monorepo",
+  "base_url": "http://voyager-platform.voyagerlabs.co",
+  "run_at": "2026-02-28T10:04:46.824Z",
+  "duration_ms": 488628,
+  "total": 96,
+  "passed": 84,
+  "failed": 0,
+  "skipped": 11,
+  "flaky": 1,
+  "gate": "PASS",
+  "failures": [],
+  "flakes": [
+    {
+      "test": "responsive.spec.ts > Responsive — Mobile Viewport > should not have horizontal overflow on mobile",
+      "hypothesis": "Login locator timed out (getByLabel /email/i) during full parallel suite run — likely resource contention causing slow page load",
+      "classification": "flake",
+      "rerun_result": "PASS",
+      "suggested_fix": "Increase login step timeout or add retry in helpers.ts login() for parallel suite runs"
+    }
+  ]
+}

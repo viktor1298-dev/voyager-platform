@@ -30,7 +30,7 @@ function statusDot(status: ClusterStatus): string {
 export function TopBar() {
   const router = useRouter()
   const { resolvedTheme } = useTheme()
-  const logoSrc = resolvedTheme === 'light' ? '/logo-mark-light.svg' : '/logo-mark.svg'
+  const logoSrc = '/logo-mark.png'
   const user = useAuthStore((s) => s.user)
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
@@ -114,7 +114,7 @@ export function TopBar() {
         <img
           src={logoSrc}
           alt="Voyager"
-          className="h-7 w-7 drop-shadow-[0_0_6px_rgba(99,102,241,0.5)]"
+          className="h-8 w-8 object-contain"
           aria-hidden="true"
         />
         <span className="font-semibold text-sm tracking-wide text-foreground text-[var(--color-text-primary)]">
@@ -122,15 +122,15 @@ export function TopBar() {
         </span>
       </div>
 
-      <div className="hidden sm:flex gap-6 items-center">
+      {/* P1-008: Simplified top bar — cluster selector + key metric only */}
+      <div className="hidden sm:flex gap-3 items-center">
         <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/80 px-2.5 py-1.5">
-          <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wide">Cluster</span>
           <select
             aria-label="Active cluster"
             value={activeClusterId ?? ''}
             onChange={(event) => setActiveCluster(event.target.value || null)}
             disabled={clustersQuery.isLoading || clusterOptions.length === 0}
-            className="max-w-[190px] truncate rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs text-[var(--color-text-primary)] disabled:opacity-60"
+            className="max-w-[200px] truncate rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs text-[var(--color-text-primary)] disabled:opacity-60"
           >
             <option value="">Select Cluster</option>
             {clusterOptions.map((cluster) => (
@@ -140,9 +140,10 @@ export function TopBar() {
             ))}
           </select>
         </div>
-        <Stat label="Total Pods" value={totalPods} color="var(--color-accent)" />
-        <Stat label="CPU Usage" value={cpuValue} color={statsQuery.data?.cpuPercent != null && statsQuery.data.cpuPercent > 80 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
-        <Stat label="Alerts" value={alerts === null ? '—' : String(alerts)} color={alerts !== null && alerts > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
+        {alerts !== null && alerts > 0 && (
+          <Stat label="Alerts" value={String(alerts)} color="var(--color-status-warning)" />
+        )}
+        <Stat label="CPU" value={cpuValue} color={statsQuery.data?.cpuPercent != null && statsQuery.data.cpuPercent > 80 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
       </div>
 
       <div className="flex items-center gap-3">
@@ -207,22 +208,17 @@ function ConnectionStatus({ dataUpdatedAt, isDisconnected, isReconnecting }: {
 
   return (
     <div
-      className="flex items-center gap-2 px-3 py-1.5 rounded-lg border"
+      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border"
       style={{ borderColor, backgroundColor: bgColor }}
+      title={`${statusText}${!isDisconnected ? ` · Synced ${syncLabel}` : ''}`}
     >
       <span
         className={`h-2 w-2 rounded-full ${isDisconnected ? '' : 'animate-pulse-slow'}`}
         style={{ backgroundColor: dotColor }}
       />
       <span className="hidden sm:inline text-[11px] font-mono font-medium" style={{ color: dotColor }}>
-        {statusText}
+        {isDisconnected ? 'Disconnected' : isReconnecting ? 'Reconnecting…' : 'Live'}
       </span>
-      {!isDisconnected && (
-        <span className="hidden sm:contents">
-          <span className="text-[10px] text-[var(--color-text-dim)]">·</span>
-          <span className="text-[10px] text-[var(--color-text-muted)] font-mono">Synced {syncLabel}</span>
-        </span>
-      )}
     </div>
   )
 }

@@ -18,6 +18,9 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: 'Voyager Platform',
   description: 'Kubernetes Operations Dashboard',
+  icons: {
+    icon: '/favicon.png',
+  },
 }
 
 export default function RootLayout({

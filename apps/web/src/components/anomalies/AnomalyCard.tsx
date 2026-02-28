@@ -40,13 +40,13 @@ export function AnomalyCard({ anomaly, onAcknowledge, onResolve }: AnomalyCardPr
   const SeverityIcon = severityMeta.icon
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1.5 min-w-0">
-          <div className="flex items-center gap-2">
-            <SeverityIcon className="h-4 w-4 shrink-0" />
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <SeverityIcon className="h-3.5 w-3.5 shrink-0" />
             <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${severityMeta.badgeClass}`}
+              className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${severityMeta.badgeClass}`}
             >
               <span className={`h-1.5 w-1.5 rounded-full ${severityMeta.dotClass}`} />
               {anomaly.severity}
@@ -55,22 +55,22 @@ export function AnomalyCard({ anomaly, onAcknowledge, onResolve }: AnomalyCardPr
               {getRelativeTime(anomaly.detectedAt)}
             </span>
           </div>
-          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
+          <h3 className="text-xs font-semibold text-[var(--color-text-primary)] truncate">
             {anomaly.title}
           </h3>
-          <p className="text-xs text-[var(--color-text-secondary)] line-clamp-2">
+          <p className="text-[11px] text-[var(--color-text-secondary)] line-clamp-1">
             {anomaly.description}
           </p>
         </div>
 
         <span
-          className={`text-[10px] uppercase tracking-wide font-semibold ${STATUS_STYLE[anomaly.status]}`}
+          className={`text-[10px] uppercase tracking-wide font-semibold shrink-0 ${STATUS_STYLE[anomaly.status]}`}
         >
           {anomaly.status}
         </span>
       </div>
 
-      <div className="flex items-center justify-between gap-3 text-xs">
+      <div className="flex items-center justify-between gap-2 text-xs">
         <Link
           href={`/clusters/${anomaly.clusterId}`}
           className="text-[var(--color-accent)] hover:underline truncate"

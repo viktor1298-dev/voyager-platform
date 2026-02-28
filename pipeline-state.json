@@ -1,24 +1,17 @@
 {
   "status": "in-progress",
-  "version": "v150",
-  "currentStage": "fix-loop-1",
-  "phase": "phase-h-p0-ux-fixes",
-  "startedAt": "2026-02-28T09:04:00Z",
+  "version": "v152",
+  "currentStage": "dev",
+  "phase": "phase-h2-p1-ux-improvements",
+  "startedAt": "2026-02-28T10:18:00Z",
   "stages": {
-    "dev": "complete",
-    "review": "complete",
-    "merge": "skipped",
-    "deploy": "complete",
-    "e2e": "complete",
-    "qa": "failed-7.5"
+    "dev": "in-progress",
+    "review": "pending",
+    "merge": "pending",
+    "deploy": "pending",
+    "e2e": "pending",
+    "qa": "pending"
   },
-  "foremanNotes": "Phase H: P0 UX fixes. E1 already implemented. Ron fixed 6 UI files (P0-001 to P0-005). Lior reviewed 10/10. Uri deploying v150 now. After deploy: run E2E then QA. Active worker: uri-v150-deploy. BOARD.md has 21 remaining [ ] items (5 policy + 16 feature items in H1-H3 + E2-E5).",
-  "scope": "H1 P0 critical UX fixes",
-  "activeWorker": "uri-v150-deploy",
-  "nextSteps": "After deploy completes: spawn Yuval for E2E, then Mai for QA. After Phase H complete: scan BOARD.md for remaining items (E2-E5, H2, H3).",
-  "checkpoint": {
-    "reason": "context-budget",
-    "timestamp": "2026-02-28T09:20:00Z",
-    "resumeAction": "Check if uri-v150-deploy finished. If deploy complete → spawn E2E. If not → wait."
-  }
+  "foremanNotes": "Auto-Continue from Phase H P0. Now tackling H2 P1 UX improvements.",
+  "scope": "P1-001 to P1-008, P1-010 (8 items)"
 }
