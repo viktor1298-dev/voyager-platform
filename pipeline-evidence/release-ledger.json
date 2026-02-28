@@ -176,5 +176,14 @@
       "voyager-web:v153"
     ],
     "health": "ok"
+  },
+  {
+    "version": "v155",
+    "timestamp": "2026-02-28T13:04:28.230096",
+    "commit": "909023a",
+    "branch": "feat/init-monorepo",
+    "helmRevision": 53,
+    "changes": "feat(logo): replace PNG with indigo v2 SVG cloud-network logo",
+    "status": "deployed"
   }
 ]
