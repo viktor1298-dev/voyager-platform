@@ -1,0 +1,14 @@
+{
+  "version": "v158",
+  "baseUrl": "http://voyager-platform.voyagerlabs.co",
+  "command": "BASE_URL=http://voyager-platform.voyagerlabs.co npx playwright test",
+  "total": 96,
+  "passed": 86,
+  "failed": 0,
+  "skipped": 10,
+  "failures": [],
+  "verdict": "PASS",
+  "gate": "0 failures required",
+  "notes": "Full suite executed from repository root with explicit BASE_URL; skipped tests are acceptable by gate.",
+  "sourceReport": "/tmp/playwright-v158.json"
+}

@@ -35,3 +35,12 @@ export const SSE_DEPLOYMENT_PROGRESS_INTERVAL_MS = 3_000
 
 /** Alert stream: check interval for new alerts (ms) */
 export const SSE_ALERT_CHECK_INTERVAL_MS = 5_000
+
+/** Token refresh threshold — refresh at 80% of TTL */
+export const TOKEN_REFRESH_THRESHOLD_RATIO = 0.8
+
+/** Metrics polling interval for ClusterWatchManager (ms) */
+export const CLUSTER_METRICS_POLL_INTERVAL_MS = 30_000
+
+/** Maximum concurrent cluster watches */
+export const MAX_CONCURRENT_CLUSTER_WATCHES = 20

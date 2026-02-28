@@ -379,5 +379,14 @@
     "env_blocked_items": [],
     "was_corrected": false,
     "note": "QA in progress, e2e passed"
+  },
+  {
+    "timestamp": "2026-02-28T15:45:00Z",
+    "version": "v158",
+    "verdict": "COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "notes": "e2e metadata (author/timestamp) null - metadata gap only, core data valid"
   }
 ]

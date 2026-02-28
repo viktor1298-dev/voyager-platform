@@ -1,6 +1,7 @@
 import { SSE_HEARTBEAT_INTERVAL_MS } from '@voyager/config/sse'
 import type {
   AlertEvent,
+  ClusterStateChangeEvent,
   DeploymentProgressEvent,
   LogLineEvent,
   MetricsEvent,
@@ -8,7 +9,7 @@ import type {
 } from '@voyager/types'
 import { z } from 'zod'
 import { voyagerEmitter } from '../lib/event-emitter.js'
-import { streamLogs, watchDeploymentProgress } from '../lib/k8s-watchers.js'
+import { streamLogs, streamLogsFollow, watchDeploymentProgress } from '../lib/k8s-watchers.js'
 import { protectedProcedure, router } from '../trpc.js'
 
 /**
@@ -71,19 +72,23 @@ function createEventStream<T>(
 
 export const subscriptionsRouter = router({
   /**
-   * Live pod events — subscribe to K8s watch API for pod status changes
+   * Live pod events — subscribe to K8s informer for pod status changes
+   * IP3-003: Now accepts optional clusterId to filter by cluster
    */
   podEvents: protectedProcedure
     .input(
       z
         .object({
           namespace: z.string().optional(),
+          clusterId: z.string().optional(),
         })
         .optional(),
     )
     .subscription(async function* ({ input, signal }) {
       const stream = createEventStream<PodEvent>('pod-event', signal)
       for await (const event of stream) {
+        // Filter by clusterId if specified
+        if (input?.clusterId && event.clusterId !== input.clusterId) continue
         // Filter by namespace if specified
         if (input?.namespace && event.namespace !== input.namespace) continue
         yield event
@@ -98,11 +103,11 @@ export const subscriptionsRouter = router({
       z.object({
         name: z.string(),
         namespace: z.string(),
+        clusterId: z.string().optional(),
       }),
     )
     .subscription(async function* ({ input, signal }) {
-      // Start watching this specific deployment
-      watchDeploymentProgress(input.name, input.namespace, signal)
+      watchDeploymentProgress(input.name, input.namespace, signal, input.clusterId)
 
       const eventName = 'deployment-progress'
       const stream = createEventStream<DeploymentProgressEvent>(eventName, signal)
@@ -115,13 +120,24 @@ export const subscriptionsRouter = router({
 
   /**
    * Metrics stream — live CPU/memory updates
+   * IP3-003: Now accepts optional clusterId to filter by cluster
    */
-  metrics: protectedProcedure.subscription(async function* ({ signal }) {
-    const stream = createEventStream<MetricsEvent>('metrics', signal)
-    for await (const event of stream) {
-      yield event
-    }
-  }),
+  metrics: protectedProcedure
+    .input(
+      z
+        .object({
+          clusterId: z.string().optional(),
+        })
+        .optional(),
+    )
+    .subscription(async function* ({ input, signal }) {
+      const stream = createEventStream<MetricsEvent>('metrics', signal)
+      for await (const event of stream) {
+        // Filter by clusterId if specified
+        if (input?.clusterId && event.clusterId !== input.clusterId) continue
+        yield event
+      }
+    }),
 
   /**
    * Alert stream — new alerts pushed instantly
@@ -134,7 +150,8 @@ export const subscriptionsRouter = router({
   }),
 
   /**
-   * Log streaming — tail logs via SSE
+   * Log streaming — follow mode (IP3-005)
+   * Uses k8s.Log follow mode when clusterId provided, falls back to polling otherwise
    */
   logs: protectedProcedure
     .input(
@@ -142,16 +159,50 @@ export const subscriptionsRouter = router({
         podName: z.string(),
         namespace: z.string(),
         container: z.string().optional(),
+        clusterId: z.string().optional(),
       }),
     )
     .subscription(async function* ({ input, signal }) {
-      const podKey = `${input.namespace}/${input.podName}${input.container ? `/${input.container}` : ''}`
+      if (input.clusterId && signal) {
+        // IP3-005: Use follow mode with clusterId
+        const podKey = `${input.clusterId}/${input.namespace}/${input.podName}${input.container ? `/${input.container}` : ''}`
+        streamLogsFollow(input.clusterId, input.namespace, input.podName, input.container, signal)
+          .catch((err) => {
+            console.error(`[logs] Follow mode failed for ${podKey}:`, err.message)
+          })
 
-      // Start streaming logs for this pod
-      streamLogs(input.podName, input.namespace, input.container, signal)
+        const stream = createEventStream<LogLineEvent>(`log:${podKey}`, signal)
+        for await (const event of stream) {
+          yield event
+        }
+      } else {
+        // Legacy: polling mode without clusterId
+        const podKey = `${input.namespace}/${input.podName}${input.container ? `/${input.container}` : ''}`
+        streamLogs(input.podName, input.namespace, input.container, signal)
 
-      const stream = createEventStream<LogLineEvent>(`log:${podKey}`, signal)
+        const stream = createEventStream<LogLineEvent>(`log:${podKey}`, signal)
+        for await (const event of stream) {
+          yield event
+        }
+      }
+    }),
+
+  /**
+   * Cluster connection state changes — real-time FSM updates
+   * IP3-004: New subscription for cluster state changes
+   */
+  clusterState: protectedProcedure
+    .input(
+      z
+        .object({
+          clusterId: z.string().optional(),
+        })
+        .optional(),
+    )
+    .subscription(async function* ({ input, signal }) {
+      const stream = createEventStream<ClusterStateChangeEvent>('cluster-state-change', signal)
       for await (const event of stream) {
+        if (input?.clusterId && event.clusterId !== input.clusterId) continue
         yield event
       }
     }),

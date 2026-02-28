@@ -1,6 +1,7 @@
 import * as k8s from '@kubernetes/client-node'
 import { z } from 'zod'
-import { getKubeConfig } from '../lib/k8s.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { clusters as clustersTable, db } from '@voyager/db'
 import { protectedProcedure, router } from '../trpc.js'
 
 const timeRangeSchema = z.enum(['24h', '7d', '30d']).default('24h')
@@ -194,77 +195,84 @@ export const metricsRouter = router({
     )
     .query(async () => {
       try {
-        const kc = getKubeConfig()
-        const coreApi = kc.makeApiClient(k8s.CoreV1Api)
-        const metricsClient = new k8s.Metrics(kc)
-
-        const [nodeMetrics, nodesResponse] = await Promise.all([
-          metricsClient.getNodeMetrics(),
-          coreApi.listNode(),
-        ])
-
-        const capacityMap = new Map<string, { cpuNano: number; memBytes: number }>()
-        for (const node of nodesResponse.items) {
-          const name = node.metadata?.name
-          if (name) {
-            capacityMap.set(name, {
-              cpuNano: parseCpuToNanoMetrics(node.status?.allocatable?.cpu ?? '0'),
-              memBytes: parseMemToBytesMetrics(node.status?.allocatable?.memory ?? '0'),
-            })
-          }
-        }
+        // IP3-003/IP3-007: Query ALL connected clusters, aggregate metrics
+        const allClusters = await db.select({ id: clustersTable.id }).from(clustersTable)
 
         let totalCpuNano = 0
         let totalMemBytes = 0
         let totalCpuAllocatable = 0
         let totalMemAllocatable = 0
+        let totalPodCount = 0
+        let hasData = false
 
-        for (const node of nodeMetrics.items) {
-          const used = {
-            cpuNano: parseCpuToNanoMetrics(node.usage?.cpu ?? '0'),
-            memBytes: parseMemToBytesMetrics(node.usage?.memory ?? '0'),
-          }
-          totalCpuNano += used.cpuNano
-          totalMemBytes += used.memBytes
+        for (const cluster of allClusters) {
+          try {
+            const kc = await clusterClientPool.getClient(cluster.id)
+            const coreApi = kc.makeApiClient(k8s.CoreV1Api)
+            const metricsClient = new k8s.Metrics(kc)
 
-          const cap = capacityMap.get(node.metadata?.name ?? '')
-          if (cap) {
-            totalCpuAllocatable += cap.cpuNano
-            totalMemAllocatable += cap.memBytes
+            const [nodeMetrics, nodesResponse] = await Promise.all([
+              metricsClient.getNodeMetrics(),
+              coreApi.listNode(),
+            ])
+
+            const capacityMap = new Map<string, { cpuNano: number; memBytes: number }>()
+            for (const node of nodesResponse.items) {
+              const name = node.metadata?.name
+              if (name) {
+                capacityMap.set(name, {
+                  cpuNano: parseCpuToNanoMetrics(node.status?.allocatable?.cpu ?? '0'),
+                  memBytes: parseMemToBytesMetrics(node.status?.allocatable?.memory ?? '0'),
+                })
+              }
+            }
+
+            for (const node of nodeMetrics.items) {
+              totalCpuNano += parseCpuToNanoMetrics(node.usage?.cpu ?? '0')
+              totalMemBytes += parseMemToBytesMetrics(node.usage?.memory ?? '0')
+              const cap = capacityMap.get(node.metadata?.name ?? '')
+              if (cap) {
+                totalCpuAllocatable += cap.cpuNano
+                totalMemAllocatable += cap.memBytes
+              }
+            }
+
+            try {
+              const pods = await coreApi.listPodForAllNamespaces()
+              totalPodCount += pods.items?.length ?? 0
+            } catch { /* ignore */ }
+
+            hasData = true
+          } catch {
+            // Skip clusters that fail — don't break aggregation
           }
         }
 
-        let podCount = 0
-        try {
-          const pods = await coreApi.listPodForAllNamespaces()
-          podCount = pods.items?.length ?? 0
-        } catch {
-          // ignore
+        if (!hasData) {
+          return {
+            cpuPercent: null, memoryPercent: null,
+            cpuCores: null, memoryBytes: null,
+            podCount: 0, timestamp: new Date().toISOString(),
+          }
         }
 
         return {
-          cpuPercent:
-            totalCpuAllocatable > 0
-              ? Math.round((totalCpuNano / totalCpuAllocatable) * 1000) / 10
-              : null,
-          memoryPercent:
-            totalMemAllocatable > 0
-              ? Math.round((totalMemBytes / totalMemAllocatable) * 1000) / 10
-              : null,
+          cpuPercent: totalCpuAllocatable > 0
+            ? Math.round((totalCpuNano / totalCpuAllocatable) * 1000) / 10
+            : null,
+          memoryPercent: totalMemAllocatable > 0
+            ? Math.round((totalMemBytes / totalMemAllocatable) * 1000) / 10
+            : null,
           cpuCores: totalCpuNano / 1e9,
           memoryBytes: totalMemBytes,
-          podCount,
+          podCount: totalPodCount,
           timestamp: new Date().toISOString(),
         }
       } catch {
-        // Metrics-server not available — return null stats
         return {
-          cpuPercent: null,
-          memoryPercent: null,
-          cpuCores: null,
-          memoryBytes: null,
-          podCount: 0,
-          timestamp: new Date().toISOString(),
+          cpuPercent: null, memoryPercent: null,
+          cpuCores: null, memoryBytes: null,
+          podCount: 0, timestamp: new Date().toISOString(),
         }
       }
     }),
