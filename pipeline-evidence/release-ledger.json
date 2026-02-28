@@ -132,5 +132,16 @@
       "voyager-web:v151"
     ],
     "status": "deployed"
+  },
+  {
+    "version": "v152",
+    "tag": "v152",
+    "commit": "5ab9f3a",
+    "branch": "feat/init-monorepo",
+    "deployed_at": "2026-02-28T10:06:09Z",
+    "helm_revision": 48,
+    "changes": "logo SVG permissions + enhanced folded-metal origami V mark",
+    "status": "success",
+    "health": "ok"
   }
 ]
