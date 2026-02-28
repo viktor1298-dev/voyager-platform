@@ -35,7 +35,7 @@ test.describe('API Tokens', () => {
     await expect(page.getByText(/shown once|will not be shown again|copy.*token|save.*token/i)).toBeVisible({ timeout: 10000 })
     // Dismiss the reveal banner
     // Wait for dismiss button to be accessible
-    await page.waitForSelector('button:has-text("Dismiss token")', { state: 'visible', timeout: 10000 });
+    await page.getByRole('button', { name: /Dismiss token/i }).waitFor({ state: 'visible', timeout: 10000 });
     await page.getByRole('button', { name: /Dismiss token/i }).click()
     // Token name should now appear in the list
     await expect(page.getByText(tokenName)).toBeVisible({ timeout: 5000 })
@@ -48,7 +48,7 @@ test.describe('API Tokens', () => {
     await page.getByRole('button', { name: /Create Token|Generate Token/i }).click()
     await expect(page.getByText(/shown once|will not be shown again|copy.*token|save.*token/i)).toBeVisible({ timeout: 10000 })
     // Wait for dismiss button to be accessible
-    await page.waitForSelector('button:has-text("Dismiss token")', { state: 'visible', timeout: 10000 });
+    await page.getByRole('button', { name: /Dismiss token/i }).waitFor({ state: 'visible', timeout: 10000 });
     await page.getByRole('button', { name: /Dismiss token/i }).click()
     await expect(page.getByText(tokenName)).toBeVisible({ timeout: 5000 })
     // Click Revoke → confirms with dialog
