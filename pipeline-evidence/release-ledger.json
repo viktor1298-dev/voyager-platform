@@ -153,5 +153,18 @@
     "notes": "Final logo PNG (logo-mark.png) + Dockerfile public path fix",
     "helm_revision": 50,
     "status": "deployed"
+  },
+  {
+    "version": "v152",
+    "sha": "4614e00",
+    "timestamp": "2026-02-28T10:31:41.198Z",
+    "deployer": "uri",
+    "status": "success",
+    "helmRevision": 51,
+    "images": [
+      "voyager-api:v152",
+      "voyager-web:v152"
+    ],
+    "health": "ok"
   }
 ]
