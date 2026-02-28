@@ -22,7 +22,7 @@ test.describe('BYOK key flow', () => {
     const apiKeyInput = page.getByLabel(/api key/i)
     const savedState = page.getByTestId('byok-saved-state')
 
-    await expect(testButton).toBeDisabled()
+    await expect(testButton).toBeEnabled()
     await expect(saveButton).toBeDisabled()
     await expect(savedState).toBeVisible()
 

@@ -1,71 +1,93 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { DataTable } from '@/components/DataTable'
-import { PageTransition } from '@/components/animations'
+import { QueryError } from '@/components/ErrorBoundary'
+import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
-import { useMemo } from 'react'
+import { Layers } from 'lucide-react'
+import { useMemo, useState } from 'react'
 
-type ServiceRow = {
-  id: string
+interface ServiceRow {
   name: string
   namespace: string
-  type: 'ClusterIP' | 'NodePort' | 'LoadBalancer'
-  endpoints: number
-  status: 'Healthy' | 'Warning'
+  type: string
+  clusterIP: string | null
+  ports: Array<{ port: number; protocol?: string | null; targetPort?: string | number | null }>
 }
 
-const mockServices: ServiceRow[] = [
-  { id: 'svc-1', name: 'api-gateway', namespace: 'voyager', type: 'LoadBalancer', endpoints: 6, status: 'Healthy' },
-  { id: 'svc-2', name: 'auth-service', namespace: 'voyager', type: 'ClusterIP', endpoints: 3, status: 'Healthy' },
-  { id: 'svc-3', name: 'metrics-proxy', namespace: 'monitoring', type: 'NodePort', endpoints: 1, status: 'Warning' },
-  { id: 'svc-4', name: 'alerts-dispatcher', namespace: 'voyager', type: 'ClusterIP', endpoints: 2, status: 'Healthy' },
+const columns: ColumnDef<ServiceRow>[] = [
+  { accessorKey: 'name', header: 'Name' },
+  { accessorKey: 'namespace', header: 'Namespace' },
+  { accessorKey: 'type', header: 'Type' },
+  { accessorKey: 'clusterIP', header: 'Cluster IP', cell: ({ getValue }) => getValue() ?? '—' },
+  {
+    id: 'ports',
+    header: 'Ports',
+    cell: ({ row }) =>
+      row.original.ports
+        .map((p) => `${p.port}${p.protocol ? '/' + p.protocol : ''}`)
+        .join(', ') || '—',
+  },
 ]
 
 export default function ServicesPage() {
-  const columns = useMemo<ColumnDef<ServiceRow, unknown>[]>(
-    () => [
-      { accessorKey: 'name', header: 'Service', cell: ({ row }) => <span className="font-medium text-[var(--color-text-primary)]">{row.original.name}</span> },
-      { accessorKey: 'namespace', header: 'Namespace' },
-      { accessorKey: 'type', header: 'Type' },
-      { accessorKey: 'endpoints', header: 'Endpoints' },
-      {
-        accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => (
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-              row.original.status === 'Healthy'
-                ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]'
-                : 'bg-[var(--color-status-warning)]/20 text-[var(--color-status-warning)]'
-            }`}
-          >
-            {row.original.status}
-          </span>
-        ),
-      },
-    ],
-    [],
+  const clustersQuery = trpc.clusters.list.useQuery()
+  const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null)
+
+  const clusterId = selectedClusterId ?? clustersQuery.data?.[0]?.id ?? null
+
+  const servicesQuery = trpc.services.list.useQuery(
+    { clusterId: clusterId! },
+    { enabled: !!clusterId, refetchInterval: 30_000 },
   )
+
+  const data = useMemo(() => (servicesQuery.data ?? []) as ServiceRow[], [servicesQuery.data])
 
   return (
     <AppLayout>
       <PageTransition>
-        <div className="space-y-4">
-          <Breadcrumbs />
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Layers className="h-6 w-6 text-[var(--color-accent)]" />
+              <div>
+                <Breadcrumbs items={[{ label: 'Services' }]} />
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Kubernetes services across your clusters
+                </p>
+              </div>
+            </div>
 
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Services</h1>
-            <p className="mt-1 text-sm text-[var(--color-text-muted)]">Cluster services overview (mock data)</p>
+            {clustersQuery.data && clustersQuery.data.length > 1 && (
+              <select
+                value={clusterId ?? ''}
+                onChange={(e) => setSelectedClusterId(e.target.value)}
+                className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-1.5 text-sm text-[var(--color-text-primary)]"
+              >
+                {clustersQuery.data.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
-          <DataTable
-            data={mockServices}
-            columns={columns}
-            searchPlaceholder="Search services..."
-            emptyTitle="No services found"
-          />
+          {servicesQuery.error ? (
+            <QueryError error={servicesQuery.error} />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={data}
+              isLoading={servicesQuery.isLoading}
+              emptyIcon={<Layers className="h-10 w-10" />}
+              emptyTitle="No services found"
+              emptyDescription="No Kubernetes services found in this cluster."
+            />
+          )}
         </div>
       </PageTransition>
     </AppLayout>
