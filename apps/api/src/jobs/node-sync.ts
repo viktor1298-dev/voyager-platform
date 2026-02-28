@@ -21,6 +21,18 @@ async function syncNodes(): Promise<void> {
       const coreApi = kc.makeApiClient(k8s.CoreV1Api)
       const nodesRes = await coreApi.listNode()
 
+      // Fetch all pods ONCE and build a per-node count map (avoid N+1 API calls)
+      const podCountByNode = new Map<string, number>()
+      try {
+        const allPods = await coreApi.listPodForAllNamespaces()
+        for (const pod of allPods.items) {
+          const nodeName = pod.spec?.nodeName
+          if (nodeName) {
+            podCountByNode.set(nodeName, (podCountByNode.get(nodeName) ?? 0) + 1)
+          }
+        }
+      } catch { /* ignore — pod counts will default to 0 */ }
+
       for (const node of nodesRes.items) {
         const name = node.metadata?.name ?? 'unknown'
         const conditions = node.status?.conditions ?? []
@@ -44,12 +56,7 @@ async function syncNodes(): Promise<void> {
 
         const k8sVersion = node.status?.nodeInfo?.kubeletVersion ?? null
 
-        // Count pods on this node
-        let podsCount = 0
-        try {
-          const pods = await coreApi.listPodForAllNamespaces({fieldSelector: `spec.nodeName=${name}`})
-          podsCount = pods.items.length
-        } catch { /* ignore */ }
+        const podsCount = podCountByNode.get(name) ?? 0
 
         // Upsert: find existing by clusterId + name
         const existing = await db

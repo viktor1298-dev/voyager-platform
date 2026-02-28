@@ -10,7 +10,10 @@ import {
 } from '@voyager/db'
 import { protectedProcedure, router } from '../trpc.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
-import { eq, gte, and, sql, desc } from 'drizzle-orm'
+import { eq, gte, and } from 'drizzle-orm'
+
+/** Shared constant for health-check polling interval (minutes) */
+const HEALTH_CHECK_INTERVAL_MINUTES = 5
 
 const timeRangeSchema = z.enum(['24h', '7d', '30d']).default('24h')
 
@@ -138,8 +141,8 @@ export const metricsRouter = router({
 
       return Array.from(clusterStats.entries()).map(([clusterId, stats]) => {
         const uptime = +(stats.healthy / stats.total * 100).toFixed(2)
-        const totalMinutes = stats.total * 5 // assuming 5-min check interval
-        const downMinutes = Math.round((stats.total - stats.healthy) * 5)
+        const totalMinutes = stats.total * HEALTH_CHECK_INTERVAL_MINUTES
+        const downMinutes = Math.round((stats.total - stats.healthy) * HEALTH_CHECK_INTERVAL_MINUTES)
         return {
           cluster: nameMap.get(clusterId) ?? clusterId,
           uptime,

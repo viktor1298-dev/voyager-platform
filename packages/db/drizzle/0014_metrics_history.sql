@@ -13,3 +13,5 @@ DO $$ BEGIN
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
+--> statement-breakpoint
+CREATE INDEX idx_metrics_history_cluster_ts ON metrics_history(cluster_id, timestamp);
