@@ -120,5 +120,17 @@
     ],
     "health": "ok",
     "branch": "feat/init-monorepo"
+  },
+  {
+    "version": "v151",
+    "timestamp": "2026-02-28T09:51:54.158878Z",
+    "branch": "feat/init-monorepo",
+    "helm_revision": 47,
+    "changes": "fix-loop-1: sidebar header contrast + env badge contrast fixes",
+    "images": [
+      "voyager-api:v151",
+      "voyager-web:v151"
+    ],
+    "status": "deployed"
   }
 ]
