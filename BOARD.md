@@ -210,13 +210,13 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [x] **IP1-003** Add integration test: health check returns real status for kubeconfig cluster
 
 ### I-Phase3: Streaming Infrastructure (1-2 weeks — build FIRST before real data)
-- [ ] **IP3-001** Replace raw `k8s.Watch` with `k8s.makeInformer` (LIST+WATCH+resync)
-- [ ] **IP3-002** Create `ClusterWatchManager` — per-cluster informer lifecycle
-- [ ] **IP3-003** Tag all events with `clusterId` — fix single-cluster streaming
-- [ ] **IP3-004** Create `ClusterConnectionState` FSM (connected→disconnected→error)
-- [ ] **IP3-005** Replace log polling with `k8s.Log` follow mode
-- [ ] **IP3-006** Token expiry tracking + proactive refresh at 80% TTL
-- [ ] **IP3-007** Consolidate all K8s ops through ClusterClientPool (remove global kubeconfig path)
+- [x] **IP3-001** Replace raw `k8s.Watch` with `k8s.makeInformer` (LIST+WATCH+resync)
+- [x] **IP3-002** Create `ClusterWatchManager` — per-cluster informer lifecycle
+- [x] **IP3-003** Tag all events with `clusterId` — fix single-cluster streaming
+- [x] **IP3-004** Create `ClusterConnectionState` FSM (connected→disconnected→error)
+- [x] **IP3-005** Replace log polling with `k8s.Log` follow mode
+- [x] **IP3-006** Token expiry tracking + proactive refresh at 80% TTL
+- [x] **IP3-007** Consolidate all K8s ops through ClusterClientPool (remove global kubeconfig path)
 
 ### I-Phase2: Replace Mock Data with Real K8s (3-5 days — after Phase3)
 - [ ] **IP2-001** Create `metricsHistory` DB table + migration

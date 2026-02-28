@@ -1,50 +1,21 @@
 {
-  "status": "complete",
+  "status": "pending-final-verification",
   "version": "v159",
-  "phase": "phase-i-backend-real-data",
-  "currentStage": "DEPLOYED",
-  "startedAt": "2026-02-28T14:39:00Z",
+  "phase": "phase-i-phase3",
+  "currentStage": "complete-phase3",
+  "startedAt": "2026-02-28T21:42:00Z",
   "stages": {
-    "deploy-v157": "complete",
-    "e2e-v157": "complete",
-    "qa-v157": "complete",
-    "dev-phase1": "complete",
-    "review-phase1": "complete",
-    "deploy-v158": "complete",
-    "e2e-v158": "complete",
-    "qa-v158": "complete"
+    "dev-phase3": "complete",
+    "review-phase3": "complete",
+    "deploy-v159": "complete",
+    "e2e-v159": "complete",
+    "qa-v159": "complete"
   },
   "deployedInK8s": "v159",
   "e2eVerdict": "PASS",
+  "e2eStats": {"total": 96, "passed": 85, "failed": 0, "skipped": 11},
   "qaVerdict": "PASS",
-  "qaScore": 9.0,
-  "foremanNotes": "Phase I-Phase1 (IP1) complete. v158 deployed with all gates passed. Remaining: IP3 (streaming), IP2 (real data), IP4 (production) \u2014 multi-day phases needing Morpheus direction.",
-  "scope": "I0-001, I0-002, I1-001, I1-002, I1-003, I1-004, IP1-001, IP1-002, IP1-003",
-  "completedItems": [
-    "I0-001",
-    "I0-002",
-    "I1-001",
-    "I1-002",
-    "I1-003",
-    "I1-004",
-    "IP1-001",
-    "IP1-002",
-    "IP1-003"
-  ],
-  "remainingPhaseI": [
-    "IP3 (7 items - streaming infra)",
-    "IP2 (9 items - replace mock data)",
-    "IP4 (5 items - production ready)"
-  ],
-  "evidenceFiles": [
-    "e2e-v157.json",
-    "qa-v157.json",
-    "e2e-v158.json",
-    "qa-v158.json",
-    "review-v158.json"
-  ],
-  "timestamp": "2026-02-28T22:31:43.957602",
-  "completedAt": "2026-02-28T15:45:00Z",
-  "verifiedBy": "guardian",
-  "verificationNotes": "Gate 4 (E2E failures=0) PASS. Gate 5 (QA 9.0>=8.5) PASS. Gate 2/3 (e2e author/timestamp null) - metadata gap, core data valid. Signed off by Guardian."
+  "qaScore": 8.8,
+  "reviewScore": 10,
+  "completedAt": "2026-02-28T22:50:00Z"
 }
