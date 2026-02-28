@@ -5,7 +5,7 @@ import { navItems } from '@/config/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Key, Search } from 'lucide-react'
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false)
@@ -76,7 +76,7 @@ export function CommandPalette() {
                     key={item.id}
                     value={`Go to ${item.label}`}
                     onSelect={() => navigate(item.id)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-white/[0.06] data-[selected=true]:text-[var(--color-text-primary)] transition-colors"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors"
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     <span>{item.label}</span>
@@ -84,6 +84,15 @@ export function CommandPalette() {
                   </Command.Item>
                 )
               })}
+              <Command.Item
+                value="Go to API Tokens"
+                onSelect={() => navigate('/api-tokens')}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors"
+              >
+                <Key className="h-4 w-4 shrink-0" />
+                <span>API Tokens</span>
+                <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">/api-tokens</span>
+              </Command.Item>
             </Command.Group>
 
             <Command.Group heading="Actions" className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[var(--color-text-dim)] [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5">
@@ -93,7 +102,7 @@ export function CommandPalette() {
                   document.querySelector<HTMLButtonElement>('[data-testid="theme-toggle"]')?.click()
                   setOpen(false)
                 }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-white/[0.06] data-[selected=true]:text-[var(--color-text-primary)] transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors"
               >
                 🎨 Toggle Theme
               </Command.Item>
@@ -103,7 +112,7 @@ export function CommandPalette() {
                   setOpen(false)
                   document.dispatchEvent(new CustomEvent('voyager:show-shortcuts'))
                 }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-white/[0.06] data-[selected=true]:text-[var(--color-text-primary)] transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors"
               >
                 ⌨️ Keyboard Shortcuts
               </Command.Item>

@@ -3,7 +3,7 @@
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
 import { useClusterContext } from '@/stores/cluster-context'
-import { LogOut } from 'lucide-react'
+import { LogOut, Search } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -152,6 +152,16 @@ export function TopBar() {
             {user.name ?? user.email}
           </span>
         )}
+        <button
+          type="button"
+          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+          className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] transition-colors"
+          title="Command Palette (⌘K)"
+          aria-label="Open command palette"
+        >
+          <Search className="h-3 w-3" />
+          <kbd className="text-[10px] font-mono">⌘K</kbd>
+        </button>
         <ThemeToggle />
         <NotificationsPanel />
         <button
