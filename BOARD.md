@@ -194,7 +194,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [x] **I3-001** Add Informer pattern (LIST+WATCH+resync) replacing raw Watch
 - [x] **I3-002** Multi-cluster streaming — independent watcher per cluster
 - [x] **I3-003** Connection state machine (connected→disconnected→error→reconnecting)
-- [ ] **I3-004** Real-time pod/node updates via SSE to frontend
+- [x] **I3-004** Real-time pod/node updates via SSE to frontend
 
 ---
 
