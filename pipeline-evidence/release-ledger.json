@@ -206,5 +206,13 @@
     "helm_revision": 55,
     "health": "ok",
     "clusters_list": "401 Unauthorized (expected - auth required)"
+  },
+  {
+    "version": "v158",
+    "timestamp": "2026-02-28T17:22:43.321474",
+    "commit": "19650d4",
+    "helm_revision": 56,
+    "status": "deployed",
+    "health": "ok"
   }
 ]

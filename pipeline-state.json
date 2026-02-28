@@ -1,16 +1,26 @@
 {
   "status": "running",
-  "version": "v157",
+  "version": "v158",
   "phase": "phase-i-backend-real-data",
-  "currentStage": "e2e",
+  "currentStage": "e2e-v158",
   "startedAt": "2026-02-28T14:39:00Z",
   "stages": {
     "deploy": "complete",
-    "e2e": "pending",
-    "qa": "pending"
+    "e2e": "complete",
+    "qa": "complete",
+    "dev-phase1": "in-progress",
+    "review-phase1": "changes-requested",
+    "deploy-v158": "complete",
+    "e2e-v158": "pending",
+    "qa-v158": "pending"
   },
-  "foremanNotes": "Phase I \u2014 deploying v157 with connectionConfig fix (e208b2d)",
-  "scope": "I0-001, I0-002",
-  "deployedInK8s": "v157",
-  "timestamp": "2026-02-28T16:49:12.863626"
+  "deployedInK8s": "v158",
+  "e2eVerdict": "PASS",
+  "qaVerdict": "PASS",
+  "qaScore": 8.7,
+  "foremanNotes": "v157 cycle complete. Now Phase I backend: IP1-001/002/003",
+  "scope": "IP1-001, IP1-002, IP1-003",
+  "timestamp": "2026-02-28T17:22:08.012876",
+  "reviewScore": 8,
+  "reviewVerdict": "CHANGES_REQUESTED"
 }
