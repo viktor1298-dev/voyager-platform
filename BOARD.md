@@ -130,11 +130,11 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 ## 🎨 Phase H — UI/UX Research P0 Fixes (from UI-UX-RESEARCH-2026.md)
 
 ### H1: Critical P0 Issues
-- [ ] **P0-001** Health status invisible in card view
-- [ ] **P0-002** Semantic color misuse — green for zero/empty states (partially done in v147 — verify complete)
-- [ ] **P0-003** WCAG AA contrast failures — tag chips, subtitle, card metadata
+- [x] **P0-001** Health status invisible in card view
+- [x] **P0-002** Semantic color misuse — green for zero/empty states (partially done in v147 — verify complete)
+- [x] **P0-003** WCAG AA contrast failures — tag chips, subtitle, card metadata
 - [x] **P0-004** Duplicate search bars on Clusters page (done in v149 ✅)
-- [ ] **P0-005** Provider watermark logos in dark mode — AWS/Azure overlapping text
+- [x] **P0-005** Provider watermark logos in dark mode — AWS/Azure overlapping text
 
 ### H2: P1 UX Improvements
 - [ ] **P1-001** Consolidate filter UI — reduce 3 layers to 1-2
