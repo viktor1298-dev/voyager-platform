@@ -152,8 +152,8 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [x] **LOGO-001** Generate new logo options using openai-image-gen skill
   - Prompt: "Minimalist geometric logo mark for Voyager — K8s operations platform. Abstract interconnected nodes forming subtle V shape or compass motif. Clean lines, single color (indigo #6366f1), dark+light backgrounds. Modern 2026 style. No text, icon only. Flat design, no gradients."
   - Evaluate 4 options → pick best → implement in TopBar + favicon
-- [ ] **LOGO-002** Drop "PLATFORM" from wordmark — use "Voyager" only
-- [ ] **LOGO-003** New favicon from chosen logo mark
+- [x] **LOGO-002** Drop "PLATFORM" from wordmark — use "Voyager" only
+- [x] **LOGO-003** New favicon from chosen logo mark
 
 ---
 
