@@ -137,19 +137,19 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [x] **P0-005** Provider watermark logos in dark mode — AWS/Azure overlapping text
 
 ### H2: P1 UX Improvements
-- [ ] **P1-001** Consolidate filter UI — reduce 3 layers to 1-2
-- [ ] **P1-002** Add card/table view toggle
-- [ ] **P1-003** Normalize component styles across card and table views
-- [ ] **P1-004** Add skeleton/loading states
-- [ ] **P1-005** Add ⌘K command palette
-- [ ] **P1-006** Fix anomalies card layout waste
-- [ ] **P1-007** Add resource utilization to cluster cards/rows
-- [ ] **P1-008** Fix top bar information overload
+- [x] **P1-001** Consolidate filter UI — reduce 3 layers to 1-2
+- [x] **P1-002** Add card/table view toggle
+- [x] **P1-003** Normalize component styles across card and table views
+- [x] **P1-004** Add skeleton/loading states
+- [x] **P1-005** Add ⌘K command palette
+- [x] **P1-006** Fix anomalies card layout waste
+- [x] **P1-007** Add resource utilization to cluster cards/rows
+- [x] **P1-008** Fix top bar information overload
 - [x] **P1-009** Table column header casing consistency (done in v149 ✅)
-- [ ] **P1-010** Add primary action before destructive action in table
+- [x] **P1-010** Add primary action before destructive action in table
 
 ### H3: Logo & Branding
-- [ ] **LOGO-001** Generate new logo options using openai-image-gen skill
+- [x] **LOGO-001** Generate new logo options using openai-image-gen skill
   - Prompt: "Minimalist geometric logo mark for Voyager — K8s operations platform. Abstract interconnected nodes forming subtle V shape or compass motif. Clean lines, single color (indigo #6366f1), dark+light backgrounds. Modern 2026 style. No text, icon only. Flat design, no gradients."
   - Evaluate 4 options → pick best → implement in TopBar + favicon
 - [ ] **LOGO-002** Drop "PLATFORM" from wordmark — use "Voyager" only
