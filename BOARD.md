@@ -195,3 +195,43 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [ ] **I3-002** Multi-cluster streaming — independent watcher per cluster
 - [ ] **I3-003** Connection state machine (connected→disconnected→error→reconnecting)
 - [ ] **I3-004** Real-time pod/node updates via SSE to frontend
+
+---
+
+## 🚀 Phase I — Revised Execution Order (2026-02-28 — Morpheus review)
+
+### I0: Deploy v157 (immediate)
+- [ ] **I0-001** Build + deploy v157 with connectionConfig fix (e208b2d)
+- [ ] **I0-002** Verify minikube cluster connects after fix
+
+### I-Phase1: Critical Backend Fixes (1-2 days)
+- [ ] **IP1-001** Fix `health.check` — use ClusterClientPool for ALL providers (not just minikube)
+- [ ] **IP1-002** Remove `metrics.requestRates` — no real data source, shows fake data
+- [ ] **IP1-003** Add integration test: health check returns real status for kubeconfig cluster
+
+### I-Phase3: Streaming Infrastructure (1-2 weeks — build FIRST before real data)
+- [ ] **IP3-001** Replace raw `k8s.Watch` with `k8s.makeInformer` (LIST+WATCH+resync)
+- [ ] **IP3-002** Create `ClusterWatchManager` — per-cluster informer lifecycle
+- [ ] **IP3-003** Tag all events with `clusterId` — fix single-cluster streaming
+- [ ] **IP3-004** Create `ClusterConnectionState` FSM (connected→disconnected→error)
+- [ ] **IP3-005** Replace log polling with `k8s.Log` follow mode
+- [ ] **IP3-006** Token expiry tracking + proactive refresh at 80% TTL
+- [ ] **IP3-007** Consolidate all K8s ops through ClusterClientPool (remove global kubeconfig path)
+
+### I-Phase2: Replace Mock Data with Real K8s (3-5 days — after Phase3)
+- [ ] **IP2-001** Create `metricsHistory` DB table + migration
+- [ ] **IP2-002** Create `MetricsHistoryCollector` background job (snapshot every 60s)
+- [ ] **IP2-003** Replace `metrics.clusterHealth` with real healthHistory data
+- [ ] **IP2-004** Replace `metrics.resourceUsage` with real metricsHistory data
+- [ ] **IP2-005** Replace `metrics.uptimeHistory` with real healthHistory uptime
+- [ ] **IP2-006** Replace `metrics.alertsTimeline` with real K8s Events (Warning type)
+- [ ] **IP2-007** Implement `alerts.evaluate` — real threshold evaluation loop
+- [ ] **IP2-008** Background sync: nodes K8s → DB every 5 min
+- [ ] **IP2-009** Background sync: K8s events → DB every 2 min
+
+### I-Phase4: Production Ready (2-3 weeks)
+- [ ] **IP4-001** Alert evaluation engine (rules vs live metrics)
+- [ ] **IP4-002** Services tRPC router (list, get)
+- [ ] **IP4-003** Namespace tRPC router (list, create, delete)
+- [ ] **IP4-004** Multi-cluster metrics aggregation for dashboard
+- [ ] **IP4-005** Cluster auto-discovery from kubeconfig contexts
