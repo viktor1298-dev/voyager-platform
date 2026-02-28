@@ -84,5 +84,21 @@
     "timestamp": "2026-02-27T20:27:00Z",
     "deployer": "uri",
     "status": "success"
+  },
+  {
+    "version": "v147",
+    "sha": "f93af37",
+    "timestamp": "2026-02-27T21:12:58Z",
+    "deployer": "uri",
+    "status": "success"
+  },
+  {
+    "version": "v148",
+    "sha": "488434e",
+    "timestamp": "2026-02-28T06:56:00Z",
+    "deployer": "uri",
+    "status": "success",
+    "helmRevision": 44,
+    "notes": "Full build both API+Web. All pods running, health OK."
   }
 ]

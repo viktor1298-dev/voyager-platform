@@ -140,7 +140,7 @@ export function FilterBar({
             ['status', options.statuses],
             ['provider', options.providers],
             ['health', options.health],
-          ] as const).map(([key, values]) => (
+          ] as const).filter(([, values]) => values.length > 0).map(([key, values]) => (
             <select
               key={key}
               value={parsed[key]}

@@ -24,7 +24,7 @@ import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
 import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS, HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
-import { AlertTriangle, Container, LayoutGrid, Network, Server } from 'lucide-react'
+import { AlertTriangle, Bell, Container, LayoutGrid, Server } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
@@ -244,9 +244,9 @@ function DashboardContent() {
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
         </header>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <SummaryCard
-            icon={<Network className="h-4 w-4" />}
+            icon={<Server className="h-4 w-4" />}
             label="Total Nodes"
             value={String(totalNodes)}
             color={totalNodes > 0 ? 'var(--color-accent)' : 'var(--color-text-muted)'}
@@ -270,7 +270,7 @@ function DashboardContent() {
             isLoading={isLoading}
           />
           <SummaryCard
-            icon={<AlertTriangle className="h-4 w-4" />}
+            icon={warningEvents > 0 ? <AlertTriangle className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
             label="Warning Events"
             value={String(warningEvents)}
             color={warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'}
@@ -320,7 +320,7 @@ function DashboardContent() {
             </div>
           </div>
 
-          <FilterBar options={filterOptions} onChange={onFiltersChange} />
+          <FilterBar options={{ ...filterOptions, environments: [] }} onChange={onFiltersChange} />
         </div>
 
         {isLoading ? (
@@ -561,7 +561,7 @@ function SummaryCard({
 }) {
   return (
     <div
-      className="rounded-2xl p-4 border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)]"
+      className="rounded-2xl p-4 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 w-full"
       style={{
         background: 'var(--glass-bg)',
         backdropFilter: 'blur(var(--glass-blur))',

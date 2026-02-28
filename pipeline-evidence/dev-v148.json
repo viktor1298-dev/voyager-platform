@@ -1,0 +1,31 @@
+{
+  "version": "v148",
+  "agent": "ron",
+  "branch": "feat/init-monorepo",
+  "commit": "ba77d6a",
+  "timestamp": "2026-02-28T06:45:00Z",
+  "task": "UI polish — 10 items",
+  "gate": "passed",
+  "build": "pnpm build — SUCCESS, all routes compiled",
+  "items": [
+    { "id": "UI-8", "desc": "Table headers unified to UPPERCASE", "file": "DataTable.tsx", "status": "done" },
+    { "id": "UI-9", "desc": "Destructive badge: soft red — bg-red-100/text-red-700 light, dark:bg-red-900/30", "file": "ui/badge.tsx", "status": "done" },
+    { "id": "UI-10", "desc": "kubeconfig icon → mdi:file-cog-outline gray; minikube stays K8s blue", "file": "ProviderLogo.tsx", "status": "done" },
+    { "id": "UI-11", "desc": "FilterBar skips empty selects; dashboard omits environment from FilterBar (tab buttons handle it)", "file": "FilterBar.tsx, page.tsx", "status": "done" },
+    { "id": "UI-12", "desc": "Sidebar nav: text-secondary (higher contrast), accent/10 active bg, accent/5 hover", "file": "Sidebar.tsx", "status": "done" },
+    { "id": "UI-13", "desc": "Total Nodes → Server icon; Warning Events → Bell when count=0, AlertTriangle only when >0", "file": "page.tsx", "status": "done" },
+    { "id": "UI-14", "desc": "Stat card borders: border-gray-200 dark:border-gray-700 (replaces invisible glass-border)", "file": "page.tsx", "status": "done" },
+    { "id": "UI-15", "desc": "Stat cards: grid-cols-4 pure Tailwind, removed inline style override, w-full on each card", "file": "page.tsx", "status": "done" },
+    { "id": "UI-16", "desc": "Sidebar section headers: text-[11px] font-semibold text-secondary (was 10px muted)", "file": "Sidebar.tsx", "status": "done" },
+    { "id": "UI-17", "desc": "PLATFORM text: text-secondary + font-medium (was text-muted, low contrast)", "file": "TopBar.tsx", "status": "done" }
+  ],
+  "files_changed": [
+    "apps/web/src/components/DataTable.tsx",
+    "apps/web/src/components/ui/badge.tsx",
+    "apps/web/src/components/ProviderLogo.tsx",
+    "apps/web/src/components/FilterBar.tsx",
+    "apps/web/src/components/Sidebar.tsx",
+    "apps/web/src/components/TopBar.tsx",
+    "apps/web/src/app/page.tsx"
+  ]
+}

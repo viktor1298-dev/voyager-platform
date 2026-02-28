@@ -8,7 +8,7 @@ const PROVIDER_ALIASES: Record<string, string> = {
 
 const PROVIDER_ICONS: Record<string, { icon: string; color: string }> = {
   minikube: { icon: 'simple-icons:kubernetes', color: '#326CE5' },
-  kubeconfig: { icon: 'simple-icons:kubernetes', color: '#326CE5' },
+  kubeconfig: { icon: 'mdi:file-cog-outline', color: '#6B7280' },
   aws: { icon: 'simple-icons:amazonaws', color: '#FF9900' },
   gcp: { icon: 'simple-icons:googlecloud', color: '#4285F4' },
   azure: { icon: 'simple-icons:microsoftazure', color: '#0078D4' },

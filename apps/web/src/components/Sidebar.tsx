@@ -127,8 +127,8 @@ function SidebarContent({
           sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg
           ${
             active
-              ? 'bg-white/[0.08] text-[var(--color-text-primary)] sidebar-active-bar'
-              : 'text-[var(--color-text-muted)] hover:bg-white/[0.04] hover:text-[var(--color-text-secondary)] sidebar-hover-bar'
+              ? 'bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] sidebar-active-bar'
+              : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-accent)]/5 hover:text-[var(--color-text-primary)] sidebar-hover-bar'
           }
         `}
         style={{ transition: 'all var(--duration-fast) ease' }}
@@ -150,7 +150,7 @@ function SidebarContent({
 
       {showLabels && autoscalingItems.length > 0 && (
         <div className="mt-1 border-t border-[var(--color-border)]/60 pt-2">
-          <p className="px-2 mb-1 text-[10px] uppercase tracking-widest font-mono text-[var(--color-text-muted)]">
+          <p className="px-2 mb-1 text-[11px] uppercase tracking-widest font-mono font-semibold text-[var(--color-text-secondary)]">
             Autoscaling
           </p>
           <nav className="flex flex-col gap-1">{autoscalingItems.map(renderNavItem)}</nav>
@@ -159,7 +159,7 @@ function SidebarContent({
 
       {showLabels && accessControlItems.length > 0 && (
         <div className="mt-1 border-t border-[var(--color-border)]/60 pt-2">
-          <p className="px-2 mb-1 text-[10px] uppercase tracking-widest font-mono text-[var(--color-text-muted)]">
+          <p className="px-2 mb-1 text-[11px] uppercase tracking-widest font-mono font-semibold text-[var(--color-text-secondary)]">
             Access Control
           </p>
           <nav className="flex flex-col gap-1">{accessControlItems.map(renderNavItem)}</nav>
@@ -168,7 +168,7 @@ function SidebarContent({
 
       {showLabels && clusters.length > 0 && (
         <div className="mt-2 border-t border-[var(--color-border)]/60 pt-2">
-          <p className="px-2 mb-1 text-[10px] uppercase tracking-widest font-mono text-[var(--color-text-muted)]">
+          <p className="px-2 mb-1 text-[11px] uppercase tracking-widest font-mono font-semibold text-[var(--color-text-secondary)]">
             Clusters
           </p>
           <div className="space-y-1">
@@ -180,7 +180,7 @@ function SidebarContent({
                   key={cluster.id}
                   href="/clusters"
                   onClick={onLinkClick}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]"
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/5"
                 >
                   <span
                     className="h-1.5 w-1.5 rounded-full shrink-0"
