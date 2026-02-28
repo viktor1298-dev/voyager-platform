@@ -46,6 +46,7 @@ type CreateClusterInput = {
   name: string
   provider: 'kubeconfig' | 'aws' | 'azure' | 'gke' | 'minikube'
   endpoint?: string
+  connectionConfig?: Record<string, unknown>
 }
 
 type ClusterRow = {
@@ -314,8 +315,8 @@ export default function ClustersPage() {
   )
 
   const toCreateClusterInput = useCallback((payload: AddClusterWizardPayload): CreateClusterInput => {
-    const { name, provider, endpoint } = payload
-    return { name, provider, endpoint }
+    const { name, provider, endpoint, connectionConfig } = payload
+    return { name, provider, endpoint, connectionConfig }
   }, [])
 
   const btnPrimary =
