@@ -361,5 +361,23 @@
     "env_blocked_items": [],
     "was_corrected": false,
     "note": "Pipeline paused by Vik. QA evidence missing (qa-v147.json). E2E passed."
+  },
+  {
+    "timestamp": "2026-02-28T00:14:32.079408",
+    "version": "v147",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 2,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "Pipeline paused-after-e2e, QA pending, no active agents"
+  },
+  {
+    "timestamp": "2026-02-28T00:24:43.001798",
+    "version": "v147",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 2,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "note": "QA in progress, e2e passed"
   }
 ]

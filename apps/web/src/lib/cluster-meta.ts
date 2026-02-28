@@ -13,19 +13,19 @@ export const ENV_META: Record<
     label: 'Production',
     sectionLabel: 'Production',
     color: 'rgb(180 120 130)',
-    badgeClass: 'bg-rose-50/60 dark:bg-rose-950/20 text-rose-500/90 dark:text-rose-300/80 border-rose-200/60 dark:border-rose-800/30',
+    badgeClass: 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-200 border-rose-200 dark:border-rose-800/40',
   },
   staging: {
     label: 'Staging / QA',
     sectionLabel: 'Staging / QA',
     color: 'rgb(180 160 100)',
-    badgeClass: 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-300 border-amber-200 dark:border-amber-800/40',
+    badgeClass: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-200 border-amber-200 dark:border-amber-800/40',
   },
   dev: {
     label: 'Dev / Minikube',
     sectionLabel: 'Dev / Minikube',
     color: 'rgb(120 140 200)',
-    badgeClass: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/40',
+    badgeClass: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800/40',
   },
 }
 

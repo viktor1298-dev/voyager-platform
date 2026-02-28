@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <!-- Background radial glow -->
+    <radialGradient id="bgGlow" cx="50%" cy="60%" r="50%">
+      <stop offset="0%" stop-color="#2d1b4e" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#0d0514" stop-opacity="1"/>
+    </radialGradient>
+
+    <!-- Left arm main face: mid indigo-blue -->
+    <linearGradient id="leftMain" x1="12" y1="8" x2="42" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6d7ef7"/>
+      <stop offset="50%" stop-color="#5b6cf4"/>
+      <stop offset="100%" stop-color="#3730a3"/>
+    </linearGradient>
+
+    <!-- Left arm inner shadow face: dark indigo -->
+    <linearGradient id="leftInner" x1="28" y1="10" x2="48" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3730a3"/>
+      <stop offset="100%" stop-color="#1e1b6b"/>
+    </linearGradient>
+
+    <!-- Left arm outer highlight: bright top edge -->
+    <linearGradient id="leftOuter" x1="8" y1="8" x2="22" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#4338ca"/>
+    </linearGradient>
+
+    <!-- Right arm main face: violet-pink -->
+    <linearGradient id="rightMain" x1="88" y1="8" x2="58" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#d07ef7"/>
+      <stop offset="40%" stop-color="#b061f0"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+
+    <!-- Right arm inner highlight face: bright pink -->
+    <linearGradient id="rightInner" x1="52" y1="10" x2="72" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f0a3fc"/>
+      <stop offset="50%" stop-color="#d855f7"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+
+    <!-- Right arm outer deep: dark violet -->
+    <linearGradient id="rightOuter" x1="92" y1="8" x2="78" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#581c87"/>
+    </linearGradient>
+
+    <!-- Center crease highlight -->
+    <linearGradient id="crease" x1="50" y1="10" x2="50" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="60%" stop-color="#c4b5fd" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.1"/>
+    </linearGradient>
+
+    <!-- Glow filter -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <!-- Soft drop shadow -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#6366f1" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Dark background circle -->
+  <circle cx="50" cy="50" r="50" fill="url(#bgGlow)"/>
+
+  <!-- === LEFT ARM (indigo/blue) === -->
+  <!-- Outer side face (darkest - leftmost edge) -->
+  <path d="M12 8 L20 8 L48 88 L40 88 Z" fill="url(#leftOuter)" opacity="0.85"/>
+  <!-- Main front face (mid indigo) -->
+  <path d="M20 8 L38 8 L50 88 L48 88 Z" fill="url(#leftMain)" filter="url(#shadow)"/>
+  <!-- Inner fold face (dark shadow toward center crease) -->
+  <path d="M38 8 L42 8 L50 88 L50 88 Z" fill="url(#leftInner)" opacity="0.9"/>
+
+  <!-- Top edge highlight left arm -->
+  <line x1="12" y1="8" x2="42" y2="8" stroke="#a5b4fc" stroke-width="1.2" stroke-opacity="0.8"/>
+
+  <!-- === RIGHT ARM (violet/pink) === -->
+  <!-- Inner fold face (bright highlight facing light) -->
+  <path d="M58 8 L62 8 L50 88 L50 88 Z" fill="url(#rightInner)" opacity="0.95"/>
+  <!-- Main front face (violet) -->
+  <path d="M62 8 L80 8 L52 88 L50 88 Z" fill="url(#rightMain)" filter="url(#shadow)"/>
+  <!-- Outer side face (dark violet edge) -->
+  <path d="M80 8 L88 8 L60 88 L52 88 Z" fill="url(#rightOuter)" opacity="0.85"/>
+
+  <!-- Top edge highlight right arm -->
+  <line x1="58" y1="8" x2="88" y2="8" stroke="#f0abfc" stroke-width="1.2" stroke-opacity="0.7"/>
+
+  <!-- === CENTER CREASE LINE === -->
+  <line x1="50" y1="10" x2="50" y2="88" stroke="url(#crease)" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Bright crease tip glow at bottom -->
+  <ellipse cx="50" cy="88" rx="3" ry="2" fill="#ffffff" opacity="0.5" filter="url(#glow)"/>
+</svg>

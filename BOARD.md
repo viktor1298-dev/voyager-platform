@@ -42,14 +42,9 @@ They must be fixed and verified at 0 failures before ANY Phase E feature work be
 2. Check if error is displayed in the UI (may be hidden behind a toast that disappears too fast)
 3. Fix the UI to show a persistent error state, OR wait for the toast before assertion
 
-### CLEANUP-1: Remove `qa-v106.spec.ts`
-**File:** `tests/e2e/qa-v106.spec.ts`
-**Action:** Delete this file — it's from v106 and shouldn't be in the suite anymore
+### ~~CLEANUP-1: Remove `qa-v106.spec.ts`~~ ✅ DONE (deleted)
 
-### CLEANUP-2: Fix `qa-v125.spec.ts` missing module import
-**File:** `tests/e2e/qa-v125.spec.ts`  
-**Error:** missing module import
-**Fix:** Fix the broken import OR delete if this is a temporary QA test file
+### ~~CLEANUP-2: Fix `qa-v125.spec.ts`~~ ✅ DONE (deleted)
 
 ---
 
@@ -78,11 +73,10 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ## 📋 Phase E — After LEGACY bugs are fixed
 
-### E1: K8s RBAC + Pod Actions ← NEXT after legacy fixes
-- ClusterRole: add delete pods + patch deployments
-- Pod delete tRPC endpoint + UI
-- Scale deployment UI (endpoint exists, needs UI wiring)
-- Target: v126
+### ~~E1: K8s RBAC + Pod Actions~~ ✅ DONE (verified v150 — already implemented)
+- ~~ClusterRole: add delete pods + patch deployments~~ ✅
+- ~~Pod delete tRPC endpoint + UI~~ ✅
+- ~~Scale deployment UI~~ ✅
 
 ### E2: Alerts Real Backend
 - tRPC router + DB schema + evaluator job + UI
@@ -107,29 +101,59 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 > Priority: Medium (non-blocking, but affects UX quality)
 
 ### F1: Dashboard Color & Contrast Fixes
-- [ ] **UI-1: Color imbalance** — Cluster cards background too high-contrast against dark background. Use subtler, harmonious card background color.
-- [ ] **UI-2: Environment badge colors** — "Production", "Staging/QA", "Dev/Minikube" tags are too bright/saturated against dark background. Tone down to muted semantic colors.
-- [ ] **UI-3: Sidebar scroll missing** — "CLUSTERS" section at bottom of sidebar has no scroll indicator. Bottom nav items are inaccessible.
-- [ ] **UI-4: Anomalies section typography** — "Critical" (orange-red), "Warning" (yellow), "Info" (teal-green) colored fonts clash with design system. Use muted semantic colors.
-- [ ] **UI-5: "Error" text near-invisible on cluster cards** — "Error" label at bottom-right is nearly same luminance as card background in dark mode. Increase contrast.
-- [ ] **UI-6: Running Pods "0/0" shown in green** — Green for 0/0 is semantically wrong (green = healthy, 0 pods = nothing). Use neutral/muted color.
-- [ ] **UI-7: Mixed icon families in sidebar** — Outline icons mixed with emoji-style icons (⚠️, 🤖). Unify to same icon family/weight.
+- [x] **UI-1: Color imbalance** — Cluster cards background too high-contrast against dark background. Use subtler, harmonious card background color.
+- [x] **UI-2: Environment badge colors** — "Production", "Staging/QA", "Dev/Minikube" tags are too bright/saturated against dark background. Tone down to muted semantic colors.
+- [x] **UI-3: Sidebar scroll missing** — "CLUSTERS" section at bottom of sidebar has no scroll indicator. Bottom nav items are inaccessible.
+- [x] **UI-4: Anomalies section typography** — "Critical" (orange-red), "Warning" (yellow), "Info" (teal-green) colored fonts clash with design system. Use muted semantic colors.
+- [x] **UI-5: "Error" text near-invisible on cluster cards** — "Error" label at bottom-right is nearly same luminance as card background in dark mode. Increase contrast.
+- [x] **UI-6: Running Pods "0/0" shown in green** — Green for 0/0 is semantically wrong (green = healthy, 0 pods = nothing). Use neutral/muted color.
+- [x] **UI-7: Mixed icon families in sidebar** — Outline icons mixed with emoji-style icons (⚠️, 🤖). Unify to same icon family/weight.
 
-### F2: Clusters Page Cleanup
-- [ ] **UI-8: Typography inconsistency in table** — "HEALTH"/"ACCESS" are uppercase, "Name"/"Provider" are title-case. Pick one convention.
-- [ ] **UI-9: "Error" health badge too aggressive** — Solid red badge with white text is too alarming for connectivity errors. Use softer/muted red.
-- [ ] **UI-10: Provider icons inconsistent quality** — MINIKUBE/KUBECONFIG show as generic circles vs proper AWS/GKE logos. Standardize icon quality.
-- [ ] **UI-11: Duplicate search bars** — Two "Search clusters..." inputs on the same page. Remove one.
+### F2: Clusters Page Cleanup — Phase G Target
+- [x] **UI-8: Typography inconsistency in table** — "HEALTH"/"ACCESS" are uppercase, "Name"/"Provider" are title-case. Pick one convention.
+- [x] **UI-9: "Error" health badge too aggressive** — Solid red badge with white text is too alarming for connectivity errors. Use softer/muted red.
+- [x] **UI-10: Provider icons inconsistent quality** — MINIKUBE/KUBECONFIG show as generic circles vs proper AWS/GKE logos. Standardize icon quality.
+- [x] **UI-11: Duplicate search bars** — Two "Search clusters..." inputs on the same page. Remove one.
 
 ### F3: Light Mode Polish
-- [ ] **UI-12: Low contrast throughout light mode** — Text barely readable, sidebar items have insufficient contrast against white background.
-- [ ] **UI-13: Stat card icons inconsistent** — Total Nodes and Clusters both use server/grid icon (confusing). Running Pods uses green circle (misleading). Warning Events uses orange triangle even when count is 0.
-- [ ] **UI-14: Cluster card borders near-invisible** — Very subtle borders make cards hard to distinguish from page background in light mode.
-- [ ] **UI-15: Stat cards unequal width** — 4 stat cards don't divide equally across the row in light mode.
+- [x] **UI-12: Low contrast throughout light mode** — Text barely readable, sidebar items have insufficient contrast against white background.
+- [x] **UI-13: Stat card icons inconsistent** — Total Nodes and Clusters both use server/grid icon (confusing). Running Pods uses green circle (misleading). Warning Events uses orange triangle even when count is 0.
+- [x] **UI-14: Cluster card borders near-invisible** — Very subtle borders make cards hard to distinguish from page background in light mode.
+- [x] **UI-15: Stat cards unequal width** — 4 stat cards don't divide equally across the row in light mode.
 
 ### F4: Cross-cutting Typography & Icons
-- [ ] **UI-16: Sidebar section headers unreadable** — "AUTOSCALING", "ACCESS CONTROL", "CLUSTERS" labels too small and low contrast in both modes.
-- [ ] **UI-17: "PLATFORM" text in header low contrast** — Very faint against dark header bar.
+- [x] **UI-16: Sidebar section headers unreadable** — "AUTOSCALING", "ACCESS CONTROL", "CLUSTERS" labels too small and low contrast in both modes.
+- [x] **UI-17: "PLATFORM" text in header low contrast** — Very faint against dark header bar.
+
+---
+
+## 🎨 Phase H — UI/UX Research P0 Fixes (from UI-UX-RESEARCH-2026.md)
+
+### H1: Critical P0 Issues
+- [ ] **P0-001** Health status invisible in card view
+- [ ] **P0-002** Semantic color misuse — green for zero/empty states (partially done in v147 — verify complete)
+- [ ] **P0-003** WCAG AA contrast failures — tag chips, subtitle, card metadata
+- [x] **P0-004** Duplicate search bars on Clusters page (done in v149 ✅)
+- [ ] **P0-005** Provider watermark logos in dark mode — AWS/Azure overlapping text
+
+### H2: P1 UX Improvements
+- [ ] **P1-001** Consolidate filter UI — reduce 3 layers to 1-2
+- [ ] **P1-002** Add card/table view toggle
+- [ ] **P1-003** Normalize component styles across card and table views
+- [ ] **P1-004** Add skeleton/loading states
+- [ ] **P1-005** Add ⌘K command palette
+- [ ] **P1-006** Fix anomalies card layout waste
+- [ ] **P1-007** Add resource utilization to cluster cards/rows
+- [ ] **P1-008** Fix top bar information overload
+- [x] **P1-009** Table column header casing consistency (done in v149 ✅)
+- [ ] **P1-010** Add primary action before destructive action in table
+
+### H3: Logo & Branding
+- [ ] **LOGO-001** Generate new logo options using openai-image-gen skill
+  - Prompt: "Minimalist geometric logo mark for Voyager — K8s operations platform. Abstract interconnected nodes forming subtle V shape or compass motif. Clean lines, single color (indigo #6366f1), dark+light backgrounds. Modern 2026 style. No text, icon only. Flat design, no gradients."
+  - Evaluate 4 options → pick best → implement in TopBar + favicon
+- [ ] **LOGO-002** Drop "PLATFORM" from wordmark — use "Voyager" only
+- [ ] **LOGO-003** New favicon from chosen logo mark
 
 ---
 

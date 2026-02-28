@@ -1,27 +1,24 @@
 {
-  "version": "v147",
-  "status": "paused-after-e2e",
-  "currentStage": "qa",
-  "phase": "phase-f-visual-polish",
-  "feature": "Phase F + P0 UI/UX Visual Polish — Color, Contrast, Consistency, Sidebar Scroll, Icons",
-  "startedAt": "2026-02-27T21:31:00+02:00",
-  "timestamp": "2026-02-27T23:29:00+02:00",
-  "reviewScore": 9,
-  "evidenceReady": false,
+  "status": "in-progress",
+  "version": "v150",
+  "currentStage": "fix-loop-1",
+  "phase": "phase-h-p0-ux-fixes",
+  "startedAt": "2026-02-28T09:04:00Z",
   "stages": {
-    "assess": "complete",
     "dev": "complete",
-    "review": "approved-9",
-    "merge": "complete",
+    "review": "complete",
+    "merge": "skipped",
     "deploy": "complete",
-    "e2e": "passed",
-    "qa": "in-progress-mai-already-spawned"
+    "e2e": "complete",
+    "qa": "failed-7.5"
   },
-  "e2eResults": {"passed": 86, "failed": 0, "skipped": 10},
-  "qaResults": null,
-  "fixLoops": {
-    "table-row-fade": {"count": 2, "history": [{"version": "v145", "error": "rows 3+ faded", "fix": "removed animationFillMode from DataTable"}, {"version": "v147", "error": "still faded in ResponsiveTable+page.tsx", "fix": "removed ALL animate-slide-up from 3 components + opacity muting"}]},
-    "zero-value-muting": {"count": 2, "history": [{"version": "v145", "error": "0/0 still bright", "fix": "added conditional muted class"}, {"version": "v147", "error": "color too subtle", "fix": "added opacity-50/60 on zero values"}]}
-  },
-  "foremanNotes": "PAUSED by Vik after E2E. Mai was already spawned before pause request — her result will be captured but no further agents will be spawned without Vik's instruction."
+  "foremanNotes": "Phase H: P0 UX fixes. E1 already implemented. Ron fixed 6 UI files (P0-001 to P0-005). Lior reviewed 10/10. Uri deploying v150 now. After deploy: run E2E then QA. Active worker: uri-v150-deploy. BOARD.md has 21 remaining [ ] items (5 policy + 16 feature items in H1-H3 + E2-E5).",
+  "scope": "H1 P0 critical UX fixes",
+  "activeWorker": "uri-v150-deploy",
+  "nextSteps": "After deploy completes: spawn Yuval for E2E, then Mai for QA. After Phase H complete: scan BOARD.md for remaining items (E2-E5, H2, H3).",
+  "checkpoint": {
+    "reason": "context-budget",
+    "timestamp": "2026-02-28T09:20:00Z",
+    "resumeAction": "Check if uri-v150-deploy finished. If deploy complete → spawn E2E. If not → wait."
+  }
 }

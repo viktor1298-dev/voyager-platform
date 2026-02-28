@@ -4,6 +4,7 @@ import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
 import { useClusterContext } from '@/stores/cluster-context'
 import { LogOut } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { NotificationsPanel } from './NotificationsPanel'
@@ -28,6 +29,8 @@ function statusDot(status: ClusterStatus): string {
 
 export function TopBar() {
   const router = useRouter()
+  const { resolvedTheme } = useTheme()
+  const logoSrc = resolvedTheme === 'light' ? '/logo-mark-light.svg' : '/logo-mark.svg'
   const user = useAuthStore((s) => s.user)
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
@@ -107,18 +110,16 @@ export function TopBar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-3 sm:px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--color-accent)] to-indigo-600 flex items-center justify-center text-white text-base shadow-lg shadow-indigo-500/20">
-          🚀
-        </div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-base font-extrabold bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-text-secondary)] bg-clip-text text-transparent tracking-tight">
-            Voyager
-          </span>
-          <span className="text-[10px] text-slate-500 dark:text-slate-300 font-mono tracking-wider font-semibold">
-            PLATFORM
-          </span>
-        </div>
+      <div className="flex items-center gap-2.5">
+        <img
+          src={logoSrc}
+          alt="Voyager"
+          className="h-7 w-7 drop-shadow-[0_0_6px_rgba(99,102,241,0.5)]"
+          aria-hidden="true"
+        />
+        <span className="font-semibold text-sm tracking-wide text-foreground text-[var(--color-text-primary)]">
+          VOYAGER
+        </span>
       </div>
 
       <div className="hidden sm:flex gap-6 items-center">

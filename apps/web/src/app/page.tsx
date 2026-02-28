@@ -257,8 +257,8 @@ function DashboardContent() {
             icon={<Container className="h-4 w-4" />}
             label="Running Pods"
             value={`${runningPods}/${liveData?.totalPods ?? 0}`}
-            color={runningPods > 0 ? 'var(--color-status-active)' : 'var(--color-text-muted)'}
-            gradient={runningPods > 0 ? 'var(--gradient-text-healthy)' : 'none'}
+            color={(runningPods > 0 && (liveData?.totalPods ?? 0) > 0) ? 'var(--color-status-active)' : 'var(--color-text-muted)'}
+            gradient={(runningPods > 0 && (liveData?.totalPods ?? 0) > 0) ? 'var(--gradient-text-healthy)' : 'none'}
             isLoading={isLoading}
           />
           <SummaryCard
@@ -512,7 +512,7 @@ function ClusterCard({
             {cluster.source === 'db' && <HealthDot clusterId={cluster.id} />}
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-[var(--color-text-secondary)] font-mono">
             <span>K8s {cluster.version ?? '—'}</span>
             <span>·</span>
             <span>Nodes: {cluster.nodeCount}</span>
@@ -537,7 +537,13 @@ function ClusterCard({
             </span>
             <ProviderLogo provider={cluster.provider ?? 'default'} />
           </div>
-          <span className="text-[9px] text-[var(--color-text-dim)]">{statusLabel}</span>
+          <span
+            className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+            style={{
+              color: getStatusColor(status),
+              background: `color-mix(in srgb, ${getStatusColor(status)} 12%, transparent)`,
+            }}
+          >{statusLabel}</span>
         </div>
       </div>
     </Link>

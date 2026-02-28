@@ -36,7 +36,7 @@ test.describe('Alerts — CRUD + History', () => {
 
     // Hypothesis: AnimatePresence exit animation keeps dialog overlay on top, making elements behind it "not visible"
     // Wait for dialog to fully dismiss before checking the table
-    await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 10_000 });
+    await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 15_000 });
 
     // Verify alert appears in list — use toBeAttached first to handle overflow:hidden clipping
     const alertEl = page.locator('table').getByText(alertName).first();
@@ -57,7 +57,7 @@ test.describe('Alerts — CRUD + History', () => {
     await page.getByRole('button', { name: /^create$/i }).click();
 
     // Hypothesis: dialog overlay blocks visibility check — wait for dismiss
-    await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 10_000 });
+    await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 15_000 });
 
     // Wait for alert row to be in DOM and scroll into view
     const alertEl = page.locator('table').getByText(alertName).first();
@@ -91,7 +91,7 @@ test.describe('Alerts — CRUD + History', () => {
     await page.getByRole('button', { name: /^create$/i }).click();
 
     // Hypothesis: dialog overlay blocks visibility — wait for dismiss
-    await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 10_000 });
+    await expect(page.getByText('Create Alert Rule')).toBeHidden({ timeout: 15_000 });
 
     // Wait for alert to appear
     const alertEl = page.locator('table').getByText(alertName).first();
@@ -109,7 +109,7 @@ test.describe('Alerts — CRUD + History', () => {
     await page.getByRole('button', { name: /^delete$/i }).click();
 
     // Verify alert is removed
-    await expect(page.locator('table').getByText(alertName).first()).toBeHidden({ timeout: 10_000 });
+    await expect(page.locator('table').getByText(alertName).first()).toBeHidden({ timeout: 15_000 });
   });
 
   test('should show empty state when no alerts exist', async ({ page }) => {

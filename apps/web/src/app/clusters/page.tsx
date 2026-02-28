@@ -241,7 +241,7 @@ export default function ClustersPage() {
         header: 'Access',
         cell: ({ row }) => {
           const relation = getPermissionForCluster(row.original.id)
-          if (!relation) return <span className="text-xs text-[var(--color-text-dim)]">—</span>
+          if (!relation) return <span className="text-xs text-[var(--color-text-muted)]">—</span>
           return <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>
         },
       },
@@ -320,7 +320,7 @@ export default function ClustersPage() {
           <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
             Clusters
           </h1>
-          <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
+          <p className="text-[11px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider mt-1">
             {filteredClusters.length}/{clusterList.length} visible
           </p>
         </div>
