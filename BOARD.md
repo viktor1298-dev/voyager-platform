@@ -8,6 +8,15 @@
 
 ---
 
+## ✅ CRITICAL FIX — connectionConfig kubeconfig bug (2026-02-28)
+- **Bug:** Creating cluster with kubeconfig stored `connectionConfig: {}` — kubeconfig content was dropped
+- **Root cause:** `toCreateClusterInput()` in `clusters/page.tsx` destructured `connectionConfig` out and never passed it to the tRPC mutation
+- **Fix:** Pass `connectionConfig` through to mutation + extract real endpoint from kubeconfig YAML (backend) + add validation rejecting empty kubeconfig
+- **Files:** `apps/web/src/app/clusters/page.tsx`, `apps/web/src/components/AddClusterWizard.tsx`, `apps/api/src/routers/clusters.ts`
+- **Status:** ✅ COMPLETE — committed & pushed to feat/init-monorepo
+
+---
+
 ## 🔴 PRIORITY 0 — E2E Legacy Bugs (fix FIRST before any Phase E work)
 
 These 3 bugs have been failing since v119 and were incorrectly allowed through the gate.
