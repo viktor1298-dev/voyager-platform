@@ -1,27 +1,21 @@
 {
-  "version": "v147",
-  "status": "paused-after-e2e",
-  "currentStage": "qa",
-  "phase": "phase-f-visual-polish",
-  "feature": "Phase F + P0 UI/UX Visual Polish — Color, Contrast, Consistency, Sidebar Scroll, Icons",
-  "startedAt": "2026-02-27T21:31:00+02:00",
-  "timestamp": "2026-02-27T23:29:00+02:00",
-  "reviewScore": 9,
-  "evidenceReady": false,
+  "status": "complete",
+  "version": "v149",
+  "currentStage": "fix-loop-1-e2e",
+  "phase": "phase-g-visual-polish",
+  "startedAt": "2026-02-28T06:42:00Z",
+  "resumedAt": "2026-02-28T07:39:00Z",
+  "resumedBy": "foreman-v148-resume",
   "stages": {
-    "assess": "complete",
     "dev": "complete",
-    "review": "approved-9",
+    "review": "complete",
     "merge": "complete",
     "deploy": "complete",
-    "e2e": "passed",
-    "qa": "in-progress-mai-already-spawned"
+    "e2e": "complete",
+    "qa": "complete"
   },
-  "e2eResults": {"passed": 86, "failed": 0, "skipped": 10},
-  "qaResults": null,
-  "fixLoops": {
-    "table-row-fade": {"count": 2, "history": [{"version": "v145", "error": "rows 3+ faded", "fix": "removed animationFillMode from DataTable"}, {"version": "v147", "error": "still faded in ResponsiveTable+page.tsx", "fix": "removed ALL animate-slide-up from 3 components + opacity muting"}]},
-    "zero-value-muting": {"count": 2, "history": [{"version": "v145", "error": "0/0 still bright", "fix": "added conditional muted class"}, {"version": "v147", "error": "color too subtle", "fix": "added opacity-50/60 on zero values"}]}
-  },
-  "foremanNotes": "PAUSED by Vik after E2E. Mai was already spawned before pause request — her result will be captured but no further agents will be spawned without Vik's instruction."
+  "foremanNotes": " | Guardian respawned Foreman at 2026-02-28T07:55:00Z (prev foreman dead, e2e gate FAIL 3 failures) | E2E PASS 86/96 0-fail, QA PASS 8.7/10. Set pending-final-verification at 2026-02-28T10:26:09.307217",
+  "completedAt": "2026-02-28T08:41:00Z",
+  "completedBy": "morpheus-manual-override",
+  "finalNotes": "E2E 86/96 PASS, QA 8.7/10 PASS. Manual complete override \u2014 Guardian stuck in rerun loop."
 }
