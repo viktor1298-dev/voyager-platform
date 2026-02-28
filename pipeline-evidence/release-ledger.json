@@ -197,5 +197,14 @@
       "P1-005 command palette"
     ],
     "status": "deployed"
+  },
+  {
+    "version": "v157",
+    "timestamp": "2026-02-28T16:49:43.094369",
+    "status": "deployed",
+    "fix": "connectionConfig kubeconfig fix (e208b2d)",
+    "helm_revision": 55,
+    "health": "ok",
+    "clusters_list": "401 Unauthorized (expected - auth required)"
   }
 ]
