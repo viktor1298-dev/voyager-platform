@@ -1,0 +1,5 @@
+[
+  {"test": "alerts.spec.ts — should create a new alert rule", "failCount": 3, "root_cause": "dialog dismiss animation timeout", "firstSeen": "2026-02-28", "lastSeen": "2026-02-28"},
+  {"test": "alerts.spec.ts — should toggle alert enabled/disabled", "failCount": 3, "root_cause": "dialog dismiss animation timeout", "firstSeen": "2026-02-28", "lastSeen": "2026-02-28"},
+  {"test": "api-tokens.spec.ts — newly created token appears in token list", "failCount": 2, "root_cause": "dismiss button accessibility delay", "firstSeen": "2026-02-28", "lastSeen": "2026-02-28"}
+]

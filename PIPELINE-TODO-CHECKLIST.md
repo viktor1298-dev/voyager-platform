@@ -6,8 +6,8 @@
 
 ## 🔴 P0 — Critical Issues
 
-- [ ] **[PIPE-001]** Foreman dies mid-pipeline → no auto-resurrection
-  - **Where:** `skills/guardian-verification/SKILL.md`, `skills/pipeline-orchestrator/SKILL.md`
+- [x] **[PIPE-001]** Foreman dies mid-pipeline → no auto-resurrection ✅ 2026-02-28
+  - **Fix:** Guardian auto-heal escalation ladder added to `guardian-verification/SKILL.md`
 
 - [x] **[PIPE-002]** Dev fixes partial component → misses 2/3 components with same bug ✅ 2026-02-27
   - **Fix:** Grep-All Rule added to `frontend-feature/SKILL.md`
@@ -28,14 +28,14 @@
 - [x] **[PIPE-006]** Task prompts duplicate SKILL.md content ✅ 2026-02-28
   - **Fix:** Standard spawn template created in `pipeline-orchestrator/references/spawn-templates.md`
 
-- [ ] **[PIPE-007]** Foreman spawn-and-exit pattern reappearing
-  - **Where:** `skills/pipeline-orchestrator/SKILL.md`
+- [x] **[PIPE-007]** Foreman spawn-and-exit pattern reappearing ✅ 2026-02-28
+  - **Fix:** Stay-Alive Contract added to `pipeline-orchestrator/SKILL.md`
 
-- [ ] **[PIPE-008]** Guardian reports but doesn't heal
-  - **Where:** `skills/guardian-verification/SKILL.md`
+- [x] **[PIPE-008]** Guardian reports but doesn't heal ✅ 2026-02-28
+  - **Fix:** Auto-Heal Escalation Ladder (steer → respawn → alert+disable)
 
-- [ ] **[PIPE-009]** Pipeline monitor shows "stalled" but doesn't auto-heal
-  - Covered by PIPE-008
+- [x] **[PIPE-009]** Pipeline monitor shows "stalled" but doesn't auto-heal ✅ 2026-02-28
+  - Covered by PIPE-008 fix
 
 - [x] **[PIPE-010]** Dev agent doesn't systematically search codebase ✅ 2026-02-27
   - Covered by PIPE-002 fix
@@ -55,8 +55,8 @@
 - [x] **[PIPE-014]** frontend-feature skill missing "grep ALL instances" rule ✅ 2026-02-27
   - Covered by PIPE-002 fix
 
-- [ ] **[PIPE-015]** Guardian skill missing "steer active Foreman" capability
-  - **Where:** `skills/guardian-verification/SKILL.md`
+- [x] **[PIPE-015]** Guardian skill missing "steer active Foreman" capability ✅ 2026-02-28
+  - **Fix:** Steer capability added to Guardian escalation ladder
 
 ---
 
@@ -71,18 +71,20 @@
 - [x] **[PIPE-018]** No rollback procedure documented ✅ 2026-02-28
   - **Fix:** Rollback section added to `build-deploy/SKILL.md`
 
+- [ ] **[PIPE-019]** Dima לתקן 3 flaky E2E tests (alerts + api-tokens timeout issues)
+  - `alerts.spec.ts` — "should create a new alert rule" + "should toggle alert enabled/disabled" → dialog dismiss animation timeout
+  - `api-tokens.spec.ts` — "newly created token appears in token list" → dismiss button accessibility delay
+  - See: `pipeline-evidence/flaky-registry.json`
+
 ---
 
 ## Summary
 
 | Priority | Count | Status |
 |----------|-------|--------|
-| 🔴 P0 Critical | 5 | 4 fixed, 1 pending (PIPE-001) |
-| 🟡 P1 Efficiency | 5 | 2 fixed, 3 pending (PIPE-007/008/009) |
-| 🟢 P2 Skill Gaps | 5 | 4 fixed, 1 pending (PIPE-015) |
-| 📚 P3 Documentation | 3 | 3 fixed ✅ |
-| **Total** | **18** | **13 fixed, 5 pending** |
-
-## Remaining Items
-All 5 pending items relate to Guardian steer/heal capability (PIPE-001/007/008/009/015).
-These require Guardian skill overhaul — separate task.
+| 🔴 P0 Critical | 5 | 5/5 ✅ |
+| 🟡 P1 Efficiency | 5 | 5/5 ✅ |
+| 🟢 P2 Skill Gaps | 5 | 5/5 ✅ |
+| 📚 P3 Documentation | 3 | 3/3 ✅ |
+| 🔧 P1 Flaky Tests | 1 | 0/1 ⏳ |
+| **Total** | **19** | **18/19** |
