@@ -1,8 +1,9 @@
-import { clusters } from '@voyager/db'
+import * as k8s from '@kubernetes/client-node'
+import { clusters, db } from '@voyager/db'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { createAuthorizationService } from '../lib/authorization.js'
-import { getCoreV1Api } from '../lib/k8s.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { protectedProcedure, router } from '../trpc.js'
 
 const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'] as const
@@ -13,6 +14,18 @@ const logTargetSchema = z.object({
   container: z.string().min(1).optional(),
   clusterId: z.string().uuid().optional(),
 })
+
+async function getDefaultClusterId(): Promise<string> {
+  const [first] = await db.select({ id: clusters.id }).from(clusters).limit(1)
+  if (!first) throw new TRPCError({ code: 'NOT_FOUND', message: 'No clusters registered' })
+  return first.id
+}
+
+async function getCoreApiForCluster(clusterId?: string): Promise<k8s.CoreV1Api> {
+  const resolvedId = clusterId ?? await getDefaultClusterId()
+  const kc = await clusterClientPool.getClient(resolvedId)
+  return kc.makeApiClient(k8s.CoreV1Api)
+}
 
 async function listAccessibleClusterIds(params: {
   db: Parameters<typeof createAuthorizationService>[0]
@@ -68,18 +81,12 @@ async function resolveClusterIdForNonAdmin(params: {
 
 function normalizeLogResponse(response: unknown): string {
   if (typeof response === 'string') return response
-
-  if (response instanceof Uint8Array) {
-    return new TextDecoder().decode(response)
-  }
-
+  if (response instanceof Uint8Array) return new TextDecoder().decode(response)
   if (response && typeof response === 'object' && 'body' in response) {
     const body = (response as { body?: unknown }).body
-
     if (typeof body === 'string') return body
     if (body instanceof Uint8Array) return new TextDecoder().decode(body)
   }
-
   return String(response)
 }
 
@@ -89,7 +96,6 @@ function normalizePodResponse(response: unknown): {
   if (response && typeof response === 'object' && 'body' in response) {
     return ((response as { body?: unknown }).body as { spec?: { containers?: Array<{ name?: string }> } }) ?? {}
   }
-
   return (response as { spec?: { containers?: Array<{ name?: string }> } }) ?? {}
 }
 
@@ -113,7 +119,7 @@ export const logsRouter = router({
         })
       }
 
-      const coreApi = getCoreV1Api()
+      const coreApi = await getCoreApiForCluster(input?.clusterId)
       const ns = input?.namespace
       const response = ns
         ? await coreApi.listNamespacedPod({ namespace: ns })
@@ -180,17 +186,22 @@ export const logsRouter = router({
         )
       }
 
-      const coreApi = getCoreV1Api()
+      const coreApi = await getCoreApiForCluster(input.targets[0]?.clusterId)
       const searchLower = input.search?.trim().toLowerCase()
       const allowedLevels = new Set(input.levels ?? LOG_LEVELS)
 
       const targetResults = await Promise.all(
         input.targets.map(async (target) => {
           try {
+            // Use per-target clusterId if available
+            const targetCoreApi = target.clusterId
+              ? await getCoreApiForCluster(target.clusterId)
+              : coreApi
+
             const containers = target.container
               ? [target.container]
               : (normalizePodResponse(
-                  await coreApi.readNamespacedPod({ name: target.podName, namespace: target.namespace }),
+                  await targetCoreApi.readNamespacedPod({ name: target.podName, namespace: target.namespace }),
                 ).spec?.containers ?? [])
                   .map((c) => c.name)
                   .filter((name): name is string => Boolean(name))
@@ -204,14 +215,13 @@ export const logsRouter = router({
 
             const containerResults = await Promise.all(
               containers.map(async (containerName) => {
-                const raw = await coreApi.readNamespacedPodLog({
+                const raw = await targetCoreApi.readNamespacedPodLog({
                   name: target.podName,
                   namespace: target.namespace,
                   container: containerName,
                   tailLines: input.tailLines,
                   timestamps: true,
                 })
-
                 return { containerName, text: normalizeLogResponse(raw) }
               }),
             )
@@ -245,11 +255,7 @@ export const logsRouter = router({
                 return line.raw.toLowerCase().includes(searchLower)
               })
 
-            return {
-              target,
-              lines,
-              error: null as string | null,
-            }
+            return { target, lines, error: null as string | null }
           } catch (error) {
             return {
               target,
@@ -293,7 +299,7 @@ export const logsRouter = router({
         })
       }
 
-      const coreApi = getCoreV1Api()
+      const coreApi = await getCoreApiForCluster(input.clusterId)
       const raw = await coreApi.readNamespacedPodLog({
         name: input.podName,
         namespace: input.namespace,

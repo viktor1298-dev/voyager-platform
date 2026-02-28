@@ -1,8 +1,10 @@
+import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { cached, getRedisClient } from '../lib/cache.js'
-import { getAppsV1Api, getKubeConfig } from '../lib/k8s.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { clusters as clustersTable, db } from '@voyager/db'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_DEPLOYMENTS_CACHE_TTL = 30
@@ -109,15 +111,16 @@ function findLastUpdated(deployment: {
     : new Date(0).toISOString()
 }
 
-function getClusterContext() {
-  const kc = getKubeConfig()
-  const currentContextName = kc.getCurrentContext() || 'default'
-  const context = kc.getContextObject(currentContextName)
-  const clusterName = context?.cluster ?? currentContextName
-  return {
-    clusterId: clusterName,
-    clusterName,
+async function getClusterContextFromPool(clusterId?: string): Promise<{ kc: import('@kubernetes/client-node').KubeConfig; clusterId: string; clusterName: string }> {
+  if (clusterId) {
+    const kc = await clusterClientPool.getClient(clusterId)
+    return { kc, clusterId, clusterName: clusterId }
   }
+  // Fallback: use first registered cluster
+  const [first] = await db.select({ id: clustersTable.id, name: clustersTable.name }).from(clustersTable).limit(1)
+  if (!first) throw new Error('No clusters registered')
+  const kc = await clusterClientPool.getClient(first.id)
+  return { kc, clusterId: first.id, clusterName: first.name }
 }
 
 export const deploymentsRouter = router({
@@ -129,13 +132,12 @@ export const deploymentsRouter = router({
     .output(z.array(deploymentInfoSchema))
     .query(async (): Promise<DeploymentInfo[]> => {
       return cached(DEPLOYMENTS_CACHE_KEY, K8S_DEPLOYMENTS_CACHE_TTL, async () => {
-        const api = getAppsV1Api()
+        const { kc, clusterId, clusterName } = await getClusterContextFromPool()
+        const api = kc.makeApiClient(k8s.AppsV1Api)
         const [{ items: deployments }, { items: replicaSets }] = await Promise.all([
           api.listDeploymentForAllNamespaces(),
           api.listReplicaSetForAllNamespaces(),
         ])
-
-        const { clusterId, clusterName } = getClusterContext()
 
         const rolloutMap = new Map<string, RolloutInfo[]>()
 
@@ -205,7 +207,8 @@ export const deploymentsRouter = router({
     .output(z.object({ success: z.boolean(), restartedAt: z.string() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const api = getAppsV1Api()
+        const { kc } = await getClusterContextFromPool()
+        const api = kc.makeApiClient(k8s.AppsV1Api)
         const now = new Date().toISOString()
         await api.patchNamespacedDeployment({
           name: input.name,
@@ -248,7 +251,8 @@ export const deploymentsRouter = router({
     .output(z.object({ success: z.boolean(), replicas: z.number().int() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const api = getAppsV1Api()
+        const { kc } = await getClusterContextFromPool()
+        const api = kc.makeApiClient(k8s.AppsV1Api)
         await api.patchNamespacedDeployment({
           name: input.name,
           namespace: input.namespace,

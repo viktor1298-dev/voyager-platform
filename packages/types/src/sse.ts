@@ -5,6 +5,7 @@ export type PodEventType = 'added' | 'modified' | 'deleted'
 export type PodPhase = 'Pending' | 'Running' | 'Succeeded' | 'Failed' | 'Unknown'
 
 export interface PodEvent {
+  clusterId?: string
   type: PodEventType
   name: string
   namespace: string
@@ -47,6 +48,7 @@ export interface DeploymentConditionSummary {
 
 // ── Metrics Stream ──────────────────────────────────────────
 export interface MetricsEvent {
+  clusterId?: string
   cpuPercent: number | null
   memoryPercent: number | null
   memoryBytes: number
@@ -76,4 +78,15 @@ export interface LogLineEvent {
 }
 
 // ── Connection State (client-side) ──────────────────────────
+
+
+// ── Cluster Connection State ────────────────────────────────
+export type ClusterConnectionState = 'connected' | 'connecting' | 'disconnected' | 'error' | 'auth_expired'
 export type SSEConnectionState = 'connecting' | 'connected' | 'reconnecting' | 'disconnected'
+
+export interface ClusterStateChangeEvent {
+  clusterId: string
+  state: ClusterConnectionState
+  error?: string
+  timestamp: string
+}

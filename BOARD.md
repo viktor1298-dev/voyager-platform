@@ -180,8 +180,8 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 ### I1: Critical Fixes (P0)
 - [x] **I1-001** connectionConfig kubeconfig not saved on create — fixed (e208b2d)
 - [x] **I1-002** Endpoint shows `kubernetes.default.svc` instead of real server — fixed (e208b2d)
-- [ ] **I1-003** Deploy v157 with connection fix (needs build+deploy)
-- [ ] **I1-004** Verify minikube cluster actually connects after fix
+- [x] **I1-003** Deploy v157 with connection fix (needs build+deploy)
+- [x] **I1-004** Verify minikube cluster actually connects after fix
 
 ### I2: Replace Mock Data with Real K8s (P1)
 - [ ] **I2-001** `clusterHealth` — replace seededRandom with real K8s metrics

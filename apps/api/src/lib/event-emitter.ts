@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import type {
   AlertEvent,
+  ClusterStateChangeEvent,
   DeploymentProgressEvent,
   LogLineEvent,
   MetricsEvent,
@@ -30,6 +31,10 @@ class VoyagerEventEmitter extends EventEmitter {
 
   emitLogLine(podKey: string, event: LogLineEvent): void {
     this.emit(`log:${podKey}`, event)
+  }
+
+  emitClusterStateChange(event: ClusterStateChangeEvent): void {
+    this.emit('cluster-state-change', event)
   }
 }
 

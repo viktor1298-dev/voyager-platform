@@ -1,226 +1,58 @@
 import * as k8s from '@kubernetes/client-node'
 import {
-  SSE_ALERT_CHECK_INTERVAL_MS,
   SSE_DEPLOYMENT_PROGRESS_INTERVAL_MS,
-  SSE_INITIAL_RECONNECT_DELAY_MS,
-  SSE_LOG_POLL_INTERVAL_MS,
   SSE_LOG_TAIL_LINES,
-  SSE_MAX_RECONNECT_DELAY_MS,
-  SSE_METRICS_INTERVAL_MS,
-  SSE_POD_WATCH_RECONNECT_DELAY_MS,
-  SSE_RECONNECT_BACKOFF_MULTIPLIER,
 } from '@voyager/config/sse'
 import type {
-  AlertEvent,
-  ContainerStatusSummary,
   DeploymentProgressEvent,
   LogLineEvent,
-  MetricsEvent,
-  PodEvent,
-  PodEventType,
-  PodPhase,
 } from '@voyager/types'
+import { clusterClientPool } from './cluster-client-pool.js'
+import { clusterWatchManager } from './cluster-watch-manager.js'
 import { voyagerEmitter } from './event-emitter.js'
-import { getKubeConfig } from './k8s.js'
 
-// ── Backoff Helper ──────────────────────────────────────────
+// ── Pod Watcher (now delegates to ClusterWatchManager) ──────
 
-function getBackoffDelay(attempt: number): number {
-  const delay = SSE_INITIAL_RECONNECT_DELAY_MS * SSE_RECONNECT_BACKOFF_MULTIPLIER ** attempt
-  return Math.min(delay, SSE_MAX_RECONNECT_DELAY_MS)
-}
-
-// ── Pod Watcher ─────────────────────────────────────────────
-
-let podWatchAbort: (() => void) | null = null
-
-function mapContainerStatuses(
-  statuses: k8s.V1ContainerStatus[] | undefined,
-): ContainerStatusSummary[] {
-  return (statuses ?? []).map((cs) => {
-    let state: 'running' | 'waiting' | 'terminated' = 'waiting'
-    let reason: string | undefined
-    if (cs.state?.running) state = 'running'
-    else if (cs.state?.terminated) {
-      state = 'terminated'
-      reason = cs.state.terminated.reason ?? undefined
-    } else if (cs.state?.waiting) {
-      reason = cs.state.waiting.reason ?? undefined
-    }
-    return {
-      name: cs.name,
-      ready: cs.ready ?? false,
-      restartCount: cs.restartCount ?? 0,
-      state,
-      reason,
-    }
-  })
-}
-
+/**
+ * @deprecated Use clusterWatchManager.startCluster(clusterId) instead.
+ * Kept for backward compatibility during migration.
+ */
 export async function startPodWatcher(): Promise<void> {
-  const kc = getKubeConfig()
-  const watch = new k8s.Watch(kc)
-
-  let attempt = 0
-
-  const doWatch = () => {
-    watch
-      .watch(
-        '/api/v1/pods',
-        {},
-        (type: string, pod: k8s.V1Pod) => {
-          attempt = 0 // Reset backoff on successful event
-          const event: PodEvent = {
-            type: type.toLowerCase() as PodEventType,
-            name: pod.metadata?.name ?? 'unknown',
-            namespace: pod.metadata?.namespace ?? 'default',
-            phase: (pod.status?.phase as PodPhase) ?? 'Unknown',
-            reason: pod.status?.reason,
-            message: pod.status?.message,
-            restartCount: (pod.status?.containerStatuses ?? []).reduce(
-              (sum, cs) => sum + (cs.restartCount ?? 0),
-              0,
-            ),
-            containerStatuses: mapContainerStatuses(pod.status?.containerStatuses),
-            timestamp: new Date().toISOString(),
-          }
-          voyagerEmitter.emitPodEvent(event)
-        },
-        (err) => {
-          if (err) {
-            const delay = getBackoffDelay(attempt)
-            console.error(`Pod watch error, reconnecting in ${delay}ms...`, err.message)
-            attempt++
-            setTimeout(doWatch, delay)
-          }
-        },
-      )
-      .then((req) => {
-        podWatchAbort = () => req.abort()
-      })
-      .catch((err) => {
-        const delay = getBackoffDelay(attempt)
-        console.error(`Failed to start pod watch, retrying in ${delay}ms:`, err.message)
-        attempt++
-        setTimeout(doWatch, delay)
-      })
-  }
-  doWatch()
+  // No-op: ClusterWatchManager handles all informers per cluster
+  console.log('[k8s-watchers] startPodWatcher() is deprecated — use clusterWatchManager.startCluster()')
 }
 
-// ── Metrics Poller ──────────────────────────────────────────
+// ── Metrics Poller (now handled by ClusterWatchManager) ─────
 
-let metricsInterval: ReturnType<typeof setInterval> | null = null
-
+/**
+ * @deprecated Use clusterWatchManager.startCluster(clusterId) instead.
+ */
 export function startMetricsPoller(): void {
-  const poll = async () => {
-    try {
-      const kc = getKubeConfig()
-      const coreApi = kc.makeApiClient(k8s.CoreV1Api)
-      const metricsClient = new k8s.Metrics(kc)
-
-      // Fetch node metrics and node capacity/allocatable in parallel
-      const [nodeMetrics, nodesResponse] = await Promise.all([
-        metricsClient.getNodeMetrics(),
-        coreApi.listNode(),
-      ])
-
-      // Build capacity map keyed by node name
-      const capacityMap = new Map<string, { cpuNano: number; memBytes: number }>()
-      for (const node of nodesResponse.items) {
-        const name = node.metadata?.name
-        if (name) {
-          capacityMap.set(name, {
-            cpuNano: parseCpuToNano(node.status?.allocatable?.cpu ?? '0'),
-            memBytes: parseMemoryToBytes(node.status?.allocatable?.memory ?? '0'),
-          })
-        }
-      }
-
-      let totalCpuNano = 0
-      let totalMemBytes = 0
-      let totalCpuAllocatableNano = 0
-      let totalMemAllocatableBytes = 0
-
-      for (const node of nodeMetrics.items) {
-        const cpuStr = node.usage?.cpu ?? '0'
-        const memStr = node.usage?.memory ?? '0'
-        totalCpuNano += parseCpuToNano(cpuStr)
-        totalMemBytes += parseMemoryToBytes(memStr)
-
-        const capacity = capacityMap.get(node.metadata?.name ?? '')
-        if (capacity) {
-          totalCpuAllocatableNano += capacity.cpuNano
-          totalMemAllocatableBytes += capacity.memBytes
-        }
-      }
-
-      const cpuPercent =
-        totalCpuAllocatableNano > 0
-          ? Math.round((totalCpuNano / totalCpuAllocatableNano) * 1000) / 10
-          : null
-      const memoryPercent =
-        totalMemAllocatableBytes > 0
-          ? Math.round((totalMemBytes / totalMemAllocatableBytes) * 1000) / 10
-          : null
-
-      let podCount = 0
-      try {
-        const pods = await coreApi.listPodForAllNamespaces()
-        podCount = pods.items?.length ?? 0
-      } catch {
-        // ignore
-      }
-
-      const event: MetricsEvent = {
-        cpuCores: totalCpuNano / 1e9,
-        cpuPercent,
-        memoryBytes: totalMemBytes,
-        memoryPercent,
-        podCount,
-        timestamp: new Date().toISOString(),
-      }
-
-      voyagerEmitter.emitMetrics(event)
-    } catch (err) {
-      // Metrics API may not be available (e.g., no metrics-server)
-      // Silently skip — clients will just not receive updates
-    }
-  }
-
-  metricsInterval = setInterval(poll, SSE_METRICS_INTERVAL_MS)
-  poll()
+  console.log('[k8s-watchers] startMetricsPoller() is deprecated — use clusterWatchManager.startCluster()')
 }
 
-// ── Helpers ─────────────────────────────────────────────────
-
-function parseCpuToNano(cpu: string): number {
-  if (cpu.endsWith('n')) return Number.parseInt(cpu, 10)
-  if (cpu.endsWith('u')) return Number.parseInt(cpu, 10) * 1000
-  if (cpu.endsWith('m')) return Number.parseInt(cpu, 10) * 1e6
-  return Number.parseFloat(cpu) * 1e9
-}
-
-function parseMemoryToBytes(mem: string): number {
-  if (mem.endsWith('Ki')) return Number.parseInt(mem, 10) * 1024
-  if (mem.endsWith('Mi')) return Number.parseInt(mem, 10) * 1024 * 1024
-  if (mem.endsWith('Gi')) return Number.parseInt(mem, 10) * 1024 * 1024 * 1024
-  return Number.parseInt(mem, 10)
-}
-
-// ── Deployment Progress (on-demand) ─────────────────────────
+// ── Deployment Progress (on-demand, per-cluster) ────────────
 
 export function watchDeploymentProgress(
   name: string,
   namespace: string,
   signal: AbortSignal | undefined,
+  clusterId?: string,
 ): void {
-  const kc = getKubeConfig()
-  const appsApi = kc.makeApiClient(k8s.AppsV1Api)
-
   const poll = async () => {
     if (signal?.aborted) return
     try {
+      let appsApi: k8s.AppsV1Api
+      if (clusterId) {
+        const kc = await clusterClientPool.getClient(clusterId)
+        appsApi = kc.makeApiClient(k8s.AppsV1Api)
+      } else {
+        // Fallback for backward compat — use default kubeconfig
+        const kc = new k8s.KubeConfig()
+        kc.loadFromDefault()
+        appsApi = kc.makeApiClient(k8s.AppsV1Api)
+      }
+
       const dep = await appsApi.readNamespacedDeployment({ name, namespace })
       const replicas = dep.spec?.replicas ?? 0
       const ready = dep.status?.readyReplicas ?? 0
@@ -232,7 +64,6 @@ export function watchDeploymentProgress(
       if (ready === replicas && replicas > 0) status = 'available'
       else if (ready === 0 && replicas > 0) status = 'degraded'
 
-      // Check for stall condition
       const progressing = dep.status?.conditions?.find((c) => c.type === 'Progressing')
       if (progressing?.reason === 'ProgressDeadlineExceeded') status = 'stalled'
 
@@ -266,15 +97,64 @@ export function watchDeploymentProgress(
   poll()
 }
 
-// ── Log Streaming (on-demand) ───────────────────────────────
+// ── Log Streaming — Follow Mode (IP3-005) ───────────────────
 
+export async function streamLogsFollow(
+  clusterId: string,
+  namespace: string,
+  podName: string,
+  container: string | undefined,
+  signal: AbortSignal,
+): Promise<void> {
+  const kc = await clusterClientPool.getClient(clusterId)
+  const log = new k8s.Log(kc)
+  const podKey = `${clusterId}/${namespace}/${podName}${container ? `/${container}` : ''}`
+
+  // k8s.Log.log() takes a Writable stream as parameter
+  const { Writable } = await import('node:stream')
+  const outputStream = new Writable({
+    write(chunk: Buffer, _encoding: string, callback: () => void) {
+      const lines = chunk.toString().split('\n').filter(Boolean)
+      for (const line of lines) {
+        const spaceIdx = line.indexOf(' ')
+        const timestamp = spaceIdx > 0 ? line.substring(0, spaceIdx) : new Date().toISOString()
+        const logLine = spaceIdx > 0 ? line.substring(spaceIdx + 1) : line
+
+        const event: LogLineEvent = {
+          line: logLine,
+          timestamp,
+          isNewSinceConnect: true,
+        }
+        voyagerEmitter.emitLogLine(podKey, event)
+      }
+      callback()
+    },
+  })
+
+  const abortController = await log.log(namespace, podName, container ?? '', outputStream, {
+    follow: true,
+    tailLines: SSE_LOG_TAIL_LINES,
+    timestamps: true,
+  })
+
+  signal.addEventListener('abort', () => {
+    abortController.abort()
+    outputStream.destroy()
+  })
+}
+
+/**
+ * @deprecated Use streamLogsFollow() with clusterId instead.
+ * Kept for backward compatibility.
+ */
 export function streamLogs(
   podName: string,
   namespace: string,
   container: string | undefined,
   signal: AbortSignal | undefined,
 ): void {
-  const kc = getKubeConfig()
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
   const coreApi = kc.makeApiClient(k8s.CoreV1Api)
   const podKey = `${namespace}/${podName}${container ? `/${container}` : ''}`
 
@@ -295,7 +175,6 @@ export function streamLogs(
       const lines = text.split('\n').filter(Boolean)
 
       for (const line of lines) {
-        // K8s log lines with timestamps: "2024-01-01T00:00:00.000Z log message"
         const spaceIdx = line.indexOf(' ')
         const timestamp = spaceIdx > 0 ? line.substring(0, spaceIdx) : new Date().toISOString()
         const logLine = spaceIdx > 0 ? line.substring(spaceIdx + 1) : line
@@ -313,7 +192,7 @@ export function streamLogs(
     }
   }
 
-  const interval = setInterval(poll, SSE_LOG_POLL_INTERVAL_MS)
+  const interval = setInterval(poll, 2000)
   if (signal) {
     signal.addEventListener('abort', () => clearInterval(interval))
   }
@@ -323,6 +202,5 @@ export function streamLogs(
 // ── Cleanup ─────────────────────────────────────────────────
 
 export function stopAllWatchers(): void {
-  if (podWatchAbort) podWatchAbort()
-  if (metricsInterval) clearInterval(metricsInterval)
+  clusterWatchManager.stopAll()
 }
