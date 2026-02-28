@@ -21,7 +21,7 @@ import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Database, Plus, Trash2 } from 'lucide-react'
+import { Database, Eye, Plus, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -61,22 +61,41 @@ type ClusterRow = {
   environment?: 'development' | 'staging' | 'production'
 }
 
-function ClusterDeleteAction({ clusterId, onDelete }: { clusterId: string; onDelete: () => void }) {
+// P1-010: Primary action (view) + destructive (delete) in correct order
+function ClusterActions({ clusterId, clusterName, onDelete }: { clusterId: string; clusterName: string; onDelete: () => void }) {
   const canDelete = usePermission('cluster', clusterId, 'admin')
-  if (!canDelete) return null
+  const router = useRouter()
   return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation()
-        onDelete()
-      }}
-      className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-      title="Delete cluster"
-      aria-label="Delete cluster"
-    >
-      <Trash2 className="h-3.5 w-3.5" />
-    </button>
+    <div className="flex items-center gap-1">
+      {/* Primary action first (P1-010) */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          router.push(`/clusters/${clusterId}`)
+        }}
+        className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors cursor-pointer"
+        title="View cluster"
+        aria-label={`View cluster ${clusterName}`}
+      >
+        <Eye className="h-3.5 w-3.5" />
+      </button>
+      {/* Destructive action last */}
+      {canDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+          className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+          title="Delete cluster"
+          aria-label={`Delete cluster ${clusterName}`}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -277,22 +296,19 @@ export default function ClustersPage() {
           </span>
         ),
       },
-      ...(isAdmin
-        ? [
-            {
-              id: 'actions',
-              header: 'Actions',
-              enableSorting: false,
-              size: 60,
-              cell: ({ row }: { row: { original: ClusterRow } }) => (
-                <ClusterDeleteAction
-                  clusterId={row.original.id}
-                  onDelete={() => setDeleteTarget({ id: row.original.id, name: row.original.name })}
-                />
-              ),
-            } as ColumnDef<ClusterRow, unknown>,
-          ]
-        : []),
+      {
+        id: 'actions',
+        header: 'Actions',
+        enableSorting: false,
+        size: 80,
+        cell: ({ row }: { row: { original: ClusterRow } }) => (
+          <ClusterActions
+            clusterId={row.original.id}
+            clusterName={row.original.name}
+            onDelete={() => setDeleteTarget({ id: row.original.id, name: row.original.name })}
+          />
+        ),
+      } as ColumnDef<ClusterRow, unknown>,
     ],
     [getPermissionForCluster, isAdmin, isClient],
   )
@@ -382,11 +398,9 @@ export default function ClustersPage() {
                 {formatLastSeen(row.updatedAt, isClient)}
               </span>
             </div>
-            {isAdmin && (
-              <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">
-                <ClusterDeleteAction clusterId={row.id} onDelete={() => setDeleteTarget({ id: row.id, name: row.name })} />
-              </div>
-            )}
+            <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">
+              <ClusterActions clusterId={row.id} clusterName={row.name} onDelete={() => setDeleteTarget({ id: row.id, name: row.name })} />
+            </div>
           </div>
         )}
       />
