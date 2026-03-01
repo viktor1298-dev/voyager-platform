@@ -87,21 +87,17 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - ~~Pod delete tRPC endpoint + UI~~ ✅
 - ~~Scale deployment UI~~ ✅
 
-### E2: Alerts Real Backend
-- tRPC router + DB schema + evaluator job + UI
-- Target: v127
+### ~~E2: Alerts Real Backend~~ ✅ DONE (implemented in IP2 — v160)
+- ~~tRPC router + DB schema + evaluator job + UI~~ ✅
 
-### E3: Webhooks Real Backend  
-- tRPC + DB + UI + Alerts integration
-- Target: v128
+### ~~E3: Webhooks Real Backend~~ ✅ DONE (v162)
+- ~~tRPC + DB + UI + Alerts integration~~ ✅
 
-### E4: AI Assistant Backend
-- OpenAI tRPC + cluster context + UI
-- Target: v129
+### ~~E4: AI Assistant Backend~~ ✅ DONE (v162)
+- ~~OpenAI tRPC + cluster context + UI~~ ✅
 
-### E5: Permissions Real Backend
-- tRPC + DB enforcement + UI
-- Target: v130
+### ~~E5: Permissions Real Backend~~ ✅ DONE (v162)
+- ~~tRPC + DB enforcement + UI~~ ✅
 
 ---
 
