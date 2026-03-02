@@ -24,10 +24,11 @@ import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
 import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS, HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
-import { AlertTriangle, Bell, Container, LayoutGrid, List, Server, Table2 } from 'lucide-react'
+import { AlertTriangle, Bell, Container, LayoutGrid, List, RefreshCw, Server, Table2 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 
 interface ClusterCardData {
   id: string
@@ -113,6 +114,31 @@ function DashboardContent() {
     setFilters((prev) => ({ ...prev, environment }))
   }
 
+  const queryClient = useQueryClient()
+  const isFetching = useIsFetching()
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date>(new Date())
+  const [secondsAgo, setSecondsAgo] = useState(0)
+  const lastRefreshedRef = useRef(lastRefreshedAt)
+  lastRefreshedRef.current = lastRefreshedAt
+
+  // Update secondsAgo every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsAgo(Math.floor((Date.now() - lastRefreshedRef.current.getTime()) / 1000))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Update lastRefreshedAt when fetching completes
+  const wasFetchingRef = useRef(false)
+  useEffect(() => {
+    if (wasFetchingRef.current && isFetching === 0) {
+      setLastRefreshedAt(new Date())
+      setSecondsAgo(0)
+    }
+    wasFetchingRef.current = isFetching > 0
+  }, [isFetching])
+
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
 
   const liveQuery = trpc.clusters.live.useQuery(
@@ -147,11 +173,7 @@ function DashboardContent() {
       provider: liveData.provider,
       version: liveData.version,
       status: liveData.status,
-      healthStatus: matchingDbCluster
-        ? (typeof (matchingDbCluster as Record<string, unknown>).healthStatus === 'string'
-            ? (matchingDbCluster as Record<string, unknown>).healthStatus as string
-            : liveData.status)
-        : liveData.status,
+      healthStatus: liveData.status,
       nodeCount: liveData.nodes.length,
       source: 'live',
       environment: getClusterEnvironment(liveData.name, liveData.provider),
@@ -261,6 +283,22 @@ function DashboardContent() {
         <header className="mb-4">
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
         </header>
+
+        <div className="flex items-center justify-end gap-2 mb-1.5">
+          <span className="text-[10px] text-[var(--color-text-dim)] font-mono">
+            Updated {secondsAgo < 5 ? 'just now' : `${secondsAgo}s ago`}
+          </span>
+          <button
+            type="button"
+            onClick={() => queryClient.invalidateQueries()}
+            disabled={isFetching > 0}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            title="Refresh all data"
+          >
+            <RefreshCw className={cn('h-3 w-3', isFetching > 0 && 'animate-spin')} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
           <SummaryCard

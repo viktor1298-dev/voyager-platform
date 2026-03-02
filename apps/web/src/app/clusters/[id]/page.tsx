@@ -341,7 +341,7 @@ export default function ClusterDetailPage() {
         provider: String(liveData?.provider ?? 'minikube'),
         version: String(liveData?.version ?? '—'),
         status: liveData?.status ?? 'unknown',
-        healthStatus: String((dbCluster.data as Record<string, unknown>)?.healthStatus ?? dbCluster.data?.status ?? liveData?.status ?? 'unknown'),
+        healthStatus: String(liveData?.status ?? (dbCluster.data as Record<string, unknown>)?.healthStatus ?? dbCluster.data?.status ?? 'unknown'),
         liveStatus: liveData?.status ?? 'unknown',
         endpoint: liveData?.endpoint ?? '—',
         nodeCount: liveData?.nodes?.length ?? 0,
