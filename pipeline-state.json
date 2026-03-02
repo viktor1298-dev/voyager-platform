@@ -1,8 +1,8 @@
 {
   "status": "running",
-  "version": "v163",
-  "phase": "deploy",
-  "timestamp": "2026-03-02T20:14:35.062532",
-  "deployedInK8s": "v163",
+  "version": "v164",
+  "phase": "J-deploy",
+  "timestamp": "2026-03-02T20:44:42.139655",
+  "deployedInK8s": "v164",
   "currentStage": "DEPLOYED"
 }

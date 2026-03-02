@@ -235,5 +235,13 @@
     "helm_revision": 59,
     "status": "deployed",
     "phase": "IP4"
+  },
+  {
+    "version": "v164",
+    "timestamp": "2026-03-02T20:44:52.096676",
+    "helmRevision": 62,
+    "status": "deployed",
+    "health": "ok",
+    "notes": "Phase J - DEGRADED status fix, refresh button + timestamp"
   }
 ]
