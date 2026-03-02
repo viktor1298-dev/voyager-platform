@@ -140,6 +140,21 @@ function DashboardContent() {
   }, [isFetching])
 
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
+  const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
+
+  const listQuery = trpc.clusters.list.useQuery(undefined, {
+    refetchInterval: DB_CLUSTER_REFETCH_MS,
+  })
+
+  // Auto-select first cluster with credentials if none selected
+  useEffect(() => {
+    if (!activeClusterId && listQuery.data) {
+      const firstWithCreds = listQuery.data.find((c: { hasCredentials?: boolean }) => c.hasCredentials)
+      if (firstWithCreds) {
+        setActiveCluster(firstWithCreds.id)
+      }
+    }
+  }, [activeClusterId, listQuery.data, setActiveCluster])
 
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
@@ -148,10 +163,6 @@ function DashboardContent() {
       enabled: Boolean(activeClusterId),
     },
   )
-
-  const listQuery = trpc.clusters.list.useQuery(undefined, {
-    refetchInterval: DB_CLUSTER_REFETCH_MS,
-  })
 
   // P1-007: metrics for resource bars
   const statsQuery = trpc.metrics.currentStats.useQuery(undefined, {

@@ -1,7 +1,1 @@
-{
-  "status": "running",
-  "version": "v165",
-  "phase": "J-fix2-deploy",
-  "timestamp": "2026-03-02T21:30:27.928923",
-  "currentStage": "DEPLOYED"
-}
+{"status": "running", "version": "v165", "phase": "J-qa-v165", "timestamp": "2026-03-02T21:08:00+02:00"}
