@@ -262,9 +262,9 @@ function DashboardContent() {
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
         </header>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
           <SummaryCard
-            icon={<Server className="h-4 w-4" />}
+            icon={<Server className="h-3.5 w-3.5" />}
             label="Total Nodes"
             value={String(totalNodes)}
             color={totalNodes > 0 ? 'var(--color-accent)' : 'var(--color-text-muted)'}
@@ -272,7 +272,7 @@ function DashboardContent() {
             isLoading={isLoading}
           />
           <SummaryCard
-            icon={<Container className="h-4 w-4" />}
+            icon={<Container className="h-3.5 w-3.5" />}
             label="Running Pods"
             value={`${runningPods}/${liveData?.totalPods ?? 0}`}
             color={(runningPods > 0 && (liveData?.totalPods ?? 0) > 0) ? 'var(--color-status-active)' : 'var(--color-text-muted)'}
@@ -280,7 +280,7 @@ function DashboardContent() {
             isLoading={isLoading}
           />
           <SummaryCard
-            icon={<LayoutGrid className="h-4 w-4" />}
+            icon={<LayoutGrid className="h-3.5 w-3.5" />}
             label="Clusters"
             value={String(clusterList.length)}
             color={clusterList.length > 0 ? 'var(--color-accent)' : 'var(--color-text-muted)'}
@@ -288,17 +288,14 @@ function DashboardContent() {
             isLoading={isLoading}
           />
           <SummaryCard
-            icon={warningEvents > 0 ? <AlertTriangle className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+            icon={warningEvents > 0 ? <AlertTriangle className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
             label="Warning Events"
             value={String(warningEvents)}
             color={warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'}
             gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'none'}
             isLoading={isLoading}
           />
-        </div>
-
-        <div className="mb-6 max-w-sm">
-          <AnomalyWidget />
+          <AnomalyWidget compact />
         </div>
 
         {/* P1-001: Consolidated cluster header + filter in one section */}
@@ -574,7 +571,8 @@ function DashboardPageFallback() {
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
         </header>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
+          <SkeletonCard />
           <SkeletonCard />
           <SkeletonCard />
           <SkeletonCard />
@@ -760,37 +758,38 @@ function SummaryCard({
 }) {
   return (
     <div
-      className="rounded-2xl p-4 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 w-full"
+      className="rounded-xl px-3 py-2.5 border border-[var(--color-border)] hover:border-[var(--color-border-hover)] w-full flex items-center justify-between gap-2"
       style={{
         background: 'var(--glass-bg)',
         backdropFilter: 'blur(var(--glass-blur))',
         WebkitBackdropFilter: 'blur(var(--glass-blur))',
         transition: 'all var(--duration-normal) ease',
         boxShadow: 'var(--shadow-card)',
+        minHeight: '64px',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'
+        e.currentTarget.style.boxShadow = 'var(--shadow-card)'
       }}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span className="text-[10px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono truncate">
           {label}
         </span>
-        <span style={{ color }}>{icon}</span>
+        {isLoading ? (
+          <SkeletonText width="2.5rem" height="1.5rem" />
+        ) : (
+          <div
+            className={cn('text-xl font-extrabold tracking-tight leading-tight animate-count-up', gradient !== 'none' && 'gradient-text', gradient === 'none' && 'opacity-50')}
+            style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
+          >
+            {value}
+          </div>
+        )}
       </div>
-      {isLoading ? (
-        <SkeletonText width="3rem" height="2rem" />
-      ) : (
-        <div
-          className={cn('text-2xl font-extrabold tracking-tight animate-count-up', gradient !== 'none' && 'gradient-text', gradient === 'none' && 'opacity-50')}
-          style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
-        >
-          {value}
-        </div>
-      )}
+      <span className="shrink-0 opacity-60" style={{ color }}>{icon}</span>
     </div>
   )
 }
