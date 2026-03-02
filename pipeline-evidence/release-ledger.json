@@ -243,5 +243,17 @@
     "status": "deployed",
     "health": "ok",
     "notes": "Phase J - DEGRADED status fix, refresh button + timestamp"
+  },
+  {
+    "version": "v165",
+    "timestamp": "2026-03-02T21:30:43.944328",
+    "tag": "v165",
+    "message": "Phase J: DEGRADED fix + refresh UX (fix2)",
+    "images": [
+      "voyager-api:v165",
+      "voyager-web:v165"
+    ],
+    "helmRevision": 64,
+    "status": "deployed"
   }
 ]
