@@ -3,7 +3,7 @@
 import { AppLayout } from '@/components/AppLayout'
 import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { PageTransition } from '@/components/animations'
-import { AnomalyWidget } from '@/components/anomalies/AnomalyWidget'
+import { filterOpenAnomalies, getAnomalySeverityCounts, MOCK_ANOMALIES } from '@/lib/anomalies'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { SkeletonCard, SkeletonText } from '@/components/Skeleton'
 import {
@@ -22,7 +22,7 @@ import {
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS, HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
-import { AlertTriangle, Box, Database, Server } from 'lucide-react'
+import { AlertOctagon, AlertTriangle, Box, Database, Info, Server } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
@@ -227,44 +227,14 @@ function DashboardContent() {
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
         </header>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-          <SummaryCard
-            icon={<Server className="h-4 w-4" />}
-            label="Total Nodes"
-            value={String(totalNodes)}
-            color="var(--color-accent)"
-            gradient="var(--gradient-text-default)"
-            isLoading={isLoading}
-          />
-          <SummaryCard
-            icon={<Box className="h-4 w-4" />}
-            label="Running Pods"
-            value={`${runningPods}/${liveData?.totalPods ?? 0}`}
-            color="var(--color-status-active)"
-            gradient="var(--gradient-text-healthy)"
-            isLoading={isLoading}
-          />
-          <SummaryCard
-            icon={<Database className="h-4 w-4" />}
-            label="Clusters"
-            value={String(clusterList.length)}
-            color="var(--color-accent)"
-            gradient="var(--gradient-text-default)"
-            isLoading={isLoading}
-          />
-          <SummaryCard
-            icon={<AlertTriangle className="h-4 w-4" />}
-            label="Warning Events"
-            value={String(warningEvents)}
-            color="var(--color-status-warning)"
-            gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'var(--gradient-text-default)'}
-            isLoading={isLoading}
-          />
-        </div>
-
-        <div className="mb-6 max-w-sm">
-          <AnomalyWidget />
-        </div>
+        <KpiStrip
+          totalNodes={totalNodes}
+          runningPods={runningPods}
+          totalPods={liveData?.totalPods ?? 0}
+          clusterCount={clusterList.length}
+          warningEvents={warningEvents}
+          isLoading={isLoading}
+        />
 
         <div className="flex flex-col gap-4 mb-5">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
@@ -390,11 +360,8 @@ function DashboardPageFallback() {
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
         </header>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
+        <div className="flex flex-wrap gap-2 mb-5">
+          {[0,1,2,3,4].map(i => <div key={i} className="flex-1 min-w-0 h-[64px] rounded-xl bg-[var(--color-bg-secondary)] animate-pulse" />)}
         </div>
         <div className="space-y-3">
           <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
@@ -528,13 +495,14 @@ function ClusterCard({
   )
 }
 
-function SummaryCard({
+function KpiPill({
   icon,
   label,
   value,
   color,
   gradient,
   isLoading,
+  href,
 }: {
   icon: React.ReactNode
   label: string
@@ -542,40 +510,122 @@ function SummaryCard({
   color: string
   gradient: string
   isLoading?: boolean
+  href?: string
 }) {
-  return (
+  const inner = (
     <div
-      className="rounded-2xl p-4 border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)]"
+      className="flex flex-col justify-center gap-0.5 px-4 py-2 border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)] rounded-xl h-[64px] transition-all duration-200 cursor-default"
       style={{
         background: 'var(--glass-bg)',
         backdropFilter: 'blur(var(--glass-blur))',
         WebkitBackdropFilter: 'blur(var(--glass-blur))',
-        transition: 'all var(--duration-normal) ease',
-        boxShadow: 'var(--shadow-card)',
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'
-      }}
+      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)' }}
+      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none' }}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[9px] uppercase tracking-[0.1em] font-mono text-[var(--color-text-dim)] whitespace-nowrap">
           {label}
         </span>
-        <span style={{ color }}>{icon}</span>
+        <span style={{ color, opacity: 0.6 }} className="shrink-0">{icon}</span>
       </div>
       {isLoading ? (
-        <SkeletonText width="3rem" height="2rem" />
+        <SkeletonText width="2.5rem" height="1.25rem" />
       ) : (
         <div
-          className="text-2xl font-extrabold tracking-tight animate-count-up gradient-text"
+          className="text-xl font-extrabold tracking-tight gradient-text leading-none"
           style={{ backgroundImage: gradient }}
         >
           {value}
         </div>
       )}
+    </div>
+  )
+
+  if (href) return <Link href={href} className="block flex-1 min-w-0">{inner}</Link>
+  return <div className="flex-1 min-w-0">{inner}</div>
+}
+
+function KpiStrip({
+  totalNodes,
+  runningPods,
+  totalPods,
+  clusterCount,
+  warningEvents,
+  isLoading,
+}: {
+  totalNodes: number
+  runningPods: number
+  totalPods: number
+  clusterCount: number
+  warningEvents: number
+  isLoading?: boolean
+}) {
+  const openAnomalies = filterOpenAnomalies(MOCK_ANOMALIES)
+  const { critical, warning, info } = getAnomalySeverityCounts(openAnomalies)
+
+  return (
+    <div className="flex flex-wrap gap-2 mb-5">
+      <KpiPill
+        icon={<Server className="h-3.5 w-3.5" />}
+        label="Total Nodes"
+        value={String(totalNodes)}
+        color="var(--color-accent)"
+        gradient="var(--gradient-text-default)"
+        isLoading={isLoading}
+      />
+      <KpiPill
+        icon={<Box className="h-3.5 w-3.5" />}
+        label="Running Pods"
+        value={`${runningPods}/${totalPods}`}
+        color="var(--color-status-active)"
+        gradient="var(--gradient-text-healthy)"
+        isLoading={isLoading}
+      />
+      <KpiPill
+        icon={<Database className="h-3.5 w-3.5" />}
+        label="Clusters"
+        value={String(clusterCount)}
+        color="var(--color-accent)"
+        gradient="var(--gradient-text-default)"
+        isLoading={isLoading}
+      />
+      <KpiPill
+        icon={<AlertTriangle className="h-3.5 w-3.5" />}
+        label="Warn Events"
+        value={String(warningEvents)}
+        color="var(--color-status-warning)"
+        gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'var(--gradient-text-default)'}
+        isLoading={isLoading}
+      />
+      {/* Anomalies pill — inline compact */}
+      <Link href="/anomalies" className="flex-1 min-w-0 block">
+        <div
+          className="flex items-center gap-3 px-4 py-2 border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)] rounded-xl h-[64px] transition-all duration-200"
+          style={{
+            background: 'var(--glass-bg)',
+            backdropFilter: 'blur(var(--glass-blur))',
+            WebkitBackdropFilter: 'blur(var(--glass-blur))',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none' }}
+        >
+          <div className="flex flex-col gap-0.5 mr-auto">
+            <span className="text-[9px] uppercase tracking-[0.1em] font-mono text-[var(--color-text-dim)]">Anomalies</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-300">
+              <AlertOctagon className="h-3 w-3" />{critical}
+            </span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300">
+              <AlertTriangle className="h-3 w-3" />{warning}
+            </span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-300">
+              <Info className="h-3 w-3" />{info}
+            </span>
+          </div>
+        </div>
+      </Link>
     </div>
   )
 }
