@@ -146,12 +146,14 @@ function DashboardContent() {
     refetchInterval: DB_CLUSTER_REFETCH_MS,
   })
 
-  // Auto-select first cluster with credentials if none selected
+  // Auto-select first cluster with credentials if none selected (prefer minikube/live clusters)
   useEffect(() => {
     if (!activeClusterId && listQuery.data) {
-      const firstWithCreds = listQuery.data.find((c: { hasCredentials?: boolean }) => c.hasCredentials)
-      if (firstWithCreds) {
-        setActiveCluster(firstWithCreds.id)
+      const withCreds = listQuery.data.filter((c: { hasCredentials?: boolean }) => c.hasCredentials)
+      // Prefer clusters with 'minikube' in name (most likely to be the live connected one)
+      const preferred = withCreds.find((c) => c.name.includes('minikube')) ?? withCreds[0]
+      if (preferred) {
+        setActiveCluster(preferred.id)
       }
     }
   }, [activeClusterId, listQuery.data, setActiveCluster])
