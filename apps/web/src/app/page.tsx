@@ -163,10 +163,14 @@ function DashboardContent() {
   const dbClusters = listQuery.data ?? []
   const isLoading = liveQuery.isLoading && listQuery.isLoading
 
+  // J1 fix: helper to match any minikube-variant DB cluster against live data
+  const isLiveClusterMatch = (name: string) =>
+    liveData && (name === liveData.name || name === 'minikube-dev' || name === 'vik-minikube' || name.includes('minikube'))
+
   const clusterList: ClusterCardData[] = []
 
   if (liveData) {
-    const matchingDbCluster = dbClusters.find(c => c.name === liveData.name || c.name === 'minikube-dev')
+    const matchingDbCluster = dbClusters.find(c => isLiveClusterMatch(c.name))
     clusterList.push({
       id: activeClusterId ?? 'live',
       name: liveData.name,
@@ -183,8 +187,7 @@ function DashboardContent() {
   }
 
   for (const c of dbClusters) {
-    const isLiveMinikube =
-      liveData && (c.name === liveData.name || c.name === 'minikube-dev')
+    const isLiveMinikube = isLiveClusterMatch(c.name)
     if (!isLiveMinikube) {
       clusterList.push({
         id: c.id,
@@ -205,7 +208,7 @@ function DashboardContent() {
   const totalNodes =
     (liveData?.nodes.length ?? 0) +
     dbClusters
-      .filter((c) => !(liveData && (c.name === liveData.name || c.name === 'minikube-dev')))
+      .filter((c) => !isLiveClusterMatch(c.name))
       .reduce((sum, c) => sum + c.nodeCount, 0)
   const runningPods = liveData?.runningPods ?? 0
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0

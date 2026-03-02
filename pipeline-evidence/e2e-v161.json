@@ -1,0 +1,18 @@
+{
+  "version": "v161",
+  "total": 96,
+  "passed": 85,
+  "failed": 1,
+  "skipped": 10,
+  "verdict": "FAIL",
+  "timestamp": "2026-03-01T00:20:00.000+02:00",
+  "failures": [
+    {
+      "test": "BYOK key flow > Settings BYOK actions keep UX clear for saved key vs raw key",
+      "file": "tests/e2e/byok-flow.spec.ts:17",
+      "hypothesis": "Test expects Test Saved Key button to be disabled when a saved key exists, but the app enables it. The test assertion is stale - UI behavior changed to allow re-testing saved keys.",
+      "classification": "test-bug",
+      "suggested_fix": "Update byok-flow.spec.ts line 25: change toBeDisabled() to toBeEnabled() for the test button when a saved key exists."
+    }
+  ]
+}
