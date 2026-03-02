@@ -293,7 +293,7 @@ function DashboardContent() {
           </span>
           <button
             type="button"
-            onClick={() => queryClient.invalidateQueries()}
+            onClick={() => { queryClient.invalidateQueries(); setLastRefreshedAt(new Date()); setSecondsAgo(0) }}
             disabled={isFetching > 0}
             className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             title="Refresh all data"
