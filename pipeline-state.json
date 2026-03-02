@@ -1,1 +1,8 @@
-{"status": "running", "version": "v165", "phase": "J-qa-v165", "timestamp": "2026-03-02T21:08:00+02:00"}
+{
+  "status": "running",
+  "version": "v166",
+  "phase": "J-qa-v165",
+  "timestamp": "2026-03-02T21:42:44.877212",
+  "deployedInK8s": "v166",
+  "currentStage": "DEPLOYED"
+}

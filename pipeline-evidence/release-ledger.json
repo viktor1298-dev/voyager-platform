@@ -255,5 +255,19 @@
     ],
     "helmRevision": 64,
     "status": "deployed"
+  },
+  {
+    "version": "v166",
+    "timestamp": "2026-03-02T21:42:54.268576",
+    "tag": "v166",
+    "commit": "c011dab",
+    "description": "Phase J: auto-select cluster + DEGRADED fix final",
+    "images": [
+      "voyager-api:v166",
+      "voyager-web:v166"
+    ],
+    "helm_revision": 65,
+    "web_no_cache": true,
+    "status": "deployed"
   }
 ]
