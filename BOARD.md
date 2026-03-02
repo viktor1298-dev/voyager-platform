@@ -162,6 +162,39 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ---
 
+---
+
+## 🐛 Phase J — Bug Fix + UX Improvements (2026-03-02 — Vik mandate)
+
+> Priority: HIGH — user-facing bugs + UX improvements requested by Vik
+
+### J1: DEGRADED Status Bug (cluster shows DEGRADED when healthy)
+- [ ] **J1-001** Investigate health status calculation — why does `vik-minikube` show "Degraded" when cluster is reachable and healthy
+  - Check `health-sync.ts` background job — is it updating `healthStatus` correctly in DB?
+  - Check `clusterHealth` tRPC procedure — is it mapping status correctly?
+  - Known possible root cause: `LIVE_CLUSTER_ID` hardcode check in `clusters/[id]/page.tsx` (should use `connectionConfig !== null`)
+  - Known possible root cause: `lastConnectedAt` missing from `clusters.getById` SELECT projection
+- [ ] **J1-002** Fix the health status mapping so connected clusters show "Healthy" not "Degraded"
+- [ ] **J1-003** Verify fix: after health-sync runs, vik-minikube shows green/Healthy badge
+
+### J2: Last Refresh Timestamp Indicator
+- [ ] **J2-001** Add "Last refreshed: X seconds ago" indicator to dashboard header area (near the stat cards strip)
+  - Show time elapsed since last data fetch (e.g. "Updated 12s ago", "Updated just now")
+  - Auto-update every second via `useEffect` interval
+  - Small, muted text — not intrusive
+- [ ] **J2-002** Track `lastRefreshedAt` state in dashboard page (set on each tRPC query completion)
+
+### J3: Manual Refresh Button with Loading Animation
+- [ ] **J3-001** Add "Refresh" button to dashboard header (next to Last Refresh timestamp)
+  - Icon: `RefreshCw` from lucide-react
+  - On click: invalidate all dashboard tRPC queries
+  - Loading state: icon spins with CSS animation while queries are loading (`animate-spin`)
+  - Button disabled while refreshing (prevent double-click)
+- [ ] **J3-002** Modern styling: ghost button, small size, shows icon only (or icon + "Refresh" text)
+  - Use `useIsFetching()` from TanStack Query to detect loading state
+
+---
+
 ## Pipeline Gates (ALL stages)
 - Code Review (Lior): 10/10
 - E2E (Yuval): **0 failures** (non-negotiable — Vik mandate 2026-02-27)
