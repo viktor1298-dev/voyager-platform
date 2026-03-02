@@ -269,5 +269,18 @@
     "helm_revision": 65,
     "web_no_cache": true,
     "status": "deployed"
+  },
+  {
+    "version": "v167",
+    "timestamp": "2026-03-02T22:03:33.681094",
+    "tag": "v167",
+    "images": [
+      "voyager-api:v167",
+      "voyager-web:v167"
+    ],
+    "helmRevision": 66,
+    "description": "Phase J: health-sync fix + auto-select minikube",
+    "status": "deployed",
+    "health": "ok"
   }
 ]
