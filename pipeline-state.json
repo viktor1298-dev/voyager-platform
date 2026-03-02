@@ -1,8 +1,1 @@
-{
-  "status": "running",
-  "version": "v167",
-  "phase": "J-qa-v166",
-  "timestamp": "2026-03-02T22:03:27.480393",
-  "deployedInK8s": "v167",
-  "currentStage": "DEPLOYED"
-}
+{"status": "pending-final-verification", "version": "v167", "phase": "J-complete", "qaScore": 10, "timestamp": "2026-03-02T21:34:00+02:00"}
