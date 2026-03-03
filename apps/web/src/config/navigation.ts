@@ -33,7 +33,7 @@ export const navItems: NavItem[] = [
   { id: '/', label: 'Dashboard', icon: LayoutDashboard },
   { id: '/clusters', label: 'Clusters', icon: Server },
   { id: '/dashboards', label: 'Shared Dashboards', icon: LayoutGrid },
-  { id: '/health', label: 'Health', icon: HeartPulse },
+  { id: '/system-health', label: 'Health', icon: HeartPulse },
   { id: '/services', label: 'Services', icon: Layers },
   { id: '/namespaces', label: 'Namespaces', icon: FolderTree },
   { id: '/deployments', label: 'Deployments', icon: Box },

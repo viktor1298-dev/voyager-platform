@@ -187,6 +187,7 @@ export const metricsRouter = router({
    * Falls back to null values when metrics-server is unavailable.
    */
   currentStats: protectedProcedure
+    .input(z.void())
     .output(
       z.object({
         cpuPercent: z.number().nullable(),
