@@ -7,6 +7,31 @@ test.describe('BYOK key flow', () => {
   })
 
   test('AI page is gated when no valid BYOK key is available', async ({ page }) => {
+    // Clear any leftover BYOK key from previous test runs so the gated UI renders
+    const baseUrl = process.env.BASE_URL || 'http://localhost:9000'
+    await page.goto('/settings')
+    const cookies = await page.context().cookies()
+    const sessionCookie = cookies.find((c) => c.name === 'better-auth.session_token')
+    if (sessionCookie) {
+      try {
+        await page.evaluate(
+          async ({ url, cookie }) => {
+            await fetch(`${url}/trpc/aiKeys.delete`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Cookie: `better-auth.session_token=${cookie}`,
+              },
+              body: JSON.stringify({}),
+            })
+          },
+          { url: baseUrl, cookie: sessionCookie.value },
+        )
+      } catch {
+        // Key may not exist — that's fine
+      }
+    }
+
     await page.goto('/ai')
 
     await expect(page.getByText('AI Chat Locked (BYOK)')).toBeVisible()
