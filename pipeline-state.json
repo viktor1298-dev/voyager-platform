@@ -1,9 +1,15 @@
 {
   "status": "running",
-  "version": "v168",
-  "phase": "K-P0",
-  "timestamp": "2026-03-03T20:25:29.865362",
-  "previousVersion": "v167",
-  "deployedInK8s": "v168",
+  "version": "v169",
+  "phase": "K-P2",
+  "timestamp": "2026-03-03T21:26:44.325242",
+  "previousVersion": "v168",
+  "completedPhases": [
+    "K-P0",
+    "K-P1"
+  ],
+  "p0p1QaScore": 8.9,
+  "p0p1E2e": "85/85 pass",
+  "deployedInK8s": "v169",
   "currentStage": "DEPLOYED"
 }
