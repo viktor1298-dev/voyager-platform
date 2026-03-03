@@ -41,6 +41,9 @@ test.describe('BYOK key flow', () => {
 
   test('Settings BYOK actions keep UX clear for saved key vs raw key', async ({ page }) => {
     await page.goto('/settings')
+    // Navigate to AI Configuration tab where BYOK settings live
+    await page.getByRole('tab', { name: 'AI Configuration' }).click()
+    await page.waitForTimeout(300)
 
     const testButton = page.getByRole('button', { name: /test (new|saved) key/i })
     const saveButton = page.getByRole('button', { name: /save key/i })
@@ -59,6 +62,9 @@ test.describe('BYOK key flow', () => {
 
   test('Settings BYOK test/save use backend response (not route unavailable)', async ({ page }) => {
     await page.goto('/settings')
+    // Navigate to AI Configuration tab where BYOK settings live
+    await page.getByRole('tab', { name: 'AI Configuration' }).click()
+    await page.waitForTimeout(300)
 
     const apiKeyInput = page.getByLabel(/api key/i)
     const testButton = page.getByTestId('byok-test')

@@ -65,8 +65,7 @@ test.describe('Alerts — CRUD + History', () => {
 
     // Find the toggle button for this alert — it starts as ON
     const toggleBtn = page.getByRole('button', { name: new RegExp(`disable alert ${alertName}`, 'i') });
-    await expect(toggleBtn).toBeAttached({ timeout: 5_000 });
-    await toggleBtn.scrollIntoViewIfNeeded();
+    await expect(toggleBtn).toBeVisible({ timeout: 10_000 });
     await expect(toggleBtn).toHaveText('ON');
 
     // Toggle OFF
@@ -99,8 +98,7 @@ test.describe('Alerts — CRUD + History', () => {
 
     // Click delete button for this alert
     const deleteBtn = page.getByRole('button', { name: new RegExp(`delete alert ${alertName}`, 'i') });
-    await expect(deleteBtn).toBeAttached({ timeout: 5_000 });
-    await deleteBtn.scrollIntoViewIfNeeded();
+    await expect(deleteBtn).toBeVisible({ timeout: 10_000 });
     await deleteBtn.click();
 
     // Confirm deletion dialog
