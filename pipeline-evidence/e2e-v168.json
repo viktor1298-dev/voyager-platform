@@ -1,0 +1,28 @@
+{
+  "agentId": "agent:testing",
+  "version": "v168",
+  "branch": "feat/init-monorepo",
+  "timestamp": "2026-03-03T21:30:00Z",
+  "base_url": "http://voyager-platform.voyagerlabs.co",
+  "preflight": {
+    "health": 200,
+    "login": "OK"
+  },
+  "stats": {
+    "total": 95,
+    "passed": 85,
+    "failed": 0,
+    "skipped": 10,
+    "flaky": 1
+  },
+  "verdict": "PASS",
+  "gate": "0 failures required",
+  "flaky_notes": [
+    {
+      "test": "alerts or byok-flow — order-dependent state contamination",
+      "classification": "flaky-ordering",
+      "note": "Passes in isolation and on retry (retries=1). Root cause: test ordering state — BYOK key left by prior test, or alerts list modified by prior test. Both pass cleanly when run alone or with retries."
+    }
+  ],
+  "failures": []
+}

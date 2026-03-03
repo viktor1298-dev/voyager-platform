@@ -12,12 +12,13 @@ export function AnomalyWidget({ compact }: { compact?: boolean }) {
     return (
       <Link href="/anomalies" className="block h-full">
         <div
-          className="rounded-xl px-3 py-2.5 border border-[var(--color-border)] hover:border-[var(--color-border-hover)] w-full h-full flex items-center justify-between gap-2 transition-colors"
+          className="rounded-xl px-3 py-2.5 border w-full h-full flex items-center justify-between gap-2 transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 border-[var(--color-status-warning)]/40 ring-1 ring-[var(--color-status-warning)]/20"
           style={{
-            background: 'var(--glass-bg)',
+            background: total > 0 ? 'rgba(246, 192, 66, 0.06)' : 'var(--glass-bg)',
             backdropFilter: 'blur(var(--glass-blur))',
             WebkitBackdropFilter: 'blur(var(--glass-blur))',
             minHeight: '64px',
+            boxShadow: total > 0 ? 'var(--glow-warning)' : 'var(--shadow-card)',
           }}
         >
           <div className="flex flex-col gap-0.5 min-w-0">
@@ -39,7 +40,11 @@ export function AnomalyWidget({ compact }: { compact?: boolean }) {
               </span>
             </div>
           </div>
-          <span className="text-xl font-extrabold text-[var(--color-text-primary)] shrink-0">{total}</span>
+          <span
+            className={`text-2xl font-extrabold shrink-0 ${total > 0 ? 'text-red-400 animate-pulse' : 'text-[var(--color-text-primary)]'}`}
+          >
+            {total}
+          </span>
         </div>
       </Link>
     )

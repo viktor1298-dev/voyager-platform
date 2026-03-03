@@ -282,5 +282,25 @@
     "description": "Phase J: health-sync fix + auto-select minikube",
     "status": "deployed",
     "health": "ok"
+  },
+  {
+    "version": "v168",
+    "commit": "7b423c1f3a8db75c09e61c2d8d8ca479c4bf8543",
+    "timestamp": "2026-03-03T20:25:36.048399",
+    "api_image": "voyager-api:v168",
+    "web_image": "voyager-web:v168",
+    "helm_revision": 67,
+    "status": "deployed",
+    "health": "ok"
+  },
+  {
+    "version": "v169",
+    "commit": "be64440",
+    "timestamp": "2026-03-03T21:26:57.085072",
+    "status": "deployed",
+    "health": "ok (/health 200)",
+    "login": "ok (token returned)",
+    "helmRevision": 69,
+    "notes": "QA fix loop - metrics endpoints, favicon, health route fixes"
   }
 ]

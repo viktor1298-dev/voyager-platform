@@ -57,8 +57,8 @@ test.describe('API Tokens', () => {
     await page.getByRole('button', { name: /Dismiss token/i }).waitFor({ state: 'visible', timeout: 10000 });
     await page.getByRole('button', { name: /Dismiss token/i }).click()
     await expect(page.getByText(tokenName)).toBeVisible({ timeout: 5000 })
-    // Click Revoke → confirms with dialog
-    await page.getByRole('button', { name: /Revoke/i }).first().click()
+    // Click the per-token Revoke button (not the bulk "Revoke N Test Tokens" button)
+    await page.getByRole('button', { name: `Revoke token ${tokenName}` }).click()
     await expect(page.getByRole('button', { name: /Confirm/i })).toBeVisible()
     await page.getByRole('button', { name: /Confirm/i }).click()
     // Token should disappear from list

@@ -1,13 +1,19 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import { APP_VERSION } from '@/config/constants'
-import { navItems } from '@/config/navigation'
+import { navItems, getNavGroups } from '@/config/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
 import { trpc } from '@/lib/trpc'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 
 export function Sidebar({
   collapsed,
@@ -108,11 +114,16 @@ function SidebarContent({
   const filteredItems = navItems.filter(
     (item) => !('adminOnly' in item && item.adminOnly) || isAdmin,
   )
-  const mainItems = filteredItems.filter((item) => !item.section)
-  const autoscalingItems = filteredItems.filter((item) => item.section === 'autoscaling')
-  const accessControlItems = filteredItems.filter((item) => item.section === 'access-control')
+  const navGroups = getNavGroups(filteredItems)
 
   const { data: unacknowledgedCount = 0 } = trpc.alerts.unacknowledgedCount.useQuery(undefined, { refetchInterval: 30000 })
+
+  // Track collapsed state per group — all open by default
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({})
+
+  const toggleGroup = (key: string) => {
+    setCollapsedGroups((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
 
   const renderNavItem = (item: (typeof navItems)[number]) => {
     const active = isActive(item.id)
@@ -145,25 +156,44 @@ function SidebarContent({
   }
 
   return (
-    <div className="flex flex-col gap-2 px-2 flex-1 min-h-0 overflow-y-auto">
-      <nav className="flex flex-col gap-1">{mainItems.map(renderNavItem)}</nav>
-
-      {showLabels && autoscalingItems.length > 0 && (
-        <div className="mt-1 border-t border-[var(--color-border)]/60 pt-2">
-          <p className="px-2 mb-1 text-[12px] uppercase tracking-widest font-mono font-bold text-slate-700 dark:text-slate-100">
-            Autoscaling
-          </p>
-          <nav className="flex flex-col gap-1">{autoscalingItems.map(renderNavItem)}</nav>
-        </div>
-      )}
-
-      {showLabels && accessControlItems.length > 0 && (
-        <div className="mt-1 border-t border-[var(--color-border)]/60 pt-2">
-          <p className="px-2 mb-1 text-[12px] uppercase tracking-widest font-mono font-bold text-slate-700 dark:text-slate-100">
-            Access Control
-          </p>
-          <nav className="flex flex-col gap-1">{accessControlItems.map(renderNavItem)}</nav>
-        </div>
+    <div className="flex flex-col gap-1 px-2 flex-1 min-h-0 overflow-y-auto">
+      {showLabels ? (
+        <>
+          {navGroups.map((group) => {
+            const isOpen = !collapsedGroups[group.key]
+            const hasActiveItem = group.items.some((item) => isActive(item.id))
+            return (
+              <Collapsible key={group.key} open={isOpen} onOpenChange={() => toggleGroup(group.key)}>
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center justify-between w-full px-2 py-1.5 mt-1 rounded-md text-[11px] uppercase tracking-widest font-mono font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.03] transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span>{group.emoji}</span>
+                      <span>{group.label}</span>
+                      {!isOpen && hasActiveItem && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+                      )}
+                    </span>
+                    <ChevronDown
+                      className={`h-3 w-3 transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
+                    />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <nav className="flex flex-col gap-0.5 mt-0.5">
+                    {group.items.map(renderNavItem)}
+                  </nav>
+                </CollapsibleContent>
+              </Collapsible>
+            )
+          })}
+        </>
+      ) : (
+        <nav className="flex flex-col gap-1">
+          {filteredItems.map(renderNavItem)}
+        </nav>
       )}
 
       {showLabels && clusters.length > 0 && (

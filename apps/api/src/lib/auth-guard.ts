@@ -1,4 +1,4 @@
-const PUBLIC_PATH_PREFIXES = ['/api/auth/', '/health', '/system-health', '/docs', '/openapi.json'] as const
+const PUBLIC_PATH_PREFIXES = ['/api/auth/', '/health', '/docs', '/openapi.json'] as const
 const PROTECTED_API_PREFIXES = ['/trpc/', '/api/'] as const
 const PUBLIC_TRPC_PROCEDURES = new Set(['sso.getProviders'])
 

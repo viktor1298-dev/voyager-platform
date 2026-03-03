@@ -219,7 +219,7 @@ export function DataTable<TData>({
                       className="border-b border-[var(--color-table-separator)]"
                     >
                       <td
-                        className="py-2.5 px-3"
+                        className="py-1.5 px-3"
                         colSpan={Math.max(table.getAllLeafColumns().length, columns.length, 1)}
                       >
                         <div className="flex gap-4">
@@ -292,10 +292,10 @@ export function DataTable<TData>({
                   <tr
                     key={row.id}
                     onClick={() => onRowClick?.(row.original)}
-                    className={`border-b border-[var(--color-table-separator)] transition-colors hover:bg-white/[0.03] ${onRowClick ? 'cursor-pointer' : ''}`}
+                    className={`border-b border-[var(--color-table-separator)] transition-colors ${onRowClick ? 'hover:bg-muted/40 cursor-pointer' : 'hover:bg-white/[0.03]'}`}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="py-2.5 px-3">
+                      <td key={cell.id} className="py-1.5 px-3">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}

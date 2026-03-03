@@ -9,6 +9,7 @@ import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { DataTable } from '@/components/DataTable'
 import { ApiTokensSection } from '@/components/settings/ApiTokens'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { APP_VERSION } from '@/config/constants'
 import {
   type AiProvider,
@@ -288,48 +289,79 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <SectionCard icon={<Wifi className="h-4 w-4" />} title="Cluster Connection">
-            <InfoRow label="Status" value={<StatusDot connected={isConnected} />} />
-            <InfoRow
-              label="API Endpoint"
-              value={
-                <span className="text-[12px] font-mono text-[var(--color-text-secondary)]">
-                  {isConnected ? (live.endpoint ?? '/trpc') : '—'}
-                </span>
-              }
-            />
-            <InfoRow label="K8s Version" value={isConnected ? live.version : '—'} />
-            <InfoRow
-              label="Last Sync"
-              value={<span suppressHydrationWarning>{isConnected ? lastSyncLabel : '—'}</span>}
-            />
-          </SectionCard>
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="ai">AI Configuration</TabsTrigger>
+            <TabsTrigger value="tokens">API Tokens</TabsTrigger>
+            <TabsTrigger value="clusters">Clusters</TabsTrigger>
+          </TabsList>
 
-          <SectionCard icon={<Server className="h-4 w-4" />} title="Platform Info">
-            <InfoRow
-              label="Voyager Version"
-              value={
-                <span
-                  className="gradient-text font-bold"
-                  style={{ backgroundImage: 'var(--gradient-text-default)' }}
-                >
-                  {APP_VERSION}
-                </span>
-              }
-            />
-            <InfoRow label="API Version" value="v1" />
-            <InfoRow label="Runtime" value="Next.js 16 + tRPC 11" />
-            <InfoRow
-              label="Status"
-              value={
-                <span className="text-[var(--color-status-active)] text-[12px] font-semibold">
-                  Operational
-                </span>
-              }
-            />
-          </SectionCard>
+          <TabsContent value="general">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <SectionCard icon={<Wifi className="h-4 w-4" />} title="Cluster Connection">
+                <InfoRow label="Status" value={<StatusDot connected={isConnected} />} />
+                <InfoRow
+                  label="API Endpoint"
+                  value={
+                    <span className="text-[12px] font-mono text-[var(--color-text-secondary)]">
+                      {isConnected ? (live.endpoint ?? '/trpc') : '—'}
+                    </span>
+                  }
+                />
+                <InfoRow label="K8s Version" value={isConnected ? live.version : '—'} />
+                <InfoRow
+                  label="Last Sync"
+                  value={<span suppressHydrationWarning>{isConnected ? lastSyncLabel : '—'}</span>}
+                />
+              </SectionCard>
 
+              <SectionCard icon={<Server className="h-4 w-4" />} title="Platform Info">
+                <InfoRow
+                  label="Voyager Version"
+                  value={
+                    <span
+                      className="gradient-text font-bold"
+                      style={{ backgroundImage: 'var(--gradient-text-default)' }}
+                    >
+                      {APP_VERSION}
+                    </span>
+                  }
+                />
+                <InfoRow label="API Version" value="v1" />
+                <InfoRow label="Runtime" value="Next.js 16 + tRPC 11" />
+                <InfoRow
+                  label="Status"
+                  value={
+                    <span className="text-[var(--color-status-active)] text-[12px] font-semibold">
+                      Operational
+                    </span>
+                  }
+                />
+              </SectionCard>
+
+              <SectionCard icon={<Info className="h-4 w-4" />} title="About">
+                <p className="text-[13px] text-[var(--color-text-secondary)] leading-relaxed mb-4">
+                  <strong className="text-[var(--color-text-primary)]">Voyager Platform</strong> —
+                  Unified Kubernetes Operations Dashboard.
+                </p>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href="https://github.com/vkzone/voyager-platform"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-[12px] text-[var(--color-accent)] hover:text-[var(--color-text-primary)] transition-colors"
+                  >
+                    <Globe className="h-3.5 w-3.5" />
+                    GitHub Repository
+                    <ExternalLink className="h-3 w-3 opacity-50" />
+                  </a>
+                </div>
+              </SectionCard>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="ai">
           <SectionCard icon={<Info className="h-4 w-4" />} title="AI Bring Your Own Key (BYOK)">
             <form
               className="space-y-3"
@@ -552,33 +584,20 @@ export default function SettingsPage() {
             </form>
           </SectionCard>
 
-          <SectionCard icon={<KeyRound className="h-4 w-4" />} title="API Tokens">
-            <ApiTokensSection />
-          </SectionCard>
+          </TabsContent>
 
-          <SectionCard icon={<Layers className="h-4 w-4" />} title="Registered Clusters">
-            <ClusterTable live={live} clusters={clusters} />
-          </SectionCard>
+          <TabsContent value="tokens">
+            <SectionCard icon={<KeyRound className="h-4 w-4" />} title="API Tokens">
+              <ApiTokensSection />
+            </SectionCard>
+          </TabsContent>
 
-          <SectionCard icon={<Info className="h-4 w-4" />} title="About">
-            <p className="text-[13px] text-[var(--color-text-secondary)] leading-relaxed mb-4">
-              <strong className="text-[var(--color-text-primary)]">Voyager Platform</strong> —
-              Unified Kubernetes Operations Dashboard.
-            </p>
-            <div className="flex flex-col gap-2">
-              <a
-                href="https://github.com/vkzone/voyager-platform"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-[12px] text-[var(--color-accent)] hover:text-[var(--color-text-primary)] transition-colors"
-              >
-                <Globe className="h-3.5 w-3.5" />
-                GitHub Repository
-                <ExternalLink className="h-3 w-3 opacity-50" />
-              </a>
-            </div>
-          </SectionCard>
-        </div>
+          <TabsContent value="clusters">
+            <SectionCard icon={<Layers className="h-4 w-4" />} title="Registered Clusters">
+              <ClusterTable live={live} clusters={clusters} />
+            </SectionCard>
+          </TabsContent>
+        </Tabs>
       </PageTransition>
     </AppLayout>
   )

@@ -187,16 +187,6 @@ export const metricsRouter = router({
    * Falls back to null values when metrics-server is unavailable.
    */
   currentStats: protectedProcedure
-    .output(
-      z.object({
-        cpuPercent: z.number().nullable(),
-        memoryPercent: z.number().nullable(),
-        cpuCores: z.number().nullable(),
-        memoryBytes: z.number().nullable(),
-        podCount: z.number().int(),
-        timestamp: z.string(),
-      }),
-    )
     .query(async () => {
       try {
         const allClusters = await db.select({ id: clustersTable.id }).from(clustersTable)
