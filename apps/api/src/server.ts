@@ -15,6 +15,9 @@ import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-
 import { generateOpenApiSpec } from './lib/openapi.js'
 import { startHealthSync } from './jobs/health-sync.js'
 import { startAlertEvaluator, stopAlertEvaluator } from './jobs/alert-evaluator.js'
+import { startMetricsHistoryCollector, stopMetricsHistoryCollector } from './jobs/metrics-history-collector.js'
+import { startNodeSync, stopNodeSync } from './jobs/node-sync.js'
+import { startEventSync, stopEventSync } from './jobs/event-sync.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
 import { shutdownTelemetry } from './lib/telemetry.js'
 import { type AppRouter, appRouter } from './routers/index.js'
@@ -223,6 +226,12 @@ const start = async () => {
 
     startHealthSync()
     startAlertEvaluator()
+    startMetricsHistoryCollector()
+    startNodeSync()
+    startEventSync()
+    app.log.info('Metrics history collector started (60s interval)')
+    app.log.info('Node sync started (5 min interval)')
+    app.log.info('Event sync started (2 min interval)')
     app.log.info('Alert evaluator background job started (60s interval)')
     app.log.info('Health sync background job started (5 minute interval)')
 
@@ -233,6 +242,9 @@ const start = async () => {
         app.log.info(`${signal} received, shutting down gracefully`)
         stopAllWatchers()
         stopAlertEvaluator()
+        stopMetricsHistoryCollector()
+        stopNodeSync()
+        stopEventSync()
         await flushSentry()
         await shutdownTelemetry()
         await app.close()

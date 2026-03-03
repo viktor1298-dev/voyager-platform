@@ -1,0 +1,31 @@
+{
+  "version": "v165",
+  "score": 5,
+  "verdict": "fail",
+  "findings": [
+    {
+      "id": "J1",
+      "check": "vik-minikube Healthy badge + no duplicates",
+      "result": "FAIL",
+      "detail": "vik-minikube shows 'Degraded' badge (orange/red), NOT 'Healthy' green. No duplicate cards — only 1 vik-minikube card present.",
+      "subresult": {
+        "no_duplicates": "PASS",
+        "healthy_badge": "FAIL"
+      }
+    },
+    {
+      "id": "J2",
+      "check": "Timestamp 'Updated X seconds ago' near stat cards",
+      "result": "PASS",
+      "detail": "Timestamp visible: 'Updated 10s ago' shown above stat cards before refresh, 'Updated just now' after refresh."
+    },
+    {
+      "id": "J3",
+      "check": "Refresh button resets timestamp to 'Updated just now'",
+      "result": "PASS",
+      "detail": "Clicked RefreshCw button. Timestamp reset from '10s ago' to 'Updated just now'. Data refreshed successfully."
+    }
+  ],
+  "timestamp": "2026-03-02T21:31:00+02:00",
+  "summary": "J1 FAIL: vik-minikube still shows Degraded status. J2 PASS: timestamp visible. J3 PASS: refresh works correctly."
+}

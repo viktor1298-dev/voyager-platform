@@ -1,0 +1,26 @@
+{
+  "version": "v166",
+  "score": 4,
+  "verdict": "fail",
+  "findings": [
+    {
+      "id": "J1",
+      "name": "DEGRADED fix",
+      "status": "FAIL",
+      "details": "After clearing localStorage and reloading: (1) Auto-select did NOT select vik-minikube — prod-cluster-eks (Error/unreachable) remained selected. (2) vik-minikube card still shows 'Degraded' badge in red, NOT 'Healthy'. Inconsistency: dropdown shows green emoji (🟢) for vik-minikube but card badge says Degraded. Only one vik-minikube card (no duplicates) ✅."
+    },
+    {
+      "id": "J2",
+      "name": "Timestamp visible",
+      "status": "PASS",
+      "details": "'Updated X seconds ago' (e.g. 'Updated 18s ago') is visible near stat cards. Timestamp updates correctly over time."
+    },
+    {
+      "id": "J3",
+      "name": "Refresh resets timestamp",
+      "status": "PASS",
+      "details": "Clicking the RefreshCw button resets the timestamp to 'Updated just now' as expected."
+    }
+  ],
+  "timestamp": "2026-03-02T19:54:00Z"
+}

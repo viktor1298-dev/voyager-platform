@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { userTokens } from '@voyager/db'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, like, or } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../trpc.js'
 
@@ -64,5 +64,22 @@ export const tokensRouter = router({
       .returning({ id: userTokens.id })
 
     return { success: Boolean(deleted) }
+  }),
+
+  revokeTestTokens: protectedProcedure.mutation(async ({ ctx }) => {
+    const deleted = await ctx.db
+      .delete(userTokens)
+      .where(
+        and(
+          eq(userTokens.userId, ctx.user.id),
+          or(
+            like(userTokens.name, 'test-token-%'),
+            like(userTokens.name, 'list-test-%'),
+          ),
+        ),
+      )
+      .returning({ id: userTokens.id })
+
+    return { count: deleted.length }
   }),
 })

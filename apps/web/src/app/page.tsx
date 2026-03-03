@@ -24,10 +24,11 @@ import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
 import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS, HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
-import { AlertTriangle, Bell, Container, LayoutGrid, List, Server, Table2 } from 'lucide-react'
+import { AlertTriangle, Bell, Container, LayoutGrid, List, RefreshCw, Server, Table2 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 
 interface ClusterCardData {
   id: string
@@ -113,7 +114,49 @@ function DashboardContent() {
     setFilters((prev) => ({ ...prev, environment }))
   }
 
+  const queryClient = useQueryClient()
+  const isFetching = useIsFetching()
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date>(new Date())
+  const [secondsAgo, setSecondsAgo] = useState(0)
+  const lastRefreshedRef = useRef(lastRefreshedAt)
+  lastRefreshedRef.current = lastRefreshedAt
+
+  // Update secondsAgo every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsAgo(Math.floor((Date.now() - lastRefreshedRef.current.getTime()) / 1000))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Update lastRefreshedAt when fetching completes
+  const wasFetchingRef = useRef(false)
+  useEffect(() => {
+    if (wasFetchingRef.current && isFetching === 0) {
+      setLastRefreshedAt(new Date())
+      setSecondsAgo(0)
+    }
+    wasFetchingRef.current = isFetching > 0
+  }, [isFetching])
+
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
+  const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
+
+  const listQuery = trpc.clusters.list.useQuery(undefined, {
+    refetchInterval: DB_CLUSTER_REFETCH_MS,
+  })
+
+  // Auto-select first cluster with credentials if none selected (prefer minikube/live clusters)
+  useEffect(() => {
+    if (!activeClusterId && listQuery.data) {
+      const withCreds = listQuery.data.filter((c: { hasCredentials?: boolean }) => c.hasCredentials)
+      // Prefer clusters with 'minikube' in name (most likely to be the live connected one)
+      const preferred = withCreds.find((c) => c.name.includes('minikube')) ?? withCreds[0]
+      if (preferred) {
+        setActiveCluster(preferred.id)
+      }
+    }
+  }, [activeClusterId, listQuery.data, setActiveCluster])
 
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
@@ -122,10 +165,6 @@ function DashboardContent() {
       enabled: Boolean(activeClusterId),
     },
   )
-
-  const listQuery = trpc.clusters.list.useQuery(undefined, {
-    refetchInterval: DB_CLUSTER_REFETCH_MS,
-  })
 
   // P1-007: metrics for resource bars
   const statsQuery = trpc.metrics.currentStats.useQuery(undefined, {
@@ -137,21 +176,21 @@ function DashboardContent() {
   const dbClusters = listQuery.data ?? []
   const isLoading = liveQuery.isLoading && listQuery.isLoading
 
+  // J1 fix: helper to match any minikube-variant DB cluster against live data
+  const isLiveClusterMatch = (name: string) =>
+    liveData && (name === liveData.name || name === 'minikube-dev' || name === 'vik-minikube' || name.includes('minikube'))
+
   const clusterList: ClusterCardData[] = []
 
   if (liveData) {
-    const matchingDbCluster = dbClusters.find(c => c.name === liveData.name || c.name === 'minikube-dev')
+    const matchingDbCluster = dbClusters.find(c => isLiveClusterMatch(c.name))
     clusterList.push({
       id: activeClusterId ?? 'live',
       name: liveData.name,
       provider: liveData.provider,
       version: liveData.version,
       status: liveData.status,
-      healthStatus: matchingDbCluster
-        ? (typeof (matchingDbCluster as Record<string, unknown>).healthStatus === 'string'
-            ? (matchingDbCluster as Record<string, unknown>).healthStatus as string
-            : liveData.status)
-        : liveData.status,
+      healthStatus: liveData.status,
       nodeCount: liveData.nodes.length,
       source: 'live',
       environment: getClusterEnvironment(liveData.name, liveData.provider),
@@ -161,8 +200,7 @@ function DashboardContent() {
   }
 
   for (const c of dbClusters) {
-    const isLiveMinikube =
-      liveData && (c.name === liveData.name || c.name === 'minikube-dev')
+    const isLiveMinikube = isLiveClusterMatch(c.name)
     if (!isLiveMinikube) {
       clusterList.push({
         id: c.id,
@@ -183,7 +221,7 @@ function DashboardContent() {
   const totalNodes =
     (liveData?.nodes.length ?? 0) +
     dbClusters
-      .filter((c) => !(liveData && (c.name === liveData.name || c.name === 'minikube-dev')))
+      .filter((c) => !isLiveClusterMatch(c.name))
       .reduce((sum, c) => sum + c.nodeCount, 0)
   const runningPods = liveData?.runningPods ?? 0
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
@@ -262,9 +300,25 @@ function DashboardContent() {
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
         </header>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="flex items-center justify-end gap-2 mb-1.5">
+          <span className="text-[10px] text-[var(--color-text-dim)] font-mono">
+            Updated {secondsAgo < 5 ? 'just now' : `${secondsAgo}s ago`}
+          </span>
+          <button
+            type="button"
+            onClick={() => { queryClient.invalidateQueries(); setLastRefreshedAt(new Date()); setSecondsAgo(0) }}
+            disabled={isFetching > 0}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            title="Refresh all data"
+          >
+            <RefreshCw className={cn('h-3 w-3', isFetching > 0 && 'animate-spin')} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
           <SummaryCard
-            icon={<Server className="h-4 w-4" />}
+            icon={<Server className="h-3.5 w-3.5" />}
             label="Total Nodes"
             value={String(totalNodes)}
             color={totalNodes > 0 ? 'var(--color-accent)' : 'var(--color-text-muted)'}
@@ -272,7 +326,7 @@ function DashboardContent() {
             isLoading={isLoading}
           />
           <SummaryCard
-            icon={<Container className="h-4 w-4" />}
+            icon={<Container className="h-3.5 w-3.5" />}
             label="Running Pods"
             value={`${runningPods}/${liveData?.totalPods ?? 0}`}
             color={(runningPods > 0 && (liveData?.totalPods ?? 0) > 0) ? 'var(--color-status-active)' : 'var(--color-text-muted)'}
@@ -280,7 +334,7 @@ function DashboardContent() {
             isLoading={isLoading}
           />
           <SummaryCard
-            icon={<LayoutGrid className="h-4 w-4" />}
+            icon={<LayoutGrid className="h-3.5 w-3.5" />}
             label="Clusters"
             value={String(clusterList.length)}
             color={clusterList.length > 0 ? 'var(--color-accent)' : 'var(--color-text-muted)'}
@@ -288,17 +342,14 @@ function DashboardContent() {
             isLoading={isLoading}
           />
           <SummaryCard
-            icon={warningEvents > 0 ? <AlertTriangle className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+            icon={warningEvents > 0 ? <AlertTriangle className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
             label="Warning Events"
             value={String(warningEvents)}
             color={warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'}
             gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'none'}
             isLoading={isLoading}
           />
-        </div>
-
-        <div className="mb-6 max-w-sm">
-          <AnomalyWidget />
+          <AnomalyWidget compact />
         </div>
 
         {/* P1-001: Consolidated cluster header + filter in one section */}
@@ -574,7 +625,8 @@ function DashboardPageFallback() {
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
         </header>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
+          <SkeletonCard />
           <SkeletonCard />
           <SkeletonCard />
           <SkeletonCard />
@@ -760,37 +812,38 @@ function SummaryCard({
 }) {
   return (
     <div
-      className="rounded-2xl p-4 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 w-full"
+      className="rounded-xl px-3 py-2.5 border border-[var(--color-border)] hover:border-[var(--color-border-hover)] w-full flex items-center justify-between gap-2"
       style={{
         background: 'var(--glass-bg)',
         backdropFilter: 'blur(var(--glass-blur))',
         WebkitBackdropFilter: 'blur(var(--glass-blur))',
         transition: 'all var(--duration-normal) ease',
         boxShadow: 'var(--shadow-card)',
+        minHeight: '64px',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'
+        e.currentTarget.style.boxShadow = 'var(--shadow-card)'
       }}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span className="text-[10px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono truncate">
           {label}
         </span>
-        <span style={{ color }}>{icon}</span>
+        {isLoading ? (
+          <SkeletonText width="2.5rem" height="1.5rem" />
+        ) : (
+          <div
+            className={cn('text-xl font-extrabold tracking-tight leading-tight animate-count-up', gradient !== 'none' && 'gradient-text', gradient === 'none' && 'opacity-50')}
+            style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
+          >
+            {value}
+          </div>
+        )}
       </div>
-      {isLoading ? (
-        <SkeletonText width="3rem" height="2rem" />
-      ) : (
-        <div
-          className={cn('text-2xl font-extrabold tracking-tight animate-count-up', gradient !== 'none' && 'gradient-text', gradient === 'none' && 'opacity-50')}
-          style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
-        >
-          {value}
-        </div>
-      )}
+      <span className="shrink-0 opacity-60" style={{ color }}>{icon}</span>
     </div>
   )
 }

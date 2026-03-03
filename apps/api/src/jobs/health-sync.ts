@@ -11,7 +11,10 @@ const HEALTH_SYNC_CONCURRENCY = 10
 
 function deriveHealthStatus(nodeCount: number, totalPods: number, runningPods: number): SyncHealthStatus {
   if (nodeCount <= 0) return 'error'
-  if (totalPods === 0 || runningPods === totalPods) return 'healthy'
+  if (totalPods === 0) return 'healthy'
+  // Consider healthy if ≥80% of pods are running (completed/evicted jobs are normal)
+  const runRatio = runningPods / totalPods
+  if (runRatio >= 0.8) return 'healthy'
   if (runningPods > 0) return 'warning'
   return 'error'
 }

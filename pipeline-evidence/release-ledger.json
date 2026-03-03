@@ -227,5 +227,60 @@
     "status": "deployed",
     "health": "ok",
     "login": "verified"
+  },
+  {
+    "version": "v161",
+    "tag": "v161",
+    "date": "2026-03-01T00:11:06.368755",
+    "helm_revision": 59,
+    "status": "deployed",
+    "phase": "IP4"
+  },
+  {
+    "version": "v164",
+    "timestamp": "2026-03-02T20:44:52.096676",
+    "helmRevision": 62,
+    "status": "deployed",
+    "health": "ok",
+    "notes": "Phase J - DEGRADED status fix, refresh button + timestamp"
+  },
+  {
+    "version": "v165",
+    "timestamp": "2026-03-02T21:30:43.944328",
+    "tag": "v165",
+    "message": "Phase J: DEGRADED fix + refresh UX (fix2)",
+    "images": [
+      "voyager-api:v165",
+      "voyager-web:v165"
+    ],
+    "helmRevision": 64,
+    "status": "deployed"
+  },
+  {
+    "version": "v166",
+    "timestamp": "2026-03-02T21:42:54.268576",
+    "tag": "v166",
+    "commit": "c011dab",
+    "description": "Phase J: auto-select cluster + DEGRADED fix final",
+    "images": [
+      "voyager-api:v166",
+      "voyager-web:v166"
+    ],
+    "helm_revision": 65,
+    "web_no_cache": true,
+    "status": "deployed"
+  },
+  {
+    "version": "v167",
+    "timestamp": "2026-03-02T22:03:33.681094",
+    "tag": "v167",
+    "images": [
+      "voyager-api:v167",
+      "voyager-web:v167"
+    ],
+    "helmRevision": 66,
+    "description": "Phase J: health-sync fix + auto-select minikube",
+    "status": "deployed",
+    "health": "ok"
   }
 ]

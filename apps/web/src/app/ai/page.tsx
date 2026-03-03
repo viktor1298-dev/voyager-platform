@@ -8,7 +8,7 @@ import { AiChat } from '@/components/ai/AiChat'
 import { type Recommendation, RecommendationsPanel } from '@/components/ai/RecommendationsPanel'
 import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { getAiKeySettings, testAiKeyConnection } from '@/lib/ai-keys-client'
+import { getAiKeySettings } from '@/lib/ai-keys-client'
 import { trpc } from '@/lib/trpc'
 import { useAiAssistantStore } from '@/stores/ai-assistant'
 
@@ -41,21 +41,20 @@ export default function AiAssistantPage() {
 
     const resolveByokState = async () => {
       setByokState('checking')
-      const settings = await getAiKeySettings()
-      if (cancelled) return
+      try {
+        const settings = await getAiKeySettings()
+        if (cancelled) return
 
-      if (!settings?.hasKey || !settings.provider) {
-        setByokState('locked')
-        return
+        if (!settings?.hasKey || !settings.provider) {
+          setByokState('locked')
+          return
+        }
+
+        // Key exists in DB — unlock immediately (don't require connection test)
+        setByokState('unlocked')
+      } catch {
+        if (!cancelled) setByokState('locked')
       }
-
-      const testResult = await testAiKeyConnection({
-        provider: settings.provider,
-        model: settings.model,
-      })
-      if (cancelled) return
-
-      setByokState(testResult.ok ? 'unlocked' : 'locked')
     }
 
     void resolveByokState()
