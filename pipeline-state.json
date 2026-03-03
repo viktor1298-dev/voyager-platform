@@ -2,6 +2,8 @@
   "status": "running",
   "version": "v168",
   "phase": "K-P0",
-  "timestamp": "2026-03-03T20:02:00+02:00",
-  "previousVersion": "v167"
+  "timestamp": "2026-03-03T20:25:29.865362",
+  "previousVersion": "v167",
+  "deployedInK8s": "v168",
+  "currentStage": "DEPLOYED"
 }
