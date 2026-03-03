@@ -78,8 +78,8 @@ test.describe('Command Palette (⌘K)', () => {
     await firstItem.click();
 
     // Wait for navigation to complete and localStorage to persist
-    await page.waitForTimeout(1000);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(1500);
 
     // Re-open palette
     await page.keyboard.press('Control+k');
