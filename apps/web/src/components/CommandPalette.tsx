@@ -83,42 +83,18 @@ export function CommandPalette() {
     const items: { label: string; path: string; type: string; icon: typeof Server }[] = []
 
     for (const c of clustersQuery.data ?? []) {
-      const name =
-        typeof c === 'object' && c !== null && 'name' in c
-          ? String((c as Record<string, unknown>).name)
-          : ''
-      const id =
-        typeof c === 'object' && c !== null && 'id' in c
-          ? String((c as Record<string, unknown>).id)
-          : ''
-      if (name && id)
-        items.push({ label: name, path: `/clusters/${id}`, type: 'Cluster', icon: Server })
+      if (c.name && c.id)
+        items.push({ label: c.name, path: `/clusters/${c.id}`, type: 'Cluster', icon: Server })
     }
 
     for (const d of deploymentsQuery.data ?? []) {
-      const name =
-        typeof d === 'object' && d !== null && 'name' in d
-          ? String((d as Record<string, unknown>).name)
-          : ''
-      const id =
-        typeof d === 'object' && d !== null && 'id' in d
-          ? String((d as Record<string, unknown>).id)
-          : ''
-      if (name && id)
-        items.push({ label: name, path: `/deployments/${id}`, type: 'Deployment', icon: Box })
+      if (d.name && d.id)
+        items.push({ label: d.name, path: `/deployments/${d.id}`, type: 'Deployment', icon: Box })
     }
 
     for (const s of servicesQuery.data ?? []) {
-      const name =
-        typeof s === 'object' && s !== null && 'name' in s
-          ? String((s as Record<string, unknown>).name)
-          : ''
-      const id =
-        typeof s === 'object' && s !== null && 'id' in s
-          ? String((s as Record<string, unknown>).id)
-          : ''
-      if (name && id)
-        items.push({ label: name, path: `/services/${id}`, type: 'Service', icon: Layers })
+      if (s.name && s.id)
+        items.push({ label: s.name, path: `/services/${s.id}`, type: 'Service', icon: Layers })
     }
 
     return items
