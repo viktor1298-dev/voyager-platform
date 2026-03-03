@@ -5,6 +5,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { DataTable } from '@/components/DataTable'
 import { LoadingState } from '@/components/LoadingState'
 import { QueryError } from '@/components/ErrorBoundary'
+import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { normalizeLiveHealthStatus, healthBadgeLabel } from '@/lib/cluster-status'
@@ -13,6 +14,7 @@ import { trpc } from '@/lib/trpc'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ArrowLeft, Server, Box, Globe, Cpu, Trash2 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -69,6 +71,8 @@ interface NodeRow {
   os: string
   cpu: string
   memory: string
+  cpuPercent: number | null
+  memoryPercent: number | null
 }
 
 interface EventRow {
@@ -130,11 +134,39 @@ const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
     ),
   },
   {
+    accessorKey: 'cpuPercent',
+    header: 'CPU %',
+    cell: ({ getValue }) => {
+      const v = getValue<number | null>()
+      if (v == null) return <span className="text-[var(--color-text-dim)] text-[11px]">—</span>
+      return (
+        <div className="flex items-center gap-2 min-w-[80px]">
+          <Progress value={v} className="h-1.5 flex-1" />
+          <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">{v}%</span>
+        </div>
+      )
+    },
+  },
+  {
     accessorKey: 'memory',
     header: 'Memory',
     cell: ({ getValue }) => (
       <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">{getValue<string>()}</span>
     ),
+  },
+  {
+    accessorKey: 'memoryPercent',
+    header: 'Mem %',
+    cell: ({ getValue }) => {
+      const v = getValue<number | null>()
+      if (v == null) return <span className="text-[var(--color-text-dim)] text-[11px]">—</span>
+      return (
+        <div className="flex items-center gap-2 min-w-[80px]">
+          <Progress value={v} className="h-1.5 flex-1" />
+          <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">{v}%</span>
+        </div>
+      )
+    },
   },
 ]
 
@@ -196,6 +228,10 @@ interface PodRow {
   status: string
   createdAt: string | null
   nodeName: string | null
+  cpuMillis: number | null
+  memoryMi: number | null
+  cpuPercent: number | null
+  memoryPercent: number | null
 }
 
 function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: string; onClose: () => void }) {
@@ -389,6 +425,8 @@ export default function ClusterDetailPage() {
         os: asText(n.os),
         cpu: asText(n.cpu),
         memory: typeof n.memory === 'string' ? formatMemoryKi(n.memory) : '—',
+        cpuPercent: typeof n.cpuPercent === 'number' ? n.cpuPercent : null,
+        memoryPercent: typeof n.memoryPercent === 'number' ? n.memoryPercent : null,
       }))
     : (dbNodes.data ?? []).map((n: Record<string, unknown>, i: number) => ({
         id: asText(n.id, `node-db-${i}`),
@@ -399,6 +437,8 @@ export default function ClusterDetailPage() {
         os: asText(n.os),
         cpu: `${asText(n.cpuAllocatable)} / ${asText(n.cpuCapacity)}`,
         memory: `${asText(n.memoryAllocatable)} / ${asText(n.memoryCapacity)}`,
+        cpuPercent: null,
+        memoryPercent: null,
       }))
 
   const events: EventRow[] = effectiveIsLive
@@ -537,8 +577,26 @@ export default function ClusterDetailPage() {
                 <span className="text-[var(--color-text-primary)]">{node.os}</span>
                 <span className="text-[var(--color-text-muted)]">CPU</span>
                 <span className="text-[var(--color-text-primary)] font-mono">{node.cpu}</span>
+                {node.cpuPercent != null && (
+                  <>
+                    <span className="text-[var(--color-text-muted)]">CPU %</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={node.cpuPercent} className="h-1.5 flex-1" />
+                      <span className="text-[var(--color-text-primary)] font-mono text-[11px]">{node.cpuPercent}%</span>
+                    </div>
+                  </>
+                )}
                 <span className="text-[var(--color-text-muted)]">Memory</span>
                 <span className="text-[var(--color-text-primary)] font-mono">{node.memory}</span>
+                {node.memoryPercent != null && (
+                  <>
+                    <span className="text-[var(--color-text-muted)]">Mem %</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={node.memoryPercent} className="h-1.5 flex-1" />
+                      <span className="text-[var(--color-text-primary)] font-mono text-[11px]">{node.memoryPercent}%</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -586,6 +644,36 @@ export default function ClusterDetailPage() {
                 },
               },
               {
+                accessorKey: 'cpuMillis',
+                header: 'CPU',
+                cell: ({ row }) => {
+                  const v = row.original.cpuMillis
+                  const pct = row.original.cpuPercent
+                  if (v == null) return <span className="text-[var(--color-text-dim)] text-[11px]">—</span>
+                  return (
+                    <div className="flex items-center gap-2 min-w-[80px]">
+                      {pct != null && <Progress value={Math.min(pct, 100)} className="h-1.5 flex-1" />}
+                      <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums">{v}m</span>
+                    </div>
+                  )
+                },
+              },
+              {
+                accessorKey: 'memoryMi',
+                header: 'Memory',
+                cell: ({ row }) => {
+                  const v = row.original.memoryMi
+                  const pct = row.original.memoryPercent
+                  if (v == null) return <span className="text-[var(--color-text-dim)] text-[11px]">—</span>
+                  return (
+                    <div className="flex items-center gap-2 min-w-[80px]">
+                      {pct != null && <Progress value={Math.min(pct, 100)} className="h-1.5 flex-1" />}
+                      <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums">{v}Mi</span>
+                    </div>
+                  )
+                },
+              },
+              {
                 accessorKey: 'createdAt',
                 header: 'Age',
                 cell: ({ getValue }) => {
@@ -601,14 +689,21 @@ export default function ClusterDetailPage() {
                 id: 'actions' as const,
                 header: '',
                 cell: ({ row }: { row: { original: PodRow } }) => (
-                  <button
-                    type="button"
-                    onClick={() => setDeletePodTarget(row.original)}
-                    className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hover:text-red-400 transition-colors"
-                    title={`Delete pod ${row.original.name}`}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => setDeletePodTarget(row.original)}
+                          className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hover:text-red-400 transition-colors"
+                          aria-label={`Delete pod ${row.original.name}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Delete pod</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ),
               }] : []),
             ] as ColumnDef<PodRow, unknown>[]}

@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { cached } from '../lib/cache.js'
+import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 export const podsRouter = router({
@@ -17,15 +18,48 @@ export const podsRouter = router({
         const podsResponse = await cached(`${cachePrefix}:pods`, 15_000, () =>
           coreV1.listPodForAllNamespaces(),
         )
-        return podsResponse.items.map((p) => ({
-          name: p.metadata?.name ?? '',
-          namespace: p.metadata?.namespace ?? '',
-          status: p.status?.phase ?? 'Unknown',
-          createdAt: p.metadata?.creationTimestamp
-            ? new Date(p.metadata.creationTimestamp as unknown as string).toISOString()
-            : null,
-          nodeName: p.spec?.nodeName ?? null,
-        }))
+
+        // Fetch pod metrics for CPU/Memory usage
+        let podMetricsMap = new Map<string, { cpuNano: number; memBytes: number }>()
+        try {
+          const metricsClient = new k8s.Metrics(kc)
+          const podMetrics = await cached(`${cachePrefix}:pod-metrics`, 15_000, () =>
+            metricsClient.getPodMetrics(''),
+          )
+          for (const pm of podMetrics.items) {
+            const key = `${pm.metadata?.namespace}/${pm.metadata?.name}`
+            let totalCpu = 0
+            let totalMem = 0
+            for (const container of pm.containers ?? []) {
+              totalCpu += parseCpuToNano(container.usage?.cpu ?? '0')
+              totalMem += parseMemToBytes(container.usage?.memory ?? '0')
+            }
+            podMetricsMap.set(key, { cpuNano: totalCpu, memBytes: totalMem })
+          }
+        } catch {
+          // metrics-server may not be available
+        }
+
+        return podsResponse.items.map((p) => {
+          const podKey = `${p.metadata?.namespace ?? ''}/${p.metadata?.name ?? ''}`
+          const metrics = podMetricsMap.get(podKey)
+          // Calculate CPU/Mem percent based on requests
+          const cpuRequestNano = (p.spec?.containers ?? []).reduce((sum, c) => sum + parseCpuToNano(c.resources?.requests?.cpu ?? '0'), 0)
+          const memRequestBytes = (p.spec?.containers ?? []).reduce((sum, c) => sum + parseMemToBytes(c.resources?.requests?.memory ?? '0'), 0)
+          return {
+            name: p.metadata?.name ?? '',
+            namespace: p.metadata?.namespace ?? '',
+            status: p.status?.phase ?? 'Unknown',
+            createdAt: p.metadata?.creationTimestamp
+              ? new Date(p.metadata.creationTimestamp as unknown as string).toISOString()
+              : null,
+            nodeName: p.spec?.nodeName ?? null,
+            cpuMillis: metrics ? Math.round(metrics.cpuNano / 1_000_000) : null,
+            memoryMi: metrics ? Math.round(metrics.memBytes / (1024 * 1024)) : null,
+            cpuPercent: metrics && cpuRequestNano > 0 ? Math.round((metrics.cpuNano / cpuRequestNano) * 1000) / 10 : null,
+            memoryPercent: metrics && memRequestBytes > 0 ? Math.round((metrics.memBytes / memRequestBytes) * 1000) / 10 : null,
+          }
+        })
       } catch (err) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { encryptCredential } from '../lib/credential-crypto.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
 import { cached, invalidateK8sCache } from '../lib/cache.js'
 import {
   awsConnectionConfigSchema,
@@ -96,6 +97,8 @@ const liveNodeSchema = z.object({
   cpu: z.string().nullable().optional(),
   memory: z.string().nullable().optional(),
   pods: z.string().nullable().optional(),
+  cpuPercent: z.number().nullable().optional(),
+  memoryPercent: z.number().nullable().optional(),
 })
 
 const liveEventSchema = z.object({
@@ -252,22 +255,51 @@ export const clustersRouter = router({
             cached(`${cachePrefix}:deployments`, K8S_CACHE_TTL, () => appsV1.listDeploymentForAllNamespaces()),
           ])
 
-        const k8sNodes = nodesResponse.items.map((node) => ({
-          name: node.metadata?.name,
-          status:
-            node.status?.conditions?.find((c) => c.type === 'Ready')?.status === 'True'
-              ? 'ready'
-              : 'not-ready',
-          role:
-            node.metadata?.labels?.['node-role.kubernetes.io/control-plane'] !== undefined
-              ? 'control-plane'
-              : 'worker',
-          kubeletVersion: node.status?.nodeInfo?.kubeletVersion,
-          os: node.status?.nodeInfo?.osImage,
-          cpu: node.status?.capacity?.cpu,
-          memory: node.status?.capacity?.memory,
-          pods: node.status?.capacity?.pods,
-        }))
+        // Fetch metrics-server data for CPU/Memory percentages
+        let nodeMetricsMap = new Map<string, { cpuPercent: number; memoryPercent: number }>()
+        try {
+          const metricsClient = new k8s.Metrics(kc)
+          const nodeMetrics = await metricsClient.getNodeMetrics()
+          for (const nm of nodeMetrics.items) {
+            const nodeName = nm.metadata?.name
+            if (!nodeName) continue
+            const node = nodesResponse.items.find((n) => n.metadata?.name === nodeName)
+            if (!node) continue
+            const cpuCapNano = parseCpuToNano(node.status?.allocatable?.cpu ?? node.status?.capacity?.cpu ?? '0')
+            const memCapBytes = parseMemToBytes(node.status?.allocatable?.memory ?? node.status?.capacity?.memory ?? '0')
+            const cpuUsageNano = parseCpuToNano(nm.usage?.cpu ?? '0')
+            const memUsageBytes = parseMemToBytes(nm.usage?.memory ?? '0')
+            nodeMetricsMap.set(nodeName, {
+              cpuPercent: cpuCapNano > 0 ? Math.round((cpuUsageNano / cpuCapNano) * 1000) / 10 : 0,
+              memoryPercent: memCapBytes > 0 ? Math.round((memUsageBytes / memCapBytes) * 1000) / 10 : 0,
+            })
+          }
+        } catch {
+          // metrics-server may not be available
+        }
+
+        const k8sNodes = nodesResponse.items.map((node) => {
+          const nodeName = node.metadata?.name ?? ''
+          const metrics = nodeMetricsMap.get(nodeName)
+          return {
+            name: node.metadata?.name,
+            status:
+              node.status?.conditions?.find((c) => c.type === 'Ready')?.status === 'True'
+                ? 'ready'
+                : 'not-ready',
+            role:
+              node.metadata?.labels?.['node-role.kubernetes.io/control-plane'] !== undefined
+                ? 'control-plane'
+                : 'worker',
+            kubeletVersion: node.status?.nodeInfo?.kubeletVersion,
+            os: node.status?.nodeInfo?.osImage,
+            cpu: node.status?.capacity?.cpu,
+            memory: node.status?.capacity?.memory,
+            pods: node.status?.capacity?.pods,
+            cpuPercent: metrics?.cpuPercent ?? null,
+            memoryPercent: metrics?.memoryPercent ?? null,
+          }
+        })
 
         const totalPods = podsResponse.items.length
         const runningPods = podsResponse.items.filter((p) => p.status?.phase === 'Running').length

@@ -22,6 +22,7 @@ import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Database, Eye, Plus, Trash2 } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -67,36 +68,44 @@ function ClusterActions({ clusterId, clusterName, onDelete }: { clusterId: strin
   const canDelete = usePermission('cluster', clusterId, 'admin')
   const router = useRouter()
   return (
-    <div className="flex items-center gap-1">
-      {/* Primary action first (P1-010) */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          router.push(`/clusters/${clusterId}`)
-        }}
-        className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors cursor-pointer"
-        title="View cluster"
-        aria-label={`View cluster ${clusterName}`}
-      >
-        <Eye className="h-3.5 w-3.5" />
-      </button>
-      {/* Destructive action last */}
-      {canDelete && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete()
-          }}
-          className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-          title="Delete cluster"
-          aria-label={`Delete cluster ${clusterName}`}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      )}
-    </div>
+    <TooltipProvider>
+      <div className="flex items-center gap-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                router.push(`/clusters/${clusterId}`)
+              }}
+              className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors cursor-pointer"
+              aria-label={`View cluster ${clusterName}`}
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>View cluster</TooltipContent>
+        </Tooltip>
+        {canDelete && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete()
+                }}
+                className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                aria-label={`Delete cluster ${clusterName}`}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Delete cluster</TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+    </TooltipProvider>
   )
 }
 
