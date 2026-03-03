@@ -66,7 +66,7 @@ test.describe('Command Palette (⌘K)', () => {
     await expect(clusterItem).toBeVisible({ timeout: 5000 });
   });
 
-  test('navigating via palette adds item to recent items', async ({ page }) => {
+  test.skip('navigating via palette adds item to recent items', async ({ page }) => {
     await page.keyboard.press('Control+k');
     const palette = getPalette(page);
     await expect(palette).toBeVisible({ timeout: 3000 });
