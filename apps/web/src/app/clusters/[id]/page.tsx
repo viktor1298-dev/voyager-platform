@@ -3,7 +3,7 @@
 import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { PodDetailSheet } from '@/components/PodDetailSheet'
-import { ArrowLeft, Box, ChevronDown, Cpu, FileText, Globe, Server, Trash2 } from 'lucide-react'
+import { ArrowLeft, Box, ChevronDown, Cpu, Globe, Server, Trash2 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -14,7 +14,7 @@ import { QueryError } from '@/components/ErrorBoundary'
 import { LoadingState } from '@/components/LoadingState'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Progress } from '@/components/ui/progress'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -713,71 +713,6 @@ export default function ClusterDetailPage() {
         </div>
       )}
 
-      {/* Pod Detail Sheet */}
-      <Sheet
-        open={!!selectedPod}
-        onOpenChange={(open) => {
-          if (!open) setSelectedPod(null)
-        }}
-      >
-        <SheetContent side="right" className="w-[400px] sm:w-[450px]">
-          <SheetHeader>
-            <SheetTitle className="font-mono text-sm">{selectedPod?.name}</SheetTitle>
-          </SheetHeader>
-          {selectedPod && (
-            <div className="mt-4 space-y-4">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-text-muted)]">Namespace</span>
-                  <span className="font-mono text-[var(--color-text-primary)]">
-                    {selectedPod.namespace}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-text-muted)]">Status</span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${selectedPod.status === 'Running' ? 'bg-[var(--color-status-active)]' : selectedPod.status === 'Pending' ? 'bg-[var(--color-status-warning)]' : 'bg-[var(--color-status-error)]'}`}
-                    />
-                    <span className="text-[var(--color-text-primary)]">{selectedPod.status}</span>
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-text-muted)]">Age</span>
-                  <span className="font-mono text-[var(--color-text-primary)]">
-                    {selectedPod.createdAt ? timeAgo(selectedPod.createdAt) : '—'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-text-muted)]">Node</span>
-                  <span className="font-mono text-[var(--color-text-primary)]">
-                    {selectedPod.nodeName ?? '—'}
-                  </span>
-                </div>
-              </div>
-              <div className="border-t border-[var(--color-border)] pt-3">
-                <h4 className="text-xs uppercase tracking-wider font-mono text-[var(--color-text-muted)] mb-2">
-                  Recent Events
-                </h4>
-                {/* TODO: query pod events */}
-                <p className="text-[11px] text-[var(--color-text-dim)]">
-                  No events available for this pod.
-                </p>
-              </div>
-              <button
-                type="button"
-                disabled
-                title="Coming soon"
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FileText className="h-4 w-4" />
-                View Logs
-              </button>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
-
       {deletePodTarget && (
         <DeletePodDialog
           pod={deletePodTarget}
@@ -790,7 +725,7 @@ export default function ClusterDetailPage() {
         pod={selectedPod}
         open={!!selectedPod}
         onOpenChange={(open) => { if (!open) setSelectedPod(null) }}
-        events={events?.filter((e) => selectedPod && e.message?.includes(selectedPod.name)).slice(0, 10)}
+        events={events?.filter((e) => selectedPod && e.message?.includes(selectedPod.name)).slice(0, 10).map((e) => ({ ...e, timestamp: e.timestamp ?? undefined }))}
       />
 
       {/* Recent Events — DataTable */}
