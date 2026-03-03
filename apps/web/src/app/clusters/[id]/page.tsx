@@ -322,28 +322,6 @@ function DeletePodDialog({
   )
 }
 
-function _HeaderSkeleton() {
-  return (
-    <div
-      className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 mb-6"
-      style={{ boxShadow: 'var(--shadow-card)' }}
-    >
-      <div className="flex items-center gap-4 mb-4">
-        <Skeleton className="h-10 w-10 rounded-xl" />
-        <div>
-          <Skeleton className="h-7 w-48 mb-2" />
-          <Skeleton className="h-4 w-32" />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={`stat-sk-${i}`} className="h-16 w-full rounded-xl" />
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export default function ClusterDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
@@ -914,13 +892,16 @@ export default function ClusterDetailPage() {
                 <h4 className="text-xs uppercase tracking-wider font-mono text-[var(--color-text-muted)] mb-2">
                   Recent Events
                 </h4>
+                {/* TODO: query pod events */}
                 <p className="text-[11px] text-[var(--color-text-dim)]">
                   No events available for this pod.
                 </p>
               </div>
               <button
                 type="button"
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors"
+                disabled
+                title="Coming soon"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FileText className="h-4 w-4" />
                 View Logs

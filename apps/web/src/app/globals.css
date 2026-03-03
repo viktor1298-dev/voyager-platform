@@ -155,6 +155,8 @@
 
 /* Light theme overrides */
 html.light {
+  --surface: #ffffff;
+  --elevated: #f5f7fa;
   --color-bg-primary: #f5f7fa;
   --color-bg-secondary: #edf0f5;
   --color-bg-card: #ffffff;

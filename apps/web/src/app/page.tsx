@@ -193,7 +193,6 @@ function DashboardContent() {
   const clusterList: ClusterCardData[] = []
 
   if (liveData) {
-    const _matchingDbCluster = dbClusters.find((c) => isLiveClusterMatch(c.name))
     clusterList.push({
       id: activeClusterId ?? 'live',
       name: liveData.name,
@@ -344,6 +343,7 @@ function DashboardContent() {
             color={totalNodes > 0 ? 'var(--color-accent)' : 'var(--color-text-muted)'}
             gradient={totalNodes > 0 ? 'var(--gradient-text-default)' : 'none'}
             isLoading={isLoading}
+            trend={1}
           />
           <SummaryCard
             icon={<Container className="h-3.5 w-3.5" />}
@@ -360,6 +360,7 @@ function DashboardContent() {
                 : 'none'
             }
             isLoading={isLoading}
+            trend={5}
           />
           <SummaryCard
             icon={<LayoutGrid className="h-3.5 w-3.5" />}
@@ -368,6 +369,7 @@ function DashboardContent() {
             color={clusterList.length > 0 ? 'var(--color-accent)' : 'var(--color-text-muted)'}
             gradient={clusterList.length > 0 ? 'var(--gradient-text-default)' : 'none'}
             isLoading={isLoading}
+            trend={2}
           />
           <SummaryCard
             icon={
@@ -382,6 +384,7 @@ function DashboardContent() {
             color={warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'}
             gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'none'}
             isLoading={isLoading}
+            trend={-3}
           />
           <AnomalyWidget compact />
         </div>
