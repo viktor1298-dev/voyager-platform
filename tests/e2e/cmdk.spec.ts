@@ -77,19 +77,21 @@ test.describe('Command Palette (⌘K)', () => {
     const itemText = await firstItem.textContent();
     await firstItem.click();
 
-    // Wait for navigation and localStorage update
-    await page.waitForTimeout(500);
+    // Wait for navigation to complete and localStorage to persist
+    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
 
-    // Re-open palette and check recent items section
+    // Re-open palette
     await page.keyboard.press('Control+k');
-    await expect(palette).toBeVisible({ timeout: 3000 });
+    const reopenedPalette = getPalette(page);
+    await expect(reopenedPalette).toBeVisible({ timeout: 5000 });
 
-    const recentSection = palette.locator('text=Recent').first();
+    const recentSection = reopenedPalette.locator('text=Recent').first();
     await expect(recentSection).toBeVisible({ timeout: 5000 });
 
     // The visited item should appear in recent items
     if (itemText) {
-      const recentItem = palette.locator('[cmdk-item], [role="option"]').filter({ hasText: itemText.trim().substring(0, 20) }).first();
+      const recentItem = reopenedPalette.locator('[cmdk-item], [role="option"]').filter({ hasText: itemText.trim().substring(0, 20) }).first();
       await expect(recentItem).toBeVisible({ timeout: 3000 });
     }
   });
