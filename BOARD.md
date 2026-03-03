@@ -331,17 +331,17 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🔴 K-P0 — Blockers (Fix Before Any External Exposure)
 
-- [ ] **K-P0-001: Settings Token Sprawl** — 240+ test tokens in an unpaginated flat list makes Settings unusable
+- [x] **K-P0-001: Settings Token Sprawl** — 240+ test tokens in an unpaginated flat list makes Settings unusable
   - Add pagination (10/page), search, bulk "Revoke All Test Tokens" action
   - Clean up test artifacts from the database
   - Reference: Grafana Cloud API keys page
 
-- [ ] **K-P0-002: Missing CPU/Memory Data** — No resource utilization visible on Nodes/Pods tables
+- [x] **K-P0-002: Missing CPU/Memory Data** — No resource utilization visible on Nodes/Pods tables
   - Add CPU % + Memory % columns to Nodes table and Pods table
   - Consider inline progress bars (like Lens K8s IDE)
   - This is the #1 data point SRE/DevOps users need
 
-- [ ] **K-P0-003: Accessibility Violations (WCAG 2.2 AA)**
+- [x] **K-P0-003: Accessibility Violations (WCAG 2.2 AA)**
   - Low contrast text in several places (below 4.5:1 ratio)
   - No visible focus indicators for keyboard navigation (add 2px focus ring)
   - Missing `aria-label` on icon-only buttons (eye/trash in tables)
@@ -352,30 +352,30 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🟠 K-P1 — High Priority
 
-- [ ] **K-P1-001: Empty States Are Bare/Unhelpful**
+- [x] **K-P1-001: Empty States Are Bare/Unhelpful**
   - Every page with empty state shows plain text with generic icon
   - Fix: contextual empty states with explanation + CTA per page type
   - Pages affected: Services, Namespaces, Events ("No events found"), Logs
   - Reference: Linear (setup guides), Vercel (get started flows)
 
-- [ ] **K-P1-002: /health Nav Link Returns Raw JSON**
+- [x] **K-P1-002: /health Nav Link Returns Raw JSON**
   - "Health" in sidebar navigates to raw API endpoint instead of UI
   - Fix: Create proper Health dashboard page, move API to `/api/health`
 
-- [ ] **K-P1-003: No Loading States / Skeleton UI**
+- [x] **K-P1-003: No Loading States / Skeleton UI**
   - Pages flash content with no transition — feels brittle
   - Fix: Add `shadcn/ui Skeleton` to all tables and cards
   - Reference: Vercel shimmer loading pattern
 
-- [ ] **K-P1-004: Fix AI Chat BYOK Lock Detection**
+- [x] **K-P1-004: Fix AI Chat BYOK Lock Detection**
   - AI Chat shows "locked" even when key is already saved in Settings
   - Fix: Sync BYOK key detection state correctly
 
-- [ ] **K-P1-005: Table Row Hover + Click Affordance**
+- [x] **K-P1-005: Table Row Hover + Click Affordance**
   - Rows look static — no hover state, no cursor pointer, unclear they're clickable
   - Fix: Add `hover:bg-muted/50 cursor-pointer` to all table rows
 
-- [ ] **K-P1-006: Icon-Only Buttons Missing Tooltips**
+- [x] **K-P1-006: Icon-Only Buttons Missing Tooltips**
   - Eye + trash icons in tables have no labels or tooltips
   - Fix: Add `<Tooltip>` wrapper to all icon-only action buttons
 
