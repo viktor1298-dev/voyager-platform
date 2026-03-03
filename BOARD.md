@@ -312,6 +312,140 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ---
 
+---
+
+## 🎨 Phase K — UI/UX Audit Findings (2026-03-03)
+> Source: Professional UI/UX Audit by Opus 4.6 | Full report: `Obsidian/Research/voyager-ui-ux-audit-2026-03-03.md`
+> Overall Score: **5/10** | Production Ready: **CONDITIONAL** (internal use YES, external/enterprise NO)
+
+### 📊 Audit Scores
+| Category | Score |
+|----------|-------|
+| Visual Polish | 5/10 |
+| UX Coherence | 6/10 |
+| Accessibility | 4/10 |
+| Modern Standards | 5/10 |
+| Enterprise Credibility | 5/10 |
+
+---
+
+### 🔴 K-P0 — Blockers (Fix Before Any External Exposure)
+
+- [ ] **K-P0-001: Settings Token Sprawl** — 240+ test tokens in an unpaginated flat list makes Settings unusable
+  - Add pagination (10/page), search, bulk "Revoke All Test Tokens" action
+  - Clean up test artifacts from the database
+  - Reference: Grafana Cloud API keys page
+
+- [ ] **K-P0-002: Missing CPU/Memory Data** — No resource utilization visible on Nodes/Pods tables
+  - Add CPU % + Memory % columns to Nodes table and Pods table
+  - Consider inline progress bars (like Lens K8s IDE)
+  - This is the #1 data point SRE/DevOps users need
+
+- [ ] **K-P0-003: Accessibility Violations (WCAG 2.2 AA)**
+  - Low contrast text in several places (below 4.5:1 ratio)
+  - No visible focus indicators for keyboard navigation (add 2px focus ring)
+  - Missing `aria-label` on icon-only buttons (eye/trash in tables)
+  - Add skip-navigation link
+  - Reference: WCAG 2.2 SC 1.4.3, SC 1.1.1, SC 2.4.1
+
+---
+
+### 🟠 K-P1 — High Priority
+
+- [ ] **K-P1-001: Empty States Are Bare/Unhelpful**
+  - Every page with empty state shows plain text with generic icon
+  - Fix: contextual empty states with explanation + CTA per page type
+  - Pages affected: Services, Namespaces, Events ("No events found"), Logs
+  - Reference: Linear (setup guides), Vercel (get started flows)
+
+- [ ] **K-P1-002: /health Nav Link Returns Raw JSON**
+  - "Health" in sidebar navigates to raw API endpoint instead of UI
+  - Fix: Create proper Health dashboard page, move API to `/api/health`
+
+- [ ] **K-P1-003: No Loading States / Skeleton UI**
+  - Pages flash content with no transition — feels brittle
+  - Fix: Add `shadcn/ui Skeleton` to all tables and cards
+  - Reference: Vercel shimmer loading pattern
+
+- [ ] **K-P1-004: Fix AI Chat BYOK Lock Detection**
+  - AI Chat shows "locked" even when key is already saved in Settings
+  - Fix: Sync BYOK key detection state correctly
+
+- [ ] **K-P1-005: Table Row Hover + Click Affordance**
+  - Rows look static — no hover state, no cursor pointer, unclear they're clickable
+  - Fix: Add `hover:bg-muted/50 cursor-pointer` to all table rows
+
+- [ ] **K-P1-006: Icon-Only Buttons Missing Tooltips**
+  - Eye + trash icons in tables have no labels or tooltips
+  - Fix: Add `<Tooltip>` wrapper to all icon-only action buttons
+
+---
+
+### 🟡 K-P2 — Medium Priority
+
+- [ ] **K-P2-001: Sidebar Navigation Overload (18+ items)**
+  - Cognitive overload — no grouping hierarchy
+  - Fix: Group into collapsible sections: Observability | Infrastructure | Platform | Admin
+
+- [ ] **K-P2-002: No Dark Mode Depth Layers**
+  - All surfaces use same dark shade — no visual hierarchy
+  - Fix: 3-layer palette: background `#0a0a0f` | surface `#14141f` | elevated `#1e1e2e`
+  - Reference: Linear's dark mode depth system
+
+- [ ] **K-P2-003: Stat Cards Lack Visual Weight / Trend Data**
+  - All 5 stat cards look identical — no sparklines or trend indicators
+  - Fix: Add mini sparkline charts (last 24h trend), delta % arrows
+  - Reference: Vercel's deployment metric cards, Datadog overview
+
+- [ ] **K-P2-004: Critical Cluster Cards Not Visually Alarming**
+  - `prod-cluster-eks` shows "Error" in small red badge — easy to miss
+  - Fix: Add red glow/border to error-state cluster cards, pulsing dot on critical status
+  - Reference: PagerDuty incident cards
+
+- [ ] **K-P2-005: Pod Detail — No Drill-Down**
+  - Clicking a pod does nothing — no detail panel
+  - Fix: Implement slide-over drawer on pod click (logs, describe, resource usage)
+
+- [ ] **K-P2-006: Pod List Not Grouped by Namespace**
+  - 13 pods in flat list requires manual scanning
+  - Fix: Group pods by namespace with collapsible section headers
+  - Reference: Grafana namespace grouping
+
+- [ ] **K-P2-007: Notification Bell (9) Has No Dropdown**
+  - Bell icon shows "9" badge but no action on click
+  - Fix: Implement notification dropdown/drawer
+
+- [ ] **K-P2-008: Settings Page Needs Tab Navigation**
+  - All settings sections are one long scroll
+  - Fix: Sub-tabs: General | AI | API Tokens | Clusters
+
+---
+
+### 🔵 K-P3 — Strategic Improvements
+
+- [ ] **K-P3-001: Full ⌘K Command Palette**
+  - Button exists but behavior unclear
+  - Fix: Raycast/Linear-style fuzzy search across all entities (pods, services, clusters, deployments)
+
+- [ ] **K-P3-002: Real-time Pod Log Streaming**
+  - No live tail for pod logs
+  - Fix: WebSocket-based live log viewer with streaming animation
+
+- [ ] **K-P3-003: Inline AI Suggestions**
+  - AI is isolated to /ai page — should be contextual
+  - Fix: Inline AI cards on cluster detail ("Pod restarted 5x — View logs?")
+
+- [ ] **K-P3-004: Time-Series Charts in Dashboard**
+  - Stat cards are static numbers — no historical context
+  - Fix: Embed Recharts/Tremor sparklines with 24h/7d data in stat cards
+
+- [ ] **K-P3-005: Branded Visual Identity**
+  - No accent gradient, no depth, no personality
+  - Fix: Add teal-to-indigo gradient accent line at top of page, logo animation on load
+  - Reference: Vercel, Railway's polished brand moments
+
+---
+
 ## Pipeline Gates (ALL stages)
 - Code Review (Lior): 10/10
 - E2E (Yuval): **0 failures** (non-negotiable — Vik mandate 2026-02-27)
