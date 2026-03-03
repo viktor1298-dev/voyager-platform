@@ -424,7 +424,7 @@ function DashboardContent() {
                         : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]',
                     )}
                   >
-                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
                     <span className="capitalize">{filter}</span>
                     <span className="tabular-nums text-[var(--color-table-meta)]">{envCounts[filter]}</span>
                   </button>
@@ -500,7 +500,7 @@ function DashboardContent() {
                       return (
                         <div key={healthGroup} className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: healthMeta.dotColor }} />
+                            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: healthMeta.dotColor }} />
                             <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--color-text-dim)]">
                               {healthMeta.label} ({clusters.length})
                             </span>
@@ -673,7 +673,7 @@ function HealthDot({ clusterId }: { clusterId: string }) {
 
   return (
     <span
-      className="h-1.5 w-1.5 rounded-full shrink-0"
+      className="h-2.5 w-2.5 rounded-full shrink-0"
       style={{ backgroundColor: color }}
       title={tooltip}
     />
@@ -802,6 +802,8 @@ function SummaryCard({
   color,
   gradient,
   isLoading,
+  trend,
+  emphasized,
 }: {
   icon: React.ReactNode
   label: string
@@ -809,23 +811,23 @@ function SummaryCard({
   color: string
   gradient: string
   isLoading?: boolean
+  trend?: { delta: number; label?: string }
+  emphasized?: boolean
 }) {
   return (
     <div
-      className="rounded-xl px-3 py-2.5 border border-[var(--color-border)] hover:border-[var(--color-border-hover)] w-full flex items-center justify-between gap-2"
+      className={cn(
+        'rounded-xl px-3 py-2.5 border w-full flex items-center justify-between gap-2 transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5',
+        emphasized
+          ? 'border-[var(--color-status-warning)]/40 ring-1 ring-[var(--color-status-warning)]/20'
+          : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)]',
+      )}
       style={{
-        background: 'var(--glass-bg)',
+        background: emphasized ? 'rgba(246, 192, 66, 0.06)' : 'var(--glass-bg)',
         backdropFilter: 'blur(var(--glass-blur))',
         WebkitBackdropFilter: 'blur(var(--glass-blur))',
-        transition: 'all var(--duration-normal) ease',
         boxShadow: 'var(--shadow-card)',
         minHeight: '64px',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--shadow-card)'
       }}
     >
       <div className="flex flex-col gap-0.5 min-w-0">
@@ -835,11 +837,23 @@ function SummaryCard({
         {isLoading ? (
           <SkeletonText width="2.5rem" height="1.5rem" />
         ) : (
-          <div
-            className={cn('text-xl font-extrabold tracking-tight leading-tight animate-count-up', gradient !== 'none' && 'gradient-text', gradient === 'none' && 'opacity-50')}
-            style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
-          >
-            {value}
+          <div className="flex items-baseline gap-1.5">
+            <div
+              className={cn('text-xl font-extrabold tracking-tight leading-tight animate-count-up', gradient !== 'none' && 'gradient-text', gradient === 'none' && 'opacity-50')}
+              style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
+            >
+              {value}
+            </div>
+            {trend && trend.delta !== 0 && (
+              <span
+                className={cn(
+                  'text-[10px] font-semibold font-mono',
+                  trend.delta > 0 ? 'text-red-400' : 'text-emerald-400',
+                )}
+              >
+                {trend.delta > 0 ? `▲ +${trend.delta}` : `▼ ${trend.delta}`}
+              </span>
+            )}
           </div>
         )}
       </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { useNotificationsStore } from '@/stores/notifications'
 import { Bell, X } from 'lucide-react'
@@ -105,7 +106,7 @@ export function NotificationsPanel() {
             </div>
           ) : (
             <div className="py-1">
-              {alerts.map((event, i: number) => (
+              {alerts.slice(0, 10).map((event, i: number) => (
                 <div
                   key={event.id ?? i}
                   className="flex items-start gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors"
@@ -136,6 +137,15 @@ export function NotificationsPanel() {
               ))}
             </div>
           )}
+          <div className="border-t border-white/10 px-4 py-2.5">
+            <Link
+              href="/alerts"
+              onClick={() => setOpen(false)}
+              className="text-[11px] text-[var(--color-accent)] hover:underline font-medium"
+            >
+              View all alerts →
+            </Link>
+          </div>
         </div>
       )}
     </div>

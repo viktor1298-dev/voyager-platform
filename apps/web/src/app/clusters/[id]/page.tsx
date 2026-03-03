@@ -15,6 +15,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { PodDetailSheet } from '@/components/PodDetailSheet'
 import { ArrowLeft, Server, Box, Globe, Cpu, Trash2 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -323,6 +324,7 @@ export default function ClusterDetailPage() {
 
   const isAdmin = useIsAdmin()
   const [deletePodTarget, setDeletePodTarget] = useState<PodRow | null>(null)
+  const [selectedPod, setSelectedPod] = useState<PodRow | null>(null)
 
   const dbNodes = trpc.nodes.list.useQuery({ clusterId: resolvedId }, { enabled: !effectiveIsLive })
   const dbEvents = trpc.events.list.useQuery({ clusterId: resolvedId, limit: 20 }, { enabled: !effectiveIsLive })
@@ -636,9 +638,9 @@ export default function ClusterDetailPage() {
                   const status = getValue<string>()
                   const color = status === 'Running' ? 'bg-[var(--color-status-active)]' : status === 'Pending' ? 'bg-[var(--color-status-warning)]' : 'bg-[var(--color-status-error)]'
                   return (
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full ${color}`} />
-                      <span className="text-[var(--color-text-secondary)] text-[13px]">{status}</span>
+                    <span className="inline-flex items-center gap-2">
+                      <span className={`h-2.5 w-2.5 rounded-full ${color}`} />
+                      <span className="text-[var(--color-text-secondary)] text-[13px] font-medium">{status}</span>
                     </span>
                   )
                 },
@@ -711,6 +713,7 @@ export default function ClusterDetailPage() {
             emptyTitle="No pods found"
             searchable
             searchPlaceholder="Search pods…"
+            onRowClick={(pod) => setSelectedPod(pod)}
             mobileCard={(pod) => (
               <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
                 <div className="flex justify-between items-center">
@@ -744,6 +747,13 @@ export default function ClusterDetailPage() {
       {deletePodTarget && (
         <DeletePodDialog pod={deletePodTarget} clusterId={resolvedId} onClose={() => setDeletePodTarget(null)} />
       )}
+
+      <PodDetailSheet
+        pod={selectedPod}
+        open={!!selectedPod}
+        onOpenChange={(open) => { if (!open) setSelectedPod(null) }}
+        events={events?.filter((e) => selectedPod && e.message?.includes(selectedPod.name)).slice(0, 10)}
+      />
 
       {/* Recent Events — DataTable */}
       <div>
