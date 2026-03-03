@@ -302,5 +302,28 @@
     "login": "ok (token returned)",
     "helmRevision": 69,
     "notes": "QA fix loop - metrics endpoints, favicon, health route fixes"
+  },
+  {
+    "version": "v169",
+    "timestamp": "2026-03-03T21:50:55.013152",
+    "commit": "ceedca9",
+    "images": [
+      "voyager-api:v169",
+      "voyager-web:v169"
+    ],
+    "helmRevision": 70,
+    "status": "deployed",
+    "healthCheck": "ok",
+    "loginSmoke": "pass",
+    "agent": "uri"
+  },
+  {
+    "version": "v170",
+    "tag": "v170",
+    "commit": "82443ed",
+    "deployedAt": "2026-03-03T21:54:38.743648",
+    "helmRevision": 72,
+    "health": "ok",
+    "notes": "QA fix loop #2: removed z.void tRPC, removed /system-health route, favicon ICO, fixed k8s health probe"
   }
 ]
