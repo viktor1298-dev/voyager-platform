@@ -13,22 +13,24 @@ test.describe('BYOK key flow', () => {
     const cookies = await page.context().cookies()
     const sessionCookie = cookies.find((c) => c.name === 'better-auth.session_token')
     if (sessionCookie) {
-      try {
-        await page.evaluate(
-          async ({ url, cookie }) => {
-            await fetch(`${url}/trpc/aiKeys.delete`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Cookie: `better-auth.session_token=${cookie}`,
-              },
-              body: JSON.stringify({}),
-            })
-          },
-          { url: baseUrl, cookie: sessionCookie.value },
-        )
-      } catch {
-        // Key may not exist — that's fine
+      for (const provider of ['openai', 'claude']) {
+        try {
+          await page.evaluate(
+            async ({ url, cookie, prov }) => {
+              await fetch(`${url}/trpc/aiKeys.delete`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Cookie: `better-auth.session_token=${cookie}`,
+                },
+                body: JSON.stringify({ provider: prov }),
+              })
+            },
+            { url: baseUrl, cookie: sessionCookie.value, prov: provider },
+          )
+        } catch {
+          // Key may not exist — that's fine
+        }
       }
     }
 
