@@ -1,24 +1,26 @@
 'use client'
 
-import { AppLayout } from '@/components/AppLayout'
-import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { DataTable } from '@/components/DataTable'
-import { LoadingState } from '@/components/LoadingState'
-import { QueryError } from '@/components/ErrorBoundary'
-import { Progress } from '@/components/ui/progress'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { normalizeLiveHealthStatus, healthBadgeLabel } from '@/lib/cluster-status'
-import { nodeStatusColor, severityColor } from '@/lib/status-utils'
-import { trpc } from '@/lib/trpc'
-import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { ArrowLeft, Server, Box, Globe, Cpu, Trash2 } from 'lucide-react'
+import { ArrowLeft, Box, ChevronDown, Cpu, FileText, Globe, Server, Trash2 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { AppLayout } from '@/components/AppLayout'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { DataTable } from '@/components/DataTable'
+import { QueryError } from '@/components/ErrorBoundary'
+import { LoadingState } from '@/components/LoadingState'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Progress } from '@/components/ui/progress'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
+import { nodeStatusColor, severityColor } from '@/lib/status-utils'
+import { trpc } from '@/lib/trpc'
 
 function providerIcon(provider: string): string {
   const map: Record<string, string> = {
@@ -58,7 +60,8 @@ function asText(value: unknown, fallback = '—'): string {
     const trimmed = value.trim()
     return trimmed.length > 0 ? trimmed : fallback
   }
-  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') return String(value)
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint')
+    return String(value)
   return fallback
 }
 
@@ -89,7 +92,9 @@ const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
     accessorKey: 'name',
     header: 'Name',
     cell: ({ getValue }) => (
-      <span className="font-medium text-[var(--color-text-primary)] text-[13px]">{getValue<string>()}</span>
+      <span className="font-medium text-[var(--color-text-primary)] text-[13px]">
+        {getValue<string>()}
+      </span>
     ),
   },
   {
@@ -116,7 +121,9 @@ const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
     accessorKey: 'kubeletVersion',
     header: 'Kubelet',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">{getValue<string>()}</span>
+      <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        {getValue<string>()}
+      </span>
     ),
   },
   {
@@ -130,7 +137,9 @@ const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
     accessorKey: 'cpu',
     header: 'CPU',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">{getValue<string>()}</span>
+      <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        {getValue<string>()}
+      </span>
     ),
   },
   {
@@ -142,7 +151,9 @@ const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
       return (
         <div className="flex items-center gap-2 min-w-[80px]">
           <Progress value={v} className="h-1.5 flex-1" />
-          <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">{v}%</span>
+          <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">
+            {v}%
+          </span>
         </div>
       )
     },
@@ -151,7 +162,9 @@ const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
     accessorKey: 'memory',
     header: 'Memory',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">{getValue<string>()}</span>
+      <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        {getValue<string>()}
+      </span>
     ),
   },
   {
@@ -163,7 +176,9 @@ const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
       return (
         <div className="flex items-center gap-2 min-w-[80px]">
           <Progress value={v} className="h-1.5 flex-1" />
-          <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">{v}%</span>
+          <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">
+            {v}%
+          </span>
         </div>
       )
     },
@@ -234,7 +249,15 @@ interface PodRow {
   memoryPercent: number | null
 }
 
-function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: string; onClose: () => void }) {
+function DeletePodDialog({
+  pod,
+  clusterId,
+  onClose,
+}: {
+  pod: PodRow
+  clusterId: string
+  onClose: () => void
+}) {
   const utils = trpc.useUtils()
   const deleteMutation = trpc.pods.delete.useMutation({
     onSuccess: () => {
@@ -249,7 +272,11 @@ function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: 
   })
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={onClose} role="presentation">
+    <div
+      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center"
+      onClick={onClose}
+      role="presentation"
+    >
       <div
         className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-5 w-96 max-w-[calc(100vw-2rem)] shadow-xl"
         onClick={(e) => e.stopPropagation()}
@@ -257,15 +284,27 @@ function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: 
         aria-label={`Delete pod ${pod.name}`}
       >
         <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-1">Delete Pod</h3>
-        <p className="text-[11px] text-[var(--color-text-muted)] mb-4 font-mono">{pod.namespace}/{pod.name}</p>
+        <p className="text-[11px] text-[var(--color-text-muted)] mb-4 font-mono">
+          {pod.namespace}/{pod.name}
+        </p>
         <p className="text-[12px] text-[var(--color-text-secondary)] mb-4">
-          This will delete pod <span className="font-mono font-medium text-[var(--color-text-primary)]">{pod.name}</span>. K8s will restart it automatically.
+          This will delete pod{' '}
+          <span className="font-mono font-medium text-[var(--color-text-primary)]">{pod.name}</span>
+          . K8s will restart it automatically.
         </p>
         <div className="flex gap-2 justify-end">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] text-[var(--color-badge-label)] hover:bg-white/[0.04] transition-colors">Cancel</button>
           <button
             type="button"
-            onClick={() => deleteMutation.mutate({ clusterId, namespace: pod.namespace, podName: pod.name })}
+            onClick={onClose}
+            className="px-3 py-1.5 rounded-lg text-[12px] text-[var(--color-badge-label)] hover:bg-white/[0.04] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              deleteMutation.mutate({ clusterId, namespace: pod.namespace, podName: pod.name })
+            }
             disabled={deleteMutation.isPending}
             className="px-3 py-1.5 rounded-lg text-[12px] font-medium bg-red-600 text-white hover:opacity-90 transition-opacity disabled:opacity-50"
           >
@@ -277,9 +316,12 @@ function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: 
   )
 }
 
-function HeaderSkeleton() {
+function _HeaderSkeleton() {
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 mb-6" style={{ boxShadow: 'var(--shadow-card)' }}>
+    <div
+      className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 mb-6"
+      style={{ boxShadow: 'var(--shadow-card)' }}
+    >
       <div className="flex items-center gap-4 mb-4">
         <Skeleton className="h-10 w-10 rounded-xl" />
         <div>
@@ -302,15 +344,20 @@ export default function ClusterDetailPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id })
   const resolvedId = dbCluster.data?.id ?? id
-  const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
+  const hasCredentials = Boolean(
+    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
+  )
   const isLive = hasCredentials
 
-  const liveQuery = trpc.clusters.live.useQuery({ clusterId: resolvedId }, {
-    enabled: isLive,
-    refetchInterval: 30000,
-    retry: false,
-    staleTime: 30000,
-  })
+  const liveQuery = trpc.clusters.live.useQuery(
+    { clusterId: resolvedId },
+    {
+      enabled: isLive,
+      refetchInterval: 30000,
+      retry: false,
+      staleTime: 30000,
+    },
+  )
 
   // Fallback to stored data when live query fails
   const liveFailed = isLive && liveQuery.isError
@@ -323,13 +370,20 @@ export default function ClusterDetailPage() {
 
   const isAdmin = useIsAdmin()
   const [deletePodTarget, setDeletePodTarget] = useState<PodRow | null>(null)
+  const [selectedPod, setSelectedPod] = useState<PodRow | null>(null)
 
   const dbNodes = trpc.nodes.list.useQuery({ clusterId: resolvedId }, { enabled: !effectiveIsLive })
-  const dbEvents = trpc.events.list.useQuery({ clusterId: resolvedId, limit: 20 }, { enabled: !effectiveIsLive })
-  const podsQuery = trpc.pods.list.useQuery({ clusterId: resolvedId }, {
-    enabled: effectiveIsLive,
-    refetchInterval: 30000,
-  })
+  const dbEvents = trpc.events.list.useQuery(
+    { clusterId: resolvedId, limit: 20 },
+    { enabled: !effectiveIsLive },
+  )
+  const podsQuery = trpc.pods.list.useQuery(
+    { clusterId: resolvedId },
+    {
+      enabled: effectiveIsLive,
+      refetchInterval: 30000,
+    },
+  )
 
   const isLoading = effectiveIsLive ? liveQuery.isLoading : dbCluster.isLoading
 
@@ -346,8 +400,10 @@ export default function ClusterDetailPage() {
     if (!ts) return { dot: 'bg-[var(--color-status-error)]', label: 'Disconnected' }
 
     const diffMins = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 60000))
-    if (diffMins < 10) return { dot: 'bg-[var(--color-status-active)]', label: `Connected ${diffMins} min ago` }
-    if (diffMins <= 30) return { dot: 'bg-[var(--color-status-warning)]', label: `Last seen ${diffMins} min ago` }
+    if (diffMins < 10)
+      return { dot: 'bg-[var(--color-status-active)]', label: `Connected ${diffMins} min ago` }
+    if (diffMins <= 30)
+      return { dot: 'bg-[var(--color-status-warning)]', label: `Last seen ${diffMins} min ago` }
     return { dot: 'bg-[var(--color-status-error)]', label: 'Disconnected' }
   }, [lastConnectedAtRaw])
 
@@ -377,7 +433,12 @@ export default function ClusterDetailPage() {
         provider: String(liveData?.provider ?? 'minikube'),
         version: String(liveData?.version ?? '—'),
         status: liveData?.status ?? 'unknown',
-        healthStatus: String(liveData?.status ?? (dbCluster.data as Record<string, unknown>)?.healthStatus ?? dbCluster.data?.status ?? 'unknown'),
+        healthStatus: String(
+          liveData?.status ??
+            (dbCluster.data as Record<string, unknown>)?.healthStatus ??
+            dbCluster.data?.status ??
+            'unknown',
+        ),
         liveStatus: liveData?.status ?? 'unknown',
         endpoint: liveData?.endpoint ?? '—',
         nodeCount: liveData?.nodes?.length ?? 0,
@@ -396,7 +457,11 @@ export default function ClusterDetailPage() {
         provider: String(dbCluster.data?.provider ?? ''),
         version: String(dbCluster.data?.version ?? '—'),
         status: String(dbCluster.data?.status ?? 'unknown'),
-        healthStatus: String((dbCluster.data as Record<string, unknown>)?.healthStatus ?? dbCluster.data?.status ?? 'unknown'),
+        healthStatus: String(
+          (dbCluster.data as Record<string, unknown>)?.healthStatus ??
+            dbCluster.data?.status ??
+            'unknown',
+        ),
         endpoint: String((dbCluster.data as Record<string, unknown>)?.endpoint ?? '—'),
         lastConnectedAt: (() => {
           const v = dbCluster.data?.lastConnectedAt
@@ -456,19 +521,28 @@ export default function ClusterDetailPage() {
         reason: asText(e.reason),
         message: asText(e.message, ''),
         namespace: asText(e.namespace, ''),
-        timestamp: e.timestamp instanceof Date ? e.timestamp.toISOString() : (typeof e.timestamp === 'string' ? e.timestamp : null),
+        timestamp:
+          e.timestamp instanceof Date
+            ? e.timestamp.toISOString()
+            : typeof e.timestamp === 'string'
+              ? e.timestamp
+              : null,
       }))
 
-  const rawStatus = typeof (cluster.healthStatus ?? cluster.status) === 'string' ? (cluster.healthStatus ?? cluster.status) : 'unknown'
+  const rawStatus =
+    typeof (cluster.healthStatus ?? cluster.status) === 'string'
+      ? (cluster.healthStatus ?? cluster.status)
+      : 'unknown'
   const normalizedStatus = normalizeLiveHealthStatus(rawStatus)
 
-  const statusDotClass = normalizedStatus === 'healthy'
-    ? 'bg-[var(--color-status-active)]'
-    : normalizedStatus === 'degraded'
-      ? 'bg-[var(--color-status-warning)]'
-      : normalizedStatus === 'error'
-        ? 'bg-[var(--color-status-error)]'
-        : 'bg-gray-400'
+  const statusDotClass =
+    normalizedStatus === 'healthy'
+      ? 'bg-[var(--color-status-active)]'
+      : normalizedStatus === 'degraded'
+        ? 'bg-[var(--color-status-warning)]'
+        : normalizedStatus === 'error'
+          ? 'bg-[var(--color-status-error)]'
+          : 'bg-gray-400'
 
   const statusLabel = healthBadgeLabel(normalizedStatus)
 
@@ -476,15 +550,25 @@ export default function ClusterDetailPage() {
     <AppLayout>
       <Breadcrumbs />
 
-      <button type="button" onClick={() => router.back()} className="flex items-center gap-1.5 text-[var(--color-accent)] hover:underline text-xs font-mono mb-5">
+      <button
+        type="button"
+        onClick={() => router.back()}
+        className="flex items-center gap-1.5 text-[var(--color-accent)] hover:underline text-xs font-mono mb-5"
+      >
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
 
       {/* Header Card */}
-      <div className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 mb-6" style={{ boxShadow: 'var(--shadow-card)' }}>
+      <div
+        className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 mb-6"
+        style={{ boxShadow: 'var(--shadow-card)' }}
+      >
         <div className="flex items-start gap-4 mb-5">
           <div className="h-11 w-11 rounded-xl bg-white/[0.05] border border-[var(--color-border)] flex items-center justify-center">
-            <Icon icon={providerIcon(cluster.provider)} className="h-6 w-6 text-[var(--color-accent)]" />
+            <Icon
+              icon={providerIcon(cluster.provider)}
+              className="h-6 w-6 text-[var(--color-accent)]"
+            />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
@@ -505,7 +589,9 @@ export default function ClusterDetailPage() {
                   <TabsTrigger
                     value="live"
                     disabled={!effectiveIsLive}
-                    title={!effectiveIsLive ? 'Live data unavailable for this cluster' : 'Live data'}
+                    title={
+                      !effectiveIsLive ? 'Live data unavailable for this cluster' : 'Live data'
+                    }
                     className="h-6 px-2 text-[10px] font-mono"
                   >
                     Live Data
@@ -522,7 +608,9 @@ export default function ClusterDetailPage() {
             <p className="text-[12px] text-[var(--color-text-dim)] font-mono mt-1 break-all">
               Kubernetes {cluster.version} • {cluster.endpoint}
               {cluster.lastConnectedAt && (
-                <span className="ml-2 text-[var(--color-text-dim)]">• Last seen: {timeAgo(cluster.lastConnectedAt)}</span>
+                <span className="ml-2 text-[var(--color-text-dim)]">
+                  • Last seen: {timeAgo(cluster.lastConnectedAt)}
+                </span>
               )}
             </p>
           </div>
@@ -531,16 +619,31 @@ export default function ClusterDetailPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { icon: Server, label: 'Nodes', value: String(cluster.nodeCount) },
-            { icon: Box, label: 'Pods', value: effectiveIsLive ? `${cluster.runningPods} / ${cluster.podCount}` : String(cluster.podCount || '—') },
+            {
+              icon: Box,
+              label: 'Pods',
+              value: effectiveIsLive
+                ? `${cluster.runningPods} / ${cluster.podCount}`
+                : String(cluster.podCount || '—'),
+            },
             { icon: Globe, label: 'Namespaces', value: String(cluster.namespaceCount || '—') },
             { icon: Cpu, label: 'Version', value: cluster.version },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-xl bg-white/[0.03] border border-[var(--color-border)] p-3.5">
+            <div
+              key={stat.label}
+              className="rounded-xl bg-white/[0.03] border border-[var(--color-border)] p-3.5"
+            >
               <div className="flex items-center gap-2 mb-1">
                 <stat.icon className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
-                <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{stat.label}</span>
+                <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
+                  {stat.label}
+                </span>
               </div>
-              <p className={`text-lg font-bold ${stat.value === '—' || stat.value === '0' || stat.value === '0 / 0' ? 'text-[var(--color-text-dim)] opacity-60' : 'text-[var(--color-text-primary)]'}`}>{stat.value}</p>
+              <p
+                className={`text-lg font-bold ${stat.value === '—' || stat.value === '0' || stat.value === '0 / 0' ? 'text-[var(--color-text-dim)] opacity-60' : 'text-[var(--color-text-primary)]'}`}
+              >
+                {stat.value}
+              </p>
             </div>
           ))}
         </div>
@@ -562,7 +665,9 @@ export default function ClusterDetailPage() {
           mobileCard={(node) => (
             <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-medium text-[var(--color-text-primary)] text-sm">{node.name}</span>
+                <span className="font-medium text-[var(--color-text-primary)] text-sm">
+                  {node.name}
+                </span>
                 <span className="inline-flex items-center gap-1.5">
                   <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
                   <span className="text-[var(--color-text-secondary)] text-xs">{node.status}</span>
@@ -572,7 +677,9 @@ export default function ClusterDetailPage() {
                 <span className="text-[var(--color-text-muted)]">Role</span>
                 <span className="text-[var(--color-text-primary)]">{node.role}</span>
                 <span className="text-[var(--color-text-muted)]">Kubelet</span>
-                <span className="text-[var(--color-text-primary)] font-mono">{node.kubeletVersion}</span>
+                <span className="text-[var(--color-text-primary)] font-mono">
+                  {node.kubeletVersion}
+                </span>
                 <span className="text-[var(--color-text-muted)]">OS</span>
                 <span className="text-[var(--color-text-primary)]">{node.os}</span>
                 <span className="text-[var(--color-text-muted)]">CPU</span>
@@ -582,7 +689,9 @@ export default function ClusterDetailPage() {
                     <span className="text-[var(--color-text-muted)]">CPU %</span>
                     <div className="flex items-center gap-2">
                       <Progress value={node.cpuPercent} className="h-1.5 flex-1" />
-                      <span className="text-[var(--color-text-primary)] font-mono text-[11px]">{node.cpuPercent}%</span>
+                      <span className="text-[var(--color-text-primary)] font-mono text-[11px]">
+                        {node.cpuPercent}%
+                      </span>
                     </div>
                   </>
                 )}
@@ -593,7 +702,9 @@ export default function ClusterDetailPage() {
                     <span className="text-[var(--color-text-muted)]">Mem %</span>
                     <div className="flex items-center gap-2">
                       <Progress value={node.memoryPercent} className="h-1.5 flex-1" />
-                      <span className="text-[var(--color-text-primary)] font-mono text-[11px]">{node.memoryPercent}%</span>
+                      <span className="text-[var(--color-text-primary)] font-mono text-[11px]">
+                        {node.memoryPercent}%
+                      </span>
                     </div>
                   </>
                 )}
@@ -603,7 +714,7 @@ export default function ClusterDetailPage() {
         />
       </div>
 
-      {/* Pods Table */}
+      {/* Pods Table — Grouped by Namespace */}
       {effectiveIsLive && (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
@@ -612,137 +723,84 @@ export default function ClusterDetailPage() {
               Pods ({podsQuery.data?.length ?? 0})
             </h2>
           </div>
-          <DataTable
-            data={(podsQuery.data ?? []).map((p, i) => ({ id: `pod-${i}`, ...p }))}
-            columns={[
-              {
-                accessorKey: 'name',
-                header: 'Name',
-                cell: ({ getValue }) => (
-                  <span className="font-medium text-[var(--color-text-primary)] text-[13px] font-mono">{getValue<string>()}</span>
-                ),
-              },
-              {
-                accessorKey: 'namespace',
-                header: 'Namespace',
-                cell: ({ getValue }) => (
-                  <span className="text-[var(--color-text-muted)] text-[12px] font-mono">{getValue<string>()}</span>
-                ),
-              },
-              {
-                accessorKey: 'status',
-                header: 'Status',
-                cell: ({ getValue }) => {
-                  const status = getValue<string>()
-                  const color = status === 'Running' ? 'bg-[var(--color-status-active)]' : status === 'Pending' ? 'bg-[var(--color-status-warning)]' : 'bg-[var(--color-status-error)]'
-                  return (
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full ${color}`} />
-                      <span className="text-[var(--color-text-secondary)] text-[13px]">{status}</span>
-                    </span>
-                  )
-                },
-              },
-              {
-                accessorKey: 'cpuMillis',
-                header: 'CPU',
-                cell: ({ row }) => {
-                  const v = row.original.cpuMillis
-                  const pct = row.original.cpuPercent
-                  if (v == null) return <span className="text-[var(--color-text-dim)] text-[11px]">—</span>
-                  return (
-                    <div className="flex items-center gap-2 min-w-[80px]">
-                      {pct != null && <Progress value={Math.min(pct, 100)} className="h-1.5 flex-1" />}
-                      <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums">{v}m</span>
-                    </div>
-                  )
-                },
-              },
-              {
-                accessorKey: 'memoryMi',
-                header: 'Memory',
-                cell: ({ row }) => {
-                  const v = row.original.memoryMi
-                  const pct = row.original.memoryPercent
-                  if (v == null) return <span className="text-[var(--color-text-dim)] text-[11px]">—</span>
-                  return (
-                    <div className="flex items-center gap-2 min-w-[80px]">
-                      {pct != null && <Progress value={Math.min(pct, 100)} className="h-1.5 flex-1" />}
-                      <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums">{v}Mi</span>
-                    </div>
-                  )
-                },
-              },
-              {
-                accessorKey: 'createdAt',
-                header: 'Age',
-                cell: ({ getValue }) => {
-                  const ts = getValue<string | null>()
-                  return (
-                    <span className="text-[var(--color-text-dim)] font-mono text-[11px]">
-                      {ts ? timeAgo(ts) : '—'}
-                    </span>
-                  )
-                },
-              },
-              ...(isAdmin ? [{
-                id: 'actions' as const,
-                header: '',
-                cell: ({ row }: { row: { original: PodRow } }) => (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={() => setDeletePodTarget(row.original)}
-                          className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hover:text-red-400 transition-colors"
-                          aria-label={`Delete pod ${row.original.name}`}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>Delete pod</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ),
-              }] : []),
-            ] as ColumnDef<PodRow, unknown>[]}
-            loading={podsQuery.isLoading}
-            emptyTitle="No pods found"
-            searchable
-            searchPlaceholder="Search pods…"
-            mobileCard={(pod) => (
-              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium text-[var(--color-text-primary)] text-sm font-mono">{pod.name}</span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className={`h-1.5 w-1.5 rounded-full ${pod.status === 'Running' ? 'bg-[var(--color-status-active)]' : 'bg-[var(--color-status-warning)]'}`} />
-                    <span className="text-[var(--color-text-secondary)] text-xs">{pod.status}</span>
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                  <span className="text-[var(--color-text-muted)]">Namespace</span>
-                  <span className="text-[var(--color-text-primary)] font-mono">{pod.namespace}</span>
-                  <span className="text-[var(--color-text-muted)]">Age</span>
-                  <span className="text-[var(--color-text-primary)] font-mono">{pod.createdAt ? timeAgo(pod.createdAt) : '—'}</span>
-                </div>
-                {isAdmin && (
-                  <button
-                    type="button"
-                    onClick={() => setDeletePodTarget(pod)}
-                    className="text-[11px] text-red-400 hover:text-red-300 font-medium"
-                  >
-                    Delete Pod
-                  </button>
-                )}
-              </div>
-            )}
+          <PodsGroupedByNamespace
+            pods={(podsQuery.data ?? []).map((p, i) => ({ id: `pod-${i}`, ...p }))}
+            isLoading={podsQuery.isLoading}
+            isAdmin={isAdmin === true}
+            onDeletePod={setDeletePodTarget}
+            onSelectPod={setSelectedPod}
           />
         </div>
       )}
 
+      {/* Pod Detail Sheet */}
+      <Sheet
+        open={!!selectedPod}
+        onOpenChange={(open) => {
+          if (!open) setSelectedPod(null)
+        }}
+      >
+        <SheetContent side="right" className="w-[400px] sm:w-[450px]">
+          <SheetHeader>
+            <SheetTitle className="font-mono text-sm">{selectedPod?.name}</SheetTitle>
+          </SheetHeader>
+          {selectedPod && (
+            <div className="mt-4 space-y-4">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-[var(--color-text-muted)]">Namespace</span>
+                  <span className="font-mono text-[var(--color-text-primary)]">
+                    {selectedPod.namespace}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[var(--color-text-muted)]">Status</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${selectedPod.status === 'Running' ? 'bg-[var(--color-status-active)]' : selectedPod.status === 'Pending' ? 'bg-[var(--color-status-warning)]' : 'bg-[var(--color-status-error)]'}`}
+                    />
+                    <span className="text-[var(--color-text-primary)]">{selectedPod.status}</span>
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[var(--color-text-muted)]">Age</span>
+                  <span className="font-mono text-[var(--color-text-primary)]">
+                    {selectedPod.createdAt ? timeAgo(selectedPod.createdAt) : '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[var(--color-text-muted)]">Node</span>
+                  <span className="font-mono text-[var(--color-text-primary)]">
+                    {selectedPod.nodeName ?? '—'}
+                  </span>
+                </div>
+              </div>
+              <div className="border-t border-[var(--color-border)] pt-3">
+                <h4 className="text-xs uppercase tracking-wider font-mono text-[var(--color-text-muted)] mb-2">
+                  Recent Events
+                </h4>
+                <p className="text-[11px] text-[var(--color-text-dim)]">
+                  No events available for this pod.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors"
+              >
+                <FileText className="h-4 w-4" />
+                View Logs
+              </button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
       {deletePodTarget && (
-        <DeletePodDialog pod={deletePodTarget} clusterId={resolvedId} onClose={() => setDeletePodTarget(null)} />
+        <DeletePodDialog
+          pod={deletePodTarget}
+          clusterId={resolvedId}
+          onClose={() => setDeletePodTarget(null)}
+        />
       )}
 
       {/* Recent Events — DataTable */}
@@ -760,7 +818,9 @@ export default function ClusterDetailPage() {
           mobileCard={(event) => {
             const isWarning = event.type === 'Warning'
             return (
-              <div className={`p-3 rounded-lg border border-[var(--color-border)] ${isWarning ? 'bg-[var(--color-status-warning)]/[0.04]' : 'bg-[var(--color-bg-card)]'}`}>
+              <div
+                className={`p-3 rounded-lg border border-[var(--color-border)] ${isWarning ? 'bg-[var(--color-status-warning)]/[0.04]' : 'bg-[var(--color-bg-card)]'}`}
+              >
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-2">
                     <span
@@ -772,18 +832,156 @@ export default function ClusterDetailPage() {
                     >
                       {event.type}
                     </span>
-                    <span className="text-[var(--color-text-primary)] text-xs font-medium">{event.reason}</span>
+                    <span className="text-[var(--color-text-primary)] text-xs font-medium">
+                      {event.reason}
+                    </span>
                   </div>
                   <span className="text-[var(--color-text-dim)] font-mono text-[10px] shrink-0">
                     {event.timestamp ? timeAgo(event.timestamp) : '—'}
                   </span>
                 </div>
-                <p className="text-[var(--color-text-muted)] text-xs line-clamp-2">{event.message}</p>
+                <p className="text-[var(--color-text-muted)] text-xs line-clamp-2">
+                  {event.message}
+                </p>
               </div>
             )
           }}
         />
       </div>
     </AppLayout>
+  )
+}
+
+function PodsGroupedByNamespace({
+  pods,
+  isLoading,
+  isAdmin,
+  onDeletePod,
+  onSelectPod,
+}: {
+  pods: PodRow[]
+  isLoading: boolean
+  isAdmin: boolean
+  onDeletePod: (pod: PodRow) => void
+  onSelectPod: (pod: PodRow) => void
+}) {
+  const grouped = useMemo(() => {
+    const map = new Map<string, PodRow[]>()
+    for (const pod of pods) {
+      const ns = pod.namespace || 'default'
+      if (!map.has(ns)) map.set(ns, [])
+      map.get(ns)?.push(pod)
+    }
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]))
+  }, [pods])
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={`skeleton-ns-${i}`} className="h-10 w-full" />
+        ))}
+      </div>
+    )
+  }
+
+  if (pods.length === 0) {
+    return <p className="text-[12px] text-[var(--color-text-muted)] py-4">No pods found.</p>
+  }
+
+  return (
+    <div className="space-y-2">
+      {grouped.map(([namespace, nsPods]) => (
+        <NamespacePodGroup
+          key={namespace}
+          namespace={namespace}
+          pods={nsPods}
+          isAdmin={isAdmin}
+          onDeletePod={onDeletePod}
+          onSelectPod={onSelectPod}
+        />
+      ))}
+    </div>
+  )
+}
+
+function NamespacePodGroup({
+  namespace,
+  pods,
+  isAdmin,
+  onDeletePod,
+  onSelectPod,
+}: {
+  namespace: string
+  pods: PodRow[]
+  isAdmin: boolean
+  onDeletePod: (pod: PodRow) => void
+  onSelectPod: (pod: PodRow) => void
+}) {
+  const [open, setOpen] = useState(true)
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger className="flex w-full items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
+        <ChevronDown
+          className={`h-3.5 w-3.5 text-[var(--color-text-dim)] transition-transform ${open ? '' : '-rotate-90'}`}
+        />
+        <span className="text-[12px] font-bold font-mono text-[var(--color-text-secondary)]">
+          {namespace}
+        </span>
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-mono font-bold">
+          {pods.length}
+        </span>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="mt-1 space-y-0.5 pl-2">
+          {pods.map((pod) => {
+            const statusColor =
+              pod.status === 'Running'
+                ? 'bg-[var(--color-status-active)]'
+                : pod.status === 'Pending'
+                  ? 'bg-[var(--color-status-warning)]'
+                  : 'bg-[var(--color-status-error)]'
+            return (
+              <button
+                key={pod.id}
+                type="button"
+                onClick={() => onSelectPod(pod)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition-colors text-left"
+              >
+                <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusColor}`} />
+                <span className="flex-1 min-w-0 text-[13px] font-mono text-[var(--color-text-primary)] truncate">
+                  {pod.name}
+                </span>
+                <span className="text-[11px] text-[var(--color-text-secondary)]">{pod.status}</span>
+                <span className="text-[11px] text-[var(--color-text-dim)] font-mono">
+                  {pod.createdAt ? timeAgo(pod.createdAt) : '—'}
+                </span>
+                {isAdmin && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDeletePod(pod)
+                          }}
+                          className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hover:text-red-400 transition-colors"
+                          aria-label={`Delete pod ${pod.name}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Delete pod</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }

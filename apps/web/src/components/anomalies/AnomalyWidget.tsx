@@ -39,7 +39,11 @@ export function AnomalyWidget({ compact }: { compact?: boolean }) {
               </span>
             </div>
           </div>
-          <span className="text-xl font-extrabold text-[var(--color-text-primary)] shrink-0">{total}</span>
+          <span
+            className={`text-2xl font-extrabold shrink-0 ${total > 0 ? 'text-red-400 animate-pulse' : 'text-[var(--color-text-primary)]'}`}
+          >
+            {total}
+          </span>
         </div>
       </Link>
     )

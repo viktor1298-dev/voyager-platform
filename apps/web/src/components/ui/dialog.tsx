@@ -1,10 +1,10 @@
 'use client'
 
+import { X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
+import { type ReactNode, useEffect, useRef } from 'react'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { dialogVariants, overlayVariants } from '@/lib/animation-constants'
-import { X } from 'lucide-react'
-import { type ReactNode, useEffect, useRef } from 'react'
 
 interface DialogProps {
   open: boolean
@@ -48,7 +48,7 @@ export function Dialog({ open, onClose, children, title }: DialogProps) {
           />
           <motion.div
             className="relative w-full max-w-lg max-w-[calc(100vw-2rem)] mx-4 rounded-xl border border-[var(--color-border)] p-4 sm:p-6 shadow-2xl"
-            style={{ background: 'var(--color-bg-card)' }}
+            style={{ background: 'var(--elevated)' }}
             variants={reduced ? undefined : dialogVariants}
             initial={reduced ? undefined : 'hidden'}
             animate={reduced ? undefined : 'visible'}

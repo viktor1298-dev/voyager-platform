@@ -1,19 +1,29 @@
 'use client'
 
+import { useIsFetching, useQueryClient } from '@tanstack/react-query'
+import { AlertTriangle, Bell, Container, LayoutGrid, List, RefreshCw, Server } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppLayout } from '@/components/AppLayout'
-import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { PageTransition } from '@/components/animations'
 import { AnomalyWidget } from '@/components/anomalies/AnomalyWidget'
+import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { SkeletonCard, SkeletonRow, SkeletonText } from '@/components/Skeleton'
 import {
+  DB_CLUSTER_REFETCH_MS,
+  HEALTH_STATUS_REFETCH_MS,
+  LIVE_CLUSTER_REFETCH_MS,
+} from '@/lib/cluster-constants'
+import {
+  type ClusterEnvironment,
   ENV_META,
   getClusterEnvironment,
   getClusterTags,
   normalizeHealth,
-  type ClusterEnvironment,
 } from '@/lib/cluster-meta'
-import { normalizeLiveHealthStatus, healthBadgeLabel } from '@/lib/cluster-status'
+import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import {
   getStatusColor,
   getStatusDotClass,
@@ -23,12 +33,6 @@ import {
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
-import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS, HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
-import { AlertTriangle, Bell, Container, LayoutGrid, List, RefreshCw, Server, Table2 } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 
 interface ClusterCardData {
   id: string
@@ -74,7 +78,9 @@ function ResourceBar({ value, max, color }: { value: number; max: number; color:
           style={{ width: `${pct}%`, backgroundColor: color }}
         />
       </div>
-      <span className="text-[10px] font-mono tabular-nums text-[var(--color-text-dim)] min-w-[28px] text-right">{pct}%</span>
+      <span className="text-[10px] font-mono tabular-nums text-[var(--color-text-dim)] min-w-[28px] text-right">
+        {pct}%
+      </span>
     </div>
   )
 }
@@ -178,12 +184,16 @@ function DashboardContent() {
 
   // J1 fix: helper to match any minikube-variant DB cluster against live data
   const isLiveClusterMatch = (name: string) =>
-    liveData && (name === liveData.name || name === 'minikube-dev' || name === 'vik-minikube' || name.includes('minikube'))
+    liveData &&
+    (name === liveData.name ||
+      name === 'minikube-dev' ||
+      name === 'vik-minikube' ||
+      name.includes('minikube'))
 
   const clusterList: ClusterCardData[] = []
 
   if (liveData) {
-    const matchingDbCluster = dbClusters.find(c => isLiveClusterMatch(c.name))
+    const _matchingDbCluster = dbClusters.find((c) => isLiveClusterMatch(c.name))
     clusterList.push({
       id: activeClusterId ?? 'live',
       name: liveData.name,
@@ -208,7 +218,12 @@ function DashboardContent() {
         provider: typeof c.provider === 'string' ? c.provider : 'unknown',
         version: typeof c.version === 'string' ? c.version : null,
         status: typeof c.status === 'string' ? c.status : null,
-        healthStatus: typeof (c as Record<string, unknown>).healthStatus === 'string' ? ((c as Record<string, unknown>).healthStatus as string) : (typeof c.status === 'string' ? c.status : null),
+        healthStatus:
+          typeof (c as Record<string, unknown>).healthStatus === 'string'
+            ? ((c as Record<string, unknown>).healthStatus as string)
+            : typeof c.status === 'string'
+              ? c.status
+              : null,
         nodeCount: c.nodeCount,
         source: 'db',
         environment: getClusterEnvironment(c.name, c.provider),
@@ -220,9 +235,7 @@ function DashboardContent() {
 
   const totalNodes =
     (liveData?.nodes.length ?? 0) +
-    dbClusters
-      .filter((c) => !isLiveClusterMatch(c.name))
-      .reduce((sum, c) => sum + c.nodeCount, 0)
+    dbClusters.filter((c) => !isLiveClusterMatch(c.name)).reduce((sum, c) => sum + c.nodeCount, 0)
   const runningPods = liveData?.runningPods ?? 0
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
 
@@ -257,12 +270,11 @@ function DashboardContent() {
       if (filters.provider !== 'all' && cluster.provider !== filters.provider) return false
       const healthValue = normalizeHealth(cluster.healthStatus ?? cluster.status)
       if (filters.health !== 'all' && healthValue !== filters.health) return false
-      if (filters.tags.length > 0 && !filters.tags.every((tag) => cluster.tags.includes(tag))) return false
+      if (filters.tags.length > 0 && !filters.tags.every((tag) => cluster.tags.includes(tag)))
+        return false
       if (
         q &&
-        !`${cluster.name} ${cluster.provider} ${cluster.tags.join(' ')}`
-          .toLowerCase()
-          .includes(q)
+        !`${cluster.name} ${cluster.provider} ${cluster.tags.join(' ')}`.toLowerCase().includes(q)
       )
         return false
       return true
@@ -277,7 +289,9 @@ function DashboardContent() {
     }
 
     for (const cluster of visibleClusters) {
-      grouped[cluster.environment][getHealthGroup(cluster.healthStatus ?? cluster.status)].push(cluster)
+      grouped[cluster.environment][getHealthGroup(cluster.healthStatus ?? cluster.status)].push(
+        cluster,
+      )
     }
 
     return grouped
@@ -297,7 +311,9 @@ function DashboardContent() {
     <AppLayout>
       <PageTransition>
         <header className="mb-4">
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
+          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+            Dashboard
+          </h1>
         </header>
 
         <div className="flex items-center justify-end gap-2 mb-1.5">
@@ -306,7 +322,11 @@ function DashboardContent() {
           </span>
           <button
             type="button"
-            onClick={() => { queryClient.invalidateQueries(); setLastRefreshedAt(new Date()); setSecondsAgo(0) }}
+            onClick={() => {
+              queryClient.invalidateQueries()
+              setLastRefreshedAt(new Date())
+              setSecondsAgo(0)
+            }}
             disabled={isFetching > 0}
             className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             title="Refresh all data"
@@ -329,8 +349,16 @@ function DashboardContent() {
             icon={<Container className="h-3.5 w-3.5" />}
             label="Running Pods"
             value={`${runningPods}/${liveData?.totalPods ?? 0}`}
-            color={(runningPods > 0 && (liveData?.totalPods ?? 0) > 0) ? 'var(--color-status-active)' : 'var(--color-text-muted)'}
-            gradient={(runningPods > 0 && (liveData?.totalPods ?? 0) > 0) ? 'var(--gradient-text-healthy)' : 'none'}
+            color={
+              runningPods > 0 && (liveData?.totalPods ?? 0) > 0
+                ? 'var(--color-status-active)'
+                : 'var(--color-text-muted)'
+            }
+            gradient={
+              runningPods > 0 && (liveData?.totalPods ?? 0) > 0
+                ? 'var(--gradient-text-healthy)'
+                : 'none'
+            }
             isLoading={isLoading}
           />
           <SummaryCard
@@ -342,7 +370,13 @@ function DashboardContent() {
             isLoading={isLoading}
           />
           <SummaryCard
-            icon={warningEvents > 0 ? <AlertTriangle className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
+            icon={
+              warningEvents > 0 ? (
+                <AlertTriangle className="h-3.5 w-3.5" />
+              ) : (
+                <Bell className="h-3.5 w-3.5" />
+              )
+            }
             label="Warning Events"
             value={String(warningEvents)}
             color={warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'}
@@ -356,7 +390,9 @@ function DashboardContent() {
         <div className="mb-5 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
+              <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">
+                Clusters
+              </h2>
               <p className="text-[11px] text-[var(--color-table-meta)] font-mono uppercase tracking-wider mt-0.5">
                 {visibleClusters.length}/{clusterList.length} visible
               </p>
@@ -404,7 +440,9 @@ function DashboardContent() {
             {/* Env tabs row */}
             <div className="flex items-center gap-1">
               {(['all', 'prod', 'staging', 'dev'] as const).map((filter) => {
-                const isActive = filters.environment === filter || (filter === 'all' && filters.environment === 'all')
+                const isActive =
+                  filters.environment === filter ||
+                  (filter === 'all' && filters.environment === 'all')
                 const color = filter === 'all' ? 'var(--color-accent)' : ENV_META[filter].color
                 const envCounts = {
                   all: clusterList.length,
@@ -424,9 +462,14 @@ function DashboardContent() {
                         : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]',
                     )}
                   >
-                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                    <span
+                      className="h-1.5 w-1.5 rounded-full shrink-0"
+                      style={{ backgroundColor: color }}
+                    />
                     <span className="capitalize">{filter}</span>
-                    <span className="tabular-nums text-[var(--color-table-meta)]">{envCounts[filter]}</span>
+                    <span className="tabular-nums text-[var(--color-table-meta)]">
+                      {envCounts[filter]}
+                    </span>
                   </button>
                 )
               })}
@@ -483,11 +526,21 @@ function DashboardContent() {
               const meta = ENV_META[environment]
 
               return (
-                <section key={environment} className="rounded-xl border border-[var(--color-border)] p-4">
+                <section
+                  key={environment}
+                  className="rounded-xl border border-[var(--color-border)] p-4"
+                >
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.color }} />
-                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{meta.sectionLabel}</h3>
-                    <span className="text-[11px] text-[var(--color-text-dim)] tabular-nums">{totalInEnvironment}</span>
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: meta.color }}
+                    />
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                      {meta.sectionLabel}
+                    </h3>
+                    <span className="text-[11px] text-[var(--color-text-dim)] tabular-nums">
+                      {totalInEnvironment}
+                    </span>
                     <div className="flex-1 h-px bg-[var(--color-border)]/40" />
                   </div>
 
@@ -500,7 +553,10 @@ function DashboardContent() {
                       return (
                         <div key={healthGroup} className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: healthMeta.dotColor }} />
+                            <span
+                              className="h-1.5 w-1.5 rounded-full"
+                              style={{ backgroundColor: healthMeta.dotColor }}
+                            />
                             <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--color-text-dim)]">
                               {healthMeta.label} ({clusters.length})
                             </span>
@@ -569,40 +625,64 @@ function ClusterTable({ clusters }: { clusters: ClusterCardData[] }) {
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full shrink-0 ${getStatusDotClass(status)}`} />
-                    <span className="text-sm font-bold text-[var(--color-text-primary)]">{cluster.name}</span>
+                    <span
+                      className={`h-2 w-2 rounded-full shrink-0 ${getStatusDotClass(status)}`}
+                    />
+                    <span className="text-sm font-bold text-[var(--color-text-primary)]">
+                      {cluster.name}
+                    </span>
                     {cluster.source === 'live' && (
-                      <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-[var(--color-accent)]/10 text-[var(--color-accent)]">LIVE</span>
+                      <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
+                        LIVE
+                      </span>
                     )}
                   </div>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5">
                     <ProviderLogo provider={cluster.provider} />
-                    <span className="text-[11px] font-mono uppercase text-[var(--color-text-secondary)]">{cluster.provider}</span>
+                    <span className="text-[11px] font-mono uppercase text-[var(--color-text-secondary)]">
+                      {cluster.provider}
+                    </span>
                   </div>
                 </td>
                 <td className="px-4 py-3">
                   <span
                     className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
-                    style={{ color: statusColor, background: `color-mix(in srgb, ${statusColor} 12%, transparent)` }}
+                    style={{
+                      color: statusColor,
+                      background: `color-mix(in srgb, ${statusColor} 12%, transparent)`,
+                    }}
                   >
                     {statusLabel}
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={cn('text-[10px] font-mono px-2 py-0.5 rounded-md border', envMeta.badgeClass)}>
+                  <span
+                    className={cn(
+                      'text-[10px] font-mono px-2 py-0.5 rounded-md border',
+                      envMeta.badgeClass,
+                    )}
+                  >
                     {envMeta.label}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-[11px] font-mono text-[var(--color-text-secondary)]">{cluster.version ?? '—'}</td>
-                <td className="px-4 py-3 text-[11px] font-mono tabular-nums text-[var(--color-text-secondary)]">{cluster.nodeCount}</td>
+                <td className="px-4 py-3 text-[11px] font-mono text-[var(--color-text-secondary)]">
+                  {cluster.version ?? '—'}
+                </td>
+                <td className="px-4 py-3 text-[11px] font-mono tabular-nums text-[var(--color-text-secondary)]">
+                  {cluster.nodeCount}
+                </td>
                 <td className="px-4 py-3 min-w-[80px]">
                   {cluster.cpuPercent != null ? (
                     <ResourceBar
                       value={cluster.cpuPercent}
                       max={100}
-                      color={cluster.cpuPercent > 80 ? 'var(--color-status-warning)' : 'var(--color-status-active)'}
+                      color={
+                        cluster.cpuPercent > 80
+                          ? 'var(--color-status-warning)'
+                          : 'var(--color-status-active)'
+                      }
                     />
                   ) : (
                     <span className="text-[var(--color-text-dim)]">—</span>
@@ -622,7 +702,9 @@ function DashboardPageFallback() {
     <AppLayout>
       <PageTransition>
         <header className="mb-4">
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
+          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+            Dashboard
+          </h1>
         </header>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
@@ -633,7 +715,9 @@ function DashboardPageFallback() {
           <SkeletonCard />
         </div>
         <div className="space-y-3">
-          <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
+          <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">
+            Clusters
+          </h2>
           <SkeletonText width="12rem" height="1.5rem" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             <SkeletonCard />
@@ -656,9 +740,12 @@ export default function DashboardPage() {
 }
 
 function HealthDot({ clusterId }: { clusterId: string }) {
-  const statusQuery = trpc.health.status.useQuery({}, {
-    refetchInterval: HEALTH_STATUS_REFETCH_MS,
-  })
+  const statusQuery = trpc.health.status.useQuery(
+    {},
+    {
+      refetchInterval: HEALTH_STATUS_REFETCH_MS,
+    },
+  )
   const entry = statusQuery.data?.find((s) => s.clusterId === clusterId)
   if (!entry || entry.status === 'unknown') return null
 
@@ -695,11 +782,15 @@ function ClusterCard({
   const normalizedStatus = normalizeLiveHealthStatus(status)
   const statusLabel = healthBadgeLabel(normalizedStatus)
   const envMeta = ENV_META[cluster.environment]
+  const isError = normalizedStatus === 'error'
 
   return (
     <Link href={`/clusters/${cluster.id}`}>
       <div
-        className="cluster-card relative group rounded-xl min-h-[90px] cursor-pointer bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 overflow-hidden"
+        className={cn(
+          'cluster-card relative group rounded-xl min-h-[90px] cursor-pointer bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 overflow-hidden',
+          isError && 'border-l-4 border-l-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]',
+        )}
         style={
           {
             '--status-color': getStatusColor(status),
@@ -725,9 +816,16 @@ function ClusterCard({
         <div className="flex-1 min-w-0 p-4 pl-5 pb-2 sm:pb-3">
           <div className="flex items-center gap-2">
             <span
-              className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(status)}`}
+              className={cn(
+                'h-2 w-2 rounded-full shrink-0',
+                isError
+                  ? 'bg-red-500 animate-pulse'
+                  : `animate-pulse-slow ${getStatusDotClass(status)}`,
+              )}
             />
-            <span className="text-sm font-bold text-[var(--color-text-primary)] truncate">{cluster.name}</span>
+            <span className="text-sm font-bold text-[var(--color-text-primary)] truncate">
+              {cluster.name}
+            </span>
             {cluster.source === 'db' && <HealthDot clusterId={cluster.id} />}
           </div>
 
@@ -738,7 +836,9 @@ function ClusterCard({
             {cluster.source === 'live' && (
               <>
                 <span>·</span>
-                <span>Pods: {runningPods}/{totalPods}</span>
+                <span>
+                  Pods: {runningPods}/{totalPods}
+                </span>
               </>
             )}
           </div>
@@ -752,7 +852,9 @@ function ClusterCard({
               <ResourceBar
                 value={cluster.cpuPercent}
                 max={100}
-                color={cluster.cpuPercent > 80 ? 'var(--color-status-warning)' : 'var(--color-accent)'}
+                color={
+                  cluster.cpuPercent > 80 ? 'var(--color-status-warning)' : 'var(--color-accent)'
+                }
               />
               {totalPods > 0 && (
                 <>
@@ -772,7 +874,10 @@ function ClusterCard({
 
         <div className="flex w-full sm:w-auto flex-row flex-wrap sm:flex-col items-start sm:items-end justify-between gap-1 sm:gap-2 shrink-0 px-4 pb-4 sm:p-4 sm:pl-0">
           <span
-            className={cn('text-[10px] font-mono px-2 py-0.5 rounded-md border', envMeta.badgeClass)}
+            className={cn(
+              'text-[10px] font-mono px-2 py-0.5 rounded-md border',
+              envMeta.badgeClass,
+            )}
           >
             {ENV_META[cluster.environment].label}
           </span>
@@ -788,7 +893,9 @@ function ClusterCard({
               color: getStatusColor(status),
               background: `color-mix(in srgb, ${getStatusColor(status)} 12%, transparent)`,
             }}
-          >{statusLabel}</span>
+          >
+            {statusLabel}
+          </span>
         </div>
       </div>
     </Link>
@@ -802,6 +909,7 @@ function SummaryCard({
   color,
   gradient,
   isLoading,
+  trend,
 }: {
   icon: React.ReactNode
   label: string
@@ -809,6 +917,7 @@ function SummaryCard({
   color: string
   gradient: string
   isLoading?: boolean
+  trend?: number | null
 }) {
   return (
     <div
@@ -835,15 +944,33 @@ function SummaryCard({
         {isLoading ? (
           <SkeletonText width="2.5rem" height="1.5rem" />
         ) : (
-          <div
-            className={cn('text-xl font-extrabold tracking-tight leading-tight animate-count-up', gradient !== 'none' && 'gradient-text', gradient === 'none' && 'opacity-50')}
-            style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
-          >
-            {value}
+          <div className="flex items-center gap-1.5">
+            <div
+              className={cn(
+                'text-xl font-extrabold tracking-tight leading-tight animate-count-up',
+                gradient !== 'none' && 'gradient-text',
+                gradient === 'none' && 'opacity-50',
+              )}
+              style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
+            >
+              {value}
+            </div>
+            {trend != null && trend !== 0 && (
+              <span
+                className={cn(
+                  'text-[10px] font-bold tabular-nums',
+                  trend > 0 ? 'text-emerald-400' : 'text-red-400',
+                )}
+              >
+                {trend > 0 ? `▲ +${trend}` : `▼ ${trend}`}
+              </span>
+            )}
           </div>
         )}
       </div>
-      <span className="shrink-0 opacity-60" style={{ color }}>{icon}</span>
+      <span className="shrink-0 opacity-60" style={{ color }}>
+        {icon}
+      </span>
     </div>
   )
 }

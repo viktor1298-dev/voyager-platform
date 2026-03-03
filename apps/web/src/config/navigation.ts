@@ -27,33 +27,71 @@ type NavItem = {
   icon: typeof LayoutDashboard
   adminOnly?: boolean
   section?: 'access-control' | 'autoscaling'
+  group?: 'observability' | 'infrastructure' | 'platform' | 'admin'
 }
 
 export const navItems: NavItem[] = [
-  { id: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { id: '/clusters', label: 'Clusters', icon: Server },
-  { id: '/dashboards', label: 'Shared Dashboards', icon: LayoutGrid },
-  { id: '/system-health', label: 'Health', icon: HeartPulse },
-  { id: '/services', label: 'Services', icon: Layers },
-  { id: '/namespaces', label: 'Namespaces', icon: FolderTree },
-  { id: '/deployments', label: 'Deployments', icon: Box },
-  { id: '/events', label: 'Events', icon: Activity },
-  { id: '/alerts', label: 'Alerts', icon: Bell },
-  { id: '/anomalies', label: 'Anomalies', icon: AlertTriangle },
-  { id: '/logs', label: 'Logs', icon: FileText },
-  { id: '/ai', label: 'AI Assistant', icon: Bot },
-  { id: '/features', label: 'Feature Flags', icon: Flag, adminOnly: true },
-  { id: '/webhooks', label: 'Webhooks', icon: Webhook, adminOnly: true },
-  { id: '/users', label: 'Users', icon: Users, adminOnly: true },
-  { id: '/audit', label: 'Audit Log', icon: ClipboardList, adminOnly: true },
-  { id: '/teams', label: 'Teams', icon: UsersRound, adminOnly: true, section: 'access-control' },
+  // Observability
+  { id: '/', label: 'Dashboard', icon: LayoutDashboard, group: 'observability' },
+  { id: '/system-health', label: 'Health', icon: HeartPulse, group: 'observability' },
+  { id: '/anomalies', label: 'Anomalies', icon: AlertTriangle, group: 'observability' },
+  { id: '/events', label: 'Events', icon: Activity, group: 'observability' },
+  { id: '/alerts', label: 'Alerts', icon: Bell, group: 'observability' },
+  // Infrastructure
+  { id: '/clusters', label: 'Clusters', icon: Server, group: 'infrastructure' },
+  { id: '/services', label: 'Services', icon: Layers, group: 'infrastructure' },
+  { id: '/deployments', label: 'Deployments', icon: Box, group: 'infrastructure' },
+  { id: '/namespaces', label: 'Namespaces', icon: FolderTree, group: 'infrastructure' },
+  { id: '/logs', label: 'Logs', icon: FileText, group: 'infrastructure' },
+  // Platform
+  { id: '/ai', label: 'AI Assistant', icon: Bot, group: 'platform' },
+  { id: '/webhooks', label: 'Webhooks', icon: Webhook, adminOnly: true, group: 'platform' },
+  { id: '/karpenter', label: 'Autoscaling', icon: Wind, group: 'platform', section: 'autoscaling' },
+  // Admin
+  { id: '/settings', label: 'Settings', icon: Settings, group: 'admin' },
+  { id: '/features', label: 'Feature Flags', icon: Flag, adminOnly: true, group: 'admin' },
+  {
+    id: '/teams',
+    label: 'Teams',
+    icon: UsersRound,
+    adminOnly: true,
+    section: 'access-control',
+    group: 'admin',
+  },
   {
     id: '/permissions',
     label: 'Permissions',
     icon: Shield,
     adminOnly: true,
     section: 'access-control',
+    group: 'admin',
   },
-  { id: '/karpenter', label: 'Karpenter', icon: Wind, section: 'autoscaling' },
-  { id: '/settings', label: 'Settings', icon: Settings },
+  { id: '/users', label: 'Users', icon: Users, adminOnly: true, group: 'admin' },
+  { id: '/audit', label: 'Audit Log', icon: ClipboardList, adminOnly: true, group: 'admin' },
+  { id: '/dashboards', label: 'Shared Dashboards', icon: LayoutGrid, group: 'observability' },
 ] as const
+
+export interface NavGroup {
+  key: string
+  label: string
+  emoji: string
+  items: NavItem[]
+}
+
+export function getNavGroups(items: NavItem[]): NavGroup[] {
+  const groups: NavGroup[] = [
+    { key: 'observability', label: 'Observability', emoji: '👁️', items: [] },
+    { key: 'infrastructure', label: 'Infrastructure', emoji: '⚙️', items: [] },
+    { key: 'platform', label: 'Platform', emoji: '🤖', items: [] },
+    { key: 'admin', label: 'Admin', emoji: '🔐', items: [] },
+  ]
+
+  const groupMap = new Map(groups.map((g) => [g.key, g]))
+
+  for (const item of items) {
+    const group = groupMap.get(item.group ?? 'admin')
+    if (group) group.items.push(item)
+  }
+
+  return groups.filter((g) => g.items.length > 0)
+}
