@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: 'Voyager Platform',
   description: 'Kubernetes Operations Dashboard',
   icons: {
-    icon: '/favicon.svg',
+    icon: '/favicon.ico',
   },
 }
 

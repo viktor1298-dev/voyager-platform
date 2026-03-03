@@ -49,13 +49,6 @@ spec:
                 name: voyager-api
                 port:
                   number: {{ .Values.api.port }}
-          - path: /system-health
-            pathType: Prefix
-            backend:
-              service:
-                name: voyager-api
-                port:
-                  number: {{ .Values.api.port }}
           - path: /trpc
             pathType: Prefix
             backend:
