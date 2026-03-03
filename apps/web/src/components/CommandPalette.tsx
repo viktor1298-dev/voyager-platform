@@ -1,17 +1,58 @@
 'use client'
 
 import { Command } from 'cmdk'
+import { Bot, Box, Clock, Key, Layers, Search, Server } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { navItems } from '@/config/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
-import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
-import { Key, Search } from 'lucide-react'
+import { trpc } from '@/lib/trpc'
+
+const MAX_RECENT = 5
+const RECENT_KEY = 'voyager-command-palette-recent'
+
+interface RecentItem {
+  label: string
+  path: string
+  type: string
+  timestamp: number
+}
+
+function getRecentItems(): RecentItem[] {
+  if (typeof window === 'undefined') return []
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
+
+function addRecentItem(item: Omit<RecentItem, 'timestamp'>) {
+  const items = getRecentItems().filter((r) => r.path !== item.path)
+  items.unshift({ ...item, timestamp: Date.now() })
+  localStorage.setItem(RECENT_KEY, JSON.stringify(items.slice(0, MAX_RECENT)))
+}
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const router = useRouter()
   const isAdmin = useIsAdmin()
+  const [recentItems, setRecentItems] = useState<RecentItem[]>([])
+
+  // Fetch resource data for fuzzy search
+  const clustersQuery = trpc.clusters.list.useQuery(undefined, { enabled: open, staleTime: 30000 })
+  const deploymentsQuery = trpc.deployments.list.useQuery(undefined, {
+    enabled: open,
+    staleTime: 30000,
+  })
+  const servicesQuery = trpc.services.list.useQuery(undefined, { enabled: open, staleTime: 30000 })
+
+  useEffect(() => {
+    if (open) {
+      setRecentItems(getRecentItems())
+    }
+  }, [open])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -25,7 +66,8 @@ export function CommandPalette() {
   }, [])
 
   const navigate = useCallback(
-    (path: string) => {
+    (path: string, label: string, type: string) => {
+      addRecentItem({ label, path, type })
       router.push(path)
       setOpen(false)
       setSearch('')
@@ -37,10 +79,62 @@ export function CommandPalette() {
     (item) => !('adminOnly' in item && item.adminOnly) || isAdmin,
   )
 
+  const resourceItems = useMemo(() => {
+    const items: { label: string; path: string; type: string; icon: typeof Server }[] = []
+
+    for (const c of clustersQuery.data ?? []) {
+      const name =
+        typeof c === 'object' && c !== null && 'name' in c
+          ? String((c as Record<string, unknown>).name)
+          : ''
+      const id =
+        typeof c === 'object' && c !== null && 'id' in c
+          ? String((c as Record<string, unknown>).id)
+          : ''
+      if (name && id)
+        items.push({ label: name, path: `/clusters/${id}`, type: 'Cluster', icon: Server })
+    }
+
+    for (const d of deploymentsQuery.data ?? []) {
+      const name =
+        typeof d === 'object' && d !== null && 'name' in d
+          ? String((d as Record<string, unknown>).name)
+          : ''
+      const id =
+        typeof d === 'object' && d !== null && 'id' in d
+          ? String((d as Record<string, unknown>).id)
+          : ''
+      if (name && id)
+        items.push({ label: name, path: `/deployments/${id}`, type: 'Deployment', icon: Box })
+    }
+
+    for (const s of servicesQuery.data ?? []) {
+      const name =
+        typeof s === 'object' && s !== null && 'name' in s
+          ? String((s as Record<string, unknown>).name)
+          : ''
+      const id =
+        typeof s === 'object' && s !== null && 'id' in s
+          ? String((s as Record<string, unknown>).id)
+          : ''
+      if (name && id)
+        items.push({ label: name, path: `/services/${id}`, type: 'Service', icon: Layers })
+    }
+
+    return items
+  }, [clustersQuery.data, deploymentsQuery.data, servicesQuery.data])
+
   if (!open) return null
+
+  const itemClass =
+    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors'
+  const headingClass =
+    '[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[var(--color-text-dim)] [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5'
 
   return (
     <div className="fixed inset-0 z-[100]" role="presentation">
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: backdrop dismiss */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: backdrop dismiss */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={() => setOpen(false)}
@@ -56,53 +150,102 @@ export function CommandPalette() {
             <Command.Input
               value={search}
               onValueChange={setSearch}
-              placeholder="Type a command or search…"
+              placeholder="Search commands, clusters, services…"
               className="w-full py-3 text-sm bg-transparent text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none"
             />
             <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
               ESC
             </kbd>
           </div>
-          <Command.List className="max-h-[300px] overflow-y-auto p-2">
+          <Command.List className="max-h-[400px] overflow-y-auto p-2">
             <Command.Empty className="py-6 text-center text-sm text-[var(--color-text-muted)]">
               No results found.
             </Command.Empty>
 
-            <Command.Group heading="Navigation" className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[var(--color-text-dim)] [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5">
+            {/* Recent Items */}
+            {recentItems.length > 0 && !search && (
+              <Command.Group heading="Recent" className={headingClass}>
+                {recentItems.map((item) => (
+                  <Command.Item
+                    key={`recent-${item.path}`}
+                    value={`Recent ${item.label} ${item.type}`}
+                    onSelect={() => navigate(item.path, item.label, item.type)}
+                    className={itemClass}
+                  >
+                    <Clock className="h-4 w-4 shrink-0 text-[var(--color-text-dim)]" />
+                    <span>{item.label}</span>
+                    <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
+                      {item.type}
+                    </span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {/* Navigation */}
+            <Command.Group heading="Navigation" className={headingClass}>
               {filteredItems.map((item) => {
                 const Icon = item.icon
                 return (
                   <Command.Item
                     key={item.id}
                     value={`Go to ${item.label}`}
-                    onSelect={() => navigate(item.id)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors"
+                    onSelect={() => navigate(item.id, item.label, 'Navigation')}
+                    className={itemClass}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     <span>{item.label}</span>
-                    <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">{item.id}</span>
+                    <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
+                      {item.id}
+                    </span>
                   </Command.Item>
                 )
               })}
               <Command.Item
                 value="Go to API Tokens"
-                onSelect={() => navigate('/api-tokens')}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors"
+                onSelect={() => navigate('/api-tokens', 'API Tokens', 'Navigation')}
+                className={itemClass}
               >
                 <Key className="h-4 w-4 shrink-0" />
                 <span>API Tokens</span>
-                <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">/api-tokens</span>
+                <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
+                  /api-tokens
+                </span>
               </Command.Item>
             </Command.Group>
 
-            <Command.Group heading="Actions" className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[var(--color-text-dim)] [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5">
+            {/* Resources — clusters, deployments, services */}
+            {resourceItems.length > 0 && (
+              <Command.Group heading="Resources" className={headingClass}>
+                {resourceItems.map((item) => {
+                  const RIcon = item.icon
+                  return (
+                    <Command.Item
+                      key={`resource-${item.path}`}
+                      value={`${item.type} ${item.label}`}
+                      onSelect={() => navigate(item.path, item.label, item.type)}
+                      className={itemClass}
+                    >
+                      <RIcon className="h-4 w-4 shrink-0" />
+                      <span>{item.label}</span>
+                      <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
+                        {item.type}
+                      </span>
+                    </Command.Item>
+                  )
+                })}
+              </Command.Group>
+            )}
+
+            {/* Actions */}
+            <Command.Group heading="Actions" className={headingClass}>
               <Command.Item
                 value="Toggle theme"
                 onSelect={() => {
                   document.querySelector<HTMLButtonElement>('[data-testid="theme-toggle"]')?.click()
                   setOpen(false)
                 }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors"
+                className={itemClass}
               >
                 🎨 Toggle Theme
               </Command.Item>
@@ -112,9 +255,17 @@ export function CommandPalette() {
                   setOpen(false)
                   document.dispatchEvent(new CustomEvent('voyager:show-shortcuts'))
                 }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors"
+                className={itemClass}
               >
                 ⌨️ Keyboard Shortcuts
+              </Command.Item>
+              <Command.Item
+                value="Open AI Assistant"
+                onSelect={() => navigate('/ai', 'AI Assistant', 'Navigation')}
+                className={itemClass}
+              >
+                <Bot className="h-4 w-4 shrink-0" />
+                <span>AI Assistant</span>
               </Command.Item>
             </Command.Group>
           </Command.List>

@@ -31,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <div className="h-0.5 w-full bg-gradient-to-r from-teal-500 to-indigo-500 fixed top-0 left-0 z-[200]" />
         <Providers>{children}</Providers>
       </body>
     </html>
