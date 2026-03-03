@@ -101,6 +101,135 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ---
 
+## 🎨 Phase K — UI/UX Audit Fixes (2026-03-03 — Opus UI/UX Expert Review)
+
+> **Source:** Full professional UI/UX audit by Opus 4.6 senior consultant
+> **Overall Score:** 5/10 — CONDITIONAL production ready
+> **Obsidian report:** `Research/voyager-ui-ux-audit-2026-03-03.md`
+> **Priority order:** P0 → P1 → P2 → Enhancements
+
+---
+
+### K0: 🔴 P0 — Blockers (Fix Before ANY External User Sees This)
+
+- [ ] **K0-001 — Settings Token Sprawl**
+  - **Problem:** 240+ test tokens in an unpaginated flat list — page is functionally broken, destroys trust
+  - **Fix:** Add pagination (10/page) + search + "Revoke All Test Tokens" bulk action
+  - **Also:** Clean up test tokens from DB (`DELETE WHERE name LIKE 'test-token-%' OR name LIKE 'list-test-%'`)
+  - **Reference:** Grafana Cloud API keys page
+
+- [ ] **K0-002 — Missing CPU/Memory Resource Data**
+  - **Problem:** K8s dashboard without CPU/memory = car without speedometer. #1 data point SREs need
+  - **Fix:** Add CPU/Memory % columns to Nodes table + Pods table; use progress bar cells
+  - **Reference:** Lens K8s IDE inline resource bars, Datadog utilization heatmaps
+
+- [ ] **K0-003 — Accessibility Violations (WCAG 2.2 AA)**
+  - **Problem:** Low contrast text in multiple places, no visible focus indicators, icon-only buttons without labels
+  - **Fix:**
+    - Audit all text colors against backgrounds (target ≥4.5:1 ratio)
+    - Add `aria-label` to all icon-only buttons (eye, trash, refresh, etc.)
+    - Add visible focus ring (`focus-visible:ring-2 ring-offset-2`) on all interactive elements
+    - Add skip-nav link
+  - **Reference:** WCAG 2.2 SC 1.4.3, 1.1.1, 2.4.1
+
+---
+
+### K1: 🟠 P1 — High Priority (Must Fix for Launch)
+
+- [ ] **K1-001 — Empty States Are Bare/Unhelpful**
+  - **Problem:** "No services found" / "No events found" — plain text, no context, no CTA. Dead ends for users
+  - **Fix:** Design contextual empty states for every page: illustration + explanation + action CTA
+  - **Affected pages:** Services, Health, Events, Anomalies (when empty), Pods
+  - **Reference:** Linear's setup guides, Vercel's Get Started flows
+
+- [ ] **K1-002 — /health Nav Link Goes to Raw JSON**
+  - **Problem:** "Health" in sidebar opens raw API JSON endpoint — broken navigation experience
+  - **Fix:** Create a proper Health dashboard UI page OR remove from sidebar nav + move API to `/api/health`
+
+- [ ] **K1-003 — No Loading/Skeleton States**
+  - **Problem:** Pages flash content with no transition — feels brittle and unpolished
+  - **Fix:** Add `<Skeleton>` (shadcn) for all tables and cards during loading; add shimmer animation
+  - **Reference:** Vercel shimmer pattern, shadcn Skeleton component
+
+- [ ] **K1-004 — AI Chat BYOK Lock Bug**
+  - **Problem:** AI chat shows "Locked (BYOK)" even when a key IS saved in Settings
+  - **Fix:** Debug BYOK key detection logic in AI assistant — key existence check is likely broken
+
+---
+
+### K2: 🟡 P2 — Medium Priority (Polish Sprint)
+
+- [ ] **K2-001 — Sidebar Navigation Overload**
+  - **Problem:** 18+ nav items with no grouping — cognitive overload, hard to find things
+  - **Fix:** Group into collapsible sections: `Observability` | `Infrastructure` | `Configuration` | `Access Control`
+
+- [ ] **K2-002 — Single-Tone Dark Mode (No Depth Layers)**
+  - **Problem:** All surfaces same shade of dark — no visual hierarchy between background, cards, overlays
+  - **Fix:** Implement 3-layer dark palette:
+    - `background: #0a0a0f` (page)
+    - `surface: #14141f` (cards)
+    - `elevated: #1e1e2e` (modals, dropdowns)
+  - **Reference:** Linear's dark mode depth system
+
+- [ ] **K2-003 — Table Rows Too Tall + No Hover States**
+  - **Problem:** Excessive row padding wastes vertical space; rows look static (no click affordance)
+  - **Fix:** Reduce row padding by ~25%; add `hover:bg-muted/40 cursor-pointer` on clickable rows; add colored left-border for status
+
+- [ ] **K2-004 — Stat Cards Lack Visual Weight + Trends**
+  - **Problem:** 5 identical flat cards feel lifeless — no sparklines, no trend deltas, no urgency for critical states
+  - **Fix:** Add mini sparkline charts (recharts); add trend arrow with delta (e.g. "+2 pods"); animate critical anomaly count (pulse)
+  - **Reference:** Datadog metric cards, Vercel deployment stats
+
+- [ ] **K2-005 — No Pod Detail Slide-Over Panel**
+  - **Problem:** Clicking a pod row does nothing — no way to see logs, describe, or resource usage inline
+  - **Fix:** Implement slide-over drawer on pod row click: show pod describe, container list, last 50 log lines
+
+- [ ] **K2-006 — Notification Bell Has No Dropdown**
+  - **Problem:** Bell icon shows "9" badge but clicking does nothing
+  - **Fix:** Implement notification dropdown showing recent alerts/events; link to alert detail
+
+- [ ] **K2-007 — Status Indicator Dots Too Small**
+  - **Problem:** 4-5px status dots are hard to scan quickly, especially for health status at a glance
+  - **Fix:** Increase to 8-10px; add text label alongside ("Running", "Error", "Degraded")
+
+---
+
+### K3: 💡 Enhancements (Strategic — 2+ Weeks)
+
+- [ ] **K3-001 — Full Command Palette (⌘K)**
+  - Full Raycast/Linear-style: fuzzy search for clusters, pods, services, deployments, quick actions, recent
+  - Button exists but unclear if functional — implement properly
+
+- [ ] **K3-002 — Real-Time Pod Log Streaming**
+  - Live tail logs from pod detail drawer (WebSocket/SSE)
+  - Include: log level filtering, search, auto-scroll toggle
+
+- [ ] **K3-003 — Cluster Health Time-Series Charts**
+  - Sparklines in stat cards and cluster cards showing 24h trends
+  - Full chart view in cluster detail (CPU/memory over time)
+  - Source: existing metricsHistory DB table from IP2
+
+- [ ] **K3-004 — Inline Contextual AI Suggestions**
+  - Instead of separate AI page — embed suggestions inline:
+    - "Pod has restarted 5 times → View logs? Ask AI?"
+    - Anomaly card → "Explain this anomaly"
+  - AI page remains for free-form chat
+
+- [ ] **K3-005 — Pod Grouping by Namespace**
+  - Cluster detail pods table: group by namespace with collapsible sections
+  - Shows pod count per namespace as header
+
+- [ ] **K3-006 — Global Cluster Context Sync**
+  - Cluster selector in top bar should propagate to ALL pages (Services, Logs, etc.)
+  - Currently each page appears to have independent cluster selection
+
+- [ ] **K3-007 — Gradient Accent + Visual Brand Identity**
+  - Add top-of-page gradient accent line (teal→purple, referencing Voyager brand)
+  - Consider subtle glassmorphism on sidebar (`backdrop-blur-xl`)
+  - Branded loading animation on initial page load
+
+---
+
 ## 🎨 UI/UX Issues — Phase F (Visual Polish)
 > Source: Vik visual review 2026-02-27
 > Priority: Medium (non-blocking, but affects UX quality)
