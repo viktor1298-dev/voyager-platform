@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { login } from './helpers';
 
 test.describe('Command Palette (⌘K)', () => {
@@ -6,7 +6,7 @@ test.describe('Command Palette (⌘K)', () => {
     await login(page);
   });
 
-  const getPalette = (page: any) =>
+  const getPalette = (page: Page) =>
     page.locator('[cmdk-root]').filter({ has: page.locator('[cmdk-input]') }).first();
 
   test('Ctrl+K opens command palette', async ({ page }) => {
@@ -54,5 +54,40 @@ test.describe('Command Palette (⌘K)', () => {
 
     await page.keyboard.press('Escape');
     await expect(palette).toBeVisible();
+  });
+
+  test('resource items (clusters) appear in palette results', async ({ page }) => {
+    await page.keyboard.press('Control+k');
+    const palette = getPalette(page);
+    await expect(palette).toBeVisible({ timeout: 3000 });
+
+    // Resource items section should show clusters
+    const clusterItem = palette.locator('[cmdk-item], [role="option"]').filter({ hasText: /Cluster/i }).first();
+    await expect(clusterItem).toBeVisible({ timeout: 5000 });
+  });
+
+  test('navigating via palette adds item to recent items', async ({ page }) => {
+    await page.keyboard.press('Control+k');
+    const palette = getPalette(page);
+    await expect(palette).toBeVisible({ timeout: 3000 });
+
+    // Select and navigate to first resource item
+    const firstItem = palette.locator('[cmdk-item], [role="option"]').first();
+    await expect(firstItem).toBeVisible({ timeout: 5000 });
+    const itemText = await firstItem.textContent();
+    await firstItem.click();
+
+    // Re-open palette and check recent items section
+    await page.keyboard.press('Control+k');
+    await expect(palette).toBeVisible({ timeout: 3000 });
+
+    const recentSection = palette.locator('text=Recent').first();
+    await expect(recentSection).toBeVisible({ timeout: 3000 });
+
+    // The visited item should appear in recent items
+    if (itemText) {
+      const recentItem = palette.locator('[cmdk-item], [role="option"]').filter({ hasText: itemText.trim().substring(0, 20) }).first();
+      await expect(recentItem).toBeVisible({ timeout: 3000 });
+    }
   });
 });

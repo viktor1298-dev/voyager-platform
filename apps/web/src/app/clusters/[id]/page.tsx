@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { AiContextCard } from '@/components/AiContextCard'
 import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
@@ -627,6 +628,15 @@ export default function ClusterDetailPage() {
           ))}
         </div>
       </div>
+
+      {/* AI Context Card for unhealthy clusters */}
+      {(normalizedStatus === 'error' || normalizedStatus === 'degraded') && (
+        <AiContextCard
+          clusterName={cluster.name}
+          clusterId={resolvedId}
+          healthStatus={normalizedStatus as 'error' | 'degraded'}
+        />
+      )}
 
       {/* Nodes Table — DataTable */}
       <div className="mb-6">

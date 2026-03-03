@@ -13,22 +13,24 @@ test.describe('BYOK key flow', () => {
     const cookies = await page.context().cookies()
     const sessionCookie = cookies.find((c) => c.name === 'better-auth.session_token')
     if (sessionCookie) {
-      try {
-        await page.evaluate(
-          async ({ url, cookie }) => {
-            await fetch(`${url}/trpc/aiKeys.delete`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Cookie: `better-auth.session_token=${cookie}`,
-              },
-              body: JSON.stringify({}),
-            })
-          },
-          { url: baseUrl, cookie: sessionCookie.value },
-        )
-      } catch {
-        // Key may not exist — that's fine
+      for (const provider of ['openai', 'claude']) {
+        try {
+          await page.evaluate(
+            async ({ url, cookie, prov }) => {
+              await fetch(`${url}/trpc/aiKeys.delete`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Cookie: `better-auth.session_token=${cookie}`,
+                },
+                body: JSON.stringify({ provider: prov }),
+              })
+            },
+            { url: baseUrl, cookie: sessionCookie.value, prov: provider },
+          )
+        } catch {
+          // Key may not exist — that's fine
+        }
       }
     }
 
@@ -41,6 +43,9 @@ test.describe('BYOK key flow', () => {
 
   test('Settings BYOK actions keep UX clear for saved key vs raw key', async ({ page }) => {
     await page.goto('/settings')
+    // Navigate to AI Configuration tab where BYOK settings live
+    await page.getByRole('tab', { name: 'AI Configuration' }).click()
+    await page.waitForTimeout(300)
 
     const testButton = page.getByRole('button', { name: /test (new|saved) key/i })
     const saveButton = page.getByRole('button', { name: /save key/i })
@@ -59,6 +64,9 @@ test.describe('BYOK key flow', () => {
 
   test('Settings BYOK test/save use backend response (not route unavailable)', async ({ page }) => {
     await page.goto('/settings')
+    // Navigate to AI Configuration tab where BYOK settings live
+    await page.getByRole('tab', { name: 'AI Configuration' }).click()
+    await page.waitForTimeout(300)
 
     const apiKeyInput = page.getByLabel(/api key/i)
     const testButton = page.getByTestId('byok-test')

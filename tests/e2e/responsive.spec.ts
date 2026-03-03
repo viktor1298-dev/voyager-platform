@@ -71,6 +71,9 @@ test.describe('Responsive — Mobile Viewport', () => {
   test('should render BYOK actions as full-width touch targets on mobile', async ({ page }) => {
     await login(page);
     await page.goto('/settings');
+    // Navigate to AI Configuration tab where BYOK settings live
+    await page.getByRole('tab', { name: 'AI Configuration' }).click();
+    await page.waitForTimeout(300);
 
     const actions = page.getByTestId('byok-actions');
     const saveBtn = page.getByTestId('byok-save');
