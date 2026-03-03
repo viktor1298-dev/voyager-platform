@@ -68,15 +68,6 @@
 }
 
 :root {
-<<<<<<< HEAD
-  --color-bg-primary: #0d0f19;
-  --color-bg-secondary: #141825;
-  --color-bg-card: #1a1e2e;
-  --color-bg-card-hover: #1e2235;
-  --background: #0a0a0f;
-  --surface: #14141f;
-  --elevated: #1e1e2e;
-=======
   /* K2-002: Dark mode 3-layer depth system */
   --background: #0a0a0f;
   --surface: #14141f;
@@ -85,7 +76,6 @@
   --color-bg-secondary: #14141f;
   --color-bg-card: #14141f;
   --color-bg-card-hover: #1e1e2e;
->>>>>>> worktree/dima
   --color-border: rgba(255, 255, 255, 0.06);
   --color-border-hover: rgba(255, 255, 255, 0.15);
   --color-text-primary: #e8ecf4;

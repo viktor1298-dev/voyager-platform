@@ -465,14 +465,10 @@ function DashboardContent() {
                         : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]',
                     )}
                   >
-<<<<<<< HEAD
                     <span
-                      className="h-1.5 w-1.5 rounded-full shrink-0"
+                      className="h-2.5 w-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: color }}
                     />
-=======
-                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
->>>>>>> worktree/dima
                     <span className="capitalize">{filter}</span>
                     <span className="tabular-nums text-[var(--color-table-meta)]">
                       {envCounts[filter]}
@@ -560,14 +556,10 @@ function DashboardContent() {
                       return (
                         <div key={healthGroup} className="space-y-2">
                           <div className="flex items-center gap-2">
-<<<<<<< HEAD
                             <span
-                              className="h-1.5 w-1.5 rounded-full"
+                              className="h-2.5 w-2.5 rounded-full"
                               style={{ backgroundColor: healthMeta.dotColor }}
                             />
-=======
-                            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: healthMeta.dotColor }} />
->>>>>>> worktree/dima
                             <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--color-text-dim)]">
                               {healthMeta.label} ({clusters.length})
                             </span>
@@ -921,10 +913,7 @@ function SummaryCard({
   gradient,
   isLoading,
   trend,
-<<<<<<< HEAD
-=======
   emphasized,
->>>>>>> worktree/dima
 }: {
   icon: React.ReactNode
   label: string
@@ -932,12 +921,8 @@ function SummaryCard({
   color: string
   gradient: string
   isLoading?: boolean
-<<<<<<< HEAD
-  trend?: number | null
-=======
-  trend?: { delta: number; label?: string }
+  trend?: number | { delta: number; label?: string } | null
   emphasized?: boolean
->>>>>>> worktree/dima
 }) {
   return (
     <div
@@ -962,44 +947,31 @@ function SummaryCard({
         {isLoading ? (
           <SkeletonText width="2.5rem" height="1.5rem" />
         ) : (
-<<<<<<< HEAD
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-baseline gap-1.5">
             <div
               className={cn(
                 'text-xl font-extrabold tracking-tight leading-tight animate-count-up',
                 gradient !== 'none' && 'gradient-text',
                 gradient === 'none' && 'opacity-50',
               )}
-=======
-          <div className="flex items-baseline gap-1.5">
-            <div
-              className={cn('text-xl font-extrabold tracking-tight leading-tight animate-count-up', gradient !== 'none' && 'gradient-text', gradient === 'none' && 'opacity-50')}
->>>>>>> worktree/dima
               style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
             >
               {value}
             </div>
-<<<<<<< HEAD
-            {trend != null && trend !== 0 && (
-              <span
-                className={cn(
-                  'text-[10px] font-bold tabular-nums',
-                  trend > 0 ? 'text-emerald-400' : 'text-red-400',
-                )}
-              >
-                {trend > 0 ? `▲ +${trend}` : `▼ ${trend}`}
-=======
-            {trend && trend.delta !== 0 && (
-              <span
-                className={cn(
-                  'text-[10px] font-semibold font-mono',
-                  trend.delta > 0 ? 'text-red-400' : 'text-emerald-400',
-                )}
-              >
-                {trend.delta > 0 ? `▲ +${trend.delta}` : `▼ ${trend.delta}`}
->>>>>>> worktree/dima
-              </span>
-            )}
+            {trend != null && (() => {
+              const delta = typeof trend === 'number' ? trend : trend.delta
+              if (delta === 0) return null
+              return (
+                <span
+                  className={cn(
+                    'text-[10px] font-semibold font-mono tabular-nums',
+                    delta > 0 ? 'text-red-400' : 'text-emerald-400',
+                  )}
+                >
+                  {delta > 0 ? `▲ +${delta}` : `▼ ${delta}`}
+                </span>
+              )
+            })()}
           </div>
         )}
       </div>
