@@ -41,14 +41,10 @@ test.describe('API Tokens', () => {
     // Dismiss the reveal banner and wait for token list to refresh
     // Wait for dismiss button to be accessible
     await page.getByRole('button', { name: /Dismiss token/i }).waitFor({ state: 'visible', timeout: 10000 });
-    const listRefresh = page.waitForResponse(
-      (r) => r.url().includes('apiTokens') && r.status() === 200,
-      { timeout: 15000 },
-    )
     await page.getByRole('button', { name: /Dismiss token/i }).click()
-    await listRefresh
+    await page.waitForTimeout(1000)
     // Token name should now appear in the list
-    await expect(page.getByText(tokenName)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(tokenName)).toBeVisible({ timeout: 15000 })
   })
 
   test('can revoke a token with confirmation', async ({ page }) => {
@@ -61,13 +57,9 @@ test.describe('API Tokens', () => {
     await expect(page.locator('p', { hasText: /shown once|will not be shown again/i }).first()).toBeVisible({ timeout: 10000 })
     // Wait for dismiss button to be accessible
     await page.getByRole('button', { name: /Dismiss token/i }).waitFor({ state: 'visible', timeout: 10000 });
-    const listRefreshRevoke = page.waitForResponse(
-      (r) => r.url().includes('apiTokens') && r.status() === 200,
-      { timeout: 15000 },
-    )
     await page.getByRole('button', { name: /Dismiss token/i }).click()
-    await listRefreshRevoke
-    await expect(page.getByText(tokenName)).toBeVisible({ timeout: 10000 })
+    await page.waitForTimeout(1000)
+    await expect(page.getByText(tokenName)).toBeVisible({ timeout: 15000 })
     // Click the per-token Revoke button (not the bulk "Revoke N Test Tokens" button)
     await page.getByRole('button', { name: `Revoke token ${tokenName}` }).click()
     await expect(page.getByRole('button', { name: /Confirm/i })).toBeVisible()

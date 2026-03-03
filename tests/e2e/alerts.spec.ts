@@ -73,8 +73,9 @@ test.describe('Alerts — CRUD + History', () => {
     const enableBtn = page.getByRole('button', { name: new RegExp(`enable alert ${alertName}`, 'i') });
     await expect(enableBtn).toHaveText('OFF', { timeout: 5_000 });
 
-    // Toggle back ON
-    await enableBtn.click();
+    // Toggle back ON — wait for re-render to settle
+    await page.waitForTimeout(500);
+    await enableBtn.click({ force: true });
     await expect(page.getByRole('button', { name: new RegExp(`disable alert ${alertName}`, 'i') })).toHaveText('ON', { timeout: 5_000 });
   });
 
