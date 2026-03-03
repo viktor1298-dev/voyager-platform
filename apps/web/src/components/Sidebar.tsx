@@ -4,12 +4,16 @@ import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { APP_VERSION } from '@/config/constants'
-import { getNavGroups, navItems } from '@/config/navigation'
+import { navItems, getNavGroups } from '@/config/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
 import { trpc } from '@/lib/trpc'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 
 export function Sidebar({
   collapsed,
@@ -110,12 +114,16 @@ function SidebarContent({
   const filteredItems = navItems.filter(
     (item) => !('adminOnly' in item && item.adminOnly) || isAdmin,
   )
+  const navGroups = getNavGroups(filteredItems)
 
-  const groups = getNavGroups(filteredItems)
+  const { data: unacknowledgedCount = 0 } = trpc.alerts.unacknowledgedCount.useQuery(undefined, { refetchInterval: 30000 })
 
-  const { data: unacknowledgedCount = 0 } = trpc.alerts.unacknowledgedCount.useQuery(undefined, {
-    refetchInterval: 30000,
-  })
+  // Track collapsed state per group — all open by default
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({})
+
+  const toggleGroup = (key: string) => {
+    setCollapsedGroups((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
 
   const renderNavItem = (item: (typeof navItems)[number]) => {
     const active = isActive(item.id)
@@ -139,10 +147,7 @@ function SidebarContent({
         <Icon className="sidebar-icon h-4 w-4 shrink-0" />
         {showLabels && <span className="sidebar-label text-[13px] font-medium">{item.label}</span>}
         {showAlertsBadge && (
-          <span
-            data-testid="alerts-badge"
-            className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1"
-          >
+          <span data-testid="alerts-badge" className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
             {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
           </span>
         )}
@@ -153,11 +158,42 @@ function SidebarContent({
   return (
     <div className="flex flex-col gap-1 px-2 flex-1 min-h-0 overflow-y-auto">
       {showLabels ? (
-        groups.map((group) => (
-          <SidebarGroup key={group.key} group={group} renderNavItem={renderNavItem} />
-        ))
+        <>
+          {navGroups.map((group) => {
+            const isOpen = !collapsedGroups[group.key]
+            const hasActiveItem = group.items.some((item) => isActive(item.id))
+            return (
+              <Collapsible key={group.key} open={isOpen} onOpenChange={() => toggleGroup(group.key)}>
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center justify-between w-full px-2 py-1.5 mt-1 rounded-md text-[11px] uppercase tracking-widest font-mono font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.03] transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span>{group.emoji}</span>
+                      <span>{group.label}</span>
+                      {!isOpen && hasActiveItem && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+                      )}
+                    </span>
+                    <ChevronDown
+                      className={`h-3 w-3 transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
+                    />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <nav className="flex flex-col gap-0.5 mt-0.5">
+                    {group.items.map(renderNavItem)}
+                  </nav>
+                </CollapsibleContent>
+              </Collapsible>
+            )
+          })}
+        </>
       ) : (
-        <nav className="flex flex-col gap-1">{filteredItems.map(renderNavItem)}</nav>
+        <nav className="flex flex-col gap-1">
+          {filteredItems.map(renderNavItem)}
+        </nav>
       )}
 
       {showLabels && clusters.length > 0 && (
@@ -188,32 +224,5 @@ function SidebarContent({
         </div>
       )}
     </div>
-  )
-}
-
-function SidebarGroup({
-  group,
-  renderNavItem,
-}: {
-  group: { key: string; label: string; emoji: string; items: (typeof navItems)[number][] }
-  renderNavItem: (item: (typeof navItems)[number]) => React.ReactNode
-}) {
-  const [open, setOpen] = useState(true)
-
-  return (
-    <Collapsible open={open} onOpenChange={setOpen} className="mt-1">
-      <CollapsibleTrigger className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-white/[0.04] transition-colors">
-        <span className="text-[12px]">{group.emoji}</span>
-        <span className="text-[11px] uppercase tracking-widest font-mono font-bold text-slate-700 dark:text-slate-100 flex-1 text-left">
-          {group.label}
-        </span>
-        <ChevronDown
-          className={`h-3 w-3 text-[var(--color-text-dim)] transition-transform ${open ? '' : '-rotate-90'}`}
-        />
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <nav className="flex flex-col gap-0.5 mt-0.5">{group.items.map(renderNavItem)}</nav>
-      </CollapsibleContent>
-    </Collapsible>
   )
 }

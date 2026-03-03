@@ -1,10 +1,10 @@
 'use client'
 
-import { Bell, X } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { useNotificationsStore } from '@/stores/notifications'
+import { Bell, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 interface KubeEvent {
   id: string
@@ -36,7 +36,10 @@ export function NotificationsPanel() {
   const { lastReadAt: lastReadTimestamp, setLastRead } = useNotificationsStore()
   const panelRef = useRef<HTMLDivElement>(null)
 
-  const eventsQuery = trpc.events.list.useQuery({ limit: 50 }, { refetchInterval: 30000 })
+  const eventsQuery = trpc.events.list.useQuery(
+    { limit: 50 },
+    { refetchInterval: 30000 },
+  )
 
   const alerts = ((eventsQuery.data ?? []) as KubeEvent[]).filter((e) => e.kind === 'Warning')
   const unreadCount = lastReadTimestamp
@@ -132,17 +135,17 @@ export function NotificationsPanel() {
                   </div>
                 </div>
               ))}
-              <div className="border-t border-white/10 px-4 py-2.5">
-                <Link
-                  href="/alerts"
-                  onClick={() => setOpen(false)}
-                  className="text-[11px] font-medium text-[var(--color-accent)] hover:underline"
-                >
-                  View all →
-                </Link>
-              </div>
             </div>
           )}
+          <div className="border-t border-white/10 px-4 py-2.5">
+            <Link
+              href="/alerts"
+              onClick={() => setOpen(false)}
+              className="text-[11px] text-[var(--color-accent)] hover:underline font-medium"
+            >
+              View all alerts →
+            </Link>
+          </div>
         </div>
       )}
     </div>

@@ -68,6 +68,7 @@
 }
 
 :root {
+<<<<<<< HEAD
   --color-bg-primary: #0d0f19;
   --color-bg-secondary: #141825;
   --color-bg-card: #1a1e2e;
@@ -75,6 +76,16 @@
   --background: #0a0a0f;
   --surface: #14141f;
   --elevated: #1e1e2e;
+=======
+  /* K2-002: Dark mode 3-layer depth system */
+  --background: #0a0a0f;
+  --surface: #14141f;
+  --elevated: #1e1e2e;
+  --color-bg-primary: #0a0a0f;
+  --color-bg-secondary: #14141f;
+  --color-bg-card: #14141f;
+  --color-bg-card-hover: #1e1e2e;
+>>>>>>> worktree/dima
   --color-border: rgba(255, 255, 255, 0.06);
   --color-border-hover: rgba(255, 255, 255, 0.15);
   --color-text-primary: #e8ecf4;
@@ -122,7 +133,7 @@
   --watermark-opacity: 1;
 
   /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg: rgba(20, 20, 31, 0.85);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-border-hover: rgba(255, 255, 255, 0.12);
   --glass-blur: 12px;
@@ -294,6 +305,15 @@ h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
+}
+
+/* Sheet slide-in animation */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
 }
 
 /* Respect prefers-reduced-motion */

@@ -1,0 +1,214 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e6]: VOYAGER
+    - generic [ref=e7]:
+      - combobox "Active cluster" [ref=e9]:
+        - option "Select Cluster" [selected]
+        - option "⚪ prod-cluster-eks"
+        - option "🟢 vik-minikube"
+        - option "🟢 test-cluster-minikube"
+      - generic [ref=e10]:
+        - generic [ref=e11]: 0%
+        - generic [ref=e12]: CPU
+    - generic [ref=e13]:
+      - generic [ref=e14]: Voyager Admin
+      - button "Open command palette" [ref=e15]:
+        - img [ref=e16]
+        - generic [ref=e19]: ⌘K
+      - 'button "Current theme: Dark. Click to switch." [ref=e20]':
+        - img [ref=e21]
+      - button "2" [ref=e24]:
+        - img [ref=e25]
+        - generic [ref=e28]: "2"
+      - button "Logout" [ref=e29]:
+        - img [ref=e30]
+        - generic [ref=e33]: Logout
+      - generic "Connected · Synced just now" [ref=e34]:
+        - generic [ref=e36]: Live
+  - complementary [ref=e37]:
+    - generic [ref=e38]:
+      - navigation [ref=e39]:
+        - link "Dashboard" [ref=e40] [cursor=pointer]:
+          - /url: /
+          - img [ref=e41]
+          - generic [ref=e46]: Dashboard
+        - link "Clusters" [ref=e47] [cursor=pointer]:
+          - /url: /clusters
+          - img [ref=e48]
+          - generic [ref=e51]: Clusters
+        - link "Shared Dashboards" [ref=e52] [cursor=pointer]:
+          - /url: /dashboards
+          - img [ref=e53]
+          - generic [ref=e58]: Shared Dashboards
+        - link "Health" [ref=e59] [cursor=pointer]:
+          - /url: /health
+          - img [ref=e60]
+          - generic [ref=e63]: Health
+        - link "Services" [ref=e64] [cursor=pointer]:
+          - /url: /services
+          - img [ref=e65]
+          - generic [ref=e69]: Services
+        - link "Namespaces" [ref=e70] [cursor=pointer]:
+          - /url: /namespaces
+          - img [ref=e71]
+          - generic [ref=e76]: Namespaces
+        - link "Deployments" [ref=e77] [cursor=pointer]:
+          - /url: /deployments
+          - img [ref=e78]
+          - generic [ref=e81]: Deployments
+        - link "Events" [ref=e82] [cursor=pointer]:
+          - /url: /events
+          - img [ref=e83]
+          - generic [ref=e85]: Events
+        - link "Alerts" [ref=e86] [cursor=pointer]:
+          - /url: /alerts
+          - img [ref=e87]
+          - generic [ref=e90]: Alerts
+        - link "Anomalies" [ref=e91] [cursor=pointer]:
+          - /url: /anomalies
+          - img [ref=e92]
+          - generic [ref=e94]: Anomalies
+        - link "Logs" [ref=e95] [cursor=pointer]:
+          - /url: /logs
+          - img [ref=e96]
+          - generic [ref=e99]: Logs
+        - link "AI Assistant" [ref=e100] [cursor=pointer]:
+          - /url: /ai
+          - img [ref=e101]
+          - generic [ref=e104]: AI Assistant
+        - link "Feature Flags" [ref=e105] [cursor=pointer]:
+          - /url: /features
+          - img [ref=e106]
+          - generic [ref=e108]: Feature Flags
+        - link "Webhooks" [ref=e109] [cursor=pointer]:
+          - /url: /webhooks
+          - img [ref=e110]
+          - generic [ref=e114]: Webhooks
+        - link "Users" [ref=e115] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e116]
+          - generic [ref=e121]: Users
+        - link "Audit Log" [ref=e122] [cursor=pointer]:
+          - /url: /audit
+          - img [ref=e123]
+          - generic [ref=e126]: Audit Log
+        - link "Settings" [ref=e127] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e128]
+          - generic [ref=e131]: Settings
+      - generic [ref=e132]:
+        - paragraph [ref=e133]: Autoscaling
+        - navigation [ref=e134]:
+          - link "Karpenter" [ref=e135] [cursor=pointer]:
+            - /url: /karpenter
+            - img [ref=e136]
+            - generic [ref=e140]: Karpenter
+      - generic [ref=e141]:
+        - paragraph [ref=e142]: Access Control
+        - navigation [ref=e143]:
+          - link "Teams" [ref=e144] [cursor=pointer]:
+            - /url: /teams
+            - img [ref=e145]
+            - generic [ref=e149]: Teams
+          - link "Permissions" [ref=e150] [cursor=pointer]:
+            - /url: /permissions
+            - img [ref=e151]
+            - generic [ref=e153]: Permissions
+      - generic [ref=e154]:
+        - paragraph [ref=e155]: Clusters
+        - generic [ref=e156]:
+          - link "prod-cluster-eks" [ref=e157] [cursor=pointer]:
+            - /url: /clusters
+            - generic [ref=e159]: prod-cluster-eks
+          - link "vik-minikube" [ref=e160] [cursor=pointer]:
+            - /url: /clusters
+            - generic [ref=e162]: vik-minikube
+          - link "test-cluster-minikube" [ref=e163] [cursor=pointer]:
+            - /url: /clusters
+            - generic [ref=e165]: test-cluster-minikube
+    - button [ref=e166]:
+      - img [ref=e167]
+    - generic [ref=e170]: Voyager v0.1.0
+  - main [ref=e171]:
+    - generic [ref=e173]:
+      - generic [ref=e175]: Online
+      - generic "0 users online" [ref=e176]: "0"
+    - generic [ref=e179]:
+      - generic [ref=e180]:
+        - navigation [ref=e181]:
+          - link "Dashboard" [ref=e183] [cursor=pointer]:
+            - /url: /
+            - img [ref=e184]
+          - generic [ref=e187]:
+            - img [ref=e188]
+            - generic "ai" [ref=e190]
+        - generic [ref=e191]:
+          - generic [ref=e192]: Cluster
+          - combobox "Cluster" [ref=e193]:
+            - option "prod-cluster-eks" [selected]
+            - option "vik-minikube"
+            - option "test-cluster-minikube"
+      - generic [ref=e194]:
+        - heading "AI Assistant" [level=1] [ref=e195]
+        - paragraph [ref=e196]: "Read-only cluster intelligence: health score, recommendations, and event reasoning."
+        - paragraph [ref=e197]: "Live health score for prod-cluster-eks: 100/100"
+        - generic [ref=e198]:
+          - button "Analyze Health" [ref=e199]:
+            - img [ref=e200]
+            - text: Analyze Health
+          - button "Show Recommendations" [ref=e204]:
+            - img [ref=e205]
+            - text: Show Recommendations
+          - button "Explain Events" [ref=e207]:
+            - img [ref=e208]
+            - text: Explain Events
+      - generic [ref=e220]:
+        - generic [ref=e221]:
+          - generic [ref=e222]:
+            - generic [ref=e223]: 🟢 FREE Tier Analytics
+            - paragraph [ref=e224]: Health score, snapshot insights, and recommendations are always available.
+          - generic [ref=e225]:
+            - generic [ref=e226]:
+              - heading "AI Chat" [level=2] [ref=e227]
+              - generic [ref=e228]: "Cluster: prod-cluster-eks"
+            - paragraph [ref=e229]: "Read-only assistant: provides analysis and guidance only, never modifies cluster resources."
+            - generic [ref=e232]:
+              - generic [ref=e233]: 🤖
+              - paragraph [ref=e235]: Hi, I am Voyager AI Assistant 🤖. Ask me anything about prod-cluster-eks health, events, and recommendations.
+            - generic [ref=e236]:
+              - textbox "Ask AI assistant" [ref=e237]:
+                - /placeholder: Ask about health, anomalies, recommendations...
+              - button "Send" [disabled] [ref=e238]:
+                - img [ref=e239]
+                - text: Send
+        - generic [ref=e242]:
+          - generic [ref=e243]:
+            - heading "Recommendations" [level=2] [ref=e244]
+            - 'button "Sort: High → Low" [ref=e245]':
+              - img [ref=e246]
+              - text: "Sort: High → Low"
+          - article [ref=e250]:
+            - generic [ref=e251]:
+              - heading "Cluster appears idle" [level=3] [ref=e252]
+              - generic [ref=e253]:
+                - img [ref=e254]
+                - text: Info
+            - paragraph [ref=e256]: No meaningful events were recorded in the last hour.
+            - paragraph [ref=e257]: "Action: If this is unexpected, validate event pipeline and workload activity."
+            - generic [ref=e258]:
+              - button "Dismiss" [ref=e259]:
+                - img [ref=e260]
+                - text: Dismiss
+              - button "Mark Resolved" [ref=e263]:
+                - img [ref=e264]
+                - text: Mark Resolved
+  - region "Notifications alt+T"
+  - alert [ref=e267]
+```

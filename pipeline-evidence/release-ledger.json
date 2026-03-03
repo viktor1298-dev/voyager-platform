@@ -292,5 +292,15 @@
     "helm_revision": 67,
     "status": "deployed",
     "health": "ok"
+  },
+  {
+    "version": "v169",
+    "commit": "be64440",
+    "timestamp": "2026-03-03T21:26:57.085072",
+    "status": "deployed",
+    "health": "ok (/health 200)",
+    "login": "ok (token returned)",
+    "helmRevision": 69,
+    "notes": "QA fix loop - metrics endpoints, favicon, health route fixes"
   }
 ]

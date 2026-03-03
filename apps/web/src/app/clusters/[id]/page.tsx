@@ -2,7 +2,13 @@
 
 import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
+<<<<<<< HEAD
 import { ArrowLeft, Box, ChevronDown, Cpu, FileText, Globe, Server, Trash2 } from 'lucide-react'
+=======
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { PodDetailSheet } from '@/components/PodDetailSheet'
+import { ArrowLeft, Server, Box, Globe, Cpu, Trash2 } from 'lucide-react'
+>>>>>>> worktree/dima
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -723,12 +729,141 @@ export default function ClusterDetailPage() {
               Pods ({podsQuery.data?.length ?? 0})
             </h2>
           </div>
+<<<<<<< HEAD
           <PodsGroupedByNamespace
             pods={(podsQuery.data ?? []).map((p, i) => ({ id: `pod-${i}`, ...p }))}
             isLoading={podsQuery.isLoading}
             isAdmin={isAdmin === true}
             onDeletePod={setDeletePodTarget}
             onSelectPod={setSelectedPod}
+=======
+          <DataTable
+            data={(podsQuery.data ?? []).map((p, i) => ({ id: `pod-${i}`, ...p }))}
+            columns={[
+              {
+                accessorKey: 'name',
+                header: 'Name',
+                cell: ({ getValue }) => (
+                  <span className="font-medium text-[var(--color-text-primary)] text-[13px] font-mono">{getValue<string>()}</span>
+                ),
+              },
+              {
+                accessorKey: 'namespace',
+                header: 'Namespace',
+                cell: ({ getValue }) => (
+                  <span className="text-[var(--color-text-muted)] text-[12px] font-mono">{getValue<string>()}</span>
+                ),
+              },
+              {
+                accessorKey: 'status',
+                header: 'Status',
+                cell: ({ getValue }) => {
+                  const status = getValue<string>()
+                  const color = status === 'Running' ? 'bg-[var(--color-status-active)]' : status === 'Pending' ? 'bg-[var(--color-status-warning)]' : 'bg-[var(--color-status-error)]'
+                  return (
+                    <span className="inline-flex items-center gap-2">
+                      <span className={`h-2.5 w-2.5 rounded-full ${color}`} />
+                      <span className="text-[var(--color-text-secondary)] text-[13px] font-medium">{status}</span>
+                    </span>
+                  )
+                },
+              },
+              {
+                accessorKey: 'cpuMillis',
+                header: 'CPU',
+                cell: ({ row }) => {
+                  const v = row.original.cpuMillis
+                  const pct = row.original.cpuPercent
+                  if (v == null) return <span className="text-[var(--color-text-dim)] text-[11px]">—</span>
+                  return (
+                    <div className="flex items-center gap-2 min-w-[80px]">
+                      {pct != null && <Progress value={Math.min(pct, 100)} className="h-1.5 flex-1" />}
+                      <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums">{v}m</span>
+                    </div>
+                  )
+                },
+              },
+              {
+                accessorKey: 'memoryMi',
+                header: 'Memory',
+                cell: ({ row }) => {
+                  const v = row.original.memoryMi
+                  const pct = row.original.memoryPercent
+                  if (v == null) return <span className="text-[var(--color-text-dim)] text-[11px]">—</span>
+                  return (
+                    <div className="flex items-center gap-2 min-w-[80px]">
+                      {pct != null && <Progress value={Math.min(pct, 100)} className="h-1.5 flex-1" />}
+                      <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums">{v}Mi</span>
+                    </div>
+                  )
+                },
+              },
+              {
+                accessorKey: 'createdAt',
+                header: 'Age',
+                cell: ({ getValue }) => {
+                  const ts = getValue<string | null>()
+                  return (
+                    <span className="text-[var(--color-text-dim)] font-mono text-[11px]">
+                      {ts ? timeAgo(ts) : '—'}
+                    </span>
+                  )
+                },
+              },
+              ...(isAdmin ? [{
+                id: 'actions' as const,
+                header: '',
+                cell: ({ row }: { row: { original: PodRow } }) => (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => setDeletePodTarget(row.original)}
+                          className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hover:text-red-400 transition-colors"
+                          aria-label={`Delete pod ${row.original.name}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Delete pod</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ),
+              }] : []),
+            ] as ColumnDef<PodRow, unknown>[]}
+            loading={podsQuery.isLoading}
+            emptyTitle="No pods found"
+            searchable
+            searchPlaceholder="Search pods…"
+            onRowClick={(pod) => setSelectedPod(pod)}
+            mobileCard={(pod) => (
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-[var(--color-text-primary)] text-sm font-mono">{pod.name}</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className={`h-1.5 w-1.5 rounded-full ${pod.status === 'Running' ? 'bg-[var(--color-status-active)]' : 'bg-[var(--color-status-warning)]'}`} />
+                    <span className="text-[var(--color-text-secondary)] text-xs">{pod.status}</span>
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                  <span className="text-[var(--color-text-muted)]">Namespace</span>
+                  <span className="text-[var(--color-text-primary)] font-mono">{pod.namespace}</span>
+                  <span className="text-[var(--color-text-muted)]">Age</span>
+                  <span className="text-[var(--color-text-primary)] font-mono">{pod.createdAt ? timeAgo(pod.createdAt) : '—'}</span>
+                </div>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setDeletePodTarget(pod)}
+                    className="text-[11px] text-red-400 hover:text-red-300 font-medium"
+                  >
+                    Delete Pod
+                  </button>
+                )}
+              </div>
+            )}
+>>>>>>> worktree/dima
           />
         </div>
       )}
@@ -802,6 +937,13 @@ export default function ClusterDetailPage() {
           onClose={() => setDeletePodTarget(null)}
         />
       )}
+
+      <PodDetailSheet
+        pod={selectedPod}
+        open={!!selectedPod}
+        onOpenChange={(open) => { if (!open) setSelectedPod(null) }}
+        events={events?.filter((e) => selectedPod && e.message?.includes(selectedPod.name)).slice(0, 10)}
+      />
 
       {/* Recent Events — DataTable */}
       <div>
