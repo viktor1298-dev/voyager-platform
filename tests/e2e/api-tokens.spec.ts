@@ -10,7 +10,8 @@ test.describe('API Tokens', () => {
     await page.waitForURL(/\/(dashboard|$)/, { timeout: 15000 })
     // Navigate to Settings > API Tokens
     await page.goto('/settings')
-    await expect(page.getByText('API Tokens')).toBeVisible({ timeout: 10000 })
+    await page.getByRole('tab', { name: 'API Tokens' }).click()
+    await page.waitForTimeout(300)
   })
 
   test('displays API Tokens section in settings', async ({ page }) => {

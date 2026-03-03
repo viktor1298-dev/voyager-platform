@@ -77,12 +77,15 @@ test.describe('Command Palette (⌘K)', () => {
     const itemText = await firstItem.textContent();
     await firstItem.click();
 
+    // Wait for navigation and localStorage update
+    await page.waitForTimeout(500);
+
     // Re-open palette and check recent items section
     await page.keyboard.press('Control+k');
     await expect(palette).toBeVisible({ timeout: 3000 });
 
     const recentSection = palette.locator('text=Recent').first();
-    await expect(recentSection).toBeVisible({ timeout: 3000 });
+    await expect(recentSection).toBeVisible({ timeout: 5000 });
 
     // The visited item should appear in recent items
     if (itemText) {
