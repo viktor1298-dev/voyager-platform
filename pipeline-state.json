@@ -1,20 +1,15 @@
 {
   "status": "deployed",
   "version": "v183",
-  "phase": "Stage-3-Quick-Fixes",
-  "fixLoopCount": 0,
-  "timestamp": "2026-03-04T22:15:16.560764",
+  "phase": "Stage-3-Quick-Fixes-FIX2",
+  "fixLoopCount": 2,
+  "timestamp": "2026-03-04T23:08:16.588780",
   "last_completed_version": "v182",
   "deployedInK8s": "v183",
-  "currentStage": "E2E",
-  "qaScore": null,
-  "e2eResult": null,
+  "currentStage": "QA",
+  "qaScore": 8.3,
+  "e2eResult": "88/105 passed, 0 FAILED",
   "reviewScore": 10,
-  "foremanNote": "Review 10/10 APPROVED. Deploying v183.",
-  "guardianNotes": [
-    {
-      "ts": "2026-03-04T21:56:58.502666",
-      "note": "Guardian 21:55 \u2014 Foreman aborted, Lior (code-reviewer) spawned and active. Spawning replacement Foreman to continue pipeline after review gate."
-    }
-  ]
+  "foremanNote": "Fix2 merged (6708fbe): Duplicate Toaster removed. Deploying web-only rebuild.",
+  "guardianNotes": []
 }
