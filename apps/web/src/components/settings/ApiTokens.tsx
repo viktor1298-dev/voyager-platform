@@ -4,6 +4,7 @@ import { Copy, KeyRound, Search, Trash2, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { trpc } from '@/lib/trpc'
+import { TableSkeleton } from '@/components/shared/TableSkeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 function getMcpSnippet(): string {
@@ -152,7 +153,7 @@ export function ApiTokensSection() {
           </div>
 
           {listTokens.isLoading ? (
-            <p className="text-[12px] text-[var(--color-text-dim)]">Loading tokens…</p>
+            <TableSkeleton rows={3} columns={3} />
           ) : pagedTokens.length === 0 ? (
             <p className="text-[12px] text-[var(--color-text-dim)]">
               {searchQuery ? 'No tokens match your search.' : 'No API tokens yet.'}
