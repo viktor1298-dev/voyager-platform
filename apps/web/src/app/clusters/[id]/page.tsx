@@ -79,7 +79,16 @@ interface EventRow {
   timestamp: string | null
 }
 
-const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
+function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>[] {
+  const metricsUnavailableCell = () => (
+    <span
+      className="text-[var(--color-text-dim)] text-[11px] italic"
+      title="Install metrics-server in your cluster to enable resource metrics"
+    >
+      {metricsAvailable ? '—' : 'metrics-server required'}
+    </span>
+  )
+  return [
   {
     accessorKey: 'name',
     header: 'Name',
@@ -139,7 +148,7 @@ const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
     header: 'CPU %',
     cell: ({ getValue }) => {
       const v = getValue<number | null>()
-      if (v == null) return <span className="text-[var(--color-text-dim)] text-[11px]">—</span>
+      if (v == null) return metricsUnavailableCell()
       return (
         <div className="flex items-center gap-2 min-w-[80px]">
           <Progress value={v} className="h-1.5 flex-1" />
@@ -164,7 +173,7 @@ const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
     header: 'Mem %',
     cell: ({ getValue }) => {
       const v = getValue<number | null>()
-      if (v == null) return <span className="text-[var(--color-text-dim)] text-[11px]">—</span>
+      if (v == null) return metricsUnavailableCell()
       return (
         <div className="flex items-center gap-2 min-w-[80px]">
           <Progress value={v} className="h-1.5 flex-1" />
@@ -175,7 +184,8 @@ const nodeColumns: ColumnDef<NodeRow, unknown>[] = [
       )
     },
   },
-]
+  ]
+}
 
 const eventColumns: ColumnDef<EventRow, unknown>[] = [
   {
@@ -674,7 +684,7 @@ export default function ClusterDetailPage() {
         <TabsContent value="nodes">
           <DataTable
             data={nodes}
-            columns={nodeColumns}
+            columns={makeNodeColumns(effectiveIsLive && nodes.some(n => n.cpuPercent != null))}
             loading={effectiveIsLive ? liveQuery.isLoading : dbNodes.isLoading}
             emptyTitle="No nodes found"
             paginated
