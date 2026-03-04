@@ -2,11 +2,13 @@
 
 import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { PageTransition } from '@/components/animations'
 import { LayoutDashboard, Sparkles } from 'lucide-react'
 
 export default function DashboardsPage() {
   return (
     <AppLayout>
+      <PageTransition>
       <Breadcrumbs />
 
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
@@ -56,6 +58,7 @@ export default function DashboardsPage() {
           ))}
         </div>
       </div>
+    </PageTransition>
     </AppLayout>
   )
 }

@@ -47,7 +47,7 @@ export function Sidebar({
       <aside
         data-testid="sidebar"
         className={`
-          fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-50 transition-all duration-200
+          fixed left-0 top-14 bottom-0 bg-[var(--surface-0)] border-r border-[var(--color-border)] flex flex-col py-3 z-50 transition-all duration-200
           ${isDesktop ? 'translate-x-0' : mobileOpen ? 'translate-x-0' : '-translate-x-full'}
           ${isDesktop ? (collapsed ? 'w-12' : 'w-48') : 'w-48'}
         `}
@@ -124,8 +124,8 @@ function SidebarContent({
           sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg
           ${
             active
-              ? 'bg-white/[0.08] text-[var(--color-text-primary)] sidebar-active-bar'
-              : 'text-[var(--color-text-muted)] hover:bg-white/[0.04] hover:text-[var(--color-text-secondary)] sidebar-hover-bar'
+              ? 'bg-primary/10 text-primary sidebar-active-bar'
+              : 'text-[var(--color-text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--color-text-secondary)] sidebar-hover-bar'
           }
         `}
         style={{ transition: 'all var(--duration-fast) ease' }}

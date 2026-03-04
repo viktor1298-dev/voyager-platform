@@ -55,7 +55,7 @@ export function ResponsiveTable<T>({
               {desktopCols.map((col) => (
                 <th
                   key={col.key}
-                  className={`text-left py-2 px-3 text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider font-normal ${col.headerClass ?? ''}`}
+                  className={`text-left py-2 px-3 text-xs text-muted-foreground font-medium ${col.headerClass ?? ''}`}
                 >
                   {col.label}
                 </th>
@@ -67,7 +67,7 @@ export function ResponsiveTable<T>({
               <tr
                 key={keyExtractor(row, i)}
                 onClick={() => onRowClick?.(row)}
-                className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.03] animate-slide-up ${onRowClick ? 'cursor-pointer' : ''}`}
+                className={`border-b border-white/[0.04] transition-colors hover:bg-muted/50 animate-slide-up cursor-pointer`}
                 style={{ animationDelay: `${i * staggerMs}ms`, animationFillMode: 'both' }}
               >
                 {desktopCols.map((col) => (

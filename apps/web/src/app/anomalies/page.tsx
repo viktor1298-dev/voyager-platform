@@ -241,7 +241,7 @@ export default function AnomaliesPage() {
                     {group.headers.map((header) => (
                       <th
                         key={header.id}
-                        className="px-3 py-2 text-left text-[10px] uppercase tracking-wider font-mono text-[var(--color-text-dim)]"
+                        className="px-3 py-2 text-left text-xs font-medium text-muted-foreground"
                       >
                         {header.isPlaceholder ? null : (
                           <button
@@ -268,7 +268,7 @@ export default function AnomaliesPage() {
                   return (
                     <Fragment key={row.id}>
                       <tr
-                        className="border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer"
+                        className="border-b border-white/[0.04] hover:bg-muted/50 transition-colors cursor-pointer"
                         onClick={(event) => {
                           if (isInteractiveTarget(event.target)) return
                           setExpandedId((prev) =>
