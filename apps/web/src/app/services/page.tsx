@@ -1,10 +1,13 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
-import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { DataTable } from '@/components/DataTable'
+import { DataTable } from '@/components/shared/DataTable'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageTransition } from '@/components/animations'
 import type { ColumnDef } from '@tanstack/react-table'
+import { Network } from 'lucide-react'
 import { useMemo } from 'react'
 
 type ServiceRow = {
@@ -26,7 +29,13 @@ const mockServices: ServiceRow[] = [
 export default function ServicesPage() {
   const columns = useMemo<ColumnDef<ServiceRow, unknown>[]>(
     () => [
-      { accessorKey: 'name', header: 'Service', cell: ({ row }) => <span className="font-medium text-[var(--color-text-primary)]">{row.original.name}</span> },
+      {
+        accessorKey: 'name',
+        header: 'Service',
+        cell: ({ row }) => (
+          <span className="font-medium text-[var(--color-text-primary)]">{row.original.name}</span>
+        ),
+      },
       { accessorKey: 'namespace', header: 'Namespace' },
       { accessorKey: 'type', header: 'Type' },
       { accessorKey: 'endpoints', header: 'Endpoints' },
@@ -34,15 +43,10 @@ export default function ServicesPage() {
         accessorKey: 'status',
         header: 'Status',
         cell: ({ row }) => (
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-              row.original.status === 'Healthy'
-                ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]'
-                : 'bg-[var(--color-status-warning)]/20 text-[var(--color-status-warning)]'
-            }`}
-          >
-            {row.original.status}
-          </span>
+          <StatusBadge
+            status={row.original.status === 'Healthy' ? 'healthy' : 'warning'}
+            dot
+          />
         ),
       },
     ],
@@ -53,19 +57,29 @@ export default function ServicesPage() {
     <AppLayout>
       <PageTransition>
         <div className="space-y-4">
-          <Breadcrumbs />
-
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Services</h1>
-            <p className="mt-1 text-sm text-[var(--color-text-muted)]">Cluster services overview (mock data)</p>
-          </div>
+          <PageHeader
+            title="Services"
+            description="Cluster services overview"
+            breadcrumb={[{ label: 'Platform' }, { label: 'Services' }]}
+          />
 
           <DataTable
             data={mockServices}
             columns={columns}
-            searchPlaceholder="Search services..."
+            searchable
+            searchPlaceholder="Search services…"
+            emptyIcon={<Network className="h-6 w-6" />}
             emptyTitle="No services found"
+            emptyDescription="No services match your current filters."
           />
+
+          {mockServices.length === 0 && (
+            <EmptyState
+              icon={<Network className="h-6 w-6" />}
+              title="No services"
+              description="This cluster has no services yet."
+            />
+          )}
         </div>
       </PageTransition>
     </AppLayout>

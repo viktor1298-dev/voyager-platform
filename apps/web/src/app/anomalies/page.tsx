@@ -15,7 +15,7 @@ import { toast } from 'sonner'
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
 import { AnomalyCard } from '@/components/anomalies/AnomalyCard'
-import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { PageHeader } from '@/components/shared/PageHeader'
 import {
   type Anomaly,
   type AnomalySeverity,
@@ -202,12 +202,16 @@ export default function AnomaliesPage() {
     <AppLayout>
       <PageTransition>
         <div className="space-y-5">
-          <div className="flex items-center justify-between gap-3">
-            <Breadcrumbs />
-            <span className="text-xs text-[var(--color-text-dim)]">
-              {filteredAnomalies.length} anomalies
-            </span>
-          </div>
+          <PageHeader
+            title="Anomalies"
+            description="Detected anomalies and alerts across your clusters."
+            breadcrumb={[{ label: 'Platform' }, { label: 'Anomalies' }]}
+            actions={
+              <span className="text-xs text-[var(--color-text-dim)]">
+                {filteredAnomalies.length} anomalies
+              </span>
+            }
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <FilterSelect
