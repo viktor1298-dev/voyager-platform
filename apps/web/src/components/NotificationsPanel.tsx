@@ -75,7 +75,7 @@ export function NotificationsPanel() {
         <div
           className="absolute right-0 top-11 w-80 max-h-96 overflow-y-auto rounded-xl border shadow-2xl z-50"
           style={{
-            background: 'rgba(15,23,42,0.95)',
+            background: 'var(--elevated)',
             backdropFilter: 'blur(12px)',
             border: '1px solid rgba(255,255,255,0.1)',
           }}

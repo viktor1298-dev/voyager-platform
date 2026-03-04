@@ -382,6 +382,7 @@ function DashboardContent() {
                 <Bell className="h-3.5 w-3.5" />
               )
             }
+            trendPositiveIsGood={false}
             label="Warning Events"
             value={String(warningEvents)}
             color={warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'}
