@@ -159,11 +159,11 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### K2: 🟡 P2 — Medium Priority (Polish Sprint)
 
-- [ ] **K2-001 — Sidebar Navigation Overload**
+- [x] **K2-001 — Sidebar Navigation Overload** ✅ v176
   - **Problem:** 18+ nav items with no grouping — cognitive overload, hard to find things
   - **Fix:** Group into collapsible sections: `Observability` | `Infrastructure` | `Configuration` | `Access Control`
 
-- [ ] **K2-002 — Single-Tone Dark Mode (No Depth Layers)**
+- [x] **K2-002 — Single-Tone Dark Mode (No Depth Layers)** ✅ v176
   - **Problem:** All surfaces same shade of dark — no visual hierarchy between background, cards, overlays
   - **Fix:** Implement 3-layer dark palette:
     - `background: #0a0a0f` (page)
@@ -171,24 +171,24 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
     - `elevated: #1e1e2e` (modals, dropdowns)
   - **Reference:** Linear's dark mode depth system
 
-- [ ] **K2-003 — Table Rows Too Tall + No Hover States**
+- [x] **K2-003 — Table Rows Too Tall + No Hover States** ✅ v176
   - **Problem:** Excessive row padding wastes vertical space; rows look static (no click affordance)
   - **Fix:** Reduce row padding by ~25%; add `hover:bg-muted/40 cursor-pointer` on clickable rows; add colored left-border for status
 
-- [ ] **K2-004 — Stat Cards Lack Visual Weight + Trends**
+- [x] **K2-004 — Stat Cards Lack Visual Weight + Trends** ✅ v176
   - **Problem:** 5 identical flat cards feel lifeless — no sparklines, no trend deltas, no urgency for critical states
   - **Fix:** Add mini sparkline charts (recharts); add trend arrow with delta (e.g. "+2 pods"); animate critical anomaly count (pulse)
   - **Reference:** Datadog metric cards, Vercel deployment stats
 
-- [ ] **K2-005 — No Pod Detail Slide-Over Panel**
+- [x] **K2-005 — No Pod Detail Slide-Over Panel** ✅ v176
   - **Problem:** Clicking a pod row does nothing — no way to see logs, describe, or resource usage inline
   - **Fix:** Implement slide-over drawer on pod row click: show pod describe, container list, last 50 log lines
 
-- [ ] **K2-006 — Notification Bell Has No Dropdown**
+- [x] **K2-006 — Notification Bell Has No Dropdown** ✅ v176
   - **Problem:** Bell icon shows "9" badge but clicking does nothing
   - **Fix:** Implement notification dropdown showing recent alerts/events; link to alert detail
 
-- [ ] **K2-007 — Status Indicator Dots Too Small**
+- [x] **K2-007 — Status Indicator Dots Too Small** ✅ v176
   - **Problem:** 4-5px status dots are hard to scan quickly, especially for health status at a glance
   - **Fix:** Increase to 8-10px; add text label alongside ("Running", "Error", "Degraded")
 
@@ -383,39 +383,39 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🟡 K-P2 — Medium Priority
 
-- [ ] **K-P2-001: Sidebar Navigation Overload (18+ items)**
+- [x] **K-P2-001: Sidebar Navigation Overload (18+ items)** ✅ v176
   - Cognitive overload — no grouping hierarchy
   - Fix: Group into collapsible sections: Observability | Infrastructure | Platform | Admin
 
-- [ ] **K-P2-002: No Dark Mode Depth Layers**
+- [x] **K-P2-002: No Dark Mode Depth Layers** ✅ v176
   - All surfaces use same dark shade — no visual hierarchy
   - Fix: 3-layer palette: background `#0a0a0f` | surface `#14141f` | elevated `#1e1e2e`
   - Reference: Linear's dark mode depth system
 
-- [ ] **K-P2-003: Stat Cards Lack Visual Weight / Trend Data**
+- [x] **K-P2-003: Stat Cards Lack Visual Weight / Trend Data** ✅ v176
   - All 5 stat cards look identical — no sparklines or trend indicators
   - Fix: Add mini sparkline charts (last 24h trend), delta % arrows
   - Reference: Vercel's deployment metric cards, Datadog overview
 
-- [ ] **K-P2-004: Critical Cluster Cards Not Visually Alarming**
+- [x] **K-P2-004: Critical Cluster Cards Not Visually Alarming** ✅ v176
   - `prod-cluster-eks` shows "Error" in small red badge — easy to miss
   - Fix: Add red glow/border to error-state cluster cards, pulsing dot on critical status
   - Reference: PagerDuty incident cards
 
-- [ ] **K-P2-005: Pod Detail — No Drill-Down**
+- [x] **K-P2-005: Pod Detail — No Drill-Down** ✅ v176
   - Clicking a pod does nothing — no detail panel
   - Fix: Implement slide-over drawer on pod click (logs, describe, resource usage)
 
-- [ ] **K-P2-006: Pod List Not Grouped by Namespace**
+- [x] **K-P2-006: Pod List Not Grouped by Namespace** ✅ v176
   - 13 pods in flat list requires manual scanning
   - Fix: Group pods by namespace with collapsible section headers
   - Reference: Grafana namespace grouping
 
-- [ ] **K-P2-007: Notification Bell (9) Has No Dropdown**
+- [x] **K-P2-007: Notification Bell (9) Has No Dropdown** ✅ v176
   - Bell icon shows "9" badge but no action on click
   - Fix: Implement notification dropdown/drawer
 
-- [ ] **K-P2-008: Settings Page Needs Tab Navigation**
+- [x] **K-P2-008: Settings Page Needs Tab Navigation** ✅ v176
   - All settings sections are one long scroll
   - Fix: Sub-tabs: General | AI | API Tokens | Clusters
 
@@ -423,26 +423,20 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🔵 K-P3 — Strategic Improvements
 
-- [ ] **K-P3-001: Full ⌘K Command Palette**
-  - Button exists but behavior unclear
-  - Fix: Raycast/Linear-style fuzzy search across all entities (pods, services, clusters, deployments)
+- [x] **K-P3-001: Full ⌘K Command Palette** _(v177 2026-03-04)_
+  - Full cmdk palette with fuzzy search across clusters, deployments, services, navigation
 
-- [ ] **K-P3-002: Real-time Pod Log Streaming**
-  - No live tail for pod logs
-  - Fix: WebSocket-based live log viewer with streaming animation
+- [x] **K-P3-002: Real-time Pod Log Streaming** _(v177 2026-03-04)_
+  - PodLogStream component with live tail, auto-scroll, pause/resume, search filter
 
-- [ ] **K-P3-003: Inline AI Suggestions**
-  - AI is isolated to /ai page — should be contextual
-  - Fix: Inline AI cards on cluster detail ("Pod restarted 5x — View logs?")
+- [x] **K-P3-003: Inline AI Suggestions** _(v177 2026-03-04)_
+  - Collapsible AiContextCard with inline AI analysis on error/degraded cluster pages
 
-- [ ] **K-P3-004: Time-Series Charts in Dashboard**
-  - Stat cards are static numbers — no historical context
-  - Fix: Embed Recharts/Tremor sparklines with 24h/7d data in stat cards
+- [x] **K-P3-004: Time-Series Charts in Dashboard** _(v177 2026-03-04)_
+  - Recharts sparkline charts in dashboard stat cards showing 24h trend data
 
-- [ ] **K-P3-005: Branded Visual Identity**
-  - No accent gradient, no depth, no personality
-  - Fix: Add teal-to-indigo gradient accent line at top of page, logo animation on load
-  - Reference: Vercel, Railway's polished brand moments
+- [x] **K-P3-005: Branded Visual Identity** _(v177 2026-03-04)_
+  - 2px teal-to-indigo gradient accent line at top of page in root layout
 
 ---
 
