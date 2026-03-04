@@ -73,6 +73,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <AuthSessionSync />
           {children}
           <Toaster
+            toasterId="main-toaster"
             position="bottom-right"
             richColors
             closeButton
