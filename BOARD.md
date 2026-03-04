@@ -538,7 +538,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [ ] **L-QW-002: Table row hover states** — add `hover:bg-muted/50 transition-colors cursor-pointer` to ALL `<tr>` elements across every data table
 - [ ] **L-QW-003: Fix table header typography** — change from `uppercase font-mono text-xs` to `text-xs font-medium text-muted-foreground` everywhere
 - [ ] **L-QW-004: Fix sidebar active state** — change from `bg-primary text-primary-foreground` to `bg-primary/10 text-primary` (Linear-style — less aggressive)
-- [ ] **L-QW-005: Reusable PageHeader component** — consistent `<PageHeader title breadcrumb description actions />` used on every page that lacks it (Services, Namespaces, Anomalies, Deployments)
+- [x] **L-QW-005: Reusable PageHeader component** — v182 2026-03-04 — consistent `<PageHeader title breadcrumb description actions />` used on every page that lacks it (Services, Namespaces, Anomalies, Deployments)
 - [ ] **L-QW-006: Reusable EmptyState component** — `<EmptyState icon title description cta />` — contextual per page (not just "No X found")
   - Services: "prod-cluster-eks is disconnected. Switch to a healthy cluster."
   - Namespaces: same pattern
@@ -627,7 +627,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🟡 Phase L-P2 — Medium Priority (v181 after P1)
 
-- [ ] **L-P2-001: Dark Mode 4-Level Surface Color Scale**
+- [x] **L-P2-001: Dark Mode 4-Level Surface Color Scale** — v182 2026-03-04
   - CSS vars: `--surface-0: hsl(230 15% 7%)` | `--surface-1: hsl(230 15% 10%)` | `--surface-2: hsl(230 15% 13%)` | `--surface-3: hsl(230 15% 17%)`
   - Apply consistently across sidebar, main, cards, hover states
 
@@ -638,11 +638,11 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - Table row height: `h-12` everywhere
   - Stat numbers: `text-3xl font-semibold tabular-nums`
 
-- [ ] **L-P2-003: MetricCard + StatusBadge Shared Components**
+- [x] **L-P2-003: MetricCard + StatusBadge Shared Components** — v182 2026-03-04
   - `<MetricCard label value trend sparkline />` — replace all ad-hoc stat cards
   - `<StatusBadge status />` — unified health/severity/status badge (one component, not 5 different ones)
 
-- [ ] **L-P2-004: DataTable Shared Component**
+- [x] **L-P2-004: DataTable Shared Component** — v182 2026-03-04
   - Replace all custom table implementations with shadcn DataTable
   - Include: sorting, filtering, pagination, row selection, row actions, sticky header
 
