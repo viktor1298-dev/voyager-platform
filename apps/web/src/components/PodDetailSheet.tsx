@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Progress } from '@/components/ui/progress'
+import { PodLogStream } from '@/components/PodLogStream'
 
 interface PodInfo {
   name: string
@@ -119,6 +120,9 @@ export function PodDetailSheet({
               </div>
             </div>
           )}
+
+          {/* Live Log Stream */}
+          <PodLogStream podName={pod.name} namespace={pod.namespace} />
 
           {/* View Logs Button */}
           <Link

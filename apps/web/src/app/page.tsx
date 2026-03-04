@@ -33,6 +33,7 @@ import {
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
+import { SparklineChart, generateMockTrend } from '@/components/charts/SparklineChart'
 
 interface ClusterCardData {
   id: string
@@ -238,6 +239,14 @@ function DashboardContent() {
   const runningPods = liveData?.runningPods ?? 0
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
 
+  // 24h sparkline trend data for dashboard stat cards
+  const sparklines = useMemo(() => ({
+    nodes: generateMockTrend(totalNodes || 3),
+    pods: generateMockTrend(runningPods || 8),
+    clusters: generateMockTrend(clusterList.length || 2),
+    warnings: generateMockTrend(warningEvents || 1, 0.3),
+  }), [totalNodes, runningPods, clusterList.length, warningEvents])
+
   const filterOptions = useMemo(() => {
     const statuses = new Set<string>()
     const providers = new Set<string>()
@@ -345,6 +354,8 @@ function DashboardContent() {
             isLoading={isLoading}
             trend={1}
             trendPositiveIsGood
+            sparklineData={sparklines.nodes}
+            sparklineColor="#6366f1"
           />
           <SummaryCard
             icon={<Container className="h-3.5 w-3.5" />}
@@ -363,6 +374,8 @@ function DashboardContent() {
             isLoading={isLoading}
             trend={5}
             trendPositiveIsGood
+            sparklineData={sparklines.pods}
+            sparklineColor="#10b981"
           />
           <SummaryCard
             icon={<LayoutGrid className="h-3.5 w-3.5" />}
@@ -373,6 +386,8 @@ function DashboardContent() {
             isLoading={isLoading}
             trend={2}
             trendPositiveIsGood
+            sparklineData={sparklines.clusters}
+            sparklineColor="#6366f1"
           />
           <SummaryCard
             icon={
@@ -390,6 +405,8 @@ function DashboardContent() {
             isLoading={isLoading}
             trend={-3}
             emphasized={warningEvents > 0}
+            sparklineData={sparklines.warnings}
+            sparklineColor="#f59e0b"
           />
           <AnomalyWidget compact />
         </div>
@@ -920,6 +937,8 @@ function SummaryCard({
   trend,
   trendPositiveIsGood,
   emphasized,
+  sparklineData,
+  sparklineColor,
 }: {
   icon: React.ReactNode
   label: string
@@ -931,11 +950,13 @@ function SummaryCard({
   /** When true, positive delta = good (green). Default: false (positive = bad/red, for alerts). */
   trendPositiveIsGood?: boolean
   emphasized?: boolean
+  sparklineData?: number[]
+  sparklineColor?: string
 }) {
   return (
     <div
       className={cn(
-        'rounded-xl px-3 py-2.5 border w-full flex items-center justify-between gap-2 transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5',
+        'relative overflow-hidden rounded-xl px-3 py-2.5 border w-full flex items-center justify-between gap-2 transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5',
         emphasized
           ? 'border-[var(--color-status-warning)]/40 ring-1 ring-[var(--color-status-warning)]/20'
           : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)]',
@@ -987,6 +1008,11 @@ function SummaryCard({
       <span className="shrink-0 opacity-60" style={{ color }}>
         {icon}
       </span>
+      {sparklineData && sparklineData.length > 0 && (
+        <div className="absolute bottom-0 left-0 right-0 h-8 opacity-60">
+          <SparklineChart data={sparklineData} color={sparklineColor ?? color} height={32} />
+        </div>
+      )}
     </div>
   )
 }
