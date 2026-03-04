@@ -588,36 +588,36 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🟠 Phase L-P1 — High Priority (v180 after P0)
 
-- [ ] **L-P1-001: Pod Table — Add Critical K8s Columns**
+- [x] **L-P1-001: Pod Table — Add Critical K8s Columns**
   - Add: CPU %, Memory %, Restart Count, Ready status to pods table
   - Reference: Lens pod list
   - Files: pod table component, pods tRPC router
 
-- [ ] **L-P1-002: Cluster Cards — Structured Layout**
+- [x] **L-P1-002: Cluster Cards — Structured Layout**
   - CURRENT: Random badges scattered around each cluster card
   - Fix: status dot + name on top, metrics grid in middle, tags at bottom. Remove cryptic mini-badges.
   - Reference: Lens cluster cards
   - Files: cluster card component
 
-- [ ] **L-P1-003: Command Palette — Add Resource Search**
+- [x] **L-P1-003: Command Palette — Add Resource Search**
   - CURRENT: Navigation only — no cluster/pod/service search
   - Fix: Add "CLUSTERS" and "RESOURCES" sections that search across all resources. Add keyboard nav hints (↑↓ Enter). Add recent items.
   - Reference: Raycast, Linear command palette
   - Files: command palette component
 
-- [ ] **L-P1-004: Logs Page UX Improvements**
+- [x] **L-P1-004: Logs Page UX Improvements**
   - Fix: Move search bar to top of log output area (sticky)
   - Add contextual "Select a pod" empty state (use L-QW-006 component)
   - Add JSON pretty-printing and color-coded log levels in output
   - Files: `/logs` page component
 
-- [ ] **L-P1-005: AI Assistant — Enhance Chat Experience**
+- [x] **L-P1-005: AI Assistant — Enhance Chat Experience**
   - Fix: Add suggested question chips in empty chat area (3-4 contextual suggestions)
   - Make cluster context more prominent (not just top-right corner)
   - Remove or redesign "FREE Tier Analytics" badge (confusing in self-hosted context)
   - Files: `/ai` page component
 
-- [ ] **L-P1-006: Alerts Page — Add Grouping and Filters**
+- [x] **L-P1-006: Alerts Page — Add Grouping and Filters**
   - Add collapsible groups by cluster/type/severity
   - Add bulk actions: enable/disable/delete selected
   - Make search sticky while scrolling
