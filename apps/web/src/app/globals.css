@@ -68,6 +68,12 @@
 }
 
 :root {
+  /* Dark mode 4-level surface scale (L-P2-001) — Ron v182 */
+  --surface-0: hsl(230 15% 7%);
+  --surface-1: hsl(230 15% 10%);
+  --surface-2: hsl(230 15% 13%);
+  --surface-3: hsl(230 15% 17%);
+
   /* K2-002: Dark mode 3-layer depth system */
   --background: #0a0a0f;
   --surface: #14141f;

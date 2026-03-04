@@ -471,7 +471,7 @@ function MetricCard({
         </p>
         <Icon className="h-4 w-4 text-[var(--color-accent)]" />
       </div>
-      <p className="mt-2 text-2xl font-bold text-[var(--color-text-primary)]">{value}</p>
+      <p className="mt-2 text-3xl font-semibold tabular-nums text-[var(--color-text-primary)]">{value}</p>
     </div>
   )
 }
