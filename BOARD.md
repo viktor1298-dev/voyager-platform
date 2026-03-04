@@ -646,7 +646,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - Replace all custom table implementations with shadcn DataTable
   - Include: sorting, filtering, pagination, row selection, row actions, sticky header
 
-- [ ] **L-P2-005: Cluster Detail — Nodes Table with Real Metrics**
+- [x] **L-P2-005: Cluster Detail — Nodes Table with Real Metrics**
   - CURRENT: CPU %, Memory %, Mem % columns show "—"
   - Fix: Populate from metrics API OR show "Metrics unavailable — install metrics-server" message
   - Files: nodes table, cluster tRPC router
@@ -675,7 +675,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - Timestamp formatting options
   - Highlight matched search terms in log output
 
-- [ ] **L-P3-005: Number Animations on Stat Cards**
+- [x] **L-P3-005: Number Animations on Stat Cards**
   - Use framer-motion `useMotionValue` + `animate()` to tween numbers on load
   - Makes dashboard feel alive
 
