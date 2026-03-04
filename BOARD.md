@@ -579,7 +579,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - Fix: Tabs: Overview | Nodes | Pods | Services | Deployments | Events (like Lens)
   - Files: `apps/web/src/app/clusters/[id]/page.tsx`
 
-- [ ] **L-P0-006: Webhooks Page — Fix Loading State Logic**
+- [x] **L-P0-006: Webhooks Page — Fix Loading State Logic**
   - CURRENT: Skeleton rows appear permanently OR conflict with "0 ENDPOINTS" count
   - Fix: `count === 0 ? <EmptyState /> : isLoading ? <Skeleton /> : <Table />`
   - Files: `/webhooks` page component
@@ -651,7 +651,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - Fix: Populate from metrics API OR show "Metrics unavailable — install metrics-server" message
   - Files: nodes table, cluster tRPC router
 
-- [ ] **L-P2-006: Sonner Toast Notifications**
+- [x] **L-P2-006: Sonner Toast Notifications**
   - Add `sonner` toasts for all CRUD operations (connect cluster, revoke token, create webhook, etc.)
   - Currently: zero feedback on user actions
 
