@@ -1,0 +1,19 @@
+{
+  "version": "v171",
+  "timestamp": "2026-03-03T20:55:00Z",
+  "total": 101,
+  "passed": 82,
+  "failed": 8,
+  "skipped": 11,
+  "failures": [
+    "AiContextCard on cluster detail › AI context card appears on cluster with Error health status",
+    "AiContextCard on cluster detail › dismiss button hides the AI context card",
+    "AiContextCard on cluster detail › \"Ask AI\" link navigates to /ai with cluster context params",
+    "API Tokens › displays API Tokens section in settings",
+    "API Tokens › can create a new API token",
+    "API Tokens › newly created token appears in the token list",
+    "API Tokens › can revoke a token with confirmation",
+    "Command Palette (⌘K) › navigating via palette adds item to recent items"
+  ],
+  "verdict": "fail"
+}

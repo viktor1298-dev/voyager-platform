@@ -2,7 +2,7 @@
 
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
-import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { PageHeader } from '@/components/PageHeader'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
@@ -273,38 +273,31 @@ export default function DeploymentsPage() {
   return (
     <AppLayout>
       <PageTransition>
-        <Breadcrumbs />
+        <PageHeader
+          title="Deployments"
+          icon={<Box className="h-6 w-6" />}
+          description="Track rollout status, replica health, and restart/scale operations."
+          actions={
+            <div className="flex items-center gap-2">
+              <label htmlFor="namespace-filter" className="text-xs text-[var(--color-table-meta)]">Namespace</label>
+              <select
+                id="namespace-filter"
+                value={namespaceFilter}
+                onChange={(event) => setNamespaceFilter(event.target.value)}
+                className="px-3 py-2 rounded-lg text-sm bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]/50"
+              >
+                <option value="all">All namespaces</option>
+                {namespaces.map((namespace) => (
+                  <option key={namespace} value={namespace}>{namespace}</option>
+                ))}
+              </select>
+            </div>
+          }
+        />
 
         {deploymentsQuery.error && (
           <QueryError message={deploymentsQuery.error.message} onRetry={() => deploymentsQuery.refetch()} />
         )}
-
-        <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Deployments</h1>
-            <p className="text-[12px] text-[var(--color-text-muted)] mt-1">
-              Track rollout status, replica health, and restart/scale operations.
-            </p>
-            <p className="text-[11px] text-[var(--color-table-meta)] font-mono uppercase tracking-wider mt-1">
-              {filteredDeployments.length} deployments · {groupedByCluster.length} clusters · auto-refresh 30s
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label htmlFor="namespace-filter" className="text-xs text-[var(--color-table-meta)]">Namespace</label>
-            <select
-              id="namespace-filter"
-              value={namespaceFilter}
-              onChange={(event) => setNamespaceFilter(event.target.value)}
-              className="px-3 py-2 rounded-lg text-sm bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]/50"
-            >
-              <option value="all">All namespaces</option>
-              {namespaces.map((namespace) => (
-                <option key={namespace} value={namespace}>{namespace}</option>
-              ))}
-            </select>
-          </div>
-        </div>
 
         <div className="space-y-5">
           {groupedByCluster.map((cluster) => (

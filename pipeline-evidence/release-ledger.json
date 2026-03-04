@@ -325,5 +325,14 @@
     "helmRevision": 72,
     "health": "ok",
     "notes": "QA fix loop #2: removed z.void tRPC, removed /system-health route, favicon ICO, fixed k8s health probe"
+  },
+  {
+    "version": "v177",
+    "timestamp": "2026-03-04T10:25:06.713627",
+    "status": "deployed",
+    "helmRevision": 75,
+    "commit": "713e911",
+    "health": "ok",
+    "login": "ok"
   }
 ]

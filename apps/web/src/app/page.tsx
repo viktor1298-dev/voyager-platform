@@ -627,7 +627,7 @@ function ClusterTable({ clusters }: { clusters: ClusterCardData[] }) {
             {['Name', 'Provider', 'Health', 'Environment', 'Version', 'Nodes', 'CPU'].map((h) => (
               <th
                 key={h}
-                className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-dim)] font-mono"
+                className="px-4 py-3 text-left text-xs font-medium text-muted-foreground"
               >
                 {h}
               </th>
@@ -646,7 +646,7 @@ function ClusterTable({ clusters }: { clusters: ClusterCardData[] }) {
               <tr
                 key={cluster.id}
                 onClick={() => router.push(`/clusters/${cluster.id}`)}
-                className="cursor-pointer hover:bg-white/[0.03] transition-all duration-200 hover:shadow-[inset_0_0_0_1px_var(--color-border-hover),0_2px_8px_rgba(0,0,0,0.15)]"
+                className="hover:bg-muted/50 transition-colors cursor-pointer"
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
@@ -979,7 +979,7 @@ function SummaryCard({
           <div className="flex items-baseline gap-1.5">
             <div
               className={cn(
-                'text-xl font-extrabold tracking-tight leading-tight animate-count-up',
+                'text-3xl font-semibold tabular-nums tracking-tight leading-tight animate-count-up',
                 gradient !== 'none' && 'gradient-text',
                 gradient === 'none' && 'opacity-50',
               )}

@@ -433,5 +433,35 @@
     "notes": "gate2 qa-v167 missing author field - content valid, not from forbidden agent",
     "env_blocked_items": [],
     "was_corrected": false
+  },
+  {
+    "timestamp": "2026-03-03T22:10:30.851048+00:00",
+    "version": "v175",
+    "verdict": "COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "was_corrected": false
+  },
+  {
+    "timestamp": "2026-03-04T10:45:00+02:00",
+    "version": "v177",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 5,
+    "gates_failed": [
+      "gate1_path",
+      "gate2_author",
+      "gate3_timestamp"
+    ],
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "notes": "e2e-v177.json written to wrong path by Yuval. Missing agentId. Placeholder timestamp 2025-07-15. Foreman spawned to fix."
+  },
+  {
+    "timestamp": "2026-03-04T10:49:55.187945",
+    "version": "v177",
+    "verdict": "COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "was_corrected": false
   }
 ]
