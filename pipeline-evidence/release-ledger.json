@@ -381,5 +381,18 @@
       "api": "voyager-api:v180 (unchanged)"
     },
     "status": "deployed"
+  },
+  {
+    "version": "v182",
+    "stage": "stage2",
+    "commit": "e43986e",
+    "timestamp": "2026-03-04T21:41:33.976387",
+    "images": [
+      "voyager-api:v182",
+      "voyager-web:v182"
+    ],
+    "status": "deployed",
+    "health": "ok",
+    "notes": "Stage 2: skeleton loading system + UI improvements"
   }
 ]
