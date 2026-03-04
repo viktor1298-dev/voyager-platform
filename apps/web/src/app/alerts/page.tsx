@@ -12,7 +12,7 @@ import { Dialog } from '@/components/ui/dialog'
 import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
 import { AlertTriangle, Bell, CheckCircle, History, Plus, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react'
 import { toast } from 'sonner'
 import { timeAgo } from '@/lib/time-utils'
 
@@ -46,6 +46,7 @@ export default function AlertsPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState<CreateFormData>(INITIAL_FORM)
+  const [pageSize, setPageSize] = useState(25)
 
   const alertsQuery = trpc.alerts.list.useQuery()
   const historyQuery = trpc.alerts.history.useQuery({ limit: 20 })
@@ -208,7 +209,21 @@ export default function AlertsPage() {
               columns={alertColumns}
               loading={alertsQuery.isLoading}
               paginated
-              pageSize={25}
+              pageSize={pageSize}
+              paginationExtra={
+                <label className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-dim)]">
+                  Rows
+                  <select
+                    value={pageSize}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setPageSize(Number(e.target.value))}
+                    className="rounded border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-1.5 py-0.5 text-xs text-[var(--color-text-primary)]"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </label>
+              }
               emptyIcon={<AlertTriangle className="h-8 w-8" />}
               emptyTitle="No alert rules configured"
               mobileCard={(alert) => (

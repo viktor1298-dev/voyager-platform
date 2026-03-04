@@ -1,0 +1,45 @@
+{
+  "agent": "qa",
+  "agentId": "agent:qa",
+  "version": "v179",
+  "timestamp": "2026-03-04T12:08:00.000Z",
+  "score": 7.5,
+  "verdict": "FAIL",
+  "gate": 8.5,
+  "sha": "187ec70e1ff65af312003ceb51355245432f4970",
+  "checks": [
+    "L-P0-001: Dashboard command center — health matrix, resource gauges, recent events",
+    "L-P0-002: System Health page — per-cluster component matrix, API latency, sync, uptime",
+    "L-P0-003: Alerts pagination with 25/50/100 per-page controls",
+    "L-P0-004: Skeleton loading on data tables and cards",
+    "L-P0-005: Cluster Detail tabbed layout (Overview, Nodes, Pods, Services, Deployments, Events)",
+    "L-P0-006: Webhooks EmptyState / skeleton / table",
+    "v178-fix: Deployments friendly error (not raw Zod JSON)",
+    "v178-fix: Empty states have CTA buttons"
+  ],
+  "results": {
+    "L-P0-001": "PASS",
+    "L-P0-002": "FAIL",
+    "L-P0-003": "PARTIAL",
+    "L-P0-004": "PASS",
+    "L-P0-005": "PASS",
+    "L-P0-006": "PASS",
+    "v178-friendly-error": "PASS",
+    "v178-cta-buttons": "PARTIAL"
+  },
+  "failures": [
+    "L-P0-002: System Health sidebar link points to /system-health which still renders OLD page (System Healthy ✓ + API status: ok). New rich health page exists at apps/web/src/app/health/page.tsx but: (a) sidebar doesn't link there, (b) /health route is intercepted by backend API endpoint returning JSON. Per-cluster component matrix, API latency display, sync status, and uptime history are NOT accessible to users.",
+    "L-P0-003: Alerts page has basic pagination (1–25 of 221, page 1/9) but NO per-page selector. pageSize is hardcoded to 25 in alerts/page.tsx. No 25/50/100 dropdown control implemented.",
+    "v178-cta-buttons: Deployments empty state has no CTA button (only emptyTitle, no emptyAction). Only Webhooks EmptyState has CTA button."
+  ],
+  "screenshots": [
+    "screenshots/v179-login.png",
+    "screenshots/v179-system-health.png",
+    "screenshots/v179-alerts.png",
+    "screenshots/v179-alerts-pagination.png",
+    "screenshots/v179-cluster-detail.png",
+    "screenshots/v179-webhooks.png",
+    "screenshots/v179-webhooks-loaded.png",
+    "screenshots/v179-deployments.png"
+  ]
+}

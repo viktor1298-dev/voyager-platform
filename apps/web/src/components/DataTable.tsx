@@ -34,6 +34,8 @@ interface DataTableProps<TData> {
   /** Enable pagination (default: false = show all) */
   paginated?: boolean
   pageSize?: number
+  /** Extra content rendered beside pagination controls */
+  paginationExtra?: ReactNode
   /** Empty state */
   emptyIcon?: ReactNode
   emptyTitle?: string
@@ -59,6 +61,7 @@ export function DataTable<TData>({
   searchPlaceholder = 'Search…',
   paginated = false,
   pageSize = 10,
+  paginationExtra,
   emptyIcon,
   emptyTitle = 'No data found',
   emptyDescription,
@@ -318,7 +321,8 @@ export function DataTable<TData>({
             )}{' '}
             of {table.getFilteredRowModel().rows.length}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {paginationExtra}
             <PaginationBtn
               onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
