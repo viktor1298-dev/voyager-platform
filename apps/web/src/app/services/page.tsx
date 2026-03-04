@@ -1,10 +1,15 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+<<<<<<< HEAD
 import { DataTable } from '@/components/shared/DataTable'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { StatusBadge } from '@/components/shared/StatusBadge'
+=======
+import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { DataTable } from '@/components/shared/DataTable'
+>>>>>>> fa9e21e (fix(ui): services DataTable migration + deployments EmptyState [v182])
 import { PageTransition } from '@/components/animations'
 import { QueryError } from '@/components/ErrorBoundary'
 import { trpc } from '@/lib/trpc'

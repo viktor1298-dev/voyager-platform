@@ -8,6 +8,7 @@ import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Box, Loader2, RefreshCw, Scale } from 'lucide-react'
@@ -347,10 +348,11 @@ export default function DeploymentsPage() {
           ))}
 
           {!deploymentsQuery.isLoading && groupedByCluster.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-14 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-              <Box className="h-8 w-8 mb-2 opacity-40" />
-              <p className="text-sm">No deployments found for selected namespace</p>
-            </div>
+            <EmptyState
+              icon={<Box className="h-8 w-8" />}
+              title="Select a cluster to view deployments"
+              description={namespaceFilter !== 'all' ? 'No deployments found for selected namespace' : undefined}
+            />
           )}
         </div>
 

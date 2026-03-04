@@ -1,74 +1,28 @@
-'use client'
-
-import { cn } from '@/lib/utils'
-import type { ReactNode } from 'react'
-
-interface CTAButton {
-  label: string
-  onClick?: () => void
-  href?: string
-  variant?: 'primary' | 'secondary'
-}
+import { type ReactNode } from 'react'
+import { Inbox } from 'lucide-react'
 
 interface EmptyStateProps {
   icon?: ReactNode
   title: string
   description?: string
-  /** Call-to-action button */
-  cta?: CTAButton
-  className?: string
+  action?: ReactNode
 }
 
-export function EmptyState({ icon, title, description, cta, className }: EmptyStateProps) {
+/**
+ * Shared EmptyState component.
+ * Used across pages to show a consistent empty/placeholder state.
+ */
+export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div
-      className={cn(
-        'flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] py-16 px-6 text-center',
-        className,
-      )}
-    >
-      {icon && (
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] opacity-60">
-          {icon}
-        </div>
-      )}
-
-      <div>
-        <p className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</p>
-        {description && (
-          <p className="mt-1 text-xs text-[var(--color-text-muted)] max-w-xs">{description}</p>
-        )}
+    <div className="flex flex-col items-center justify-center py-16 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+      <div className="mb-3 opacity-40">
+        {icon ?? <Inbox className="h-8 w-8" />}
       </div>
-
-      {cta && (
-        <>
-          {cta.href ? (
-            <a
-              href={cta.href}
-              className={cn(
-                'mt-1 rounded-lg px-4 py-1.5 text-sm font-medium transition-colors',
-                cta.variant === 'secondary'
-                  ? 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]'
-                  : 'bg-[var(--color-brand)] text-white hover:opacity-90',
-              )}
-            >
-              {cta.label}
-            </a>
-          ) : (
-            <button
-              onClick={cta.onClick}
-              className={cn(
-                'mt-1 rounded-lg px-4 py-1.5 text-sm font-medium transition-colors',
-                cta.variant === 'secondary'
-                  ? 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]'
-                  : 'bg-[var(--color-brand)] text-white hover:opacity-90',
-              )}
-            >
-              {cta.label}
-            </button>
-          )}
-        </>
+      <p className="text-sm font-medium text-[var(--color-text-primary)]">{title}</p>
+      {description && (
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{description}</p>
       )}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   )
 }
