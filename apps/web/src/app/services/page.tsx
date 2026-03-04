@@ -6,27 +6,39 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageTransition } from '@/components/animations'
+import { QueryError } from '@/components/ErrorBoundary'
+import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Network } from 'lucide-react'
-import { useMemo } from 'react'
+import { Layers } from 'lucide-react'
+import { useMemo, useState } from 'react'
 
-type ServiceRow = {
-  id: string
+interface ServiceRow {
   name: string
   namespace: string
-  type: 'ClusterIP' | 'NodePort' | 'LoadBalancer'
-  endpoints: number
-  status: 'Healthy' | 'Warning'
+  type: string
+  clusterIP: string | null
+  ports: Array<{ port: number; protocol?: string | null; targetPort?: string | number | null }>
 }
 
-const mockServices: ServiceRow[] = [
-  { id: 'svc-1', name: 'api-gateway', namespace: 'voyager', type: 'LoadBalancer', endpoints: 6, status: 'Healthy' },
-  { id: 'svc-2', name: 'auth-service', namespace: 'voyager', type: 'ClusterIP', endpoints: 3, status: 'Healthy' },
-  { id: 'svc-3', name: 'metrics-proxy', namespace: 'monitoring', type: 'NodePort', endpoints: 1, status: 'Warning' },
-  { id: 'svc-4', name: 'alerts-dispatcher', namespace: 'voyager', type: 'ClusterIP', endpoints: 2, status: 'Healthy' },
-]
-
 export default function ServicesPage() {
+  const clustersQuery = trpc.clusters.list.useQuery()
+  const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null)
+
+  const defaultClusterId = useMemo(() => {
+    const clusters = clustersQuery.data
+    if (!clusters?.length) return null
+    return (clusters.find((c) => c.healthStatus === 'healthy') ?? clusters[0]).id
+  }, [clustersQuery.data])
+
+  const clusterId = selectedClusterId ?? defaultClusterId
+
+  const servicesQuery = trpc.services.list.useQuery(
+    { clusterId: clusterId! },
+    { enabled: !!clusterId, refetchInterval: 30_000 },
+  )
+
+  const data = useMemo(() => (servicesQuery.data ?? []) as ServiceRow[], [servicesQuery.data])
+
   const columns = useMemo<ColumnDef<ServiceRow, unknown>[]>(
     () => [
       {
@@ -38,16 +50,23 @@ export default function ServicesPage() {
       },
       { accessorKey: 'namespace', header: 'Namespace' },
       { accessorKey: 'type', header: 'Type' },
-      { accessorKey: 'endpoints', header: 'Endpoints' },
       {
-        accessorKey: 'status',
+        accessorKey: 'clusterIP',
+        header: 'Cluster IP',
+        cell: ({ getValue }) => (getValue() as string | null) ?? '—',
+      },
+      {
+        id: 'ports',
+        header: 'Ports',
+        cell: ({ row }) =>
+          row.original.ports
+            .map((p) => `${p.port}${p.protocol ? '/' + p.protocol : ''}`)
+            .join(', ') || '—',
+      },
+      {
+        id: 'status',
         header: 'Status',
-        cell: ({ row }) => (
-          <StatusBadge
-            status={row.original.status === 'Healthy' ? 'healthy' : 'warning'}
-            dot
-          />
-        ),
+        cell: () => <StatusBadge status="healthy" dot />,
       },
     ],
     [],
@@ -59,25 +78,42 @@ export default function ServicesPage() {
         <div className="space-y-4">
           <PageHeader
             title="Services"
-            description="Cluster services overview"
+            description="Kubernetes services across your clusters"
             breadcrumb={[{ label: 'Platform' }, { label: 'Services' }]}
+            actions={
+              clustersQuery.data && clustersQuery.data.length > 1 ? (
+                <select
+                  value={clusterId ?? ''}
+                  onChange={(e) => setSelectedClusterId(e.target.value)}
+                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-1.5 text-sm text-[var(--color-text-primary)]"
+                >
+                  {clustersQuery.data.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              ) : undefined
+            }
           />
 
-          <DataTable
-            data={mockServices}
-            columns={columns}
-            searchable
-            searchPlaceholder="Search services…"
-            emptyIcon={<Network className="h-6 w-6" />}
-            emptyTitle="No services found"
-            emptyDescription="No services match your current filters."
-          />
-
-          {mockServices.length === 0 && (
+          {servicesQuery.error ? (
+            <QueryError message={servicesQuery.error.message} />
+          ) : data.length === 0 && !servicesQuery.isLoading ? (
             <EmptyState
-              icon={<Network className="h-6 w-6" />}
-              title="No services"
-              description="This cluster has no services yet."
+              icon={<Layers className="h-6 w-6" />}
+              title="No services found"
+              description="No Kubernetes services found in this cluster."
+            />
+          ) : (
+            <DataTable
+              data={data}
+              columns={columns}
+              searchable
+              searchPlaceholder="Search services…"
+              emptyIcon={<Layers className="h-6 w-6" />}
+              emptyTitle="No services found"
+              emptyDescription="No Kubernetes services found in this cluster."
             />
           )}
         </div>

@@ -73,6 +73,9 @@
   --surface-1: hsl(230 15% 10%);
   --surface-2: hsl(230 15% 13%);
   --surface-3: hsl(230 15% 17%);
+  /* Shared component aliases — map to surface scale */
+  --color-surface-secondary: var(--surface-1);
+  --color-brand: var(--color-accent);
 
   /* K2-002: Dark mode 3-layer depth system */
   --background: #0a0a0f;
@@ -153,6 +156,9 @@
 html.light {
   --surface: #ffffff;
   --elevated: #f5f7fa;
+  /* Shared component aliases — light mode */
+  --color-surface-secondary: var(--elevated);
+  --color-brand: var(--color-accent);
   --color-bg-primary: #f5f7fa;
   --color-bg-secondary: #edf0f5;
   --color-bg-card: #ffffff;
