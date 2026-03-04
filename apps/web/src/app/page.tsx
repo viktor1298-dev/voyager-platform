@@ -2,6 +2,7 @@
 
 import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, Bell, Container, LayoutGrid, List, RefreshCw, Server } from 'lucide-react'
+import { animate, useMotionValue } from 'motion/react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -998,6 +999,32 @@ function ClusterCard({
   )
 }
 
+function AnimatedNumber({ value }: { value: string }) {
+  const numericMatch = value.match(/^(\d+)(\/(\d+))?$/)
+  const motionVal = useMotionValue(0)
+  const [display, setDisplay] = useState(0)
+  const [display2, setDisplay2] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!numericMatch) return
+    const target = parseInt(numericMatch[1], 10)
+    const controls = animate(motionVal, target, {
+      duration: 1.2,
+      ease: 'easeOut',
+      onUpdate: (v) => setDisplay(Math.round(v)),
+    })
+    if (numericMatch[3] != null) {
+      const t2 = parseInt(numericMatch[3], 10)
+      setDisplay2(t2)
+    }
+    return controls.stop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
+
+  if (!numericMatch) return <>{value}</>
+  return <>{display2 != null ? `${display}/${display2}` : display}</>
+}
+
 function SummaryCard({
   icon,
   label,
@@ -1056,7 +1083,7 @@ function SummaryCard({
               )}
               style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
             >
-              {value}
+              <AnimatedNumber value={value} />
             </div>
             {trend != null && (() => {
               const delta = typeof trend === 'number' ? trend : trend.delta
