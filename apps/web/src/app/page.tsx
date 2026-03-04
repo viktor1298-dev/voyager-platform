@@ -411,6 +411,77 @@ function DashboardContent() {
           <AnomalyWidget compact />
         </div>
 
+        {/* L-P0-001: Health Matrix + Resource Gauges + Events Feed */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
+          {/* Health Matrix Grid */}
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+            <h3 className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-3">Cluster Health Matrix</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {clusterList.map((c) => {
+                const health = normalizeLiveHealthStatus(c.healthStatus ?? c.status)
+                const dotClass = health === 'healthy' ? 'bg-[var(--color-status-active)]' : health === 'degraded' ? 'bg-[var(--color-status-warning)]' : health === 'error' ? 'bg-[var(--color-status-error)]' : 'bg-gray-400'
+                return (
+                  <Link key={c.id} href={`/clusters/${c.id}`} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.04] transition-colors">
+                    <span className={`h-2 w-2 rounded-full ${dotClass} shrink-0`} />
+                    <span className="text-xs text-[var(--color-text-primary)] truncate">{c.name}</span>
+                    <span className="text-[10px] text-[var(--color-text-dim)] ml-auto font-mono">{c.nodeCount}n</span>
+                  </Link>
+                )
+              })}
+              {clusterList.length === 0 && <span className="text-xs text-[var(--color-text-dim)] col-span-2">No clusters</span>}
+            </div>
+          </div>
+
+          {/* Resource Utilization Gauges */}
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+            <h3 className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-3">Resource Utilization</h3>
+            {(() => {
+              const cpuPct = statsQuery.data?.cpuPercent ?? 0
+              const memPct = statsQuery.data?.memoryPercent ?? 0
+              return (
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-[var(--color-text-secondary)]">CPU</span>
+                      <span className="font-mono text-[var(--color-text-primary)]">{cpuPct}%</span>
+                    </div>
+                    <div className="h-3 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full bg-[var(--color-accent)] transition-all duration-500" style={{ width: `${Math.min(cpuPct, 100)}%` }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-[var(--color-text-secondary)]">Memory</span>
+                      <span className="font-mono text-[var(--color-text-primary)]">{memPct}%</span>
+                    </div>
+                    <div className="h-3 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full bg-emerald-500 transition-all duration-500" style={{ width: `${Math.min(memPct, 100)}%` }} />
+                    </div>
+                  </div>
+                  {statsQuery.isLoading && <span className="text-[10px] text-[var(--color-text-dim)]">Loading metrics...</span>}
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Recent Events Feed */}
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+            <h3 className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-3">Recent Events</h3>
+            <div className="space-y-1.5 max-h-[180px] overflow-auto">
+              {(liveData?.events ?? []).slice(0, 8).map((e, i) => (
+                <div key={`ev-${i}`} className="flex items-center gap-2 text-xs">
+                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${e.type === 'Warning' ? 'bg-[var(--color-status-warning)]' : 'bg-[var(--color-status-active)]'}`} />
+                  <span className="text-[var(--color-text-primary)] font-medium truncate flex-1">{String(e.reason ?? '')}</span>
+                  <span className="text-[10px] text-[var(--color-text-dim)] font-mono shrink-0">{e.lastTimestamp ? new Date(String(e.lastTimestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                </div>
+              ))}
+              {(!liveData?.events || liveData.events.length === 0) && (
+                <span className="text-xs text-[var(--color-text-dim)]">No recent events</span>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* P1-001: Consolidated cluster header + filter in one section */}
         <div className="mb-5 space-y-3">
           <div className="flex items-center justify-between gap-3">

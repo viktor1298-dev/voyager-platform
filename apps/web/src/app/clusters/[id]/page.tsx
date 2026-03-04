@@ -16,7 +16,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Progress } from '@/components/ui/progress'
 
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { AiContextCard } from '@/components/AiContextCard'
@@ -596,34 +596,16 @@ export default function ClusterDetailPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {[
             { icon: Server, label: 'Nodes', value: String(cluster.nodeCount) },
-            {
-              icon: Box,
-              label: 'Pods',
-              value: effectiveIsLive
-                ? `${cluster.runningPods} / ${cluster.podCount}`
-                : String(cluster.podCount || '—'),
-            },
+            { icon: Box, label: 'Pods', value: effectiveIsLive ? `${cluster.runningPods}/${cluster.podCount}` : '—' },
             { icon: Globe, label: 'Namespaces', value: String(cluster.namespaceCount || '—') },
             { icon: Cpu, label: 'Version', value: cluster.version },
           ].map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-xl bg-white/[0.03] border border-[var(--color-border)] p-3.5"
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <stat.icon className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
-                <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
-                  {stat.label}
-                </span>
-              </div>
-              <p
-                className={`text-lg font-bold ${stat.value === '—' || stat.value === '0' || stat.value === '0 / 0' ? 'text-[var(--color-text-dim)] opacity-60' : 'text-[var(--color-text-primary)]'}`}
-              >
-                {stat.value}
-              </p>
+            <div key={stat.label} className="text-center">
+              <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase">{stat.label}</span>
+              <p className={`text-sm font-bold ${stat.value === '—' || stat.value === '0' ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-text-primary)]'}`}>{stat.value}</p>
             </div>
           ))}
         </div>
@@ -638,90 +620,177 @@ export default function ClusterDetailPage() {
         />
       )}
 
-      {/* Nodes Table — DataTable */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Server className="h-4 w-4 text-[var(--color-text-dim)]" />
-          <h2 className="text-base font-extrabold tracking-tight text-[var(--color-text-primary)]">
-            Nodes ({nodes.length})
-          </h2>
-        </div>
-        <DataTable
-          data={nodes}
-          columns={nodeColumns}
-          loading={effectiveIsLive ? liveQuery.isLoading : dbNodes.isLoading}
-          emptyTitle="No nodes found"
-          mobileCard={(node) => (
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-[var(--color-text-primary)] text-sm">
-                  {node.name}
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
-                  <span className="text-[var(--color-text-secondary)] text-xs">{node.status}</span>
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                <span className="text-[var(--color-text-muted)]">Role</span>
-                <span className="text-[var(--color-text-primary)]">{node.role}</span>
-                <span className="text-[var(--color-text-muted)]">Kubelet</span>
-                <span className="text-[var(--color-text-primary)] font-mono">
-                  {node.kubeletVersion}
-                </span>
-                <span className="text-[var(--color-text-muted)]">OS</span>
-                <span className="text-[var(--color-text-primary)]">{node.os}</span>
-                <span className="text-[var(--color-text-muted)]">CPU</span>
-                <span className="text-[var(--color-text-primary)] font-mono">{node.cpu}</span>
-                {node.cpuPercent != null && (
-                  <>
-                    <span className="text-[var(--color-text-muted)]">CPU %</span>
-                    <div className="flex items-center gap-2">
-                      <Progress value={node.cpuPercent} className="h-1.5 flex-1" />
-                      <span className="text-[var(--color-text-primary)] font-mono text-[11px]">
-                        {node.cpuPercent}%
-                      </span>
-                    </div>
-                  </>
-                )}
-                <span className="text-[var(--color-text-muted)]">Memory</span>
-                <span className="text-[var(--color-text-primary)] font-mono">{node.memory}</span>
-                {node.memoryPercent != null && (
-                  <>
-                    <span className="text-[var(--color-text-muted)]">Mem %</span>
-                    <div className="flex items-center gap-2">
-                      <Progress value={node.memoryPercent} className="h-1.5 flex-1" />
-                      <span className="text-[var(--color-text-primary)] font-mono text-[11px]">
-                        {node.memoryPercent}%
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-        />
-      </div>
+      {/* Tabbed Layout */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="nodes">Nodes ({nodes.length})</TabsTrigger>
+          {effectiveIsLive && <TabsTrigger value="pods">Pods ({podsQuery.data?.length ?? 0})</TabsTrigger>}
+          <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="deployments">Deployments</TabsTrigger>
+          <TabsTrigger value="events">Events ({events.length})</TabsTrigger>
+        </TabsList>
 
-      {/* Pods Table — Grouped by Namespace */}
-      {effectiveIsLive && (
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Box className="h-4 w-4 text-[var(--color-text-dim)]" />
-            <h2 className="text-base font-extrabold tracking-tight text-[var(--color-text-primary)]">
-              Pods ({podsQuery.data?.length ?? 0})
-            </h2>
+        {/* Overview Tab */}
+        <TabsContent value="overview">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            {[
+              { icon: Server, label: 'Nodes', value: String(cluster.nodeCount) },
+              {
+                icon: Box,
+                label: 'Pods',
+                value: effectiveIsLive
+                  ? `${cluster.runningPods} / ${cluster.podCount}`
+                  : String(cluster.podCount || '—'),
+              },
+              { icon: Globe, label: 'Namespaces', value: String(cluster.namespaceCount || '—') },
+              { icon: Cpu, label: 'Version', value: cluster.version },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-xl bg-white/[0.03] border border-[var(--color-border)] p-3.5"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <stat.icon className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
+                  <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
+                    {stat.label}
+                  </span>
+                </div>
+                <p className={`text-lg font-bold ${stat.value === '—' || stat.value === '0' || stat.value === '0 / 0' ? 'text-[var(--color-text-dim)] opacity-60' : 'text-[var(--color-text-primary)]'}`}>
+                  {stat.value}
+                </p>
+              </div>
+            ))}
           </div>
-          <PodsGroupedByNamespace
-            pods={(podsQuery.data ?? []).map((p, i) => ({ id: `pod-${i}`, ...p }))}
-            isLoading={podsQuery.isLoading}
-            isAdmin={isAdmin === true}
-            onDeletePod={setDeletePodTarget}
-            onSelectPod={setSelectedPod}
+          {/* Recent events preview */}
+          <div>
+            <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-2">Recent Events</h3>
+            {events.slice(0, 5).map((event) => (
+              <div key={event.id} className="flex items-center gap-3 py-2 border-b border-[var(--color-border)]/30 last:border-0">
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ color: severityColor(event.type), background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)` }}>
+                  {event.type}
+                </span>
+                <span className="text-xs text-[var(--color-text-primary)] font-medium">{event.reason}</span>
+                <span className="flex-1 text-xs text-[var(--color-text-muted)] truncate">{event.message}</span>
+                <span className="text-[10px] text-[var(--color-text-dim)] font-mono shrink-0">{event.timestamp ? timeAgo(event.timestamp) : '—'}</span>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
 
+        {/* Nodes Tab */}
+        <TabsContent value="nodes">
+          <DataTable
+            data={nodes}
+            columns={nodeColumns}
+            loading={effectiveIsLive ? liveQuery.isLoading : dbNodes.isLoading}
+            emptyTitle="No nodes found"
+            paginated
+            pageSize={25}
+            mobileCard={(node) => (
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-[var(--color-text-primary)] text-sm">{node.name}</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
+                    <span className="text-[var(--color-text-secondary)] text-xs">{node.status}</span>
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                  <span className="text-[var(--color-text-muted)]">Role</span>
+                  <span className="text-[var(--color-text-primary)]">{node.role}</span>
+                  <span className="text-[var(--color-text-muted)]">Kubelet</span>
+                  <span className="text-[var(--color-text-primary)] font-mono">{node.kubeletVersion}</span>
+                  <span className="text-[var(--color-text-muted)]">CPU</span>
+                  <span className="text-[var(--color-text-primary)] font-mono">{node.cpu}</span>
+                  {node.cpuPercent != null && (
+                    <>
+                      <span className="text-[var(--color-text-muted)]">CPU %</span>
+                      <div className="flex items-center gap-2">
+                        <Progress value={node.cpuPercent} className="h-1.5 flex-1" />
+                        <span className="text-[var(--color-text-primary)] font-mono text-[11px]">{node.cpuPercent}%</span>
+                      </div>
+                    </>
+                  )}
+                  <span className="text-[var(--color-text-muted)]">Memory</span>
+                  <span className="text-[var(--color-text-primary)] font-mono">{node.memory}</span>
+                  {node.memoryPercent != null && (
+                    <>
+                      <span className="text-[var(--color-text-muted)]">Mem %</span>
+                      <div className="flex items-center gap-2">
+                        <Progress value={node.memoryPercent} className="h-1.5 flex-1" />
+                        <span className="text-[var(--color-text-primary)] font-mono text-[11px]">{node.memoryPercent}%</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           />
-        </div>
-      )}
+        </TabsContent>
+
+        {/* Pods Tab */}
+        {effectiveIsLive && (
+          <TabsContent value="pods">
+            <PodsGroupedByNamespace
+              pods={(podsQuery.data ?? []).map((p, i) => ({ id: `pod-${i}`, ...p }))}
+              isLoading={podsQuery.isLoading}
+              isAdmin={isAdmin === true}
+              onDeletePod={setDeletePodTarget}
+              onSelectPod={setSelectedPod}
+            />
+          </TabsContent>
+        )}
+
+        {/* Services Tab */}
+        <TabsContent value="services">
+          <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+            <Globe className="h-8 w-8 mb-2 opacity-40" />
+            <p className="text-sm">Services for this cluster</p>
+            <p className="text-xs text-[var(--color-text-dim)] mt-1">View all services on the <a href="/services" className="text-[var(--color-accent)] hover:underline">Services page</a></p>
+          </div>
+        </TabsContent>
+
+        {/* Deployments Tab */}
+        <TabsContent value="deployments">
+          <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+            <Box className="h-8 w-8 mb-2 opacity-40" />
+            <p className="text-sm">Deployments for this cluster</p>
+            <p className="text-xs text-[var(--color-text-dim)] mt-1">View all deployments on the <a href="/deployments" className="text-[var(--color-accent)] hover:underline">Deployments page</a></p>
+          </div>
+        </TabsContent>
+
+        {/* Events Tab */}
+        <TabsContent value="events">
+          <DataTable
+            data={events}
+            columns={eventColumns}
+            loading={effectiveIsLive ? liveQuery.isLoading : dbEvents.isLoading}
+            emptyTitle="No events found"
+            searchable
+            paginated
+            pageSize={25}
+            searchPlaceholder="Search events…"
+            mobileCard={(event) => {
+              const isWarning = event.type === 'Warning'
+              return (
+                <div className={`p-3 rounded-lg border border-[var(--color-border)] ${isWarning ? 'bg-[var(--color-status-warning)]/[0.04]' : 'bg-[var(--color-bg-card)]'}`}>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ color: severityColor(event.type), background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)` }}>
+                        {event.type}
+                      </span>
+                      <span className="text-[var(--color-text-primary)] text-xs font-medium">{event.reason}</span>
+                    </div>
+                    <span className="text-[var(--color-text-dim)] font-mono text-[10px] shrink-0">{event.timestamp ? timeAgo(event.timestamp) : '—'}</span>
+                  </div>
+                  <p className="text-[var(--color-text-muted)] text-xs line-clamp-2">{event.message}</p>
+                </div>
+              )
+            }}
+          />
+        </TabsContent>
+      </Tabs>
 
       {deletePodTarget && (
         <DeletePodDialog
@@ -737,52 +806,6 @@ export default function ClusterDetailPage() {
         onOpenChange={(open) => { if (!open) setSelectedPod(null) }}
         events={events?.filter((e) => selectedPod && e.message?.includes(selectedPod.name)).slice(0, 10).map((e) => ({ ...e, timestamp: e.timestamp ?? undefined }))}
       />
-
-      {/* Recent Events — DataTable */}
-      <div>
-        <h2 className="text-base font-extrabold tracking-tight text-[var(--color-text-primary)] mb-3">
-          Recent Events
-        </h2>
-        <DataTable
-          data={events}
-          columns={eventColumns}
-          loading={effectiveIsLive ? liveQuery.isLoading : dbEvents.isLoading}
-          emptyTitle="No events found"
-          searchable
-          searchPlaceholder="Search events…"
-          mobileCard={(event) => {
-            const isWarning = event.type === 'Warning'
-            return (
-              <div
-                className={`p-3 rounded-lg border border-[var(--color-border)] ${isWarning ? 'bg-[var(--color-status-warning)]/[0.04]' : 'bg-[var(--color-bg-card)]'}`}
-              >
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
-                      style={{
-                        color: severityColor(event.type),
-                        background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)`,
-                      }}
-                    >
-                      {event.type}
-                    </span>
-                    <span className="text-[var(--color-text-primary)] text-xs font-medium">
-                      {event.reason}
-                    </span>
-                  </div>
-                  <span className="text-[var(--color-text-dim)] font-mono text-[10px] shrink-0">
-                    {event.timestamp ? timeAgo(event.timestamp) : '—'}
-                  </span>
-                </div>
-                <p className="text-[var(--color-text-muted)] text-xs line-clamp-2">
-                  {event.message}
-                </p>
-              </div>
-            )
-          }}
-        />
-      </div>
     </AppLayout>
   )
 }

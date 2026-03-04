@@ -217,6 +217,8 @@ export default function AlertsPage() {
               data={alerts}
               columns={alertColumns}
               loading={alertsQuery.isLoading}
+              paginated
+              pageSize={25}
               emptyIcon={<AlertTriangle className="h-8 w-8" />}
               emptyTitle="No alert rules configured"
               mobileCard={(alert) => (

@@ -296,7 +296,14 @@ export default function DeploymentsPage() {
         />
 
         {deploymentsQuery.error && (
-          <QueryError message={deploymentsQuery.error.message} onRetry={() => deploymentsQuery.refetch()} />
+          <QueryError
+            message={
+              deploymentsQuery.error.message?.includes('[')
+                ? 'Failed to load deployments. The server returned an unexpected response. Please try again.'
+                : deploymentsQuery.error.message
+            }
+            onRetry={() => deploymentsQuery.refetch()}
+          />
         )}
 
         <div className="space-y-5">
@@ -346,9 +353,15 @@ export default function DeploymentsPage() {
           ))}
 
           {!deploymentsQuery.isLoading && groupedByCluster.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-14 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+            <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
               <Box className="h-8 w-8 mb-2 opacity-40" />
-              <p className="text-sm">No deployments found for selected namespace</p>
+              <p className="text-sm font-medium mb-1">No deployments found</p>
+              <p className="text-xs text-[var(--color-text-dim)] mb-3">{namespaceFilter !== 'all' ? 'Try selecting a different namespace.' : 'Connect a cluster to see deployments.'}</p>
+              {namespaceFilter !== 'all' && (
+                <button type="button" onClick={() => setNamespaceFilter('all')} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity">
+                  Show All Namespaces
+                </button>
+              )}
             </div>
           )}
         </div>
