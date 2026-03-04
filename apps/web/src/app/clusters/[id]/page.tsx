@@ -239,6 +239,8 @@ interface PodRow {
   memoryMi: number | null
   cpuPercent: number | null
   memoryPercent: number | null
+  restartCount: number | null
+  ready: string | null
 }
 
 function DeletePodDialog({
@@ -723,7 +725,7 @@ export default function ClusterDetailPage() {
         {effectiveIsLive && (
           <TabsContent value="pods">
             <PodsGroupedByNamespace
-              pods={(podsQuery.data ?? []).map((p, i) => ({ id: `pod-${i}`, ...p }))}
+              pods={(podsQuery.data ?? []).map((p: Record<string, unknown>, i) => ({ id: `pod-${i}`, ...p, restartCount: typeof p.restartCount === 'number' ? p.restartCount : null, ready: typeof p.ready === 'string' ? p.ready : null } as PodRow))}
               isLoading={podsQuery.isLoading}
               isAdmin={isAdmin === true}
               onDeletePod={setDeletePodTarget}
@@ -901,6 +903,26 @@ function NamespacePodGroup({
                 <span className="flex-1 min-w-0 text-[13px] font-mono text-[var(--color-text-primary)] truncate">
                   {pod.name}
                 </span>
+                {pod.ready && (
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${pod.ready.split('/')[0] === pod.ready.split('/')[1] ? 'bg-[var(--color-status-active)]/15 text-[var(--color-status-active)]' : 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)]'}`}>
+                    {pod.ready}
+                  </span>
+                )}
+                {pod.cpuPercent != null && (
+                  <span className="text-[10px] font-mono text-[var(--color-text-dim)]" title="CPU %">
+                    CPU {pod.cpuPercent}%
+                  </span>
+                )}
+                {pod.memoryPercent != null && (
+                  <span className="text-[10px] font-mono text-[var(--color-text-dim)]" title="Memory %">
+                    Mem {pod.memoryPercent}%
+                  </span>
+                )}
+                {pod.restartCount != null && pod.restartCount > 0 && (
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${pod.restartCount >= 5 ? 'bg-red-500/15 text-red-400' : 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)]'}`} title="Restart count">
+                    ↻{pod.restartCount}
+                  </span>
+                )}
                 <span className="text-[11px] text-[var(--color-text-secondary)]">{pod.status}</span>
                 <span className="text-[11px] text-[var(--color-text-dim)] font-mono">
                   {pod.createdAt ? timeAgo(pod.createdAt) : '—'}

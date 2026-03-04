@@ -129,9 +129,17 @@ export function CommandPalette() {
               placeholder="Search commands, clusters, services…"
               className="w-full py-3 text-sm bg-transparent text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none"
             />
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-              ESC
-            </kbd>
+            <div className="hidden sm:inline-flex items-center gap-1.5">
+              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                ↑↓
+              </kbd>
+              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                ↵
+              </kbd>
+              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                ESC
+              </kbd>
+            </div>
           </div>
           <Command.List className="max-h-[400px] overflow-y-auto p-2">
             <Command.Empty className="py-6 text-center text-sm text-[var(--color-text-muted)]">
@@ -190,26 +198,53 @@ export function CommandPalette() {
               </Command.Item>
             </Command.Group>
 
-            {/* Resources — clusters, deployments, services */}
-            {resourceItems.length > 0 && (
+            {/* Clusters */}
+            {resourceItems.filter((i) => i.type === 'Cluster').length > 0 && (
+              <Command.Group heading="Clusters" className={headingClass}>
+                {resourceItems
+                  .filter((i) => i.type === 'Cluster')
+                  .map((item) => {
+                    const RIcon = item.icon
+                    return (
+                      <Command.Item
+                        key={`resource-${item.path}`}
+                        value={`Cluster ${item.label}`}
+                        onSelect={() => navigate(item.path, item.label, item.type)}
+                        className={itemClass}
+                      >
+                        <RIcon className="h-4 w-4 shrink-0" />
+                        <span>{item.label}</span>
+                        <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
+                          cluster
+                        </span>
+                      </Command.Item>
+                    )
+                  })}
+              </Command.Group>
+            )}
+
+            {/* Resources — deployments, services */}
+            {resourceItems.filter((i) => i.type !== 'Cluster').length > 0 && (
               <Command.Group heading="Resources" className={headingClass}>
-                {resourceItems.map((item) => {
-                  const RIcon = item.icon
-                  return (
-                    <Command.Item
-                      key={`resource-${item.path}`}
-                      value={`${item.type} ${item.label}`}
-                      onSelect={() => navigate(item.path, item.label, item.type)}
-                      className={itemClass}
-                    >
-                      <RIcon className="h-4 w-4 shrink-0" />
-                      <span>{item.label}</span>
-                      <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
-                        {item.type}
-                      </span>
-                    </Command.Item>
-                  )
-                })}
+                {resourceItems
+                  .filter((i) => i.type !== 'Cluster')
+                  .map((item) => {
+                    const RIcon = item.icon
+                    return (
+                      <Command.Item
+                        key={`resource-${item.path}`}
+                        value={`${item.type} ${item.label}`}
+                        onSelect={() => navigate(item.path, item.label, item.type)}
+                        className={itemClass}
+                      >
+                        <RIcon className="h-4 w-4 shrink-0" />
+                        <span>{item.label}</span>
+                        <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
+                          {item.type.toLowerCase()}
+                        </span>
+                      </Command.Item>
+                    )
+                  })}
               </Command.Group>
             )}
 

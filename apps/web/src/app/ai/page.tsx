@@ -207,14 +207,24 @@ export default function AiAssistantPage() {
 
           <div className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
             <section className="space-y-3">
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
-                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)]">
-                  🟢 FREE Tier Analytics
+              {/* Cluster context banner */}
+              {selectedCluster && (
+                <div className="rounded-2xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 flex items-center justify-center">
+                      <BrainCircuit className="h-5 w-5 text-[var(--color-accent)]" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                        Analyzing: {selectedCluster.name}
+                      </p>
+                      <p className="text-xs text-[var(--color-text-secondary)]">
+                        {analysisQuery.data ? `Health score: ${analysisQuery.data.score}/100` : 'Health score, insights, and recommendations available'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-[var(--color-text-secondary)]">
-                  Health score, snapshot insights, and recommendations are always available.
-                </p>
-              </div>
+              )}
 
               <AiChat
                 key={selectedCluster?.id ?? 'no-cluster'}

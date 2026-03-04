@@ -369,50 +369,49 @@ export default function ClustersPage() {
         loading={clusters.isLoading}
         emptyIcon={<Database className="h-10 w-10" />}
         emptyTitle="No clusters found"
-        mobileCard={(row) => (
-          <div
-            onClick={() => router.push(`/clusters/${row.id}`)}
-            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2 cursor-pointer active:bg-white/[0.03]"
-          >
-            <div className="flex justify-between items-center gap-2">
-              <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm">{row.name}</span>
-              <div className="flex items-center gap-2 shrink-0">
-                {(() => {
-                  const liveStatus = normalizeLiveHealthStatus(row.healthStatus ?? row.status)
-                  return (
-                    <>
-                      <span className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`} />
-                      <Badge variant={healthBadgeVariant(liveStatus)}>{healthBadgeLabel(liveStatus)}</Badge>
-                    </>
-                  )
-                })()}
+        mobileCard={(row) => {
+          const liveStatus = normalizeLiveHealthStatus(row.healthStatus ?? row.status)
+          const relation = getPermissionForCluster(row.id)
+          const tags = getClusterTags({ name: row.name, provider: row.provider ?? undefined, source: 'db' })
+          return (
+            <div
+              onClick={() => router.push(`/clusters/${row.id}`)}
+              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 cursor-pointer active:bg-white/[0.03] space-y-3"
+            >
+              {/* Top: Status dot + Name */}
+              <div className="flex items-center gap-2.5">
+                <span className={`h-2.5 w-2.5 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`} />
+                <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm flex-1">{row.name}</span>
+                <ProviderLogo provider={row.provider ?? 'default'} />
+              </div>
+
+              {/* Middle: Metrics grid */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Nodes', value: String(row.nodeCount) },
+                  { label: 'Version', value: row.version ?? '—' },
+                  { label: 'Status', value: healthBadgeLabel(liveStatus) },
+                ].map((m) => (
+                  <div key={m.label} className="text-center rounded-lg bg-white/[0.03] py-1.5 px-1">
+                    <div className="text-[9px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{m.label}</div>
+                    <div className={`text-xs font-bold ${m.value === '—' || m.value === '0' ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-text-primary)]'}`}>{m.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bottom: Tags + Access */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {relation && <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>}
+                {tags.slice(0, 3).map((tag) => (
+                  <span key={tag} className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-white/[0.05] text-[var(--color-text-dim)] border border-[var(--color-border)]">{tag}</span>
+                ))}
+                <span className="ml-auto text-[10px] text-[var(--color-text-dim)]" suppressHydrationWarning>
+                  {formatLastSeen(row.updatedAt, isClient)}
+                </span>
               </div>
             </div>
-            {(() => {
-              const relation = getPermissionForCluster(row.id)
-              if (!relation) return null
-              return <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>
-            })()}
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-              <span className="text-[var(--color-text-secondary)]">Provider</span>
-              <span className="text-[var(--color-text-primary)] flex items-center gap-1.5">
-                <ProviderLogo provider={row.provider ?? 'default'} />
-                <span className="font-mono uppercase">{row.provider}</span>
-              </span>
-              <span className="text-[var(--color-text-secondary)]">Version</span>
-              <span className="text-[var(--color-text-primary)] font-mono">{row.version ?? '—'}</span>
-              <span className="text-[var(--color-text-secondary)]">Nodes</span>
-              <span className="text-[var(--color-text-primary)] font-mono tabular-nums">{row.nodeCount}</span>
-              <span className="text-[var(--color-text-secondary)]">Last Seen</span>
-              <span className="text-[var(--color-text-primary)]" suppressHydrationWarning>
-                {formatLastSeen(row.updatedAt, isClient)}
-              </span>
-            </div>
-            <div className="pt-2 border-t border-[var(--color-border)]/50 flex justify-end">
-              <ClusterActions clusterId={row.id} clusterName={row.name} onDelete={() => setDeleteTarget({ id: row.id, name: row.name })} />
-            </div>
-          </div>
-        )}
+          )
+        }}
       />
 
       {/* Add Cluster Modal */}
