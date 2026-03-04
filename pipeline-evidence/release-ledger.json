@@ -334,5 +334,16 @@
     "commit": "713e911",
     "health": "ok",
     "login": "ok"
+  },
+  {
+    "version": "v178",
+    "timestamp": "2026-03-04T13:10:19.560723",
+    "images": [
+      "voyager-api:v178",
+      "voyager-web:v178"
+    ],
+    "health": "ok",
+    "login": "ok",
+    "deployedBy": "uri-devops"
   }
 ]
