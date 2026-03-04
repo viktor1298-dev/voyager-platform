@@ -10,3 +10,6 @@ export type { DataTableProps } from './DataTable'
 export { PageHeader } from './PageHeader'
 
 export { EmptyState } from './EmptyState'
+
+export { TableSkeleton } from './TableSkeleton'
+export { CardSkeleton } from './CardSkeleton'

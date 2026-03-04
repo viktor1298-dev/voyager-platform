@@ -20,6 +20,7 @@ import {
   type NodePool,
 } from '@/lib/mock-karpenter'
 import { getTRPCClient, trpc } from '@/lib/trpc'
+import { CardSkeleton } from '@/components/shared/CardSkeleton'
 
 type TopologyItem = {
   id: string
@@ -147,7 +148,10 @@ export default function KarpenterPage() {
   )
 
   const clustersQuery = trpc.clusters.list.useQuery()
-  const selectedClusterId = searchParams.get('clusterId') ?? clustersQuery.data?.[0]?.id ?? null
+  const selectedClusterId =
+    searchParams.get('clusterId') ??
+    (clustersQuery.data?.find((c) => c.healthStatus === 'healthy') ?? clustersQuery.data?.[0])?.id ??
+    null
 
   const nodePoolsFallback = useMemo(() => getMockNodePools(), [])
   const nodeClassesFallback = useMemo(() => getMockEC2NodeClasses(), [])
@@ -349,6 +353,10 @@ export default function KarpenterPage() {
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
+          {metricsQuery.isLoading ? (
+            <CardSkeleton count={3} />
+          ) : (
+            <>
           <MetricCard
             title="Nodes provisioned"
             value={metrics.nodesProvisioned.toString()}
@@ -360,6 +368,8 @@ export default function KarpenterPage() {
             value={`$${metrics.estimatedCostPerHour.toFixed(2)}`}
             icon={CircleDollarSign}
           />
+            </>
+          )}
         </div>
 
         <div className="mt-6 grid gap-4 xl:grid-cols-2">
@@ -370,6 +380,7 @@ export default function KarpenterPage() {
             <DataTable
               data={nodePools}
               columns={nodePoolColumns}
+              loading={nodePoolsQuery.isLoading}
               searchable
               searchPlaceholder="Search NodePools…"
               mobileCard={(pool) => (
@@ -395,6 +406,7 @@ export default function KarpenterPage() {
             <DataTable
               data={nodeClasses}
               columns={nodeClassColumns}
+              loading={nodeClassesQuery.isLoading}
               searchable
               searchPlaceholder="Search node classes…"
               mobileCard={(nodeClass) => (
