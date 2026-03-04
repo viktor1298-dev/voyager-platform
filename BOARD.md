@@ -533,7 +533,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### ⚡ Phase L-QW — Quick Wins (1-day fixes, start here — v178)
 
-- [ ] **L-QW-001: Default cluster selector to first healthy cluster** — `clusters.find(c => c.health === 'healthy') ?? clusters[0]` — fixes Services, Deployments, Namespaces, Logs (5 pages instantly)
+- [x] **L-QW-001: Default cluster selector to first healthy cluster** — `clusters.find(c => c.health === 'healthy') ?? clusters[0]` — fixes Services, Deployments, Namespaces, Logs (5 pages instantly)
   - Files: all pages with cluster selector component
 - [x] **L-QW-002: Table row hover states** — add `hover:bg-muted/50 transition-colors cursor-pointer` to ALL `<tr>` elements across every data table
 - [x] **L-QW-003: Fix table header typography** — change from `uppercase font-mono text-xs` to `text-xs font-medium text-muted-foreground` everywhere
@@ -569,7 +569,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - Fix: `@tanstack/virtual` virtual scrolling OR standard pagination (25/50/100 per page)
   - Files: `/alerts` page component
 
-- [ ] **L-P0-004: Skeleton Loading — All Data Tables and Cards**
+- [x] **L-P0-004: Skeleton Loading — All Data Tables and Cards**
   - CURRENT: Pages flash empty → content with no intermediate state
   - Fix: Add `<TableSkeleton rows={5} />` and `<CardSkeleton />` to every data table and card that uses `isLoading`
   - Files: all table components, stat cards
