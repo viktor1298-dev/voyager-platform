@@ -1,13 +1,9 @@
 {
   "status": "running",
-  "version": "v170",
-  "phase": "K-P0-QA-FIX-2",
-  "timestamp": "2026-03-03T21:54:26.715742",
-  "previousVersion": "v169",
-  "deployedInK8s": "v170",
+  "version": "v176",
+  "phase": "K-P2",
+  "fixLoopCount": 1,
+  "deployedInK8s": "v176",
   "currentStage": "DEPLOYED",
-  "e2eVerdict": "PASS",
-  "qaVerdict": "FAIL",
-  "qaScore": 4.5,
-  "fixLoopCount": 2
+  "timestamp": "2026-03-04T09:51:17.292978"
 }
