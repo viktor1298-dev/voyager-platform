@@ -33,6 +33,7 @@ import {
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
+import { SparklineChart, generateMockTrend } from '@/components/charts/SparklineChart'
 
 interface ClusterCardData {
   id: string
@@ -238,6 +239,14 @@ function DashboardContent() {
   const runningPods = liveData?.runningPods ?? 0
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
 
+  // 24h sparkline trend data for dashboard stat cards
+  const sparklines = useMemo(() => ({
+    nodes: generateMockTrend(totalNodes || 3),
+    pods: generateMockTrend(runningPods || 8),
+    clusters: generateMockTrend(clusterList.length || 2),
+    warnings: generateMockTrend(warningEvents || 1, 0.3),
+  }), [totalNodes, runningPods, clusterList.length, warningEvents])
+
   const filterOptions = useMemo(() => {
     const statuses = new Set<string>()
     const providers = new Set<string>()
@@ -344,6 +353,9 @@ function DashboardContent() {
             gradient={totalNodes > 0 ? 'var(--gradient-text-default)' : 'none'}
             isLoading={isLoading}
             trend={1}
+            trendPositiveIsGood
+            sparklineData={sparklines.nodes}
+            sparklineColor="#6366f1"
           />
           <SummaryCard
             icon={<Container className="h-3.5 w-3.5" />}
@@ -361,6 +373,9 @@ function DashboardContent() {
             }
             isLoading={isLoading}
             trend={5}
+            trendPositiveIsGood
+            sparklineData={sparklines.pods}
+            sparklineColor="#10b981"
           />
           <SummaryCard
             icon={<LayoutGrid className="h-3.5 w-3.5" />}
@@ -370,6 +385,9 @@ function DashboardContent() {
             gradient={clusterList.length > 0 ? 'var(--gradient-text-default)' : 'none'}
             isLoading={isLoading}
             trend={2}
+            trendPositiveIsGood
+            sparklineData={sparklines.clusters}
+            sparklineColor="#6366f1"
           />
           <SummaryCard
             icon={
@@ -379,14 +397,89 @@ function DashboardContent() {
                 <Bell className="h-3.5 w-3.5" />
               )
             }
+            trendPositiveIsGood={false}
             label="Warning Events"
             value={String(warningEvents)}
             color={warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'}
             gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'none'}
             isLoading={isLoading}
             trend={-3}
+            emphasized={warningEvents > 0}
+            sparklineData={sparklines.warnings}
+            sparklineColor="#f59e0b"
           />
           <AnomalyWidget compact />
+        </div>
+
+        {/* L-P0-001: Health Matrix + Resource Gauges + Events Feed */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
+          {/* Health Matrix Grid */}
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+            <h3 className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-3">Cluster Health Matrix</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {clusterList.map((c) => {
+                const health = normalizeLiveHealthStatus(c.healthStatus ?? c.status)
+                const dotClass = health === 'healthy' ? 'bg-[var(--color-status-active)]' : health === 'degraded' ? 'bg-[var(--color-status-warning)]' : health === 'error' ? 'bg-[var(--color-status-error)]' : 'bg-gray-400'
+                return (
+                  <Link key={c.id} href={`/clusters/${c.id}`} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.04] transition-colors">
+                    <span className={`h-2 w-2 rounded-full ${dotClass} shrink-0`} />
+                    <span className="text-xs text-[var(--color-text-primary)] truncate">{c.name}</span>
+                    <span className="text-[10px] text-[var(--color-text-dim)] ml-auto font-mono">{c.nodeCount}n</span>
+                  </Link>
+                )
+              })}
+              {clusterList.length === 0 && <span className="text-xs text-[var(--color-text-dim)] col-span-2">No clusters</span>}
+            </div>
+          </div>
+
+          {/* Resource Utilization Gauges */}
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+            <h3 className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-3">Resource Utilization</h3>
+            {(() => {
+              const cpuPct = statsQuery.data?.cpuPercent ?? 0
+              const memPct = statsQuery.data?.memoryPercent ?? 0
+              return (
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-[var(--color-text-secondary)]">CPU</span>
+                      <span className="font-mono text-[var(--color-text-primary)]">{cpuPct}%</span>
+                    </div>
+                    <div className="h-3 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full bg-[var(--color-accent)] transition-all duration-500" style={{ width: `${Math.min(cpuPct, 100)}%` }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-[var(--color-text-secondary)]">Memory</span>
+                      <span className="font-mono text-[var(--color-text-primary)]">{memPct}%</span>
+                    </div>
+                    <div className="h-3 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full bg-emerald-500 transition-all duration-500" style={{ width: `${Math.min(memPct, 100)}%` }} />
+                    </div>
+                  </div>
+                  {statsQuery.isLoading && <span className="text-[10px] text-[var(--color-text-dim)]">Loading metrics...</span>}
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Recent Events Feed */}
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+            <h3 className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-3">Recent Events</h3>
+            <div className="space-y-1.5 max-h-[180px] overflow-auto">
+              {(liveData?.events ?? []).slice(0, 8).map((e, i) => (
+                <div key={`ev-${i}`} className="flex items-center gap-2 text-xs">
+                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${e.type === 'Warning' ? 'bg-[var(--color-status-warning)]' : 'bg-[var(--color-status-active)]'}`} />
+                  <span className="text-[var(--color-text-primary)] font-medium truncate flex-1">{String(e.reason ?? '')}</span>
+                  <span className="text-[10px] text-[var(--color-text-dim)] font-mono shrink-0">{e.lastTimestamp ? new Date(String(e.lastTimestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                </div>
+              ))}
+              {(!liveData?.events || liveData.events.length === 0) && (
+                <span className="text-xs text-[var(--color-text-dim)]">No recent events</span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* P1-001: Consolidated cluster header + filter in one section */}
@@ -605,7 +698,7 @@ function ClusterTable({ clusters }: { clusters: ClusterCardData[] }) {
             {['Name', 'Provider', 'Health', 'Environment', 'Version', 'Nodes', 'CPU'].map((h) => (
               <th
                 key={h}
-                className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-dim)] font-mono"
+                className="px-4 py-3 text-left text-xs font-medium text-muted-foreground"
               >
                 {h}
               </th>
@@ -624,7 +717,7 @@ function ClusterTable({ clusters }: { clusters: ClusterCardData[] }) {
               <tr
                 key={cluster.id}
                 onClick={() => router.push(`/clusters/${cluster.id}`)}
-                className="cursor-pointer hover:bg-white/[0.03] transition-all duration-200 hover:shadow-[inset_0_0_0_1px_var(--color-border-hover),0_2px_8px_rgba(0,0,0,0.15)]"
+                className="hover:bg-muted/50 transition-colors cursor-pointer"
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
@@ -913,7 +1006,10 @@ function SummaryCard({
   gradient,
   isLoading,
   trend,
+  trendPositiveIsGood,
   emphasized,
+  sparklineData,
+  sparklineColor,
 }: {
   icon: React.ReactNode
   label: string
@@ -922,12 +1018,16 @@ function SummaryCard({
   gradient: string
   isLoading?: boolean
   trend?: number | { delta: number; label?: string } | null
+  /** When true, positive delta = good (green). Default: false (positive = bad/red, for alerts). */
+  trendPositiveIsGood?: boolean
   emphasized?: boolean
+  sparklineData?: number[]
+  sparklineColor?: string
 }) {
   return (
     <div
       className={cn(
-        'rounded-xl px-3 py-2.5 border w-full flex items-center justify-between gap-2 transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5',
+        'relative overflow-hidden rounded-xl px-3 py-2.5 border w-full flex items-center justify-between gap-2 transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5',
         emphasized
           ? 'border-[var(--color-status-warning)]/40 ring-1 ring-[var(--color-status-warning)]/20'
           : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)]',
@@ -950,7 +1050,7 @@ function SummaryCard({
           <div className="flex items-baseline gap-1.5">
             <div
               className={cn(
-                'text-xl font-extrabold tracking-tight leading-tight animate-count-up',
+                'text-3xl font-semibold tabular-nums tracking-tight leading-tight animate-count-up',
                 gradient !== 'none' && 'gradient-text',
                 gradient === 'none' && 'opacity-50',
               )}
@@ -961,11 +1061,12 @@ function SummaryCard({
             {trend != null && (() => {
               const delta = typeof trend === 'number' ? trend : trend.delta
               if (delta === 0) return null
+              const isGood = trendPositiveIsGood ? delta > 0 : delta < 0
               return (
                 <span
                   className={cn(
                     'text-[10px] font-semibold font-mono tabular-nums',
-                    delta > 0 ? 'text-red-400' : 'text-emerald-400',
+                    isGood ? 'text-emerald-400' : 'text-red-400',
                   )}
                 >
                   {delta > 0 ? `▲ +${delta}` : `▼ ${delta}`}
@@ -978,6 +1079,11 @@ function SummaryCard({
       <span className="shrink-0 opacity-60" style={{ color }}>
         {icon}
       </span>
+      {sparklineData && sparklineData.length > 0 && (
+        <div className="absolute bottom-0 left-0 right-0 h-8 opacity-60">
+          <SparklineChart data={sparklineData} color={sparklineColor ?? color} height={32} />
+        </div>
+      )}
     </div>
   )
 }

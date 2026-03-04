@@ -273,6 +273,17 @@ function WebhooksPageContent() {
           </button>
         </div>
 
+        {!isLoading && webhooks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+            <Webhook className="h-10 w-10 mb-3 opacity-40" />
+            <p className="text-sm font-medium mb-1">No webhooks configured</p>
+            <p className="text-xs text-[var(--color-text-dim)] mb-4">Create your first webhook to receive event notifications.</p>
+            <button type="button" onClick={() => router.push('/webhooks/new')} className={btnPrimary}>
+              <Plus className="h-4 w-4" />
+              Add Webhook
+            </button>
+          </div>
+        ) : (
         <DataTable
           data={webhooks}
           columns={columns}
@@ -305,6 +316,7 @@ function WebhooksPageContent() {
             </div>
           )}
         />
+        )}
 
         <AnimatedList
           className="mt-3 space-y-3"

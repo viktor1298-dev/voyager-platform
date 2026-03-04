@@ -2,7 +2,7 @@
 
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
-import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { PageHeader } from '@/components/PageHeader'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
@@ -273,38 +273,38 @@ export default function DeploymentsPage() {
   return (
     <AppLayout>
       <PageTransition>
-        <Breadcrumbs />
+        <PageHeader
+          title="Deployments"
+          icon={<Box className="h-6 w-6" />}
+          description="Track rollout status, replica health, and restart/scale operations."
+          actions={
+            <div className="flex items-center gap-2">
+              <label htmlFor="namespace-filter" className="text-xs text-[var(--color-table-meta)]">Namespace</label>
+              <select
+                id="namespace-filter"
+                value={namespaceFilter}
+                onChange={(event) => setNamespaceFilter(event.target.value)}
+                className="px-3 py-2 rounded-lg text-sm bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]/50"
+              >
+                <option value="all">All namespaces</option>
+                {namespaces.map((namespace) => (
+                  <option key={namespace} value={namespace}>{namespace}</option>
+                ))}
+              </select>
+            </div>
+          }
+        />
 
         {deploymentsQuery.error && (
-          <QueryError message={deploymentsQuery.error.message} onRetry={() => deploymentsQuery.refetch()} />
+          <QueryError
+            message={
+              deploymentsQuery.error.message?.includes('[')
+                ? 'Failed to load deployments. The server returned an unexpected response. Please try again.'
+                : deploymentsQuery.error.message
+            }
+            onRetry={() => deploymentsQuery.refetch()}
+          />
         )}
-
-        <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Deployments</h1>
-            <p className="text-[12px] text-[var(--color-text-muted)] mt-1">
-              Track rollout status, replica health, and restart/scale operations.
-            </p>
-            <p className="text-[11px] text-[var(--color-table-meta)] font-mono uppercase tracking-wider mt-1">
-              {filteredDeployments.length} deployments · {groupedByCluster.length} clusters · auto-refresh 30s
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label htmlFor="namespace-filter" className="text-xs text-[var(--color-table-meta)]">Namespace</label>
-            <select
-              id="namespace-filter"
-              value={namespaceFilter}
-              onChange={(event) => setNamespaceFilter(event.target.value)}
-              className="px-3 py-2 rounded-lg text-sm bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]/50"
-            >
-              <option value="all">All namespaces</option>
-              {namespaces.map((namespace) => (
-                <option key={namespace} value={namespace}>{namespace}</option>
-              ))}
-            </select>
-          </div>
-        </div>
 
         <div className="space-y-5">
           {groupedByCluster.map((cluster) => (
@@ -353,9 +353,15 @@ export default function DeploymentsPage() {
           ))}
 
           {!deploymentsQuery.isLoading && groupedByCluster.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-14 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+            <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
               <Box className="h-8 w-8 mb-2 opacity-40" />
-              <p className="text-sm">No deployments found for selected namespace</p>
+              <p className="text-sm font-medium mb-1">No deployments found</p>
+              <p className="text-xs text-[var(--color-text-dim)] mb-3">{namespaceFilter !== 'all' ? 'Try selecting a different namespace.' : 'Connect a cluster to see deployments.'}</p>
+              {namespaceFilter !== 'all' && (
+                <button type="button" onClick={() => setNamespaceFilter('all')} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity">
+                  Show All Namespaces
+                </button>
+              )}
             </div>
           )}
         </div>

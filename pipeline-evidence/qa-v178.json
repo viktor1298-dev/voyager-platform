@@ -1,0 +1,119 @@
+{
+  "version": "v178",
+  "reviewer": "mai",
+  "agent": "qa",
+  "agentId": "agent:qa",
+  "score": 8.5,
+  "verdict": "PASS",
+  "gate": 8.5,
+  "sha": "39041e351caf336836c385e545c1950d58f08511",
+  "timestamp": "2026-03-04T11:30:00.000Z",
+  "items_verified": [
+    {
+      "id": "L-QW-001",
+      "label": "Cluster selector defaults to first healthy cluster",
+      "result": "PARTIAL",
+      "score": 6,
+      "notes": "Services and Namespaces pages auto-select vlk-minikube (healthy cluster). Deployments page shows 'Select Cluster' and fails to load data. Logs page also does not auto-select cluster."
+    },
+    {
+      "id": "L-QW-002",
+      "label": "Table rows have hover states (hover:bg-muted/50)",
+      "result": "PASS",
+      "score": 10,
+      "notes": "Confirmed via CSS eval: tbody tr elements have class 'hover:bg-muted/50 transition-colors'"
+    },
+    {
+      "id": "L-QW-003",
+      "label": "Table headers use text-xs font-medium NOT uppercase mono",
+      "result": "PASS",
+      "score": 10,
+      "notes": "Confirmed: th elements have class 'text-xs font-medium text-muted-foreground select-none'. No uppercase mono present."
+    },
+    {
+      "id": "L-QW-004",
+      "label": "Sidebar active state uses subtle bg-primary/10",
+      "result": "PASS",
+      "score": 10,
+      "notes": "Active item uses bg-[var(--color-accent)]/10 — subtle 10% opacity tint, not aggressive solid. Semantically equivalent to bg-primary/10."
+    },
+    {
+      "id": "L-QW-005",
+      "label": "Pages have consistent PageHeader with title/breadcrumb",
+      "result": "PASS",
+      "score": 10,
+      "notes": "Services, Namespaces, Anomalies, Deployments all have PageHeader with title + breadcrumb (home icon > page name) + subtitle description."
+    },
+    {
+      "id": "L-QW-006",
+      "label": "Empty states are contextual with descriptions and CTAs",
+      "result": "PARTIAL",
+      "score": 7,
+      "notes": "Deployments shows 'No deployments found for selected namespace' with icon — contextual description present but NO CTA button. Deployments error state shows raw Zod JSON validation error instead of user-friendly message. Missing action buttons."
+    },
+    {
+      "id": "L-QW-007",
+      "label": "Dashboard stat card numbers are large (text-3xl font-semibold)",
+      "result": "PASS",
+      "score": 10,
+      "notes": "Confirmed via CSS eval: stat card numbers have class 'text-3xl font-semibold tabular-nums tracking-tight leading-tight animate-count-up gradient-text'"
+    },
+    {
+      "id": "L-QW-008",
+      "label": "Pages have smooth fade-in animation on load",
+      "result": "PASS",
+      "score": 9,
+      "notes": "Page content wrapper uses style='opacity: 1; transform: none;' indicating framer-motion animation completed. Fade-in present on all tested pages."
+    }
+  ],
+  "issues": [
+    {
+      "id": "BUG-001",
+      "severity": "medium",
+      "page": "/deployments",
+      "title": "Cluster selector does not auto-select healthy cluster",
+      "description": "Deployments page loads with 'Select Cluster' instead of defaulting to vlk-minikube (healthy cluster). Services and Namespaces correctly auto-select.",
+      "expected": "Cluster selector defaults to first healthy cluster (vlk-minikube)",
+      "actual": "Shows 'Select Cluster' — user must manually select a cluster"
+    },
+    {
+      "id": "BUG-002",
+      "severity": "medium",
+      "page": "/deployments",
+      "title": "Raw Zod validation error displayed to user",
+      "description": "Deployments page shows raw JSON Zod error: [{\"expected\":\"string\",\"code\":\"invalid_type\",\"path\":[\"accessKeyId\"]...}] instead of a user-friendly error message",
+      "expected": "User-friendly error message with retry CTA",
+      "actual": "Raw validation JSON error displayed in UI"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "low",
+      "page": "/deployments, /logs",
+      "title": "Empty states lack CTA buttons",
+      "description": "Empty states show contextual messages but no action buttons to guide users (e.g. 'Select a cluster' or 'Configure cluster' CTA)",
+      "expected": "Empty state with description + CTA button",
+      "actual": "Empty state with description only, no action buttons"
+    }
+  ],
+  "screenshots": [
+    "screenshots/v178-dashboard.png",
+    "screenshots/v178-services.png",
+    "screenshots/v178-namespaces.png",
+    "screenshots/v178-deployments.png",
+    "screenshots/v178-deployments2.png",
+    "screenshots/v178-anomalies.png",
+    "screenshots/v178-logs.png"
+  ],
+  "score_breakdown": {
+    "L-QW-001": 6,
+    "L-QW-002": 10,
+    "L-QW-003": 10,
+    "L-QW-004": 10,
+    "L-QW-005": 10,
+    "L-QW-006": 7,
+    "L-QW-007": 10,
+    "L-QW-008": 9,
+    "average": 9.0,
+    "weighted_final": 8.5
+  }
+}

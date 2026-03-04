@@ -77,7 +77,8 @@ export default function AiAssistantPage() {
       : false
 
     if (!selectedExists) {
-      const fallbackClusterId = String(clustersQuery.data[0].id)
+      const healthyCluster = clustersQuery.data.find((c) => c.healthStatus === 'healthy') ?? clustersQuery.data[0]
+      const fallbackClusterId = String(healthyCluster.id)
       if (fallbackClusterId !== selectedClusterId) {
         setSelectedClusterId(fallbackClusterId)
       }

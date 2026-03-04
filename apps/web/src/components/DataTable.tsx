@@ -130,7 +130,7 @@ export function DataTable<TData>({
                 scope="col"
                 aria-sort={ariaSort}
                 aria-label={plainHeader ?? undefined}
-                className="text-left py-2 px-3 text-[10px] text-[var(--color-table-header)] font-mono tracking-wider font-medium select-none uppercase"
+                className="text-left py-2 px-3 text-xs font-medium text-muted-foreground select-none"
                 style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
               >
                 {header.isPlaceholder ? null : canSort ? (
@@ -292,7 +292,7 @@ export function DataTable<TData>({
                   <tr
                     key={row.id}
                     onClick={() => onRowClick?.(row.original)}
-                    className={`border-b border-[var(--color-table-separator)] transition-colors ${onRowClick ? 'hover:bg-muted/40 cursor-pointer' : 'hover:bg-white/[0.03]'}`}
+                    className={`border-b border-[var(--color-table-separator)] hover:bg-muted/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="py-1.5 px-3">

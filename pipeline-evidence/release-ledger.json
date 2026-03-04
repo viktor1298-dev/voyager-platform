@@ -325,5 +325,39 @@
     "helmRevision": 72,
     "health": "ok",
     "notes": "QA fix loop #2: removed z.void tRPC, removed /system-health route, favicon ICO, fixed k8s health probe"
+  },
+  {
+    "version": "v177",
+    "timestamp": "2026-03-04T10:25:06.713627",
+    "status": "deployed",
+    "helmRevision": 75,
+    "commit": "713e911",
+    "health": "ok",
+    "login": "ok"
+  },
+  {
+    "version": "v178",
+    "timestamp": "2026-03-04T13:10:19.560723",
+    "images": [
+      "voyager-api:v178",
+      "voyager-web:v178"
+    ],
+    "health": "ok",
+    "login": "ok",
+    "deployedBy": "uri-devops"
+  },
+  {
+    "version": "v179",
+    "timestamp": "2026-03-04T13:54:13.183070",
+    "helmRevision": 79,
+    "images": [
+      "voyager-api:v179",
+      "voyager-web:v179"
+    ],
+    "pods": "Running",
+    "health": "ok",
+    "login": "ok",
+    "note": "Drizzle hook fixed via --no-hooks (UI-only changes, no schema migration needed)",
+    "deployedBy": "uri-devops"
   }
 ]

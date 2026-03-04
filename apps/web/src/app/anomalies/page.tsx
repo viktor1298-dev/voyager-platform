@@ -15,7 +15,7 @@ import { toast } from 'sonner'
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
 import { AnomalyCard } from '@/components/anomalies/AnomalyCard'
-import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { PageHeader } from '@/components/PageHeader'
 import {
   type Anomaly,
   type AnomalySeverity,
@@ -202,12 +202,10 @@ export default function AnomaliesPage() {
     <AppLayout>
       <PageTransition>
         <div className="space-y-5">
-          <div className="flex items-center justify-between gap-3">
-            <Breadcrumbs />
-            <span className="text-xs text-[var(--color-text-dim)]">
-              {filteredAnomalies.length} anomalies
-            </span>
-          </div>
+          <PageHeader
+            title="Anomalies"
+            description={`${filteredAnomalies.length} anomalies detected`}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <FilterSelect
@@ -241,7 +239,7 @@ export default function AnomaliesPage() {
                     {group.headers.map((header) => (
                       <th
                         key={header.id}
-                        className="px-3 py-2 text-left text-[10px] uppercase tracking-wider font-mono text-[var(--color-text-dim)]"
+                        className="px-3 py-2 text-left text-xs font-medium text-muted-foreground"
                       >
                         {header.isPlaceholder ? null : (
                           <button
@@ -268,7 +266,7 @@ export default function AnomaliesPage() {
                   return (
                     <Fragment key={row.id}>
                       <tr
-                        className="border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer"
+                        className="border-b border-white/[0.04] hover:bg-muted/50 transition-colors cursor-pointer"
                         onClick={(event) => {
                           if (isInteractiveTarget(event.target)) return
                           setExpandedId((prev) =>

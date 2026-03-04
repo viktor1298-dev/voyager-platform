@@ -14,6 +14,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { AlertTriangle, Bell, CheckCircle, History, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { timeAgo } from '@/lib/time-utils'
 
 type Metric = 'cpu' | 'memory' | 'pods' | 'restarts'
 type Operator = 'gt' | 'lt' | 'eq'
@@ -33,17 +34,6 @@ const OPERATORS: { value: Operator; label: string }[] = [
 
 function operatorLabel(op: string) { return OPERATORS.find((o) => o.value === op)?.label ?? op }
 function metricLabel(m: string) { return METRICS.find((mt) => mt.value === m)?.label ?? m }
-
-function timeAgo(ts: string): string {
-  const diff = Date.now() - new Date(ts).getTime()
-  const seconds = Math.floor(diff / 1000)
-  if (seconds < 60) return `${seconds}s ago`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
 
 interface CreateFormData {
   name: string; metric: Metric; operator: Operator; threshold: string; clusterFilter: string; webhookUrl: string
@@ -217,6 +207,8 @@ export default function AlertsPage() {
               data={alerts}
               columns={alertColumns}
               loading={alertsQuery.isLoading}
+              paginated
+              pageSize={25}
               emptyIcon={<AlertTriangle className="h-8 w-8" />}
               emptyTitle="No alert rules configured"
               mobileCard={(alert) => (

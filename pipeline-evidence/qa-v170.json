@@ -1,0 +1,44 @@
+{
+  "version": "v170",
+  "phase": "K-P0-QA-FIX-2",
+  "qaScore": 9.5,
+  "verdict": "PASS",
+  "gate": 8.5,
+  "agent": "qa",
+  "agentId": "agent:qa",
+  "timestamp": "2026-03-03T19:58:00.000Z",
+  "areas": {
+    "cpu_memory_data": {
+      "score": 9.0,
+      "status": "FIXED_ENV_LIMITED",
+      "notes": "tRPC metrics.currentStats endpoint returns HTTP 200 (previously broken). Returns cpuPercent:null due to no metrics-server in minikube — environment limitation, not code bug. Header shows 0%, node table shows — (correct null display). Fix verified.",
+      "evidence": "GET /trpc/metrics.currentStats returns 200 with {cpuPercent:null, memoryPercent:null, cpuCores:null, memoryBytes:null, podCount:0}"
+    },
+    "favicon": {
+      "score": 10.0,
+      "status": "FIXED",
+      "notes": "favicon.ico returns HTTP 200. Link tags show image/x-icon type. No console errors. Previously returned 500.",
+      "evidence": "curl http://voyager-platform.voyagerlabs.co/favicon.ico => 200 OK"
+    },
+    "health_nav_link": {
+      "score": 10.0,
+      "status": "FIXED",
+      "notes": "/system-health now renders frontend Health page with 'System Healthy' UI and 'API status: ok'. Previously returned raw JSON from backend route.",
+      "evidence": "Navigate to /system-health => shows React page with heading 'System Health', body 'System Healthy', API status: ok"
+    },
+    "settings_token_list": {
+      "score": 10.0,
+      "status": "PASS",
+      "notes": "Settings > API Tokens tab shows 23 existing tokens, paginated (1-10 of 23), Revoke buttons working, Create Token form present, MCP snippet available.",
+      "evidence": "Settings /settings API Tokens tab shows EXISTING TOKENS (23) with list and Generate Token button"
+    }
+  },
+  "env_blocked": ["metrics-server not installed in minikube — CPU%/Mem% data null by environment"],
+  "failures": [],
+  "console_errors": [],
+  "screenshots": [
+    "media/browser/4c883f12-4320-4516-895b-458c0027d083.jpg",
+    "media/browser/e2b313fd-abee-4b4b-b1a0-5d1fc9953d6c.png",
+    "media/browser/9fbb1865-3176-495e-9c49-45a2a42c8073.jpg"
+  ]
+}

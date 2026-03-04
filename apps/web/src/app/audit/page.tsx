@@ -250,7 +250,7 @@ export default function AuditPage() {
                     {hg.headers.map((header) => (
                       <th
                         key={header.id}
-                        className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-dim)]"
+                        className="px-4 py-3 text-left text-xs font-medium text-muted-foreground"
                         style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
                         onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
                       >
@@ -285,7 +285,7 @@ export default function AuditPage() {
                   table.getRowModel().rows.map((row) => (
                     <Fragment key={row.id}>
                       <tr
-                        className="border-b border-[var(--color-border)]/50 hover:bg-white/[0.02] transition-colors"
+                        className="border-b border-[var(--color-border)]/50 hover:bg-muted/50 transition-colors cursor-pointer"
                       >
                         {row.getVisibleCells().map((cell) => (
                           <td key={cell.id} className="px-4 py-3">
