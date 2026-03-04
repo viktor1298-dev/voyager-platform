@@ -15,7 +15,7 @@ import { toast } from 'sonner'
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
 import { AnomalyCard } from '@/components/anomalies/AnomalyCard'
-import { PageHeader } from '@/components/PageHeader'
+import { PageHeader } from '@/components/shared/PageHeader'
 import {
   type Anomaly,
   type AnomalySeverity,
@@ -204,7 +204,13 @@ export default function AnomaliesPage() {
         <div className="space-y-5">
           <PageHeader
             title="Anomalies"
-            description={`${filteredAnomalies.length} anomalies detected`}
+            description="Detected anomalies and alerts across your clusters."
+            breadcrumb={[{ label: 'Platform' }, { label: 'Anomalies' }]}
+            actions={
+              <span className="text-xs text-[var(--color-text-dim)]">
+                {filteredAnomalies.length} anomalies
+              </span>
+            }
           />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -239,7 +245,7 @@ export default function AnomaliesPage() {
                     {group.headers.map((header) => (
                       <th
                         key={header.id}
-                        className="px-3 py-2 text-left text-xs font-medium text-muted-foreground"
+                        className="px-3 py-2 text-left text-[10px] uppercase tracking-wider font-mono text-[var(--color-text-dim)]"
                       >
                         {header.isPlaceholder ? null : (
                           <button
@@ -266,7 +272,7 @@ export default function AnomaliesPage() {
                   return (
                     <Fragment key={row.id}>
                       <tr
-                        className="border-b border-white/[0.04] hover:bg-muted/50 transition-colors cursor-pointer"
+                        className="border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer"
                         onClick={(event) => {
                           if (isInteractiveTarget(event.target)) return
                           setExpandedId((prev) =>
