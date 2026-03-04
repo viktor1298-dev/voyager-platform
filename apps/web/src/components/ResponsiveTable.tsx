@@ -67,7 +67,7 @@ export function ResponsiveTable<T>({
               <tr
                 key={keyExtractor(row, i)}
                 onClick={() => onRowClick?.(row)}
-                className={`border-b border-white/[0.04] hover:bg-muted/50 transition-colors cursor-pointer`}
+                className={`border-b border-white/[0.04] hover:bg-muted/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
               >
                 {desktopCols.map((col) => (
                   <td key={col.key} className="py-2.5 px-3">

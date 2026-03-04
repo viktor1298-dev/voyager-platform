@@ -292,7 +292,7 @@ export function DataTable<TData>({
                   <tr
                     key={row.id}
                     onClick={() => onRowClick?.(row.original)}
-                    className={`border-b border-[var(--color-table-separator)] hover:bg-muted/50 transition-colors cursor-pointer`}
+                    className={`border-b border-[var(--color-table-separator)] hover:bg-muted/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="py-1.5 px-3">
