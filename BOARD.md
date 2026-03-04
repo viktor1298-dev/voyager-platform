@@ -112,18 +112,18 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### K0: 🔴 P0 — Blockers (Fix Before ANY External User Sees This)
 
-- [ ] **K0-001 — Settings Token Sprawl**
+- [x] **K0-001 — Settings Token Sprawl** ✅ (done in K-P0)
   - **Problem:** 240+ test tokens in an unpaginated flat list — page is functionally broken, destroys trust
   - **Fix:** Add pagination (10/page) + search + "Revoke All Test Tokens" bulk action
   - **Also:** Clean up test tokens from DB (`DELETE WHERE name LIKE 'test-token-%' OR name LIKE 'list-test-%'`)
   - **Reference:** Grafana Cloud API keys page
 
-- [ ] **K0-002 — Missing CPU/Memory Resource Data**
+- [x] **K0-002 — Missing CPU/Memory Resource Data** ✅ (done in K-P0)
   - **Problem:** K8s dashboard without CPU/memory = car without speedometer. #1 data point SREs need
   - **Fix:** Add CPU/Memory % columns to Nodes table + Pods table; use progress bar cells
   - **Reference:** Lens K8s IDE inline resource bars, Datadog utilization heatmaps
 
-- [ ] **K0-003 — Accessibility Violations (WCAG 2.2 AA)**
+- [x] **K0-003 — Accessibility Violations (WCAG 2.2 AA)** ✅ (done in K-P0)
   - **Problem:** Low contrast text in multiple places, no visible focus indicators, icon-only buttons without labels
   - **Fix:**
     - Audit all text colors against backgrounds (target ≥4.5:1 ratio)
@@ -136,22 +136,22 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### K1: 🟠 P1 — High Priority (Must Fix for Launch)
 
-- [ ] **K1-001 — Empty States Are Bare/Unhelpful**
+- [x] **K1-001 — Empty States Are Bare/Unhelpful** ✅ (done in K-P1)
   - **Problem:** "No services found" / "No events found" — plain text, no context, no CTA. Dead ends for users
   - **Fix:** Design contextual empty states for every page: illustration + explanation + action CTA
   - **Affected pages:** Services, Health, Events, Anomalies (when empty), Pods
   - **Reference:** Linear's setup guides, Vercel's Get Started flows
 
-- [ ] **K1-002 — /health Nav Link Goes to Raw JSON**
+- [x] **K1-002 — /health Nav Link Goes to Raw JSON** ✅ (done in K-P1)
   - **Problem:** "Health" in sidebar opens raw API JSON endpoint — broken navigation experience
   - **Fix:** Create a proper Health dashboard UI page OR remove from sidebar nav + move API to `/api/health`
 
-- [ ] **K1-003 — No Loading/Skeleton States**
+- [x] **K1-003 — No Loading/Skeleton States** ✅ (done in K-P1)
   - **Problem:** Pages flash content with no transition — feels brittle and unpolished
   - **Fix:** Add `<Skeleton>` (shadcn) for all tables and cards during loading; add shimmer animation
   - **Reference:** Vercel shimmer pattern, shadcn Skeleton component
 
-- [ ] **K1-004 — AI Chat BYOK Lock Bug**
+- [x] **K1-004 — AI Chat BYOK Lock Bug** ✅ (done in K-P1)
   - **Problem:** AI chat shows "Locked (BYOK)" even when a key IS saved in Settings
   - **Fix:** Debug BYOK key detection logic in AI assistant — key existence check is likely broken
 
@@ -196,34 +196,34 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### K3: 💡 Enhancements (Strategic — 2+ Weeks)
 
-- [ ] **K3-001 — Full Command Palette (⌘K)**
+- [x] **K3-001 — Full Command Palette (⌘K)** ✅ v177
   - Full Raycast/Linear-style: fuzzy search for clusters, pods, services, deployments, quick actions, recent
   - Button exists but unclear if functional — implement properly
 
-- [ ] **K3-002 — Real-Time Pod Log Streaming**
+- [x] **K3-002 — Real-Time Pod Log Streaming** ✅ v177
   - Live tail logs from pod detail drawer (WebSocket/SSE)
   - Include: log level filtering, search, auto-scroll toggle
 
-- [ ] **K3-003 — Cluster Health Time-Series Charts**
+- [x] **K3-003 — Cluster Health Time-Series Charts** ✅ v177
   - Sparklines in stat cards and cluster cards showing 24h trends
   - Full chart view in cluster detail (CPU/memory over time)
   - Source: existing metricsHistory DB table from IP2
 
-- [ ] **K3-004 — Inline Contextual AI Suggestions**
+- [x] **K3-004 — Inline Contextual AI Suggestions** ✅ v177
   - Instead of separate AI page — embed suggestions inline:
     - "Pod has restarted 5 times → View logs? Ask AI?"
     - Anomaly card → "Explain this anomaly"
   - AI page remains for free-form chat
 
-- [ ] **K3-005 — Pod Grouping by Namespace**
+- [x] **K3-005 — Pod Grouping by Namespace** ✅ v177
   - Cluster detail pods table: group by namespace with collapsible sections
   - Shows pod count per namespace as header
 
-- [ ] **K3-006 — Global Cluster Context Sync**
+- [x] **K3-006 — Global Cluster Context Sync** ✅ v177
   - Cluster selector in top bar should propagate to ALL pages (Services, Logs, etc.)
   - Currently each page appears to have independent cluster selection
 
-- [ ] **K3-007 — Gradient Accent + Visual Brand Identity**
+- [x] **K3-007 — Gradient Accent + Visual Brand Identity** ✅ v177
   - Add top-of-page gradient accent line (teal→purple, referencing Voyager brand)
   - Consider subtle glassmorphism on sidebar (`backdrop-blur-xl`)
   - Branded loading animation on initial page load
@@ -509,3 +509,173 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - [x] **IP4-003** Namespace tRPC router (list, create, delete)
 - [x] **IP4-004** Multi-cluster metrics aggregation for dashboard
 - [x] **IP4-005** Cluster auto-discovery from kubeconfig contexts
+
+---
+
+## 🎨 Phase L — Deep UX Audit v2 Findings (2026-03-04)
+> Source: Opus 4.6 Deep UX Audit | 17 pages reviewed | Score: 5.8/10
+> Full report: `Obsidian/Research/voyager-ux-deep-audit-v2-2026-03-04.md`
+> Goal: Reach 8+/10 — Early customer ready
+
+### 📊 Current Audit Scores
+| Category | Score |
+|----------|-------|
+| Overall | 5.8/10 |
+| Dashboard | 5/10 |
+| Cluster Detail | 6.5/10 |
+| AI Assistant | 7/10 |
+| Feature Flags | 8/10 |
+| Command Palette | 8/10 |
+| Motion/Microinteractions | 3/10 |
+| System Health | 3/10 |
+
+---
+
+### ⚡ Phase L-QW — Quick Wins (1-day fixes, start here — v178)
+
+- [ ] **L-QW-001: Default cluster selector to first healthy cluster** — `clusters.find(c => c.health === 'healthy') ?? clusters[0]` — fixes Services, Deployments, Namespaces, Logs (5 pages instantly)
+  - Files: all pages with cluster selector component
+- [ ] **L-QW-002: Table row hover states** — add `hover:bg-muted/50 transition-colors cursor-pointer` to ALL `<tr>` elements across every data table
+- [ ] **L-QW-003: Fix table header typography** — change from `uppercase font-mono text-xs` to `text-xs font-medium text-muted-foreground` everywhere
+- [ ] **L-QW-004: Fix sidebar active state** — change from `bg-primary text-primary-foreground` to `bg-primary/10 text-primary` (Linear-style — less aggressive)
+- [ ] **L-QW-005: Reusable PageHeader component** — consistent `<PageHeader title breadcrumb description actions />` used on every page that lacks it (Services, Namespaces, Anomalies, Deployments)
+- [ ] **L-QW-006: Reusable EmptyState component** — `<EmptyState icon title description cta />` — contextual per page (not just "No X found")
+  - Services: "prod-cluster-eks is disconnected. Switch to a healthy cluster."
+  - Namespaces: same pattern
+  - Deployments: same pattern
+  - Logs: "Select a pod to begin streaming logs"
+  - Webhooks: "No webhooks configured. Add one to receive event notifications."
+- [ ] **L-QW-007: Increase Dashboard stat card numbers** — change to `text-3xl font-semibold tabular-nums` for all 5 stat cards
+- [ ] **L-QW-008: Page fade-in animation** — add framer-motion `initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.15 }}` to all page root divs
+
+---
+
+### 🔴 Phase L-P0 — Blockers (v179 after QW)
+
+- [ ] **L-P0-001: Dashboard Redesign — Operational Command Center**
+  - CURRENT: Dashboard IS the cluster list — no operational overview
+  - TARGET: Multi-panel overview: health matrix grid + resource gauges + anomaly timeline + recent events + cluster quick-access
+  - Reference: Datadog Infrastructure Overview, Grafana Home
+  - Files: `apps/web/src/app/page.tsx`
+
+- [ ] **L-P0-002: System Health Page — Complete Overhaul**
+  - CURRENT: "System Healthy ✓ | API status: ok" — embarrassingly empty
+  - TARGET: Per-cluster component health matrix (API server, etcd, scheduler, controller-manager), API latency graph, sync status, uptime history, recent incidents timeline
+  - Reference: Datadog Infrastructure, Grafana System Health
+  - Files: health-related page and tRPC endpoints
+
+- [ ] **L-P0-003: Alerts Page — Pagination / Virtual Scroll**
+  - CURRENT: Hundreds of rows with NO pagination — will crash performance
+  - Fix: `@tanstack/virtual` virtual scrolling OR standard pagination (25/50/100 per page)
+  - Files: `/alerts` page component
+
+- [ ] **L-P0-004: Skeleton Loading — All Data Tables and Cards**
+  - CURRENT: Pages flash empty → content with no intermediate state
+  - Fix: Add `<TableSkeleton rows={5} />` and `<CardSkeleton />` to every data table and card that uses `isLoading`
+  - Files: all table components, stat cards
+
+- [ ] **L-P0-005: Cluster Detail — Tabbed Layout**
+  - CURRENT: Single scrolling page — unusable at scale (100+ pods on one page)
+  - Fix: Tabs: Overview | Nodes | Pods | Services | Deployments | Events (like Lens)
+  - Files: `apps/web/src/app/clusters/[id]/page.tsx`
+
+- [ ] **L-P0-006: Webhooks Page — Fix Loading State Logic**
+  - CURRENT: Skeleton rows appear permanently OR conflict with "0 ENDPOINTS" count
+  - Fix: `count === 0 ? <EmptyState /> : isLoading ? <Skeleton /> : <Table />`
+  - Files: `/webhooks` page component
+
+---
+
+### 🟠 Phase L-P1 — High Priority (v180 after P0)
+
+- [ ] **L-P1-001: Pod Table — Add Critical K8s Columns**
+  - Add: CPU %, Memory %, Restart Count, Ready status to pods table
+  - Reference: Lens pod list
+  - Files: pod table component, pods tRPC router
+
+- [ ] **L-P1-002: Cluster Cards — Structured Layout**
+  - CURRENT: Random badges scattered around each cluster card
+  - Fix: status dot + name on top, metrics grid in middle, tags at bottom. Remove cryptic mini-badges.
+  - Reference: Lens cluster cards
+  - Files: cluster card component
+
+- [ ] **L-P1-003: Command Palette — Add Resource Search**
+  - CURRENT: Navigation only — no cluster/pod/service search
+  - Fix: Add "CLUSTERS" and "RESOURCES" sections that search across all resources. Add keyboard nav hints (↑↓ Enter). Add recent items.
+  - Reference: Raycast, Linear command palette
+  - Files: command palette component
+
+- [ ] **L-P1-004: Logs Page UX Improvements**
+  - Fix: Move search bar to top of log output area (sticky)
+  - Add contextual "Select a pod" empty state (use L-QW-006 component)
+  - Add JSON pretty-printing and color-coded log levels in output
+  - Files: `/logs` page component
+
+- [ ] **L-P1-005: AI Assistant — Enhance Chat Experience**
+  - Fix: Add suggested question chips in empty chat area (3-4 contextual suggestions)
+  - Make cluster context more prominent (not just top-right corner)
+  - Remove or redesign "FREE Tier Analytics" badge (confusing in self-hosted context)
+  - Files: `/ai` page component
+
+- [ ] **L-P1-006: Alerts Page — Add Grouping and Filters**
+  - Add collapsible groups by cluster/type/severity
+  - Add bulk actions: enable/disable/delete selected
+  - Make search sticky while scrolling
+  - Files: `/alerts` page component
+
+---
+
+### 🟡 Phase L-P2 — Medium Priority (v181 after P1)
+
+- [ ] **L-P2-001: Dark Mode 4-Level Surface Color Scale**
+  - CSS vars: `--surface-0: hsl(230 15% 7%)` | `--surface-1: hsl(230 15% 10%)` | `--surface-2: hsl(230 15% 13%)` | `--surface-3: hsl(230 15% 17%)`
+  - Apply consistently across sidebar, main, cards, hover states
+
+- [ ] **L-P2-002: Standardize Design Tokens (spacing + typography)**
+  - Page padding: `px-6 py-6` everywhere
+  - Section gap: `space-y-6` everywhere
+  - Card padding: `p-4` (compact) or `p-6` (spacious) — never mixed
+  - Table row height: `h-12` everywhere
+  - Stat numbers: `text-3xl font-semibold tabular-nums`
+
+- [ ] **L-P2-003: MetricCard + StatusBadge Shared Components**
+  - `<MetricCard label value trend sparkline />` — replace all ad-hoc stat cards
+  - `<StatusBadge status />` — unified health/severity/status badge (one component, not 5 different ones)
+
+- [ ] **L-P2-004: DataTable Shared Component**
+  - Replace all custom table implementations with shadcn DataTable
+  - Include: sorting, filtering, pagination, row selection, row actions, sticky header
+
+- [ ] **L-P2-005: Cluster Detail — Nodes Table with Real Metrics**
+  - CURRENT: CPU %, Memory %, Mem % columns show "—"
+  - Fix: Populate from metrics API OR show "Metrics unavailable — install metrics-server" message
+  - Files: nodes table, cluster tRPC router
+
+- [ ] **L-P2-006: Sonner Toast Notifications**
+  - Add `sonner` toasts for all CRUD operations (connect cluster, revoke token, create webhook, etc.)
+  - Currently: zero feedback on user actions
+
+---
+
+### 🔵 Phase L-P3 — Strategic Improvements (v182)
+
+- [ ] **L-P3-001: Dashboard Resource Utilization Gauges**
+  - Add CPU/Memory gauges across all clusters using Recharts or @nivo
+  - Show aggregate + per-cluster breakdown
+
+- [ ] **L-P3-002: Anomaly Timeline Integration in Dashboard**
+  - Show last 24h anomaly events as a timeline widget on Dashboard
+  - Color-coded by severity
+
+- [ ] **L-P3-003: Feature Flags — Activity Log Collapsible**
+  - Make activity log sections collapsible per flag card (saves space for large flag counts)
+
+- [ ] **L-P3-004: Log Viewer — Advanced Features**
+  - Regex search capability
+  - Timestamp formatting options
+  - Highlight matched search terms in log output
+
+- [ ] **L-P3-005: Number Animations on Stat Cards**
+  - Use framer-motion `useMotionValue` + `animate()` to tween numbers on load
+  - Makes dashboard feel alive
+
