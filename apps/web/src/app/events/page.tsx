@@ -10,6 +10,7 @@ import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
+import { timeAgo } from '@/lib/time-utils'
 
 interface KubeEvent {
   type: string
@@ -35,17 +36,6 @@ function isRenderableEvent(event: Partial<KubeEvent> | null | undefined): event 
 }
 
 type EventFilter = 'all' | 'Normal' | 'Warning'
-
-function timeAgo(ts: string): string {
-  const diff = Date.now() - new Date(ts).getTime()
-  const seconds = Math.floor(diff / 1000)
-  if (seconds < 60) return `${seconds}s ago`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
 
 function TypeBadge({ type }: { type: string }) {
   const isWarning = type === 'Warning'

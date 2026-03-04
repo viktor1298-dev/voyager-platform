@@ -23,6 +23,7 @@ import { AiContextCard } from '@/components/AiContextCard'
 import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
+import { timeAgo } from '@/lib/time-utils'
 
 function providerIcon(provider: string): string {
   const map: Record<string, string> = {
@@ -44,17 +45,6 @@ function formatMemoryKi(ki: string): string {
   if (!match) return ki
   const gb = Number(match[1]) / (1024 * 1024)
   return gb >= 1 ? `${gb.toFixed(1)} GB` : `${(Number(match[1]) / 1024).toFixed(0)} MB`
-}
-
-function timeAgo(ts: string): string {
-  const diff = Date.now() - new Date(ts).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
 }
 
 function asText(value: unknown, fallback = '—'): string {

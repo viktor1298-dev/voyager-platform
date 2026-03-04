@@ -7,16 +7,7 @@ import { TableSkeleton } from '@/components/Skeleton'
 import { trpc } from '@/lib/trpc'
 import { normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { Activity, CheckCircle2, Clock, HeartPulse, ServerCrash, Wifi, WifiOff } from 'lucide-react'
-
-function timeAgo(ts: string | Date): string {
-  const diff = Date.now() - new Date(ts).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
+import { timeAgo } from '@/lib/time-utils'
 
 const COMPONENT_NAMES = ['API Server', 'etcd', 'Scheduler', 'Controller Manager'] as const
 
