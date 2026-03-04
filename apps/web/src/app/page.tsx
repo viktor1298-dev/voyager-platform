@@ -344,6 +344,7 @@ function DashboardContent() {
             gradient={totalNodes > 0 ? 'var(--gradient-text-default)' : 'none'}
             isLoading={isLoading}
             trend={1}
+            trendPositiveIsGood
           />
           <SummaryCard
             icon={<Container className="h-3.5 w-3.5" />}
@@ -361,6 +362,7 @@ function DashboardContent() {
             }
             isLoading={isLoading}
             trend={5}
+            trendPositiveIsGood
           />
           <SummaryCard
             icon={<LayoutGrid className="h-3.5 w-3.5" />}
@@ -370,6 +372,7 @@ function DashboardContent() {
             gradient={clusterList.length > 0 ? 'var(--gradient-text-default)' : 'none'}
             isLoading={isLoading}
             trend={2}
+            trendPositiveIsGood
           />
           <SummaryCard
             icon={
@@ -385,6 +388,7 @@ function DashboardContent() {
             gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'none'}
             isLoading={isLoading}
             trend={-3}
+            emphasized={warningEvents > 0}
           />
           <AnomalyWidget compact />
         </div>
@@ -913,6 +917,7 @@ function SummaryCard({
   gradient,
   isLoading,
   trend,
+  trendPositiveIsGood,
   emphasized,
 }: {
   icon: React.ReactNode
@@ -922,6 +927,8 @@ function SummaryCard({
   gradient: string
   isLoading?: boolean
   trend?: number | { delta: number; label?: string } | null
+  /** When true, positive delta = good (green). Default: false (positive = bad/red, for alerts). */
+  trendPositiveIsGood?: boolean
   emphasized?: boolean
 }) {
   return (
@@ -961,11 +968,12 @@ function SummaryCard({
             {trend != null && (() => {
               const delta = typeof trend === 'number' ? trend : trend.delta
               if (delta === 0) return null
+              const isGood = trendPositiveIsGood ? delta > 0 : delta < 0
               return (
                 <span
                   className={cn(
                     'text-[10px] font-semibold font-mono tabular-nums',
-                    delta > 0 ? 'text-red-400' : 'text-emerald-400',
+                    isGood ? 'text-emerald-400' : 'text-red-400',
                   )}
                 >
                   {delta > 0 ? `▲ +${delta}` : `▼ ${delta}`}
