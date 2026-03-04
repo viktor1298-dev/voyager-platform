@@ -535,18 +535,18 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 - [ ] **L-QW-001: Default cluster selector to first healthy cluster** — `clusters.find(c => c.health === 'healthy') ?? clusters[0]` — fixes Services, Deployments, Namespaces, Logs (5 pages instantly)
   - Files: all pages with cluster selector component
-- [ ] **L-QW-002: Table row hover states** — add `hover:bg-muted/50 transition-colors cursor-pointer` to ALL `<tr>` elements across every data table
-- [ ] **L-QW-003: Fix table header typography** — change from `uppercase font-mono text-xs` to `text-xs font-medium text-muted-foreground` everywhere
-- [ ] **L-QW-004: Fix sidebar active state** — change from `bg-primary text-primary-foreground` to `bg-primary/10 text-primary` (Linear-style — less aggressive)
+- [x] **L-QW-002: Table row hover states** — add `hover:bg-muted/50 transition-colors cursor-pointer` to ALL `<tr>` elements across every data table
+- [x] **L-QW-003: Fix table header typography** — change from `uppercase font-mono text-xs` to `text-xs font-medium text-muted-foreground` everywhere
+- [x] **L-QW-004: Fix sidebar active state** — change from `bg-primary text-primary-foreground` to `bg-primary/10 text-primary` (Linear-style — less aggressive)
 - [x] **L-QW-005: Reusable PageHeader component** — v182 2026-03-04 — consistent `<PageHeader title breadcrumb description actions />` used on every page that lacks it (Services, Namespaces, Anomalies, Deployments)
-- [ ] **L-QW-006: Reusable EmptyState component** — `<EmptyState icon title description cta />` — contextual per page (not just "No X found")
+- [x] **L-QW-006: Reusable EmptyState component** — `<EmptyState icon title description cta />` — contextual per page (not just "No X found")
   - Services: "prod-cluster-eks is disconnected. Switch to a healthy cluster."
   - Namespaces: same pattern
   - Deployments: same pattern
   - Logs: "Select a pod to begin streaming logs"
   - Webhooks: "No webhooks configured. Add one to receive event notifications."
-- [ ] **L-QW-007: Increase Dashboard stat card numbers** — change to `text-3xl font-semibold tabular-nums` for all 5 stat cards
-- [ ] **L-QW-008: Page fade-in animation** — add framer-motion `initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.15 }}` to all page root divs
+- [x] **L-QW-007: Increase Dashboard stat card numbers** — change to `text-3xl font-semibold tabular-nums` for all 5 stat cards
+- [x] **L-QW-008: Page fade-in animation** — add framer-motion `initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.15 }}` to all page root divs
 
 ---
 
@@ -631,7 +631,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - CSS vars: `--surface-0: hsl(230 15% 7%)` | `--surface-1: hsl(230 15% 10%)` | `--surface-2: hsl(230 15% 13%)` | `--surface-3: hsl(230 15% 17%)`
   - Apply consistently across sidebar, main, cards, hover states
 
-- [ ] **L-P2-002: Standardize Design Tokens (spacing + typography)**
+- [x] **L-P2-002: Standardize Design Tokens (spacing + typography)**
   - Page padding: `px-6 py-6` everywhere
   - Section gap: `space-y-6` everywhere
   - Card padding: `p-4` (compact) or `p-6` (spacious) — never mixed
