@@ -312,6 +312,7 @@ export default function AlertsPage() {
                   <button
                     type="button"
                     onClick={() => {
+                      if (!confirm(`Delete ${selectedIds.size} selected alert(s)? This cannot be undone.`)) return
                       for (const id of selectedIds) {
                         deleteMut.mutate({ id })
                       }
