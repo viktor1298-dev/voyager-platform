@@ -359,5 +359,61 @@
     "login": "ok",
     "note": "Drizzle hook fixed via --no-hooks (UI-only changes, no schema migration needed)",
     "deployedBy": "uri-devops"
+  },
+  {
+    "version": "v182",
+    "timestamp": "2026-03-04T20:21:10.899518",
+    "deployer": "uri",
+    "status": "success",
+    "images": [
+      "voyager-api:v182",
+      "voyager-web:v182"
+    ]
+  },
+  {
+    "version": "v182",
+    "timestamp": "2026-03-04T20:55:47.837078",
+    "type": "web-only-redeploy",
+    "commit": "b779414",
+    "note": "QA fix rebuild \u2014 web image only, API unchanged at v180",
+    "images": {
+      "web": "voyager-web:v182",
+      "api": "voyager-api:v180 (unchanged)"
+    },
+    "status": "deployed"
+  },
+  {
+    "version": "v182",
+    "stage": "stage2",
+    "commit": "e43986e",
+    "timestamp": "2026-03-04T21:41:33.976387",
+    "images": [
+      "voyager-api:v182",
+      "voyager-web:v182"
+    ],
+    "status": "deployed",
+    "health": "ok",
+    "notes": "Stage 2: skeleton loading system + UI improvements"
+  },
+  {
+    "version": "v185",
+    "date": "2026-03-05T03:05:43.480581",
+    "services": {
+      "voyager-web": "v185",
+      "voyager-api": "v180"
+    },
+    "note": "Frontend-only deploy. API stays at v180.",
+    "health": "ok"
+  },
+  {
+    "version": "v186",
+    "timestamp": "2026-03-05T03:54:34.170245",
+    "services": {
+      "web": "v186",
+      "api": "v180"
+    },
+    "changes": "Frontend only: features page collapsible, log viewer advanced, resource gauges, anomaly timeline",
+    "status": "deployed",
+    "health": "ok"
   }
 ]

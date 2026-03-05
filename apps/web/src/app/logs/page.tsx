@@ -3,20 +3,94 @@
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { EmptyState } from '@/components/EmptyState'
 import { QueryError } from '@/components/ErrorBoundary'
 import { Shimmer } from '@/components/Skeleton'
 import { trpc } from '@/lib/trpc'
+import { useClusterContext } from '@/stores/cluster-context'
 import { Download, FileText, Pause, Play, RefreshCw, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
+/** Try to pretty-print JSON log messages */
+function tryFormatJson(message: string): string {
+  const trimmed = message.trim()
+  if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return message
+  try {
+    const parsed = JSON.parse(trimmed)
+    return JSON.stringify(parsed, null, 2)
+  } catch {
+    return message
+  }
+}
 
 const TAIL_OPTIONS = [50, 100, 500, 1000] as const
 const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'] as const
 const AUTO_REFRESH_INTERVAL = 5000
 
 type LogLevel = (typeof LOG_LEVELS)[number]
+type TimestampFormat = 'iso' | 'local' | 'relative' | 'time-only'
 
 function podKey(namespace: string, podName: string) {
   return `${namespace}/${podName}`
+}
+
+function formatTimestamp(ts: string, format: TimestampFormat): string {
+  const date = new Date(ts)
+  if (Number.isNaN(date.getTime())) return ts
+  switch (format) {
+    case 'iso':
+      return ts
+    case 'local':
+      return date.toLocaleString()
+    case 'relative': {
+      const diffMs = Date.now() - date.getTime()
+      const diffSec = Math.floor(diffMs / 1000)
+      if (diffSec < 60) return `${diffSec}s ago`
+      const diffMin = Math.floor(diffSec / 60)
+      if (diffMin < 60) return `${diffMin}m ago`
+      const diffHr = Math.floor(diffMin / 60)
+      if (diffHr < 24) return `${diffHr}h ago`
+      return `${Math.floor(diffHr / 24)}d ago`
+    }
+    case 'time-only':
+      return date.toLocaleTimeString()
+    default:
+      return ts
+  }
+}
+
+/** Build a safe regex from the search term. Returns null if invalid. */
+function buildSearchRegex(term: string, isRegex: boolean): RegExp | null {
+  if (!term) return null
+  try {
+    return isRegex ? new RegExp(term, 'gi') : new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+  } catch {
+    return null
+  }
+}
+
+/** Highlight all regex matches in a string, returning React nodes. */
+function highlightMatches(text: string, regex: RegExp | null): React.ReactNode {
+  if (!regex) return text
+  const parts: React.ReactNode[] = []
+  let last = 0
+  regex.lastIndex = 0
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index))
+    parts.push(
+      <mark
+        key={match.index}
+        className="rounded bg-yellow-400/30 text-yellow-200 px-0.5"
+      >
+        {match[0]}
+      </mark>,
+    )
+    last = match.index + match[0].length
+    if (match[0].length === 0) break // guard infinite loop on zero-width match
+  }
+  if (last < text.length) parts.push(text.slice(last))
+  return parts.length > 0 ? parts : text
 }
 
 function SelectField({
@@ -47,6 +121,7 @@ function SelectField({
 }
 
 export default function LogsPage() {
+  const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const [selectedNamespace, setSelectedNamespace] = useState<string>('')
   const [selectedPods, setSelectedPods] = useState<string[]>([]) // keys: namespace/pod
 
@@ -55,12 +130,18 @@ export default function LogsPage() {
   const [isPaused, setIsPaused] = useState(false)
   const [autoScroll, setAutoScroll] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [isRegexMode, setIsRegexMode] = useState(false)
+  const [regexError, setRegexError] = useState<string | null>(null)
+  const [timestampFormat, setTimestampFormat] = useState<TimestampFormat>('iso')
   const [selectedLevels, setSelectedLevels] = useState<LogLevel[]>([...LOG_LEVELS])
   const [viewMode, setViewMode] = useState<'merged' | 'split'>('merged')
   const logEndRef = useRef<HTMLDivElement>(null)
 
   const podsQuery = trpc.logs.pods.useQuery(
-    selectedNamespace ? { namespace: selectedNamespace } : undefined,
+    {
+      ...(selectedNamespace ? { namespace: selectedNamespace } : {}),
+      ...(activeClusterId ? { clusterId: activeClusterId } : {}),
+    },
     { refetchOnWindowFocus: false },
   )
 
@@ -82,6 +163,20 @@ export default function LogsPage() {
         .map((pod) => ({ namespace: pod.namespace, podName: pod.name })),
     [filteredPods, selectedPods],
   )
+
+  // Validate regex when mode/term changes
+  useEffect(() => {
+    if (!isRegexMode || !searchTerm) {
+      setRegexError(null)
+      return
+    }
+    try {
+      new RegExp(searchTerm)
+      setRegexError(null)
+    } catch (e) {
+      setRegexError(e instanceof Error ? e.message : 'Invalid regex')
+    }
+  }, [searchTerm, isRegexMode])
 
   const logsQuery = trpc.logs.tail.useQuery(
     {
@@ -158,6 +253,12 @@ export default function LogsPage() {
     return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b))
   }, [logsQuery.data?.lines])
 
+  // Build search regex for highlighting
+  const searchRegex = useMemo(
+    () => (regexError ? null : buildSearchRegex(searchTerm, isRegexMode)),
+    [searchTerm, isRegexMode, regexError],
+  )
+
   return (
     <AppLayout>
       <PageTransition>
@@ -199,6 +300,19 @@ export default function LogsPage() {
                   {n}
                 </option>
               ))}
+            </SelectField>
+
+            {/* Timestamp format selector */}
+            <SelectField
+              label="Timestamp"
+              value={timestampFormat}
+              onChange={(v) => setTimestampFormat(v as TimestampFormat)}
+              className="w-36"
+            >
+              <option value="iso">ISO 8601</option>
+              <option value="local">Local</option>
+              <option value="relative">Relative</option>
+              <option value="time-only">Time only</option>
             </SelectField>
 
             <button
@@ -277,15 +391,38 @@ export default function LogsPage() {
             </div>
 
             <div className="space-y-3">
-              <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
-                <input
-                  type="text"
-                  placeholder="Search logs…"
-                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] py-2 pl-9 pr-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              {/* Search with regex toggle */}
+              <div className="space-y-1">
+                <div className="relative max-w-sm flex items-stretch gap-0">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
+                    <input
+                      type="text"
+                      placeholder={isRegexMode ? 'Regex pattern…' : 'Search logs…'}
+                      className={`w-full rounded-l-lg border border-r-0 border-[var(--color-border)] bg-[var(--color-bg-card)] py-2 pl-9 pr-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors ${regexError ? 'border-red-500' : ''}`}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsRegexMode((v) => !v)}
+                    title={isRegexMode ? 'Switch to plain text search' : 'Switch to regex search'}
+                    className={`rounded-r-lg border border-[var(--color-border)] px-3 text-xs font-mono font-bold transition-colors ${
+                      isRegexMode
+                        ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
+                        : 'bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+                    }`}
+                    aria-pressed={isRegexMode}
+                  >
+                    .*
+                  </button>
+                </div>
+                {regexError && (
+                  <p className="text-xs text-red-400 max-w-sm" role="alert">
+                    Invalid regex: {regexError}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -345,10 +482,11 @@ export default function LogsPage() {
           )}
 
           {selectedTargets.length === 0 && !podsQuery.isLoading && (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] py-20 text-[var(--color-text-muted)]">
-              <FileText className="h-10 w-10 mb-3 opacity-40" />
-              <p>Select one or more pods to view logs</p>
-            </div>
+            <EmptyState
+              icon={<FileText className="h-10 w-10" />}
+              title="Select a pod to view logs"
+              description="Choose one or more pods from the sidebar to start streaming live logs with filtering and search."
+            />
           )}
 
           {selectedTargets.length > 0 && logsQuery.data && (
@@ -357,30 +495,47 @@ export default function LogsPage() {
                 className="relative rounded-xl border border-[var(--color-border)] overflow-hidden"
                 style={{ boxShadow: 'var(--shadow-card)' }}
               >
-                <div className="flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-log-header)] px-4 py-2">
-                  <span className="text-xs text-[var(--color-log-dim)] font-mono">
-                    {selectedTargets.length} pod(s) • {selectedLevels.join(', ')}
-                  </span>
-                  <span className="text-xs text-[var(--color-log-dim)]">{logsQuery.data.lines.length} lines</span>
+                {/* Sticky header */}
+                <div className="sticky top-0 z-10 border-b border-[var(--color-border)] bg-[var(--color-log-header)]">
+                  <div className="flex items-center justify-between px-4 py-2">
+                    <span className="text-xs text-[var(--color-log-dim)] font-mono">
+                      {selectedTargets.length} pod(s) • {selectedLevels.join(', ')}
+                      {isRegexMode && searchTerm && !regexError && (
+                        <span className="ml-2 rounded bg-[var(--color-accent)]/20 px-1.5 py-0.5 text-[10px] text-[var(--color-accent)]">
+                          regex
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-xs text-[var(--color-log-dim)]">{logsQuery.data.lines.length} lines</span>
+                  </div>
                 </div>
+
                 {viewMode === 'merged' ? (
                   <pre className="overflow-auto max-h-[600px] p-4 text-xs leading-5 text-[var(--color-log-text)] font-mono whitespace-pre-wrap bg-[var(--color-log-bg)]">
                     {logsQuery.data.lines.length === 0 ? (
                       <span className="text-[var(--color-log-dim)] italic">No matching log lines</span>
                     ) : (
-                      logsQuery.data.lines.map((line, index) => (
-                        <div key={`${line.timestamp}-${line.podName}-${index}`} className="hover:bg-white/5">
-                          <span className="inline-block w-8 text-right text-[var(--color-log-line-number)] select-none mr-3">
-                            {index + 1}
-                          </span>
-                          <span className="text-[var(--color-log-dim)] mr-2">{line.timestamp}</span>
-                          <span className="mr-2">[{line.level}]</span>
-                          <span className="text-cyan-300 mr-2">
-                            {line.namespace}/{line.podName}/{line.container}
-                          </span>
-                          {line.message}
-                        </div>
-                      ))
+                      logsQuery.data.lines.map((line, index) => {
+                        const levelColor = line.level === 'ERROR' ? 'text-red-400' : line.level === 'WARN' ? 'text-yellow-400' : line.level === 'INFO' ? 'text-blue-400' : line.level === 'DEBUG' ? 'text-gray-400' : ''
+                        const formattedMessage = tryFormatJson(line.message)
+                        return (
+                          <div key={`${line.timestamp}-${line.podName}-${index}`} className="hover:bg-white/5">
+                            <span className="inline-block w-8 text-right text-[var(--color-log-line-number)] select-none mr-3">
+                              {index + 1}
+                            </span>
+                            <span className="text-[var(--color-log-dim)] mr-2">
+                              {formatTimestamp(line.timestamp, timestampFormat)}
+                            </span>
+                            <span className={`mr-2 font-bold ${levelColor}`}>[{line.level}]</span>
+                            <span className="text-cyan-300 mr-2">
+                              {line.namespace}/{line.podName}/{line.container}
+                            </span>
+                            {searchRegex
+                              ? highlightMatches(formattedMessage, searchRegex)
+                              : formattedMessage}
+                          </div>
+                        )
+                      })
                     )}
                     <div ref={logEndRef} />
                   </pre>
@@ -395,13 +550,21 @@ export default function LogsPage() {
                             {groupKey} ({lines.length})
                           </div>
                           <pre className="p-3 text-xs leading-5 text-[var(--color-log-text)] font-mono whitespace-pre-wrap">
-                            {lines.map((line, index) => (
-                              <div key={`${line.timestamp}-${index}`}>
-                                <span className="text-[var(--color-log-dim)] mr-2">{line.timestamp}</span>
-                                <span className="mr-2">[{line.level}]</span>
-                                {line.message}
-                              </div>
-                            ))}
+                            {lines.map((line, index) => {
+                              const lvlColor = line.level === 'ERROR' ? 'text-red-400' : line.level === 'WARN' ? 'text-yellow-400' : line.level === 'INFO' ? 'text-blue-400' : line.level === 'DEBUG' ? 'text-gray-400' : ''
+                              const formattedMessage = tryFormatJson(line.message)
+                              return (
+                                <div key={`${line.timestamp}-${index}`}>
+                                  <span className="text-[var(--color-log-dim)] mr-2">
+                                    {formatTimestamp(line.timestamp, timestampFormat)}
+                                  </span>
+                                  <span className={`mr-2 font-bold ${lvlColor}`}>[{line.level}]</span>
+                                  {searchRegex
+                                    ? highlightMatches(formattedMessage, searchRegex)
+                                    : formattedMessage}
+                                </div>
+                              )
+                            })}
                           </pre>
                         </div>
                       ))

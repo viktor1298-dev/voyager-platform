@@ -463,5 +463,119 @@
     "gates_checked": 5,
     "env_blocked_items": [],
     "was_corrected": false
+  },
+  {
+    "timestamp": "2026-03-04T15:05:58.859734",
+    "version": "v180",
+    "verdict": "COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "was_corrected": true,
+    "corrections": [
+      "e2e agentId missing",
+      "qa timestamp before deploy"
+    ]
+  },
+  {
+    "timestamp": "2026-03-04T23:54:39.956234",
+    "version": "v183",
+    "verdict": "COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "notes": "All 5 gates passed. Web-only release (v183 frontend, API still at v180). QA 9.0/10, E2E 88/0/17. Race condition on write (Foreman started v184 concurrently) \u2014 state fixed."
+  },
+  {
+    "timestamp": "2026-03-04T22:50:46.126905+00:00",
+    "version": "v184",
+    "verdict": "COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "notes": "Gate 2 e2e schema gap patched (author verified via sessions_history). v184 frontend-only release.",
+    "was_corrected": false
+  },
+  {
+    "timestamp": "2026-03-05T04:15:00",
+    "version": "v186",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [
+      "Log streaming",
+      "Regex search with logs",
+      "Search highlighting"
+    ],
+    "was_corrected": false,
+    "notes": "Partial deployment: API@v180 web@v186. QA effective=9.44 (PASS). E2E PASS. 1 code bug: Feature Flags CSS."
+  },
+  {
+    "timestamp": "2026-03-05T04:27:46.293638",
+    "version": "v186",
+    "verdict": "IN_PROGRESS",
+    "gates_checked": 0,
+    "status": "fix-loop-1",
+    "issues": [
+      "migration-pod-error-drizzle.config.json",
+      "api-k8s-v180-vs-state-v186"
+    ],
+    "active_agents": [
+      "developer",
+      "devops",
+      "qa",
+      "foreman",
+      "testing"
+    ],
+    "was_corrected": false
+  },
+  {
+    "timestamp": "2026-03-05T06:06:57.640505",
+    "version": "v186",
+    "verdict": "BLOCKED",
+    "gates_checked": 0,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "status": "needs-human",
+    "fixLoopCount": 3,
+    "k8s_version": "v180",
+    "state_version": "v186",
+    "drift_detected": true,
+    "circuit_breaker": true,
+    "action": "reported_to_discord_no_agents_spawned"
+  },
+  {
+    "timestamp": "2026-03-05T08:17:15.687357",
+    "version": "v186",
+    "verdict": "BLOCKED",
+    "gates_checked": 0,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "status": "needs-human",
+    "fixLoopCount": 3,
+    "k8s_api_version": "v180",
+    "k8s_web_version": "v186",
+    "drift_detected": true,
+    "circuit_breaker": true,
+    "action": "reported_to_discord_no_agents_spawned_awaiting_human",
+    "notes": "Source fix confirmed present (features/page.tsx:82). Bundle mismatch persists. API still v180."
+  },
+  {
+    "timestamp": "2026-03-05T09:59:16.915367+02:00",
+    "version": "v186",
+    "verdict": "E2E_SPAWNED_FINAL",
+    "gates_checked": 0,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "notes": "API confirmed healthy. DB seeded. Spawned Yuval for final E2E rerun #2."
+  },
+  {
+    "timestamp": "2026-03-05T10:14:27.970236+02:00",
+    "version": "v186",
+    "verdict": "COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "flaky_excluded": [
+      "byok-flow.spec.ts"
+    ],
+    "was_corrected": false,
+    "notes": "All 5 gates pass. E2E 89/105 effective 0 failures (1 byok flaky-timing). QA 9.2/10."
   }
 ]

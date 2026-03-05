@@ -1,9 +1,44 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { login } from './helpers';
 
+/** Delete a test-created alert rule by name via API to prevent artifact accumulation. */
+async function cleanupAlert(page: Page, alertName: string): Promise<void> {
+  try {
+    // Use the tRPC API to delete the alert by name
+    await page.evaluate(async (name) => {
+      const res = await fetch('/trpc/alerts.list', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!res.ok) return;
+      const data = await res.json() as { result?: { data?: { json?: Array<{ id: string; name: string }> } } };
+      const alerts = data.result?.data?.json ?? [];
+      const target = alerts.find((a) => a.name === name);
+      if (!target) return;
+      await fetch('/trpc/alerts.delete', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: target.id }),
+      });
+    }, alertName);
+  } catch {
+    // Best-effort cleanup — do not fail test on cleanup error
+  }
+}
+
 test.describe('Alerts — CRUD + History', () => {
+  const createdAlerts: string[] = [];
+
   test.beforeEach(async ({ page }) => {
     await login(page);
+  });
+
+  test.afterEach(async ({ page }) => {
+    for (const name of createdAlerts) {
+      await cleanupAlert(page, name);
+    }
+    createdAlerts.length = 0;
   });
 
   test('should load alerts page with rules list and history', async ({ page }) => {
@@ -25,6 +60,8 @@ test.describe('Alerts — CRUD + History', () => {
 
     // Fill form
     const alertName = `E2E-Alert-${Date.now()}`;
+    createdAlerts.push(alertName);
+    test.info().annotations.push({ type: 'e2e-created-alert', description: alertName });
     await page.getByLabel(/alert name/i).fill(alertName);
     await page.locator('select').filter({ has: page.locator('option[value="cpu"]') }).selectOption('memory');
     await page.getByLabel(/operator/i).selectOption('gt');
@@ -52,6 +89,7 @@ test.describe('Alerts — CRUD + History', () => {
     // First create an alert to toggle
     await page.getByRole('button', { name: /create alert/i }).click();
     const alertName = `Toggle-Alert-${Date.now()}`;
+    createdAlerts.push(alertName);
     await page.getByLabel(/alert name/i).fill(alertName);
     await page.getByLabel(/threshold value/i).fill('50');
     await page.getByRole('button', { name: /^create$/i }).click();
@@ -86,6 +124,7 @@ test.describe('Alerts — CRUD + History', () => {
     // Create an alert to delete
     await page.getByRole('button', { name: /create alert/i }).click();
     const alertName = `Delete-Alert-${Date.now()}`;
+    createdAlerts.push(alertName);
     await page.getByLabel(/alert name/i).fill(alertName);
     await page.getByLabel(/threshold value/i).fill('90');
     await page.getByRole('button', { name: /^create$/i }).click();
@@ -109,6 +148,7 @@ test.describe('Alerts — CRUD + History', () => {
 
     // Verify alert is removed
     await expect(page.locator('table').getByText(alertName).first()).toBeHidden({ timeout: 15_000 });
+    // Alert was deleted during the test itself — afterEach cleanupAlert is a no-op for this one
   });
 
   test('should show empty state when no alerts exist', async ({ page }) => {

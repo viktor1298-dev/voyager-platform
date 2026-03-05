@@ -466,9 +466,10 @@ export function AiChat({
     <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 sm:p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)]">AI Chat</h2>
-        <span className="rounded-full border border-[var(--color-border)] px-2 py-1 text-xs text-[var(--color-text-dim)]">
-          Cluster: {selectedClusterName ?? 'Not selected'}
-        </span>
+        <div className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium ${selectedClusterName ? 'border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 text-[var(--color-accent)]' : 'border-[var(--color-border)] text-[var(--color-text-dim)]'}`}>
+          <span className={`h-2 w-2 rounded-full ${selectedClusterName ? 'bg-[var(--color-accent)] animate-pulse' : 'bg-[var(--color-text-dim)]'}`} />
+          {selectedClusterName ?? 'No cluster selected'}
+        </div>
       </div>
 
       <p className="mb-3 text-xs text-[var(--color-text-dim)]">
@@ -575,6 +576,27 @@ export function AiChat({
                   </motion.div>
                 )
               })}
+
+            {/* Suggested question chips when chat is empty */}
+            {!locked && visibleMessages.length <= 1 && !isStreaming && selectedClusterId && (
+              <div className="flex flex-wrap gap-2 mt-4 justify-center">
+                {[
+                  { label: '🏥 Analyze cluster health', prompt: 'Analyze cluster health and top risks' },
+                  { label: '📊 Show recent anomalies', prompt: 'Show recent anomalies and their severity' },
+                  { label: '🔄 Explain pod restarts', prompt: 'Explain recent pod restarts and likely root causes' },
+                  { label: '💡 Resource optimization', prompt: 'Suggest resource optimization opportunities' },
+                ].map((chip) => (
+                  <button
+                    key={chip.label}
+                    type="button"
+                    onClick={() => void sendPrompt(chip.prompt)}
+                    className="rounded-xl border border-[var(--color-border)] bg-white/[0.03] px-3 py-2 text-xs text-[var(--color-text-secondary)] hover:bg-white/[0.06] hover:border-[var(--color-accent)]/40 transition-colors"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {locked && (
               <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-8 text-center">

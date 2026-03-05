@@ -1,9 +1,12 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { DataTable } from '@/components/shared/DataTable'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageTransition } from '@/components/animations'
-import { DataTable } from '@/components/DataTable'
-import { PageHeader } from '@/components/PageHeader'
 import { QueryError } from '@/components/ErrorBoundary'
 import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -17,21 +20,6 @@ interface ServiceRow {
   clusterIP: string | null
   ports: Array<{ port: number; protocol?: string | null; targetPort?: string | number | null }>
 }
-
-const columns: ColumnDef<ServiceRow>[] = [
-  { accessorKey: 'name', header: 'Name' },
-  { accessorKey: 'namespace', header: 'Namespace' },
-  { accessorKey: 'type', header: 'Type' },
-  { accessorKey: 'clusterIP', header: 'Cluster IP', cell: ({ getValue }) => getValue() ?? '—' },
-  {
-    id: 'ports',
-    header: 'Ports',
-    cell: ({ row }) =>
-      row.original.ports
-        .map((p) => `${p.port}${p.protocol ? '/' + p.protocol : ''}`)
-        .join(', ') || '—',
-  },
-]
 
 export default function ServicesPage() {
   const clustersQuery = trpc.clusters.list.useQuery()
@@ -52,14 +40,47 @@ export default function ServicesPage() {
 
   const data = useMemo(() => (servicesQuery.data ?? []) as ServiceRow[], [servicesQuery.data])
 
+  const columns = useMemo<ColumnDef<ServiceRow, unknown>[]>(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Service',
+        cell: ({ row }) => (
+          <span className="font-medium text-[var(--color-text-primary)]">{row.original.name}</span>
+        ),
+      },
+      { accessorKey: 'namespace', header: 'Namespace' },
+      { accessorKey: 'type', header: 'Type' },
+      {
+        accessorKey: 'clusterIP',
+        header: 'Cluster IP',
+        cell: ({ getValue }) => (getValue() as string | null) ?? '—',
+      },
+      {
+        id: 'ports',
+        header: 'Ports',
+        cell: ({ row }) =>
+          row.original.ports
+            .map((p) => `${p.port}${p.protocol ? '/' + p.protocol : ''}`)
+            .join(', ') || '—',
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        cell: () => <StatusBadge status="healthy" dot />,
+      },
+    ],
+    [],
+  )
+
   return (
     <AppLayout>
       <PageTransition>
-        <div className="space-y-6">
+        <div className="space-y-4">
           <PageHeader
             title="Services"
-            icon={<Layers className="h-6 w-6" />}
             description="Kubernetes services across your clusters"
+            breadcrumb={[{ label: 'Platform' }, { label: 'Services' }]}
             actions={
               clustersQuery.data && clustersQuery.data.length > 1 ? (
                 <select
@@ -78,13 +99,20 @@ export default function ServicesPage() {
           />
 
           {servicesQuery.error ? (
-            <QueryError error={servicesQuery.error} />
+            <QueryError message={servicesQuery.error.message} />
+          ) : data.length === 0 && !servicesQuery.isLoading ? (
+            <EmptyState
+              icon={<Layers className="h-6 w-6" />}
+              title="No services found"
+              description="No Kubernetes services found in this cluster."
+            />
           ) : (
             <DataTable
-              columns={columns}
               data={data}
-              isLoading={servicesQuery.isLoading}
-              emptyIcon={<Layers className="h-10 w-10" />}
+              columns={columns}
+              searchable
+              searchPlaceholder="Search services…"
+              emptyIcon={<Layers className="h-6 w-6" />}
               emptyTitle="No services found"
               emptyDescription="No Kubernetes services found in this cluster."
             />

@@ -53,7 +53,7 @@ export function DashboardCharts() {
             aria-pressed={range === opt.value}
             className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
               range === opt.value
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-primary/10 text-primary'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
             }`}
           >

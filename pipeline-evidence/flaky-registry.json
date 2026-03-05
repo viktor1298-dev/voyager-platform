@@ -1,5 +1,32 @@
 [
-  {"test": "alerts.spec.ts — should create a new alert rule", "failCount": 3, "root_cause": "dialog dismiss animation timeout", "firstSeen": "2026-02-28", "lastSeen": "2026-02-28"},
-  {"test": "alerts.spec.ts — should toggle alert enabled/disabled", "failCount": 3, "root_cause": "dialog dismiss animation timeout", "firstSeen": "2026-02-28", "lastSeen": "2026-02-28"},
-  {"test": "api-tokens.spec.ts — newly created token appears in token list", "failCount": 2, "root_cause": "dismiss button accessibility delay", "firstSeen": "2026-02-28", "lastSeen": "2026-02-28"}
+  {
+    "test": "alerts.spec.ts \u2014 should create a new alert rule",
+    "failCount": 3,
+    "root_cause": "dialog dismiss animation timeout",
+    "firstSeen": "2026-02-28",
+    "lastSeen": "2026-02-28"
+  },
+  {
+    "test": "alerts.spec.ts \u2014 should toggle alert enabled/disabled",
+    "failCount": 3,
+    "root_cause": "dialog dismiss animation timeout",
+    "firstSeen": "2026-02-28",
+    "lastSeen": "2026-02-28"
+  },
+  {
+    "test": "api-tokens.spec.ts \u2014 newly created token appears in token list",
+    "failCount": 2,
+    "root_cause": "dismiss button accessibility delay",
+    "firstSeen": "2026-02-28",
+    "lastSeen": "2026-02-28"
+  },
+  {
+    "test": "byok-flow.spec.ts \u2014 Settings BYOK actions keep UX clear for saved key vs raw key",
+    "failCount": 1,
+    "root_cause": "seedByokKey() + page.reload() timing race \u2014 button enabled state depends on API response arriving before 5000ms assertion timeout",
+    "suggested_fix": "Add waitForSelector([data-testid=byok-saved-state]) after reload, or increase toBeEnabled() timeout to 10000ms",
+    "firstSeen": "2026-03-05",
+    "lastSeen": "2026-03-05",
+    "classification": "flaky-timing"
+  }
 ]

@@ -533,53 +533,53 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### ⚡ Phase L-QW — Quick Wins (1-day fixes, start here — v178)
 
-- [ ] **L-QW-001: Default cluster selector to first healthy cluster** — `clusters.find(c => c.health === 'healthy') ?? clusters[0]` — fixes Services, Deployments, Namespaces, Logs (5 pages instantly)
+- [x] **L-QW-001: Default cluster selector to first healthy cluster** — `clusters.find(c => c.health === 'healthy') ?? clusters[0]` — fixes Services, Deployments, Namespaces, Logs (5 pages instantly)
   - Files: all pages with cluster selector component
-- [ ] **L-QW-002: Table row hover states** — add `hover:bg-muted/50 transition-colors cursor-pointer` to ALL `<tr>` elements across every data table
-- [ ] **L-QW-003: Fix table header typography** — change from `uppercase font-mono text-xs` to `text-xs font-medium text-muted-foreground` everywhere
-- [ ] **L-QW-004: Fix sidebar active state** — change from `bg-primary text-primary-foreground` to `bg-primary/10 text-primary` (Linear-style — less aggressive)
-- [ ] **L-QW-005: Reusable PageHeader component** — consistent `<PageHeader title breadcrumb description actions />` used on every page that lacks it (Services, Namespaces, Anomalies, Deployments)
-- [ ] **L-QW-006: Reusable EmptyState component** — `<EmptyState icon title description cta />` — contextual per page (not just "No X found")
+- [x] **L-QW-002: Table row hover states** — add `hover:bg-muted/50 transition-colors cursor-pointer` to ALL `<tr>` elements across every data table
+- [x] **L-QW-003: Fix table header typography** — change from `uppercase font-mono text-xs` to `text-xs font-medium text-muted-foreground` everywhere
+- [x] **L-QW-004: Fix sidebar active state** — change from `bg-primary text-primary-foreground` to `bg-primary/10 text-primary` (Linear-style — less aggressive)
+- [x] **L-QW-005: Reusable PageHeader component** — v182 2026-03-04 — consistent `<PageHeader title breadcrumb description actions />` used on every page that lacks it (Services, Namespaces, Anomalies, Deployments)
+- [x] **L-QW-006: Reusable EmptyState component** — `<EmptyState icon title description cta />` — contextual per page (not just "No X found")
   - Services: "prod-cluster-eks is disconnected. Switch to a healthy cluster."
   - Namespaces: same pattern
   - Deployments: same pattern
   - Logs: "Select a pod to begin streaming logs"
   - Webhooks: "No webhooks configured. Add one to receive event notifications."
-- [ ] **L-QW-007: Increase Dashboard stat card numbers** — change to `text-3xl font-semibold tabular-nums` for all 5 stat cards
-- [ ] **L-QW-008: Page fade-in animation** — add framer-motion `initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.15 }}` to all page root divs
+- [x] **L-QW-007: Increase Dashboard stat card numbers** — change to `text-3xl font-semibold tabular-nums` for all 5 stat cards
+- [x] **L-QW-008: Page fade-in animation** — add framer-motion `initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.15 }}` to all page root divs
 
 ---
 
 ### 🔴 Phase L-P0 — Blockers (v179 after QW)
 
-- [ ] **L-P0-001: Dashboard Redesign — Operational Command Center**
+- [x] **L-P0-001: Dashboard Redesign — Operational Command Center** [v185 2026-03-05]
   - CURRENT: Dashboard IS the cluster list — no operational overview
   - TARGET: Multi-panel overview: health matrix grid + resource gauges + anomaly timeline + recent events + cluster quick-access
   - Reference: Datadog Infrastructure Overview, Grafana Home
   - Files: `apps/web/src/app/page.tsx`
 
-- [ ] **L-P0-002: System Health Page — Complete Overhaul**
+- [x] **L-P0-002: System Health Page — Complete Overhaul** [v185 2026-03-05]
   - CURRENT: "System Healthy ✓ | API status: ok" — embarrassingly empty
   - TARGET: Per-cluster component health matrix (API server, etcd, scheduler, controller-manager), API latency graph, sync status, uptime history, recent incidents timeline
   - Reference: Datadog Infrastructure, Grafana System Health
   - Files: health-related page and tRPC endpoints
 
-- [ ] **L-P0-003: Alerts Page — Pagination / Virtual Scroll**
+- [x] **L-P0-003: Alerts Page — Pagination / Virtual Scroll** ✅ (v179, already implemented)
   - CURRENT: Hundreds of rows with NO pagination — will crash performance
   - Fix: `@tanstack/virtual` virtual scrolling OR standard pagination (25/50/100 per page)
   - Files: `/alerts` page component
 
-- [ ] **L-P0-004: Skeleton Loading — All Data Tables and Cards**
+- [x] **L-P0-004: Skeleton Loading — All Data Tables and Cards**
   - CURRENT: Pages flash empty → content with no intermediate state
   - Fix: Add `<TableSkeleton rows={5} />` and `<CardSkeleton />` to every data table and card that uses `isLoading`
   - Files: all table components, stat cards
 
-- [ ] **L-P0-005: Cluster Detail — Tabbed Layout**
+- [x] **L-P0-005: Cluster Detail — Tabbed Layout** ✅ (v179, already implemented)
   - CURRENT: Single scrolling page — unusable at scale (100+ pods on one page)
   - Fix: Tabs: Overview | Nodes | Pods | Services | Deployments | Events (like Lens)
   - Files: `apps/web/src/app/clusters/[id]/page.tsx`
 
-- [ ] **L-P0-006: Webhooks Page — Fix Loading State Logic**
+- [x] **L-P0-006: Webhooks Page — Fix Loading State Logic**
   - CURRENT: Skeleton rows appear permanently OR conflict with "0 ENDPOINTS" count
   - Fix: `count === 0 ? <EmptyState /> : isLoading ? <Skeleton /> : <Table />`
   - Files: `/webhooks` page component
@@ -588,36 +588,36 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🟠 Phase L-P1 — High Priority (v180 after P0)
 
-- [ ] **L-P1-001: Pod Table — Add Critical K8s Columns**
+- [x] **L-P1-001: Pod Table — Add Critical K8s Columns**
   - Add: CPU %, Memory %, Restart Count, Ready status to pods table
   - Reference: Lens pod list
   - Files: pod table component, pods tRPC router
 
-- [ ] **L-P1-002: Cluster Cards — Structured Layout**
+- [x] **L-P1-002: Cluster Cards — Structured Layout**
   - CURRENT: Random badges scattered around each cluster card
   - Fix: status dot + name on top, metrics grid in middle, tags at bottom. Remove cryptic mini-badges.
   - Reference: Lens cluster cards
   - Files: cluster card component
 
-- [ ] **L-P1-003: Command Palette — Add Resource Search**
+- [x] **L-P1-003: Command Palette — Add Resource Search**
   - CURRENT: Navigation only — no cluster/pod/service search
   - Fix: Add "CLUSTERS" and "RESOURCES" sections that search across all resources. Add keyboard nav hints (↑↓ Enter). Add recent items.
   - Reference: Raycast, Linear command palette
   - Files: command palette component
 
-- [ ] **L-P1-004: Logs Page UX Improvements**
+- [x] **L-P1-004: Logs Page UX Improvements**
   - Fix: Move search bar to top of log output area (sticky)
   - Add contextual "Select a pod" empty state (use L-QW-006 component)
   - Add JSON pretty-printing and color-coded log levels in output
   - Files: `/logs` page component
 
-- [ ] **L-P1-005: AI Assistant — Enhance Chat Experience**
+- [x] **L-P1-005: AI Assistant — Enhance Chat Experience**
   - Fix: Add suggested question chips in empty chat area (3-4 contextual suggestions)
   - Make cluster context more prominent (not just top-right corner)
   - Remove or redesign "FREE Tier Analytics" badge (confusing in self-hosted context)
   - Files: `/ai` page component
 
-- [ ] **L-P1-006: Alerts Page — Add Grouping and Filters**
+- [x] **L-P1-006: Alerts Page — Add Grouping and Filters**
   - Add collapsible groups by cluster/type/severity
   - Add bulk actions: enable/disable/delete selected
   - Make search sticky while scrolling
@@ -627,31 +627,31 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🟡 Phase L-P2 — Medium Priority (v181 after P1)
 
-- [ ] **L-P2-001: Dark Mode 4-Level Surface Color Scale**
+- [x] **L-P2-001: Dark Mode 4-Level Surface Color Scale** — v182 2026-03-04
   - CSS vars: `--surface-0: hsl(230 15% 7%)` | `--surface-1: hsl(230 15% 10%)` | `--surface-2: hsl(230 15% 13%)` | `--surface-3: hsl(230 15% 17%)`
   - Apply consistently across sidebar, main, cards, hover states
 
-- [ ] **L-P2-002: Standardize Design Tokens (spacing + typography)**
+- [x] **L-P2-002: Standardize Design Tokens (spacing + typography)**
   - Page padding: `px-6 py-6` everywhere
   - Section gap: `space-y-6` everywhere
   - Card padding: `p-4` (compact) or `p-6` (spacious) — never mixed
   - Table row height: `h-12` everywhere
   - Stat numbers: `text-3xl font-semibold tabular-nums`
 
-- [ ] **L-P2-003: MetricCard + StatusBadge Shared Components**
+- [x] **L-P2-003: MetricCard + StatusBadge Shared Components** — v182 2026-03-04
   - `<MetricCard label value trend sparkline />` — replace all ad-hoc stat cards
   - `<StatusBadge status />` — unified health/severity/status badge (one component, not 5 different ones)
 
-- [ ] **L-P2-004: DataTable Shared Component**
+- [x] **L-P2-004: DataTable Shared Component** — v182 2026-03-04
   - Replace all custom table implementations with shadcn DataTable
   - Include: sorting, filtering, pagination, row selection, row actions, sticky header
 
-- [ ] **L-P2-005: Cluster Detail — Nodes Table with Real Metrics**
+- [x] **L-P2-005: Cluster Detail — Nodes Table with Real Metrics**
   - CURRENT: CPU %, Memory %, Mem % columns show "—"
   - Fix: Populate from metrics API OR show "Metrics unavailable — install metrics-server" message
   - Files: nodes table, cluster tRPC router
 
-- [ ] **L-P2-006: Sonner Toast Notifications**
+- [x] **L-P2-006: Sonner Toast Notifications**
   - Add `sonner` toasts for all CRUD operations (connect cluster, revoke token, create webhook, etc.)
   - Currently: zero feedback on user actions
 
@@ -659,23 +659,302 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🔵 Phase L-P3 — Strategic Improvements (v182)
 
-- [ ] **L-P3-001: Dashboard Resource Utilization Gauges**
+- [x] **L-P3-001: Dashboard Resource Utilization Gauges** [v186 2026-03-05]
   - Add CPU/Memory gauges across all clusters using Recharts or @nivo
   - Show aggregate + per-cluster breakdown
 
-- [ ] **L-P3-002: Anomaly Timeline Integration in Dashboard**
+- [x] **L-P3-002: Anomaly Timeline Integration in Dashboard** [v186 2026-03-05]
   - Show last 24h anomaly events as a timeline widget on Dashboard
   - Color-coded by severity
 
-- [ ] **L-P3-003: Feature Flags — Activity Log Collapsible**
+- [x] **L-P3-003: Feature Flags — Activity Log Collapsible** [v186 2025-07-22]
   - Make activity log sections collapsible per flag card (saves space for large flag counts)
 
-- [ ] **L-P3-004: Log Viewer — Advanced Features**
+- [x] **L-P3-004: Log Viewer — Advanced Features** [v186 2025-07-22]
   - Regex search capability
   - Timestamp formatting options
   - Highlight matched search terms in log output
 
-- [ ] **L-P3-005: Number Animations on Stat Cards**
+- [x] **L-P3-005: Number Animations on Stat Cards**
   - Use framer-motion `useMotionValue` + `animate()` to tween numbers on load
   - Makes dashboard feel alive
+
+
+---
+
+## 🎨 Phase M — UX Audit v3 Deep Fixes (2026-03-05)
+> **Source:** Senior Frontend Designer audit (Vercel/Linear/Datadog expertise), v186
+> **Current Score:** 6.4/10 | **Target:** 8.5+/10
+> **Full report:** `Obsidian/Research/voyager-ux-audit-v3-2026-03-05.md`
+> **Priority order:** P0 (bugs) → P1 (high-impact polish) → P2 (premium feel) → P3 (strategic)
+>
+> ⚠️ NOTE: Items marked with [VERIFY] were previously implemented but auditor still flagged them — must verify they work correctly and apply globally to ALL pages/tables.
+
+---
+
+### 🔴 M-P0 — Critical Bugs (Enterprise Blockers — Fix First)
+
+- [x] **M-P0-001: Theme Toggle Broken — CSS Class Not Applied to `<html>`**
+  - **Problem:** The theme toggle button cycles `Light → System → Dark` label states but does NOT apply `class="dark"` to `document.documentElement`. The whole theme system is broken at the root — dark mode only works after manually injecting the class via JS.
+  - **Root cause:** The `useTheme` hook (or `ThemeProvider`) updates state but the `useEffect` that syncs state → DOM is missing or race-conditions on SSR hydration.
+  - **Fix:** In the theme provider, ensure the side-effect fires:
+    ```tsx
+    useEffect(() => {
+      const root = document.documentElement;
+      root.classList.remove('light', 'dark');
+      if (theme === 'system') {
+        const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        root.classList.add(sys);
+      } else {
+        root.classList.add(theme);
+      }
+    }, [theme]);
+    ```
+    Consider migrating to `next-themes` which handles SSR hydration correctly.
+  - **Expected result after fix:** Clicking the toggle in the header instantly switches the full UI between dark/light mode with zero flash. `document.documentElement.className` must reflect the active theme.
+  - **Reference:** Vercel and Linear both have flawless, instant theme switching.
+  - **Effort:** XS (30 min)
+
+- [x] **M-P0-002: Raw JSON Error Messages Shown to Users**
+  - **Problem:** Multiple pages (`/logs`, `/deployments`) display raw Zod/tRPC validation errors: `[{"expected":"string","code":"invalid_type","path":["accessKeyId"],"message":"Invalid input: expected string, received undefined"}]`. This is completely unreadable to users and a hard enterprise deal-killer.
+  - **Fix:**
+    1. Add a global `ErrorBoundary` component that catches tRPC/fetch errors
+    2. Map common error codes to human-readable messages (e.g., `invalid_type` on `accessKeyId` → "Cloud provider credentials not configured")
+    3. Implement a reusable `<ErrorState>` component:
+       ```tsx
+       <ErrorState
+         icon={<AlertTriangle />}
+         title="Connection Configuration Required"
+         description="Cloud provider credentials are not configured. Add your AWS access keys in Settings → Clusters."
+         primaryAction={{ label: "Go to Settings", href: "/settings" }}
+         secondaryAction={{ label: "View Docs", href: "/docs/clusters" }}
+       />
+       ```
+    4. Apply to: `/logs`, `/deployments`, and any other page that currently shows raw JSON
+  - **Expected result after fix:** Zero raw JSON visible anywhere in the UI. All error states show a clear icon, title, description, and at least one action button guiding the user forward.
+  - **Reference:** Vercel's error states always have CTA. Grafana shows "Data source is not configured" with a direct config link.
+  - **Effort:** S (2-3 hours)
+
+- [x] **M-P0-003: 308 E2E Test Artifacts Polluting Alerts Page**
+  - **Problem:** The Alerts page shows 308 alert rules, almost all named `Toggle-Alert-177269XXXXX` or `E2E-Alert-177269XXXXX` — automated test artifacts never cleaned up. Page is completely unusable for real alert management. Pagination shows "1-25 of 308."
+  - **Fix:**
+    1. **Immediate DB cleanup:** Run migration to delete all test artifacts:
+       ```sql
+       DELETE FROM alert_rules WHERE name ~ '^(Toggle|E2E|Delete)-Alert-\d+$';
+       ```
+    2. **E2E preventive fix:** Add `afterEach`/`afterAll` cleanup hooks in all alert-related E2E tests so test data is deleted after each test run
+    3. **UI improvement:** Add bulk select + delete action bar (checkbox column exists but no bulk action bar appears on selection)
+  - **Expected result after fix:** Alerts page shows only real/demo alerts. E2E runs clean up after themselves. Bulk actions work.
+  - **Effort:** S (1-2 hours for cleanup + E2E hooks)
+
+- [x] **M-P0-004: Cluster Selector Resets on Navigation — Context Not Persisted**
+  - **Problem:** Selecting `vik-minikube` on the dashboard doesn't persist when navigating to Deployments, Logs, or Services. Header shows "Select Cluster" and pages fail with JSON errors. Users must re-select a cluster on every page.
+  - **Fix:**
+    1. Store selected cluster ID in a Zustand store with `persist` middleware (localStorage)
+    2. Every page that has a cluster selector must read from the global store as the default
+    3. Consider URL-based routing: `/clusters/{id}/pods`, `/clusters/{id}/logs` so cluster is in the URL
+    4. Header cluster selector must always reflect the globally selected cluster
+  - **Expected result after fix:** Select `vik-minikube` once → navigate to Logs, Deployments, Services — they all show data for `vik-minikube` automatically without re-selecting.
+  - **Reference:** Lens maintains cluster context persistently. Rancher uses URL-based routing `/c/{cluster-id}/...`.
+  - **Effort:** M (4-6 hours)
+
+- [x] **M-P0-005: "ONLINE 0" User Count is Broken**
+  - **Problem:** Every page header shows "● ONLINE 0" — the current user themselves should count as at least 1. The badge shows 0 which is either a bug in the presence system or the feature was never fully implemented.
+  - **Fix:** Fix the WebSocket/SSE presence counter to correctly count connected users (minimum 1 when logged in). If the presence feature is not ready, remove the "0 users online" text — show just the "ONLINE" badge or a simple connection indicator.
+  - **Expected result after fix:** Shows "● ONLINE 1" (or "● ONLINE" without the count) while logged in.
+  - **Effort:** XS (30 min)
+
+- [x] **M-P0-006: Cluster Detail Breadcrumb Shows UUID Instead of Name**
+  - **Problem:** Cluster detail page breadcrumb shows `Clusters > f907d8f1…132d72` (truncated UUID) instead of `Clusters > vik-minikube`. This is a debug artifact that should never reach production.
+  - **Fix:** In the cluster detail page, look up the cluster name from the route param (cluster ID) using the cluster list query and use it in the breadcrumb component.
+  - **Expected result after fix:** Breadcrumb always shows human-readable name: `Clusters > vik-minikube`.
+  - **Effort:** XS (30 min)
+
+---
+
+### 🟠 M-P1 — High Priority (Must Fix Before Customer Demos)
+
+- [ ] **M-P1-001: Typography System — Establish 4-Level Hierarchy**
+  - **Problem:** All section headers (`CLUSTER HEALTH MATRIX`, `RESOURCE UTILIZATION`, `Anomaly Timeline — 24h`) use the same visual weight. Nothing stands out. Uppercase monospace labels in Settings (`API ENDPOINT`, `K8S VERSION`) feel overly technical for UI labels. The visual plane is flat — eye doesn't know where to go first.
+  - **Fix:** Establish and apply a consistent 4-level type scale across ALL pages:
+    - **Page title:** `text-2xl font-bold` (28px/700) — e.g., "Dashboard", "Clusters"
+    - **Section heading:** `text-base font-semibold` (16px/600) with optional subtle left border accent — e.g., "Cluster Health Matrix"
+    - **Subsection label:** `text-xs font-medium uppercase tracking-wider text-muted-foreground` (12px) — e.g., "PER-CLUSTER BREAKDOWN"
+    - **Body/values:** `text-sm` (14px/400), high contrast for data, muted for metadata
+    Replace monospace labels in Settings with standard `text-sm font-medium` labels.
+  - **Expected result after fix:** Clear visual hierarchy on every page. Eye naturally goes to page title → section → data. Settings labels look like proper UI, not terminal output.
+  - **Reference:** Linear uses exactly this hierarchy. Vercel uses subtle font-weight differences rather than uppercase transforms.
+  - **Effort:** S (3-4 hours — systematic pass across all pages)
+
+- [ ] **M-P1-002: Stat Cards — Fix Sparklines & Add Timeframe Context to Trends**
+  - **Problem:** Dashboard stat card sparklines (~40px tall) are too small to convey meaningful trends. Trend indicators show "▲ +1", "▲ +5" with no timeframe — "+5 since when?" The Anomalies card uses icons (`⊙4 △4 ⊙4`) that are hard to distinguish at a glance.
+  - **Fix:**
+    1. Increase sparkline chart height to 60px minimum with proper Recharts configuration
+    2. Add timeframe to all trend indicators: "▲ +5 (24h)" or "▲ +5 vs yesterday"
+    3. Replace ambiguous severity icons in Anomalies card with color-coded dots: red (critical), yellow (warning), blue (info) + count
+    4. If sparklines can't be made readable at the card size, remove them and use the space for a cleaner metric display
+  - **Expected result after fix:** Glancing at stat cards gives immediate sense of direction (up/down) AND timeframe. Anomaly severity breakdown is instantly color-coded and scannable.
+  - **Reference:** Datadog metric cards show trend + timeframe + readable sparkline. Grafana stat panels include threshold coloring.
+  - **Effort:** S (2-3 hours)
+
+- [ ] **M-P1-003: Table Row Hover/Focus States — Apply Globally to ALL Tables** [VERIFY: previously marked done in L-QW-002 and K-P1-005, but auditor still flags as missing on multiple pages]
+  - **Problem:** Tables on Clusters, Services, Events, and Alerts pages have no visible hover state. Clickable pod rows have no cursor change or background highlight. Alerts table has checkboxes but no bulk action bar appears on selection.
+  - **Fix:**
+    1. Do a full audit of every `<table>` in the codebase — verify `hover:bg-muted/50 transition-colors` is applied to ALL `<tr>` elements
+    2. Add `cursor-pointer` to all clickable rows
+    3. Fix Alerts table bulk selection — on checkbox select, show a sticky action bar: "N selected — [Delete] [Enable] [Disable]"
+    4. Add `focus-visible:outline-2 outline-ring` for keyboard focus on rows
+  - **Expected result after fix:** Every table row highlights on hover. Clickable rows show pointer cursor. Alerts bulk selection shows an action bar.
+  - **Effort:** S (1-2 hours — systematic verification pass)
+
+- [ ] **M-P1-004: Notification Panel — Grouping, Source Names, Categories**
+  - **Problem:** Notification dropdown shows 6-16 notifications, all identical: "unknown — Readiness probe failed / Liveness probe failed, 6h ago". Source shows "unknown" instead of pod/service name. No grouping of repeated events. "Mark all read" button visible but badge remains.
+  - **Fix:**
+    1. Group identical notifications: "Readiness probe failed (×6) — 6h ago" instead of 6 separate entries
+    2. Resolve source entity: show pod name, namespace, cluster from the underlying K8s event
+    3. Add severity coloring (left border: red for critical, yellow for warning, blue for info)
+    4. Fix "Mark all read" to clear the badge count in header
+    5. Add category filters in the panel: All | Alerts | Events | System
+  - **Expected result after fix:** Notification panel shows grouped, readable events with real source names, color-coded by severity, and "Mark all read" actually clears the badge.
+  - **Reference:** PagerDuty groups related incidents. GitHub notifications have category filters and clear read/unread states.
+  - **Effort:** M (4-5 hours)
+
+- [ ] **M-P1-005: Sidebar Section Headers — Replace Emoji with Lucide Icons**
+  - **Problem:** Sidebar section headers use emoji characters: "👁️ Observability", "⚙️ Infrastructure", "🤖 Platform", "🔐 Admin". Individual nav items use proper Lucide SVG icons, creating a jarring inconsistency. Emoji renders differently across OS/browsers.
+  - **Fix:** Replace each emoji with a matching Lucide icon using the same size/color as the nav item icons:
+    - `👁️` → `<Eye className="h-4 w-4" />` or `<Activity />`
+    - `⚙️` → `<Settings className="h-4 w-4" />` or `<Server />`
+    - `🤖` → `<Bot className="h-4 w-4" />` or `<Cpu />`
+    - `🔐` → `<Shield className="h-4 w-4" />` or `<Lock />`
+  - **Expected result after fix:** Sidebar uses consistent monochrome Lucide icons throughout, for both section headers and nav items.
+  - **Reference:** Linear's sidebar uses consistent icon treatment. Vercel never mixes emoji with SVG icons.
+  - **Effort:** XS (30 min)
+
+- [ ] **M-P1-006: Dashboard — Remove Duplicate Cluster Section, Reduce Scroll Depth**
+  - **Problem:** Dashboard page is 3+ screens of scroll. Below stat cards, health matrix, resource utilization, anomaly timeline, and events — there's a FULL "Clusters" section with filter bar, search, tags, and cluster cards. This entirely duplicates `/clusters`. Initial viewport shows only stat cards and top of health matrix.
+  - **Fix:**
+    1. Remove the full Clusters section from the dashboard — add a "View all clusters →" link from the Cluster Health Matrix header instead
+    2. Move anomaly timeline and resource utilization into a 2-column layout (side by side) to reduce vertical scroll
+    3. Replace the removed cluster section with a compact "Quick Clusters" widget: top 3-4 clusters by health status, no filters, just name + health badge + pod count
+    4. Target: dashboard should be fully visible without scrolling on a 1440px screen (or with minimal scroll)
+  - **Expected result after fix:** Dashboard fits in 1-2 screens. All critical info visible at a glance. No duplication between dashboard and `/clusters` page.
+  - **Reference:** Vercel's dashboard shows focused deployment list — no full-page duplication. Datadog home shows curated widgets.
+  - **Effort:** M (3-4 hours)
+
+- [ ] **M-P1-007: Light Mode — Depth and Shadow Improvements**
+  - **Problem:** Light mode uses `rgb(245,247,250)` background which is very close to white card backgrounds. Cards lack depth (no shadows, very faint borders). Overall feels flat and unfinished compared to the polished dark mode.
+  - **Fix:**
+    1. Set page background to `rgb(248,250,252)` (slightly off-white), cards to pure white `#ffffff`
+    2. Add card shadows in light mode: `shadow-sm` with subtle blue tint, e.g., `box-shadow: 0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.06)`
+    3. Add subtle card borders: `border: 1px solid hsl(220, 13%, 91%)`
+    4. Add subtle gradient or texture to sidebar background in light mode
+  - **Expected result after fix:** Light mode has clear card depth — cards are visually distinct from the page background. Both modes feel equally polished.
+  - **Reference:** Linear's light mode uses clear card shadows. Vercel uses subtle borders + shadows for depth.
+  - **Effort:** S (2-3 hours)
+
+---
+
+### 🟡 M-P2 — Polish Sprint (Premium Feel)
+
+- [ ] **M-P2-001: Card Border-Radius Consistency Pass**
+  - **Problem:** At least 3 different border-radius values used on the same page: stat cards `rounded-lg` (~8px), health matrix cards `rounded-xl` (~12px), anomaly timeline `rounded-lg`, cluster cards with colored left borders using yet another radius.
+  - **Fix:** Standardize across the entire app: `border-radius: 12px` for all cards/panels, `8px` for smaller elements (badges, tags, compact cards), `6px` for inputs and buttons.
+  - **Expected result after fix:** Visual consistency — every card on every page uses the same border radius. No more mismatched corners.
+  - **Effort:** XS (1 hour — search and replace across components)
+
+- [ ] **M-P2-002: Empty State Redesign — Contextual Tips + Better Guidance**
+  - **Problem:** Empty states (Webhooks "No webhooks configured", Events "No events found", Recent Events "No recent events") are functional but generic. Just an icon + text + button, no illustrations, no contextual help, no personality.
+  - **Fix:** Design contextual empty states for each page:
+    - **Webhooks:** Flow diagram illustration + "Receive real-time alerts in Slack, PagerDuty, or any HTTP endpoint. Set up your first webhook in 30 seconds."
+    - **Events:** "All quiet in the last hour. Adjust the time range to see historical events." + time range picker shortcut
+    - **Deployments:** "No deployments tracked for this cluster. Deploy an app or connect a CI/CD pipeline."
+    - **Services:** "No services found in {cluster}. Try selecting a different namespace or cluster."
+  - **Expected result after fix:** Every empty state tells the user WHY it's empty and WHAT to do next. No dead ends.
+  - **Reference:** Linear's empty states use custom illustrations. Vercel shows contextual setup guides.
+  - **Effort:** S (2-3 hours — one reusable `<EmptyState>` component with page-specific props)
+
+- [ ] **M-P2-003: Pod Detail Drawer — Add Containers, Resources, Events, YAML Tabs**
+  - **Problem:** Pod detail drawer shows Status, Namespace, Node, Age, and live logs. Missing: CPU/memory usage, container details, restart count, labels, pod events, and YAML view. For a K8s ops tool, this is essential debugging information.
+  - **Fix:** Add tabs to the drawer:
+    - **Overview tab:** Resource requests/limits, current CPU/memory usage as progress bars, restart count, labels as tags, annotations
+    - **Containers tab:** List each container with image, status, ports, last state (e.g., "OOMKilled 2h ago")
+    - **Logs tab:** (current) — move existing live log view here
+    - **Events tab:** K8s events scoped to this pod (pulled from `/api/v1/events?fieldSelector=involvedObject.name={pod}`)
+    - **YAML tab:** Full pod spec as formatted YAML with syntax highlighting and "Copy" button
+  - **Expected result after fix:** Clicking a pod gives a comprehensive inline view equivalent to `kubectl describe pod`. Users never need to leave the UI to debug pod issues.
+  - **Reference:** Lens pod detail is the gold standard. `kubectl describe pod` output is the minimum information bar.
+  - **Effort:** M (5-7 hours)
+
+- [ ] **M-P2-004: Command Palette — Add Entity Search (Pods, Services, Deployments, Namespaces)**
+  - **Problem:** Command palette (`⌘K`) only shows navigation links, cluster shortcuts, and 2 actions (Toggle Theme, Keyboard Shortcuts). No search for actual K8s resources. For a power-user tool, this is severely limited.
+  - **Fix:**
+    1. Add "RESOURCES" section that searches: pods (by name across all clusters), services, deployments, namespaces
+    2. Add "RECENT" section showing last 5 visited entities
+    3. Add quick actions: "Restart deployment X", "View logs for pod X", "Scale X to N"
+    4. Show keyboard hints per result (e.g., `↵ Open`, `⌘↵ Open in new tab`)
+    5. Add fuzzy matching on resource names
+  - **Expected result after fix:** Typing "nginx" in the palette shows all pods/deployments/services named nginx. Power users can navigate entirely via keyboard.
+  - **Reference:** Linear's command palette is the gold standard. GitHub's command palette finds repos, files, and PRs.
+  - **Effort:** L (8-12 hours — requires tRPC endpoints for cross-resource search)
+
+---
+
+### 🔵 M-P3 — Strategic Improvements (Competitive Differentiators)
+
+- [ ] **M-P3-001: Keyboard-First Navigation System**
+  - **Problem:** No keyboard shortcuts beyond `⌘K`. K8s power users live in terminals — they expect keyboard shortcuts for everything. This is a significant gap vs GitHub (extensive shortcuts) and Linear (every action is accessible via keyboard).
+  - **Fix:**
+    1. Add global keyboard shortcut system
+    2. Navigation shortcuts (Gmail-style `G` prefix): `G D` (dashboard), `G C` (clusters), `G L` (logs), `G A` (alerts), `G F` (feature flags)
+    3. List navigation: `J/K` (move between rows), `Enter` (open detail), `Esc` (close drawer/modal)
+    4. Page actions: `/` (focus search on any page), `N` (new item where applicable)
+    5. Add `?` shortcut that opens a keyboard shortcut cheat sheet modal
+    6. Show shortcuts in command palette alongside each action
+  - **Expected result after fix:** Experienced users can navigate the entire app without touching the mouse. Keyboard shortcut guide is discoverable via `?`.
+  - **Effort:** M (6-8 hours)
+
+- [ ] **M-P3-002: Real-Time Time-Series Resource Charts**
+  - **Problem:** Resource utilization gauges show static "0%" values. No live-updating charts showing CPU/memory/network trends over time. Competitors (Datadog, Grafana, Lens) all show time-series resource data as a core feature.
+  - **Fix:**
+    1. Add time-series charts using Recharts or `@nivo/line` to the cluster detail Overview tab
+    2. Show CPU %, Memory %, and Network I/O over selected time range (1h/6h/24h/7d)
+    3. Show per-node and per-pod resource breakdowns
+    4. Use existing `metricsHistory` DB table (already populated by background collector)
+    5. Add real-time sparklines (last 5min, 5-second intervals) to the Services table rows
+  - **Expected result after fix:** Cluster detail shows live-updating resource charts. Users can see CPU spike over last 24h, identify memory leaks, correlate with deployment events.
+  - **Reference:** Datadog time-series charts are best-in-class. Lens shows real-time resource graphs per pod/node.
+  - **Effort:** XL (15-20 hours)
+
+- [ ] **M-P3-003: AI Assistant — Inline Integration Throughout App**
+  - **Problem:** AI Assistant is isolated on its own `/ai` page. The rest of the app has no AI integration — users must context-switch to ask about an anomaly or pod issue. Recommendations panel on the AI page is disconnected.
+  - **Fix:**
+    1. Add "Ask AI" button contextually throughout the app:
+       - Anomaly card → "Explain this anomaly" button
+       - Pod detail drawer header → "Ask AI about this pod" 
+       - Alert detail → "Get remediation suggestions"
+    2. Show AI recommendations inline on dashboard for critical events
+    3. Natural language queries in command palette: type "pods with high memory" → AI interprets and filters
+    4. AI insight chips in cluster detail when anomalies are detected
+  - **Expected result after fix:** AI assistance feels native to the workflow, not a separate tool. Users get proactive suggestions on critical pages without navigating away.
+  - **Effort:** XL (25-35 hours)
+
+- [ ] **M-P3-004: Customizable Dashboard Widgets**
+  - **Problem:** Dashboard layout is fixed — everyone sees the same stat cards, health matrix, resource utilization, anomaly timeline. Different teams need different views (SRE wants alerts + resource metrics, developers want deployment status + logs).
+  - **Fix:** Implement a configurable dashboard widget system:
+    1. Widget library: stat cards, time-series charts, alert feed, deployment list, log tail, anomaly timeline
+    2. Add/remove widgets via a "Customize Dashboard" panel
+    3. Drag-to-reorder within defined layout grid
+    4. Save layout per user (user preferences DB table)
+    5. "Default" layout for new users (current dashboard layout)
+  - **Expected result after fix:** Each user configures their own dashboard view. SREs, developers, and managers see different default widgets.
+  - **Reference:** Grafana's dashboard customization is the industry standard. Datadog's custom dashboards are a core selling point.
+  - **Effort:** XL (35-45 hours)
+
+---
+
+## Pipeline Gates (Phase M — same as prior phases)
+- Code Review (Lior): 10/10
+- E2E (Yuval): 0 failures (non-negotiable)
+- Desktop QA (Mai): ≥8.5/10
+- VERSION CONTRACT: git tag → docker → helm → state.json (all must match)
 

@@ -1,0 +1,24 @@
+{
+  "version": "v179",
+  "tag": "fix1-redeploy",
+  "timestamp": "2026-03-04T14:17:00.000Z",
+  "commit": "8533573",
+  "commitMessage": "fix(ui): v179 QA fixes — health routing, alerts page-size, deployments CTA",
+  "helmRevision": 80,
+  "build": {
+    "api": "voyager-api:v179",
+    "web": "voyager-web:v179",
+    "status": "success"
+  },
+  "deploy": {
+    "method": "helm upgrade --reuse-values --no-hooks + rollout restart",
+    "namespace": "voyager",
+    "status": "success"
+  },
+  "verify": {
+    "podsRunning": true,
+    "healthCheck": {"status": "ok"},
+    "loginSmoke": "token received — admin@voyager.local OK"
+  },
+  "result": "SUCCESS"
+}

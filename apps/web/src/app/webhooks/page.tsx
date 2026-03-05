@@ -331,7 +331,7 @@ function WebhooksPageContent() {
                 <p className="text-xs text-[var(--color-text-muted)]">No deliveries yet</p>
               ) : (
                 <div className="space-y-2">
-                  {item.deliveries.map((d) => (
+                  {item.deliveries.map((d: WebhookItem['deliveries'][number]) => (
                     <div
                       key={d.id}
                       className="grid grid-cols-3 gap-2 rounded-md border border-[var(--color-border)]/70 bg-[var(--color-bg-surface)] px-3 py-2 text-xs"

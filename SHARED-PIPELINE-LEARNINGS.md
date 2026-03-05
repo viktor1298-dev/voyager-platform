@@ -112,3 +112,27 @@ Fix: Before spawning dev agents for a phase, audit codebase first: `rg "webhook|
 - **QA score:** 9.5/10 | **Review score:** 10/10
 - **Key deliverables:** ClusterWatchManager (Informer pattern), real K8s metrics, health check for all providers, connectionConfig fix, alert engine, Services/Namespaces routers, multi-cluster aggregation, Webhooks, AI Assistant (GPT-4o streaming), RBAC permissions
 - **Total phases:** I0→IP4 + E2-E5 + all review/deploy/E2E/QA cycles
+
+---
+
+[LRN-005] | 2026-03-05 | Foreman/Infra | critical
+Pattern: Docker build process not including source code changes in final image despite --no-cache flag and Dockerfile cache-clearing (rm -rf .next/). After 3 consecutive builds, code in git HEAD was correct but deployed bundle contained old code. Bundle inspection in deployed pod confirmed fix was NOT in JS bundle.
+Context: v186 feature flags collapse fix — code showed `{expanded && <ul>}` in git, but bundle had `(0,b.jsx)("ul",{id:...` without conditional.
+Fix: Investigate Docker build context, multi-stage build caching, and build directory state. Workaround: `docker system prune -a` before build.
+[SKILL-PATCH: build-deploy → Add bundle verification step before marking deploy complete]
+
+---
+
+[LRN-006] | 2026-03-05 | Foreman/Process | best_practice
+Pattern: QA was run twice on broken builds because bundle verification didn't happen before deploy. Wasted QA time and delayed pipeline unnecessarily.
+Fix: MANDATORY bundle verification after Docker rebuild when fixing bugs. Before deploying to QA, verify the fix pattern exists in the built bundle: `kubectl exec deployment/voyager-web -- grep -r "pattern-from-fix" /app/apps/web/.next/` OR during build: `docker run --rm voyager-web:v186 grep -r "pattern-from-fix" /app/apps/web/.next/`
+If verification fails → HALT, report build issue, DO NOT deploy.
+[SKILL-PATCH: build-deploy → Add pre-QA bundle verification for fix loop rebuilds]
+
+---
+
+[LRN-007] | 2026-03-05 | Foreman/Process | best_practice
+Pattern: Fix loop limit (3) worked as designed. After 3 failed attempts with same root cause (Docker build infrastructure), pipeline was properly BLOCKED with clear evidence and escalation. Automated fix loops cannot resolve infrastructure issues.
+Fix: Current process is correct. Document that fix loop 3/3 triggers BLOCK status with manual intervention required. Foreman should never self-certify or try to bypass the gate — report and escalate.
+
+---

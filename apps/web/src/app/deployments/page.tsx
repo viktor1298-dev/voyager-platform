@@ -2,13 +2,15 @@
 
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
-import { PageHeader } from '@/components/PageHeader'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { trpc } from '@/lib/trpc'
+import { useClusterContext } from '@/stores/cluster-context'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Box, Loader2, RefreshCw, Scale } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -116,12 +118,16 @@ function ScaleDialog({ deployment, onClose }: { deployment: Deployment; onClose:
 
 export default function DeploymentsPage() {
   const isAdmin = useIsAdmin()
+  const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const [isClient, setIsClient] = useState(false)
   const [scaleTarget, setScaleTarget] = useState<Deployment | null>(null)
   const [confirmRestart, setConfirmRestart] = useState<Deployment | null>(null)
   const [namespaceFilter, setNamespaceFilter] = useState<string>('all')
 
-  const deploymentsQuery = trpc.deployments.list.useQuery(undefined, { refetchInterval: 30_000 })
+  const deploymentsQuery = trpc.deployments.list.useQuery(
+    activeClusterId ? { clusterId: activeClusterId } : undefined,
+    { refetchInterval: 30_000 },
+  )
   const deployQueryKey = [['deployments', 'list'], { type: 'query' }] as const
 
   const restartMutation = trpc.deployments.restart.useMutation(
@@ -273,38 +279,32 @@ export default function DeploymentsPage() {
   return (
     <AppLayout>
       <PageTransition>
-        <PageHeader
-          title="Deployments"
-          icon={<Box className="h-6 w-6" />}
-          description="Track rollout status, replica health, and restart/scale operations."
-          actions={
-            <div className="flex items-center gap-2">
-              <label htmlFor="namespace-filter" className="text-xs text-[var(--color-table-meta)]">Namespace</label>
-              <select
-                id="namespace-filter"
-                value={namespaceFilter}
-                onChange={(event) => setNamespaceFilter(event.target.value)}
-                className="px-3 py-2 rounded-lg text-sm bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]/50"
-              >
-                <option value="all">All namespaces</option>
-                {namespaces.map((namespace) => (
-                  <option key={namespace} value={namespace}>{namespace}</option>
-                ))}
-              </select>
-            </div>
-          }
-        />
-
         {deploymentsQuery.error && (
-          <QueryError
-            message={
-              deploymentsQuery.error.message?.includes('[')
-                ? 'Failed to load deployments. The server returned an unexpected response. Please try again.'
-                : deploymentsQuery.error.message
-            }
-            onRetry={() => deploymentsQuery.refetch()}
-          />
+          <QueryError message={deploymentsQuery.error.message} onRetry={() => deploymentsQuery.refetch()} />
         )}
+
+        <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
+          <PageHeader
+            title="Deployments"
+            description="Track rollout status, replica health, and restart/scale operations."
+            breadcrumb={[{ label: 'Platform' }, { label: 'Deployments' }]}
+          />
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="namespace-filter" className="text-xs text-[var(--color-table-meta)]">Namespace</label>
+            <select
+              id="namespace-filter"
+              value={namespaceFilter}
+              onChange={(event) => setNamespaceFilter(event.target.value)}
+              className="px-3 py-2 rounded-lg text-sm bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]/50"
+            >
+              <option value="all">All namespaces</option>
+              {namespaces.map((namespace) => (
+                <option key={namespace} value={namespace}>{namespace}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
         <div className="space-y-5">
           {groupedByCluster.map((cluster) => (
@@ -353,16 +353,11 @@ export default function DeploymentsPage() {
           ))}
 
           {!deploymentsQuery.isLoading && groupedByCluster.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-              <Box className="h-8 w-8 mb-2 opacity-40" />
-              <p className="text-sm font-medium mb-1">No deployments found</p>
-              <p className="text-xs text-[var(--color-text-dim)] mb-3">{namespaceFilter !== 'all' ? 'Try selecting a different namespace.' : 'Connect a cluster to see deployments.'}</p>
-              {namespaceFilter !== 'all' && (
-                <button type="button" onClick={() => setNamespaceFilter('all')} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity">
-                  Show All Namespaces
-                </button>
-              )}
-            </div>
+            <EmptyState
+              icon={<Box className="h-8 w-8" />}
+              title="Select a cluster to view deployments"
+              description={namespaceFilter !== 'all' ? 'No deployments found for selected namespace' : undefined}
+            />
           )}
         </div>
 
