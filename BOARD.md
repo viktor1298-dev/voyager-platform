@@ -667,10 +667,10 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - Show last 24h anomaly events as a timeline widget on Dashboard
   - Color-coded by severity
 
-- [ ] **L-P3-003: Feature Flags — Activity Log Collapsible**
+- [x] **L-P3-003: Feature Flags — Activity Log Collapsible** [v186 2025-07-22]
   - Make activity log sections collapsible per flag card (saves space for large flag counts)
 
-- [ ] **L-P3-004: Log Viewer — Advanced Features**
+- [x] **L-P3-004: Log Viewer — Advanced Features** [v186 2025-07-22]
   - Regex search capability
   - Timestamp formatting options
   - Highlight matched search terms in log output
