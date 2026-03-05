@@ -1,0 +1,44 @@
+{
+  "score": 9,
+  "verdict": "CHANGES_REQUESTED",
+  "test_coverage_checked": true,
+  "files_reviewed": [
+    "apps/web/src/hooks/useKeyboardShortcuts.ts",
+    "apps/web/src/components/KeyboardShortcuts.tsx",
+    "apps/web/src/components/PodDetailSheet.tsx",
+    "apps/web/src/components/CommandPalette.tsx",
+    "apps/web/src/components/shared/EmptyState.tsx",
+    "apps/web/src/app/webhooks/page.tsx",
+    "apps/web/src/app/events/page.tsx",
+    "apps/web/src/app/deployments/page.tsx",
+    "apps/web/src/app/namespaces/page.tsx",
+    "apps/web/src/app/services/page.tsx",
+    "BOARD.md"
+  ],
+  "lines_changed": 725,
+  "commit": "2a39ded",
+  "branch": "feat/init-monorepo",
+  "reviewer": "Lior",
+  "timestamp": "2026-03-05T19:00:00+02:00",
+  "env_blocked_items": [],
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "description": "J/K shortcuts dispatch voyager:list-down/list-up events but NO page listens to them. Shortcuts are documented in the modal as working but are effectively dead code.",
+      "file": "apps/web/src/components/KeyboardShortcuts.tsx",
+      "line": 56
+    },
+    {
+      "severity": "LOW",
+      "description": "Namespace items in CommandPalette all route to /namespaces (no deep-link to namespace context). Minor but reduces power-user value.",
+      "file": "apps/web/src/components/CommandPalette.tsx",
+      "line": 131
+    },
+    {
+      "severity": "LOW",
+      "description": "GLOBAL_SHORTCUTS display-only array uses composite key strings like '⌘K, / Ctrl+K' which are rendered as single kbd elements. Should be split into separate kbd chips for visual correctness.",
+      "file": "apps/web/src/hooks/useKeyboardShortcuts.ts",
+      "line": 95
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+'use client'
+
+import { AlertTriangle, CheckCircle, Info } from 'lucide-react'
+import Link from 'next/link'
+import { trpc } from '@/lib/trpc'
+
+export function AlertFeedWidget() {
+  const alertsQuery = trpc.alerts.list.useQuery(undefined, { refetchInterval: 30000 })
+  const alerts = (alertsQuery.data ?? []).slice(0, 10)
+
+  return (
+    <div className="h-full p-4 flex flex-col">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)] border-l-2 border-[var(--color-accent)] pl-2">Alert Feed</h3>
+        <Link href="/alerts" className="text-[10px] text-[var(--color-accent)] hover:underline">View all →</Link>
+      </div>
+      <div className="flex-1 overflow-auto space-y-1.5">
+        {alerts.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full gap-2 text-[var(--color-text-dim)]">
+            <CheckCircle className="h-6 w-6 text-emerald-500/50" />
+            <span className="text-xs">No active alerts</span>
+          </div>
+        )}
+        {alerts.map((alert) => {
+          const Icon = alert.enabled ? AlertTriangle : Info
+          const color = alert.enabled ? 'text-amber-400' : 'text-blue-400'
+          return (
+            <div key={alert.id} className="flex items-start gap-2 px-2.5 py-2 rounded-lg border border-[var(--color-border)]/40 hover:bg-white/[0.02] transition-colors">
+              <Icon className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${color}`} />
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-[var(--color-text-primary)] truncate">{alert.name}</p>
+                <p className="text-[10px] text-[var(--color-text-dim)] truncate">{alert.metric} {alert.operator} {alert.threshold}</p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

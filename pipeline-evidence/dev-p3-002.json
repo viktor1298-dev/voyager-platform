@@ -1,0 +1,70 @@
+{
+  "task": "M-P3-002",
+  "title": "Real-Time Time-Series Resource Charts",
+  "version": "v189",
+  "branch": "feat/init-monorepo",
+  "completedAt": "2026-03-05T22:55:03Z",
+  "agent": "Dima (frontend-feature)",
+  "status": "complete",
+  "changes": {
+    "backend": [
+      {
+        "file": "apps/api/src/routers/metrics.ts",
+        "changes": [
+          "Extended timeRangeSchema to include '1h' and '6h' variants",
+          "Added TIME_RANGE_CONFIG entries: '1h' (60 1-min buckets), '6h' (72 5-min buckets)",
+          "Added metrics.history procedure: per-cluster time-series from metricsHistory, bucketed by range",
+          "Added metrics.nodeBreakdown procedure: live per-node CPU/memory snapshot from K8s metrics-server"
+        ]
+      }
+    ],
+    "frontend": [
+      {
+        "file": "apps/web/src/components/charts/chart-theme.ts",
+        "changes": ["Extended TimeRange type and formatTimestamp() with '1h' and '6h' cases"]
+      },
+      {
+        "file": "apps/web/src/components/metrics/TimeRangeSelector.tsx",
+        "changes": ["New component: segmented control for 1h|6h|24h|7d"]
+      },
+      {
+        "file": "apps/web/src/components/metrics/AutoRefreshToggle.tsx",
+        "changes": ["New component: toggle + interval selector 30s/1m/5m"]
+      },
+      {
+        "file": "apps/web/src/components/metrics/MetricsEmptyState.tsx",
+        "changes": ["New component: animated empty state with pulsing icon"]
+      },
+      {
+        "file": "apps/web/src/components/metrics/MetricsAreaChart.tsx",
+        "changes": ["New component: Recharts AreaChart with gradient fills, CPU/Memory/Pods series, custom tooltip"]
+      },
+      {
+        "file": "apps/web/src/components/metrics/NodeResourceBreakdown.tsx",
+        "changes": ["New component: collapsible per-node resource bars with color-coded thresholds"]
+      },
+      {
+        "file": "apps/web/src/components/metrics/MetricsTimeSeriesPanel.tsx",
+        "changes": ["New container: manages range + auto-refresh via Zustand store, composes all sub-components"]
+      },
+      {
+        "file": "apps/web/src/stores/metrics-preferences.ts",
+        "changes": ["New Zustand store with localStorage persistence for range + autoRefresh + refreshInterval"]
+      },
+      {
+        "file": "apps/web/src/app/clusters/[id]/page.tsx",
+        "changes": ["Added 'Metrics' TabsTrigger after Events", "Added MetricsTimeSeriesPanel in Metrics TabsContent"]
+      }
+    ]
+  },
+  "colors": {
+    "cpu": "hsl(262,83%,58%)",
+    "memory": "hsl(199,89%,48%)",
+    "pods": "hsl(142,71%,45%)"
+  },
+  "chartHeight": 280,
+  "autoRefreshDefault": 60000,
+  "preExistingTypeScriptErrors": true,
+  "newTypeScriptErrors": false,
+  "gateRequired": "Lior review 10/10"
+}

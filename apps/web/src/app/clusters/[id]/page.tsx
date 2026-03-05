@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { AiContextCard } from '@/components/AiContextCard'
+import { MetricsTimeSeriesPanel } from '@/components/metrics/MetricsTimeSeriesPanel'
 import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
@@ -631,6 +632,7 @@ export default function ClusterDetailPage() {
           <TabsTrigger value="services">Services</TabsTrigger>
           <TabsTrigger value="deployments">Deployments</TabsTrigger>
           <TabsTrigger value="events">Events ({events.length})</TabsTrigger>
+          <TabsTrigger value="metrics">Metrics</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -791,6 +793,11 @@ export default function ClusterDetailPage() {
               )
             }}
           />
+        </TabsContent>
+
+        {/* Metrics Tab */}
+        <TabsContent value="metrics">
+          <MetricsTimeSeriesPanel clusterId={resolvedId} isLive={effectiveIsLive} />
         </TabsContent>
       </Tabs>
 

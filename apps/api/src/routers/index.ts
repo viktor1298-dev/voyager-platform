@@ -25,6 +25,7 @@ import { tokensRouter } from './tokens.js'
 import { webhooksRouter } from './webhooks.js'
 import { servicesRouter } from './services.js'
 import { namespacesRouter } from './namespaces.js'
+import { dashboardLayoutRouter } from './dashboard-layout.js'
 
 export const appRouter = router({
   ai: aiRouter,
@@ -54,6 +55,7 @@ export const appRouter = router({
   webhooks: webhooksRouter,
   services: servicesRouter,
   namespaces: namespacesRouter,
+  dashboardLayout: dashboardLayoutRouter,
 })
 
 export type AppRouter = typeof appRouter

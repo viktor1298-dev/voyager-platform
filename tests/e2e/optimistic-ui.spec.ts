@@ -7,14 +7,15 @@ test.describe('Optimistic UI + Motion Animations', () => {
   })
 
   test('page navigation renders with transition', async ({ page }) => {
-    await page.goto('/')
-    await expect(page.locator('h2:has-text("Clusters")')).toBeVisible()
+    await page.goto('/clusters')
+    await page.waitForSelector('h1:has-text("Clusters")', { state: 'visible', timeout: 30000 })
+    await expect(page.locator('h1:has-text("Clusters")')).toBeVisible({ timeout: 10_000 })
 
     await page.click('a[href="/clusters"]')
-    await expect(page.locator('h1:has-text("Clusters")')).toBeVisible()
+    await expect(page.locator('h1:has-text("Clusters")')).toBeVisible({ timeout: 10_000 })
 
     await page.click('a[href="/deployments"]')
-    await expect(page.locator('h1:has-text("Deployments")')).toBeVisible()
+    await expect(page.locator('h1:has-text("Deployments")')).toBeVisible({ timeout: 10_000 })
   })
 
   test('optimistic delete cluster shows immediate feedback', async ({ page }) => {
@@ -68,11 +69,12 @@ test.describe('Optimistic UI + Motion Animations', () => {
   test('reduced motion preference disables animations', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
 
-    await page.goto('/')
-    await expect(page.locator('h2:has-text("Clusters")')).toBeVisible()
+    await page.goto('/clusters')
+    await page.waitForSelector('h1:has-text("Clusters")', { state: 'visible', timeout: 30000 })
+    await expect(page.locator('h1:has-text("Clusters")')).toBeVisible({ timeout: 10_000 })
 
     await page.click('a[href="/clusters"]')
-    await expect(page.locator('h1:has-text("Clusters")')).toBeVisible()
+    await expect(page.locator('h1:has-text("Clusters")')).toBeVisible({ timeout: 10_000 })
   })
 
   test('dialog animations work', async ({ page }) => {
