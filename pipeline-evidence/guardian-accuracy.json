@@ -493,5 +493,37 @@
     "env_blocked_items": [],
     "notes": "Gate 2 e2e schema gap patched (author verified via sessions_history). v184 frontend-only release.",
     "was_corrected": false
+  },
+  {
+    "timestamp": "2026-03-05T04:15:00",
+    "version": "v186",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [
+      "Log streaming",
+      "Regex search with logs",
+      "Search highlighting"
+    ],
+    "was_corrected": false,
+    "notes": "Partial deployment: API@v180 web@v186. QA effective=9.44 (PASS). E2E PASS. 1 code bug: Feature Flags CSS."
+  },
+  {
+    "timestamp": "2026-03-05T04:27:46.293638",
+    "version": "v186",
+    "verdict": "IN_PROGRESS",
+    "gates_checked": 0,
+    "status": "fix-loop-1",
+    "issues": [
+      "migration-pod-error-drizzle.config.json",
+      "api-k8s-v180-vs-state-v186"
+    ],
+    "active_agents": [
+      "developer",
+      "devops",
+      "qa",
+      "foreman",
+      "testing"
+    ],
+    "was_corrected": false
   }
 ]
