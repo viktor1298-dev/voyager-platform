@@ -659,11 +659,11 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🔵 Phase L-P3 — Strategic Improvements (v182)
 
-- [ ] **L-P3-001: Dashboard Resource Utilization Gauges**
+- [x] **L-P3-001: Dashboard Resource Utilization Gauges** [v186 2026-03-05]
   - Add CPU/Memory gauges across all clusters using Recharts or @nivo
   - Show aggregate + per-cluster breakdown
 
-- [ ] **L-P3-002: Anomaly Timeline Integration in Dashboard**
+- [x] **L-P3-002: Anomaly Timeline Integration in Dashboard** [v186 2026-03-05]
   - Show last 24h anomaly events as a timeline widget on Dashboard
   - Color-coded by severity
 
