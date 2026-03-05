@@ -101,12 +101,17 @@ export function TopBar() {
   )
 
   useEffect(() => {
+    // Only validate when clusters have actually loaded — if we run this while
+    // clustersQuery is still fetching, clusterOptions is empty and we'd
+    // incorrectly clear the persisted activeClusterId on direct navigation /
+    // hard refresh (BUG-001 fix).
+    if (!clustersQuery.isSuccess) return
     if (activeClusterId == null) return
     const exists = clusterOptions.some((cluster) => cluster.id === activeClusterId)
     if (!exists) {
       setActiveCluster(null)
     }
-  }, [activeClusterId, clusterOptions, setActiveCluster])
+  }, [activeClusterId, clusterOptions, clustersQuery.isSuccess, setActiveCluster])
 
   return (
     <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-3 sm:px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">
