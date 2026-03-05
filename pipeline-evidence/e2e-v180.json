@@ -1,0 +1,17 @@
+{
+  "agentId": "agent:e2e",
+  "version": "v180",
+  "base_url": "http://voyager-platform.voyagerlabs.co",
+  "run_time": "2026-03-04T12:44:12.636Z",
+  "duration_ms": 345396,
+  "total": 105,
+  "passed": 90,
+  "failed": 0,
+  "skipped": 15,
+  "flaky": 0,
+  "unexpected": 0,
+  "verdict": "PASS",
+  "gate": "0 failures required",
+  "failures": [],
+  "notes": "All 90 active tests passed. 15 skipped (test.skip with code comments). Exit code 0."
+}

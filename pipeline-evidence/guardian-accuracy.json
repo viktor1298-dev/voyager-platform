@@ -463,5 +463,35 @@
     "gates_checked": 5,
     "env_blocked_items": [],
     "was_corrected": false
+  },
+  {
+    "timestamp": "2026-03-04T15:05:58.859734",
+    "version": "v180",
+    "verdict": "COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "was_corrected": true,
+    "corrections": [
+      "e2e agentId missing",
+      "qa timestamp before deploy"
+    ]
+  },
+  {
+    "timestamp": "2026-03-04T23:54:39.956234",
+    "version": "v183",
+    "verdict": "COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "was_corrected": false,
+    "notes": "All 5 gates passed. Web-only release (v183 frontend, API still at v180). QA 9.0/10, E2E 88/0/17. Race condition on write (Foreman started v184 concurrently) \u2014 state fixed."
+  },
+  {
+    "timestamp": "2026-03-04T22:50:46.126905+00:00",
+    "version": "v184",
+    "verdict": "COMPLETE",
+    "gates_checked": 5,
+    "env_blocked_items": [],
+    "notes": "Gate 2 e2e schema gap patched (author verified via sessions_history). v184 frontend-only release.",
+    "was_corrected": false
   }
 ]

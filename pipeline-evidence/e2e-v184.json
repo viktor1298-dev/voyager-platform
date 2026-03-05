@@ -1,0 +1,22 @@
+{
+  "agentId": "agent:e2e",
+  "author": "yuval",
+  "guardian_schema_fix": "Missing fields added by Guardian \u2014 authorship verified via sessions_history(agent:testing:subagent:17bf9c0d)",
+  "version": "v184",
+  "timestamp": "2026-03-04T22:40:12.205793Z",
+  "app_url": "http://voyager-platform.voyagerlabs.co",
+  "preflight": {
+    "health": "ok",
+    "login": "ok"
+  },
+  "total": 105,
+  "passed": 89,
+  "failed": 0,
+  "skipped": 16,
+  "duration_ms": 631412,
+  "duration_human": "~10m31s",
+  "verdict": "PASS",
+  "gate": "0 failures required",
+  "failures": [],
+  "notes": "v184 changes: number animations (framer-motion) + cluster nodes metrics handling. Low E2E impact as expected. Clean pass."
+}
