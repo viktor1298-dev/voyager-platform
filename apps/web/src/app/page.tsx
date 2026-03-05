@@ -1,7 +1,7 @@
 'use client'
 
 import { useIsFetching, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, Bell, Container, LayoutGrid, List, RefreshCw, Server } from 'lucide-react'
+import { AlertTriangle, Bell, Container, LayoutGrid, List, Pencil, RefreshCw, Server } from 'lucide-react'
 import { animate, useMotionValue } from 'motion/react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -9,9 +9,16 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
 import { AnomalyWidget } from '@/components/anomalies/AnomalyWidget'
+import { AiInsightBanner } from '@/components/ai/AiInsightBanner'
 import { AnomalyTimeline } from '@/components/dashboard/AnomalyTimeline'
+import { DashboardGrid } from '@/components/dashboard/DashboardGrid'
+import { DashboardEditBar } from '@/components/dashboard/DashboardEditBar'
+import { WidgetLibraryDrawer } from '@/components/dashboard/WidgetLibraryDrawer'
+import { useDashboardLayout } from '@/stores/dashboard-layout'
 import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { ProviderLogo } from '@/components/ProviderLogo'
+import { trpc } from '@/lib/trpc'
+import { toast } from 'sonner'
 import { SkeletonCard, SkeletonRow, SkeletonText } from '@/components/Skeleton'
 import {
   DB_CLUSTER_REFETCH_MS,
@@ -426,6 +433,12 @@ function DashboardContent() {
           />
           <AnomalyWidget compact />
         </div>
+
+        {/* M-P3-003: AI Proactive Insight Banner */}
+        <AiInsightBanner
+          criticalAnomalyCount={warningEvents}
+          criticalAlertCount={0}
+        />
 
         {/* L-P0-001: Operational Command Center — 2×2 panel grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">

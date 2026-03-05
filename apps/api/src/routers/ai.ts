@@ -5,6 +5,23 @@ import { AiKeySettingsService } from '../services/ai-key-settings-service.js'
 import { AIService, aiRecommendationSchema, clusterSnapshotSchema } from '../services/ai-service.js'
 import { protectedProcedure, router } from '../trpc.js'
 
+// M-P3-003: Inline AI context chat schema
+const contextChatInputSchema = z.object({
+  prompt: z.string().min(1).max(4000),
+  context: z.object({
+    type: z.enum(['anomaly', 'pod', 'alert', 'cluster', 'dashboard']),
+    data: z.record(z.string(), z.unknown()),
+  }),
+  clusterId: z.string().uuid().optional(),
+})
+
+// M-P3-003: Proactive insights schema
+const proactiveInsightsInputSchema = z.object({
+  clusterId: z.string().uuid().optional(),
+  criticalAnomalyCount: z.number().int().min(0).optional(),
+  criticalAlertCount: z.number().int().min(0).optional(),
+})
+
 const analyzeInputSchema = z.object({
   clusterId: z.string().uuid(),
   snapshot: clusterSnapshotSchema.optional(),
@@ -639,6 +656,152 @@ export const aiRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Failed to create suggestions: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        })
+      }
+    }),
+
+  // M-P3-003: Contextual inline AI chat
+  contextChat: protectedProcedure
+    .input(contextChatInputSchema)
+    .output(
+      z.object({
+        answer: z.string(),
+        contextType: z.string(),
+        provider: z.string().optional(),
+        model: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const aiService = new AIService({ db: ctx.db })
+
+        // Build context-aware prompt
+        const contextSummary = JSON.stringify(input.context.data, null, 2)
+        const systemPrompt = `You are an expert Kubernetes and cloud infrastructure assistant integrated into the Voyager platform.
+The user is asking about a ${input.context.type} in their cluster.
+Context data:
+${contextSummary}
+
+Provide a concise, actionable response focused on the specific context. Use markdown for formatting.`
+
+        // Use existing answerQuestion with a synthetic clusterId or provided one
+        const clusterId = input.clusterId ?? '00000000-0000-0000-0000-000000000000'
+
+        let answer: string
+        let provider: 'openai' | 'anthropic' | undefined
+        let model: string | undefined
+
+        try {
+          const result = await aiService.answerQuestion({
+            clusterId,
+            question: `${systemPrompt}\n\nUser question: ${input.prompt}`,
+            userId: ctx.user.id,
+          })
+          answer = result.answer
+          provider = result.provider
+          model = result.model
+        } catch (aiError) {
+          if (
+            aiError instanceof TRPCError &&
+            aiError.code === 'BAD_REQUEST' &&
+            aiError.message === 'NO_API_KEY'
+          ) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'NO_API_KEY',
+            })
+          }
+          throw aiError
+        }
+
+        return {
+          answer,
+          contextType: input.context.type,
+          provider,
+          model,
+        }
+      } catch (error) {
+        if (error instanceof TRPCError) throw error
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Context chat failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        })
+      }
+    }),
+
+  // M-P3-003: Proactive dashboard insights
+  proactiveInsights: protectedProcedure
+    .input(proactiveInsightsInputSchema)
+    .output(
+      z.object({
+        hasInsights: z.boolean(),
+        summary: z.string(),
+        severity: z.enum(['info', 'warning', 'critical']),
+        insights: z.array(
+          z.object({
+            type: z.string(),
+            message: z.string(),
+            action: z.string().optional(),
+          }),
+        ),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const keyService = new AiKeySettingsService(ctx.db)
+        const keys = await keyService.getUserKeyStatus({ userId: ctx.user.id })
+
+        if (keys.length === 0) {
+          return {
+            hasInsights: false,
+            summary: 'Configure an AI key in Settings to enable proactive insights.',
+            severity: 'info' as const,
+            insights: [],
+          }
+        }
+
+        const criticalAnomalies = input.criticalAnomalyCount ?? 0
+        const criticalAlerts = input.criticalAlertCount ?? 0
+        const totalCritical = criticalAnomalies + criticalAlerts
+
+        if (totalCritical === 0) {
+          return {
+            hasInsights: false,
+            summary: 'All systems operating normally.',
+            severity: 'info' as const,
+            insights: [],
+          }
+        }
+
+        const severity = totalCritical >= 5 ? 'critical' : totalCritical >= 2 ? 'warning' : 'info'
+
+        const insights = []
+        if (criticalAnomalies > 0) {
+          insights.push({
+            type: 'anomaly',
+            message: `${criticalAnomalies} critical anomal${criticalAnomalies === 1 ? 'y' : 'ies'} detected`,
+            action: 'Review and acknowledge anomalies to prevent escalation',
+          })
+        }
+        if (criticalAlerts > 0) {
+          insights.push({
+            type: 'alert',
+            message: `${criticalAlerts} alert${criticalAlerts === 1 ? '' : 's'} firing`,
+            action: 'Check alert thresholds and remediate affected services',
+          })
+        }
+
+        return {
+          hasInsights: true,
+          summary: `${totalCritical} critical issue${totalCritical === 1 ? '' : 's'} require${totalCritical === 1 ? 's' : ''} attention`,
+          severity: severity as 'info' | 'warning' | 'critical',
+          insights,
+        }
+      } catch (error) {
+        if (error instanceof TRPCError) throw error
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to get proactive insights: ${error instanceof Error ? error.message : 'Unknown error'}`,
         })
       }
     }),

@@ -7,6 +7,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Progress } from '@/components/ui/progress'
 import { PodLogStream } from '@/components/PodLogStream'
 import { timeAgo } from '@/lib/time-utils'
+import { InlineAiTrigger } from '@/components/ai/InlineAiTrigger'
+import { InlineAiPanel } from '@/components/ai/InlineAiPanel'
 
 interface ContainerInfo {
   name: string
@@ -367,6 +369,7 @@ export function PodDetailSheet({
   }>
 }) {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
+  const [aiPanelOpen, setAiPanelOpen] = useState(false)
 
   if (!pod) return null
 
@@ -374,8 +377,34 @@ export function PodDetailSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full max-w-lg flex flex-col" onClose={() => onOpenChange(false)}>
         <SheetHeader>
-          <SheetTitle className="font-mono text-base">{pod.name}</SheetTitle>
+          <div className="flex items-center justify-between gap-2">
+            <SheetTitle className="font-mono text-base">{pod.name}</SheetTitle>
+            <InlineAiTrigger
+              label="Ask AI about this pod"
+              variant="button"
+              onClick={() => setAiPanelOpen((v) => !v)}
+            />
+          </div>
           <p className="text-sm text-[var(--color-text-muted)]">Pod details</p>
+          <InlineAiPanel
+            open={aiPanelOpen}
+            onClose={() => setAiPanelOpen(false)}
+            contextType="pod"
+            contextData={{
+              name: pod.name,
+              namespace: pod.namespace,
+              status: pod.status,
+              nodeName: pod.nodeName,
+              cpuMillis: pod.cpuMillis,
+              memoryMi: pod.memoryMi,
+              cpuPercent: pod.cpuPercent,
+              memoryPercent: pod.memoryPercent,
+              restartCount: pod.restartCount,
+              containers: pod.containers?.length ?? 0,
+              createdAt: pod.createdAt,
+            }}
+            initialPrompt={`Analyze this pod: ${pod.name} in namespace ${pod.namespace}. Status: ${pod.status}. CPU: ${pod.cpuPercent ?? 'N/A'}%, Memory: ${pod.memoryPercent ?? 'N/A'}%, Restarts: ${pod.restartCount ?? 0}. What should I know about this pod's health?`}
+          />
         </SheetHeader>
 
         {/* Tabs */}

@@ -8,6 +8,8 @@ import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { Shimmer } from '@/components/Skeleton'
+import { InlineAiTrigger } from '@/components/ai/InlineAiTrigger'
+import { InlineAiPanel } from '@/components/ai/InlineAiPanel'
 import { Dialog } from '@/components/ui/dialog'
 import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -47,6 +49,7 @@ export default function AlertsPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState<CreateFormData>(INITIAL_FORM)
+  const [aiAlertId, setAiAlertId] = useState<string | null>(null)
   const [pageSize, setPageSize] = useState(25)
   const [groupBy, setGroupBy] = useState<'none' | 'cluster' | 'metric' | 'status'>('none')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -209,9 +212,16 @@ export default function AlertsPage() {
     {
       id: 'actions', header: '', enableSorting: false,
       cell: ({ row }) => (
-        <button type="button" onClick={() => setDeleteId(row.original.id)} aria-label={`Delete alert ${row.original.name}`} className="text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer">
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <InlineAiTrigger
+            label="Get remediation suggestions"
+            variant="button"
+            onClick={() => setAiAlertId(aiAlertId === row.original.id ? null : row.original.id)}
+          />
+          <button type="button" onClick={() => setDeleteId(row.original.id)} aria-label={`Delete alert ${row.original.name}`} className="text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       ),
     },
   ], [updateMut, selectedIds, filteredAlerts, toggleSelectAlert])
@@ -432,6 +442,31 @@ export default function AlertsPage() {
             </div>
           )}
         </div>
+
+        {/* AI Panel for selected alert */}
+        {aiAlertId && (() => {
+          const alert = alerts.find((a) => a.id === aiAlertId)
+          if (!alert) return null
+          return (
+            <InlineAiPanel
+              open={true}
+              onClose={() => setAiAlertId(null)}
+              contextType="alert"
+              contextData={{
+                id: alert.id,
+                name: alert.name,
+                metric: alert.metric,
+                operator: alert.operator,
+                threshold: alert.threshold,
+                clusterFilter: alert.clusterFilter,
+                enabled: alert.enabled,
+                lastTriggeredAt: alert.lastTriggeredAt,
+                lastValue: alert.lastValue,
+              }}
+              initialPrompt={`Suggest remediation steps for this alert: "${alert.name}". It triggers when ${metricLabel(alert.metric)} ${operatorLabel(alert.operator)} ${alert.threshold}. Last triggered: ${alert.lastTriggeredAt ?? 'never'}. Current value: ${alert.lastValue ?? 'unknown'}.`}
+            />
+          )
+        })()}
 
         <ConfirmDialog
           open={deleteId !== null}

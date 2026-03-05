@@ -8,6 +8,7 @@ import { navItems } from '@/config/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
+import { AiCommandPaletteProvider } from '@/components/ai/AiCommandPaletteProvider'
 
 const MAX_RECENT = 5
 const RECENT_KEY = 'voyager-command-palette-recent'
@@ -315,6 +316,12 @@ export function CommandPalette() {
               </Command.Item>
             </Command.Group>
           </Command.List>
+          {/* M-P3-003: AI natural language query detection */}
+          <AiCommandPaletteProvider
+            search={search}
+            onClear={() => setSearch('')}
+            clusterId={activeClusterId ?? undefined}
+          />
         </Command>
       </div>
     </div>

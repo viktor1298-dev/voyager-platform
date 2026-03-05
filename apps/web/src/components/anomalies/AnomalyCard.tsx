@@ -2,8 +2,11 @@
 
 import { AlertOctagon, AlertTriangle, CheckCircle2, Info, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
 import type { Anomaly } from '@/lib/anomalies'
 import { getRelativeTime } from '@/lib/anomalies'
+import { InlineAiTrigger } from '@/components/ai/InlineAiTrigger'
+import { InlineAiPanel } from '@/components/ai/InlineAiPanel'
 
 interface AnomalyCardProps {
   anomaly: Anomaly
@@ -38,6 +41,7 @@ const STATUS_STYLE: Record<Anomaly['status'], string> = {
 export function AnomalyCard({ anomaly, onAcknowledge, onResolve }: AnomalyCardProps) {
   const severityMeta = SEVERITY_META[anomaly.severity]
   const SeverityIcon = severityMeta.icon
+  const [aiPanelOpen, setAiPanelOpen] = useState(false)
 
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
@@ -79,6 +83,11 @@ export function AnomalyCard({ anomaly, onAcknowledge, onResolve }: AnomalyCardPr
         </Link>
 
         <div className="flex items-center gap-2">
+          <InlineAiTrigger
+            label="Explain this anomaly"
+            variant="button"
+            onClick={() => setAiPanelOpen((v) => !v)}
+          />
           <button
             type="button"
             onPointerDown={(event) => {
@@ -115,6 +124,24 @@ export function AnomalyCard({ anomaly, onAcknowledge, onResolve }: AnomalyCardPr
           </button>
         </div>
       </div>
+
+      <InlineAiPanel
+        open={aiPanelOpen}
+        onClose={() => setAiPanelOpen(false)}
+        contextType="anomaly"
+        contextData={{
+          id: anomaly.id,
+          title: anomaly.title,
+          description: anomaly.description,
+          severity: anomaly.severity,
+          status: anomaly.status,
+          cluster: anomaly.cluster,
+          clusterId: anomaly.clusterId,
+          detectedAt: anomaly.detectedAt,
+        }}
+        initialPrompt={`Explain this ${anomaly.severity} anomaly: "${anomaly.title}". ${anomaly.description}. What is the likely cause and recommended action?`}
+        clusterId={anomaly.clusterId}
+      />
     </div>
   )
 }
