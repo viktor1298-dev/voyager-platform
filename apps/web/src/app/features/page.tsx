@@ -7,7 +7,7 @@ import { FeatureFlagToggle } from '@/components/FeatureFlagToggle'
 import { AnimatedList, PageTransition } from '@/components/animations'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { type FeatureFlag, mockAdminApi } from '@/lib/mock-admin-api'
-import { Activity, Search } from 'lucide-react'
+import { Activity, ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -38,6 +38,76 @@ function getRollout(targeting: Record<string, unknown>) {
 function getStringList(targeting: Record<string, unknown>, key: string) {
   const value = targeting[key]
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
+}
+
+function ActivityLog({
+  activity,
+  flagId,
+}: {
+  activity: FeatureFlag['activity']
+  flagId: string
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const visible = expanded ? activity : activity.slice(0, MAX_VISIBLE_ACTIVITIES)
+  const hasMore = activity.length > MAX_VISIBLE_ACTIVITIES
+
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center justify-between gap-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)] transition-colors"
+        aria-expanded={expanded}
+        aria-controls={`activity-log-${flagId}`}
+      >
+        <span className="flex items-center gap-1">
+          <Activity className="h-3.5 w-3.5" />
+          Activity log
+          <span className="ml-1 rounded-full bg-[var(--color-bg-surface)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-text-muted)]">
+            {activity.length}
+          </span>
+        </span>
+        {hasMore &&
+          (expanded ? (
+            <ChevronUp className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          ) : (
+            <ChevronDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          ))}
+      </button>
+
+      <ul
+        id={`activity-log-${flagId}`}
+        className="space-y-1.5"
+      >
+        {visible.map((entry) => (
+          <li
+            key={entry.id}
+            className="flex items-center justify-between rounded-md border border-[var(--color-border)]/60 px-2 py-1.5 text-xs"
+          >
+            <span className="text-[var(--color-text-secondary)]">
+              <strong className="font-semibold text-[var(--color-text-primary)]">
+                {entry.actor}
+              </strong>{' '}
+              {entry.action} the flag
+            </span>
+            <span className="text-[var(--color-text-muted)] whitespace-nowrap ml-2">{formatDate(entry.at)}</span>
+          </li>
+        ))}
+      </ul>
+
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="w-full rounded-md border border-dashed border-[var(--color-border)] py-1 text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/40 transition-colors"
+        >
+          {expanded
+            ? `Show less`
+            : `+${activity.length - MAX_VISIBLE_ACTIVITIES} more entries`}
+        </button>
+      )}
+    </div>
+  )
 }
 
 export default function FeatureFlagsPage() {
@@ -332,28 +402,7 @@ export default function FeatureFlagsPage() {
                         </span>
                       </div>
 
-                      <div className="space-y-2">
-                        <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-dim)]">
-                          <Activity className="h-3.5 w-3.5" />
-                          Activity log
-                        </p>
-                        <ul className="space-y-1.5">
-                          {flag.activity.slice(0, MAX_VISIBLE_ACTIVITIES).map((entry) => (
-                            <li
-                              key={entry.id}
-                              className="flex items-center justify-between rounded-md border border-[var(--color-border)]/60 px-2 py-1.5 text-xs"
-                            >
-                              <span className="text-[var(--color-text-secondary)]">
-                                <strong className="font-semibold text-[var(--color-text-primary)]">
-                                  {entry.actor}
-                                </strong>{' '}
-                                {entry.action} the flag
-                              </span>
-                              <span className="text-[var(--color-text-muted)]">{formatDate(entry.at)}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                      <ActivityLog activity={flag.activity} flagId={flag.id} />
                     </footer>
                   </article>
                 )
