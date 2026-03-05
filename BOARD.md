@@ -564,7 +564,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - Reference: Datadog Infrastructure, Grafana System Health
   - Files: health-related page and tRPC endpoints
 
-- [ ] **L-P0-003: Alerts Page — Pagination / Virtual Scroll**
+- [x] **L-P0-003: Alerts Page — Pagination / Virtual Scroll** ✅ (v179, already implemented)
   - CURRENT: Hundreds of rows with NO pagination — will crash performance
   - Fix: `@tanstack/virtual` virtual scrolling OR standard pagination (25/50/100 per page)
   - Files: `/alerts` page component
@@ -574,7 +574,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - Fix: Add `<TableSkeleton rows={5} />` and `<CardSkeleton />` to every data table and card that uses `isLoading`
   - Files: all table components, stat cards
 
-- [ ] **L-P0-005: Cluster Detail — Tabbed Layout**
+- [x] **L-P0-005: Cluster Detail — Tabbed Layout** ✅ (v179, already implemented)
   - CURRENT: Single scrolling page — unusable at scale (100+ pods on one page)
   - Fix: Tabs: Overview | Nodes | Pods | Services | Deployments | Events (like Lens)
   - Files: `apps/web/src/app/clusters/[id]/page.tsx`
