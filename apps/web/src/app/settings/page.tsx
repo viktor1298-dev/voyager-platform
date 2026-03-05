@@ -94,7 +94,7 @@ const clusterColumns: ColumnDef<ClusterRow, unknown>[] = [
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-[var(--color-border)]/50 last:border-b-0">
-      <span className="text-[12px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider">
+      <span className="text-sm font-medium text-[var(--color-text-muted)]">
         {label}
       </span>
       <span className="text-[13px] text-[var(--color-text-primary)] font-medium">{value}</span>
@@ -281,10 +281,10 @@ export default function SettingsPage() {
         <Breadcrumbs />
 
         <div className="mb-8">
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
             Settings
           </h1>
-          <p className="text-[12px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
+          <p className="text-sm text-[var(--color-text-dim)] mt-1">
             Platform configuration & information
           </p>
         </div>
@@ -401,7 +401,7 @@ export default function SettingsPage() {
               <div>
                 <label
                   htmlFor="provider"
-                  className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono"
+                  className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]"
                 >
                   Provider
                 </label>
@@ -422,7 +422,7 @@ export default function SettingsPage() {
               <div>
                 <label
                   htmlFor="model"
-                  className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono"
+                  className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]"
                 >
                   Model
                 </label>
@@ -443,7 +443,7 @@ export default function SettingsPage() {
               <div>
                 <label
                   htmlFor="api-key"
-                  className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono"
+                  className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]"
                 >
                   API Key
                 </label>

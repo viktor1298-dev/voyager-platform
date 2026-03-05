@@ -272,7 +272,7 @@ export default function AnomaliesPage() {
                   return (
                     <Fragment key={row.id}>
                       <tr
-                        className="border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer"
+                        className="border-b border-white/[0.04] hover:bg-muted/50 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-ring"
                         onClick={(event) => {
                           if (isInteractiveTarget(event.target)) return
                           setExpandedId((prev) =>

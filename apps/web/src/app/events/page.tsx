@@ -220,7 +220,7 @@ export default function EventsPage() {
           <QueryError message={eventsQuery.error.message} onRetry={() => eventsQuery.refetch()} />
         )}
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
             Events
           </h1>
           <p

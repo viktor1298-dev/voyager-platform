@@ -170,7 +170,7 @@ function SidebarContent({
                     className="flex items-center justify-between w-full px-2 py-1.5 mt-1 rounded-md text-[11px] uppercase tracking-widest font-mono font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.03] transition-colors"
                   >
                     <span className="flex items-center gap-1.5">
-                      <span>{group.emoji}</span>
+                      <group.icon className="h-3.5 w-3.5 shrink-0" />
                       <span>{group.label}</span>
                       {!isOpen && hasActiveItem && (
                         <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />

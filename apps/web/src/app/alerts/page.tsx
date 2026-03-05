@@ -12,7 +12,7 @@ import { Dialog } from '@/components/ui/dialog'
 import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { AlertTriangle, Bell, CheckCircle, ChevronDown, History, Plus, Search, Trash2 } from 'lucide-react'
+import { AlertTriangle, Bell, CheckCircle, ChevronDown, History, Plus, Search, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react'
 import { toast } from 'sonner'
 import { timeAgo } from '@/lib/time-utils'
@@ -444,6 +444,42 @@ export default function AlertsPage() {
           loading={deleteMut.isPending}
         />
       </div>
+
+      {/* M-P1-003: Sticky bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-[var(--color-border)] shadow-2xl bg-[var(--elevated)] backdrop-blur-md">
+          <span className="text-sm font-medium text-[var(--color-text-primary)]">{selectedIds.size} selected</span>
+          <div className="h-4 w-px bg-[var(--color-border)]" />
+          <button
+            type="button"
+            onClick={() => { for (const id of selectedIds) { deleteMut.mutate({ id }) }; setSelectedIds(new Set()) }}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+          >
+            <Trash2 className="h-3.5 w-3.5" />Delete
+          </button>
+          <button
+            type="button"
+            onClick={() => { for (const id of selectedIds) { updateMut.mutate({ id, enabled: true }) }; setSelectedIds(new Set()) }}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--color-status-active)] hover:bg-[var(--color-status-active)]/10 transition-colors"
+          >
+            Enable
+          </button>
+          <button
+            type="button"
+            onClick={() => { for (const id of selectedIds) { updateMut.mutate({ id, enabled: false }) }; setSelectedIds(new Set()) }}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--color-text-dim)] hover:bg-white/5 transition-colors"
+          >
+            Disable
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedIds(new Set())}
+            className="ml-1 text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)] transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
       </PageTransition>
     </AppLayout>
   )

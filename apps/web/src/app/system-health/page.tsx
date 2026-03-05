@@ -28,7 +28,7 @@ export default function HealthPage() {
 
         <div className="mb-6 mt-2 flex items-center gap-3">
           <HeartPulse className="h-5 w-5 text-[var(--color-accent)]" />
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
             System Health
           </h1>
         </div>
@@ -66,7 +66,7 @@ export default function HealthPage() {
         </div>
 
         {/* Per-Cluster Component Health Matrix */}
-        <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-3">Cluster Component Health</h3>
+        <h3 className="text-base font-semibold text-[var(--color-text-primary)] mb-3">Cluster Component Health</h3>
 
         {isLoading ? (
           <TableSkeleton rows={3} cols={5} />
@@ -114,7 +114,7 @@ export default function HealthPage() {
         )}
 
         {/* Sync Status */}
-        <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-3">Sync Status</h3>
+        <h3 className="text-base font-semibold text-[var(--color-text-primary)] mb-3">Sync Status</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
           {healthData.map((entry) => {
             const checkedRecently = entry.checkedAt && (Date.now() - new Date(entry.checkedAt as string).getTime()) < 600_000
@@ -137,7 +137,7 @@ export default function HealthPage() {
         </div>
 
         {/* Uptime History (placeholder) */}
-        <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-3">Uptime History (24h)</h3>
+        <h3 className="text-base font-semibold text-[var(--color-text-primary)] mb-3">Uptime History (24h)</h3>
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 mb-6">
           <div className="flex gap-0.5">
             {Array.from({ length: 24 }).map((_, i) => (

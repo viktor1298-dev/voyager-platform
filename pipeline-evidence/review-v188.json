@@ -1,0 +1,16 @@
+{
+  "score": 10,
+  "verdict": "APPROVED",
+  "test_coverage_checked": true,
+  "files_reviewed": [
+    "apps/web/src/components/TopBar.tsx",
+    "apps/api/src/server.ts"
+  ],
+  "lines_changed": 11,
+  "commit": "4ec331a",
+  "branch": "feat/init-monorepo",
+  "reviewer": "Lior",
+  "timestamp": "2026-03-05T18:18:00+02:00",
+  "env_blocked_items": [],
+  "findings": []
+}

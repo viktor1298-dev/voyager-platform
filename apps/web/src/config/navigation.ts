@@ -5,6 +5,7 @@ import {
   Bot,
   Box,
   ClipboardList,
+  Eye,
   FileText,
   Flag,
   FolderTree,
@@ -12,6 +13,7 @@ import {
   Layers,
   LayoutDashboard,
   LayoutGrid,
+  Lock,
   Server,
   Settings,
   Shield,
@@ -75,15 +77,16 @@ export interface NavGroup {
   key: string
   label: string
   emoji: string
+  icon: typeof LayoutDashboard
   items: NavItem[]
 }
 
 export function getNavGroups(items: NavItem[]): NavGroup[] {
   const groups: NavGroup[] = [
-    { key: 'observability', label: 'Observability', emoji: '👁️', items: [] },
-    { key: 'infrastructure', label: 'Infrastructure', emoji: '⚙️', items: [] },
-    { key: 'platform', label: 'Platform', emoji: '🤖', items: [] },
-    { key: 'admin', label: 'Admin', emoji: '🔐', items: [] },
+    { key: 'observability', label: 'Observability', emoji: '👁️', icon: Eye, items: [] },
+    { key: 'infrastructure', label: 'Infrastructure', emoji: '⚙️', icon: Server, items: [] },
+    { key: 'platform', label: 'Platform', emoji: '🤖', icon: Bot, items: [] },
+    { key: 'admin', label: 'Admin', emoji: '🔐', icon: Lock, items: [] },
   ]
 
   const groupMap = new Map(groups.map((g) => [g.key, g]))

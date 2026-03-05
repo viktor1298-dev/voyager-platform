@@ -17,6 +17,11 @@ api:
     repository: voyager-api
     tag: dev
     pullPolicy: IfNotPresent
+
+migrate:
+  image:
+    repository: voyager-api-migrate
+    tag: ""
   port: 4000
 
 ingress:
