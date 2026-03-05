@@ -1,5 +1,5 @@
 {
-  "status": "running",
+  "status": "deployed",
   "version": "v187",
   "phase": "Phase-M",
   "timestamp": "2026-03-05T15:35:00.000Z",
@@ -29,5 +29,11 @@
   "reviewStatus": "10/10 APPROVED",
   "mergedSHA": "f4afd63",
   "mergedBranch": "feat/init-monorepo",
-  "tag": "v187"
+  "tag": "v187",
+  "deploy_timestamp": "2026-03-05T15:50:53.399846+00:00",
+  "deployed_images": {
+    "api": "voyager-api:v187",
+    "web": "voyager-web:v187"
+  },
+  "health": "ok"
 }

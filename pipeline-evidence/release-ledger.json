@@ -415,5 +415,16 @@
     "changes": "Frontend only: features page collapsible, log viewer advanced, resource gauges, anomaly timeline",
     "status": "deployed",
     "health": "ok"
+  },
+  {
+    "version": "v187",
+    "timestamp": "2026-03-05T15:50:47.495782",
+    "services": {
+      "web": "v187",
+      "api": "v187"
+    },
+    "changes": "Phase M UX audit v3 deep fixes (P0-P3, 18 items): E2E cleanup, critical UX bugs fixed",
+    "status": "deployed",
+    "health": "ok"
   }
 ]
