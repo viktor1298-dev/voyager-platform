@@ -19,6 +19,7 @@ api:
     pullPolicy: IfNotPresent
 
 migrate:
+  enabled: false  # Migration is handled by the API on startup — no separate job needed
   image:
     repository: voyager-api-migrate
     tag: ""

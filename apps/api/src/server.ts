@@ -1,3 +1,5 @@
+import { migrate } from 'drizzle-orm/node-postgres/migrator'
+import { db } from '@voyager/db'
 import compress from '@fastify/compress'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
@@ -208,6 +210,15 @@ app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok'
 
 const start = async () => {
   try {
+    // Apply DB migrations before starting the server (replaces Helm hook)
+    try {
+      await migrate(db, { migrationsFolder: './drizzle' })
+      console.log('✅ Database migrations applied')
+    } catch (err) {
+      console.error('❌ Migration failed:', err)
+      process.exit(1)
+    }
+
     await ensureAdminUser({ allowLocalDevDefaults: false })
 
     const PORT = Number.parseInt(process.env.PORT || '4000', 10)
