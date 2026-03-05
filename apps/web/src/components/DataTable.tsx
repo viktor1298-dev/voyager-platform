@@ -23,7 +23,7 @@ import {
   ChevronsRight,
   Search,
 } from 'lucide-react'
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 
 interface DataTableProps<TData> {
   data: TData[]
@@ -40,6 +40,7 @@ interface DataTableProps<TData> {
   emptyIcon?: ReactNode
   emptyTitle?: string
   emptyDescription?: string
+  emptyAction?: ReactNode
   /** Additional toolbar content (right side) */
   toolbar?: ReactNode
   /** Row click handler */
@@ -65,6 +66,7 @@ export function DataTable<TData>({
   emptyIcon,
   emptyTitle = 'No data found',
   emptyDescription,
+  emptyAction,
   toolbar,
   onRowClick,
   mobileCard,
@@ -80,6 +82,45 @@ export function DataTable<TData>({
     pageIndex: 0,
     pageSize,
   })
+
+  // J/K keyboard navigation — listen for voyager:list-down / voyager:list-up events
+  const tableBodyRef = useRef<HTMLTableSectionElement>(null)
+  useEffect(() => {
+    function getDataRows(): HTMLTableRowElement[] {
+      if (!tableBodyRef.current) return []
+      return Array.from(tableBodyRef.current.querySelectorAll<HTMLTableRowElement>('tr[data-row]'))
+    }
+
+    function moveFocus(direction: 'down' | 'up') {
+      const rows = getDataRows()
+      if (rows.length === 0) return
+
+      const focused = document.activeElement
+      const currentIdx = rows.indexOf(focused as HTMLTableRowElement)
+
+      let nextIdx: number
+      if (currentIdx === -1) {
+        nextIdx = direction === 'down' ? 0 : rows.length - 1
+      } else {
+        nextIdx = direction === 'down'
+          ? Math.min(currentIdx + 1, rows.length - 1)
+          : Math.max(currentIdx - 1, 0)
+      }
+
+      rows[nextIdx]?.focus()
+      rows[nextIdx]?.scrollIntoView({ block: 'nearest' })
+    }
+
+    const handleDown = () => moveFocus('down')
+    const handleUp = () => moveFocus('up')
+
+    document.addEventListener('voyager:list-down', handleDown)
+    document.addEventListener('voyager:list-up', handleUp)
+    return () => {
+      document.removeEventListener('voyager:list-down', handleDown)
+      document.removeEventListener('voyager:list-up', handleUp)
+    }
+  }, [])
 
   const table = useReactTable({
     data,
@@ -179,7 +220,7 @@ export function DataTable<TData>({
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 aria-label={searchPlaceholder}
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
               />
             </div>
           )}
@@ -247,6 +288,7 @@ export function DataTable<TData>({
                 {emptyDescription && (
                   <p className="text-xs text-[var(--color-text-dim)] mt-1">{emptyDescription}</p>
                 )}
+                {emptyAction && <div className="mt-4">{emptyAction}</div>}
               </div>
             )}
 
@@ -266,6 +308,7 @@ export function DataTable<TData>({
                           {emptyDescription}
                         </p>
                       )}
+                      {emptyAction && <div className="mt-4">{emptyAction}</div>}
                     </div>
                   </td>
                 </tr>
@@ -290,12 +333,20 @@ export function DataTable<TData>({
             {/* Desktop Table */}
             <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
               {renderTableHeader()}
-              <tbody>
+              <tbody ref={tableBodyRef}>
                 {sortedRows.map((row, i) => (
                   <tr
                     key={row.id}
+                    data-row
+                    tabIndex={0}
                     onClick={() => onRowClick?.(row.original)}
-                    className={`border-b border-[var(--color-table-separator)] hover:bg-muted/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && onRowClick) {
+                        e.preventDefault()
+                        onRowClick(row.original)
+                      }
+                    }}
+                    className={`border-b border-[var(--color-table-separator)] hover:bg-muted/50 focus:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] focus:ring-inset transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="py-1.5 px-3">
@@ -378,7 +429,7 @@ function PaginationBtn({
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
-      className="p-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+      className="p-1.5 rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
     >
       {children}
     </button>

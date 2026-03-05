@@ -470,7 +470,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
       </AnimatePresence>
 
       <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3">
-        <button aria-label={step === 1 ? 'Cancel wizard' : 'Go back to previous step'} type="button" onClick={step === 1 ? onCancel : () => setStep((s) => Math.max(1, s - 1))} className="px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer">
+        <button aria-label={step === 1 ? 'Cancel wizard' : 'Go back to previous step'} type="button" onClick={step === 1 ? onCancel : () => setStep((s) => Math.max(1, s - 1))} className="px-4 py-2 text-sm font-medium rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer">
           {step === 1 ? 'Cancel' : 'Back'}
         </button>
         <button

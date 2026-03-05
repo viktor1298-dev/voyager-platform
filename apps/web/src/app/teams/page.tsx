@@ -156,7 +156,7 @@ export default function TeamsPage() {
     return null
   }
 
-  const inputClass = 'w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm'
+  const inputClass = 'w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm'
 
   return (
     <AppLayout>
@@ -220,7 +220,7 @@ export default function TeamsPage() {
                   </select>
                   <button
                     type="button"
-                    className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-white/[0.06]"
+                    className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-white/[0.06]"
                     onClick={async () => {
                       try {
                         await mockAccessControlApi.teams.addMember({ teamId: selectedTeam.id, userId: memberToAdd, role: roleToAdd })
@@ -241,7 +241,7 @@ export default function TeamsPage() {
                   columns={memberColumns}
                   emptyTitle="No members"
                   mobileCard={(member) => (
-                    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3">
+                    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3">
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-semibold text-[var(--color-text-primary)]">{member.name}</p>
                         <Badge variant="outline">{member.role}</Badge>
@@ -278,7 +278,7 @@ export default function TeamsPage() {
               )}
             </createForm.Field>
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setShowCreate(false)} className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm">Cancel</button>
+              <button type="button" onClick={() => setShowCreate(false)} className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-sm">Cancel</button>
               <button type="submit" className="rounded-lg bg-[var(--color-accent)] px-3 py-2 text-sm text-white">Create</button>
             </div>
           </form>

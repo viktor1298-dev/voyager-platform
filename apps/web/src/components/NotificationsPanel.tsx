@@ -21,6 +21,16 @@ interface KubeEvent {
   cluster?: string | null
 }
 
+interface GroupedNotification {
+  key: string
+  message: string
+  reason: string
+  count: number
+  latestTimestamp: string
+  clusterName: string
+  severity: 'critical' | 'warning' | 'info'
+}
+
 function relativeTime(date: string | Date): string {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
   if (seconds < 60) return `${seconds}s ago`
@@ -31,8 +41,63 @@ function relativeTime(date: string | Date): string {
   return `${Math.floor(hours / 24)}d ago`
 }
 
+function getSeverity(event: KubeEvent): 'critical' | 'warning' | 'info' {
+  const reason = (event.reason ?? '').toLowerCase()
+  const message = (event.message ?? '').toLowerCase()
+  if (reason.includes('error') || reason.includes('failed') || reason.includes('crash') || reason.includes('oom') || message.includes('crashloop')) return 'critical'
+  if (event.kind === 'Warning') return 'warning'
+  return 'info'
+}
+
+function getSeverityBorderColor(severity: 'critical' | 'warning' | 'info'): string {
+  if (severity === 'critical') return '#ef4444'
+  if (severity === 'warning') return '#f59e0b'
+  return '#3b82f6'
+}
+
+function getSourceName(event: KubeEvent): string {
+  // Try to get pod/service name from involvedObject
+  const obj = event.involvedObject as Record<string, unknown> | null | undefined
+  if (obj && typeof obj === 'object') {
+    const name = obj.name as string | undefined
+    if (name) return name
+  }
+  return event.source ?? event.clusterName ?? event.cluster ?? 'unknown'
+}
+
+function groupNotifications(events: KubeEvent[]): GroupedNotification[] {
+  const map = new Map<string, GroupedNotification>()
+  for (const event of events) {
+    const key = `${event.reason ?? ''}|${event.message ?? ''}|${event.clusterId}`
+    const severity = getSeverity(event)
+    const existing = map.get(key)
+    if (existing) {
+      existing.count++
+      if (new Date(event.timestamp) > new Date(existing.latestTimestamp)) {
+        existing.latestTimestamp = event.timestamp
+      }
+    } else {
+      map.set(key, {
+        key,
+        message: event.message ?? event.reason ?? '',
+        reason: event.reason ?? '',
+        count: 1,
+        latestTimestamp: event.timestamp,
+        clusterName: getSourceName(event),
+        severity,
+      })
+    }
+  }
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(b.latestTimestamp).getTime() - new Date(a.latestTimestamp).getTime()
+  )
+}
+
+type CategoryFilter = 'all' | 'alerts' | 'events' | 'system'
+
 export function NotificationsPanel() {
   const [open, setOpen] = useState(false)
+  const [category, setCategory] = useState<CategoryFilter>('all')
   const { lastReadAt: lastReadTimestamp, setLastRead } = useNotificationsStore()
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -41,10 +106,25 @@ export function NotificationsPanel() {
     { refetchInterval: 30000 },
   )
 
-  const alerts = ((eventsQuery.data ?? []) as KubeEvent[]).filter((e) => e.kind === 'Warning')
+  const allEvents = (eventsQuery.data ?? []) as KubeEvent[]
+  const alerts = allEvents.filter((e) => e.kind === 'Warning')
   const unreadCount = lastReadTimestamp
     ? alerts.filter((e) => new Date(e.timestamp) > new Date(lastReadTimestamp)).length
     : alerts.length
+
+  // Category filtering
+  const filteredEvents = category === 'all' ? alerts
+    : category === 'alerts' ? allEvents.filter((e) => e.kind === 'Warning' && ((e.reason ?? '').toLowerCase().includes('error') || (e.reason ?? '').toLowerCase().includes('failed') || (e.reason ?? '').toLowerCase().includes('crash')))
+    : category === 'events' ? allEvents.filter((e) => e.kind !== 'Warning')
+    : allEvents.filter((e) => (e.source ?? '').toLowerCase().includes('system') || (e.reason ?? '').toLowerCase().includes('node'))
+
+  const grouped = groupNotifications(filteredEvents.length > 0 ? filteredEvents : category === 'all' ? alerts : filteredEvents)
+
+  const handleMarkAllRead = () => {
+    setLastRead()
+    // Close panel to visually confirm badge dismissed
+    setOpen(false)
+  }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -61,7 +141,7 @@ export function NotificationsPanel() {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="relative flex items-center justify-center h-11 w-11 rounded-lg border border-[var(--color-border)] hover:bg-white/[0.04] transition-colors"
+        className="relative flex items-center justify-center h-11 w-11 rounded-xl border border-[var(--color-border)] hover:bg-white/[0.04] transition-colors"
       >
         <Bell className="h-4 w-4 text-[var(--color-text-muted)]" />
         {unreadCount > 0 && (
@@ -73,7 +153,7 @@ export function NotificationsPanel() {
 
       {open && (
         <div
-          className="absolute right-0 top-11 w-80 max-h-96 overflow-y-auto rounded-xl border shadow-2xl z-50"
+          className="absolute right-0 top-11 w-80 max-h-[420px] overflow-y-auto rounded-xl border shadow-2xl z-50"
           style={{
             background: 'var(--elevated)',
             backdropFilter: 'blur(12px)',
@@ -88,7 +168,7 @@ export function NotificationsPanel() {
               {unreadCount > 0 && (
                 <button
                   type="button"
-                  onClick={() => setLastRead()}
+                  onClick={handleMarkAllRead}
                   className="text-[10px] text-[var(--color-accent)] hover:underline font-medium"
                 >
                   Mark all read
@@ -100,38 +180,50 @@ export function NotificationsPanel() {
             </div>
           </div>
 
-          {alerts.length === 0 ? (
+          {/* Category filter tabs */}
+          <div className="flex items-center gap-1 px-3 py-2 border-b border-white/10">
+            {(['all', 'alerts', 'events', 'system'] as CategoryFilter[]).map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setCategory(cat)}
+                className={`px-2 py-1 rounded text-[10px] font-medium capitalize transition-colors ${category === cat ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]' : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)]'}`}
+              >
+                {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {grouped.length === 0 ? (
             <div className="px-4 py-8 text-center text-[var(--color-text-dim)] text-xs">
               No alerts
             </div>
           ) : (
             <div className="py-1">
-              {alerts.slice(0, 10).map((event, i: number) => (
+              {grouped.slice(0, 10).map((notif) => (
                 <div
-                  key={event.id ?? i}
-                  className="flex items-start gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors"
+                  key={notif.key}
+                  className="flex items-start gap-0 hover:bg-white/[0.04] transition-colors"
+                  style={{
+                    borderLeft: `3px solid ${getSeverityBorderColor(notif.severity)}`,
+                  }}
                 >
-                  <span
-                    className="mt-1.5 h-2 w-2 rounded-full shrink-0"
-                    style={{
-                      backgroundColor:
-                        event.kind === 'Error'
-                          ? 'var(--color-status-error, #ef4444)'
-                          : 'var(--color-status-warning, #f59e0b)',
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-semibold text-[var(--color-text-secondary)] truncate">
-                        {event.clusterName ?? event.cluster ?? 'unknown'}
-                      </span>
-                      <span className="text-[10px] text-[var(--color-text-dim)] font-mono whitespace-nowrap">
-                        {event.timestamp ? relativeTime(event.timestamp) : ''}
-                      </span>
+                  <div className="flex items-start gap-3 px-4 py-2.5 flex-1 min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-semibold text-[var(--color-text-secondary)] truncate">
+                          {notif.clusterName}
+                        </span>
+                        <span className="text-[10px] text-[var(--color-text-dim)] font-mono whitespace-nowrap">
+                          {relativeTime(notif.latestTimestamp)}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-snug line-clamp-2">
+                        {notif.count > 1
+                          ? `${notif.message || notif.reason} (×${notif.count})`
+                          : (notif.message || notif.reason)}
+                      </p>
                     </div>
-                    <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-snug line-clamp-2">
-                      {event.message ?? event.reason ?? ''}
-                    </p>
                   </div>
                 </div>
               ))}

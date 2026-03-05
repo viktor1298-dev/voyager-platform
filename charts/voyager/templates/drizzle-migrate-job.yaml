@@ -22,9 +22,9 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: "{{ .Values.api.image.repository | default "voyager-api" }}:{{ .Values.api.image.tag }}"
+          image: "{{ .Values.migrate.image.repository | default "voyager-api-migrate" }}:{{ .Values.migrate.image.tag | default .Values.api.image.tag }}"
           imagePullPolicy: {{ .Values.api.image.pullPolicy | default "IfNotPresent" }}
-          command: ["npx", "drizzle-kit", "migrate"]
+          command: ["node_modules/.pnpm/node_modules/.bin/drizzle-kit", "migrate", "--config=drizzle.config.ts"]
           env:
             - name: DATABASE_URL
               valueFrom:

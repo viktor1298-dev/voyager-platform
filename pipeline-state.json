@@ -1,39 +1,17 @@
 {
-  "status": "deployed",
-  "version": "v187",
+  "status": "running",
+  "version": "v188",
   "phase": "Phase-M",
-  "timestamp": "2026-03-05T15:35:00.000Z",
-  "currentTask": "Gil merge+tag v187 complete",
+  "timestamp": "2026-03-05T16:34:00.000Z",
+  "currentTask": "M-P1 — Spawning Dima for high-priority polish items",
   "completedItems": [
-    "M-P0-001",
-    "M-P0-002",
-    "M-P0-003",
-    "M-P0-004",
-    "M-P0-005",
-    "M-P0-006"
+    "M-P0-001", "M-P0-002", "M-P0-003", "M-P0-004", "M-P0-005", "M-P0-006"
   ],
+  "deployedVersion": "v187.1",
+  "qaScore": "8.7/10 PASS",
   "pendingItems": [
-    "M-P1-001",
-    "M-P1-002",
-    "M-P1-003",
-    "M-P1-004",
-    "M-P1-005",
-    "M-P1-006",
-    "M-P1-007",
-    "M-P2-001",
-    "M-P2-002",
-    "M-P2-003",
-    "M-P2-004",
+    "M-P1-001", "M-P1-002", "M-P1-003", "M-P1-004", "M-P1-005", "M-P1-006", "M-P1-007",
+    "M-P2-001", "M-P2-002", "M-P2-003", "M-P2-004",
     "M-P3-001"
-  ],
-  "reviewStatus": "10/10 APPROVED",
-  "mergedSHA": "f4afd63",
-  "mergedBranch": "feat/init-monorepo",
-  "tag": "v187",
-  "deploy_timestamp": "2026-03-05T15:50:53.399846+00:00",
-  "deployed_images": {
-    "api": "voyager-api:v187",
-    "web": "voyager-web:v187"
-  },
-  "health": "ok"
+  ]
 }

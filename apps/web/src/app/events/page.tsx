@@ -180,7 +180,7 @@ export default function EventsPage() {
   )
 
   const filterBar = (
-    <div className="flex flex-wrap items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)] w-full sm:w-auto">
+    <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)] w-full sm:w-auto">
       {(['all', 'Normal', 'Warning'] as EventFilter[]).map((f) => {
         const isActive = filter === f
         return (
@@ -220,7 +220,7 @@ export default function EventsPage() {
           <QueryError message={eventsQuery.error.message} onRetry={() => eventsQuery.refetch()} />
         )}
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
             Events
           </h1>
           <p
@@ -239,12 +239,13 @@ export default function EventsPage() {
           toolbar={filterBar}
           loading={eventsQuery.isLoading}
           emptyIcon={<Calendar className="h-8 w-8" />}
-          emptyTitle="No events found"
+          emptyTitle="All quiet in the last hour"
+          emptyDescription="No Kubernetes events found. Adjust the time range filter to see historical events."
           mobileCard={(event) => {
             const isWarning = event.type === 'Warning'
             return (
               <div
-                className={`p-3 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-card)] relative ${isWarning ? 'bg-[var(--color-status-warning)]/[0.03]' : ''}`}
+                className={`p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] relative ${isWarning ? 'bg-[var(--color-status-warning)]/[0.03]' : ''}`}
               >
                 {isWarning && (
                   <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--color-status-warning)]/60 rounded-l-lg" />

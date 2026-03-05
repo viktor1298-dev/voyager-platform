@@ -167,9 +167,9 @@ export default function AuditPage() {
   }
 
   const selectClass =
-    'px-3 py-1.5 text-xs rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
+    'px-3 py-1.5 text-xs rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
   const inputClass =
-    'px-3 py-1.5 text-xs rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
+    'px-3 py-1.5 text-xs rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
 
   return (
     <AppLayout>
@@ -331,7 +331,7 @@ export default function AuditPage() {
                 type="button"
                 disabled={page === 0}
                 onClick={() => setPage((p) => p - 1)}
-                className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] hover:bg-white/[0.06] disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-default"
+                className="px-3 py-1.5 rounded-xl border border-[var(--color-border)] hover:bg-white/[0.06] disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-default"
               >
                 Previous
               </button>
@@ -339,7 +339,7 @@ export default function AuditPage() {
                 type="button"
                 disabled={page >= totalPages - 1}
                 onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] hover:bg-white/[0.06] disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-default"
+                className="px-3 py-1.5 rounded-xl border border-[var(--color-border)] hover:bg-white/[0.06] disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-default"
               >
                 Next
               </button>

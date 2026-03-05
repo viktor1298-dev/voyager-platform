@@ -120,7 +120,7 @@ export default function AiAssistantPage() {
                 value={selectedClusterId ?? ''}
                 onChange={(event) => setSelectedClusterId(event.target.value)}
                 disabled={!clustersQuery.data || clustersQuery.data.length === 0}
-                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-1 text-sm text-[var(--color-text-primary)] disabled:opacity-60"
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-1 text-sm text-[var(--color-text-primary)] disabled:opacity-60"
               >
                 {clustersQuery.data?.map((cluster) => (
                   <option key={cluster.id} value={String(cluster.id)}>

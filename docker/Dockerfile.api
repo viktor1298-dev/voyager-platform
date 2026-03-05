@@ -34,6 +34,19 @@ RUN pnpm --filter @voyager/api build
 RUN pnpm --filter @voyager/api deploy --prod --legacy /app/pruned
 
 # ============================================================
+# Stage 3a — migrate: dedicated migration runner with drizzle-kit
+# ============================================================
+FROM node:22-alpine AS migrate-runner
+RUN addgroup -g 1001 -S nodejs && adduser -S voyager -u 1001
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/db/node_modules ./packages/db/node_modules
+COPY --from=builder /app/packages/db/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/packages/db/drizzle ./drizzle
+USER voyager
+CMD ["node_modules/.pnpm/node_modules/.bin/drizzle-kit", "migrate", "--config=drizzle.config.ts"]
+
+# ============================================================
 # Stage 3 — production: minimal runtime image
 # ============================================================
 FROM node:22-alpine AS runner
@@ -43,6 +56,8 @@ COPY --from=builder /app/pruned/node_modules ./node_modules
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package.json ./
 COPY --from=builder /app/charts/voyager/sql ./sql
+COPY --from=builder /app/packages/db/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/packages/db/drizzle ./drizzle
 ENV HIDE_STACK_TRACES=true
 USER voyager
 EXPOSE 4000

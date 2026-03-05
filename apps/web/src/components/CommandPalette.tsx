@@ -1,12 +1,13 @@
 'use client'
 
 import { Command } from 'cmdk'
-import { Bot, Box, Clock, Key, Layers, Search, Server } from 'lucide-react'
+import { Bot, Box, Clock, FolderOpen, Key, Layers, Package, Search, Server } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { navItems } from '@/config/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { trpc } from '@/lib/trpc'
+import { useClusterContext } from '@/stores/cluster-context'
 
 const MAX_RECENT = 5
 const RECENT_KEY = 'voyager-command-palette-recent'
@@ -39,6 +40,7 @@ export function CommandPalette() {
   const router = useRouter()
   const isAdmin = useIsAdmin()
   const [recentItems, setRecentItems] = useState<RecentItem[]>([])
+  const { activeClusterId } = useClusterContext()
 
   // Fetch resource data for fuzzy search
   const clustersQuery = trpc.clusters.list.useQuery(undefined, { enabled: open, staleTime: 30000 })
@@ -47,6 +49,14 @@ export function CommandPalette() {
     staleTime: 30000,
   })
   const servicesQuery = trpc.services.list.useQuery(undefined, { enabled: open, staleTime: 30000 })
+  const podsQuery = trpc.pods.list.useQuery(
+    { clusterId: activeClusterId ?? '' },
+    { enabled: open && !!activeClusterId, staleTime: 30000 },
+  )
+  const namespacesQuery = trpc.namespaces.list.useQuery(
+    { clusterId: activeClusterId ?? '' },
+    { enabled: open && !!activeClusterId, staleTime: 30000 },
+  )
 
   useEffect(() => {
     if (open) {
@@ -97,8 +107,29 @@ export function CommandPalette() {
         items.push({ label: s.name, path: `/services/${s.id}`, type: 'Service', icon: Layers })
     }
 
+    for (const p of podsQuery.data ?? []) {
+      if (p.name)
+        items.push({
+          label: `${p.namespace}/${p.name}`,
+          path: `/logs?pod=${encodeURIComponent(p.name)}&namespace=${encodeURIComponent(p.namespace)}`,
+          type: 'Pod',
+          icon: Package,
+        })
+    }
+
+    for (const ns of namespacesQuery.data ?? []) {
+      const nsName = typeof ns === 'string' ? ns : (ns as { name?: string }).name
+      if (nsName)
+        items.push({
+          label: nsName,
+          path: `/namespaces`,
+          type: 'Namespace',
+          icon: FolderOpen,
+        })
+    }
+
     return items
-  }, [clustersQuery.data, deploymentsQuery.data, servicesQuery.data])
+  }, [clustersQuery.data, deploymentsQuery.data, servicesQuery.data, podsQuery.data, namespacesQuery.data])
 
   if (!open) return null
 
@@ -223,25 +254,29 @@ export function CommandPalette() {
               </Command.Group>
             )}
 
-            {/* Resources — deployments, services */}
+            {/* Resources — deployments, services, pods, namespaces */}
             {resourceItems.filter((i) => i.type !== 'Cluster').length > 0 && (
               <Command.Group heading="Resources" className={headingClass}>
                 {resourceItems
                   .filter((i) => i.type !== 'Cluster')
+                  .slice(0, 20)
                   .map((item) => {
                     const RIcon = item.icon
                     return (
                       <Command.Item
-                        key={`resource-${item.path}`}
+                        key={`resource-${item.path}-${item.label}`}
                         value={`${item.type} ${item.label}`}
                         onSelect={() => navigate(item.path, item.label, item.type)}
                         className={itemClass}
                       >
                         <RIcon className="h-4 w-4 shrink-0" />
-                        <span>{item.label}</span>
-                        <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
+                        <span className="flex-1 truncate">{item.label}</span>
+                        <span className="ml-2 text-[10px] text-[var(--color-text-dim)] font-mono shrink-0">
                           {item.type.toLowerCase()}
                         </span>
+                        <kbd className="ml-2 hidden sm:inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shrink-0">
+                          ↵ Open
+                        </kbd>
                       </Command.Item>
                     )
                   })}

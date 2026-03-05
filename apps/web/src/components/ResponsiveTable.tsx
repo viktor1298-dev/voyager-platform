@@ -91,7 +91,7 @@ export function ResponsiveTable<T>({
             <div
               key={keyExtractor(row, i)}
               onClick={() => onRowClick?.(row)}
-              className={`rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2 ${onRowClick ? 'cursor-pointer active:bg-white/[0.03]' : ''}`}
+              className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2 ${onRowClick ? 'cursor-pointer active:bg-white/[0.03]' : ''}`}
             >
               {/* Card header */}
               <div className="flex justify-between items-center gap-2">

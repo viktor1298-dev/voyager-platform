@@ -485,7 +485,7 @@ export function AiChat({
             </div>
             <Link
               href="/settings"
-              className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs text-[var(--color-text-primary)] hover:bg-white/[0.04]"
+              className="inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs text-[var(--color-text-primary)] hover:bg-white/[0.04]"
             >
               <Settings className="h-3.5 w-3.5" />
               Open Settings

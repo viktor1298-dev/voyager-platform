@@ -12,7 +12,7 @@ import { Dialog } from '@/components/ui/dialog'
 import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { AlertTriangle, Bell, CheckCircle, ChevronDown, History, Plus, Search, Trash2 } from 'lucide-react'
+import { AlertTriangle, Bell, CheckCircle, ChevronDown, History, Plus, Search, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react'
 import { toast } from 'sonner'
 import { timeAgo } from '@/lib/time-utils'
@@ -216,9 +216,9 @@ export default function AlertsPage() {
     },
   ], [updateMut, selectedIds, filteredAlerts, toggleSelectAlert])
 
-  const inputClass = 'w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)]'
+  const inputClass = 'w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)]'
   const btnPrimary = 'rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer'
-  const btnSecondary = 'rounded-lg border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer'
+  const btnSecondary = 'rounded-xl border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer'
 
   return (
     <AppLayout>
@@ -269,13 +269,13 @@ export default function AlertsPage() {
                   placeholder="Search alerts…"
                   value={alertSearch}
                   onChange={(e) => setAlertSearch(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] py-1.5 pl-8 pr-3 text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] py-1.5 pl-8 pr-3 text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
                 />
               </div>
               <select
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value as typeof groupBy)}
-                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1.5 text-xs text-[var(--color-text-primary)]"
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1.5 text-xs text-[var(--color-text-primary)]"
               >
                 <option value="none">No grouping</option>
                 <option value="cluster">Group by Cluster</option>
@@ -293,7 +293,7 @@ export default function AlertsPage() {
                       }
                       setSelectedIds(new Set())
                     }}
-                    className="rounded-lg border border-[var(--color-border)] px-2 py-1 text-[10px] text-[var(--color-status-active)] hover:bg-[var(--color-status-active)]/10"
+                    className="rounded-xl border border-[var(--color-border)] px-2 py-1 text-[10px] text-[var(--color-status-active)] hover:bg-[var(--color-status-active)]/10"
                   >
                     Enable All
                   </button>
@@ -305,7 +305,7 @@ export default function AlertsPage() {
                       }
                       setSelectedIds(new Set())
                     }}
-                    className="rounded-lg border border-[var(--color-border)] px-2 py-1 text-[10px] text-[var(--color-text-dim)] hover:bg-white/5"
+                    className="rounded-xl border border-[var(--color-border)] px-2 py-1 text-[10px] text-[var(--color-text-dim)] hover:bg-white/5"
                   >
                     Disable All
                   </button>
@@ -318,7 +318,7 @@ export default function AlertsPage() {
                       }
                       setSelectedIds(new Set())
                     }}
-                    className="rounded-lg border border-[var(--color-border)] px-2 py-1 text-[10px] text-red-400 hover:bg-red-500/10"
+                    className="rounded-xl border border-[var(--color-border)] px-2 py-1 text-[10px] text-red-400 hover:bg-red-500/10"
                   >
                     Delete All
                   </button>
@@ -347,7 +347,7 @@ export default function AlertsPage() {
                         emptyTitle="No alerts in this group"
                         emptyIcon={<AlertTriangle className="h-8 w-8" />}
                         mobileCard={(alert) => (
-                          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
+                          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
                             <span className="font-medium text-[var(--color-text-primary)] text-sm">{alert.name}</span>
                           </div>
                         )}
@@ -381,7 +381,7 @@ export default function AlertsPage() {
               emptyIcon={<AlertTriangle className="h-8 w-8" />}
               emptyTitle="No alert rules configured"
               mobileCard={(alert) => (
-                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
                   <div className="flex justify-between items-center gap-2">
                     <span className="font-medium text-[var(--color-text-primary)] text-sm">{alert.name}</span>
                     <button type="button" onClick={() => updateMut.mutate({ id: alert.id, enabled: !alert.enabled })}
@@ -444,6 +444,42 @@ export default function AlertsPage() {
           loading={deleteMut.isPending}
         />
       </div>
+
+      {/* M-P1-003: Sticky bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-[var(--color-border)] shadow-2xl bg-[var(--elevated)] backdrop-blur-md">
+          <span className="text-sm font-medium text-[var(--color-text-primary)]">{selectedIds.size} selected</span>
+          <div className="h-4 w-px bg-[var(--color-border)]" />
+          <button
+            type="button"
+            onClick={() => { for (const id of selectedIds) { deleteMut.mutate({ id }) }; setSelectedIds(new Set()) }}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+          >
+            <Trash2 className="h-3.5 w-3.5" />Delete
+          </button>
+          <button
+            type="button"
+            onClick={() => { for (const id of selectedIds) { updateMut.mutate({ id, enabled: true }) }; setSelectedIds(new Set()) }}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--color-status-active)] hover:bg-[var(--color-status-active)]/10 transition-colors"
+          >
+            Enable
+          </button>
+          <button
+            type="button"
+            onClick={() => { for (const id of selectedIds) { updateMut.mutate({ id, enabled: false }) }; setSelectedIds(new Set()) }}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--color-text-dim)] hover:bg-white/5 transition-colors"
+          >
+            Disable
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedIds(new Set())}
+            className="ml-1 text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)] transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
       </PageTransition>
     </AppLayout>
   )

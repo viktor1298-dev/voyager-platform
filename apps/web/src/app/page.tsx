@@ -335,7 +335,7 @@ function DashboardContent() {
     <AppLayout>
       <PageTransition>
         <header className="mb-4">
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
             Dashboard
           </h1>
         </header>
@@ -431,13 +431,16 @@ function DashboardContent() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
           {/* Health Matrix Grid */}
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
-            <h3 className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-3">Cluster Health Matrix</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-semibold text-[var(--color-text-primary)] border-l-2 border-[var(--color-accent)] pl-2">Cluster Health Matrix</h3>
+              <Link href="/clusters" className="text-[10px] text-[var(--color-accent)] hover:underline font-medium">View all clusters →</Link>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {clusterList.map((c) => {
                 const health = normalizeLiveHealthStatus(c.healthStatus ?? c.status)
                 const dotClass = health === 'healthy' ? 'bg-[var(--color-status-active)]' : health === 'degraded' ? 'bg-[var(--color-status-warning)]' : health === 'error' ? 'bg-[var(--color-status-error)]' : 'bg-gray-400'
                 return (
-                  <Link key={c.id} href={`/clusters/${c.id}`} className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-[var(--color-border)]/50 hover:bg-white/[0.04] hover:border-[var(--color-border-hover)] transition-all">
+                  <Link key={c.id} href={`/clusters/${c.id}`} className="flex items-center gap-2 px-2.5 py-2 rounded-xl border border-[var(--color-border)]/50 hover:bg-white/[0.04] hover:border-[var(--color-border-hover)] transition-all">
                     <span className={`h-2.5 w-2.5 rounded-full ${dotClass} shrink-0 animate-pulse-slow`} />
                     <div className="min-w-0 flex-1">
                       <span className="text-xs font-medium text-[var(--color-text-primary)] truncate block">{c.name}</span>
@@ -452,7 +455,7 @@ function DashboardContent() {
 
           {/* Resource Utilization Gauges — Aggregate + Per-Cluster Breakdown */}
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
-            <h3 className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-3">Resource Utilization</h3>
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)] border-l-2 border-[var(--color-accent)] pl-2 mb-3">Resource Utilization</h3>
             {(() => {
               const cpuPct = statsQuery.data?.cpuPercent ?? 0
               const memPct = statsQuery.data?.memoryPercent ?? 0
@@ -548,211 +551,37 @@ function DashboardContent() {
 
           {/* Recent Events Feed */}
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
-            <h3 className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-3">Recent Events</h3>
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)] mb-3">Recent Events</h3>
             <RecentEventsList events={liveData?.events} />
           </div>
         </div>
 
-        {/* P1-001: Consolidated cluster header + filter in one section */}
-        <div className="mb-5 space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">
-                Clusters
-              </h2>
-              <p className="text-[11px] text-[var(--color-table-meta)] font-mono uppercase tracking-wider mt-0.5">
-                {visibleClusters.length}/{clusterList.length} visible
-              </p>
-            </div>
-
-            {/* P1-002: Card/Table view toggle */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 p-0.5">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('card')}
-                  title="Card view"
-                  aria-label="Card view"
-                  className={cn(
-                    'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all duration-200 cursor-pointer min-h-[36px]',
-                    viewMode === 'card'
-                      ? 'bg-white/[0.08] text-[var(--color-text-primary)] shadow-sm'
-                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]',
-                  )}
-                >
-                  <LayoutGrid className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Cards</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('table')}
-                  title="Table view"
-                  aria-label="Table view"
-                  className={cn(
-                    'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all duration-200 cursor-pointer min-h-[36px]',
-                    viewMode === 'table'
-                      ? 'bg-white/[0.08] text-[var(--color-text-primary)] shadow-sm'
-                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]',
-                  )}
-                >
-                  <List className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Table</span>
-                </button>
-              </div>
-            </div>
+        {/* M-P1-006: Quick Clusters widget — compact top clusters by health */}
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Quick Clusters</h3>
+            <Link href="/clusters" className="text-[10px] text-[var(--color-accent)] hover:underline font-medium">View all →</Link>
           </div>
-
-          {/* P1-001: Single consolidated filter bar with env tabs integrated */}
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30 px-3 py-2.5 space-y-2">
-            {/* Env tabs row */}
-            <div className="flex items-center gap-1">
-              {(['all', 'prod', 'staging', 'dev'] as const).map((filter) => {
-                const isActive =
-                  filters.environment === filter ||
-                  (filter === 'all' && filters.environment === 'all')
-                const color = filter === 'all' ? 'var(--color-accent)' : ENV_META[filter].color
-                const envCounts = {
-                  all: clusterList.length,
-                  prod: clusterList.filter((c) => c.environment === 'prod').length,
-                  staging: clusterList.filter((c) => c.environment === 'staging').length,
-                  dev: clusterList.filter((c) => c.environment === 'dev').length,
-                }
-                return (
-                  <button
-                    key={filter}
-                    type="button"
-                    onClick={() => setEnvironmentFilter(filter)}
-                    className={cn(
-                      'flex items-center gap-1.5 px-2.5 py-1 min-h-[32px] rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 cursor-pointer',
-                      isActive
-                        ? 'bg-white/[0.08] text-[var(--color-text-primary)]'
-                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]',
-                    )}
-                  >
-                    <span
-                      className="h-2.5 w-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: color }}
-                    />
-                    <span className="capitalize">{filter}</span>
-                    <span className="tabular-nums text-[var(--color-table-meta)]">
-                      {envCounts[filter]}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-            {/* Separator */}
-            <div className="h-px bg-[var(--color-border)]/40" />
-            {/* Main filters */}
-            <FilterBar
-              options={{ ...filterOptions, environments: [] }}
-              onChange={onFiltersChange}
-            />
-          </div>
-        </div>
-
-        {/* P1-004: Loading skeleton */}
-        {isLoading ? (
-          viewMode === 'card' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              <SkeletonCard />
-              <SkeletonCard />
-              <SkeletonCard />
-              <SkeletonCard />
-            </div>
-          ) : (
-            <div className="rounded-xl border border-[var(--color-border)] overflow-hidden">
-              <div className="space-y-0 divide-y divide-[var(--color-border)]/50">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="px-4">
-                    <SkeletonRow />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        ) : liveQuery.error && listQuery.error ? (
-          <p className="text-[var(--color-status-error)]">
-            Failed to load clusters: {liveQuery.error?.message ?? listQuery.error?.message}
-          </p>
-        ) : visibleClusters.length === 0 ? (
-          <p className="text-[var(--color-text-muted)]">No clusters match the current filters.</p>
-        ) : viewMode === 'table' ? (
-          /* P1-002: Table view */
-          <ClusterTable clusters={visibleClusters} />
-        ) : (
-          /* Card view */
-          <div className="space-y-6">
-            {ENV_ORDER.map((environment) => {
-              const clustersByHealth = groupedByEnvironment[environment]
-              const totalInEnvironment = Object.values(clustersByHealth).reduce(
-                (sum, clusters) => sum + clusters.length,
-                0,
-              )
-              if (totalInEnvironment === 0) return null
-              const meta = ENV_META[environment]
-
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {clusterList.slice(0, 4).map((c) => {
+              const health = normalizeLiveHealthStatus(c.healthStatus ?? c.status)
+              const healthColor = health === 'healthy' ? 'var(--color-status-active)' : health === 'degraded' ? 'var(--color-status-warning)' : 'var(--color-status-error)'
+              const healthLabel = health === 'healthy' ? 'Healthy' : health === 'degraded' ? 'Degraded' : 'Critical'
               return (
-                <section
-                  key={environment}
-                  className="rounded-xl border border-[var(--color-border)] p-4"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <span
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: meta.color }}
-                    />
-                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                      {meta.sectionLabel}
-                    </h3>
-                    <span className="text-[11px] text-[var(--color-text-dim)] tabular-nums">
-                      {totalInEnvironment}
-                    </span>
-                    <div className="flex-1 h-px bg-[var(--color-border)]/40" />
+                <Link key={c.id} href={`/clusters/${c.id}`} className="flex flex-col gap-1 px-3 py-2.5 rounded-xl border border-[var(--color-border)]/50 hover:bg-muted/50 hover:border-[var(--color-border-hover)] transition-colors cursor-pointer">
+                  <span className="text-xs font-semibold text-[var(--color-text-primary)] truncate">{c.name}</span>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ color: healthColor, background: `color-mix(in srgb, ${healthColor} 12%, transparent)` }}>{healthLabel}</span>
+                    <span className="text-[10px] text-[var(--color-text-dim)] font-mono">{c.nodeCount} pods</span>
                   </div>
-
-                  <div className="space-y-4">
-                    {HEALTH_GROUP_ORDER.map((healthGroup) => {
-                      const clusters = clustersByHealth[healthGroup]
-                      if (clusters.length === 0) return null
-                      const healthMeta = HEALTH_GROUP_META[healthGroup]
-
-                      return (
-                        <div key={healthGroup} className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="h-2.5 w-2.5 rounded-full"
-                              style={{ backgroundColor: healthMeta.dotColor }}
-                            />
-                            <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--color-text-dim)]">
-                              {healthMeta.label} ({clusters.length})
-                            </span>
-                            <div className="flex-1 h-px bg-[var(--color-border)]/30" />
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                            {clusters.map((cluster) => {
-                              const idx = cardIndex++
-                              return (
-                                <ClusterCard
-                                  key={cluster.id}
-                                  cluster={cluster}
-                                  index={idx}
-                                  runningPods={runningPods}
-                                  totalPods={liveData?.totalPods ?? 0}
-                                />
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </section>
+                </Link>
               )
             })}
+            {clusterList.length === 0 && (
+              <span className="text-xs text-[var(--color-text-dim)] col-span-full">No clusters available</span>
+            )}
           </div>
-        )}
+        </div>
       </PageTransition>
     </AppLayout>
   )
@@ -869,7 +698,7 @@ function DashboardPageFallback() {
     <AppLayout>
       <PageTransition>
         <header className="mb-4">
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
             Dashboard
           </h1>
         </header>
@@ -882,7 +711,7 @@ function DashboardPageFallback() {
           <SkeletonCard />
         </div>
         <div className="space-y-3">
-          <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">
+          <h2 className="text-base font-semibold tracking-tight text-[var(--color-text-primary)]">
             Clusters
           </h2>
           <SkeletonText width="12rem" height="1.5rem" />
@@ -1186,7 +1015,7 @@ function SummaryCard({
                     isGood ? 'text-emerald-400' : 'text-red-400',
                   )}
                 >
-                  {delta > 0 ? `▲ +${delta}` : `▼ ${delta}`}
+                  {delta > 0 ? `▲ +${delta} (24h)` : `▼ ${delta} (24h)`}
                 </span>
               )
             })()}
@@ -1197,8 +1026,8 @@ function SummaryCard({
         {icon}
       </span>
       {sparklineData && sparklineData.length > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 h-8 opacity-60">
-          <SparklineChart data={sparklineData} color={sparklineColor ?? color} height={32} />
+        <div className="absolute bottom-0 left-0 right-0 h-[60px] opacity-60">
+          <SparklineChart data={sparklineData} color={sparklineColor ?? color} height={60} />
         </div>
       )}
     </div>

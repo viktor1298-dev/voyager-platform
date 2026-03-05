@@ -129,7 +129,7 @@ export function TopBar() {
 
       {/* P1-008: Simplified top bar — cluster selector + key metric only */}
       <div className="hidden sm:flex gap-3 items-center">
-        <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/80 px-2.5 py-1.5">
+        <div className="flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/80 px-2.5 py-1.5">
           <select
             aria-label="Active cluster"
             value={activeClusterId ?? ''}
@@ -160,7 +160,7 @@ export function TopBar() {
         <button
           type="button"
           onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
-          className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] transition-colors"
+          className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] transition-colors"
           title="Command Palette (⌘K)"
           aria-label="Open command palette"
         >

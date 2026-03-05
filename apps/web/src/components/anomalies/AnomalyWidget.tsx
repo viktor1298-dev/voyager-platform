@@ -26,16 +26,16 @@ export function AnomalyWidget({ compact }: { compact?: boolean }) {
               Anomalies
             </span>
             <div className="flex items-center gap-2 text-[11px] font-semibold tabular-nums">
-              <span className="text-red-400/90 inline-flex items-center gap-0.5">
-                <AlertOctagon className="h-3 w-3" />
+              <span className="text-red-400/90 inline-flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
                 {critical}
               </span>
-              <span className="text-amber-400/80 inline-flex items-center gap-0.5">
-                <AlertTriangle className="h-3 w-3" />
+              <span className="text-amber-400/80 inline-flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-yellow-500 shrink-0" />
                 {warning}
               </span>
-              <span className="text-sky-400/80 inline-flex items-center gap-0.5">
-                <Info className="h-3 w-3" />
+              <span className="text-sky-400/80 inline-flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
                 {info}
               </span>
             </div>

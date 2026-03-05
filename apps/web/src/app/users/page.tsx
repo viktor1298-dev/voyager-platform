@@ -272,7 +272,7 @@ export default function UsersPage() {
   const btnPrimary =
     'px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer'
   const btnSecondary =
-    'px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer'
+    'px-4 py-2 text-sm font-medium rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer'
 
   if (isAdmin === null)
     return (
@@ -324,7 +324,7 @@ export default function UsersPage() {
           emptyIcon={<Users className="h-10 w-10" />}
           emptyTitle="No users found"
           mobileCard={(u) => (
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2 min-w-0">
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2 min-w-0">
               <div className="flex justify-between items-center gap-2 min-w-0">
                 <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm min-w-0">
                   {u.name}

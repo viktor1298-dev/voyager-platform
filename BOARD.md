@@ -774,7 +774,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🟠 M-P1 — High Priority (Must Fix Before Customer Demos)
 
-- [ ] **M-P1-001: Typography System — Establish 4-Level Hierarchy**
+- [x] **M-P1-001: Typography System — Establish 4-Level Hierarchy**
   - **Problem:** All section headers (`CLUSTER HEALTH MATRIX`, `RESOURCE UTILIZATION`, `Anomaly Timeline — 24h`) use the same visual weight. Nothing stands out. Uppercase monospace labels in Settings (`API ENDPOINT`, `K8S VERSION`) feel overly technical for UI labels. The visual plane is flat — eye doesn't know where to go first.
   - **Fix:** Establish and apply a consistent 4-level type scale across ALL pages:
     - **Page title:** `text-2xl font-bold` (28px/700) — e.g., "Dashboard", "Clusters"
@@ -786,7 +786,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** Linear uses exactly this hierarchy. Vercel uses subtle font-weight differences rather than uppercase transforms.
   - **Effort:** S (3-4 hours — systematic pass across all pages)
 
-- [ ] **M-P1-002: Stat Cards — Fix Sparklines & Add Timeframe Context to Trends**
+- [x] **M-P1-002: Stat Cards — Fix Sparklines & Add Timeframe Context to Trends**
   - **Problem:** Dashboard stat card sparklines (~40px tall) are too small to convey meaningful trends. Trend indicators show "▲ +1", "▲ +5" with no timeframe — "+5 since when?" The Anomalies card uses icons (`⊙4 △4 ⊙4`) that are hard to distinguish at a glance.
   - **Fix:**
     1. Increase sparkline chart height to 60px minimum with proper Recharts configuration
@@ -797,7 +797,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** Datadog metric cards show trend + timeframe + readable sparkline. Grafana stat panels include threshold coloring.
   - **Effort:** S (2-3 hours)
 
-- [ ] **M-P1-003: Table Row Hover/Focus States — Apply Globally to ALL Tables** [VERIFY: previously marked done in L-QW-002 and K-P1-005, but auditor still flags as missing on multiple pages]
+- [x] **M-P1-003: Table Row Hover/Focus States — Apply Globally to ALL Tables** [VERIFY: previously marked done in L-QW-002 and K-P1-005, but auditor still flags as missing on multiple pages]
   - **Problem:** Tables on Clusters, Services, Events, and Alerts pages have no visible hover state. Clickable pod rows have no cursor change or background highlight. Alerts table has checkboxes but no bulk action bar appears on selection.
   - **Fix:**
     1. Do a full audit of every `<table>` in the codebase — verify `hover:bg-muted/50 transition-colors` is applied to ALL `<tr>` elements
@@ -807,7 +807,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Expected result after fix:** Every table row highlights on hover. Clickable rows show pointer cursor. Alerts bulk selection shows an action bar.
   - **Effort:** S (1-2 hours — systematic verification pass)
 
-- [ ] **M-P1-004: Notification Panel — Grouping, Source Names, Categories**
+- [x] **M-P1-004: Notification Panel — Grouping, Source Names, Categories**
   - **Problem:** Notification dropdown shows 6-16 notifications, all identical: "unknown — Readiness probe failed / Liveness probe failed, 6h ago". Source shows "unknown" instead of pod/service name. No grouping of repeated events. "Mark all read" button visible but badge remains.
   - **Fix:**
     1. Group identical notifications: "Readiness probe failed (×6) — 6h ago" instead of 6 separate entries
@@ -819,7 +819,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** PagerDuty groups related incidents. GitHub notifications have category filters and clear read/unread states.
   - **Effort:** M (4-5 hours)
 
-- [ ] **M-P1-005: Sidebar Section Headers — Replace Emoji with Lucide Icons**
+- [x] **M-P1-005: Sidebar Section Headers — Replace Emoji with Lucide Icons**
   - **Problem:** Sidebar section headers use emoji characters: "👁️ Observability", "⚙️ Infrastructure", "🤖 Platform", "🔐 Admin". Individual nav items use proper Lucide SVG icons, creating a jarring inconsistency. Emoji renders differently across OS/browsers.
   - **Fix:** Replace each emoji with a matching Lucide icon using the same size/color as the nav item icons:
     - `👁️` → `<Eye className="h-4 w-4" />` or `<Activity />`
@@ -830,7 +830,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** Linear's sidebar uses consistent icon treatment. Vercel never mixes emoji with SVG icons.
   - **Effort:** XS (30 min)
 
-- [ ] **M-P1-006: Dashboard — Remove Duplicate Cluster Section, Reduce Scroll Depth**
+- [x] **M-P1-006: Dashboard — Remove Duplicate Cluster Section, Reduce Scroll Depth**
   - **Problem:** Dashboard page is 3+ screens of scroll. Below stat cards, health matrix, resource utilization, anomaly timeline, and events — there's a FULL "Clusters" section with filter bar, search, tags, and cluster cards. This entirely duplicates `/clusters`. Initial viewport shows only stat cards and top of health matrix.
   - **Fix:**
     1. Remove the full Clusters section from the dashboard — add a "View all clusters →" link from the Cluster Health Matrix header instead
@@ -841,7 +841,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** Vercel's dashboard shows focused deployment list — no full-page duplication. Datadog home shows curated widgets.
   - **Effort:** M (3-4 hours)
 
-- [ ] **M-P1-007: Light Mode — Depth and Shadow Improvements**
+- [x] **M-P1-007: Light Mode — Depth and Shadow Improvements**
   - **Problem:** Light mode uses `rgb(245,247,250)` background which is very close to white card backgrounds. Cards lack depth (no shadows, very faint borders). Overall feels flat and unfinished compared to the polished dark mode.
   - **Fix:**
     1. Set page background to `rgb(248,250,252)` (slightly off-white), cards to pure white `#ffffff`
@@ -856,13 +856,13 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🟡 M-P2 — Polish Sprint (Premium Feel)
 
-- [ ] **M-P2-001: Card Border-Radius Consistency Pass**
+- [x] **M-P2-001: Card Border-Radius Consistency Pass**
   - **Problem:** At least 3 different border-radius values used on the same page: stat cards `rounded-lg` (~8px), health matrix cards `rounded-xl` (~12px), anomaly timeline `rounded-lg`, cluster cards with colored left borders using yet another radius.
   - **Fix:** Standardize across the entire app: `border-radius: 12px` for all cards/panels, `8px` for smaller elements (badges, tags, compact cards), `6px` for inputs and buttons.
   - **Expected result after fix:** Visual consistency — every card on every page uses the same border radius. No more mismatched corners.
   - **Effort:** XS (1 hour — search and replace across components)
 
-- [ ] **M-P2-002: Empty State Redesign — Contextual Tips + Better Guidance**
+- [x] **M-P2-002: Empty State Redesign — Contextual Tips + Better Guidance**
   - **Problem:** Empty states (Webhooks "No webhooks configured", Events "No events found", Recent Events "No recent events") are functional but generic. Just an icon + text + button, no illustrations, no contextual help, no personality.
   - **Fix:** Design contextual empty states for each page:
     - **Webhooks:** Flow diagram illustration + "Receive real-time alerts in Slack, PagerDuty, or any HTTP endpoint. Set up your first webhook in 30 seconds."
@@ -873,7 +873,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** Linear's empty states use custom illustrations. Vercel shows contextual setup guides.
   - **Effort:** S (2-3 hours — one reusable `<EmptyState>` component with page-specific props)
 
-- [ ] **M-P2-003: Pod Detail Drawer — Add Containers, Resources, Events, YAML Tabs**
+- [x] **M-P2-003: Pod Detail Drawer — Add Containers, Resources, Events, YAML Tabs**
   - **Problem:** Pod detail drawer shows Status, Namespace, Node, Age, and live logs. Missing: CPU/memory usage, container details, restart count, labels, pod events, and YAML view. For a K8s ops tool, this is essential debugging information.
   - **Fix:** Add tabs to the drawer:
     - **Overview tab:** Resource requests/limits, current CPU/memory usage as progress bars, restart count, labels as tags, annotations
@@ -885,7 +885,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** Lens pod detail is the gold standard. `kubectl describe pod` output is the minimum information bar.
   - **Effort:** M (5-7 hours)
 
-- [ ] **M-P2-004: Command Palette — Add Entity Search (Pods, Services, Deployments, Namespaces)**
+- [x] **M-P2-004: Command Palette — Add Entity Search (Pods, Services, Deployments, Namespaces)**
   - **Problem:** Command palette (`⌘K`) only shows navigation links, cluster shortcuts, and 2 actions (Toggle Theme, Keyboard Shortcuts). No search for actual K8s resources. For a power-user tool, this is severely limited.
   - **Fix:**
     1. Add "RESOURCES" section that searches: pods (by name across all clusters), services, deployments, namespaces
@@ -901,7 +901,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🔵 M-P3 — Strategic Improvements (Competitive Differentiators)
 
-- [ ] **M-P3-001: Keyboard-First Navigation System**
+- [x] **M-P3-001: Keyboard-First Navigation System**
   - **Problem:** No keyboard shortcuts beyond `⌘K`. K8s power users live in terminals — they expect keyboard shortcuts for everything. This is a significant gap vs GitHub (extensive shortcuts) and Linear (every action is accessible via keyboard).
   - **Fix:**
     1. Add global keyboard shortcut system

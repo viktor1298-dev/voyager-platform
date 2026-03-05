@@ -50,7 +50,7 @@ export function ConfirmDialog({
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
+          className="px-4 py-2 text-sm font-medium rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
         >
           {cancelLabel}
         </button>
