@@ -3,6 +3,7 @@
 import { AlertOctagon, AlertTriangle, Info } from 'lucide-react'
 import Link from 'next/link'
 import { filterOpenAnomalies, MOCK_ANOMALIES, type Anomaly } from '@/lib/anomalies'
+import { trpc } from '@/lib/trpc'
 
 function severityIcon(severity: string) {
   switch (severity) {
@@ -36,11 +37,17 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(hours / 24)}d ago`
 }
 
+/** Maximum anomalies shown in timeline */
+const TIMELINE_MAX_ITEMS = 8
+
 export function AnomalyTimeline() {
-  // Using mock data for now — will switch to trpc.anomalies.list once backend supports cross-cluster query
-  const anomalies = filterOpenAnomalies(MOCK_ANOMALIES)
+  // TODO: Replace mock fallback once backend anomalies.listAll is deployed
+  const liveQuery = trpc.anomalies?.listAll?.useQuery?.(undefined, { refetchInterval: 60_000 })
+  const USE_MOCK = !liveQuery?.data
+  const source = USE_MOCK ? MOCK_ANOMALIES : (liveQuery?.data ?? [])
+  const anomalies = filterOpenAnomalies(source)
     .sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime())
-    .slice(0, 8)
+    .slice(0, TIMELINE_MAX_ITEMS)
 
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">

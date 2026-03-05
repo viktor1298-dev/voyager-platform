@@ -63,6 +63,20 @@ const HEALTH_GROUP_META: Record<HealthGroup, { label: string; dotColor: string }
   critical: { label: 'Critical', dotColor: 'var(--color-status-error)' },
 }
 
+// ── SVG Gauge Constants ──
+const GAUGE_VIEWBOX = 100
+const GAUGE_CENTER = 50
+const GAUGE_RADIUS = 40
+const GAUGE_STROKE_WIDTH = 10
+const GAUGE_CIRCUMFERENCE = 2 * Math.PI * GAUGE_RADIUS // ≈ 251.33
+const GAUGE_BG_OPACITY = 'rgba(255,255,255,0.06)'
+
+// ── Resource Utilization Thresholds ──
+const CPU_WARN_THRESHOLD = 60
+const CPU_CRITICAL_THRESHOLD = 80
+const MEM_WARN_THRESHOLD = 60
+const MEM_CRITICAL_THRESHOLD = 80
+
 function getHealthGroup(status: string | null | undefined): HealthGroup {
   const normalized = normalizeLiveHealthStatus(status)
   if (normalized === 'healthy') return 'healthy'
@@ -442,15 +456,15 @@ function DashboardContent() {
             {(() => {
               const cpuPct = statsQuery.data?.cpuPercent ?? 0
               const memPct = statsQuery.data?.memoryPercent ?? 0
-              const cpuColor = cpuPct > 80 ? 'var(--color-status-error)' : cpuPct > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)'
-              const memColor = memPct > 80 ? 'var(--color-status-error)' : memPct > 60 ? 'var(--color-status-warning)' : '#10b981'
+              const cpuColor = cpuPct > CPU_CRITICAL_THRESHOLD ? 'var(--color-status-error)' : cpuPct > CPU_WARN_THRESHOLD ? 'var(--color-status-warning)' : 'var(--color-accent)'
+              const memColor = memPct > MEM_CRITICAL_THRESHOLD ? 'var(--color-status-error)' : memPct > MEM_WARN_THRESHOLD ? 'var(--color-status-warning)' : '#10b981'
               return (
                 <div className="grid grid-cols-2 gap-6">
                   <div className="flex flex-col items-center gap-2">
                     <div className="relative h-24 w-24">
-                      <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
-                        <circle cx="50" cy="50" r="40" fill="none" stroke={cpuColor} strokeWidth="10" strokeLinecap="round" strokeDasharray={`${cpuPct * 2.51} 251`} className="transition-all duration-700" />
+                      <svg viewBox={`0 0 ${GAUGE_VIEWBOX} ${GAUGE_VIEWBOX}`} className="h-full w-full -rotate-90">
+                        <circle cx={GAUGE_CENTER} cy={GAUGE_CENTER} r={GAUGE_RADIUS} fill="none" stroke={GAUGE_BG_OPACITY} strokeWidth={GAUGE_STROKE_WIDTH} />
+                        <circle cx={GAUGE_CENTER} cy={GAUGE_CENTER} r={GAUGE_RADIUS} fill="none" stroke={cpuColor} strokeWidth={GAUGE_STROKE_WIDTH} strokeLinecap="round" strokeDasharray={`${(cpuPct / 100) * GAUGE_CIRCUMFERENCE} ${GAUGE_CIRCUMFERENCE}`} className="transition-all duration-700" />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
                         <span className="text-lg font-bold font-mono text-[var(--color-text-primary)]">{cpuPct}%</span>
@@ -460,9 +474,9 @@ function DashboardContent() {
                   </div>
                   <div className="flex flex-col items-center gap-2">
                     <div className="relative h-24 w-24">
-                      <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
-                        <circle cx="50" cy="50" r="40" fill="none" stroke={memColor} strokeWidth="10" strokeLinecap="round" strokeDasharray={`${memPct * 2.51} 251`} className="transition-all duration-700" />
+                      <svg viewBox={`0 0 ${GAUGE_VIEWBOX} ${GAUGE_VIEWBOX}`} className="h-full w-full -rotate-90">
+                        <circle cx={GAUGE_CENTER} cy={GAUGE_CENTER} r={GAUGE_RADIUS} fill="none" stroke={GAUGE_BG_OPACITY} strokeWidth={GAUGE_STROKE_WIDTH} />
+                        <circle cx={GAUGE_CENTER} cy={GAUGE_CENTER} r={GAUGE_RADIUS} fill="none" stroke={memColor} strokeWidth={GAUGE_STROKE_WIDTH} strokeLinecap="round" strokeDasharray={`${(memPct / 100) * GAUGE_CIRCUMFERENCE} ${GAUGE_CIRCUMFERENCE}`} className="transition-all duration-700" />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
                         <span className="text-lg font-bold font-mono text-[var(--color-text-primary)]">{memPct}%</span>
