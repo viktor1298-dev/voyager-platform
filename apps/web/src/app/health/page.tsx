@@ -21,6 +21,27 @@ import {
 
 const COMPONENT_NAMES = ['API Server', 'etcd', 'Scheduler', 'Controller Mgr'] as const
 
+// ── Latency Thresholds (ms) ──
+const LATENCY_GOOD = 200
+const LATENCY_WARN = 600
+const LATENCY_MAX_DISPLAY = 2000
+
+// ── Sync Freshness Threshold (ms) ──
+const SYNC_FRESH_THRESHOLD_MS = 600_000 // 10 minutes
+
+// ── Display Limits ──
+const MAX_RECENT_EVENTS = 15
+
+/** Shape of a Kubernetes-style event from the events.list router */
+interface KubeEvent {
+  id?: string | number
+  kind: string
+  reason?: string
+  message?: string
+  namespace?: string
+  timestamp?: string | Date
+}
+
 function UptimeBars({ history }: { history: Array<{ status: string; checkedAt: string | Date }> }) {
   // Build 24 hourly slots (index 0 = oldest)
   const now = Date.now()
@@ -84,7 +105,7 @@ export default function HealthPage() {
     }
   }
 
-  const recentEvents = (eventsQuery.data ?? []).filter(
+  const recentEvents = ((eventsQuery.data ?? []) as KubeEvent[]).filter(
     (e) => e.kind === 'Warning' || e.kind === 'Normal',
   )
   const warningEvents = recentEvents.filter((e) => e.kind === 'Warning')
@@ -234,11 +255,11 @@ export default function HealthPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
               {healthData.map((entry) => {
                 const ms = entry.responseTimeMs ?? 0
-                const pct = Math.min(100, (ms / 2000) * 100)
+                const pct = Math.min(100, (ms / LATENCY_MAX_DISPLAY) * 100)
                 const barColor =
-                  ms < 200
+                  ms < LATENCY_GOOD
                     ? 'bg-[var(--color-status-active)]'
-                    : ms < 600
+                    : ms < LATENCY_WARN
                       ? 'bg-[var(--color-status-warning)]'
                       : 'bg-[var(--color-status-error)]'
                 return (
@@ -258,7 +279,7 @@ export default function HealthPage() {
                       <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
                     </div>
                     <p className="text-[10px] text-[var(--color-text-dim)] mt-1">
-                      {ms < 200 ? 'Excellent' : ms < 600 ? 'Moderate' : 'Slow'} response
+                      {ms < LATENCY_GOOD ? 'Excellent' : ms < LATENCY_WARN ? 'Moderate' : 'Slow'} response
                     </p>
                   </div>
                 )
@@ -275,7 +296,7 @@ export default function HealthPage() {
               {healthData.map((entry) => {
                 const checkedRecently =
                   entry.checkedAt &&
-                  Date.now() - new Date(entry.checkedAt as string).getTime() < 600_000
+                  Date.now() - new Date(entry.checkedAt as string).getTime() < SYNC_FRESH_THRESHOLD_MS
                 return (
                   <div
                     key={entry.clusterId}
@@ -374,10 +395,10 @@ export default function HealthPage() {
           </div>
         ) : (
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] divide-y divide-[var(--color-border)] mb-6 overflow-hidden">
-            {recentEvents.slice(0, 15).map((event, idx) => {
+            {recentEvents.slice(0, MAX_RECENT_EVENTS).map((event, idx) => {
               const isWarning = event.kind === 'Warning'
               return (
-                <div key={String((event as { id?: unknown }).id ?? idx)} className="flex gap-3 px-4 py-3 hover:bg-white/[0.02]">
+                <div key={String(event.id ?? idx)} className="flex gap-3 px-4 py-3 hover:bg-white/[0.02]">
                   {/* Timeline dot */}
                   <div className="relative flex flex-col items-center pt-0.5">
                     {isWarning ? (
@@ -385,7 +406,7 @@ export default function HealthPage() {
                     ) : (
                       <Info className="h-4 w-4 text-[var(--color-text-dim)] shrink-0" />
                     )}
-                    {idx < recentEvents.slice(0, 15).length - 1 && (
+                    {idx < recentEvents.slice(0, MAX_RECENT_EVENTS).length - 1 && (
                       <div className="w-px flex-1 bg-[var(--color-border)] mt-1" />
                     )}
                   </div>
@@ -401,23 +422,23 @@ export default function HealthPage() {
                       >
                         {event.kind}
                       </span>
-                      {(event as { reason?: string }).reason && (
+                      {event.reason && (
                         <span className="text-xs font-medium text-[var(--color-text-secondary)]">
-                          {(event as { reason?: string }).reason}
+                          {event.reason}
                         </span>
                       )}
                       <span className="text-[10px] text-[var(--color-text-dim)] ml-auto">
                         {event.timestamp ? timeAgo(event.timestamp as string) : '—'}
                       </span>
                     </div>
-                    {(event as { message?: string }).message && (
+                    {event.message && (
                       <p className="text-xs text-[var(--color-text-muted)] mt-0.5 truncate">
-                        {(event as { message?: string }).message}
+                        {event.message}
                       </p>
                     )}
-                    {(event as { namespace?: string }).namespace && (
+                    {event.namespace && (
                       <p className="text-[10px] text-[var(--color-text-dim)] mt-0.5 font-mono">
-                        ns: {(event as { namespace?: string }).namespace}
+                        ns: {event.namespace}
                       </p>
                     )}
                   </div>
