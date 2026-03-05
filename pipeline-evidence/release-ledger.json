@@ -426,5 +426,16 @@
     "changes": "Phase M UX audit v3 deep fixes (P0-P3, 18 items): E2E cleanup, critical UX bugs fixed",
     "status": "deployed",
     "health": "ok"
+  },
+  {
+    "version": "v187.1",
+    "timestamp": "2026-03-05T16:31:18.072369",
+    "services": {
+      "web": "v187.1",
+      "api": "v187.1"
+    },
+    "changes": "Patch: cluster selector localStorage hydration on direct nav + SSE text/event-stream MIME fix",
+    "status": "deployed",
+    "health": "ok"
   }
 ]
