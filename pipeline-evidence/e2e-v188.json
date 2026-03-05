@@ -1,0 +1,13 @@
+{
+  "agentId": "agent:e2e",
+  "version": "v188",
+  "verdict": "PASS",
+  "passed": 90,
+  "failed": 0,
+  "skipped": 15,
+  "total": 105,
+  "timestamp": "2026-03-05T18:55:00.000Z",
+  "commit": "e8ff29f",
+  "gate": "0 failures required",
+  "notes": "3 tests initially showed timeout with --timeout=15000 override (api-tokens, multi-cluster E2E-2, pod-actions destructive). Re-ran with default 45s timeout — all 3 passed. No real failures. Duration: ~4min full suite."
+}

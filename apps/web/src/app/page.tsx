@@ -17,7 +17,6 @@ import { WidgetLibraryDrawer } from '@/components/dashboard/WidgetLibraryDrawer'
 import { useDashboardLayout } from '@/stores/dashboard-layout'
 import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { ProviderLogo } from '@/components/ProviderLogo'
-import { trpc } from '@/lib/trpc'
 import { toast } from 'sonner'
 import { SkeletonCard, SkeletonRow, SkeletonText } from '@/components/Skeleton'
 import {
@@ -336,16 +335,100 @@ function DashboardContent() {
     setFilters((prev) => ({ ...next, environment: prev.environment }))
   }, [])
 
+  // M-P3-004: Dashboard widget customization
+  const editMode = useDashboardLayout((s) => s.editMode)
+  const setEditMode = useDashboardLayout((s) => s.setEditMode)
+  const addWidget = useDashboardLayout((s) => s.addWidget)
+  const resetToDefault = useDashboardLayout((s) => s.resetToDefault)
+  const getLayoutForServer = useDashboardLayout((s) => s.getLayoutForServer)
+  const applyServerLayout = useDashboardLayout((s) => s.applyServerLayout)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [widgetMode, setWidgetMode] = useState(false)
+
+  const saveLayoutMutation = trpc.dashboardLayout.save.useMutation({
+    onSuccess: () => toast.success('Layout saved'),
+    onError: () => toast.error('Failed to save layout'),
+  })
+
+  const serverLayoutQuery = trpc.dashboardLayout.get.useQuery(undefined)
+  useEffect(() => {
+    if (serverLayoutQuery.data) applyServerLayout(serverLayoutQuery.data)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverLayoutQuery.data])
+
+  const handleSaveLayout = async () => {
+    const layout = getLayoutForServer()
+    await saveLayoutMutation.mutateAsync(layout)
+    setEditMode(false)
+    setDrawerOpen(false)
+  }
+
+  const handleCancelEdit = () => {
+    setEditMode(false)
+    setDrawerOpen(false)
+  }
+
   let cardIndex = 0
 
   return (
     <AppLayout>
       <PageTransition>
-        <header className="mb-4">
+        <header className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
             Dashboard
           </h1>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setWidgetMode((v) => !v)}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
+                widgetMode
+                  ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30'
+                  : 'text-[var(--color-text-secondary)] hover:bg-white/[0.06] border border-[var(--color-border)]',
+              )}
+              data-testid="toggle-widget-mode-btn"
+              title="Toggle widget dashboard mode"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Widgets</span>
+            </button>
+            {widgetMode && !editMode && (
+              <button
+                type="button"
+                onClick={() => setEditMode(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[var(--color-text-secondary)] hover:bg-white/[0.06] border border-[var(--color-border)] transition-all"
+                data-testid="customize-dashboard-btn"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Customize</span>
+              </button>
+            )}
+          </div>
         </header>
+
+        {/* M-P3-004: Widget dashboard mode */}
+        {widgetMode && (
+          <>
+            {editMode && (
+              <DashboardEditBar
+                onAddWidget={() => setDrawerOpen(true)}
+                onReset={resetToDefault}
+                onCancel={handleCancelEdit}
+                onSave={handleSaveLayout}
+              />
+            )}
+            <DashboardGrid />
+            <WidgetLibraryDrawer
+              open={drawerOpen}
+              onClose={() => setDrawerOpen(false)}
+              onAdd={(type) => { addWidget(type); setDrawerOpen(false) }}
+            />
+          </>
+        )}
+
+        {/* Legacy hardcoded layout (hidden when widget mode active) */}
+        {!widgetMode && (<>
 
         <div className="flex items-center justify-end gap-2 mb-1.5">
           <span className="text-[10px] text-[var(--color-text-dim)] font-mono">
@@ -595,6 +678,7 @@ function DashboardContent() {
             )}
           </div>
         </div>
+        </>)}
       </PageTransition>
     </AppLayout>
   )

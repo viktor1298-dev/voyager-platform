@@ -15,12 +15,14 @@ import { eq, gte, and, sql, avg, sum } from 'drizzle-orm'
 /** Shared constant for health-check polling interval (minutes) */
 const HEALTH_CHECK_INTERVAL_MINUTES = 5
 
-const timeRangeSchema = z.enum(['24h', '7d', '30d']).default('24h')
+const timeRangeSchema = z.enum(['1h', '6h', '24h', '7d', '30d']).default('24h')
 
 type TimeRange = z.infer<typeof timeRangeSchema>
 
 /** Interval configuration per time range */
 const TIME_RANGE_CONFIG: Record<TimeRange, { intervalMs: number; points: number }> = {
+  '1h': { intervalMs: 60 * 1000, points: 60 },
+  '6h': { intervalMs: 5 * 60 * 1000, points: 72 },
   '24h': { intervalMs: 60 * 60 * 1000, points: 24 },
   '7d': { intervalMs: 6 * 60 * 60 * 1000, points: 28 },
   '30d': { intervalMs: 24 * 60 * 60 * 1000, points: 30 },
@@ -267,6 +269,102 @@ export const metricsRouter = router({
           cpuCores: null, memoryBytes: null,
           podCount: 0, timestamp: new Date().toISOString(),
         }
+      }
+    }),
+
+  /** M-P3-002: Per-cluster time-series from metricsHistory, bucketed by range */
+  history: protectedProcedure
+    .input(z.object({ clusterId: z.string().uuid(), range: timeRangeSchema }))
+    .query(async ({ input }) => {
+      const { intervalMs } = TIME_RANGE_CONFIG[input.range]
+      const start = getTimeRangeStart(input.range)
+
+      const rows = await db
+        .select()
+        .from(metricsHistory)
+        .where(and(
+          eq(metricsHistory.clusterId, input.clusterId),
+          gte(metricsHistory.timestamp, start),
+        ))
+        .orderBy(metricsHistory.timestamp)
+
+      if (rows.length === 0) return []
+
+      const startMs = start.getTime()
+      const buckets = new Map<string, { cpuSum: number; memSum: number; podSum: number; count: number }>()
+
+      for (const row of rows) {
+        const ts = bucketTimestamp(new Date(row.timestamp), intervalMs, startMs)
+        if (!buckets.has(ts)) buckets.set(ts, { cpuSum: 0, memSum: 0, podSum: 0, count: 0 })
+        const b = buckets.get(ts)!
+        b.cpuSum += row.cpuPercent
+        b.memSum += row.memPercent
+        b.podSum += row.podCount
+        b.count++
+      }
+
+      return Array.from(buckets.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([timestamp, b]) => ({
+          timestamp,
+          cpu: Math.round(b.cpuSum / b.count * 10) / 10,
+          memory: Math.round(b.memSum / b.count * 10) / 10,
+          pods: Math.round(b.podSum / b.count),
+        }))
+    }),
+
+  /** M-P3-002: Live per-node resource snapshot from K8s metrics-server */
+  nodeBreakdown: protectedProcedure
+    .input(z.object({ clusterId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      try {
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreApi = kc.makeApiClient(k8s.CoreV1Api)
+        const metricsClient = new k8s.Metrics(kc)
+
+        const [nodeMetrics, nodesResponse] = await Promise.all([
+          metricsClient.getNodeMetrics(),
+          coreApi.listNode(),
+        ])
+
+        const capacityMap = new Map<string, { cpuNano: number; memBytes: number; cpuAllocNano: number; memAllocBytes: number }>()
+        for (const node of nodesResponse.items) {
+          const name = node.metadata?.name
+          if (name) {
+            capacityMap.set(name, {
+              cpuNano: parseCpuToNano(node.status?.capacity?.cpu ?? '0'),
+              memBytes: parseMemToBytes(node.status?.capacity?.memory ?? '0'),
+              cpuAllocNano: parseCpuToNano(node.status?.allocatable?.cpu ?? '0'),
+              memAllocBytes: parseMemToBytes(node.status?.allocatable?.memory ?? '0'),
+            })
+          }
+        }
+
+        return nodeMetrics.items.map((node) => {
+          const name = node.metadata?.name ?? 'unknown'
+          const usedCpuNano = parseCpuToNano(node.usage?.cpu ?? '0')
+          const usedMemBytes = parseMemToBytes(node.usage?.memory ?? '0')
+          const cap = capacityMap.get(name)
+
+          const cpuPercent = cap && cap.cpuAllocNano > 0
+            ? Math.round((usedCpuNano / cap.cpuAllocNano) * 1000) / 10
+            : null
+          const memPercent = cap && cap.memAllocBytes > 0
+            ? Math.round((usedMemBytes / cap.memAllocBytes) * 1000) / 10
+            : null
+
+          return {
+            name,
+            cpuPercent,
+            memPercent,
+            cpuCores: +(usedCpuNano / 1e9).toFixed(2),
+            memGb: +(usedMemBytes / (1024 ** 3)).toFixed(2),
+            cpuAllocCores: cap ? +(cap.cpuAllocNano / 1e9).toFixed(2) : null,
+            memAllocGb: cap ? +(cap.memAllocBytes / (1024 ** 3)).toFixed(2) : null,
+          }
+        })
+      } catch {
+        return []
       }
     }),
 
