@@ -110,7 +110,7 @@ export function useKeyboardShortcuts(shortcuts?: ShortcutConfig[]) {
 }
 
 export const GLOBAL_SHORTCUTS = [
-  { keys: ['⌘K', '/ Ctrl+K'], description: 'Open command palette', group: 'Global' },
+  { keys: ['⌘K', 'Ctrl+K'], description: 'Open command palette', group: 'Global' },
   { keys: ['?'], description: 'Show keyboard shortcuts', group: 'Global' },
   { keys: ['G', 'D'], description: 'Go to Dashboard', group: 'Navigation' },
   { keys: ['G', 'C'], description: 'Go to Clusters', group: 'Navigation' },
