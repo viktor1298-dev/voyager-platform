@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { usePresence } from '@/hooks/usePresence'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { useAuthStore } from '@/stores/auth'
 
 function initialsFromName(name: string) {
   return name
@@ -16,8 +17,11 @@ function initialsFromName(name: string) {
 export function PresenceBar() {
   const reduced = useReducedMotion()
   const { onlineUsers } = usePresence()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
-  const count = onlineUsers.length
+  // Ensure count is at least 1 when the current user is authenticated
+  // (presence backend may not have processed the heartbeat yet on first load)
+  const count = Math.max(onlineUsers.length, isAuthenticated ? 1 : 0)
 
   return (
     <div className="h-10 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/85 backdrop-blur-lg flex items-center px-3 sm:px-6">

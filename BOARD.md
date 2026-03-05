@@ -694,7 +694,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🔴 M-P0 — Critical Bugs (Enterprise Blockers — Fix First)
 
-- [ ] **M-P0-001: Theme Toggle Broken — CSS Class Not Applied to `<html>`**
+- [x] **M-P0-001: Theme Toggle Broken — CSS Class Not Applied to `<html>`**
   - **Problem:** The theme toggle button cycles `Light → System → Dark` label states but does NOT apply `class="dark"` to `document.documentElement`. The whole theme system is broken at the root — dark mode only works after manually injecting the class via JS.
   - **Root cause:** The `useTheme` hook (or `ThemeProvider`) updates state but the `useEffect` that syncs state → DOM is missing or race-conditions on SSR hydration.
   - **Fix:** In the theme provider, ensure the side-effect fires:
@@ -715,7 +715,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** Vercel and Linear both have flawless, instant theme switching.
   - **Effort:** XS (30 min)
 
-- [ ] **M-P0-002: Raw JSON Error Messages Shown to Users**
+- [x] **M-P0-002: Raw JSON Error Messages Shown to Users**
   - **Problem:** Multiple pages (`/logs`, `/deployments`) display raw Zod/tRPC validation errors: `[{"expected":"string","code":"invalid_type","path":["accessKeyId"],"message":"Invalid input: expected string, received undefined"}]`. This is completely unreadable to users and a hard enterprise deal-killer.
   - **Fix:**
     1. Add a global `ErrorBoundary` component that catches tRPC/fetch errors
@@ -735,7 +735,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** Vercel's error states always have CTA. Grafana shows "Data source is not configured" with a direct config link.
   - **Effort:** S (2-3 hours)
 
-- [ ] **M-P0-003: 308 E2E Test Artifacts Polluting Alerts Page**
+- [x] **M-P0-003: 308 E2E Test Artifacts Polluting Alerts Page**
   - **Problem:** The Alerts page shows 308 alert rules, almost all named `Toggle-Alert-177269XXXXX` or `E2E-Alert-177269XXXXX` — automated test artifacts never cleaned up. Page is completely unusable for real alert management. Pagination shows "1-25 of 308."
   - **Fix:**
     1. **Immediate DB cleanup:** Run migration to delete all test artifacts:
@@ -747,7 +747,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Expected result after fix:** Alerts page shows only real/demo alerts. E2E runs clean up after themselves. Bulk actions work.
   - **Effort:** S (1-2 hours for cleanup + E2E hooks)
 
-- [ ] **M-P0-004: Cluster Selector Resets on Navigation — Context Not Persisted**
+- [x] **M-P0-004: Cluster Selector Resets on Navigation — Context Not Persisted**
   - **Problem:** Selecting `vik-minikube` on the dashboard doesn't persist when navigating to Deployments, Logs, or Services. Header shows "Select Cluster" and pages fail with JSON errors. Users must re-select a cluster on every page.
   - **Fix:**
     1. Store selected cluster ID in a Zustand store with `persist` middleware (localStorage)
@@ -758,13 +758,13 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** Lens maintains cluster context persistently. Rancher uses URL-based routing `/c/{cluster-id}/...`.
   - **Effort:** M (4-6 hours)
 
-- [ ] **M-P0-005: "ONLINE 0" User Count is Broken**
+- [x] **M-P0-005: "ONLINE 0" User Count is Broken**
   - **Problem:** Every page header shows "● ONLINE 0" — the current user themselves should count as at least 1. The badge shows 0 which is either a bug in the presence system or the feature was never fully implemented.
   - **Fix:** Fix the WebSocket/SSE presence counter to correctly count connected users (minimum 1 when logged in). If the presence feature is not ready, remove the "0 users online" text — show just the "ONLINE" badge or a simple connection indicator.
   - **Expected result after fix:** Shows "● ONLINE 1" (or "● ONLINE" without the count) while logged in.
   - **Effort:** XS (30 min)
 
-- [ ] **M-P0-006: Cluster Detail Breadcrumb Shows UUID Instead of Name**
+- [x] **M-P0-006: Cluster Detail Breadcrumb Shows UUID Instead of Name**
   - **Problem:** Cluster detail page breadcrumb shows `Clusters > f907d8f1…132d72` (truncated UUID) instead of `Clusters > vik-minikube`. This is a debug artifact that should never reach production.
   - **Fix:** In the cluster detail page, look up the cluster name from the route param (cluster ID) using the cluster list query and use it in the breadcrumb component.
   - **Expected result after fix:** Breadcrumb always shows human-readable name: `Clusters > vik-minikube`.

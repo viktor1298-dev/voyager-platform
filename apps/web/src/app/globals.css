@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* M-P0-001: Configure Tailwind v4 to use class-based dark mode (html.dark)
+   so that dark: utility variants work alongside next-themes ThemeProvider. */
+@variant dark (&:where(.dark, .dark *));
+
 @property --gradient-angle {
   syntax: "<angle>";
   initial-value: 0deg;

@@ -10,6 +10,7 @@ import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { trpc } from '@/lib/trpc'
+import { useClusterContext } from '@/stores/cluster-context'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Box, Loader2, RefreshCw, Scale } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -117,12 +118,16 @@ function ScaleDialog({ deployment, onClose }: { deployment: Deployment; onClose:
 
 export default function DeploymentsPage() {
   const isAdmin = useIsAdmin()
+  const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const [isClient, setIsClient] = useState(false)
   const [scaleTarget, setScaleTarget] = useState<Deployment | null>(null)
   const [confirmRestart, setConfirmRestart] = useState<Deployment | null>(null)
   const [namespaceFilter, setNamespaceFilter] = useState<string>('all')
 
-  const deploymentsQuery = trpc.deployments.list.useQuery(undefined, { refetchInterval: 30_000 })
+  const deploymentsQuery = trpc.deployments.list.useQuery(
+    activeClusterId ? { clusterId: activeClusterId } : undefined,
+    { refetchInterval: 30_000 },
+  )
   const deployQueryKey = [['deployments', 'list'], { type: 'query' }] as const
 
   const restartMutation = trpc.deployments.restart.useMutation(

@@ -530,7 +530,7 @@ export default function ClusterDetailPage() {
 
   return (
     <AppLayout>
-      <Breadcrumbs />
+      <Breadcrumbs segmentLabels={{ [id]: cluster.name }} />
 
       <button
         type="button"

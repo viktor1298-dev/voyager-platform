@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { QueryError } from '@/components/ErrorBoundary'
 import { Shimmer } from '@/components/Skeleton'
 import { trpc } from '@/lib/trpc'
+import { useClusterContext } from '@/stores/cluster-context'
 import { Download, FileText, Pause, Play, RefreshCw, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -120,6 +121,7 @@ function SelectField({
 }
 
 export default function LogsPage() {
+  const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const [selectedNamespace, setSelectedNamespace] = useState<string>('')
   const [selectedPods, setSelectedPods] = useState<string[]>([]) // keys: namespace/pod
 
@@ -136,7 +138,10 @@ export default function LogsPage() {
   const logEndRef = useRef<HTMLDivElement>(null)
 
   const podsQuery = trpc.logs.pods.useQuery(
-    selectedNamespace ? { namespace: selectedNamespace } : undefined,
+    {
+      ...(selectedNamespace ? { namespace: selectedNamespace } : {}),
+      ...(activeClusterId ? { clusterId: activeClusterId } : {}),
+    },
     { refetchOnWindowFocus: false },
   )
 

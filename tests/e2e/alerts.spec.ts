@@ -1,5 +1,33 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { login } from './helpers';
+
+const BASE_URL = process.env.BASE_URL ?? 'http://voyager-platform.voyagerlabs.co';
+
+/** Delete a test-created alert rule by name via API to prevent artifact accumulation. */
+async function cleanupAlert(page: Page, alertName: string): Promise<void> {
+  try {
+    // Use the tRPC API to delete the alert by name
+    await page.evaluate(async (name) => {
+      const res = await fetch('/trpc/alerts.list', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!res.ok) return;
+      const data = await res.json() as { result?: { data?: { json?: Array<{ id: string; name: string }> } } };
+      const alerts = data.result?.data?.json ?? [];
+      const target = alerts.find((a) => a.name === name);
+      if (!target) return;
+      await fetch('/trpc/alerts.delete', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: target.id }),
+      });
+    }, alertName);
+  } catch {
+    // Best-effort cleanup — do not fail test on cleanup error
+  }
+}
 
 test.describe('Alerts — CRUD + History', () => {
   test.beforeEach(async ({ page }) => {
@@ -25,6 +53,7 @@ test.describe('Alerts — CRUD + History', () => {
 
     // Fill form
     const alertName = `E2E-Alert-${Date.now()}`;
+    test.info().annotations.push({ type: 'e2e-created-alert', description: alertName });
     await page.getByLabel(/alert name/i).fill(alertName);
     await page.locator('select').filter({ has: page.locator('option[value="cpu"]') }).selectOption('memory');
     await page.getByLabel(/operator/i).selectOption('gt');
@@ -43,6 +72,9 @@ test.describe('Alerts — CRUD + History', () => {
     await expect(alertEl).toBeVisible({ timeout: 10_000 });
     await expect(page.locator('table').getByText('Memory Usage').first()).toBeVisible();
     await expect(page.getByText('Memory Usage').first()).toBeAttached();
+
+    // Cleanup: remove test artifact
+    await cleanupAlert(page, alertName);
   });
 
   test('should toggle alert enabled/disabled', async ({ page }) => {
@@ -77,6 +109,9 @@ test.describe('Alerts — CRUD + History', () => {
     await page.waitForTimeout(500);
     await enableBtn.click({ force: true });
     await expect(page.getByRole('button', { name: new RegExp(`disable alert ${alertName}`, 'i') })).toHaveText('ON', { timeout: 5_000 });
+
+    // Cleanup: remove test artifact
+    await cleanupAlert(page, alertName);
   });
 
   test('should delete an alert rule', async ({ page }) => {
@@ -109,6 +144,7 @@ test.describe('Alerts — CRUD + History', () => {
 
     // Verify alert is removed
     await expect(page.locator('table').getByText(alertName).first()).toBeHidden({ timeout: 15_000 });
+    // Note: alert was deleted during the test itself — no additional cleanup needed
   });
 
   test('should show empty state when no alerts exist', async ({ page }) => {
