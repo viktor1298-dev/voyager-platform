@@ -345,7 +345,7 @@ export default function KarpenterPage() {
           <button
             type="button"
             onClick={refetchAll}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-xs text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/60 hover:text-[var(--color-text-primary)] transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-xs text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/60 hover:text-[var(--color-text-primary)] transition-colors"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Refresh
@@ -384,7 +384,7 @@ export default function KarpenterPage() {
               searchable
               searchPlaceholder="Search NodePools…"
               mobileCard={(pool) => (
-                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3">
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium text-[var(--color-text-primary)]">
                       {pool.name}
@@ -410,7 +410,7 @@ export default function KarpenterPage() {
               searchable
               searchPlaceholder="Search node classes…"
               mobileCard={(nodeClass) => (
-                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3">
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3">
                   <p className="font-medium text-[var(--color-text-primary)]">{nodeClass.name}</p>
                   <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     AMI: {nodeClass.amiFamily}
@@ -440,7 +440,7 @@ export default function KarpenterPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3"
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">

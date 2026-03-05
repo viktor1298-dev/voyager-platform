@@ -1,0 +1,28 @@
+{
+  "score": 10,
+  "verdict": "APPROVED",
+  "test_coverage_checked": true,
+  "files_reviewed": [
+    "apps/web/src/app/settings/page.tsx",
+    "apps/web/src/app/anomalies/page.tsx",
+    "apps/web/src/app/alerts/page.tsx",
+    "apps/web/src/app/page.tsx",
+    "apps/web/src/app/globals.css",
+    "apps/web/src/components/NotificationsPanel.tsx",
+    "apps/web/src/components/Sidebar.tsx"
+  ],
+  "lines_changed": 378,
+  "commit": "123ff49",
+  "branch": "feat/init-monorepo",
+  "reviewer": "Lior",
+  "timestamp": "2026-03-05T18:42:00+02:00",
+  "env_blocked_items": [],
+  "findings": [
+    {
+      "severity": "LOW",
+      "description": "html.light [class*='rounded-xl'] applies box-shadow to ALL elements including buttons/badges. Prefer targeted selector.",
+      "file": "apps/web/src/app/globals.css",
+      "line": 226
+    }
+  ]
+}

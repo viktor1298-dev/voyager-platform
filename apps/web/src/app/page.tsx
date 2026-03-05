@@ -440,7 +440,7 @@ function DashboardContent() {
                 const health = normalizeLiveHealthStatus(c.healthStatus ?? c.status)
                 const dotClass = health === 'healthy' ? 'bg-[var(--color-status-active)]' : health === 'degraded' ? 'bg-[var(--color-status-warning)]' : health === 'error' ? 'bg-[var(--color-status-error)]' : 'bg-gray-400'
                 return (
-                  <Link key={c.id} href={`/clusters/${c.id}`} className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-[var(--color-border)]/50 hover:bg-white/[0.04] hover:border-[var(--color-border-hover)] transition-all">
+                  <Link key={c.id} href={`/clusters/${c.id}`} className="flex items-center gap-2 px-2.5 py-2 rounded-xl border border-[var(--color-border)]/50 hover:bg-white/[0.04] hover:border-[var(--color-border-hover)] transition-all">
                     <span className={`h-2.5 w-2.5 rounded-full ${dotClass} shrink-0 animate-pulse-slow`} />
                     <div className="min-w-0 flex-1">
                       <span className="text-xs font-medium text-[var(--color-text-primary)] truncate block">{c.name}</span>
@@ -568,7 +568,7 @@ function DashboardContent() {
               const healthColor = health === 'healthy' ? 'var(--color-status-active)' : health === 'degraded' ? 'var(--color-status-warning)' : 'var(--color-status-error)'
               const healthLabel = health === 'healthy' ? 'Healthy' : health === 'degraded' ? 'Degraded' : 'Critical'
               return (
-                <Link key={c.id} href={`/clusters/${c.id}`} className="flex flex-col gap-1 px-3 py-2.5 rounded-lg border border-[var(--color-border)]/50 hover:bg-muted/50 hover:border-[var(--color-border-hover)] transition-colors cursor-pointer">
+                <Link key={c.id} href={`/clusters/${c.id}`} className="flex flex-col gap-1 px-3 py-2.5 rounded-xl border border-[var(--color-border)]/50 hover:bg-muted/50 hover:border-[var(--color-border-hover)] transition-colors cursor-pointer">
                   <span className="text-xs font-semibold text-[var(--color-text-primary)] truncate">{c.name}</span>
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ color: healthColor, background: `color-mix(in srgb, ${healthColor} 12%, transparent)` }}>{healthLabel}</span>

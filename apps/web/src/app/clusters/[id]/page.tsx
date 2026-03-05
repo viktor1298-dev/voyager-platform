@@ -690,7 +690,7 @@ export default function ClusterDetailPage() {
             paginated
             pageSize={25}
             mobileCard={(node) => (
-              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-[var(--color-text-primary)] text-sm">{node.name}</span>
                   <span className="inline-flex items-center gap-1.5">
@@ -776,7 +776,7 @@ export default function ClusterDetailPage() {
             mobileCard={(event) => {
               const isWarning = event.type === 'Warning'
               return (
-                <div className={`p-3 rounded-lg border border-[var(--color-border)] ${isWarning ? 'bg-[var(--color-status-warning)]/[0.04]' : 'bg-[var(--color-bg-card)]'}`}>
+                <div className={`p-3 rounded-xl border border-[var(--color-border)] ${isWarning ? 'bg-[var(--color-status-warning)]/[0.04]' : 'bg-[var(--color-bg-card)]'}`}>
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ color: severityColor(event.type), background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)` }}>

@@ -40,7 +40,7 @@ export function AnomalyCard({ anomaly, onAcknowledge, onResolve }: AnomalyCardPr
   const SeverityIcon = severityMeta.icon
 
   return (
-    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-1.5">

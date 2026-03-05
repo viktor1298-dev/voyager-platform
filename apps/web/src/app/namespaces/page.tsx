@@ -106,7 +106,7 @@ export default function NamespacesPage() {
               isLoading={namespacesQuery.isLoading}
               emptyIcon={<FolderTree className="h-10 w-10" />}
               emptyTitle="No namespaces found"
-              emptyDescription="No Kubernetes namespaces found in this cluster."
+              emptyDescription="No namespaces found. Try switching to a different cluster."
             />
           )}
         </div>

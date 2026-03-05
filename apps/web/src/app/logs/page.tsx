@@ -110,7 +110,7 @@ function SelectField({
     <div className="space-y-1">
       <label className="text-xs font-medium text-[var(--color-text-muted)]">{label}</label>
       <select
-        className={`block ${className} rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] transition-colors`}
+        className={`block ${className} rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] transition-colors`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
@@ -327,7 +327,7 @@ export default function LogsPage() {
 
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/5"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/5"
               disabled={selectedTargets.length === 0}
               onClick={() => setIsPaused((v) => !v)}
             >
@@ -337,7 +337,7 @@ export default function LogsPage() {
 
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/5 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/5 disabled:opacity-50"
               disabled={!logsQuery.data?.lines.length}
               onClick={downloadLogs}
             >
@@ -445,7 +445,7 @@ export default function LogsPage() {
               <div
                 role="group"
                 aria-label="Log view mode"
-                className="inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1 text-xs"
+                className="inline-flex rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1 text-xs"
               >
                 <button
                   type="button"
@@ -545,7 +545,7 @@ export default function LogsPage() {
                       <div className="text-xs italic text-[var(--color-log-dim)]">No matching log lines</div>
                     ) : (
                       groupedLines.map(([groupKey, lines]) => (
-                        <div key={groupKey} className="rounded-lg border border-[var(--color-border)] overflow-hidden">
+                        <div key={groupKey} className="rounded-xl border border-[var(--color-border)] overflow-hidden">
                           <div className="bg-[var(--color-log-header)] px-3 py-1 text-xs text-cyan-300 font-mono">
                             {groupKey} ({lines.length})
                           </div>

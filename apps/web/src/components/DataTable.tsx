@@ -40,6 +40,7 @@ interface DataTableProps<TData> {
   emptyIcon?: ReactNode
   emptyTitle?: string
   emptyDescription?: string
+  emptyAction?: ReactNode
   /** Additional toolbar content (right side) */
   toolbar?: ReactNode
   /** Row click handler */
@@ -65,6 +66,7 @@ export function DataTable<TData>({
   emptyIcon,
   emptyTitle = 'No data found',
   emptyDescription,
+  emptyAction,
   toolbar,
   onRowClick,
   mobileCard,
@@ -179,7 +181,7 @@ export function DataTable<TData>({
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 aria-label={searchPlaceholder}
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
               />
             </div>
           )}
@@ -247,6 +249,7 @@ export function DataTable<TData>({
                 {emptyDescription && (
                   <p className="text-xs text-[var(--color-text-dim)] mt-1">{emptyDescription}</p>
                 )}
+                {emptyAction && <div className="mt-4">{emptyAction}</div>}
               </div>
             )}
 
@@ -266,6 +269,7 @@ export function DataTable<TData>({
                           {emptyDescription}
                         </p>
                       )}
+                      {emptyAction && <div className="mt-4">{emptyAction}</div>}
                     </div>
                   </td>
                 </tr>
@@ -378,7 +382,7 @@ function PaginationBtn({
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
-      className="p-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+      className="p-1.5 rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
     >
       {children}
     </button>

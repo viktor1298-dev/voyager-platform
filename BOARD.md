@@ -856,13 +856,13 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🟡 M-P2 — Polish Sprint (Premium Feel)
 
-- [ ] **M-P2-001: Card Border-Radius Consistency Pass**
+- [x] **M-P2-001: Card Border-Radius Consistency Pass**
   - **Problem:** At least 3 different border-radius values used on the same page: stat cards `rounded-lg` (~8px), health matrix cards `rounded-xl` (~12px), anomaly timeline `rounded-lg`, cluster cards with colored left borders using yet another radius.
   - **Fix:** Standardize across the entire app: `border-radius: 12px` for all cards/panels, `8px` for smaller elements (badges, tags, compact cards), `6px` for inputs and buttons.
   - **Expected result after fix:** Visual consistency — every card on every page uses the same border radius. No more mismatched corners.
   - **Effort:** XS (1 hour — search and replace across components)
 
-- [ ] **M-P2-002: Empty State Redesign — Contextual Tips + Better Guidance**
+- [x] **M-P2-002: Empty State Redesign — Contextual Tips + Better Guidance**
   - **Problem:** Empty states (Webhooks "No webhooks configured", Events "No events found", Recent Events "No recent events") are functional but generic. Just an icon + text + button, no illustrations, no contextual help, no personality.
   - **Fix:** Design contextual empty states for each page:
     - **Webhooks:** Flow diagram illustration + "Receive real-time alerts in Slack, PagerDuty, or any HTTP endpoint. Set up your first webhook in 30 seconds."
@@ -873,7 +873,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** Linear's empty states use custom illustrations. Vercel shows contextual setup guides.
   - **Effort:** S (2-3 hours — one reusable `<EmptyState>` component with page-specific props)
 
-- [ ] **M-P2-003: Pod Detail Drawer — Add Containers, Resources, Events, YAML Tabs**
+- [x] **M-P2-003: Pod Detail Drawer — Add Containers, Resources, Events, YAML Tabs**
   - **Problem:** Pod detail drawer shows Status, Namespace, Node, Age, and live logs. Missing: CPU/memory usage, container details, restart count, labels, pod events, and YAML view. For a K8s ops tool, this is essential debugging information.
   - **Fix:** Add tabs to the drawer:
     - **Overview tab:** Resource requests/limits, current CPU/memory usage as progress bars, restart count, labels as tags, annotations
@@ -885,7 +885,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Reference:** Lens pod detail is the gold standard. `kubectl describe pod` output is the minimum information bar.
   - **Effort:** M (5-7 hours)
 
-- [ ] **M-P2-004: Command Palette — Add Entity Search (Pods, Services, Deployments, Namespaces)**
+- [x] **M-P2-004: Command Palette — Add Entity Search (Pods, Services, Deployments, Namespaces)**
   - **Problem:** Command palette (`⌘K`) only shows navigation links, cluster shortcuts, and 2 actions (Toggle Theme, Keyboard Shortcuts). No search for actual K8s resources. For a power-user tool, this is severely limited.
   - **Fix:**
     1. Add "RESOURCES" section that searches: pods (by name across all clusters), services, deployments, namespaces
@@ -901,7 +901,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🔵 M-P3 — Strategic Improvements (Competitive Differentiators)
 
-- [ ] **M-P3-001: Keyboard-First Navigation System**
+- [x] **M-P3-001: Keyboard-First Navigation System**
   - **Problem:** No keyboard shortcuts beyond `⌘K`. K8s power users live in terminals — they expect keyboard shortcuts for everything. This is a significant gap vs GitHub (extensive shortcuts) and Linear (every action is accessible via keyboard).
   - **Fix:**
     1. Add global keyboard shortcut system

@@ -148,7 +148,7 @@ export function ApiTokensSection() {
                 setPage(0)
               }}
               aria-label="Search tokens"
-              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+              className="w-full pl-9 pr-3 py-2 text-sm rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus-visible:ring-2 focus-visible:ring-ring transition-colors"
             />
           </div>
 
@@ -232,7 +232,7 @@ export function ApiTokensSection() {
                   type="button"
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                   disabled={currentPage === 0}
-                  className="px-2 py-1 rounded-lg border border-[var(--color-border)] disabled:opacity-30 hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-ring"
+                  className="px-2 py-1 rounded-xl border border-[var(--color-border)] disabled:opacity-30 hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Previous page"
                 >
                   ←
@@ -244,7 +244,7 @@ export function ApiTokensSection() {
                   type="button"
                   onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                   disabled={currentPage >= totalPages - 1}
-                  className="px-2 py-1 rounded-lg border border-[var(--color-border)] disabled:opacity-30 hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-ring"
+                  className="px-2 py-1 rounded-xl border border-[var(--color-border)] disabled:opacity-30 hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Next page"
                 >
                   →

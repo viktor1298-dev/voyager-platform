@@ -331,7 +331,7 @@ export default function AnomaliesPage() {
                   onAcknowledge={acknowledgeAnomaly}
                   onResolve={resolveAnomaly}
                 />
-                <div className="mt-2 rounded-lg border border-[var(--color-border)] p-3">
+                <div className="mt-2 rounded-xl border border-[var(--color-border)] p-3">
                   <MetadataGrid metadata={row.original.metadata} />
                 </div>
               </motion.div>
@@ -362,7 +362,7 @@ function FilterSelect<T extends string>({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value as T)}
-        className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+        className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
       >
         {options.map((option) => (
           <option key={option} value={option}>

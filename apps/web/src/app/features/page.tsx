@@ -248,14 +248,14 @@ export default function FeatureFlagsPage() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search by name, description, or tag"
-                className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] pl-9 pr-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none"
+                className="h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] pl-9 pr-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none"
               />
             </label>
 
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-              className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
+              className="h-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
             >
               <option value="all">All statuses</option>
               <option value="on">On</option>
@@ -265,7 +265,7 @@ export default function FeatureFlagsPage() {
             <select
               value={environmentFilter}
               onChange={(event) => setEnvironmentFilter(event.target.value)}
-              className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
+              className="h-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
             >
               <option value="all">All envs</option>
               {environments.map((environment) => (
@@ -278,7 +278,7 @@ export default function FeatureFlagsPage() {
             <select
               value={tagFilter}
               onChange={(event) => setTagFilter(event.target.value)}
-              className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
+              className="h-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent)] focus:outline-none"
             >
               <option value="all">All tags</option>
               {tags.map((tag) => (
@@ -349,7 +349,7 @@ export default function FeatureFlagsPage() {
                       </div>
                     </header>
 
-                    <section className="mb-4 grid gap-3 rounded-lg border border-[var(--color-border)]/70 bg-[var(--color-bg-surface)]/40 p-3 text-xs">
+                    <section className="mb-4 grid gap-3 rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-surface)]/40 p-3 text-xs">
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-dim)]">
                         Targeting rules
                       </p>

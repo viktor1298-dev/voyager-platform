@@ -104,7 +104,7 @@ export default function ServicesPage() {
             <EmptyState
               icon={<Layers className="h-6 w-6" />}
               title="No services found"
-              description="No Kubernetes services found in this cluster."
+              description="No Kubernetes services found in this cluster. Try selecting a different namespace or cluster."
             />
           ) : (
             <DataTable
@@ -114,7 +114,7 @@ export default function ServicesPage() {
               searchPlaceholder="Search services…"
               emptyIcon={<Layers className="h-6 w-6" />}
               emptyTitle="No services found"
-              emptyDescription="No Kubernetes services found in this cluster."
+              emptyDescription="No Kubernetes services found in this cluster. Try selecting a different namespace or cluster."
             />
           )}
         </div>

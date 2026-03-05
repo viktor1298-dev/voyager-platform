@@ -243,7 +243,7 @@ function WebhooksPageContent() {
   const btnPrimary =
     'inline-flex items-center gap-2 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity cursor-pointer'
   const inputClass =
-    'w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)]'
+    'w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)]'
 
   if (isAdmin === null)
     return (
@@ -277,10 +277,12 @@ function WebhooksPageContent() {
           <div className="flex flex-col items-center justify-center py-16 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
             <Webhook className="h-10 w-10 mb-3 opacity-40" />
             <p className="text-sm font-medium mb-1">No webhooks configured</p>
-            <p className="text-xs text-[var(--color-text-dim)] mb-4">Create your first webhook to receive event notifications.</p>
+            <p className="text-xs text-[var(--color-text-dim)] mb-4 max-w-xs text-center">
+              Receive real-time alerts in Slack, PagerDuty, or any HTTP endpoint. Set up your first webhook in 30 seconds.
+            </p>
             <button type="button" onClick={() => router.push('/webhooks/new')} className={btnPrimary}>
               <Plus className="h-4 w-4" />
-              Add Webhook
+              Add First Webhook
             </button>
           </div>
         ) : (
@@ -293,7 +295,7 @@ function WebhooksPageContent() {
           emptyIcon={<Webhook className="h-10 w-10" />}
           emptyTitle="No webhooks configured"
           mobileCard={(hook) => (
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <span className="font-mono text-xs text-[var(--color-text-primary)] break-all">
                   {hook.url}
@@ -424,7 +426,7 @@ function WebhooksPageContent() {
                     await navigator.clipboard.writeText(secret)
                     toast.success('Secret copied')
                   }}
-                  className="rounded-lg border border-[var(--color-border)] px-3 text-[var(--color-text-secondary)] hover:bg-white/[0.06] cursor-pointer"
+                  className="rounded-xl border border-[var(--color-border)] px-3 text-[var(--color-text-secondary)] hover:bg-white/[0.06] cursor-pointer"
                 >
                   <Copy className="h-4 w-4" />
                 </button>
@@ -444,7 +446,7 @@ function WebhooksPageContent() {
               <button
                 type="button"
                 onClick={() => setShowAdd(false)}
-                className="rounded-lg border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.06] cursor-pointer"
+                className="rounded-xl border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.06] cursor-pointer"
               >
                 Cancel
               </button>

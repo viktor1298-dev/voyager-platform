@@ -321,9 +321,10 @@ export default function DeploymentsPage() {
                 searchPlaceholder={`Search in ${cluster.clusterName}...`}
                 loading={deploymentsQuery.isLoading}
                 emptyIcon={<Box className="h-7 w-7" />}
-                emptyTitle="No deployments in this cluster"
+                emptyTitle="No deployments tracked"
+                emptyDescription="Deploy an app or connect a CI/CD pipeline to start tracking deployments."
                 mobileCard={(deployment) => (
-                  <div className="p-3 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-card)] space-y-2">
+                  <div className="p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] space-y-2">
                     <div className="flex justify-between items-center gap-2">
                       <span className="text-[var(--color-text-primary)] font-medium text-sm truncate">{deployment.name}</span>
                       <StatusBadge status={deployment.status} />
@@ -355,8 +356,12 @@ export default function DeploymentsPage() {
           {!deploymentsQuery.isLoading && groupedByCluster.length === 0 && (
             <EmptyState
               icon={<Box className="h-8 w-8" />}
-              title="Select a cluster to view deployments"
-              description={namespaceFilter !== 'all' ? 'No deployments found for selected namespace' : undefined}
+              title="No deployments tracked for this cluster"
+              description={
+                namespaceFilter !== 'all'
+                  ? 'No deployments found for the selected namespace. Try switching namespaces.'
+                  : 'Deploy an app or connect a CI/CD pipeline to start tracking deployments here.'
+              }
             />
           )}
         </div>
