@@ -552,7 +552,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ### 🔴 Phase L-P0 — Blockers (v179 after QW)
 
-- [ ] **L-P0-001: Dashboard Redesign — Operational Command Center**
+- [x] **L-P0-001: Dashboard Redesign — Operational Command Center** [v185 2026-03-05]
   - CURRENT: Dashboard IS the cluster list — no operational overview
   - TARGET: Multi-panel overview: health matrix grid + resource gauges + anomaly timeline + recent events + cluster quick-access
   - Reference: Datadog Infrastructure Overview, Grafana Home
