@@ -8,7 +8,7 @@ test.describe('Optimistic UI + Motion Animations', () => {
 
   test('page navigation renders with transition', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('h2:has-text("Clusters")')).toBeVisible()
+    await expect(page.locator('h1:has-text("Clusters")')).toBeVisible()
 
     await page.click('a[href="/clusters"]')
     await expect(page.locator('h1:has-text("Clusters")')).toBeVisible()
@@ -69,7 +69,7 @@ test.describe('Optimistic UI + Motion Animations', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
 
     await page.goto('/')
-    await expect(page.locator('h2:has-text("Clusters")')).toBeVisible()
+    await expect(page.locator('h1:has-text("Clusters")')).toBeVisible()
 
     await page.click('a[href="/clusters"]')
     await expect(page.locator('h1:has-text("Clusters")')).toBeVisible()
