@@ -75,7 +75,7 @@ function ActivityLog({
           ))}
       </button>
 
-      <ul
+      {expanded && <ul
         id={`activity-log-${flagId}`}
         className="space-y-1.5"
       >
@@ -93,9 +93,9 @@ function ActivityLog({
             <span className="text-[var(--color-text-muted)] whitespace-nowrap ml-2">{formatDate(entry.at)}</span>
           </li>
         ))}
-      </ul>
+      </ul>}
 
-      {hasMore && (
+      {expanded && hasMore && (
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
