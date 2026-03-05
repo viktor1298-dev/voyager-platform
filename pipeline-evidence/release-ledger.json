@@ -404,5 +404,16 @@
     },
     "note": "Frontend-only deploy. API stays at v180.",
     "health": "ok"
+  },
+  {
+    "version": "v186",
+    "timestamp": "2026-03-05T03:54:34.170245",
+    "services": {
+      "web": "v186",
+      "api": "v180"
+    },
+    "changes": "Frontend only: features page collapsible, log viewer advanced, resource gauges, anomaly timeline",
+    "status": "deployed",
+    "health": "ok"
   }
 ]
