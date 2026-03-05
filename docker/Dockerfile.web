@@ -33,7 +33,8 @@ COPY apps/api/src apps/api/src
 COPY apps/api/tsconfig.json apps/api/tsconfig.json
 COPY packages/ packages/
 
-RUN pnpm --filter @voyager/web build
+# Force clean build — prevent stale .next cache from hiding source changes
+RUN rm -rf apps/web/.next && pnpm --filter @voyager/web build
 
 # ============================================================
 # Stage 3 — runner: minimal production image
