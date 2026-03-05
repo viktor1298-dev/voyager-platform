@@ -61,6 +61,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
+const CONFIG_CREDENTIAL_FIELDS = ['accessKeyId', 'secretAccessKey', 'kubeconfig', 'apiKey', 'token', 'credentials'] as const
+
 /** Parse raw tRPC/Zod JSON error messages into human-readable text. */
 function parseErrorMessage(raw: string): { title: string; description: string } {
   // Try to detect raw JSON Zod validation errors
@@ -70,10 +72,9 @@ function parseErrorMessage(raw: string): { title: string; description: string } 
     if (arr && arr.length > 0) {
       const first = arr[0] as Record<string, unknown>
       // Check for known Zod field errors pointing to cloud/config fields
-      const configFields = ['accessKeyId', 'secretAccessKey', 'kubeconfig', 'apiKey', 'token', 'credentials']
       const hasConfigField = arr.some((e) => {
         const path = (e as Record<string, unknown>).path
-        return Array.isArray(path) && path.some((p) => configFields.includes(String(p)))
+        return Array.isArray(path) && path.some((p) => (CONFIG_CREDENTIAL_FIELDS as readonly string[]).includes(String(p)))
       })
       if (hasConfigField) {
         return {
