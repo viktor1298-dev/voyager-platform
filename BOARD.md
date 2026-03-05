@@ -558,7 +558,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - Reference: Datadog Infrastructure Overview, Grafana Home
   - Files: `apps/web/src/app/page.tsx`
 
-- [ ] **L-P0-002: System Health Page — Complete Overhaul**
+- [x] **L-P0-002: System Health Page — Complete Overhaul** [v185 2026-03-05]
   - CURRENT: "System Healthy ✓ | API status: ok" — embarrassingly empty
   - TARGET: Per-cluster component health matrix (API server, etcd, scheduler, controller-manager), API latency graph, sync status, uptime history, recent incidents timeline
   - Reference: Datadog Infrastructure, Grafana System Health
