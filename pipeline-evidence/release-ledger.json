@@ -394,5 +394,15 @@
     "status": "deployed",
     "health": "ok",
     "notes": "Stage 2: skeleton loading system + UI improvements"
+  },
+  {
+    "version": "v185",
+    "date": "2026-03-05T03:05:43.480581",
+    "services": {
+      "voyager-web": "v185",
+      "voyager-api": "v180"
+    },
+    "note": "Frontend-only deploy. API stays at v180.",
+    "health": "ok"
   }
 ]
