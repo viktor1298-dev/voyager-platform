@@ -1,28 +1,98 @@
 {
   "score": 10,
   "verdict": "APPROVED",
-  "test_coverage_checked": true,
-  "files_reviewed": [
-    "apps/web/src/app/settings/page.tsx",
-    "apps/web/src/app/anomalies/page.tsx",
-    "apps/web/src/app/alerts/page.tsx",
-    "apps/web/src/app/page.tsx",
-    "apps/web/src/app/globals.css",
-    "apps/web/src/components/NotificationsPanel.tsx",
-    "apps/web/src/components/Sidebar.tsx"
-  ],
-  "lines_changed": 378,
-  "commit": "123ff49",
+  "version": "v189",
   "branch": "feat/init-monorepo",
-  "reviewer": "Lior",
-  "timestamp": "2026-03-05T18:42:00+02:00",
+  "features_reviewed": ["M-P3-002", "M-P3-003", "M-P3-004"],
+  "test_coverage_checked": true,
+  "e2e_tests_missing": false,
+  "files_reviewed": [
+    "tests/e2e/m-p3-features.spec.ts",
+    "apps/web/src/components/metrics/TimeRangeSelector.tsx",
+    "apps/web/src/components/metrics/AutoRefreshToggle.tsx",
+    "apps/web/src/components/metrics/NodeResourceBreakdown.tsx",
+    "apps/web/src/components/dashboard/WidgetConfigModal.tsx",
+    "apps/web/src/components/dashboard/WidgetLibraryDrawer.tsx",
+    "apps/web/src/components/ai/InlineAiPanel.tsx",
+    "apps/web/src/stores/dashboard-layout.ts"
+  ],
+  "lines_changed": 1800,
   "env_blocked_items": [],
   "findings": [
     {
       "severity": "LOW",
-      "description": "html.light [class*='rounded-xl'] applies box-shadow to ALL elements including buttons/badges. Prefer targeted selector.",
-      "file": "apps/web/src/app/globals.css",
-      "line": 226
+      "description": "E2E: 4x page.waitForTimeout (300ms, 3x 500ms) used for hydration/settle. Prefer waitForSelector or network idle instead.",
+      "file": "tests/e2e/m-p3-features.spec.ts",
+      "line": 68
+    },
+    {
+      "severity": "LOW",
+      "description": "CustomTooltip uses `any` type for recharts payload props. Define a proper TooltipPayload interface.",
+      "file": "apps/web/src/components/metrics/MetricsAreaChart.tsx",
+      "line": 51
+    },
+    {
+      "severity": "LOW",
+      "description": "AnyResponsiveGridLayout = React.ComponentType<any> — weak typing for dynamically-imported grid component.",
+      "file": "apps/web/src/components/dashboard/DashboardGrid.tsx",
+      "line": 19
+    },
+    {
+      "severity": "LOW",
+      "description": "MetricsRange type missing '30d' option which the backend timeRangeSchema supports.",
+      "file": "apps/web/src/components/metrics/TimeRangeSelector.tsx",
+      "line": 5
     }
-  ]
+  ],
+  "fixes_verified": [
+    {
+      "issue": "Missing E2E tests",
+      "status": "FIXED",
+      "evidence": "tests/e2e/m-p3-features.spec.ts — 9 tests covering M-P3-002 (metrics/TimeRangeSelector), M-P3-003 (InlineAiTrigger/Panel), M-P3-004 (dashboard customize). Uses BASE_URL, no localhost."
+    },
+    {
+      "issue": "Missing type='button' on TimeRangeSelector, AutoRefreshToggle, NodeResourceBreakdown",
+      "status": "FIXED",
+      "evidence": "All buttons confirmed with type='button' at correct lines."
+    },
+    {
+      "issue": "WidgetConfigModal missing role/aria-modal/focus-trap",
+      "status": "FIXED",
+      "evidence": "role='dialog', aria-modal='true', aria-labelledby, focus trap on Tab/Shift+Tab, auto-focus on open — all present."
+    },
+    {
+      "issue": "WidgetLibraryDrawer missing role/aria-label/focus-trap",
+      "status": "FIXED",
+      "evidence": "role='dialog', aria-modal='true', aria-label='Widget Library', Escape handler, focus trap — all present."
+    },
+    {
+      "issue": "InlineAiPanel stale closure on askQuestion",
+      "status": "FIXED",
+      "evidence": "useRef for contextType/contextData/clusterId + useCallback wrapping askQuestion — stale closure eliminated."
+    },
+    {
+      "issue": "widgetCounter module-level mutable state",
+      "status": "FIXED",
+      "evidence": "crypto.randomUUID() at dashboard-layout.ts:150 — no more counter."
+    },
+    {
+      "issue": "applyServerLayout unsafe type casts",
+      "status": "FIXED",
+      "evidence": "isWidget() and isLayoutItem() runtime guards at lines 192-213 — malformed data filtered, not cast."
+    }
+  ],
+  "positives": [
+    "All 6 MEDIUM blocking issues from v189 initial review fully resolved",
+    "E2E spec uses BASE_URL env var — no localhost hardcoding",
+    "Focus trap implementation is correct and idiomatic (Tab/Shift+Tab wrapping)",
+    "crypto.randomUUID() is the right approach for collision-free widget IDs",
+    "Type guards in applyServerLayout properly narrow unknown → Widget/LayoutItem",
+    "useCallback + useRef pattern for InlineAiPanel correctly solves stale closure",
+    "E2E tests handle data-conditional flows gracefully (skip when no anomalies)"
+  ],
+  "timestamp": "2026-03-06T01:31:00+02:00",
+  "reviewer": "Lior",
+  "re_review": true,
+  "previous_score": 6,
+  "previous_verdict": "CHANGES_REQUESTED"
 }

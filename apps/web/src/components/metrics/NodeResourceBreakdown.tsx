@@ -95,6 +95,7 @@ export function NodeResourceBreakdown({ nodes, className }: NodeResourceBreakdow
   return (
     <div className={cn('rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden', className)}>
       <button
+        type="button"
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors"
       >

@@ -137,8 +137,6 @@ interface DashboardLayoutState {
   applyServerLayout: (data: { widgets: unknown[]; layouts: Record<string, unknown[]> }) => void
 }
 
-let widgetCounter = 0
-
 export const useDashboardLayout = create<DashboardLayoutState>()(
   persist(
     (set, get) => ({
@@ -149,7 +147,7 @@ export const useDashboardLayout = create<DashboardLayoutState>()(
       setEditMode: (on) => set({ editMode: on }),
 
       addWidget: (type) => {
-        const id = `w-${type}-${++widgetCounter}`
+        const id = `w-${type}-${crypto.randomUUID()}`
         const meta = WIDGET_REGISTRY[type]
         const widget: Widget = { id, type }
         const { w, h, minW, minH } = meta.defaultSize
@@ -191,10 +189,31 @@ export const useDashboardLayout = create<DashboardLayoutState>()(
       },
 
       applyServerLayout: (data) => {
-        set({
-          widgets: data.widgets as Widget[],
-          layouts: data.layouts as ResponsiveLayouts,
-        })
+        // Runtime type guards — reject malformed server data instead of silent corruption
+        const isLayoutItem = (item: unknown): item is LayoutItem => {
+          if (typeof item !== 'object' || item === null) return false
+          const l = item as Record<string, unknown>
+          return (
+            typeof l['i'] === 'string' &&
+            typeof l['x'] === 'number' &&
+            typeof l['y'] === 'number' &&
+            typeof l['w'] === 'number' &&
+            typeof l['h'] === 'number'
+          )
+        }
+        const isWidget = (w: unknown): w is Widget => {
+          if (typeof w !== 'object' || w === null) return false
+          const obj = w as Record<string, unknown>
+          return typeof obj['id'] === 'string' && typeof obj['type'] === 'string' && obj['type'] in WIDGET_REGISTRY
+        }
+        const widgets = data.widgets.filter(isWidget)
+        const layouts: ResponsiveLayouts = {}
+        for (const [bp, items] of Object.entries(data.layouts)) {
+          if (Array.isArray(items)) {
+            layouts[bp] = items.filter(isLayoutItem)
+          }
+        }
+        set({ widgets, layouts })
       },
     }),
     {

@@ -29,6 +29,7 @@ export function AutoRefreshToggle({
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <button
+        type="button"
         onClick={() => onToggle(!enabled)}
         className={cn(
           'flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-mono font-medium transition-all',
@@ -45,6 +46,7 @@ export function AutoRefreshToggle({
           {INTERVALS.map((item) => (
             <button
               key={item.value}
+              type="button"
               onClick={() => onIntervalChange(item.value)}
               className={cn(
                 'px-2 py-1 text-[11px] font-mono transition-all',

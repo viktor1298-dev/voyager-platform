@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'motion/react'
 import { Send, X, Loader2 } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 
@@ -38,6 +38,34 @@ export function InlineAiPanel({
 
   const contextChatMutation = trpc.ai.contextChat.useMutation()
 
+  // Use refs to always capture the latest contextType/contextData/clusterId
+  // without re-triggering the open effect
+  const contextTypeRef = useRef(contextType)
+  const contextDataRef = useRef(contextData)
+  const clusterIdRef = useRef(clusterId)
+  useEffect(() => { contextTypeRef.current = contextType }, [contextType])
+  useEffect(() => { contextDataRef.current = contextData }, [contextData])
+  useEffect(() => { clusterIdRef.current = clusterId }, [clusterId])
+
+  const askQuestion = useCallback(async (prompt: string) => {
+    setMessages((prev) => [...prev, { role: 'user', content: prompt }])
+
+    try {
+      const result = await contextChatMutation.mutateAsync({
+        prompt,
+        context: { type: contextTypeRef.current, data: contextDataRef.current },
+        clusterId: clusterIdRef.current,
+      })
+      setMessages((prev) => [...prev, { role: 'assistant', content: result.answer }])
+    } catch (err) {
+      const msg =
+        err instanceof Error && err.message.includes('NO_API_KEY')
+          ? 'No AI key configured. Please add one in Settings → AI Keys.'
+          : 'Failed to get AI response. Please try again.'
+      setMessages((prev) => [...prev, { role: 'assistant', content: msg }])
+    }
+  }, [contextChatMutation])
+
   // Auto-ask initial prompt when panel opens
   useEffect(() => {
     if (open && !hasAskedInitial) {
@@ -49,32 +77,13 @@ export function InlineAiPanel({
       setMessages([])
       setHasAskedInitial(false)
     }
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, hasAskedInitial, initialPrompt, askQuestion])
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages])
-
-  async function askQuestion(prompt: string) {
-    setMessages((prev) => [...prev, { role: 'user', content: prompt }])
-
-    try {
-      const result = await contextChatMutation.mutateAsync({
-        prompt,
-        context: { type: contextType, data: contextData },
-        clusterId,
-      })
-      setMessages((prev) => [...prev, { role: 'assistant', content: result.answer }])
-    } catch (err) {
-      const msg =
-        err instanceof Error && err.message.includes('NO_API_KEY')
-          ? 'No AI key configured. Please add one in Settings → AI Keys.'
-          : 'Failed to get AI response. Please try again.'
-      setMessages((prev) => [...prev, { role: 'assistant', content: msg }])
-    }
-  }
 
   function handleFollowUp(e: React.FormEvent) {
     e.preventDefault()

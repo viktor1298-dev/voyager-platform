@@ -1,7 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Widget } from '@/stores/dashboard-layout'
 import { WIDGET_REGISTRY } from '@/stores/dashboard-layout'
 
@@ -11,9 +11,43 @@ interface WidgetConfigModalProps {
   onSave: (config: Record<string, unknown>) => void
 }
 
+const MODAL_TITLE_ID = 'widget-config-modal-title'
+
 export function WidgetConfigModal({ widget, onClose, onSave }: WidgetConfigModalProps) {
   const meta = WIDGET_REGISTRY[widget.type]
   const [config, setConfig] = useState<Record<string, unknown>>(widget.config ?? {})
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Focus the close button on open
+  useEffect(() => {
+    closeButtonRef.current?.focus()
+  }, [])
+
+  // Focus trap
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelectors))
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
 
   return (
     <div
@@ -21,19 +55,25 @@ export function WidgetConfigModal({ widget, onClose, onSave }: WidgetConfigModal
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={MODAL_TITLE_ID}
         className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
+            <h2 id={MODAL_TITLE_ID} className="text-base font-semibold text-[var(--color-text-primary)]">
               {meta.icon} {meta.title} — Settings
             </h2>
             <p className="text-xs text-[var(--color-text-dim)] mt-0.5">{meta.description}</p>
           </div>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
+            aria-label="Close settings"
             className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-white/10 text-[var(--color-text-secondary)] transition-colors"
           >
             <X className="h-4 w-4" />

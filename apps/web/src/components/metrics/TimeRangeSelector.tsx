@@ -28,6 +28,7 @@ export function TimeRangeSelector({ value, onChange, className }: TimeRangeSelec
       {RANGES.map((r) => (
         <button
           key={r.value}
+          type="button"
           onClick={() => onChange(r.value)}
           className={cn(
             'px-3 py-1 rounded-md text-xs font-mono font-medium transition-all',

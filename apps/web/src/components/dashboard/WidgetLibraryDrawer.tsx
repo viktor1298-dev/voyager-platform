@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { WIDGET_REGISTRY, type WidgetType } from '@/stores/dashboard-layout'
 
@@ -10,6 +11,42 @@ interface WidgetLibraryDrawerProps {
 }
 
 export function WidgetLibraryDrawer({ open, onClose, onAdd }: WidgetLibraryDrawerProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const drawerRef = useRef<HTMLDivElement>(null)
+
+  // Focus the close button when drawer opens
+  useEffect(() => {
+    if (open) {
+      closeButtonRef.current?.focus()
+    }
+  }, [open])
+
+  // Focus trap + Escape key
+  useEffect(() => {
+    if (!open) return
+    const drawer = drawerRef.current
+    if (!drawer) return
+    const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const focusable = Array.from(drawer.querySelectorAll<HTMLElement>(focusableSelectors))
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open, onClose])
+
   if (!open) return null
 
   return (
@@ -22,6 +59,10 @@ export function WidgetLibraryDrawer({ open, onClose, onAdd }: WidgetLibraryDrawe
 
       {/* Drawer */}
       <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Widget Library"
         className="fixed right-0 top-0 bottom-0 z-50 w-80 flex flex-col border-l border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-2xl"
         data-testid="widget-library-drawer"
       >
@@ -30,8 +71,10 @@ export function WidgetLibraryDrawer({ open, onClose, onAdd }: WidgetLibraryDrawe
             Widget Library
           </h2>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
+            aria-label="Close widget library"
             className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-white/10 text-[var(--color-text-secondary)] transition-colors"
           >
             <X className="h-4 w-4" />
