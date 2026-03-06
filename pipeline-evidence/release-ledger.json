@@ -475,5 +475,36 @@
     },
     "pods": 5,
     "notes": "Clean reinstall (helm uninstall + install). All pods Running 0 restarts. Functional verification passed."
+  },
+  {
+    "version": "v192-fix",
+    "sha": "7ec019b",
+    "timestamp": "2026-03-06T22:00:00+02:00",
+    "deployer": "uri",
+    "status": "success",
+    "notes": "Redeploy \u2014 fixed image tags. voyager-api:v192-fix + voyager-web:v192-fix CONFIRMED RUNNING. Health OK. Bundle verified (InlineAiPanel fix present).",
+    "imageTagsVerified": true,
+    "healthEndpoint": "ok",
+    "bundleVerified": true
+  },
+  {
+    "version": "v193",
+    "sha": "f555d7c",
+    "timestamp": "2026-03-06T23:53:31.290346",
+    "deployer": "uri",
+    "status": "success",
+    "helmRevision": 1,
+    "images": {
+      "api": "voyager-api:v193",
+      "web": "voyager-web:v193"
+    },
+    "pods": 5,
+    "build_times": {
+      "api": "1m47s (mostly cached)",
+      "web": "2m15s (full Next.js build)"
+    },
+    "health": "ok",
+    "login": "verified (token returned)",
+    "notes": "BUG-193-001 (gauge rings), BUG-193-002 (sparklines), BUG-193-003 (chart quality). Clean helm reinstall. All pods Running 0 restarts."
   }
 ]

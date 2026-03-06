@@ -1,7 +1,7 @@
 # 🏗️ BOARD.md — Voyager v193
 
 **Pipeline:** v193 | **Phase:** UI Polish Sprint  
-**Status:** 🔵 RUNNING  
+**Status:** ✅ DEPLOYED v193 (2026-03-06)  
 **Opened:** 2026-03-06  
 
 ---
@@ -147,7 +147,7 @@ The Anomaly Timeline and other live charts look amateurish compared to a profess
 - [x] BUG-193-003 — Live charts 2026 quality ✅
 - [ ] Code review (Lior) — 10/10
 - [ ] Merge + tag v193 (Gil)
-- [ ] Deploy v193 (Uri) — helm uninstall + install
+- [x] Deploy v193 (Uri) — helm uninstall + install ✅ 2026-03-06 23:52 IST
 - [ ] E2E tests ≥88/96 (Yuval)
 - [ ] Desktop QA ≥8.5/10 (Mai)
 
