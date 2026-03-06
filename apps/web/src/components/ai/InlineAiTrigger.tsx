@@ -1,7 +1,6 @@
 'use client'
 
 import { Sparkles } from 'lucide-react'
-import { trpc } from '@/lib/trpc'
 
 export type InlineAiTriggerVariant = 'button' | 'icon' | 'banner'
 
@@ -20,13 +19,19 @@ export function InlineAiTrigger({
   disabled,
   className,
 }: InlineAiTriggerProps) {
-  const keysQuery = trpc.ai.keySettingsStatus.useQuery({ provider: undefined })
-  const hasKey = (keysQuery.data?.length ?? 0) > 0
-  const isDisabled = disabled || !hasKey || keysQuery.isLoading
+  // BUG-192-001-v3 FIX: Removed trpc.ai.keySettingsStatus.useQuery from this component.
+  // That query was batched by tRPC httpBatchLink with other critical queries
+  // (events.list, clusters.live, etc.) into a combined URL like:
+  //   /trpc/events.list,...,ai.keySettingsStatus?batch=1
+  // The deployed Nginx proxy returned 404 for this long comma-separated batch path,
+  // causing ALL batched queries to fail with retry loops that saturated React's
+  // concurrent scheduler → navigation transitions from /anomalies never completed.
+  //
+  // Fix: Always show the trigger as enabled. If no AI key is configured, the
+  // contextChat mutation returns a clear error message (handled in InlineAiPanel).
+  const isDisabled = disabled
 
-  const title = !hasKey
-    ? 'Configure an AI key in Settings → AI Keys to enable inline AI'
-    : label
+  const title = label
 
   if (variant === 'icon') {
     return (
