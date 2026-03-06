@@ -107,6 +107,7 @@
   --color-status-warning: #f6c042;
   --color-status-healthy: #10b981;
   --color-track: rgba(255, 255, 255, 0.08);
+  --color-gauge-track: rgba(255, 255, 255, 0.12);
   --color-chart-cpu: #6366f1;
   --color-chart-mem: #10b981;
   --color-chart-pods: #10b981;
@@ -164,6 +165,10 @@
   --gradient-text-default: linear-gradient(135deg, var(--color-text-primary), var(--color-accent));
   --gradient-text-healthy: linear-gradient(135deg, #10b981, #34d399);
   --gradient-text-warning: linear-gradient(135deg, #f59e0b, #fbbf24);
+
+  /* Chart grid lines */
+  --color-grid-line: rgba(128,128,128,0.12);
+  --color-grid-line-subtle: rgba(128,128,128,0.08);
 }
 
 /* Light theme overrides */
@@ -191,6 +196,7 @@ html.light {
   --color-badge-label: #0d1e37;
   --color-status-healthy: #059669;
   --color-track: rgba(0, 0, 0, 0.08);
+  --color-gauge-track: rgba(0, 0, 0, 0.10);
   --color-chart-cpu: #6366f1;
   --color-chart-mem: #059669;
   --color-chart-pods: #059669;
@@ -225,6 +231,10 @@ html.light {
   --watermark-opacity: 1;
 
   --gradient-text-default: linear-gradient(135deg, var(--color-text-primary), var(--color-accent));
+
+  /* Chart grid lines */
+  --color-grid-line: rgba(0,0,0,0.08);
+  --color-grid-line-subtle: rgba(0,0,0,0.05);
 }
 
 @media (max-width: 768px) {

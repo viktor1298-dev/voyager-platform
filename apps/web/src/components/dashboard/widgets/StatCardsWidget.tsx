@@ -2,9 +2,9 @@
 
 import { AlertTriangle, Bell, Container, LayoutGrid, Server } from 'lucide-react'
 import { animate, useMotionValue } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { SkeletonText } from '@/components/Skeleton'
-import { SparklineChart, generateMockTrend } from '@/components/charts/SparklineChart'
+import { SparklineChart, generateStableTimeSeries } from '@/components/charts/SparklineChart'
 import { trpc } from '@/lib/trpc'
 import { DB_CLUSTER_REFETCH_MS, LIVE_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { useClusterContext } from '@/stores/cluster-context'
@@ -87,7 +87,7 @@ function StatCard({
       </div>
       <span className="shrink-0 opacity-60" style={{ color }}>{icon}</span>
       {sparklineData && sparklineData.length > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 h-[50px] opacity-50 pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 h-[50px] opacity-50 pointer-events-none overflow-hidden">
           <SparklineChart data={sparklineData} color={sparklineColor ?? color} height={50} />
         </div>
       )}
@@ -115,12 +115,14 @@ export function StatCardsWidget() {
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
   const clusterCount = dbClusters.length + (liveData ? 1 : 0)
 
-  const sparklines = {
-    nodes: generateMockTrend(totalNodes || 3),
-    pods: generateMockTrend(runningPods || 8),
-    clusters: generateMockTrend(clusterCount || 2),
-    warnings: generateMockTrend(warningEvents || 1, 0.3),
-  }
+  // BUG-193-002: Use stable seeded PRNG — same metric name → same shape every render
+  const sparklines = useMemo(() => ({
+    nodes: generateStableTimeSeries('stat-nodes', totalNodes || 3),
+    pods: generateStableTimeSeries('stat-pods', runningPods || 8),
+    clusters: generateStableTimeSeries('stat-clusters', clusterCount || 2),
+    warnings: generateStableTimeSeries('stat-warnings', warningEvents || 1, 0.3),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), []) // stable seed → shape never changes; live values update the last point via generateStableTimeSeries
 
   return (
     <div className="h-full p-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 content-start">

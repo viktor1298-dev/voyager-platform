@@ -43,7 +43,7 @@ import {
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
-import { SparklineChart, generateMockTrend } from '@/components/charts/SparklineChart'
+import { SparklineChart, generateStableTimeSeries } from '@/components/charts/SparklineChart'
 
 interface ClusterCardData {
   id: string
@@ -77,7 +77,7 @@ const GAUGE_CENTER = 50
 const GAUGE_RADIUS = 40
 const GAUGE_STROKE_WIDTH = 10
 const GAUGE_CIRCUMFERENCE = 2 * Math.PI * GAUGE_RADIUS // ≈ 251.33
-const GAUGE_BG_OPACITY = 'rgba(255,255,255,0.06)'
+const GAUGE_BG_OPACITY = 'var(--color-gauge-track)'
 
 // ── Resource Utilization Thresholds ──
 const CPU_WARN_THRESHOLD = 60
@@ -269,13 +269,14 @@ function DashboardContent() {
   const runningPods = liveData?.runningPods ?? 0
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
 
-  // 24h sparkline trend data for dashboard stat cards
+  // 24h sparkline trend data — BUG-193-002: stable seeded PRNG, shape doesn't change per render
   const sparklines = useMemo(() => ({
-    nodes: generateMockTrend(totalNodes || 3),
-    pods: generateMockTrend(runningPods || 8),
-    clusters: generateMockTrend(clusterList.length || 2),
-    warnings: generateMockTrend(warningEvents || 1, 0.3),
-  }), [totalNodes, runningPods, clusterList.length, warningEvents])
+    nodes: generateStableTimeSeries('page-nodes', totalNodes || 3),
+    pods: generateStableTimeSeries('page-pods', runningPods || 8),
+    clusters: generateStableTimeSeries('page-clusters', clusterList.length || 2),
+    warnings: generateStableTimeSeries('page-warnings', warningEvents || 1, 0.3),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), []) // stable seed → consistent shape; last data point reflects current value
 
   const filterOptions = useMemo(() => {
     const statuses = new Set<string>()

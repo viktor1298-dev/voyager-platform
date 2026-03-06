@@ -1,42 +1,28 @@
 {
-  "status": "deployed-awaiting-review",
-  "version": "v192-fix",
-  "currentStage": "deployed",
+  "status": "deployed",
+  "version": "v193",
+  "currentStage": "DEPLOYED",
   "fixLoopCount": 1,
-  "timestamp": "2026-03-06T19:41:53+02:00",
-  "foremanResumed": "2026-03-06T19:15:00+02:00",
+  "timestamp": "2026-03-06T23:53:17.605985",
+  "branch": "feat/init-monorepo",
   "completedStages": [
     "dev",
     "review",
     "merge",
-    "deploy",
-    "e2e",
-    "fix-loop-001-deploy",
-    "v192-fix-deploy"
+    "deploy"
   ],
-  "failedStages": [
-    "qa"
-  ],
+  "failedStages": [],
   "completedItems": [
-    "BUG-192-002",
-    "BUG-192-003",
-    "BUG-192-004",
-    "BUG-192-005",
-    "BUG-192-006",
-    "FEAT-192-001"
+    "BUG-193-001",
+    "BUG-193-002",
+    "BUG-193-003"
   ],
-  "inProgress": [
-    "BUG-192-001"
-  ],
-  "rootCause": "InlineAiPanel: askQuestion useCallback depended on contextChatMutation (new ref every render) \u2192 N infinite re-render loops \u2192 React event queue saturated \u2192 ALL navigation unresponsive",
-  "fixCommit": "7f6d2e8",
-  "liorReview": "APPROVED 10/10",
-  "gitPush": "confirmed origin/feat/init-monorepo",
-  "deployStatus": "SUCCESS \u2014 voyager-web:v192-fix + voyager-api:v192-fix all pods Running",
-  "currentStep": "Yuval E2E testing (target \u226588/96)",
-  "targetTag": "v192-fix",
-  "deployedAt": "2026-03-06T19:41:53+02:00",
-  "deployedTag": "v192-fix",
-  "deployedCommit": "7f6d2e8",
-  "healthCheck": "ok"
+  "inProgress": [],
+  "previousVersion": "v192-fix",
+  "devCommit": "f555d7c",
+  "reviewScore": 10,
+  "reviewVerdict": "APPROVED",
+  "targetTag": "v193",
+  "notes": "Tag v193 created. Deploying via Uri.",
+  "deployedInK8s": "v193"
 }

@@ -1,8 +1,9 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useClusterContext } from '@/stores/cluster-context'
 import { trpc } from '@/lib/trpc'
-import { SparklineChart, generateMockTrend } from '@/components/charts/SparklineChart'
+import { SparklineChart, generateStableTimeSeries } from '@/components/charts/SparklineChart'
 import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
 
 export function ResourceChartsWidget() {
@@ -13,8 +14,11 @@ export function ResourceChartsWidget() {
   const cpuPct = statsQuery.data?.cpuPercent ?? 0
   const memPct = statsQuery.data?.memoryPercent ?? 0
 
-  const cpuTrend = generateMockTrend(cpuPct || 40)
-  const memTrend = generateMockTrend(memPct || 60)
+  // BUG-193-002: Stable seeded sparklines — shape is consistent across renders
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const cpuTrend = useMemo(() => generateStableTimeSeries('resource-cpu', cpuPct || 40), [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const memTrend = useMemo(() => generateStableTimeSeries('resource-mem', memPct || 60), [])
 
   return (
     <div className="h-full p-4 space-y-4">

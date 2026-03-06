@@ -1,0 +1,33 @@
+{
+  "agent": "ron",
+  "task": "BUG-192-001-v3",
+  "commit": "8155b2e",
+  "timestamp": "2026-03-06T20:07:49.000Z",
+  "branch": "feat/init-monorepo",
+  "status": "FIXED",
+  "investigation_method": "browser_console + kubectl_logs + source_analysis",
+  "root_cause": {
+    "bug_id": "BUG-192-001 + BUG-TRPC-001",
+    "description": "InlineAiTrigger called trpc.ai.keySettingsStatus.useQuery on every AnomalyCard (12 cards in md:hidden mobile view, in DOM on all viewports). TanStack Query's httpBatchLink batched this with events.list + clusters.live + clusters.list + metrics.currentStats + alerts.unacknowledgedCount = 6 procedures in one batch URL. The deployed Nginx proxy returned 404 for this long comma-separated batch path. ALL queries in the batch failed. TanStack Query's retry logic (max 3 retries) fired rapid state updates. React's concurrent scheduler was saturated processing these updates. Navigation startTransition never completed. pushState was never called. URL stayed on /anomalies.",
+    "confirmed_by": [
+      "Browser console: /trpc/events.list,clusters.live,clusters.list,metrics.currentStats,alerts.unacknowledgedCount,ai.keySettingsStatus?batch=1 → 404",
+      "pushState interceptor: installed but never called after Dashboard link click",
+      "element.click() JS trigger: DID navigate successfully (bypasses pointer events)",
+      "kubectl logs: confirmed individual queries (clusters.list, metrics.currentStats) return 200 but batch returns 404"
+    ],
+    "secondary_issue": "InlineAiPanel motion.div had pointerEvents:'none' in initial/animate/exit animation states (added in commit 7f6d2e8). With Motion v12.34 + React 19 concurrent rendering, this caused pointer event interference on the 12 hidden AnomalyCard panels. Removed as defensive fix."
+  },
+  "files_changed": [
+    "apps/web/src/components/ai/InlineAiTrigger.tsx",
+    "apps/web/src/components/ai/InlineAiPanel.tsx"
+  ],
+  "changes": {
+    "InlineAiTrigger.tsx": "Removed trpc.ai.keySettingsStatus.useQuery entirely. AI trigger always renders enabled. If no AI key configured, contextChat mutation returns error message handled by InlineAiPanel. Eliminates the query from the batch → batch no longer fails → navigation restored.",
+    "InlineAiPanel.tsx": "Removed pointerEvents from motion animation states (initial/animate/exit). height:0 + overflow:hidden is sufficient for hiding. No pointer event interference."
+  },
+  "build_verified": true,
+  "typescript_errors": "pre-existing (ignoreBuildErrors:true in next.config.ts)",
+  "requires_deploy": true,
+  "deploy_note": "Needs Docker build + helm upgrade to take effect. Previous v192-fix image still has the bug. New image from this commit will fix navigation.",
+  "mai_re_test": "Navigation from /anomalies should work after deploy. keySettingsStatus no longer in batch. Batch URL reverts to events.list,clusters.live,clusters.list,metrics.currentStats,alerts.unacknowledgedCount → 5 procedures, same as before ai.keySettingsStatus was added."
+}

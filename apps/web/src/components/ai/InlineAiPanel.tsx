@@ -112,9 +112,9 @@ export function InlineAiPanel({
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={prefersReduced ? false : { opacity: 0, height: 0, pointerEvents: 'none' as const }}
-          animate={{ opacity: 1, height: 'auto', pointerEvents: 'auto' as const }}
-          exit={prefersReduced ? { opacity: 0, pointerEvents: 'none' as const } : { opacity: 0, height: 0, pointerEvents: 'none' as const }}
+          initial={prefersReduced ? false : { opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={prefersReduced ? { opacity: 0 } : { opacity: 0, height: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           style={{ overflow: 'hidden' }}
         >

@@ -89,7 +89,7 @@ export function ClusterHealthWidget() {
             <div key={label} className="flex flex-col items-center gap-2">
               <div className="relative h-20 w-20">
                 <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                  <circle cx={GAUGE_CENTER} cy={GAUGE_CENTER} r={GAUGE_RADIUS} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={GAUGE_STROKE_WIDTH} />
+                  <circle cx={GAUGE_CENTER} cy={GAUGE_CENTER} r={GAUGE_RADIUS} fill="none" stroke="var(--color-gauge-track)" strokeWidth={GAUGE_STROKE_WIDTH} />
                   <circle cx={GAUGE_CENTER} cy={GAUGE_CENTER} r={GAUGE_RADIUS} fill="none" stroke={color} strokeWidth={GAUGE_STROKE_WIDTH} strokeLinecap="round"
                     strokeDasharray={`${(pct / 100) * GAUGE_CIRCUMFERENCE} ${GAUGE_CIRCUMFERENCE}`} className="transition-all duration-700" />
                 </svg>
