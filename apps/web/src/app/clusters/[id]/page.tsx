@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { AiContextCard } from '@/components/AiContextCard'
+import { AiInsightBanner } from '@/components/ai/AiInsightBanner'
 import { MetricsTimeSeriesPanel } from '@/components/metrics/MetricsTimeSeriesPanel'
 import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
@@ -368,6 +369,12 @@ export default function ClusterDetailPage() {
     },
   )
 
+  // M-P3-003: Fetch anomalies for AI insight chips
+  const anomaliesQuery = trpc.anomalies.list.useQuery(
+    { clusterId: resolvedId, page: 1, pageSize: 50 },
+    { staleTime: 60000 },
+  )
+
   const isLoading = effectiveIsLive ? liveQuery.isLoading : dbCluster.isLoading
 
   // useMemo MUST be called before any early return to satisfy Rules of Hooks
@@ -623,6 +630,28 @@ export default function ClusterDetailPage() {
         />
       )}
 
+      {/* M-P3-003: AI insight chips when anomalies detected */}
+      {(() => {
+        const anomalyItems = anomaliesQuery.data?.items ?? []
+        // Open anomalies = not yet acknowledged or resolved
+        const criticalCount = anomalyItems.filter(
+          (a: { severity: string; acknowledgedAt: unknown; resolvedAt: unknown }) =>
+            a.severity === 'critical' && !a.acknowledgedAt && !a.resolvedAt
+        ).length
+        const warningCount = anomalyItems.filter(
+          (a: { severity: string; acknowledgedAt: unknown; resolvedAt: unknown }) =>
+            a.severity === 'warning' && !a.acknowledgedAt && !a.resolvedAt
+        ).length
+        if (criticalCount === 0 && warningCount === 0) return null
+        return (
+          <AiInsightBanner
+            clusterId={resolvedId}
+            criticalAnomalyCount={criticalCount}
+            criticalAlertCount={warningCount}
+          />
+        )
+      })()}
+
       {/* Tabbed Layout */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="mb-4">
@@ -666,6 +695,12 @@ export default function ClusterDetailPage() {
               </div>
             ))}
           </div>
+
+          {/* M-P3-002: Real-time time-series charts in Overview */}
+          <div className="mb-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+            <MetricsTimeSeriesPanel clusterId={resolvedId} isLive={effectiveIsLive} compact />
+          </div>
+
           {/* Recent events preview */}
           <div>
             <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-2">Recent Events</h3>

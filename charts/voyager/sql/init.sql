@@ -419,9 +419,14 @@ CREATE TABLE IF NOT EXISTS "metrics_history" (
   "cpu_percent" real NOT NULL,
   "mem_percent" real NOT NULL,
   "pod_count" integer DEFAULT 0 NOT NULL,
-  "node_count" integer DEFAULT 0 NOT NULL
+  "node_count" integer DEFAULT 0 NOT NULL,
+  "network_bytes_in" bigint DEFAULT 0,
+  "network_bytes_out" bigint DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS "idx_metrics_history_cluster_ts" ON "metrics_history" ("cluster_id", "timestamp");
+-- M-P3-002: Add network columns to existing deployments (idempotent)
+ALTER TABLE "metrics_history" ADD COLUMN IF NOT EXISTS "network_bytes_in" bigint DEFAULT 0;
+ALTER TABLE "metrics_history" ADD COLUMN IF NOT EXISTS "network_bytes_out" bigint DEFAULT 0;
 
 -- Feature flags (missing table — added v190)
 CREATE TABLE IF NOT EXISTS "feature_flags" (

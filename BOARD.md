@@ -913,7 +913,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Expected result after fix:** Experienced users can navigate the entire app without touching the mouse. Keyboard shortcut guide is discoverable via `?`.
   - **Effort:** M (6-8 hours)
 
-- [ ] **M-P3-002: Real-Time Time-Series Resource Charts**
+- [x] **M-P3-002: Real-Time Time-Series Resource Charts** ✅ v191 2026-03-06
   - **Problem:** Resource utilization gauges show static "0%" values. No live-updating charts showing CPU/memory/network trends over time. Competitors (Datadog, Grafana, Lens) all show time-series resource data as a core feature.
   - **Fix:**
     1. Add time-series charts using Recharts or `@nivo/line` to the cluster detail Overview tab
@@ -924,8 +924,9 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Expected result after fix:** Cluster detail shows live-updating resource charts. Users can see CPU spike over last 24h, identify memory leaks, correlate with deployment events.
   - **Reference:** Datadog time-series charts are best-in-class. Lens shows real-time resource graphs per pod/node.
   - **Effort:** XL (15-20 hours)
+  - **Implemented:** MetricsTimeSeriesPanel in Overview tab (compact mode), metric toggles (CPU/Mem/Net In/Net Out/Pods), ResourceSparkline component, networkBytesIn/Out schema columns + collector, tRPC history endpoint updated
 
-- [ ] **M-P3-003: AI Assistant — Inline Integration Throughout App**
+- [x] **M-P3-003: AI Assistant — Inline Integration Throughout App**
   - **Problem:** AI Assistant is isolated on its own `/ai` page. The rest of the app has no AI integration — users must context-switch to ask about an anomaly or pod issue. Recommendations panel on the AI page is disconnected.
   - **Fix:**
     1. Add "Ask AI" button contextually throughout the app:
@@ -938,17 +939,16 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Expected result after fix:** AI assistance feels native to the workflow, not a separate tool. Users get proactive suggestions on critical pages without navigating away.
   - **Effort:** XL (25-35 hours)
 
-- [ ] **M-P3-004: Customizable Dashboard Widgets**
+- [x] **M-P3-004: Customizable Dashboard Widgets** _(v191 2026-03-06)_
   - **Problem:** Dashboard layout is fixed — everyone sees the same stat cards, health matrix, resource utilization, anomaly timeline. Different teams need different views (SRE wants alerts + resource metrics, developers want deployment status + logs).
   - **Fix:** Implement a configurable dashboard widget system:
     1. Widget library: stat cards, time-series charts, alert feed, deployment list, log tail, anomaly timeline
     2. Add/remove widgets via a "Customize Dashboard" panel
-    3. Drag-to-reorder within defined layout grid
-    4. Save layout per user (user preferences DB table)
-    5. "Default" layout for new users (current dashboard layout)
+    3. Drag-to-reorder within defined layout grid (react-grid-layout)
+    4. Save layout per user (dashboard_layouts DB table + localStorage persistence)
+    5. "Default" layout for new users (stat-cards, cluster-health, anomaly-timeline)
   - **Expected result after fix:** Each user configures their own dashboard view. SREs, developers, and managers see different default widgets.
-  - **Reference:** Grafana's dashboard customization is the industry standard. Datadog's custom dashboards are a core selling point.
-  - **Effort:** XL (35-45 hours)
+  - **Implemented:** `dashboard-layout` Zustand store, `DashboardGrid`, `DashboardEditBar`, `WidgetLibraryDrawer`, `WidgetWrapper`, `WidgetConfigModal`, 8 widget types (stat-cards, cluster-health, resource-charts, alert-feed, anomaly-timeline, deployment-list, log-tail, pod-status), tRPC `dashboardLayout` router with DB persistence, "Customize" button in dashboard header.
 
 ---
 
@@ -963,19 +963,19 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 
 ## 🐛 Bug Fixes — v190 (Priority: Critical)
 
-- [ ] **BUG-001: Clusters page "Failed to load data" — SQL schema mismatch**
+- [x] **BUG-001: Clusters page "Failed to load data" — SQL schema mismatch**
   - **Symptom:** Clusters page shows `Failed query: select "id", "name", "provider", "environment", "endpoint", "connection_config", "status", "health_status", "last_health_check", "last_connected_at", "version", "nodes_count", "credential_ref", "is_active", "created_at", "updated_at" from "clusters"` — query fails
   - **Root cause:** init.sql has old clusters schema (basic columns only). Drizzle migrations (0002_multi_provider_clusters.sql) added new columns (`connection_config`, `credential_ref`, `is_active`, `nodes_count`, etc.) that were never added to init.sql. Since migrate() was removed from server.ts, new columns don't exist in DB.
   - **Fix:** Update init.sql clusters table definition to include ALL columns from latest drizzle migrations. OR: run the missing migration SQL directly on the DB.
   - **Effort:** S (1-2 hours)
 
-- [ ] **BUG-002: Cannot add new cluster — returns error on submit**
+- [x] **BUG-002: Cannot add new cluster — returns error on submit**
   - **Symptom:** Clicking "+ Add Cluster" and submitting form returns error. Cluster gets partially created (appears in list as "Unknown" health, viewer access, 0 nodes) but is non-functional.
   - **Root cause:** Likely the same schema mismatch — INSERT fails on missing columns, partial insert succeeds for basic fields only.
   - **Fix:** Resolves automatically once BUG-001 is fixed (correct schema = correct INSERT).
   - **Effort:** Included in BUG-001
 
-- [ ] **BUG-003: Cannot remove broken/partial cluster — delete returns error**
+- [x] **BUG-003: Cannot remove broken/partial cluster — delete returns error**
   - **Symptom:** "minikube-local" cluster stuck in broken state. Delete action returns error.
   - **Fix:** After BUG-001 fix + fresh DB deploy, cluster table resets. OR: add SQL direct delete as immediate workaround.
   - **Effort:** XS (part of BUG-001 deploy)

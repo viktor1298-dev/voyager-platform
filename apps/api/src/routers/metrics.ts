@@ -291,15 +291,20 @@ export const metricsRouter = router({
       if (rows.length === 0) return []
 
       const startMs = start.getTime()
-      const buckets = new Map<string, { cpuSum: number; memSum: number; podSum: number; count: number }>()
+      const buckets = new Map<string, {
+        cpuSum: number; memSum: number; podSum: number
+        netInSum: number; netOutSum: number; count: number
+      }>()
 
       for (const row of rows) {
         const ts = bucketTimestamp(new Date(row.timestamp), intervalMs, startMs)
-        if (!buckets.has(ts)) buckets.set(ts, { cpuSum: 0, memSum: 0, podSum: 0, count: 0 })
+        if (!buckets.has(ts)) buckets.set(ts, { cpuSum: 0, memSum: 0, podSum: 0, netInSum: 0, netOutSum: 0, count: 0 })
         const b = buckets.get(ts)!
         b.cpuSum += row.cpuPercent
         b.memSum += row.memPercent
         b.podSum += row.podCount
+        b.netInSum += row.networkBytesIn ?? 0
+        b.netOutSum += row.networkBytesOut ?? 0
         b.count++
       }
 
@@ -310,6 +315,8 @@ export const metricsRouter = router({
           cpu: Math.round(b.cpuSum / b.count * 10) / 10,
           memory: Math.round(b.memSum / b.count * 10) / 10,
           pods: Math.round(b.podSum / b.count),
+          networkBytesIn: Math.round(b.netInSum / b.count),
+          networkBytesOut: Math.round(b.netOutSum / b.count),
         }))
     }),
 
