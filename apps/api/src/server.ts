@@ -1,4 +1,4 @@
-import { migrate } from 'drizzle-orm/node-postgres/migrator'
+// migrate import removed — schema handled by Helm sql/init.sql on postgres startup
 import { db } from '@voyager/db'
 import compress from '@fastify/compress'
 import cors from '@fastify/cors'
@@ -210,14 +210,7 @@ app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok'
 
 const start = async () => {
   try {
-    // Apply DB migrations before starting the server (replaces Helm hook)
-    try {
-      await migrate(db, { migrationsFolder: './drizzle' })
-      console.log('✅ Database migrations applied')
-    } catch (err) {
-      console.error('❌ Migration failed:', err)
-      process.exit(1)
-    }
+    // Schema is initialized by Helm sql/init.sql on postgres startup (no migrate() needed)
 
     await ensureAdminUser({ allowLocalDevDefaults: false })
 
