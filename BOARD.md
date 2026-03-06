@@ -1,6 +1,6 @@
 # BOARD.md — v192 Bug Fix + Feature Pipeline
 
-**Status:** RUNNING → Review Phase
+**Status:** DEPLOYED ✅ v192 — 2026-03-06 — Awaiting E2E + QA
 **Version:** v192
 **Base:** v191 (deployed)
 **Started:** 2026-03-06
@@ -38,4 +38,4 @@
 - Desktop QA (Mai): ≥8.5/10
 - VERSION: git tag v192 → docker → helm → state.json
 
-## Status: ALL 7 ITEMS CODED ✅ — Awaiting Lior Review
+## Status: ALL 7 ITEMS DEPLOYED ✅ — v192 LIVE at http://voyager-platform.voyagerlabs.co — Awaiting E2E (Yuval) + QA (Mai)
