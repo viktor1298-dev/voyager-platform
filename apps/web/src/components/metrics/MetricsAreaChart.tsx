@@ -238,7 +238,7 @@ export function MetricsAreaChart({
           {/* BUG-193-003: Subtle horizontal dashed grid lines */}
           <CartesianGrid
             strokeDasharray="3 6"
-            stroke="rgba(128,128,128,0.12)"
+            stroke="var(--color-grid-line)"
             vertical={false}
           />
 
@@ -248,7 +248,7 @@ export function MetricsAreaChart({
               key={val}
               yAxisId="percent"
               y={val}
-              stroke="rgba(128,128,128,0.08)"
+              stroke="var(--color-grid-line-subtle)"
               strokeDasharray="4 4"
             />
           ))}

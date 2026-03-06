@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
 import { Area, AreaChart, ResponsiveContainer } from 'recharts'
 
 interface SparklineChartProps {
@@ -97,41 +96,4 @@ export function generateStableTimeSeries(
   return points
 }
 
-/**
- * Calculate 24h delta: difference between last point (now) and first point (24h ago).
- */
-export function calculate24hDelta(timeSeries: number[]): number {
-  if (timeSeries.length < 2) return 0
-  const now = timeSeries[timeSeries.length - 1] ?? 0
-  const then = timeSeries[0] ?? 0
-  return now - then
-}
 
-/**
- * Legacy helper — generates 24 hourly data points.
- * @deprecated Use generateStableTimeSeries with a metricName for deterministic output.
- */
-export function generateMockTrend(base: number, volatility = 0.15): number[] {
-  return generateStableTimeSeries(`legacy-${base}`, base, volatility)
-}
-
-/**
- * Hook: returns stable sparkline data memoized by metricName.
- * Use this inside components to avoid re-generating on every render.
- */
-export function useStableSparkline(
-  metricName: string,
-  currentValue: number,
-  variance = 0.15,
-): { data: number[]; delta: number } {
-  const data = useMemo(
-    () => generateStableTimeSeries(metricName, currentValue, variance),
-    // Only recalculate when metricName changes; currentValue is baked into last point
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [metricName],
-  )
-
-  const delta = useMemo(() => calculate24hDelta(data), [data])
-
-  return { data, delta }
-}

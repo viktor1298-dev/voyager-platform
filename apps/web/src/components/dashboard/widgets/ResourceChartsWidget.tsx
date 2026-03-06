@@ -15,7 +15,9 @@ export function ResourceChartsWidget() {
   const memPct = statsQuery.data?.memoryPercent ?? 0
 
   // BUG-193-002: Stable seeded sparklines — shape is consistent across renders
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const cpuTrend = useMemo(() => generateStableTimeSeries('resource-cpu', cpuPct || 40), [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const memTrend = useMemo(() => generateStableTimeSeries('resource-mem', memPct || 60), [])
 
   return (
