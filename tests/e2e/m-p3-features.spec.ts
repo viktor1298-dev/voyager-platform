@@ -6,7 +6,40 @@ const BASE_URL = process.env.BASE_URL ?? 'http://voyager-platform.voyagerlabs.co
 /**
  * M-P3 Feature E2E Tests
  * Covers: M-P3-002 (Metrics tab), M-P3-003 (InlineAiTrigger), M-P3-004 (Dashboard customize)
+ *
+ * FIX v192: clusters/page.tsx uses <tr data-row> rows with router.push() onClick, NOT <a href="/clusters/..."> links.
+ * Navigation to cluster detail is done via:
+ *   - Row click: [data-row] (desktop table)
+ *   - Eye icon button: button[aria-label^="View cluster"] (ClusterActions component)
+ *
+ * FIX v192: Dashboard "Customize" button is inside widgetMode guard.
+ * Must click [data-testid="toggle-widget-mode-btn"] first, then [data-testid="customize-dashboard-btn"].
  */
+
+/** Navigate to the first cluster's detail page from the clusters list */
+async function navigateToFirstCluster(page: import('@playwright/test').Page) {
+  await page.goto(`${BASE_URL}/clusters`);
+  await page.waitForLoadState('domcontentloaded');
+
+  // Wait for clusters data to load — rows appear in the table
+  // Use the Eye-icon "View cluster" button from ClusterActions (aria-label="View cluster {name}")
+  // This is more reliable than clicking the row since the Eye button is the explicit navigation action
+  const viewBtn = page.locator('button[aria-label^="View cluster"]').first();
+  const hasViewBtn = await viewBtn.isVisible({ timeout: 15_000 }).catch(() => false);
+
+  if (hasViewBtn) {
+    await viewBtn.click();
+  } else {
+    // Fallback: click the first data row directly (desktop table uses <tr data-row>)
+    const dataRow = page.locator('tr[data-row]').first();
+    await expect(dataRow).toBeVisible({ timeout: 15_000 });
+    await dataRow.click();
+  }
+
+  // Wait for navigation to cluster detail page
+  await page.waitForURL(/\/clusters\/[^/]+/, { timeout: 15_000 });
+  await page.waitForLoadState('domcontentloaded');
+}
 
 test.describe('M-P3-002: Metrics Tab & TimeRangeSelector', () => {
   test.beforeEach(async ({ page }) => {
@@ -14,14 +47,7 @@ test.describe('M-P3-002: Metrics Tab & TimeRangeSelector', () => {
   });
 
   test('cluster detail page has Metrics tab', async ({ page }) => {
-    // Navigate to clusters list
-    await page.goto(`${BASE_URL}/clusters`);
-    await page.waitForLoadState('domcontentloaded');
-
-    // Click the first cluster link
-    const clusterLink = page.locator('a[href*="/clusters/"]').first();
-    await expect(clusterLink).toBeVisible({ timeout: 15_000 });
-    await clusterLink.click();
+    await navigateToFirstCluster(page);
 
     // Verify Metrics tab exists
     const metricsTab = page.locator('[role="tab"]:has-text("Metrics"), button:has-text("Metrics"), a:has-text("Metrics")').first();
@@ -29,12 +55,7 @@ test.describe('M-P3-002: Metrics Tab & TimeRangeSelector', () => {
   });
 
   test('TimeRangeSelector renders with range options when Metrics tab is active', async ({ page }) => {
-    await page.goto(`${BASE_URL}/clusters`);
-    await page.waitForLoadState('domcontentloaded');
-
-    const clusterLink = page.locator('a[href*="/clusters/"]').first();
-    await expect(clusterLink).toBeVisible({ timeout: 15_000 });
-    await clusterLink.click();
+    await navigateToFirstCluster(page);
 
     // Click Metrics tab
     const metricsTab = page.locator('[role="tab"]:has-text("Metrics"), button:has-text("Metrics")').first();
@@ -51,12 +72,7 @@ test.describe('M-P3-002: Metrics Tab & TimeRangeSelector', () => {
   });
 
   test('clicking a time range button updates selection', async ({ page }) => {
-    await page.goto(`${BASE_URL}/clusters`);
-    await page.waitForLoadState('domcontentloaded');
-
-    const clusterLink = page.locator('a[href*="/clusters/"]').first();
-    await expect(clusterLink).toBeVisible({ timeout: 15_000 });
-    await clusterLink.click();
+    await navigateToFirstCluster(page);
 
     const metricsTab = page.locator('[role="tab"]:has-text("Metrics"), button:has-text("Metrics")').first();
     await expect(metricsTab).toBeVisible({ timeout: 15_000 });
@@ -77,17 +93,10 @@ test.describe('M-P3-003: InlineAiTrigger on AnomalyCard', () => {
   });
 
   test('InlineAiTrigger button renders on AnomalyCard', async ({ page }) => {
-    // Navigate to anomalies or a cluster detail that shows anomaly cards
-    await page.goto(`${BASE_URL}/clusters`);
-    await page.waitForLoadState('domcontentloaded');
-
-    const clusterLink = page.locator('a[href*="/clusters/"]').first();
-    await expect(clusterLink).toBeVisible({ timeout: 15_000 });
-    await clusterLink.click();
-    await page.waitForLoadState('domcontentloaded');
+    // Navigate to a cluster detail that shows anomaly cards
+    await navigateToFirstCluster(page);
 
     // Look for InlineAiTrigger — typically an "Ask AI" button or AI icon within anomaly cards
-    // Try data-testid first, then fallback to text content
     const aiTrigger = page
       .locator('[data-testid="inline-ai-trigger"], button:has-text("Ask AI"), button[aria-label*="AI"], button[aria-label*="ai"]')
       .first();
@@ -115,13 +124,7 @@ test.describe('M-P3-003: InlineAiTrigger on AnomalyCard', () => {
   });
 
   test('InlineAiTrigger click opens InlineAiPanel', async ({ page }) => {
-    await page.goto(`${BASE_URL}/clusters`);
-    await page.waitForLoadState('domcontentloaded');
-
-    const clusterLink = page.locator('a[href*="/clusters/"]').first();
-    await expect(clusterLink).toBeVisible({ timeout: 15_000 });
-    await clusterLink.click();
-    await page.waitForLoadState('domcontentloaded');
+    await navigateToFirstCluster(page);
 
     const aiTrigger = page
       .locator('[data-testid="inline-ai-trigger"], button:has-text("Ask AI")')
@@ -146,49 +149,53 @@ test.describe('M-P3-004: Dashboard Customize & DashboardEditBar', () => {
     await login(page);
   });
 
-  test('Customize button exists on dashboard', async ({ page }) => {
+  /**
+   * Enter widget mode first (widgetMode guard), then click Customize.
+   * Dashboard "Customize" button is only rendered when widgetMode === true.
+   * Toggle widget mode via: [data-testid="toggle-widget-mode-btn"]
+   * Then Customize appears at: [data-testid="customize-dashboard-btn"]
+   */
+  async function enterWidgetModeAndCustomize(page: import('@playwright/test').Page) {
     await page.goto(BASE_URL);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(500); // Allow React hydration
 
-    const customizeBtn = page
-      .locator('button:has-text("Customize"), button[aria-label*="Customize"], [data-testid="customize-dashboard"]')
-      .first();
-    await expect(customizeBtn).toBeVisible({ timeout: 15_000 });
+    // First enable widget mode (required for Customize button to appear)
+    const widgetModeBtn = page.locator('[data-testid="toggle-widget-mode-btn"]');
+    await expect(widgetModeBtn).toBeVisible({ timeout: 15_000 });
+    await widgetModeBtn.click();
+    await page.waitForTimeout(300);
+
+    // Now Customize button should be visible
+    const customizeBtn = page.locator('[data-testid="customize-dashboard-btn"]');
+    await expect(customizeBtn).toBeVisible({ timeout: 10_000 });
+    return customizeBtn;
+  }
+
+  test('Customize button exists on dashboard (in widget mode)', async ({ page }) => {
+    const customizeBtn = await enterWidgetModeAndCustomize(page);
+    await expect(customizeBtn).toBeVisible();
   });
 
   test('clicking Customize shows DashboardEditBar', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
-
-    const customizeBtn = page
-      .locator('button:has-text("Customize"), button[aria-label*="Customize"], [data-testid="customize-dashboard"]')
-      .first();
-    await expect(customizeBtn).toBeVisible({ timeout: 15_000 });
+    const customizeBtn = await enterWidgetModeAndCustomize(page);
     await customizeBtn.click();
 
-    // DashboardEditBar should appear — check for "Add Widget", "Reset", or "Done" buttons
-    const editBar = page
-      .locator('[data-testid="dashboard-edit-bar"], button:has-text("Add Widget"), button:has-text("Done"), button:has-text("Reset")')
-      .first();
+    // DashboardEditBar should appear with edit mode indicator and buttons
+    const editBar = page.locator('[data-testid="dashboard-edit-bar"]');
     await expect(editBar).toBeVisible({ timeout: 10_000 });
   });
 
   test('DashboardEditBar has Add Widget button that opens widget library', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
-
-    // Enter edit mode
-    const customizeBtn = page
-      .locator('button:has-text("Customize"), [data-testid="customize-dashboard"]')
-      .first();
-    await expect(customizeBtn).toBeVisible({ timeout: 15_000 });
+    const customizeBtn = await enterWidgetModeAndCustomize(page);
     await customizeBtn.click();
 
-    // Click Add Widget
-    const addWidgetBtn = page.locator('button:has-text("Add Widget"), [data-testid="add-widget-btn"]').first();
+    // Edit bar should be visible
+    const editBar = page.locator('[data-testid="dashboard-edit-bar"]');
+    await expect(editBar).toBeVisible({ timeout: 10_000 });
+
+    // Click Add Widget button
+    const addWidgetBtn = page.locator('[data-testid="add-widget-btn"]');
     await expect(addWidgetBtn).toBeVisible({ timeout: 10_000 });
     await addWidgetBtn.click();
 

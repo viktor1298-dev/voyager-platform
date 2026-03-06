@@ -32,26 +32,36 @@ export function InlineAiPanel({
 }: InlineAiPanelProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [followUp, setFollowUp] = useState('')
-  const [hasAskedInitial, setHasAskedInitial] = useState(false)
+  // Track whether the initial prompt has been sent for the current open session
+  const hasAskedInitialRef = useRef(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const prefersReduced = useReducedMotion()
 
   const contextChatMutation = trpc.ai.contextChat.useMutation()
 
-  // Use refs to always capture the latest contextType/contextData/clusterId
-  // without re-triggering the open effect
+  // Use refs to always capture the latest contextType/contextData/clusterId/initialPrompt
+  // This avoids stale closures without adding them as effect dependencies
   const contextTypeRef = useRef(contextType)
   const contextDataRef = useRef(contextData)
   const clusterIdRef = useRef(clusterId)
+  const initialPromptRef = useRef(initialPrompt)
+  // Keep mutation ref stable — useMutation returns a new object each render,
+  // so we store it in a ref to avoid making askQuestion re-create on each render
+  const mutationRef = useRef(contextChatMutation)
   useEffect(() => { contextTypeRef.current = contextType }, [contextType])
   useEffect(() => { contextDataRef.current = contextData }, [contextData])
   useEffect(() => { clusterIdRef.current = clusterId }, [clusterId])
+  useEffect(() => { initialPromptRef.current = initialPrompt }, [initialPrompt])
+  // Always keep mutationRef current without causing re-renders of askQuestion
+  mutationRef.current = contextChatMutation
 
+  // askQuestion is stable — it never changes reference because it only uses refs
+  // This prevents the useEffect below from re-firing on every render
   const askQuestion = useCallback(async (prompt: string) => {
     setMessages((prev) => [...prev, { role: 'user', content: prompt }])
 
     try {
-      const result = await contextChatMutation.mutateAsync({
+      const result = await mutationRef.current.mutateAsync({
         prompt,
         context: { type: contextTypeRef.current, data: contextDataRef.current },
         clusterId: clusterIdRef.current,
@@ -64,20 +74,25 @@ export function InlineAiPanel({
           : 'Failed to get AI response. Please try again.'
       setMessages((prev) => [...prev, { role: 'assistant', content: msg }])
     }
-  }, [contextChatMutation])
+  }, []) // stable — only uses refs
 
-  // Auto-ask initial prompt when panel opens
+  // FIX BUG-192-001: cleanup added to prevent global listener leak that broke SPA routing
+  // Auto-ask initial prompt when panel opens; reset when closed.
+  // IMPORTANT: askQuestion is stable (no deps), so this effect only fires when `open` changes.
+  // Previously, askQuestion depended on contextChatMutation (new object every render),
+  // causing this effect to re-run every render → infinite setState loop → navigation frozen.
   useEffect(() => {
-    if (open && !hasAskedInitial) {
-      setHasAskedInitial(true)
-      askQuestion(initialPrompt)
-    }
-    if (!open) {
-      // Reset when closed
+    if (open) {
+      if (!hasAskedInitialRef.current) {
+        hasAskedInitialRef.current = true
+        askQuestion(initialPromptRef.current)
+      }
+    } else {
+      // Reset for next open session
+      hasAskedInitialRef.current = false
       setMessages([])
-      setHasAskedInitial(false)
     }
-  }, [open, hasAskedInitial, initialPrompt, askQuestion])
+  }, [open, askQuestion]) // askQuestion is stable, so this only fires on open change
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -97,9 +112,9 @@ export function InlineAiPanel({
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={prefersReduced ? false : { opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={prefersReduced ? { opacity: 0 } : { opacity: 0, height: 0 }}
+          initial={prefersReduced ? false : { opacity: 0, height: 0, pointerEvents: 'none' as const }}
+          animate={{ opacity: 1, height: 'auto', pointerEvents: 'auto' as const }}
+          exit={prefersReduced ? { opacity: 0, pointerEvents: 'none' as const } : { opacity: 0, height: 0, pointerEvents: 'none' as const }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           style={{ overflow: 'hidden' }}
         >

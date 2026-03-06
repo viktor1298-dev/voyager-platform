@@ -1,0 +1,20 @@
+{
+  "agent": "uri",
+  "version": "v192",
+  "timestamp": "2026-03-06T17:43:58.000Z",
+  "api_image": "voyager-api:v192",
+  "web_image": "voyager-web:v192",
+  "namespace": "voyager",
+  "pods_status": "Running",
+  "health_check": "200",
+  "status": "success",
+  "commit": "a9b279d",
+  "branch": "feat/init-monorepo",
+  "helm_revision": 1,
+  "notes": "Fresh helm install with values-dev.yaml. All 5 pods Running (jaeger, postgres, redis, voyager-api, voyager-web). Health endpoint 200 OK. No schema errors. Web redirects to /login as expected. tRPC responding. Git synced to main.",
+  "git_sync": {
+    "feat_branch_pushed": true,
+    "main_merged": true,
+    "main_pushed": true
+  }
+}

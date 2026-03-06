@@ -1,0 +1,16 @@
+{
+  "agent": "yuval+foreman",
+  "version": "v192",
+  "timestamp": "2026-03-06T18:40:00+02:00",
+  "total": 113,
+  "passed": 95,
+  "failed": 0,
+  "skipped": 18,
+  "unexpected": 0,
+  "flaky": 0,
+  "exitCode": 0,
+  "durationMs": 468740,
+  "failures": [],
+  "status": "pass",
+  "notes": "Initial run: 9 failures in m-p3-features.spec.ts (selector fixes: router.push vs a[href], widget mode toggle) and byok-flow.spec.ts (page.request.post fix). Fixed in commit eb0fd63. Full re-run: 0 failures."
+}

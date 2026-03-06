@@ -594,5 +594,14 @@
     "gates_checked": 5,
     "env_blocked_items": [],
     "was_corrected": false
+  },
+  {
+    "timestamp": "2026-03-06T18:16:00+02:00",
+    "version": "v192",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 2,
+    "stage": "e2e",
+    "notes": "E2E run #2 in progress. Run #1: 9 failures (1 flaky, 8 test-bugs). Real bug found: aiKeys.save API 500 due to missing created_at column.",
+    "was_corrected": false
   }
 ]

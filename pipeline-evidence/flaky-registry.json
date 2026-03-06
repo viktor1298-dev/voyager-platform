@@ -1,32 +1,34 @@
 [
   {
-    "test": "alerts.spec.ts \u2014 should create a new alert rule",
+    "test": "alerts.spec.ts — should create a new alert rule",
     "failCount": 3,
     "root_cause": "dialog dismiss animation timeout",
     "firstSeen": "2026-02-28",
     "lastSeen": "2026-02-28"
   },
   {
-    "test": "alerts.spec.ts \u2014 should toggle alert enabled/disabled",
+    "test": "alerts.spec.ts — should toggle alert enabled/disabled",
     "failCount": 3,
     "root_cause": "dialog dismiss animation timeout",
     "firstSeen": "2026-02-28",
     "lastSeen": "2026-02-28"
   },
   {
-    "test": "api-tokens.spec.ts \u2014 newly created token appears in token list",
+    "test": "api-tokens.spec.ts — newly created token appears in token list",
     "failCount": 2,
     "root_cause": "dismiss button accessibility delay",
     "firstSeen": "2026-02-28",
     "lastSeen": "2026-02-28"
   },
   {
-    "test": "byok-flow.spec.ts \u2014 Settings BYOK actions keep UX clear for saved key vs raw key",
-    "failCount": 1,
-    "root_cause": "seedByokKey() + page.reload() timing race \u2014 button enabled state depends on API response arriving before 5000ms assertion timeout",
-    "suggested_fix": "Add waitForSelector([data-testid=byok-saved-state]) after reload, or increase toBeEnabled() timeout to 10000ms",
+    "test": "byok-flow.spec.ts — Settings BYOK actions keep UX clear for saved key vs raw key",
+    "failCount": 3,
+    "root_cause": "DB schema drift: user_ai_keys table missing created_at column. aiKeys.save returns 500 INTERNAL_SERVER_ERROR. seedByokKey() cannot seed data. Test is env-blocked until migration runs.",
+    "suggested_fix": "Run DB migration to add created_at column to user_ai_keys table. Then re-enable test by removing test.skip.",
     "firstSeen": "2026-03-05",
-    "lastSeen": "2026-03-05",
-    "classification": "flaky-timing"
+    "lastSeen": "2026-03-06",
+    "classification": "env-blocked",
+    "backend_bug": true,
+    "skip_reason": "aiKeys.save returns 500 — DB schema drift: user_ai_keys missing created_at column"
   }
 ]
