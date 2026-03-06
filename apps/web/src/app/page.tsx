@@ -13,8 +13,10 @@ import { AiInsightBanner } from '@/components/ai/AiInsightBanner'
 import { AnomalyTimeline } from '@/components/dashboard/AnomalyTimeline'
 import { DashboardGrid } from '@/components/dashboard/DashboardGrid'
 import { DashboardEditBar } from '@/components/dashboard/DashboardEditBar'
+import { RefreshIntervalSelector } from '@/components/dashboard/RefreshIntervalSelector'
 import { WidgetLibraryDrawer } from '@/components/dashboard/WidgetLibraryDrawer'
 import { useDashboardLayout } from '@/stores/dashboard-layout'
+import { useRefreshInterval } from '@/hooks/useRefreshInterval'
 import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { toast } from 'sonner'
@@ -95,7 +97,7 @@ function ResourceBar({ value, max, color }: { value: number; max: number; color:
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
   return (
     <div className="flex items-center gap-1.5">
-      <div className="flex-1 h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${pct}%`, backgroundColor: color }}
@@ -172,7 +174,8 @@ function DashboardContent() {
   const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
 
   const listQuery = trpc.clusters.list.useQuery(undefined, {
-    refetchInterval: DB_CLUSTER_REFETCH_MS,
+    // FEAT-192-001: honour user-configured refresh interval (min of default + user pref)
+    refetchInterval: Math.min(DB_CLUSTER_REFETCH_MS, intervalMs),
   })
 
   // Auto-select first cluster with credentials if none selected (prefer minikube/live clusters)
@@ -190,14 +193,16 @@ function DashboardContent() {
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
     {
-      refetchInterval: LIVE_CLUSTER_REFETCH_MS,
+      // FEAT-192-001: use user-configured refresh interval for live cluster data
+      refetchInterval: Math.min(LIVE_CLUSTER_REFETCH_MS, intervalMs),
       enabled: Boolean(activeClusterId),
     },
   )
 
   // P1-007: metrics for resource bars
   const statsQuery = trpc.metrics.currentStats.useQuery(undefined, {
-    refetchInterval: 30000,
+    // FEAT-192-001: honour refresh interval for metrics too
+    refetchInterval: Math.min(30000, intervalMs),
     retry: 1,
   })
 
@@ -345,14 +350,34 @@ function DashboardContent() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [widgetMode, setWidgetMode] = useState(false)
 
+  // FEAT-192-001: Live refresh interval selector
+  const { intervalMs, setIntervalMs } = useRefreshInterval()
+  const [isDataFresh, setIsDataFresh] = useState(false)
+  const freshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Mark data as "fresh" for 8 seconds after a fetch completes
+  useEffect(() => {
+    if (wasFetchingRef.current && isFetching === 0) {
+      setIsDataFresh(true)
+      if (freshTimerRef.current) clearTimeout(freshTimerRef.current)
+      freshTimerRef.current = setTimeout(() => setIsDataFresh(false), 8000)
+    }
+  }, [isFetching])
+
   const saveLayoutMutation = trpc.dashboardLayout.save.useMutation({
     onSuccess: () => toast.success('Layout saved'),
     onError: () => toast.error('Failed to save layout'),
   })
 
   const serverLayoutQuery = trpc.dashboardLayout.get.useQuery(undefined)
+  // BUG-192-005 fix: only apply server layout when it has actual widgets.
+  // Previously, an empty/null server response would overwrite the locally-added
+  // widgets (stored in localStorage via Zustand persist), silently discarding them.
   useEffect(() => {
-    if (serverLayoutQuery.data) applyServerLayout(serverLayoutQuery.data)
+    const data = serverLayoutQuery.data
+    if (data && Array.isArray(data.widgets) && data.widgets.length > 0) {
+      applyServerLayout(data)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serverLayoutQuery.data])
 
@@ -373,11 +398,18 @@ function DashboardContent() {
   return (
     <AppLayout>
       <PageTransition>
-        <header className="mb-4 flex items-center justify-between">
+        <header className="mb-4 flex items-center justify-between gap-3">
           <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
             Dashboard
           </h1>
           <div className="flex items-center gap-2">
+            {/* FEAT-192-001: Live refresh interval selector */}
+            <RefreshIntervalSelector
+              intervalMs={intervalMs}
+              onChange={setIntervalMs}
+              isLive={isDataFresh}
+              className="hidden sm:flex"
+            />
             <button
               type="button"
               onClick={() => setWidgetMode((v) => !v)}
@@ -418,7 +450,7 @@ function DashboardContent() {
                 onSave={handleSaveLayout}
               />
             )}
-            <DashboardGrid />
+            <DashboardGrid intervalMs={intervalMs} />
             <WidgetLibraryDrawer
               open={drawerOpen}
               onClose={() => setDrawerOpen(false)}
@@ -461,7 +493,7 @@ function DashboardContent() {
             trend={1}
             trendPositiveIsGood
             sparklineData={sparklines.nodes}
-            sparklineColor="#6366f1"
+            sparklineColor="var(--color-chart-cpu)"
           />
           <SummaryCard
             icon={<Container className="h-3.5 w-3.5" />}
@@ -481,7 +513,7 @@ function DashboardContent() {
             trend={5}
             trendPositiveIsGood
             sparklineData={sparklines.pods}
-            sparklineColor="#10b981"
+            sparklineColor="var(--color-chart-pods)"
           />
           <SummaryCard
             icon={<LayoutGrid className="h-3.5 w-3.5" />}
@@ -493,7 +525,7 @@ function DashboardContent() {
             trend={2}
             trendPositiveIsGood
             sparklineData={sparklines.clusters}
-            sparklineColor="#6366f1"
+            sparklineColor="var(--color-chart-clusters)"
           />
           <SummaryCard
             icon={
@@ -512,7 +544,7 @@ function DashboardContent() {
             trend={-3}
             emphasized={warningEvents > 0}
             sparklineData={sparklines.warnings}
-            sparklineColor="#f59e0b"
+            sparklineColor="var(--color-chart-warnings)"
           />
           <AnomalyWidget compact />
         </div>
@@ -556,7 +588,7 @@ function DashboardContent() {
               const cpuPct = statsQuery.data?.cpuPercent ?? 0
               const memPct = statsQuery.data?.memoryPercent ?? 0
               const cpuColor = cpuPct > CPU_CRITICAL_THRESHOLD ? 'var(--color-status-error)' : cpuPct > CPU_WARN_THRESHOLD ? 'var(--color-status-warning)' : 'var(--color-accent)'
-              const memColor = memPct > MEM_CRITICAL_THRESHOLD ? 'var(--color-status-error)' : memPct > MEM_WARN_THRESHOLD ? 'var(--color-status-warning)' : '#10b981'
+              const memColor = memPct > MEM_CRITICAL_THRESHOLD ? 'var(--color-status-error)' : memPct > MEM_WARN_THRESHOLD ? 'var(--color-status-warning)' : 'var(--color-status-healthy)'
 
               // Per-cluster mock breakdown: distribute aggregate across clusters with realistic variance
               const perClusterResources = clusterList.map((c, idx) => {
@@ -611,7 +643,7 @@ function DashboardContent() {
                       <div className="space-y-2">
                         {perClusterResources.map((pc) => {
                           const pcCpuColor = pc.cpu > CPU_CRITICAL_THRESHOLD ? 'var(--color-status-error)' : pc.cpu > CPU_WARN_THRESHOLD ? 'var(--color-status-warning)' : 'var(--color-accent)'
-                          const pcMemColor = pc.mem > MEM_CRITICAL_THRESHOLD ? 'var(--color-status-error)' : pc.mem > MEM_WARN_THRESHOLD ? 'var(--color-status-warning)' : '#10b981'
+                          const pcMemColor = pc.mem > MEM_CRITICAL_THRESHOLD ? 'var(--color-status-error)' : pc.mem > MEM_WARN_THRESHOLD ? 'var(--color-status-warning)' : 'var(--color-status-healthy)'
                           return (
                             <div key={pc.name} className="space-y-1">
                               <div className="flex items-center justify-between">

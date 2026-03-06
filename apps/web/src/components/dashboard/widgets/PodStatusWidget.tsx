@@ -3,12 +3,14 @@
 import { useClusterContext } from '@/stores/cluster-context'
 import { trpc } from '@/lib/trpc'
 import { LIVE_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
+import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
 
 export function PodStatusWidget() {
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
+  const intervalMs = useDashboardRefreshInterval()
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
-    { refetchInterval: LIVE_CLUSTER_REFETCH_MS, enabled: Boolean(activeClusterId) },
+    { refetchInterval: Math.min(LIVE_CLUSTER_REFETCH_MS, intervalMs), enabled: Boolean(activeClusterId) },
   )
 
   const liveData = liveQuery.data
@@ -43,10 +45,10 @@ export function PodStatusWidget() {
               <span className="text-[10px] text-[var(--color-text-dim)]">Pod health</span>
               <span className="text-[10px] font-mono text-emerald-400">{podPct}%</span>
             </div>
-            <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${podPct}%`, backgroundColor: podPct > 90 ? '#10b981' : podPct > 70 ? '#f59e0b' : '#ef4444' }}
+                style={{ width: `${podPct}%`, backgroundColor: podPct > 90 ? 'var(--color-status-healthy)' : podPct > 70 ? 'var(--color-status-warning)' : 'var(--color-status-error)' }}
               />
             </div>
           </div>

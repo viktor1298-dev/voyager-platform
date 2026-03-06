@@ -5,6 +5,7 @@ import { trpc } from '@/lib/trpc'
 import { DB_CLUSTER_REFETCH_MS, LIVE_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { useClusterContext } from '@/stores/cluster-context'
 import { normalizeLiveHealthStatus } from '@/lib/cluster-status'
+import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
 
 const GAUGE_CENTER = 50
 const GAUGE_RADIUS = 40
@@ -15,7 +16,7 @@ function ResourceBar({ value, max, color }: { value: number; max: number; color:
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
   return (
     <div className="flex items-center gap-1.5">
-      <div className="flex-1 h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
       <span className="text-[10px] font-mono tabular-nums text-[var(--color-text-dim)] min-w-[28px] text-right">{pct}%</span>
@@ -25,12 +26,13 @@ function ResourceBar({ value, max, color }: { value: number; max: number; color:
 
 export function ClusterHealthWidget() {
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
-  const listQuery = trpc.clusters.list.useQuery(undefined, { refetchInterval: DB_CLUSTER_REFETCH_MS })
+  const intervalMs = useDashboardRefreshInterval()
+  const listQuery = trpc.clusters.list.useQuery(undefined, { refetchInterval: Math.min(DB_CLUSTER_REFETCH_MS, intervalMs) })
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
-    { refetchInterval: LIVE_CLUSTER_REFETCH_MS, enabled: Boolean(activeClusterId) },
+    { refetchInterval: Math.min(LIVE_CLUSTER_REFETCH_MS, intervalMs), enabled: Boolean(activeClusterId) },
   )
-  const statsQuery = trpc.metrics.currentStats.useQuery(undefined, { refetchInterval: 30000, retry: 1 })
+  const statsQuery = trpc.metrics.currentStats.useQuery(undefined, { refetchInterval: Math.min(30000, intervalMs), retry: 1 })
 
   const liveData = liveQuery.data
   const dbClusters = listQuery.data ?? []
@@ -48,7 +50,7 @@ export function ClusterHealthWidget() {
   const cpuPct = statsQuery.data?.cpuPercent ?? 0
   const memPct = statsQuery.data?.memoryPercent ?? 0
   const cpuColor = cpuPct > 80 ? 'var(--color-status-error)' : cpuPct > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)'
-  const memColor = memPct > 80 ? 'var(--color-status-error)' : memPct > 60 ? 'var(--color-status-warning)' : '#10b981'
+  const memColor = memPct > 80 ? 'var(--color-status-error)' : memPct > 60 ? 'var(--color-status-warning)' : 'var(--color-status-healthy)'
 
   return (
     <div className="h-full p-4 overflow-auto space-y-4">
@@ -107,7 +109,7 @@ export function ClusterHealthWidget() {
               const cpu = c.source === 'live' ? cpuPct : Math.max(5, Math.min(95, cpuPct + (seed % 30) - 15))
               const mem = c.source === 'live' ? memPct : Math.max(5, Math.min(95, memPct + ((seed * 3) % 30) - 15))
               const pcCpu = cpu > 80 ? 'var(--color-status-error)' : cpu > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)'
-              const pcMem = mem > 80 ? 'var(--color-status-error)' : mem > 60 ? 'var(--color-status-warning)' : '#10b981'
+              const pcMem = mem > 80 ? 'var(--color-status-error)' : mem > 60 ? 'var(--color-status-warning)' : 'var(--color-status-healthy)'
               return (
                 <div key={c.id}>
                   <div className="flex items-center justify-between mb-1">

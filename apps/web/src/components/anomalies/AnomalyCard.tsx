@@ -90,12 +90,7 @@ export function AnomalyCard({ anomaly, onAcknowledge, onResolve }: AnomalyCardPr
           />
           <button
             type="button"
-            onPointerDown={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-            }}
             onClick={(event) => {
-              event.preventDefault()
               event.stopPropagation()
               onAcknowledge?.(anomaly.id)
             }}
@@ -107,12 +102,7 @@ export function AnomalyCard({ anomaly, onAcknowledge, onResolve }: AnomalyCardPr
           </button>
           <button
             type="button"
-            onPointerDown={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-            }}
             onClick={(event) => {
-              event.preventDefault()
               event.stopPropagation()
               onResolve?.(anomaly.id)
             }}
