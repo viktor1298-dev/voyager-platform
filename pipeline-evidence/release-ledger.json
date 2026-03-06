@@ -448,5 +448,18 @@
     "namespace": "voyager",
     "health": "ok",
     "gate": "PASS"
+  },
+  {
+    "version": "v192-fix",
+    "timestamp": "2026-03-06T17:40:56+02:00",
+    "status": "deployed",
+    "commit": "7f6d2e8",
+    "api_image": "voyager-api:v192-fix",
+    "web_image": "voyager-web:v192-fix",
+    "namespace": "voyager",
+    "health": "ok",
+    "helmRevision": 1,
+    "gate": "PASS",
+    "notes": "Patch fix on v192 \u2014 BUG-192-001: SPA routing corruption + InlineAiPanel infinite re-render loop fix. helm uninstall + delete PVC + helm install with values-dev.yaml. All 5 pods Running 0 restarts."
   }
 ]

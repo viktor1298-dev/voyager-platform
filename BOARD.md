@@ -1,7 +1,7 @@
 # BOARD.md — v192 Bug Fix + Feature Pipeline
 
-**Status:** 🔄 FIX LOOP — BUG-192-001 patch deploy in progress
-**Version:** v192
+**Status:** ✅ DEPLOYED — v192-fix live (BUG-192-001 patched)
+**Version:** v192-fix
 **Base:** v191 (deployed)
 **Started:** 2026-03-06
 **Completed:** 2026-03-06
@@ -11,7 +11,7 @@
 ## 🐛 v192 Bug Fixes + Feature
 
 ### BUG-192-001 — CRITICAL: Anomalies tab breaks all other tabs
-- [x] **BUG-192-001** 🔄 — Fix Loop Iteration 2: REAL root cause found by Foreman. InlineAiPanel useCallback(askQuestion) depended on contextChatMutation (new ref every render) → useEffect re-fired every render → infinite setState loop when open=false → React event queue saturated → ALL sidebar navigation unresponsive. Fix: mutationRef pattern + useRef for hasAskedInitial. Commit: 7f6d2e8. Deploying as v192-fix.
+- [x] **BUG-192-001** ✅ — Fix Loop Iteration 2: REAL root cause found by Foreman. InlineAiPanel useCallback(askQuestion) depended on contextChatMutation (new ref every render) → useEffect re-fired every render → infinite setState loop when open=false → React event queue saturated → ALL sidebar navigation unresponsive. Fix: mutationRef pattern + useRef for hasAskedInitial. Commit: 7f6d2e8. **DEPLOYED as v192-fix — 2026-03-06. All 5 pods Running 0 restarts. Health OK.**
 
 ### BUG-192-002 — Light mode: Resource Utilization bars invisible at 0%
 - [x] **BUG-192-002** ✅ — Fixed: replaced bg-white/* with bg-muted, then bg-[var(--color-track)]. Commits: 74fb698, 878a7d7. QA verified: bars visible at 0%.
@@ -39,9 +39,10 @@
 - ✅ Desktop QA (Foreman): 9/10
 - ✅ VERSION: git tag v192 → docker → helm → state.json
 
-## Status: ✅ ALL 7 ITEMS COMPLETE — v192 DEPLOYED
+## Status: ✅ ALL 7 ITEMS COMPLETE — v192-fix DEPLOYED
 
 **Deploy URL:** http://voyager-platform.voyagerlabs.co
-**Tag:** v192 (e9fd725)
-**Merged to:** main
+**Tag:** v192-fix (7f6d2e8 — BUG-192-001 patch)
+**Previous tag:** v192 (e9fd725)
+**Merged to:** main (v192)
 **Awaiting:** Vik review
