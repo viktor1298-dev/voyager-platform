@@ -89,11 +89,6 @@ export default function AnomaliesPage() {
     toast.success('Anomaly resolved')
   }
 
-  const isInteractiveTarget = (target: EventTarget | null) => {
-    if (!(target instanceof HTMLElement)) return false
-    return Boolean(target.closest('a, button, input, select, textarea, [role="button"]'))
-  }
-
   const columns = useMemo<ColumnDef<Anomaly, unknown>[]>(
     () => [
       {
@@ -272,13 +267,7 @@ export default function AnomaliesPage() {
                   return (
                     <Fragment key={row.id}>
                       <tr
-                        className="border-b border-white/[0.04] hover:bg-muted/50 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-ring"
-                        onClick={(event) => {
-                          if (isInteractiveTarget(event.target)) return
-                          setExpandedId((prev) =>
-                            prev === row.original.id ? null : row.original.id,
-                          )
-                        }}
+                        className="border-b border-white/[0.04] hover:bg-muted/50 transition-colors cursor-default focus-visible:outline-2 focus-visible:outline-ring"
                       >
                         {row.getVisibleCells().map((cell) => (
                           <td key={cell.id} className="px-3 py-2.5 align-top">
