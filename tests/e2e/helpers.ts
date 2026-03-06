@@ -28,6 +28,8 @@ export const TEST_USER = TEST_ADMIN;
 export const AUTH_COOKIE_NAME = 'better-auth.session_token';
 
 export async function login(page: Page, user = TEST_ADMIN): Promise<void> {
+  // Clear cookies to ensure clean login state (prevents auto-redirect from /login)
+  await page.context().clearCookies();
   await page.goto('/login');
   await page.getByLabel(/email/i).fill(user.email);
   await page.getByLabel(/password/i).fill(user.password);
