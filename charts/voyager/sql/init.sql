@@ -71,14 +71,40 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
+-- ENUMs for clusters table (migration 0002)
+DO $$ BEGIN
+ CREATE TYPE "public"."cluster_provider" AS ENUM('kubeconfig', 'aws', 'azure', 'gke', 'minikube');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ CREATE TYPE "public"."cluster_environment" AS ENUM('production', 'staging', 'development');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ CREATE TYPE "public"."cluster_health_status" AS ENUM('healthy', 'degraded', 'critical', 'unreachable', 'unknown');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
 CREATE TABLE IF NOT EXISTS clusters (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL UNIQUE,
-  provider VARCHAR(50) NOT NULL,
-  endpoint VARCHAR(500) NOT NULL,
+  provider cluster_provider NOT NULL DEFAULT 'kubeconfig',
+  endpoint VARCHAR(500),
+  environment cluster_environment NOT NULL DEFAULT 'development',
+  connection_config JSONB NOT NULL DEFAULT '{}',
   status VARCHAR(50) NOT NULL DEFAULT 'unreachable',
+  health_status cluster_health_status NOT NULL DEFAULT 'unknown',
+  last_health_check TIMESTAMPTZ,
+  last_connected_at TIMESTAMPTZ,
   version VARCHAR(50),
   nodes_count INTEGER NOT NULL DEFAULT 0,
+  credential_ref VARCHAR(255),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -200,51 +226,8 @@ BEGIN
   END IF;
 END $$;
 
--- Multi-provider clusters (migration 0002)
-DO $$ BEGIN
- CREATE TYPE "public"."cluster_provider" AS ENUM('kubeconfig', 'aws', 'azure', 'gke', 'minikube');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
-
-DO $$ BEGIN
- CREATE TYPE "public"."cluster_environment" AS ENUM('production', 'staging', 'development');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
-
-DO $$ BEGIN
- CREATE TYPE "public"."cluster_health_status" AS ENUM('healthy', 'degraded', 'critical', 'unreachable', 'unknown');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
-
-ALTER TABLE "clusters" ADD COLUMN IF NOT EXISTS "environment" "cluster_environment" DEFAULT 'development' NOT NULL;
-ALTER TABLE "clusters" ADD COLUMN IF NOT EXISTS "connection_config" jsonb DEFAULT '{}'::jsonb NOT NULL;
-ALTER TABLE "clusters" ADD COLUMN IF NOT EXISTS "health_status" "cluster_health_status" DEFAULT 'unknown' NOT NULL;
-ALTER TABLE "clusters" ADD COLUMN IF NOT EXISTS "last_health_check" timestamp with time zone;
-ALTER TABLE "clusters" ALTER COLUMN "endpoint" DROP NOT NULL;
-
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'clusters' 
-    AND column_name = 'provider' 
-    AND data_type = 'character varying'
-  ) THEN
-    ALTER TABLE "clusters" ALTER COLUMN "provider" TYPE "cluster_provider" USING (
-      CASE
-        WHEN "provider" IN ('minikube') THEN 'minikube'::"cluster_provider"
-        WHEN "provider" IN ('eks', 'aws') THEN 'aws'::"cluster_provider"
-        WHEN "provider" IN ('aks', 'azure') THEN 'azure'::"cluster_provider"
-        WHEN "provider" IN ('gcp', 'gke') THEN 'gke'::"cluster_provider"
-        ELSE 'kubeconfig'::"cluster_provider"
-      END
-    );
-    ALTER TABLE "clusters" ALTER COLUMN "provider" SET DEFAULT 'kubeconfig';
-  END IF;
-END $$;
+-- Multi-provider clusters (migration 0002) — columns now inlined in CREATE TABLE above
+-- migration 0011: credential_ref, is_active, last_connected_at also inlined above
 
 -- Seed test cluster data (for E2E tests)
 INSERT INTO "clusters" (id, name, provider, status, version, nodes_count, environment, connection_config, health_status, created_at, updated_at)
@@ -363,3 +346,51 @@ FROM "user" u
 CROSS JOIN "clusters" c
 WHERE u."role" = 'admin'
 ON CONFLICT ("subject_type","subject_id","relation","object_type","object_id") DO NOTHING;
+
+-- Anomalies (migration 0008)
+DO $$ BEGIN
+ CREATE TYPE "public"."anomaly_severity" AS ENUM('critical', 'warning', 'info');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS "anomalies" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "cluster_id" uuid NOT NULL,
+  "type" varchar(64) NOT NULL,
+  "severity" "anomaly_severity" NOT NULL,
+  "title" varchar(255) NOT NULL,
+  "description" varchar(2000) NOT NULL,
+  "metadata" jsonb DEFAULT '{}'::jsonb NOT NULL,
+  "detected_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "acknowledged_at" timestamp with time zone,
+  "resolved_at" timestamp with time zone
+);
+
+CREATE TABLE IF NOT EXISTS "anomaly_rules" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "cluster_id" uuid NOT NULL,
+  "metric" varchar(64) NOT NULL,
+  "operator" varchar(16) DEFAULT 'gt' NOT NULL,
+  "threshold" varchar(64) NOT NULL,
+  "severity" "anomaly_severity" DEFAULT 'warning' NOT NULL,
+  "enabled" boolean DEFAULT true NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+DO $$ BEGIN
+ ALTER TABLE "anomalies" ADD CONSTRAINT "anomalies_cluster_id_clusters_id_fk"
+  FOREIGN KEY ("cluster_id") REFERENCES "public"."clusters"("id") ON DELETE cascade;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+ ALTER TABLE "anomaly_rules" ADD CONSTRAINT "anomaly_rules_cluster_id_clusters_id_fk"
+  FOREIGN KEY ("cluster_id") REFERENCES "public"."clusters"("id") ON DELETE cascade;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+CREATE INDEX IF NOT EXISTS "idx_anomalies_cluster" ON "anomalies" ("cluster_id", "detected_at" DESC);
+CREATE INDEX IF NOT EXISTS "idx_anomaly_rules_cluster" ON "anomaly_rules" ("cluster_id");

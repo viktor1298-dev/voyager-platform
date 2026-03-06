@@ -958,3 +958,25 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
 - Desktop QA (Mai): ≥8.5/10
 - VERSION CONTRACT: git tag → docker → helm → state.json (all must match)
 
+
+---
+
+## 🐛 Bug Fixes — v190 (Priority: Critical)
+
+- [ ] **BUG-001: Clusters page "Failed to load data" — SQL schema mismatch**
+  - **Symptom:** Clusters page shows `Failed query: select "id", "name", "provider", "environment", "endpoint", "connection_config", "status", "health_status", "last_health_check", "last_connected_at", "version", "nodes_count", "credential_ref", "is_active", "created_at", "updated_at" from "clusters"` — query fails
+  - **Root cause:** init.sql has old clusters schema (basic columns only). Drizzle migrations (0002_multi_provider_clusters.sql) added new columns (`connection_config`, `credential_ref`, `is_active`, `nodes_count`, etc.) that were never added to init.sql. Since migrate() was removed from server.ts, new columns don't exist in DB.
+  - **Fix:** Update init.sql clusters table definition to include ALL columns from latest drizzle migrations. OR: run the missing migration SQL directly on the DB.
+  - **Effort:** S (1-2 hours)
+
+- [ ] **BUG-002: Cannot add new cluster — returns error on submit**
+  - **Symptom:** Clicking "+ Add Cluster" and submitting form returns error. Cluster gets partially created (appears in list as "Unknown" health, viewer access, 0 nodes) but is non-functional.
+  - **Root cause:** Likely the same schema mismatch — INSERT fails on missing columns, partial insert succeeds for basic fields only.
+  - **Fix:** Resolves automatically once BUG-001 is fixed (correct schema = correct INSERT).
+  - **Effort:** Included in BUG-001
+
+- [ ] **BUG-003: Cannot remove broken/partial cluster — delete returns error**
+  - **Symptom:** "minikube-local" cluster stuck in broken state. Delete action returns error.
+  - **Fix:** After BUG-001 fix + fresh DB deploy, cluster table resets. OR: add SQL direct delete as immediate workaround.
+  - **Effort:** XS (part of BUG-001 deploy)
+

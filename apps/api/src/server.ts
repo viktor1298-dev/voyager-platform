@@ -1,3 +1,5 @@
+// migrate import removed — schema handled by Helm sql/init.sql on postgres startup
+import { db } from '@voyager/db'
 import compress from '@fastify/compress'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
@@ -208,6 +210,8 @@ app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok'
 
 const start = async () => {
   try {
+    // Schema is initialized by Helm sql/init.sql on postgres startup (no migrate() needed)
+
     await ensureAdminUser({ allowLocalDevDefaults: false })
 
     const PORT = Number.parseInt(process.env.PORT || '4000', 10)
