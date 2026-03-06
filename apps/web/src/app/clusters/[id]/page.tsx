@@ -666,6 +666,12 @@ export default function ClusterDetailPage() {
               </div>
             ))}
           </div>
+
+          {/* M-P3-002: Real-time time-series charts in Overview */}
+          <div className="mb-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+            <MetricsTimeSeriesPanel clusterId={resolvedId} isLive={effectiveIsLive} compact />
+          </div>
+
           {/* Recent events preview */}
           <div>
             <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-2">Recent Events</h3>

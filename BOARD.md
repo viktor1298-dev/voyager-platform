@@ -913,7 +913,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Expected result after fix:** Experienced users can navigate the entire app without touching the mouse. Keyboard shortcut guide is discoverable via `?`.
   - **Effort:** M (6-8 hours)
 
-- [ ] **M-P3-002: Real-Time Time-Series Resource Charts**
+- [x] **M-P3-002: Real-Time Time-Series Resource Charts** ✅ v191 2026-03-06
   - **Problem:** Resource utilization gauges show static "0%" values. No live-updating charts showing CPU/memory/network trends over time. Competitors (Datadog, Grafana, Lens) all show time-series resource data as a core feature.
   - **Fix:**
     1. Add time-series charts using Recharts or `@nivo/line` to the cluster detail Overview tab
@@ -924,6 +924,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Expected result after fix:** Cluster detail shows live-updating resource charts. Users can see CPU spike over last 24h, identify memory leaks, correlate with deployment events.
   - **Reference:** Datadog time-series charts are best-in-class. Lens shows real-time resource graphs per pod/node.
   - **Effort:** XL (15-20 hours)
+  - **Implemented:** MetricsTimeSeriesPanel in Overview tab (compact mode), metric toggles (CPU/Mem/Net In/Net Out/Pods), ResourceSparkline component, networkBytesIn/Out schema columns + collector, tRPC history endpoint updated
 
 - [ ] **M-P3-003: AI Assistant — Inline Integration Throughout App**
   - **Problem:** AI Assistant is isolated on its own `/ai` page. The rest of the app has no AI integration — users must context-switch to ask about an anomaly or pod issue. Recommendations panel on the AI page is disconnected.

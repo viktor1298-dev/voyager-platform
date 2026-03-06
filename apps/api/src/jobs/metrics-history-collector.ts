@@ -9,6 +9,37 @@ const COLLECT_INTERVAL_MS = 60 * 1000
 let intervalHandle: NodeJS.Timeout | null = null
 let isRunning = false
 
+/** Parse pod network stats from K8s metrics-server (best-effort, returns null on failure) */
+async function collectNetworkBytes(
+  podMetrics: k8s.PodMetricsList,
+): Promise<{ bytesIn: number; bytesOut: number } | null> {
+  try {
+    let totalBytesIn = 0
+    let totalBytesOut = 0
+    let hasData = false
+
+    for (const pod of podMetrics.items) {
+      for (const container of pod.containers ?? []) {
+        // metrics-server v0.7+ exposes network via window.average.totalBytesIn / Out on some distros
+        // Fallback: read from container usage if available
+        const usage = container.usage as unknown as Record<string, string> | undefined
+        if (usage?.['network.rx_bytes']) {
+          totalBytesIn += parseInt(usage['network.rx_bytes'] ?? '0', 10)
+          hasData = true
+        }
+        if (usage?.['network.tx_bytes']) {
+          totalBytesOut += parseInt(usage['network.tx_bytes'] ?? '0', 10)
+          hasData = true
+        }
+      }
+    }
+
+    return hasData ? { bytesIn: totalBytesIn, bytesOut: totalBytesOut } : null
+  } catch {
+    return null
+  }
+}
+
 async function collectMetrics(): Promise<void> {
   const allClusters = await db
     .select({ id: clusters.id })
@@ -60,12 +91,28 @@ async function collectMetrics(): Promise<void> {
         ? Math.round((totalMemUsageBytes / totalMemAllocatable) * 1000) / 10
         : 0
 
+      // M-P3-002: Collect network I/O (best-effort via pod metrics)
+      let networkBytesIn = 0
+      let networkBytesOut = 0
+      try {
+        const podMetrics = await metricsClient.getPodMetrics()
+        const netStats = await collectNetworkBytes(podMetrics)
+        if (netStats) {
+          networkBytesIn = netStats.bytesIn
+          networkBytesOut = netStats.bytesOut
+        }
+      } catch {
+        // Network metrics not available — store 0 (chart will hide the series)
+      }
+
       await db.insert(metricsHistory).values({
         clusterId: cluster.id,
         cpuPercent,
         memPercent,
         podCount: podsRes.items.length,
         nodeCount: nodesRes.items.length,
+        networkBytesIn,
+        networkBytesOut,
       })
     } catch (err) {
       console.warn(`[metrics-collector] failed for cluster ${cluster.id}`, err)
