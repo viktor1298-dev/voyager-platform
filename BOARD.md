@@ -926,7 +926,7 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Effort:** XL (15-20 hours)
   - **Implemented:** MetricsTimeSeriesPanel in Overview tab (compact mode), metric toggles (CPU/Mem/Net In/Net Out/Pods), ResourceSparkline component, networkBytesIn/Out schema columns + collector, tRPC history endpoint updated
 
-- [ ] **M-P3-003: AI Assistant — Inline Integration Throughout App**
+- [x] **M-P3-003: AI Assistant — Inline Integration Throughout App**
   - **Problem:** AI Assistant is isolated on its own `/ai` page. The rest of the app has no AI integration — users must context-switch to ask about an anomaly or pod issue. Recommendations panel on the AI page is disconnected.
   - **Fix:**
     1. Add "Ask AI" button contextually throughout the app:
