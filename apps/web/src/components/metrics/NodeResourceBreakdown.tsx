@@ -48,7 +48,7 @@ function NodeRow({ node }: { node: NodeStats }) {
               {node.cpuPercent != null ? `${node.cpuPercent}%` : '—'}
             </span>
           </div>
-          <div className="relative h-1.5 rounded-full bg-white/10 overflow-hidden">
+          <div className="relative h-1.5 rounded-full bg-[var(--color-track)] overflow-hidden">
             {node.cpuPercent != null && (
               <div
                 className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
@@ -69,7 +69,7 @@ function NodeRow({ node }: { node: NodeStats }) {
               {node.memPercent != null ? `${node.memPercent}%` : '—'}
             </span>
           </div>
-          <div className="relative h-1.5 rounded-full bg-white/10 overflow-hidden">
+          <div className="relative h-1.5 rounded-full bg-[var(--color-track)] overflow-hidden">
             {node.memPercent != null && (
               <div
                 className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"

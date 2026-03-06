@@ -1,0 +1,35 @@
+{
+  "agent": "dima",
+  "version": "v192",
+  "timestamp": "2026-03-06T15:02:17Z",
+  "bugs_fixed": ["BUG-192-001", "BUG-192-002", "BUG-192-003"],
+  "files_changed": [
+    "apps/web/src/components/anomalies/AnomalyCard.tsx",
+    "apps/web/src/components/dashboard/widgets/ClusterHealthWidget.tsx",
+    "apps/web/src/components/dashboard/widgets/PodStatusWidget.tsx",
+    "apps/web/src/components/metrics/NodeResourceBreakdown.tsx",
+    "apps/web/src/components/ui/progress.tsx",
+    "apps/web/src/app/page.tsx",
+    "apps/web/src/components/PresenceBar.tsx",
+    "pipeline-evidence/dev-dima-v192.json"
+  ],
+  "summary": "BUG-192-001: Removed onPointerDown handlers with event.preventDefault() + stopPropagation() from AnomalyCard.tsx Acknowledge/Resolve buttons. These prevented React's pointer capture from releasing properly, causing sidebar navigation to stop responding after interacting with Anomaly cards. Fixed by keeping only onClick with stopPropagation(). BUG-192-002: Fixed invisible progress bars in light mode across 5 files. All progress bar track containers used bg-white/[0.08], bg-white/10, or bg-white/[0.06] which are transparent on white backgrounds. Replaced with bg-muted (uses CSS variable that adapts to light/dark themes). Affected: ClusterHealthWidget, NodeResourceBreakdown (2x), PodStatusWidget, ui/progress, app/page.tsx ResourceBar. BUG-192-003: Redesigned PresenceBar.tsx user avatars. Moved user avatar list to the right side of the bar (flex justify-between layout), increased size from 28px to 32px (h-8 w-8), added accent color background to make them clearly look like user avatars, added CSS tooltip on hover showing user name + current page, added hover state with border/background color change, added proper ARIA labels.",
+  "grep_all_verified": {
+    "onPointerDown": "0 matches remaining in apps/web/src/",
+    "bg-white progress tracks": "0 remaining in progress bar components"
+  },
+  "fix_loop_1": {
+    "timestamp": "2026-03-06T15:26:27Z",
+    "fixes": ["LIOR-192-001", "LIOR-192-002"],
+    "files_changed": [
+      "apps/web/src/app/globals.css",
+      "apps/web/src/components/dashboard/widgets/ClusterHealthWidget.tsx",
+      "apps/web/src/components/dashboard/widgets/PodStatusWidget.tsx",
+      "apps/web/src/components/metrics/NodeResourceBreakdown.tsx",
+      "apps/web/src/components/ui/progress.tsx",
+      "apps/web/src/app/page.tsx",
+      "apps/web/src/components/dashboard/widgets/LogTailWidget.tsx",
+      "apps/web/src/components/dashboard/widgets/ResourceChartsWidget.tsx"
+    ]
+  }
+}

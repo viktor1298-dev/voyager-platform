@@ -10,6 +10,7 @@ import { DB_CLUSTER_REFETCH_MS, LIVE_CLUSTER_REFETCH_MS } from '@/lib/cluster-co
 import { useClusterContext } from '@/stores/cluster-context'
 import { cn } from '@/lib/utils'
 import { AnomalyWidget } from '@/components/anomalies/AnomalyWidget'
+import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
 
 function AnimatedNumber({ value }: { value: string }) {
   const numericMatch = value.match(/^(\d+)(\/(\d+))?$/)
@@ -96,13 +97,14 @@ function StatCard({
 
 export function StatCardsWidget() {
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
+  const intervalMs = useDashboardRefreshInterval()
 
-  const listQuery = trpc.clusters.list.useQuery(undefined, { refetchInterval: DB_CLUSTER_REFETCH_MS })
+  const listQuery = trpc.clusters.list.useQuery(undefined, { refetchInterval: Math.min(DB_CLUSTER_REFETCH_MS, intervalMs) })
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
-    { refetchInterval: LIVE_CLUSTER_REFETCH_MS, enabled: Boolean(activeClusterId) },
+    { refetchInterval: Math.min(LIVE_CLUSTER_REFETCH_MS, intervalMs), enabled: Boolean(activeClusterId) },
   )
-  const statsQuery = trpc.metrics.currentStats.useQuery(undefined, { refetchInterval: 30000, retry: 1 })
+  const statsQuery = trpc.metrics.currentStats.useQuery(undefined, { refetchInterval: Math.min(30000, intervalMs), retry: 1 })
 
   const liveData = liveQuery.data
   const dbClusters = listQuery.data ?? []
@@ -130,7 +132,7 @@ export function StatCardsWidget() {
         gradient={totalNodes > 0 ? 'var(--gradient-text-default)' : 'none'}
         isLoading={isLoading}
         sparklineData={sparklines.nodes}
-        sparklineColor="#6366f1"
+        sparklineColor="var(--color-chart-cpu)"
       />
       <StatCard
         icon={<Container className="h-3.5 w-3.5" />}
@@ -140,7 +142,7 @@ export function StatCardsWidget() {
         gradient={runningPods > 0 ? 'var(--gradient-text-healthy)' : 'none'}
         isLoading={isLoading}
         sparklineData={sparklines.pods}
-        sparklineColor="#10b981"
+        sparklineColor="var(--color-chart-pods)"
       />
       <StatCard
         icon={<LayoutGrid className="h-3.5 w-3.5" />}
@@ -150,7 +152,7 @@ export function StatCardsWidget() {
         gradient={clusterCount > 0 ? 'var(--gradient-text-default)' : 'none'}
         isLoading={isLoading}
         sparklineData={sparklines.clusters}
-        sparklineColor="#6366f1"
+        sparklineColor="var(--color-chart-clusters)"
       />
       <StatCard
         icon={warningEvents > 0 ? <AlertTriangle className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
@@ -161,7 +163,7 @@ export function StatCardsWidget() {
         isLoading={isLoading}
         emphasized={warningEvents > 0}
         sparklineData={sparklines.warnings}
-        sparklineColor="#f59e0b"
+        sparklineColor="var(--color-chart-warnings)"
       />
       <AnomalyWidget compact />
     </div>

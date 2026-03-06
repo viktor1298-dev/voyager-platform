@@ -3,10 +3,12 @@
 import { useClusterContext } from '@/stores/cluster-context'
 import { trpc } from '@/lib/trpc'
 import { SparklineChart, generateMockTrend } from '@/components/charts/SparklineChart'
+import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
 
 export function ResourceChartsWidget() {
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
-  const statsQuery = trpc.metrics.currentStats.useQuery(undefined, { refetchInterval: 30000, retry: 1 })
+  const intervalMs = useDashboardRefreshInterval()
+  const statsQuery = trpc.metrics.currentStats.useQuery(undefined, { refetchInterval: Math.min(30000, intervalMs), retry: 1 })
 
   const cpuPct = statsQuery.data?.cpuPercent ?? 0
   const memPct = statsQuery.data?.memoryPercent ?? 0
@@ -27,16 +29,16 @@ export function ResourceChartsWidget() {
             <span className="text-xs font-mono text-[var(--color-accent)]">{cpuPct}%</span>
           </div>
           <div className="h-16 rounded-lg overflow-hidden bg-white/[0.02] border border-[var(--color-border)]/40">
-            <SparklineChart data={cpuTrend} color="#6366f1" height={64} />
+            <SparklineChart data={cpuTrend} color="var(--color-chart-cpu)" height={64} />
           </div>
         </div>
         <div>
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-[var(--color-text-secondary)]">Memory Utilization</span>
-            <span className="text-xs font-mono text-emerald-400">{memPct}%</span>
+            <span className="text-xs font-mono text-[var(--color-status-healthy)]">{memPct}%</span>
           </div>
           <div className="h-16 rounded-lg overflow-hidden bg-white/[0.02] border border-[var(--color-border)]/40">
-            <SparklineChart data={memTrend} color="#10b981" height={64} />
+            <SparklineChart data={memTrend} color="var(--color-chart-mem)" height={64} />
           </div>
         </div>
       </div>

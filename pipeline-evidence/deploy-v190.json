@@ -1,0 +1,57 @@
+{
+  "version": "v190",
+  "deployedAt": "2026-03-06T01:40:00Z",
+  "helmRevision": 1,
+  "deployType": "fresh",
+  "images": {
+    "api": "voyager-api:v190",
+    "web": "voyager-web:v190"
+  },
+  "schemaFix": {
+    "note": "init.sql was missing multiple tables vs Drizzle schema. Fixed and redeployed.",
+    "tablesAdded": [
+      "audit_log",
+      "metrics_history",
+      "feature_flags",
+      "dashboard_layouts",
+      "shared_dashboards",
+      "dashboard_collaborators",
+      "user_tokens",
+      "webhooks",
+      "webhook_deliveries",
+      "ai_conversations",
+      "ai_threads",
+      "ai_messages",
+      "ai_recommendations",
+      "karpenter_cache"
+    ],
+    "columnsAdded": {
+      "alerts": ["webhook_url", "last_triggered_at", "last_value"]
+    }
+  },
+  "pods": {
+    "jaeger": "Running",
+    "postgres": "Running",
+    "redis": "Running",
+    "voyager-api": "Running",
+    "voyager-web": "Running",
+    "allRestarts": 0
+  },
+  "healthCheck": {
+    "url": "http://voyager-platform.voyagerlabs.co/health",
+    "status": 200,
+    "response": "{\"status\":\"ok\"}"
+  },
+  "webCheck": {
+    "url": "http://voyager-platform.voyagerlabs.co/",
+    "status": 307,
+    "note": "307 redirect to /login — expected behavior"
+  },
+  "schemaErrors": "none",
+  "versionVerified": true,
+  "git": {
+    "commit": "edacb13",
+    "message": "fix(db): add all missing tables to init.sql — v190 full schema sync"
+  },
+  "gate": "PASS"
+}

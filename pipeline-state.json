@@ -1,19 +1,16 @@
 {
   "status": "running",
-  "version": "v189",
-  "phase": "Phase-M-P3",
-  "timestamp": "2026-03-06T00:49:00.000Z",
-  "currentTask": "Dev phase — spawning Dima for M-P3-002, M-P3-003, M-P3-004",
-  "completedItems": [
-    "M-P0-001","M-P0-002","M-P0-003","M-P0-004","M-P0-005","M-P0-006",
-    "M-P1-001","M-P1-002","M-P1-003","M-P1-004","M-P1-005","M-P1-006","M-P1-007",
-    "M-P2-001","M-P2-002","M-P2-003","M-P2-004",
-    "M-P3-001"
-  ],
-  "pendingItems": ["M-P3-002","M-P3-003","M-P3-004"],
-  "completedStages": ["assess"],
-  "currentStage": "dev",
-  "fixLoopCount": 0,
-  "devAttempts": 1,
-  "e2eAttempts": 0
+  "version": "v192",
+  "currentStage": "merge",
+  "phase": "git-ops",
+  "timestamp": "2026-03-06T17:35:00+02:00",
+  "foremanStarted": "2026-03-06T16:52:00+02:00",
+  "pendingItems": [],
+  "completedItems": ["BUG-192-001", "BUG-192-002", "BUG-192-003", "BUG-192-004", "BUG-192-005", "FEAT-192-001", "BUG-192-006"],
+  "completedStages": ["dev", "review"],
+  "boardStatus": "ALL 7 ITEMS CODED + REVIEWED — Gil merging",
+  "devCommits": ["74fb698", "1ec8dda", "878a7d7"],
+  "reviewScore": 10,
+  "reviewVerdict": "APPROVED",
+  "notes": "Lior 10/10 APPROVED after 1 fix loop. Spawning Gil for merge + v192 tag."
 }

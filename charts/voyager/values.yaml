@@ -17,6 +17,7 @@ api:
     repository: voyager-api
     tag: dev
     pullPolicy: IfNotPresent
+  port: 4000
 
 migrate:
   enabled: false  # Migration is handled by the API on startup — no separate job needed

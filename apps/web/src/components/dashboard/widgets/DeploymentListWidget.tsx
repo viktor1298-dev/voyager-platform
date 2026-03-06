@@ -3,12 +3,14 @@
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
+import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
 
 export function DeploymentListWidget() {
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
+  const intervalMs = useDashboardRefreshInterval()
   const deploymentsQuery = trpc.deployments.list.useQuery(
     { clusterId: activeClusterId ?? '' },
-    { enabled: Boolean(activeClusterId), refetchInterval: 30000 },
+    { enabled: Boolean(activeClusterId), refetchInterval: Math.min(30000, intervalMs) },
   )
   const deployments = deploymentsQuery.data ?? []
 

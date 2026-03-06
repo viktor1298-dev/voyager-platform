@@ -3,12 +3,14 @@
 import { useClusterContext } from '@/stores/cluster-context'
 import { trpc } from '@/lib/trpc'
 import { LIVE_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
+import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
 
 export function PodStatusWidget() {
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
+  const intervalMs = useDashboardRefreshInterval()
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
-    { refetchInterval: LIVE_CLUSTER_REFETCH_MS, enabled: Boolean(activeClusterId) },
+    { refetchInterval: Math.min(LIVE_CLUSTER_REFETCH_MS, intervalMs), enabled: Boolean(activeClusterId) },
   )
 
   const liveData = liveQuery.data
@@ -27,7 +29,7 @@ export function PodStatusWidget() {
         <div className="flex-1 space-y-3">
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Running', value: runningPods, color: 'text-emerald-400' },
+              { label: 'Running', value: runningPods, color: 'text-[var(--color-status-healthy)]' },
               { label: 'Pending', value: pendingPods, color: 'text-amber-400' },
               { label: 'Total', value: totalPods, color: 'text-[var(--color-text-primary)]' },
             ].map(({ label, value, color }) => (
@@ -41,12 +43,12 @@ export function PodStatusWidget() {
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-[var(--color-text-dim)]">Pod health</span>
-              <span className="text-[10px] font-mono text-emerald-400">{podPct}%</span>
+              <span className="text-[10px] font-mono text-[var(--color-status-healthy)]">{podPct}%</span>
             </div>
-            <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className="h-2 rounded-full bg-[var(--color-track)] overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${podPct}%`, backgroundColor: podPct > 90 ? '#10b981' : podPct > 70 ? '#f59e0b' : '#ef4444' }}
+                style={{ width: `${podPct}%`, backgroundColor: podPct > 90 ? 'var(--color-status-healthy)' : podPct > 70 ? 'var(--color-status-warning)' : 'var(--color-status-error)' }}
               />
             </div>
           </div>
