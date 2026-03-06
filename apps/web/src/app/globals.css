@@ -106,6 +106,7 @@
   --color-status-error: #ff4d6a;
   --color-status-warning: #f6c042;
   --color-status-healthy: #10b981;
+  --color-track: rgba(255, 255, 255, 0.08);
   --color-chart-cpu: #6366f1;
   --color-chart-mem: #10b981;
   --color-chart-pods: #10b981;
@@ -189,6 +190,7 @@ html.light {
   --color-table-separator: rgba(0, 0, 0, 0.4);
   --color-badge-label: #0d1e37;
   --color-status-healthy: #059669;
+  --color-track: rgba(0, 0, 0, 0.08);
   --color-chart-cpu: #6366f1;
   --color-chart-mem: #059669;
   --color-chart-pods: #059669;

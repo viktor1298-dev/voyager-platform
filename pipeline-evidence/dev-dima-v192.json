@@ -17,5 +17,19 @@
   "grep_all_verified": {
     "onPointerDown": "0 matches remaining in apps/web/src/",
     "bg-white progress tracks": "0 remaining in progress bar components"
+  },
+  "fix_loop_1": {
+    "timestamp": "2026-03-06T15:26:27Z",
+    "fixes": ["LIOR-192-001", "LIOR-192-002"],
+    "files_changed": [
+      "apps/web/src/app/globals.css",
+      "apps/web/src/components/dashboard/widgets/ClusterHealthWidget.tsx",
+      "apps/web/src/components/dashboard/widgets/PodStatusWidget.tsx",
+      "apps/web/src/components/metrics/NodeResourceBreakdown.tsx",
+      "apps/web/src/components/ui/progress.tsx",
+      "apps/web/src/app/page.tsx",
+      "apps/web/src/components/dashboard/widgets/LogTailWidget.tsx",
+      "apps/web/src/components/dashboard/widgets/ResourceChartsWidget.tsx"
+    ]
   }
 }

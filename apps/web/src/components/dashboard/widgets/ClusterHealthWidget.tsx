@@ -16,7 +16,7 @@ function ResourceBar({ value, max, color }: { value: number; max: number; color:
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
   return (
     <div className="flex items-center gap-1.5">
-      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-[var(--color-track)] overflow-hidden">
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
       <span className="text-[10px] font-mono tabular-nums text-[var(--color-text-dim)] min-w-[28px] text-right">{pct}%</span>

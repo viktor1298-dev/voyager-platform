@@ -35,7 +35,7 @@ export function ResourceChartsWidget() {
         <div>
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-[var(--color-text-secondary)]">Memory Utilization</span>
-            <span className="text-xs font-mono text-emerald-400">{memPct}%</span>
+            <span className="text-xs font-mono text-[var(--color-status-healthy)]">{memPct}%</span>
           </div>
           <div className="h-16 rounded-lg overflow-hidden bg-white/[0.02] border border-[var(--color-border)]/40">
             <SparklineChart data={memTrend} color="var(--color-chart-mem)" height={64} />
