@@ -939,17 +939,16 @@ When a feature is code-complete but QA is blocked by missing K8s environment:
   - **Expected result after fix:** AI assistance feels native to the workflow, not a separate tool. Users get proactive suggestions on critical pages without navigating away.
   - **Effort:** XL (25-35 hours)
 
-- [ ] **M-P3-004: Customizable Dashboard Widgets**
+- [x] **M-P3-004: Customizable Dashboard Widgets** _(v191 2026-03-06)_
   - **Problem:** Dashboard layout is fixed — everyone sees the same stat cards, health matrix, resource utilization, anomaly timeline. Different teams need different views (SRE wants alerts + resource metrics, developers want deployment status + logs).
   - **Fix:** Implement a configurable dashboard widget system:
     1. Widget library: stat cards, time-series charts, alert feed, deployment list, log tail, anomaly timeline
     2. Add/remove widgets via a "Customize Dashboard" panel
-    3. Drag-to-reorder within defined layout grid
-    4. Save layout per user (user preferences DB table)
-    5. "Default" layout for new users (current dashboard layout)
+    3. Drag-to-reorder within defined layout grid (react-grid-layout)
+    4. Save layout per user (dashboard_layouts DB table + localStorage persistence)
+    5. "Default" layout for new users (stat-cards, cluster-health, anomaly-timeline)
   - **Expected result after fix:** Each user configures their own dashboard view. SREs, developers, and managers see different default widgets.
-  - **Reference:** Grafana's dashboard customization is the industry standard. Datadog's custom dashboards are a core selling point.
-  - **Effort:** XL (35-45 hours)
+  - **Implemented:** `dashboard-layout` Zustand store, `DashboardGrid`, `DashboardEditBar`, `WidgetLibraryDrawer`, `WidgetWrapper`, `WidgetConfigModal`, 8 widget types (stat-cards, cluster-health, resource-charts, alert-feed, anomaly-timeline, deployment-list, log-tail, pod-status), tRPC `dashboardLayout` router with DB persistence, "Customize" button in dashboard header.
 
 ---
 
