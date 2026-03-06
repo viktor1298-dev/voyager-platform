@@ -3,9 +3,11 @@
 import { AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
+import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
 
 export function AlertFeedWidget() {
-  const alertsQuery = trpc.alerts.list.useQuery(undefined, { refetchInterval: 30000 })
+  const intervalMs = useDashboardRefreshInterval()
+  const alertsQuery = trpc.alerts.list.useQuery(undefined, { refetchInterval: Math.min(30000, intervalMs) })
   const alerts = (alertsQuery.data ?? []).slice(0, 10)
 
   return (

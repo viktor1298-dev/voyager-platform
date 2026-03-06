@@ -13,14 +13,14 @@ export async function waitForPageReady(page: Page, options?: { timeout?: number 
 }
 
 export const TEST_ADMIN = {
-  email: 'admin@voyager.local',
-  password: 'admin123',
-} as const;
+  email: process.env.E2E_ADMIN_EMAIL ?? 'admin@voyager.local',
+  password: process.env.E2E_ADMIN_PASSWORD ?? 'admin123',
+};
 
 export const TEST_VIEWER = {
-  email: 'viewer@voyager.local',
-  password: 'viewer123',
-} as const;
+  email: process.env.E2E_VIEWER_EMAIL ?? 'viewer@voyager.local',
+  password: process.env.E2E_VIEWER_PASSWORD ?? 'viewer123',
+};
 
 /** @deprecated Use TEST_ADMIN instead */
 export const TEST_USER = TEST_ADMIN;

@@ -1,5 +1,6 @@
 'use client'
 
+import type React from 'react'
 import { AlertOctagon, AlertTriangle, Info } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo } from 'react'
@@ -9,29 +10,29 @@ import { trpc } from '@/lib/trpc'
 function severityIcon(severity: string) {
   switch (severity) {
     case 'critical':
-      return <AlertOctagon className="h-3 w-3 text-red-400" />
+      return <AlertOctagon className="h-3 w-3" style={{ color: 'var(--color-chart-critical)' }} />
     case 'warning':
-      return <AlertTriangle className="h-3 w-3 text-amber-400" />
+      return <AlertTriangle className="h-3 w-3" style={{ color: 'var(--color-chart-warning)' }} />
     default:
-      return <Info className="h-3 w-3 text-sky-400" />
+      return <Info className="h-3 w-3" style={{ color: 'var(--color-chart-info)' }} />
   }
 }
 
-function severityDotColor(severity: string) {
+function severityDotStyle(severity: string): React.CSSProperties {
   switch (severity) {
     case 'critical':
-      return 'bg-red-400'
+      return { backgroundColor: 'var(--color-chart-critical)' }
     case 'warning':
-      return 'bg-amber-400'
+      return { backgroundColor: 'var(--color-chart-warning)' }
     default:
-      return 'bg-sky-400'
+      return { backgroundColor: 'var(--color-chart-info)' }
   }
 }
 
 const SEVERITY_COLORS: Record<AnomalySeverity, string> = {
-  critical: '#f87171',
-  warning: '#fbbf24',
-  info: '#38bdf8',
+  critical: 'var(--color-chart-critical)',
+  warning: 'var(--color-chart-warning)',
+  info: 'var(--color-chart-info)',
 }
 
 function timeAgo(dateStr: string): string {
@@ -183,7 +184,8 @@ export function AnomalyTimeline() {
               <div key={a.id} className="flex items-start gap-3 relative">
                 {/* Timeline dot */}
                 <span
-                  className={`h-[14px] w-[14px] rounded-full ${severityDotColor(a.severity)} shrink-0 z-10 ring-2 ring-[var(--color-bg-card)]`}
+                  className="h-[14px] w-[14px] rounded-full shrink-0 z-10 ring-2 ring-[var(--color-bg-card)]"
+                  style={severityDotStyle(a.severity)}
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">

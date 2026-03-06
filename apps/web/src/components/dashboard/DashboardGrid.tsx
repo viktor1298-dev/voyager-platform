@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useDashboardLayout, type Widget, type WidgetType } from '@/stores/dashboard-layout'
+import { DashboardRefreshProvider } from './DashboardRefreshContext'
+import type { RefreshIntervalMs } from '@/hooks/useRefreshInterval'
 import { WidgetWrapper } from './WidgetWrapper'
 import { StatCardsWidget } from './widgets/StatCardsWidget'
 import { ClusterHealthWidget } from './widgets/ClusterHealthWidget'
@@ -45,7 +47,7 @@ function renderWidget(widget: Widget) {
   }
 }
 
-export function DashboardGrid() {
+export function DashboardGrid({ intervalMs = 300_000 as RefreshIntervalMs }: { intervalMs?: RefreshIntervalMs }) {
   const widgets = useDashboardLayout((s) => s.widgets)
   const layouts = useDashboardLayout((s) => s.layouts)
   const editMode = useDashboardLayout((s) => s.editMode)
@@ -81,6 +83,7 @@ export function DashboardGrid() {
   )
 
   return (
+    <DashboardRefreshProvider intervalMs={intervalMs}>
     <div ref={containerRef} data-testid="dashboard-grid" className="w-full">
       {GridComponent && containerWidth > 0 ? (
         <GridComponent
@@ -131,5 +134,6 @@ export function DashboardGrid() {
         </div>
       )}
     </div>
+    </DashboardRefreshProvider>
   )
 }

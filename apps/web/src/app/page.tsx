@@ -173,6 +173,9 @@ function DashboardContent() {
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
 
+  // FEAT-192-001: Live refresh interval — must be declared before queries that use it
+  const { intervalMs, setIntervalMs } = useRefreshInterval()
+
   const listQuery = trpc.clusters.list.useQuery(undefined, {
     // FEAT-192-001: honour user-configured refresh interval (min of default + user pref)
     refetchInterval: Math.min(DB_CLUSTER_REFETCH_MS, intervalMs),
@@ -350,18 +353,19 @@ function DashboardContent() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [widgetMode, setWidgetMode] = useState(false)
 
-  // FEAT-192-001: Live refresh interval selector
-  const { intervalMs, setIntervalMs } = useRefreshInterval()
+  // FEAT-192-001: Live indicator state
   const [isDataFresh, setIsDataFresh] = useState(false)
   const freshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wasLiveFetchingRef = useRef(false)
 
   // Mark data as "fresh" for 8 seconds after a fetch completes
   useEffect(() => {
-    if (wasFetchingRef.current && isFetching === 0) {
+    if (wasLiveFetchingRef.current && isFetching === 0) {
       setIsDataFresh(true)
       if (freshTimerRef.current) clearTimeout(freshTimerRef.current)
       freshTimerRef.current = setTimeout(() => setIsDataFresh(false), 8000)
     }
+    wasLiveFetchingRef.current = isFetching > 0
   }, [isFetching])
 
   const saveLayoutMutation = trpc.dashboardLayout.save.useMutation({

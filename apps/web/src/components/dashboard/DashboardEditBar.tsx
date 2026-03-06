@@ -32,18 +32,18 @@ export function DashboardEditBar({
     <div
       className={cn(
         'sticky top-0 z-30 flex items-center justify-between gap-2 px-4 py-2',
-        'rounded-xl border border-blue-500/40 bg-blue-950/80 backdrop-blur-md shadow-lg mb-3',
+        'rounded-xl border border-[var(--color-accent)]/40 bg-[var(--color-bg-card)]/90 backdrop-blur-md shadow-lg mb-3',
       )}
       data-testid="dashboard-edit-bar"
     >
       <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
+        <span className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wider">
           ✏️ Edit Mode
         </span>
         <button
           type="button"
           onClick={onAddWidget}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30 transition-all"
           data-testid="add-widget-btn"
         >
           <PanelRightOpen className="h-3.5 w-3.5" />
@@ -74,7 +74,7 @@ export function DashboardEditBar({
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-semibold bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white transition-all"
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-semibold bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-60 text-white transition-all"
           data-testid="save-layout-btn"
         >
           {saving ? (

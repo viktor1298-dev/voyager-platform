@@ -375,7 +375,7 @@
     "timestamp": "2026-03-04T20:55:47.837078",
     "type": "web-only-redeploy",
     "commit": "b779414",
-    "note": "QA fix rebuild \u2014 web image only, API unchanged at v180",
+    "note": "QA fix rebuild — web image only, API unchanged at v180",
     "images": {
       "web": "voyager-web:v182",
       "api": "voyager-api:v180 (unchanged)"
@@ -426,5 +426,16 @@
     "changes": "Phase M UX audit v3 deep fixes (P0-P3, 18 items): E2E cleanup, critical UX bugs fixed",
     "status": "deployed",
     "health": "ok"
+  },
+  {
+    "version": "v189",
+    "deployedAt": "2026-03-05T23:50:55Z",
+    "helmRevision": 108,
+    "images": {
+      "api": "voyager-api:v189",
+      "web": "voyager-web:v189"
+    },
+    "health": "ok",
+    "gate": "PASS"
   }
 ]

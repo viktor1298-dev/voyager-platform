@@ -3,7 +3,7 @@
 import { getTRPCClient } from '@/lib/trpc'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { AnimatePresence, motion } from 'motion/react'
-import { Loader2, UploadCloud } from 'lucide-react'
+import { CheckCircle2, Loader2, UploadCloud } from 'lucide-react'
 import { useEffect, useMemo, useState, type DragEvent } from 'react'
 
 type ClusterProviderOption = {
@@ -352,20 +352,39 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
         >
           {step === 1 && (
             <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Cluster provider">
-              {CLUSTER_PROVIDERS.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={provider === p.id}
-                  onClick={() => setProvider(p.id)}
-                  className={`${cardClass} ${provider === p.id ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10' : 'hover:border-[var(--color-border-hover)]'}`}
-                >
-                  <div className="text-lg">{p.icon}</div>
-                  <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{p.label}</p>
-                  <p className="text-xs text-[var(--color-text-muted)]">{p.subtitle}</p>
-                </button>
-              ))}
+              {CLUSTER_PROVIDERS.map((p) => {
+                const isSelected = provider === p.id
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    onClick={() => setProvider(p.id)}
+                    className={[
+                      'relative rounded-xl p-3 text-left transition-all duration-200',
+                      isSelected
+                        ? 'border-2 border-[var(--color-accent)] bg-[var(--color-accent)]/5 scale-[1.02]'
+                        : 'border border-[var(--color-border)] bg-[var(--color-bg-surface)] hover:border-[var(--color-border-hover)] hover:bg-[var(--color-bg-card-hover)]',
+                    ].join(' ')}
+                  >
+                    {/* BUG-192-006: checkmark icon — visible only when selected */}
+                    <span
+                      className="absolute top-2 right-2 transition-all duration-200"
+                      style={{ opacity: isSelected ? 1 : 0 }}
+                      aria-hidden="true"
+                    >
+                      <CheckCircle2
+                        className="h-4 w-4"
+                        style={{ color: 'var(--color-accent)' }}
+                      />
+                    </span>
+                    <div className="text-lg">{p.icon}</div>
+                    <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{p.label}</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">{p.subtitle}</p>
+                  </button>
+                )
+              })}
             </div>
           )}
 
