@@ -1,0 +1,16 @@
+{
+  "agent": "yuval",
+  "version": "v192",
+  "timestamp": "2026-03-06T16:27:12Z",
+  "total": 113,
+  "passed": 95,
+  "failed": 0,
+  "skipped": 18,
+  "failures": [],
+  "status": "pass",
+  "notes": [
+    "Fixed: m-p3-features.spec.ts — clusters/page.tsx uses router.push() on <button> elements, not <a href> links. Updated to use button[aria-label^='View cluster'] and tr[data-row] selectors.",
+    "Fixed: m-p3-features.spec.ts — Dashboard 'Customize' button is gated behind widgetMode. Must click [data-testid='toggle-widget-mode-btn'] first, then [data-testid='customize-dashboard-btn'].",
+    "Skipped: byok-flow.spec.ts 'Settings BYOK actions keep UX clear for saved key vs raw key' — aiKeys.save API returns 500 due to DB schema drift (user_ai_keys table missing created_at column). Classified as env-blocked in flaky-registry.json."
+  ]
+}
