@@ -147,6 +147,9 @@ CREATE TABLE IF NOT EXISTS alerts (
   threshold NUMERIC NOT NULL,
   cluster_filter VARCHAR(255),
   enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  webhook_url VARCHAR(1000),
+  last_triggered_at TIMESTAMPTZ,
+  last_value NUMERIC,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -394,3 +397,197 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS "idx_anomalies_cluster" ON "anomalies" ("cluster_id", "detected_at" DESC);
 CREATE INDEX IF NOT EXISTS "idx_anomaly_rules_cluster" ON "anomaly_rules" ("cluster_id");
+
+-- Audit log (missing table — added v190)
+CREATE TABLE IF NOT EXISTS "audit_log" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "user_id" text NOT NULL,
+  "user_email" text,
+  "action" varchar(100) NOT NULL,
+  "resource" varchar(100) NOT NULL,
+  "resource_id" text,
+  "details" text,
+  "ip_address" varchar(45),
+  "timestamp" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- Metrics history (missing table — added v190)
+CREATE TABLE IF NOT EXISTS "metrics_history" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "cluster_id" uuid NOT NULL REFERENCES "clusters"("id") ON DELETE CASCADE,
+  "timestamp" timestamp with time zone DEFAULT now() NOT NULL,
+  "cpu_percent" real NOT NULL,
+  "mem_percent" real NOT NULL,
+  "pod_count" integer DEFAULT 0 NOT NULL,
+  "node_count" integer DEFAULT 0 NOT NULL
+);
+CREATE INDEX IF NOT EXISTS "idx_metrics_history_cluster_ts" ON "metrics_history" ("cluster_id", "timestamp");
+
+-- Feature flags (missing table — added v190)
+CREATE TABLE IF NOT EXISTS "feature_flags" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "name" varchar(100) NOT NULL UNIQUE,
+  "description" text,
+  "enabled" boolean DEFAULT false NOT NULL,
+  "targeting" jsonb DEFAULT '{}'::jsonb NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- Dashboard layouts (missing table — added v190)
+CREATE TABLE IF NOT EXISTS "dashboard_layouts" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "user_id" text NOT NULL UNIQUE REFERENCES "user"("id") ON DELETE CASCADE,
+  "layout" jsonb NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- Shared dashboards (missing table — added v190)
+DO $$ BEGIN
+  CREATE TYPE "public"."dashboard_visibility" AS ENUM('private', 'team', 'public');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "public"."dashboard_collaborator_role" AS ENUM('viewer', 'editor', 'owner');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS "shared_dashboards" (
+  "id" text PRIMARY KEY NOT NULL,
+  "name" text NOT NULL,
+  "description" text,
+  "created_by" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "team_id" text DEFAULT 'org:default' NOT NULL,
+  "config" jsonb NOT NULL,
+  "visibility" "dashboard_visibility" DEFAULT 'private' NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "dashboard_collaborators" (
+  "dashboard_id" text NOT NULL REFERENCES "shared_dashboards"("id") ON DELETE CASCADE,
+  "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "role" "dashboard_collaborator_role" DEFAULT 'viewer' NOT NULL,
+  PRIMARY KEY ("dashboard_id", "user_id")
+);
+
+-- User API tokens (missing table — added v190)
+CREATE TABLE IF NOT EXISTS "user_tokens" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "name" varchar(255) NOT NULL,
+  "token_hash" varchar(64) NOT NULL UNIQUE,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "last_used_at" timestamp with time zone,
+  "expires_at" timestamp with time zone
+);
+
+-- Webhooks (missing table — added v190)
+CREATE TABLE IF NOT EXISTS "webhooks" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "name" varchar(255) NOT NULL,
+  "url" varchar(1000) NOT NULL,
+  "secret" varchar(255),
+  "events" jsonb DEFAULT '[]'::jsonb NOT NULL,
+  "enabled" boolean DEFAULT true NOT NULL,
+  "last_triggered_at" timestamp with time zone,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "webhook_deliveries" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "webhook_id" uuid NOT NULL REFERENCES "webhooks"("id") ON DELETE CASCADE,
+  "event" varchar(100) NOT NULL,
+  "payload" jsonb NOT NULL,
+  "response_status" varchar(10),
+  "success" boolean NOT NULL,
+  "delivered_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- AI tables (missing — added v190)
+DO $$ BEGIN
+  CREATE TYPE "public"."ai_recommendation_severity" AS ENUM('critical', 'warning', 'info');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "public"."ai_recommendation_status" AS ENUM('open', 'dismissed', 'resolved');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "public"."ai_provider" AS ENUM('openai', 'anthropic');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "public"."user_ai_key_provider" AS ENUM('openai', 'claude');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS "ai_conversations" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "cluster_id" uuid NOT NULL REFERENCES "clusters"("id") ON DELETE CASCADE,
+  "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "messages" jsonb NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "ai_threads" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "cluster_id" uuid NOT NULL REFERENCES "clusters"("id") ON DELETE CASCADE,
+  "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "title" varchar(255),
+  "provider" "ai_provider" NOT NULL,
+  "model" varchar(120) NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+CREATE INDEX IF NOT EXISTS "idx_ai_threads_user_created" ON "ai_threads" ("user_id", "created_at" DESC);
+CREATE INDEX IF NOT EXISTS "idx_ai_threads_cluster_created" ON "ai_threads" ("cluster_id", "created_at" DESC);
+
+CREATE TABLE IF NOT EXISTS "ai_messages" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "thread_id" uuid NOT NULL REFERENCES "ai_threads"("id") ON DELETE CASCADE,
+  "role" varchar(16) NOT NULL,
+  "content" text NOT NULL,
+  "provider" "ai_provider" NOT NULL,
+  "model" varchar(120) NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+CREATE INDEX IF NOT EXISTS "idx_ai_messages_thread_created" ON "ai_messages" ("thread_id", "created_at" DESC);
+
+CREATE TABLE IF NOT EXISTS "ai_recommendations" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "cluster_id" uuid NOT NULL REFERENCES "clusters"("id") ON DELETE CASCADE,
+  "severity" "ai_recommendation_severity" NOT NULL,
+  "title" varchar(255) NOT NULL,
+  "description" text NOT NULL,
+  "action" text NOT NULL,
+  "status" "ai_recommendation_status" DEFAULT 'open' NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- Karpenter cache (missing — added v190)
+CREATE TABLE IF NOT EXISTS "karpenter_cache" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "cluster_id" uuid NOT NULL REFERENCES "clusters"("id") ON DELETE CASCADE,
+  "data_type" varchar(50) NOT NULL,
+  "payload" jsonb NOT NULL,
+  "observed_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT "karpenter_cache_cluster_data_type_uq" UNIQUE("cluster_id", "data_type")
+);
+CREATE INDEX IF NOT EXISTS "karpenter_cache_cluster_type_observed_idx" ON "karpenter_cache" ("cluster_id", "data_type", "observed_at");
+
+-- user_ai_keys: update provider type if needed (v190 uses enum)
+-- Note: user_ai_keys table already created above with text provider; 
+-- ensure enum version is consistent
