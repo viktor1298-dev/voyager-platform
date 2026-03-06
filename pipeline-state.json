@@ -1,15 +1,32 @@
 {
-  "status": "running",
+  "status": "deployed-awaiting-review",
   "version": "v192",
   "currentStage": "fix-loop-001-deploy",
   "fixLoopCount": 1,
   "timestamp": "2026-03-06T19:35:00+02:00",
   "foremanResumed": "2026-03-06T19:15:00+02:00",
-  "completedStages": ["dev", "review", "merge", "deploy", "e2e"],
-  "failedStages": ["qa"],
-  "completedItems": ["BUG-192-002", "BUG-192-003", "BUG-192-004", "BUG-192-005", "BUG-192-006", "FEAT-192-001"],
-  "inProgress": ["BUG-192-001"],
-  "rootCause": "InlineAiPanel: askQuestion useCallback depended on contextChatMutation (new ref every render) → N infinite re-render loops (one per AnomalyCard in table) → React event queue saturated → ALL navigation unresponsive",
+  "completedStages": [
+    "dev",
+    "review",
+    "merge",
+    "deploy",
+    "e2e"
+  ],
+  "failedStages": [
+    "qa"
+  ],
+  "completedItems": [
+    "BUG-192-002",
+    "BUG-192-003",
+    "BUG-192-004",
+    "BUG-192-005",
+    "BUG-192-006",
+    "FEAT-192-001"
+  ],
+  "inProgress": [
+    "BUG-192-001"
+  ],
+  "rootCause": "InlineAiPanel: askQuestion useCallback depended on contextChatMutation (new ref every render) \u2192 N infinite re-render loops (one per AnomalyCard in table) \u2192 React event queue saturated \u2192 ALL navigation unresponsive",
   "fixCommit": "7f6d2e8",
   "fixFile": "apps/web/src/components/ai/InlineAiPanel.tsx",
   "liorReview": "APPROVED 10/10",
@@ -17,5 +34,10 @@
   "buildStatus": "PASS",
   "currentStep": "Uri building Docker image v192-fix + deploying to K8s",
   "targetTag": "v192-fix",
-  "nextStep": "Yuval E2E (≥88/96) → Mai QA (≥8.5/10)"
+  "nextStep": "Yuval E2E (\u226588/96) \u2192 Mai QA (\u22658.5/10)",
+  "mergedSHA": "192b81a",
+  "mergedBranch": "feat/init-monorepo",
+  "mergeTag": "v192.1",
+  "mergeNote": "v192 tag already existed; created v192.1 per git-sync SKILL.md (NEVER force-tag)",
+  "mergeTimestamp": "2026-03-06T19:35:00+02:00"
 }
