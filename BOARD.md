@@ -1,3 +1,29 @@
+# 🏗️ BOARD.md — Voyager v194
+
+**Pipeline:** v194 | **Phase:** Foundation — Navigation Redesign (Phase 1)
+**Status:** 🔄 IN PROGRESS (2026-03-07)
+**Opened:** 2026-03-07
+
+---
+
+## ✅ v194 Phase 1 — Foundation (Completed by Ron 2026-03-07)
+
+### [x] P1-001 — Refactor navigation.ts to 6 global items ✅ v194 Ron 2026-03-07
+### [x] P1-002 — Rewrite Sidebar.tsx — layoutId active indicator, Cmd+B, flat 6 items ✅ v194 Ron 2026-03-07
+### [x] P1-003 / BUG-RD-001 — Fix cluster quick-links href to /clusters/${id} ✅ v194 Ron 2026-03-07
+### [x] P1-004 — Auto-collapse AppLayout on /clusters/[id]/* routes ✅ v194 Ron 2026-03-07
+### [x] P1-005 — Create app/clusters/[id]/layout.tsx with 10-tab bar + layoutId underline ✅ v194 Ron 2026-03-07
+### [x] P1-006 — Migrate cluster detail to Overview tab (path-based routing) ✅ v194 Ron 2026-03-07
+### [x] P1-007 — Create route stubs for all 10 cluster tabs ✅ v194 Ron 2026-03-07
+### [x] P1-008 / BUG-RD-005 — Remove duplicate stat cards from Overview tab ✅ v194 Ron 2026-03-07
+### [x] P1-009 — Update Breadcrumbs.tsx for new route structure ✅ v194 Ron 2026-03-07
+### [x] P1-010 — Animation constants updated (counter, snappy, bouncy, max stagger) ✅ v194 Ron 2026-03-07
+### [x] P1-011 — MotionConfig reducedMotion="user" added to providers.tsx ✅ v194 Ron 2026-03-07
+### [x] P1-012 — Install nuqs ✅ v194 Ron 2026-03-07
+### [ ] P1-013 — Remove @tanstack/react-form — BLOCKED: used in login/users/teams pages
+
+---
+
 # 🏗️ BOARD.md — Voyager v193
 
 **Pipeline:** v193 | **Phase:** UI Polish Sprint  
