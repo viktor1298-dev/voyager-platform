@@ -116,8 +116,8 @@ async function collectMetrics(): Promise<void> {
         networkBytesOut,
       })
 
-      // Per-node metrics (MX-002)
-      for (const nm of nodeMetrics.items) {
+      // Per-node metrics (MX-002) — batch insert to avoid N+1
+      const nodeValues = nodeMetrics.items.map((nm) => {
         const nodeName = nm.metadata?.name ?? 'unknown'
         const usedCpuNano = parseCpuToNano(nm.usage?.cpu ?? '0')
         const usedMemBytes = parseMemToBytes(nm.usage?.memory ?? '0')
@@ -130,7 +130,7 @@ async function collectMetrics(): Promise<void> {
           ? Math.round((usedMemBytes / alloc.mem) * 1000) / 10
           : 0
 
-        await db.insert(nodeMetricsHistory).values({
+        return {
           clusterId: cluster.id,
           nodeName,
           timestamp: new Date(),
@@ -138,7 +138,11 @@ async function collectMetrics(): Promise<void> {
           memPercent: nodeMemPercent,
           cpuMillis: Math.round(usedCpuNano / 1_000_000),
           memMi: Math.round(usedMemBytes / (1024 * 1024)),
-        })
+        }
+      })
+
+      if (nodeValues.length > 0) {
+        await db.insert(nodeMetricsHistory).values(nodeValues)
       }
     } catch (err) {
       console.warn(`[metrics-collector] failed for cluster ${cluster.id}`, err)

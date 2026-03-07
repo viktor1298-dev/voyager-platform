@@ -218,6 +218,7 @@ await registerMcpRoute(app)
 
 app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
 
+/** Public health endpoint — intentionally unauthenticated. Returns collector running status. */
 app.get('/health/metrics-collector', { config: { rateLimit: false } }, async () => {
   const { getCollectorStatus } = await import('./jobs/metrics-history-collector.js')
   return getCollectorStatus()

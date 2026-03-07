@@ -439,6 +439,7 @@ export const metricsRouter = router({
           gte(nodeMetricsHistory.timestamp, start),
         ))
         .orderBy(nodeMetricsHistory.timestamp)
+        .limit(10000)
 
       if (rows.length === 0) return []
 
