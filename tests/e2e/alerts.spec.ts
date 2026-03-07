@@ -164,10 +164,11 @@ test.describe('Alerts — CRUD + History', () => {
 
   test('should display history section with triggers or empty message', async ({ page }) => {
     await page.goto('/alerts');
-    await expect(page.getByText('Recent Triggers')).toBeVisible({ timeout: 15_000 });
+    // Use .first() to avoid strict-mode violation if "Recent Triggers" text appears in multiple elements
+    await expect(page.getByText('Recent Triggers').first()).toBeVisible({ timeout: 15_000 });
 
     // Either shows trigger entries or "No alert triggers yet"
-    const emptyHistory = page.getByText(/no alert triggers yet/i);
+    const emptyHistory = page.getByText(/no alert triggers yet/i).first();
 
     // Use poll to avoid strict-mode issues when both ACK and NEW entries may exist
     await expect.poll(async () => {

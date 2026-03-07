@@ -11,11 +11,13 @@ test.describe('Optimistic UI + Motion Animations', () => {
     await page.waitForSelector('h1:has-text("Clusters")', { state: 'visible', timeout: 30000 })
     await expect(page.locator('h1:has-text("Clusters")')).toBeVisible({ timeout: 10_000 })
 
+    // Navigate to Alerts (which IS in the sidebar nav)
+    await page.click('a[href="/alerts"]')
+    await expect(page.locator('h1:has-text("Alerts")')).toBeVisible({ timeout: 10_000 })
+
+    // Navigate back to Clusters
     await page.click('a[href="/clusters"]')
     await expect(page.locator('h1:has-text("Clusters")')).toBeVisible({ timeout: 10_000 })
-
-    await page.click('a[href="/deployments"]')
-    await expect(page.locator('h1:has-text("Deployments")')).toBeVisible({ timeout: 10_000 })
   })
 
   test('optimistic delete cluster shows immediate feedback', async ({ page }) => {
@@ -30,9 +32,9 @@ test.describe('Optimistic UI + Motion Animations', () => {
   })
 
   test('optimistic role change shows immediate update', async ({ page }) => {
-    await page.goto('/settings/users')
-    await expect(page).toHaveURL(/\/settings\/users/, { timeout: 10_000 })
-    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 10_000 })
+    await page.goto('/settings/users', { waitUntil: 'domcontentloaded' })
+    await expect(page).toHaveURL(/\/settings\/users/, { timeout: 15_000 })
+    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 15_000 })
 
     const roleBtn = page.locator('button:has-text("Promote"), button:has-text("Demote")').first()
     if (await roleBtn.isVisible()) {

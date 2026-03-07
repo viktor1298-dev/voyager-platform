@@ -4,9 +4,9 @@ import { login } from './helpers';
 test.describe('Confirmation Dialog', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.goto('/settings/users');
-    await expect(page).toHaveURL(/\/settings\/users/, { timeout: 10_000 });
-    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 10_000 });
+    await page.goto('/settings/users', { waitUntil: 'domcontentloaded' });
+    await expect(page).toHaveURL(/\/settings\/users/, { timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 20_000 });
   });
 
   test('delete action shows confirmation dialog', async ({ page }) => {

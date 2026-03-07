@@ -60,8 +60,9 @@ test.describe('K-P2 Features', () => {
   test('settings tabs: 7 tabs exist and can be switched', async ({ page }) => {
     await page.goto(`${BASE_URL}/settings`);
 
-    // Wait for settings page — new layout uses Link-based nav, not Radix Tabs
-    const tabs = page.locator('nav a[href^="/settings"], [aria-label="Settings tabs"] a');
+    // Wait for settings page — new layout uses Link-based nav inside aria-label="Settings tabs"
+    // Use only the aria-label selector to avoid matching the sidebar /settings link
+    const tabs = page.locator('[aria-label="Settings tabs"] a');
     await expect(tabs.first()).toBeVisible({ timeout: 15_000 });
 
     // Verify 7 tabs (General, Users, Teams, Permissions, Webhooks, Feature Flags, Audit Log)

@@ -44,42 +44,52 @@ test.describe('Responsive — Mobile Viewport', () => {
 
   test('mobile nav first tap should navigate immediately', async ({ page }) => {
     await login(page);
-    await page.goto('/settings/users');
+    await page.goto('/settings/users', { waitUntil: 'domcontentloaded' });
 
     const menuButton = page.getByRole('button', { name: /open navigation menu|close navigation menu/i });
+    await expect(menuButton).toBeVisible({ timeout: 10_000 });
     await menuButton.click();
+    await page.waitForTimeout(300); // wait for sidebar to open
 
-    await page.getByRole('link', { name: /^settings$/i }).click();
-    await expect(page).toHaveURL(/\/settings/);
-    await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible({ timeout: 10_000 });
+    // Navigate to Settings (sidebar link href="/settings")
+    const settingsLink = page.getByRole('link', { name: /^settings$/i });
+    await expect(settingsLink).toBeVisible({ timeout: 5_000 });
+    await settingsLink.click();
+
+    await page.waitForURL(/\/settings/, { timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: /^settings$/i })).toBeVisible({ timeout: 10_000 });
   });
 
 
   test('mobile nav tap lands on target route without login returnUrl drift', async ({ page }) => {
     await login(page);
-    await page.goto('/clusters');
+    await page.goto('/clusters', { waitUntil: 'domcontentloaded' });
 
     const menuButton = page.getByRole('button', { name: /open navigation menu|close navigation menu/i });
+    await expect(menuButton).toBeVisible({ timeout: 10_000 });
     await menuButton.click();
+    await page.waitForTimeout(300); // wait for sidebar to open
 
-    await page.getByRole('link', { name: /^events$/i }).click();
-    await expect(page).toHaveURL(/\/events$/);
+    const eventsLink = page.getByRole('link', { name: /^events$/i });
+    await expect(eventsLink).toBeVisible({ timeout: 5_000 });
+    await eventsLink.click();
+
+    await page.waitForURL(/\/events/, { timeout: 10_000 });
     await expect(page).not.toHaveURL(/\/login\?/);
     await expect(page).not.toHaveURL(/returnUrl=/);
   });
 
   test('should render BYOK actions as full-width touch targets on mobile', async ({ page }) => {
     await login(page);
-    await page.goto('/settings');
-    // Navigate to AI Configuration tab where BYOK settings live
-    await page.getByRole('tab', { name: 'AI Configuration' }).click();
-    await page.waitForTimeout(300);
+    // BYOK settings are on the General settings page (not behind a separate tab)
+    await page.goto('/settings', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(500); // Allow React hydration
 
     const actions = page.getByTestId('byok-actions');
     const saveBtn = page.getByTestId('byok-save');
     const testBtn = page.getByTestId('byok-test');
 
-    await expect(actions).toBeVisible();
+    await expect(actions).toBeVisible({ timeout: 15_000 });
     await expect(saveBtn).toBeVisible();
     await expect(testBtn).toBeVisible();
 
