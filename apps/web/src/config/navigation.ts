@@ -1,4 +1,4 @@
-import { Bell, CalendarDays, FileText, LayoutDashboard, Server, Settings } from 'lucide-react'
+import { Bell, Bot, LayoutDashboard, PieChart, Server, Settings } from 'lucide-react'
 
 export type NavItem = {
   id: string
@@ -10,7 +10,7 @@ export const navItems: NavItem[] = [
   { id: '/', label: 'Dashboard', icon: LayoutDashboard },
   { id: '/clusters', label: 'Clusters', icon: Server },
   { id: '/alerts', label: 'Alerts', icon: Bell },
-  { id: '/events', label: 'Events', icon: CalendarDays },
-  { id: '/logs', label: 'Logs', icon: FileText },
+  { id: '/ai', label: 'AI Assistant', icon: Bot },
+  { id: '/dashboards', label: 'Dashboards', icon: PieChart },
   { id: '/settings', label: 'Settings', icon: Settings },
 ] as const
