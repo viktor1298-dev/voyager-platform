@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 const PATH_LABELS: Record<string, string> = {
   '': 'Dashboard',
   clusters: 'Clusters',
-  dashboards: 'Shared Dashboards',
+  dashboards: 'Dashboards',
   events: 'Events',
   logs: 'Logs',
   alerts: 'Alerts',
@@ -18,10 +18,19 @@ const PATH_LABELS: Record<string, string> = {
   'feature-flags': 'Feature Flags',
   webhooks: 'Webhooks',
   users: 'Users',
-  audit: 'Audit Logs',
+  audit: 'Audit Log',
   deployments: 'Deployments',
   teams: 'Teams',
   permissions: 'Permissions',
+  ai: 'AI Assistant',
+  // Cluster tabs
+  nodes: 'Nodes',
+  pods: 'Pods',
+  services: 'Services',
+  namespaces: 'Namespaces',
+  metrics: 'Metrics',
+  autoscaling: 'Autoscaling',
+  overview: 'Overview',
 }
 
 function formatSegmentLabel(segment: string, segmentLabels?: Record<string, string>) {
