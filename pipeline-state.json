@@ -2,11 +2,11 @@
   "status": "running",
   "version": "v197",
   "currentStage": "phase5-dev",
-  "phase": "dashboard-ux-metrics-fix",
+  "phase": "Phase5",
   "fixLoopCount": 0,
   "timestamp": "2026-03-07T11:33:00.000Z",
   "branch": "main",
-  "tag": null,
+  "tag": "v197",
   "mergeCommit": null,
   "completedStages": [
     "deploy-v195",
@@ -23,7 +23,10 @@
     "qa-v196-fix1"
   ],
   "failedStages": [],
-  "inProgress": ["phase5-dev-frontend", "phase5-dev-backend"],
+  "inProgress": [
+    "phase5-dev-frontend",
+    "phase5-dev-backend"
+  ],
   "notes": "Phase 5: Dashboard UX compact + Metrics fix. Ron (frontend) + Dima (backend) in parallel.",
   "deployedInK8s": "v196-fix1",
   "evidence": {
@@ -32,5 +35,7 @@
     "review-v196": "pipeline-evidence/review-v196-phase4.json",
     "e2e-v196-fix1": "pipeline-evidence/e2e-v196-fix1.json",
     "qa-v196-fix1": "pipeline-evidence/qa-v196-fix1.json"
-  }
+  },
+  "mergedSHA": "c4ed475e5ac1e9c7ecc253c6a162768857866993",
+  "mergedBranch": "feat/phase5-metrics-backend-deleted"
 }
