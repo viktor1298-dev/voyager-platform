@@ -1,10 +1,10 @@
 {
   "status": "running",
-  "version": "v194",
-  "currentStage": "e2e-phase2",
+  "version": "v196-fix1",
+  "currentStage": "DEPLOYED",
   "phase": "phase2",
   "fixLoopCount": 1,
-  "timestamp": "2026-03-07T07:00:00+02:00",
+  "timestamp": "2026-03-07T12:26:50.606937",
   "branch": "feat/init-monorepo",
   "tag": "v194-phase2",
   "completedStages": [
@@ -40,5 +40,6 @@
     "loginWorks": true
   },
   "notes": "Phase 2 deployed. E2E running.",
-  "foremanNotes": "Guardian 07:45: QA FAIL 8.2/10. BUG-2 (sidebar) assigned to frontend agent. BUG-1 (401 auth storm - HIGH) UNADDRESSED - backend tRPC auth regression on polling endpoints. Fix needed before QA re-run can pass."
+  "foremanNotes": "Guardian 07:45: QA FAIL 8.2/10. BUG-2 (sidebar) assigned to frontend agent. BUG-1 (401 auth storm - HIGH) UNADDRESSED - backend tRPC auth regression on polling endpoints. Fix needed before QA re-run can pass.",
+  "deployedInK8s": "v196-fix1"
 }
