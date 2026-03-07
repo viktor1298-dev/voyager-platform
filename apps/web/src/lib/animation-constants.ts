@@ -5,26 +5,34 @@
 
 // Durations (seconds)
 export const DURATION = {
-  instant: 0.1,
+  instant: 0.08,
   fast: 0.15,
   normal: 0.2,
   slow: 0.3,
   page: 0.25,
+  counter: 0.8,
+  counterLarge: 1.2,
 } as const
 
 // Easings
 export const EASING = {
   default: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
+  standard: [0.4, 0, 0.2, 1] as [number, number, number, number],
+  decelerate: [0, 0, 0.2, 1] as [number, number, number, number],
+  accelerate: [0.4, 0, 1, 1] as [number, number, number, number],
   spring: { type: 'spring' as const, stiffness: 300, damping: 30 },
+  snappy: { type: 'spring' as const, stiffness: 500, damping: 40 },
+  bouncy: { type: 'spring' as const, stiffness: 400, damping: 25, mass: 0.8 },
   exit: [0.4, 0, 1, 1] as [number, number, number, number],
   enter: [0, 0, 0.2, 1] as [number, number, number, number],
 } as const
 
 // Stagger delay between list items
 export const STAGGER = {
-  fast: 0.03,
-  normal: 0.05,
-  slow: 0.08,
+  fast: 0.03,   // dense table rows
+  normal: 0.05, // card grid
+  slow: 0.08,   // hero cards
+  max: 0.3,     // cap total stagger (10 items max effect)
 } as const
 
 // Common animation variants

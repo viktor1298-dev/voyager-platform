@@ -1,15 +1,10 @@
 'use client'
 
 import type { ColumnDef } from '@tanstack/react-table'
-import { ExternalLink, Globe, Info, KeyRound, Layers, Server, Wifi } from 'lucide-react'
+import { ExternalLink, Globe, Info, Layers, Server, Wifi } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { AppLayout } from '@/components/AppLayout'
-import { PageTransition } from '@/components/animations'
-import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { DataTable } from '@/components/DataTable'
-import { ApiTokensSection } from '@/components/settings/ApiTokens'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { APP_VERSION } from '@/config/constants'
 import {
   type AiProvider,
@@ -18,7 +13,6 @@ import {
   testAiKeyConnection,
   upsertAiKeySettings,
 } from '@/lib/ai-keys-client'
-import { normalizeLiveHealthStatus, healthBadgeLabel } from '@/lib/cluster-status'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
 
@@ -38,7 +32,7 @@ interface ProviderConfig {
 
 const PROVIDERS: ProviderConfig[] = [
   {
-    value: 'claude',
+    value: 'anthropic',
     label: 'Claude (Anthropic)',
     models: ['claude-sonnet-4-20250514', 'claude-3-7-sonnet-latest'],
   },
@@ -94,7 +88,7 @@ const clusterColumns: ColumnDef<ClusterRow, unknown>[] = [
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-[var(--color-border)]/50 last:border-b-0">
-      <span className="text-sm font-medium text-[var(--color-text-muted)]">
+      <span className="text-[12px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider">
         {label}
       </span>
       <span className="text-[13px] text-[var(--color-text-primary)] font-medium">{value}</span>
@@ -157,7 +151,7 @@ function StatusDot({ connected }: { connected: boolean }) {
 
 export const dynamic = 'force-dynamic'
 
-export default function SettingsPage() {
+export default function SettingsGeneralPage() {
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
 
   const liveQuery = trpc.clusters.live.useQuery({ clusterId: activeClusterId ?? '' }, {
@@ -168,7 +162,7 @@ export default function SettingsPage() {
     refetchInterval: 60000,
   })
 
-  const [provider, setProvider] = useState<AiProvider>('claude')
+  const [provider, setProvider] = useState<AiProvider>('anthropic')
   const [model, setModel] = useState(PROVIDERS[0].models[0])
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [storedMaskedKey, setStoredMaskedKey] = useState<string | null>(null)
@@ -204,8 +198,6 @@ export default function SettingsPage() {
       setModel(providerConfig.models[0])
     }
   }, [model, providerConfig])
-
-  // Keep latest action status visible until a newer save/test result replaces it.
 
   useEffect(() => {
     setIsHydrated(true)
@@ -276,330 +268,293 @@ export default function SettingsPage() {
   }, [])
 
   return (
-    <AppLayout>
-      <PageTransition>
-        <Breadcrumbs />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <SectionCard icon={<Wifi className="h-4 w-4" />} title="Cluster Connection">
+        <InfoRow label="Status" value={<StatusDot connected={isConnected} />} />
+        <InfoRow
+          label="API Endpoint"
+          value={
+            <span className="text-[12px] font-mono text-[var(--color-text-secondary)]">
+              {isConnected ? (live.endpoint ?? '/trpc') : '—'}
+            </span>
+          }
+        />
+        <InfoRow label="K8s Version" value={isConnected ? live.version : '—'} />
+        <InfoRow
+          label="Last Sync"
+          value={<span suppressHydrationWarning>{isConnected ? lastSyncLabel : '—'}</span>}
+        />
+      </SectionCard>
 
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
-            Settings
-          </h1>
-          <p className="text-sm text-[var(--color-text-dim)] mt-1">
-            Platform configuration & information
-          </p>
-        </div>
-
-        <Tabs defaultValue="general" className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="ai">AI Configuration</TabsTrigger>
-            <TabsTrigger value="tokens">API Tokens</TabsTrigger>
-            <TabsTrigger value="clusters">Clusters</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="general">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              <SectionCard icon={<Wifi className="h-4 w-4" />} title="Cluster Connection">
-                <InfoRow label="Status" value={<StatusDot connected={isConnected} />} />
-                <InfoRow
-                  label="API Endpoint"
-                  value={
-                    <span className="text-[12px] font-mono text-[var(--color-text-secondary)]">
-                      {isConnected ? (live.endpoint ?? '/trpc') : '—'}
-                    </span>
-                  }
-                />
-                <InfoRow label="K8s Version" value={isConnected ? live.version : '—'} />
-                <InfoRow
-                  label="Last Sync"
-                  value={<span suppressHydrationWarning>{isConnected ? lastSyncLabel : '—'}</span>}
-                />
-              </SectionCard>
-
-              <SectionCard icon={<Server className="h-4 w-4" />} title="Platform Info">
-                <InfoRow
-                  label="Voyager Version"
-                  value={
-                    <span
-                      className="gradient-text font-bold"
-                      style={{ backgroundImage: 'var(--gradient-text-default)' }}
-                    >
-                      {APP_VERSION}
-                    </span>
-                  }
-                />
-                <InfoRow label="API Version" value="v1" />
-                <InfoRow label="Runtime" value="Next.js 16 + tRPC 11" />
-                <InfoRow
-                  label="Status"
-                  value={
-                    <span className="text-[var(--color-status-active)] text-[12px] font-semibold">
-                      Operational
-                    </span>
-                  }
-                />
-              </SectionCard>
-
-              <SectionCard icon={<Info className="h-4 w-4" />} title="About">
-                <p className="text-[13px] text-[var(--color-text-secondary)] leading-relaxed mb-4">
-                  <strong className="text-[var(--color-text-primary)]">Voyager Platform</strong> —
-                  Unified Kubernetes Operations Dashboard.
-                </p>
-                <div className="flex flex-col gap-2">
-                  <a
-                    href="https://github.com/vkzone/voyager-platform"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-[12px] text-[var(--color-accent)] hover:text-[var(--color-text-primary)] transition-colors"
-                  >
-                    <Globe className="h-3.5 w-3.5" />
-                    GitHub Repository
-                    <ExternalLink className="h-3 w-3 opacity-50" />
-                  </a>
-                </div>
-              </SectionCard>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="ai">
-          <SectionCard icon={<Info className="h-4 w-4" />} title="AI Bring Your Own Key (BYOK)">
-            <form
-              className="space-y-3"
-              onSubmit={(event) => {
-                event.preventDefault()
-                if (!apiKeyInput.trim() || isSaving) return
-
-                setIsSaving(true)
-                void upsertAiKeySettings({ provider, model, apiKey: apiKeyInput.trim() })
-                  .then((saved) => {
-                    setStoredMaskedKey(saved.maskedKey)
-                    setStoredKeyProvider(saved.provider)
-                    setStoredKeyModel(saved.model)
-                    setApiKeyInput('')
-                    const message = `AI key saved for ${saved.provider}/${saved.model}`
-                    setActionStatus({
-                      type: 'success',
-                      message,
-                      action: 'save',
-                      at: new Date().toISOString(),
-                    })
-                    toast.success('AI key saved')
-                  })
-                  .catch((error) => {
-                    const message = error instanceof Error ? error.message : 'Failed to save AI key'
-                    setActionStatus({
-                      type: 'error',
-                      message,
-                      action: 'save',
-                      at: new Date().toISOString(),
-                    })
-                    toast.error(message)
-                  })
-                  .finally(() => setIsSaving(false))
-              }}
+      <SectionCard icon={<Server className="h-4 w-4" />} title="Platform Info">
+        <InfoRow
+          label="Voyager Version"
+          value={
+            <span
+              className="gradient-text font-bold"
+              style={{ backgroundImage: 'var(--gradient-text-default)' }}
             >
-              <div>
-                <label
-                  htmlFor="provider"
-                  className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]"
-                >
-                  Provider
-                </label>
-                <select
-                  id="provider"
-                  value={provider}
-                  onChange={(event) => setProvider(event.target.value as AiProvider)}
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
-                >
-                  {PROVIDERS.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {APP_VERSION}
+            </span>
+          }
+        />
+        <InfoRow label="API Version" value="v1" />
+        <InfoRow label="Runtime" value="Next.js 16 + tRPC 11" />
+        <InfoRow
+          label="Status"
+          value={
+            <span className="text-[var(--color-status-active)] text-[12px] font-semibold">
+              Operational
+            </span>
+          }
+        />
+      </SectionCard>
 
-              <div>
-                <label
-                  htmlFor="model"
-                  className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]"
-                >
-                  Model
-                </label>
-                <select
-                  id="model"
-                  value={model}
-                  onChange={(event) => setModel(event.target.value)}
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
-                >
-                  {providerConfig.models.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      <SectionCard icon={<Info className="h-4 w-4" />} title="AI Bring Your Own Key (BYOK)">
+        <form
+          className="space-y-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (!apiKeyInput.trim() || isSaving) return
 
-              <div>
-                <label
-                  htmlFor="api-key"
-                  className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]"
-                >
-                  API Key
-                </label>
-                <input
-                  id="api-key"
-                  type="password"
-                  value={apiKeyInput}
-                  onChange={(event) => setApiKeyInput(event.target.value)}
-                  placeholder={provider === 'claude' ? 'sk-ant-...' : 'sk-...'}
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
-                />
-                <p className="mt-1 text-[11px] text-[var(--color-text-dim)]">
-                  We never show your full key in the UI.
-                </p>
-                {(storedMaskedKey || apiKeyInput) && (
-                  <p className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
-                    Key preview:{' '}
-                    <span className="font-mono">{storedMaskedKey ?? maskApiKey(apiKeyInput)}</span>
-                  </p>
-                )}
-              </div>
+            setIsSaving(true)
+            void upsertAiKeySettings({ provider, model, apiKey: apiKeyInput.trim() })
+              .then((saved) => {
+                setStoredMaskedKey(saved.maskedKey)
+                setStoredKeyProvider(saved.provider)
+                setStoredKeyModel(saved.model)
+                setApiKeyInput('')
+                const message = `AI key saved for ${saved.provider}/${saved.model}`
+                setActionStatus({
+                  type: 'success',
+                  message,
+                  action: 'save',
+                  at: new Date().toISOString(),
+                })
+                toast.success('AI key saved')
+              })
+              .catch((error) => {
+                const message = error instanceof Error ? error.message : 'Failed to save AI key'
+                setActionStatus({
+                  type: 'error',
+                  message,
+                  action: 'save',
+                  at: new Date().toISOString(),
+                })
+                toast.error(message)
+              })
+              .finally(() => setIsSaving(false))
+          }}
+        >
+          <div>
+            <label
+              htmlFor="provider"
+              className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono"
+            >
+              Provider
+            </label>
+            <select
+              id="provider"
+              value={provider}
+              onChange={(event) => setProvider(event.target.value as AiProvider)}
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+            >
+              {PROVIDERS.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-              <div
-                data-testid="byok-actions"
-                className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2"
-              >
-                <button
-                  type="submit"
-                  data-testid="byok-save"
-                  disabled={!apiKeyInput.trim() || isSaving}
-                  className="inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-[var(--color-accent)]/20 hover:opacity-90 disabled:opacity-60"
-                >
-                  {isSaving ? 'Saving...' : 'Save Key'}
-                </button>
+          <div>
+            <label
+              htmlFor="model"
+              className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono"
+            >
+              Model
+            </label>
+            <select
+              id="model"
+              value={model}
+              onChange={(event) => setModel(event.target.value)}
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+            >
+              {providerConfig.models.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
 
-                <button
-                  type="button"
-                  data-testid="byok-test"
-                  disabled={(!hasRawKeyInput && !hasStoredKeyForProvider) || isTesting}
-                  onClick={() => {
-                    setIsTesting(true)
-                    void testAiKeyConnection({
-                      provider,
-                      model,
-                      apiKey: hasRawKeyInput ? apiKeyInput.trim() : undefined,
-                    })
-                      .then((result) => {
-                        if (result.ok) {
-                          setActionStatus({
-                            type: 'success',
-                            message: result.message,
-                            action: 'test',
-                            at: new Date().toISOString(),
-                          })
-                          toast.success(result.message)
-                        } else {
-                          setActionStatus({
-                            type: 'error',
-                            message: result.message,
-                            action: 'test',
-                            at: new Date().toISOString(),
-                          })
-                          toast.error(result.message)
-                        }
+          <div>
+            <label
+              htmlFor="api-key"
+              className="mb-1 block text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-mono"
+            >
+              API Key
+            </label>
+            <input
+              id="api-key"
+              type="password"
+              value={apiKeyInput}
+              onChange={(event) => setApiKeyInput(event.target.value)}
+              placeholder={provider === 'anthropic' ? 'sk-ant-...' : 'sk-...'}
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+            />
+            <p className="mt-1 text-[11px] text-[var(--color-text-dim)]">
+              We never show your full key in the UI.
+            </p>
+            {(storedMaskedKey || apiKeyInput) && (
+              <p className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
+                Key preview:{' '}
+                <span className="font-mono">{storedMaskedKey ?? maskApiKey(apiKeyInput)}</span>
+              </p>
+            )}
+          </div>
+
+          <div
+            data-testid="byok-actions"
+            className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2"
+          >
+            <button
+              type="submit"
+              data-testid="byok-save"
+              disabled={!apiKeyInput.trim() || isSaving}
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-[var(--color-accent)]/20 hover:opacity-90 disabled:opacity-60"
+            >
+              {isSaving ? 'Saving...' : 'Save Key'}
+            </button>
+
+            <button
+              type="button"
+              data-testid="byok-test"
+              disabled={(!hasRawKeyInput && !hasStoredKeyForProvider) || isTesting}
+              onClick={() => {
+                setIsTesting(true)
+                void testAiKeyConnection({
+                  provider,
+                  model,
+                  apiKey: hasRawKeyInput ? apiKeyInput.trim() : undefined,
+                })
+                  .then((result) => {
+                    if (result.ok) {
+                      setActionStatus({
+                        type: 'success',
+                        message: result.message,
+                        action: 'test',
+                        at: new Date().toISOString(),
                       })
-                      .finally(() => setIsTesting(false))
-                  }}
-                  className="inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-white/[0.04] disabled:opacity-60"
-                >
-                  {isTesting
-                    ? hasRawKeyInput
-                      ? 'Testing new key...'
-                      : 'Testing saved key...'
-                    : hasRawKeyInput
-                      ? 'Test New Key'
-                      : 'Test Saved Key'}
-                </button>
+                      toast.success(result.message)
+                    } else {
+                      setActionStatus({
+                        type: 'error',
+                        message: result.message,
+                        action: 'test',
+                        at: new Date().toISOString(),
+                      })
+                      toast.error(result.message)
+                    }
+                  })
+                  .finally(() => setIsTesting(false))
+              }}
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-white/[0.04] disabled:opacity-60"
+            >
+              {isTesting
+                ? hasRawKeyInput
+                  ? 'Testing new key...'
+                  : 'Testing saved key...'
+                : hasRawKeyInput
+                  ? 'Test New Key'
+                  : 'Test Saved Key'}
+            </button>
+          </div>
+
+          {hasStoredKeyForProvider && !hasRawKeyInput && (
+            <p className="text-xs text-[var(--color-text-dim)]">
+              You can test your saved key, or enter a new key and save to replace it.
+            </p>
+          )}
+
+          {!hasRawKeyInput &&
+            storedMaskedKey &&
+            storedKeyProvider &&
+            storedKeyProvider !== provider && (
+              <p className="text-xs text-[var(--color-text-dim)]">
+                Saved key exists for {storedKeyProvider}, switch provider to test it.
+              </p>
+            )}
+
+          <div
+            data-testid="byok-saved-state"
+            className={`rounded-xl border px-3 py-2 text-xs ${
+              isKeyLoading
+                ? 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-dim)]'
+                : hasStoredKeyForSelection
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                  : hasStoredKeyForProvider
+                    ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                    : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-dim)]'
+            }`}
+          >
+            {isKeyLoading
+              ? 'Loading saved key status…'
+              : hasStoredKeyForSelection
+                ? `Saved key active for ${provider}/${model}`
+                : hasStoredKeyForProvider
+                  ? `Saved key exists for ${provider}/${storedKeyModel ?? 'another model'} (selected model is ${model})`
+                  : 'No saved key for selected provider'}
+          </div>
+
+          {actionStatus && (
+            <div
+              data-testid="byok-action-status"
+              className={`rounded-xl border px-3 py-2 text-xs ${
+                actionStatus.type === 'success'
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                  : 'border-red-500/40 bg-red-500/10 text-red-300'
+              }`}
+            >
+              <div className="font-medium">
+                {actionStatus.action === 'save' ? 'Save result' : 'Test result'}
               </div>
-
-              {hasStoredKeyForProvider && !hasRawKeyInput && (
-                <p className="text-xs text-[var(--color-text-dim)]">
-                  You can test your saved key, or enter a new key and save to replace it.
-                </p>
-              )}
-
-              {!hasRawKeyInput &&
-                storedMaskedKey &&
-                storedKeyProvider &&
-                storedKeyProvider !== provider && (
-                  <p className="text-xs text-[var(--color-text-dim)]">
-                    Saved key exists for {storedKeyProvider}, switch provider to test it.
-                  </p>
-                )}
-
-              <div
-                data-testid="byok-saved-state"
-                className={`rounded-xl border px-3 py-2 text-xs ${
-                  isKeyLoading
-                    ? 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-dim)]'
-                    : hasStoredKeyForSelection
-                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                      : hasStoredKeyForProvider
-                        ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
-                        : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-dim)]'
-                }`}
-              >
-                {isKeyLoading
-                  ? 'Loading saved key status…'
-                  : hasStoredKeyForSelection
-                    ? `Saved key active for ${provider}/${model}`
-                    : hasStoredKeyForProvider
-                      ? `Saved key exists for ${provider}/${storedKeyModel ?? 'another model'} (selected model is ${model})`
-                      : 'No saved key for selected provider'}
+              <div>{actionStatus.message}</div>
+              <div className="mt-0.5 opacity-80">
+                {new Date(actionStatus.at).toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                })}
               </div>
+            </div>
+          )}
+        </form>
+      </SectionCard>
 
-              {actionStatus && (
-                <div
-                  data-testid="byok-action-status"
-                  className={`rounded-xl border px-3 py-2 text-xs ${
-                    actionStatus.type === 'success'
-                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                      : 'border-red-500/40 bg-red-500/10 text-red-300'
-                  }`}
-                >
-                  <div className="font-medium">
-                    {actionStatus.action === 'save' ? 'Save result' : 'Test result'}
-                  </div>
-                  <div>{actionStatus.message}</div>
-                  <div className="mt-0.5 opacity-80">
-                    {new Date(actionStatus.at).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                    })}
-                  </div>
-                </div>
-              )}
-            </form>
-          </SectionCard>
+      <SectionCard icon={<Layers className="h-4 w-4" />} title="Registered Clusters">
+        <ClusterTable live={live} clusters={clusters} />
+      </SectionCard>
 
-          </TabsContent>
-
-          <TabsContent value="tokens">
-            <SectionCard icon={<KeyRound className="h-4 w-4" />} title="API Tokens">
-              <ApiTokensSection />
-            </SectionCard>
-          </TabsContent>
-
-          <TabsContent value="clusters">
-            <SectionCard icon={<Layers className="h-4 w-4" />} title="Registered Clusters">
-              <ClusterTable live={live} clusters={clusters} />
-            </SectionCard>
-          </TabsContent>
-        </Tabs>
-      </PageTransition>
-    </AppLayout>
+      <SectionCard icon={<Info className="h-4 w-4" />} title="About">
+        <p className="text-[13px] text-[var(--color-text-secondary)] leading-relaxed mb-4">
+          <strong className="text-[var(--color-text-primary)]">Voyager Platform</strong> —
+          Unified Kubernetes Operations Dashboard.
+        </p>
+        <div className="flex flex-col gap-2">
+          <a
+            href="https://github.com/vkzone/voyager-platform"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-[12px] text-[var(--color-accent)] hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            GitHub Repository
+            <ExternalLink className="h-3 w-3 opacity-50" />
+          </a>
+        </div>
+      </SectionCard>
+    </div>
   )
 }
 
@@ -632,7 +587,7 @@ function ClusterTable({
         name: (c.name as string) ?? '',
         provider: (c.provider as string) ?? '',
         endpoint: (c.endpoint as string) ?? '—',
-        status: healthBadgeLabel(normalizeLiveHealthStatus(((c as Record<string, unknown>).healthStatus as string) ?? (c.status as string))),
+        status: (c.status as string) ?? 'Unknown',
       })
     }
     return result

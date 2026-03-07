@@ -1,6 +1,7 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MotionConfig } from 'motion/react'
 import { ThemeProvider } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
@@ -67,6 +68,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [trpcClient] = useState(() => getTRPCClient())
 
   return (
+    <MotionConfig reducedMotion="user">
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
@@ -91,5 +93,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         </QueryClientProvider>
       </trpc.Provider>
     </ThemeProvider>
+    </MotionConfig>
   )
 }

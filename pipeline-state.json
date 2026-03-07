@@ -1,28 +1,21 @@
 {
-  "status": "deployed",
-  "version": "v193",
+  "status": "running",
+  "version": "v194-phase1",
   "currentStage": "DEPLOYED",
   "fixLoopCount": 1,
-  "timestamp": "2026-03-06T23:53:17.605985",
+  "timestamp": "2026-03-07T04:26:36.300081",
   "branch": "feat/init-monorepo",
+  "tag": "v194-phase1",
   "completedStages": [
-    "dev",
-    "review",
-    "merge",
-    "deploy"
+    "dev-phase1",
+    "review-phase1",
+    "merge-phase1"
   ],
   "failedStages": [],
-  "completedItems": [
-    "BUG-193-001",
-    "BUG-193-002",
-    "BUG-193-003"
+  "inProgress": [
+    "Deploy \u2014 Uri"
   ],
-  "inProgress": [],
-  "previousVersion": "v192-fix",
-  "devCommit": "f555d7c",
-  "reviewScore": 10,
-  "reviewVerdict": "APPROVED",
-  "targetTag": "v193",
-  "notes": "Tag v193 created. Deploying via Uri.",
-  "deployedInK8s": "v193"
+  "previousVersion": "v193",
+  "notes": "Phase 1 reviewed (7\u2192fixed\u219210), tagged v194-phase1, deploying",
+  "deployedInK8s": "v194-phase1"
 }

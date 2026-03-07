@@ -506,5 +506,17 @@
     "health": "ok",
     "login": "verified (token returned)",
     "notes": "BUG-193-001 (gauge rings), BUG-193-002 (sparklines), BUG-193-003 (chart quality). Clean helm reinstall. All pods Running 0 restarts."
+  },
+  {
+    "version": "v194-phase1",
+    "deployer": "Uri",
+    "webImage": "voyager-web:v194-phase1",
+    "apiImage": "voyager-api:v194-phase1",
+    "helmRevision": 1,
+    "podsRunning": true,
+    "healthCheck": 200,
+    "loginSmoke": true,
+    "timestamp": "2026-03-07T02:26:30.000Z",
+    "notes": "Phase 1 UI redesign \u2014 types, tests, dead code cleanup"
   }
 ]

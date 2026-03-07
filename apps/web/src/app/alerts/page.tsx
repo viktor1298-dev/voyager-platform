@@ -8,16 +8,26 @@ import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { Shimmer } from '@/components/Skeleton'
-import { InlineAiTrigger } from '@/components/ai/InlineAiTrigger'
-import { InlineAiPanel } from '@/components/ai/InlineAiPanel'
 import { Dialog } from '@/components/ui/dialog'
 import { trpc } from '@/lib/trpc'
-import type { ColumnDef } from '@tanstack/react-table'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { AlertTriangle, Bell, CheckCircle, ChevronDown, History, Plus, Search, Trash2, X } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react'
+import type { ColumnDef, SortingState } from '@tanstack/react-table'
+import { flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table'
+import { AlertTriangle, Bell, CheckCircle, ChevronDown, ChevronRight, History, Plus, Trash2 } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
+import Link from 'next/link'
+import { useCallback, useEffect, useMemo, useState, Fragment } from 'react'
 import { toast } from 'sonner'
-import { timeAgo } from '@/lib/time-utils'
+import { AnomalyCard } from '@/components/anomalies/AnomalyCard'
+import {
+  type Anomaly,
+  type AnomalySeverity,
+  type AnomalyStatus,
+  filterOpenAnomalies,
+  getRelativeTime,
+  MOCK_ANOMALIES,
+  severityScore,
+} from '@/lib/anomalies'
+import { cn } from '@/lib/utils'
 
 type Metric = 'cpu' | 'memory' | 'pods' | 'restarts'
 type Operator = 'gt' | 'lt' | 'eq'
@@ -38,22 +48,28 @@ const OPERATORS: { value: Operator; label: string }[] = [
 function operatorLabel(op: string) { return OPERATORS.find((o) => o.value === op)?.label ?? op }
 function metricLabel(m: string) { return METRICS.find((mt) => mt.value === m)?.label ?? m }
 
-interface CreateFormData {
-  name: string; metric: Metric; operator: Operator; threshold: string; clusterFilter: string; webhookUrl: string
+function timeAgo(ts: string): string {
+  const diff = Date.now() - new Date(ts).getTime()
+  const seconds = Math.floor(diff / 1000)
+  if (seconds < 60) return `${seconds}s ago`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
 }
-const INITIAL_FORM: CreateFormData = { name: '', metric: 'cpu', operator: 'gt', threshold: '', clusterFilter: '', webhookUrl: '' }
 
-type AlertRow = { id: string; name: string; metric: string; operator: string; threshold: string | number; clusterFilter: string | null; enabled: boolean; webhookUrl?: string | null; lastTriggeredAt?: string | null; lastValue?: string | number | null }
+interface CreateFormData {
+  name: string; metric: Metric; operator: Operator; threshold: string; clusterFilter: string
+}
+const INITIAL_FORM: CreateFormData = { name: '', metric: 'cpu', operator: 'gt', threshold: '', clusterFilter: '' }
+
+type AlertRow = { id: string; name: string; metric: string; operator: string; threshold: string | number; clusterFilter: string | null; enabled: boolean }
 
 export default function AlertsPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState<CreateFormData>(INITIAL_FORM)
-  const [aiAlertId, setAiAlertId] = useState<string | null>(null)
-  const [pageSize, setPageSize] = useState(25)
-  const [groupBy, setGroupBy] = useState<'none' | 'cluster' | 'metric' | 'status'>('none')
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [alertSearch, setAlertSearch] = useState('')
 
   const alertsQuery = trpc.alerts.list.useQuery()
   const historyQuery = trpc.alerts.history.useQuery({ limit: 20 })
@@ -61,10 +77,10 @@ export default function AlertsPage() {
   const historyQueryKey: unknown[] = [['alerts', 'history'], { input: { limit: 20 }, type: 'query' }]
 
   const createMut = trpc.alerts.create.useMutation(
-    useOptimisticOptions<AlertRow[], { name: string; metric: string; operator: string; threshold: number; clusterFilter?: string; webhookUrl?: string | null }>({
+    useOptimisticOptions<AlertRow[], { name: string; metric: string; operator: string; threshold: number; clusterFilter?: string }>({
       queryKey: alertQueryKey,
       updater: (old, vars) => [
-        { id: `temp-${Date.now()}`, name: vars.name, metric: vars.metric, operator: vars.operator, threshold: vars.threshold, clusterFilter: vars.clusterFilter ?? null, enabled: true, webhookUrl: vars.webhookUrl ?? null },
+        { id: `temp-${Date.now()}`, name: vars.name, metric: vars.metric, operator: vars.operator, threshold: vars.threshold, clusterFilter: vars.clusterFilter ?? null, enabled: true },
         ...(old ?? []),
       ],
       successMessage: 'Alert rule created',
@@ -103,77 +119,14 @@ export default function AlertsPage() {
   const handleCreate = useCallback(() => {
     const threshold = Number(form.threshold)
     if (!form.name || Number.isNaN(threshold)) return
-    createMut.mutate({ name: form.name, metric: form.metric, operator: form.operator, threshold, clusterFilter: form.clusterFilter || undefined, webhookUrl: form.webhookUrl || undefined })
+    createMut.mutate({ name: form.name, metric: form.metric, operator: form.operator, threshold, clusterFilter: form.clusterFilter || undefined })
   }, [form, createMut])
 
   const alerts: AlertRow[] = alertsQuery.data ?? []
   const history = historyQuery.data ?? []
 
-  const filteredAlerts = useMemo(() => {
-    const q = alertSearch.trim().toLowerCase()
-    if (!q) return alerts
-    return alerts.filter((a) =>
-      `${a.name} ${a.metric} ${a.clusterFilter ?? ''}`.toLowerCase().includes(q)
-    )
-  }, [alerts, alertSearch])
-
-  const groupedAlerts = useMemo(() => {
-    if (groupBy === 'none') return null
-    const map = new Map<string, AlertRow[]>()
-    for (const alert of filteredAlerts) {
-      const key = groupBy === 'cluster' ? (alert.clusterFilter ?? 'All Clusters')
-        : groupBy === 'metric' ? metricLabel(alert.metric)
-        : alert.enabled ? 'Enabled' : 'Disabled'
-      if (!map.has(key)) map.set(key, [])
-      map.get(key)!.push(alert)
-    }
-    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b))
-  }, [filteredAlerts, groupBy])
-
-  const toggleSelectAlert = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }, [])
-
   const alertColumns = useMemo<ColumnDef<AlertRow, unknown>[]>(() => [
-    {
-      id: 'select',
-      header: () => (
-        <input
-          type="checkbox"
-          checked={selectedIds.size > 0 && selectedIds.size === filteredAlerts.length}
-          onChange={(e) => {
-            if (e.target.checked) setSelectedIds(new Set(filteredAlerts.map((a) => a.id)))
-            else setSelectedIds(new Set())
-          }}
-          className="rounded border-[var(--color-border)] accent-[var(--color-accent)]"
-        />
-      ),
-      cell: ({ row }) => (
-        <input
-          type="checkbox"
-          checked={selectedIds.has(row.original.id)}
-          onChange={() => toggleSelectAlert(row.original.id)}
-          className="rounded border-[var(--color-border)] accent-[var(--color-accent)]"
-        />
-      ),
-      enableSorting: false,
-      size: 40,
-    },
-    { accessorKey: 'name', header: 'Name', cell: ({ row }) => {
-      const triggered = row.original.lastTriggeredAt
-      const isRecent = triggered ? Date.now() - new Date(triggered).getTime() < 10 * 60 * 1000 : false
-      return (
-        <span className="text-[var(--color-text-primary)] flex items-center gap-1.5">
-          {isRecent && <span className="inline-block h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
-          {row.original.name}
-        </span>
-      )
-    } },
+    { accessorKey: 'name', header: 'Name', cell: ({ row }) => <span className="text-[var(--color-text-primary)]">{row.original.name}</span> },
     { accessorKey: 'metric', header: 'Metric', cell: ({ row }) => <span className="text-[var(--color-text-secondary)]">{metricLabel(row.original.metric)}</span> },
     { id: 'condition', header: 'Condition', cell: ({ row }) => <span className="text-[var(--color-text-secondary)]">{operatorLabel(row.original.operator)} {row.original.threshold}</span>, enableSorting: false },
     { id: 'cluster', header: 'Cluster', accessorFn: (r) => r.clusterFilter, cell: ({ row }) => <span className="text-[var(--color-text-muted)]">{row.original.clusterFilter ?? 'All'}</span> },
@@ -188,47 +141,18 @@ export default function AlertsPage() {
       ),
     },
     {
-      accessorKey: 'lastTriggeredAt', header: 'Last Triggered',
-      cell: ({ row }) => {
-        const val = row.original.lastTriggeredAt
-        if (!val) return <span className="text-[var(--color-text-muted)]">Never</span>
-        const date = new Date(val)
-        const isRecent = Date.now() - date.getTime() < 10 * 60 * 1000
-        return (
-          <span className={isRecent ? 'text-red-500 font-medium' : 'text-[var(--color-text-secondary)]'}>
-            {date.toLocaleString()}
-          </span>
-        )
-      },
-    },
-    {
-      accessorKey: 'lastValue', header: 'Current Value',
-      cell: ({ row }) => {
-        const val = row.original.lastValue
-        if (val == null) return <span className="text-[var(--color-text-muted)]">—</span>
-        return <span className="text-[var(--color-text-secondary)]">{val}</span>
-      },
-    },
-    {
       id: 'actions', header: '', enableSorting: false,
       cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          <InlineAiTrigger
-            label="Get remediation suggestions"
-            variant="button"
-            onClick={() => setAiAlertId(aiAlertId === row.original.id ? null : row.original.id)}
-          />
-          <button type="button" onClick={() => setDeleteId(row.original.id)} aria-label={`Delete alert ${row.original.name}`} className="text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer">
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
+        <button type="button" onClick={() => setDeleteId(row.original.id)} aria-label={`Delete alert ${row.original.name}`} className="text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer">
+          <Trash2 className="h-4 w-4" />
+        </button>
       ),
     },
-  ], [updateMut, selectedIds, filteredAlerts, toggleSelectAlert])
+  ], [updateMut])
 
-  const inputClass = 'w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)]'
+  const inputClass = 'w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)]'
   const btnPrimary = 'rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer'
-  const btnSecondary = 'rounded-xl border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer'
+  const btnSecondary = 'rounded-lg border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer'
 
   return (
     <AppLayout>
@@ -253,8 +177,6 @@ export default function AlertsPage() {
             </select>
             <input type="number" placeholder="Threshold value" aria-label="Threshold value" value={form.threshold} onChange={(e) => setForm((f) => ({ ...f, threshold: e.target.value }))} className={inputClass} />
             <input type="text" placeholder="Cluster filter (optional)" aria-label="Cluster filter" value={form.clusterFilter} onChange={(e) => setForm((f) => ({ ...f, clusterFilter: e.target.value }))} className={inputClass} />
-            <input type="text" placeholder="https://..." aria-label="Webhook URL (optional)" value={form.webhookUrl} onChange={(e) => setForm((f) => ({ ...f, webhookUrl: e.target.value }))} className={inputClass} />
-            <label className="text-xs text-[var(--color-text-muted)] -mt-2">Webhook URL (optional)</label>
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <button type="button" onClick={() => { setShowCreate(false); setForm(INITIAL_FORM) }} className={btnSecondary}>Cancel</button>
@@ -264,134 +186,22 @@ export default function AlertsPage() {
 
         {/* Alerts Table */}
         <div className="space-y-2">
-          {/* Sticky search + controls */}
-          <div className="sticky top-0 z-10 bg-[var(--color-bg-primary)] pb-2 space-y-2">
-            <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-[var(--color-accent)]" />
-              <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Alert Rules</h2>
-              <span className="ml-auto text-xs text-[var(--color-text-dim)]">{alerts.length} rules</span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 max-w-xs">
-                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-text-muted)]" />
-                <input
-                  type="text"
-                  placeholder="Search alerts…"
-                  value={alertSearch}
-                  onChange={(e) => setAlertSearch(e.target.value)}
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] py-1.5 pl-8 pr-3 text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
-                />
-              </div>
-              <select
-                value={groupBy}
-                onChange={(e) => setGroupBy(e.target.value as typeof groupBy)}
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1.5 text-xs text-[var(--color-text-primary)]"
-              >
-                <option value="none">No grouping</option>
-                <option value="cluster">Group by Cluster</option>
-                <option value="metric">Group by Metric</option>
-                <option value="status">Group by Status</option>
-              </select>
-              {selectedIds.size > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-[var(--color-text-dim)]">{selectedIds.size} selected</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      for (const id of selectedIds) {
-                        updateMut.mutate({ id, enabled: true })
-                      }
-                      setSelectedIds(new Set())
-                    }}
-                    className="rounded-xl border border-[var(--color-border)] px-2 py-1 text-[10px] text-[var(--color-status-active)] hover:bg-[var(--color-status-active)]/10"
-                  >
-                    Enable All
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      for (const id of selectedIds) {
-                        updateMut.mutate({ id, enabled: false })
-                      }
-                      setSelectedIds(new Set())
-                    }}
-                    className="rounded-xl border border-[var(--color-border)] px-2 py-1 text-[10px] text-[var(--color-text-dim)] hover:bg-white/5"
-                  >
-                    Disable All
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!confirm(`Delete ${selectedIds.size} selected alert(s)? This cannot be undone.`)) return
-                      for (const id of selectedIds) {
-                        deleteMut.mutate({ id })
-                      }
-                      setSelectedIds(new Set())
-                    }}
-                    className="rounded-xl border border-[var(--color-border)] px-2 py-1 text-[10px] text-red-400 hover:bg-red-500/10"
-                  >
-                    Delete All
-                  </button>
-                </div>
-              )}
-            </div>
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-[var(--color-accent)]" />
+            <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Alert Rules</h2>
+            <span className="ml-auto text-xs text-[var(--color-text-dim)]">{alerts.length} rules</span>
           </div>
           {alertsQuery.isError ? (
             <QueryError message={alertsQuery.error?.message ?? 'Failed to load alerts'} />
-          ) : groupedAlerts ? (
-            <div className="space-y-2">
-              {groupedAlerts.map(([groupName, groupAlerts]) => (
-                <Collapsible key={groupName} defaultOpen>
-                  <CollapsibleTrigger className="flex w-full items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
-                    <ChevronDown className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
-                    <span className="text-[12px] font-bold font-mono text-[var(--color-text-secondary)]">{groupName}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-mono font-bold">{groupAlerts.length}</span>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="mt-1">
-                      <DataTable
-                        data={groupAlerts}
-                        columns={alertColumns}
-                        loading={false}
-                        paginated={false}
-                        emptyTitle="No alerts in this group"
-                        emptyIcon={<AlertTriangle className="h-8 w-8" />}
-                        mobileCard={(alert) => (
-                          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
-                            <span className="font-medium text-[var(--color-text-primary)] text-sm">{alert.name}</span>
-                          </div>
-                        )}
-                      />
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              ))}
-            </div>
           ) : (
             <DataTable
-              data={filteredAlerts}
+              data={alerts}
               columns={alertColumns}
               loading={alertsQuery.isLoading}
-              paginated
-              pageSize={pageSize}
-              paginationExtra={
-                <label className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-dim)]">
-                  Rows
-                  <select
-                    value={pageSize}
-                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setPageSize(Number(e.target.value))}
-                    className="rounded border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-1.5 py-0.5 text-xs text-[var(--color-text-primary)]"
-                  >
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                </label>
-              }
               emptyIcon={<AlertTriangle className="h-8 w-8" />}
               emptyTitle="No alert rules configured"
               mobileCard={(alert) => (
-                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
                   <div className="flex justify-between items-center gap-2">
                     <span className="font-medium text-[var(--color-text-primary)] text-sm">{alert.name}</span>
                     <button type="button" onClick={() => updateMut.mutate({ id: alert.id, enabled: !alert.enabled })}
@@ -443,31 +253,6 @@ export default function AlertsPage() {
           )}
         </div>
 
-        {/* AI Panel for selected alert */}
-        {aiAlertId && (() => {
-          const alert = alerts.find((a) => a.id === aiAlertId)
-          if (!alert) return null
-          return (
-            <InlineAiPanel
-              open={true}
-              onClose={() => setAiAlertId(null)}
-              contextType="alert"
-              contextData={{
-                id: alert.id,
-                name: alert.name,
-                metric: alert.metric,
-                operator: alert.operator,
-                threshold: alert.threshold,
-                clusterFilter: alert.clusterFilter,
-                enabled: alert.enabled,
-                lastTriggeredAt: alert.lastTriggeredAt,
-                lastValue: alert.lastValue,
-              }}
-              initialPrompt={`Suggest remediation steps for this alert: "${alert.name}". It triggers when ${metricLabel(alert.metric)} ${operatorLabel(alert.operator)} ${alert.threshold}. Last triggered: ${alert.lastTriggeredAt ?? 'never'}. Current value: ${alert.lastValue ?? 'unknown'}.`}
-            />
-          )
-        })()}
-
         <ConfirmDialog
           open={deleteId !== null}
           onClose={() => setDeleteId(null)}
@@ -478,44 +263,213 @@ export default function AlertsPage() {
           variant="danger"
           loading={deleteMut.isPending}
         />
-      </div>
 
-      {/* M-P1-003: Sticky bulk action bar */}
-      {selectedIds.size > 0 && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-[var(--color-border)] shadow-2xl bg-[var(--elevated)] backdrop-blur-md">
-          <span className="text-sm font-medium text-[var(--color-text-primary)]">{selectedIds.size} selected</span>
-          <div className="h-4 w-px bg-[var(--color-border)]" />
-          <button
-            type="button"
-            onClick={() => { for (const id of selectedIds) { deleteMut.mutate({ id }) }; setSelectedIds(new Set()) }}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
-          >
-            <Trash2 className="h-3.5 w-3.5" />Delete
-          </button>
-          <button
-            type="button"
-            onClick={() => { for (const id of selectedIds) { updateMut.mutate({ id, enabled: true }) }; setSelectedIds(new Set()) }}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--color-status-active)] hover:bg-[var(--color-status-active)]/10 transition-colors"
-          >
-            Enable
-          </button>
-          <button
-            type="button"
-            onClick={() => { for (const id of selectedIds) { updateMut.mutate({ id, enabled: false }) }; setSelectedIds(new Set()) }}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--color-text-dim)] hover:bg-white/5 transition-colors"
-          >
-            Disable
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedIds(new Set())}
-            className="ml-1 text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)] transition-colors"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      )}
+        {/* ── Anomalies Section (merged from /anomalies) ── */}
+        <AnomaliesSection />
+      </div>
       </PageTransition>
     </AppLayout>
+  )
+}
+
+// ─── Anomalies Section (merged from /anomalies page) ─────────────────────────
+
+const severityBadge: Record<AnomalySeverity, string> = {
+  critical: 'bg-red-500/15 text-red-300 border-red-500/30',
+  warning: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  info: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+}
+
+const statusBadge: Record<AnomalyStatus, string> = {
+  open: 'bg-red-500/15 text-red-300 border-red-500/30',
+  acknowledged: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  resolved: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+}
+
+const severityFilterOptions: Array<AnomalySeverity | 'all'> = ['all', 'critical', 'warning', 'info']
+const statusFilterOptions: Array<AnomalyStatus | 'all'> = ['all', 'open', 'acknowledged', 'resolved']
+
+function AnomaliesSection() {
+  const [anomalies, setAnomalies] = useState<Anomaly[]>(MOCK_ANOMALIES)
+  const [severityFilter, setSeverityFilter] = useState<AnomalySeverity | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<AnomalyStatus | 'all'>('open')
+  const [clusterFilter, setClusterFilter] = useState<'all' | string>('all')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'detectedAt', desc: true },
+    { id: 'severity', desc: true },
+  ])
+
+  const clusterOptions = useMemo(() => ['all', ...new Set(anomalies.map((a) => a.cluster))], [anomalies])
+
+  const filteredAnomalies = useMemo(() => {
+    const statusScoped = statusFilter === 'open' ? filterOpenAnomalies(anomalies) : anomalies
+    return statusScoped.filter((anomaly) => {
+      if (severityFilter !== 'all' && anomaly.severity !== severityFilter) return false
+      if (statusFilter !== 'all' && statusFilter !== 'open' && anomaly.status !== statusFilter) return false
+      if (clusterFilter !== 'all' && anomaly.cluster !== clusterFilter) return false
+      return true
+    })
+  }, [anomalies, severityFilter, statusFilter, clusterFilter])
+
+  const acknowledgeAnomaly = (id: string) => {
+    setAnomalies((prev) => prev.map((item) => (item.id === id ? { ...item, status: 'acknowledged' } : item)))
+    toast.success('Anomaly acknowledged')
+  }
+
+  const resolveAnomaly = (id: string) => {
+    setAnomalies((prev) => prev.map((item) => (item.id === id ? { ...item, status: 'resolved' } : item)))
+    toast.success('Anomaly resolved')
+  }
+
+  const isInteractiveTarget = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false
+    return Boolean(target.closest('a, button, input, select, textarea, [role="button"]'))
+  }
+
+  const columns = useMemo<ColumnDef<Anomaly, unknown>[]>(
+    () => [
+      {
+        id: 'expand', header: '', size: 44, enableSorting: false,
+        cell: ({ row }) => (
+          <button type="button" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-[var(--color-border)] hover:bg-white/[0.04] cursor-pointer" onClick={(event) => { event.stopPropagation(); setExpandedId((prev) => (prev === row.original.id ? null : row.original.id)) }} aria-label={expandedId === row.original.id ? 'Collapse' : 'Expand'}>
+            {expandedId === row.original.id ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+          </button>
+        ),
+      },
+      {
+        accessorKey: 'severity', header: 'Severity',
+        sortingFn: (a, b) => severityScore(a.original.severity) - severityScore(b.original.severity),
+        cell: ({ row }) => <span className={cn('inline-flex rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide font-semibold', severityBadge[row.original.severity])}>{row.original.severity}</span>,
+      },
+      { accessorKey: 'type', header: 'Type' },
+      {
+        accessorKey: 'cluster', header: 'Cluster',
+        cell: ({ row }) => <Link href={`/clusters/${row.original.clusterId}`} className="text-[var(--color-accent)] hover:underline">{row.original.cluster}</Link>,
+      },
+      {
+        accessorKey: 'title', header: 'Title',
+        cell: ({ row }) => <span className="font-medium text-[var(--color-text-primary)]">{row.original.title}</span>,
+      },
+      {
+        accessorKey: 'detectedAt', header: 'Detected',
+        sortingFn: (a, b) => new Date(a.original.detectedAt).getTime() - new Date(b.original.detectedAt).getTime(),
+        cell: ({ row }) => (
+          <div className="text-xs text-[var(--color-text-secondary)]">
+            <p>{getRelativeTime(row.original.detectedAt)}</p>
+            <p className="text-[10px] text-[var(--color-text-dim)]">{new Date(row.original.detectedAt).toLocaleString()}</p>
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'status', header: 'Status',
+        cell: ({ row }) => <span className={cn('inline-flex rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide font-semibold', statusBadge[row.original.status])}>{row.original.status}</span>,
+      },
+    ],
+    [expandedId],
+  )
+
+  const table = useReactTable({
+    data: filteredAnomalies, columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
+
+  return (
+    <div className="space-y-4">
+      {/* Section header */}
+      <div className="flex items-center gap-2 pt-2">
+        <div className="flex-1 h-px bg-[var(--color-border)]" />
+        <div className="flex items-center gap-2 px-3">
+          <AlertTriangle className="h-4 w-4 text-amber-400" />
+          <h2 className="text-sm font-bold text-[var(--color-text-primary)]">Anomalies</h2>
+          <span className="text-xs text-[var(--color-text-dim)]">{filteredAnomalies.length} detected</span>
+        </div>
+        <div className="flex-1 h-px bg-[var(--color-border)]" />
+      </div>
+
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {([
+          { label: 'Severity', value: severityFilter, onChange: setSeverityFilter, options: severityFilterOptions },
+          { label: 'Status', value: statusFilter, onChange: setStatusFilter, options: statusFilterOptions },
+          { label: 'Cluster', value: clusterFilter, onChange: setClusterFilter, options: clusterOptions },
+        ] as const).map(({ label, value, onChange, options }) => (
+          <label key={label} className="space-y-1">
+            <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-dim)]">{label}</span>
+            <select value={value} onChange={(e) => onChange(e.target.value as never)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-primary)]">
+              {options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </label>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="rounded-xl border border-[var(--color-border)] overflow-hidden hidden md:block">
+        <table className="w-full text-sm">
+          <thead>
+            {table.getHeaderGroups().map((group) => (
+              <tr key={group.id} className="border-b border-[var(--color-border)] bg-white/[0.02]">
+                {group.headers.map((header) => (
+                  <th key={header.id} className="px-3 py-2 text-left text-[10px] uppercase tracking-wider font-mono text-[var(--color-text-dim)]">
+                    {header.isPlaceholder ? null : (
+                      <button type="button" onClick={header.column.getToggleSortingHandler()} className={cn('inline-flex items-center gap-1', header.column.getCanSort() ? 'cursor-pointer hover:text-[var(--color-text-secondary)]' : '')}>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </button>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => {
+              const isExpanded = expandedId === row.original.id
+              return (
+                <Fragment key={row.id}>
+                  <tr className="border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer" onClick={(e) => { if (isInteractiveTarget(e.target)) return; setExpandedId((p) => p === row.original.id ? null : row.original.id) }}>
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-3 py-2.5 align-top">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                    ))}
+                  </tr>
+                  <tr className="border-b border-white/[0.04]">
+                    <td colSpan={columns.length} className="p-0">
+                      <AnimatePresence initial={false}>
+                        {isExpanded && (
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                            <div className="p-3 bg-black/10 dark:bg-white/[0.02] space-y-3">
+                              <AnomalyCard anomaly={row.original} onAcknowledge={acknowledgeAnomaly} onResolve={resolveAnomaly} />
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                {Object.entries(row.original.metadata).map(([key, val]) => (
+                                  <div key={key} className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] p-2">
+                                    <p className="text-[10px] uppercase tracking-wide text-[var(--color-text-dim)]">{key}</p>
+                                    <p className="text-xs text-[var(--color-text-primary)] mt-0.5">{val}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </td>
+                  </tr>
+                </Fragment>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {table.getRowModel().rows.map((row) => (
+          <motion.div key={row.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+            <AnomalyCard anomaly={row.original} onAcknowledge={acknowledgeAnomaly} onResolve={resolveAnomaly} />
+          </motion.div>
+        ))}
+      </div>
+    </div>
   )
 }
