@@ -122,7 +122,7 @@ Each phase follows this flow:
 - [ ] Dev complete (Ron/Shiri/Dima) → report to Discord
 - [ ] Code review (Lior) → 10/10 → APPROVED
 - [ ] Merge + tag (Gil) → `v194-phase1` / `v194-phase2` / `v194-phase3`
-- [ ] Deploy (Uri) → helm uninstall + helm install → image tag verified
+- [x] Deploy (Uri) → helm uninstall + helm install → image tag verified [v194-phase3 2026-03-07]
 - [ ] E2E (Yuval) → all tests pass → evidence file written
 - [ ] QA (Mai) → desktop ≥8.5/10 → evidence file written
 - [ ] Guardian: all 5 gates → write `status: deployed-awaiting-review`
