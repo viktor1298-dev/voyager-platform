@@ -1,27 +1,33 @@
 {
   "status": "running",
-  "version": "v194-phase2-fix1",
-  "currentStage": "DEPLOYED",
-  "fixLoopCount": 1,
-  "timestamp": "2026-03-07T08:24:38.904910",
+  "version": "v194",
+  "currentStage": "review-phase3",
+  "phase": "phase3",
+  "fixLoopCount": 0,
+  "timestamp": "2026-03-07T07:46:00+02:00",
   "branch": "feat/init-monorepo",
-  "tag": "v194-phase1",
+  "tag": "v194-phase2-fix1",
   "completedStages": [
-    "dev-phase1",
-    "review-phase1",
-    "merge-phase1"
+    "dev-phase1", "review-phase1", "merge-phase1", "deploy-phase1",
+    "e2e-phase1", "fix-phase1", "deploy-fix1", "qa-phase1-fix1",
+    "dev-phase2-backend", "dev-phase2-frontend", "review-phase2",
+    "fix-phase2", "merge-phase2", "deploy-phase2",
+    "e2e-phase2", "qa-phase2", "fix-phase2-qa", "merge-phase2-fix1",
+    "deploy-phase2-fix1", "qa-phase2-fix1", "dev-phase3"
   ],
   "failedStages": [],
-  "inProgress": [
-    "Deploy \u2014 Uri (loading v194-phase2-fix1 into minikube)"
-  ],
+  "inProgress": ["review-phase3"],
   "previousVersion": "v193",
-  "notes": "Phase 1 reviewed (7\u2192fixed\u219210), tagged v194-phase1, deploying | Guardian fix 2026-03-07T08:05: version drift corrected. State was v194-phase1 but K8s=v194-phase2 and devops loading v194-phase2-fix1. Review-phase2 CHANGES_REQUESTED (score 8). Foreman alive waiting for Uri build.",
-  "deployedInK8s": "v194-phase2-fix1",
-  "guardianVersionCorrection": {
-    "correctedAt": "2026-03-07T08:07:33.522858",
-    "from": "v194-phase1",
-    "to": "v194-phase2-fix1",
-    "reason": "K8s deployed v194-phase2; devops building v194-phase2-fix1; foreman-v194-phase2-3 alive"
-  }
+  "phase1Result": {
+    "qaScore": 9.5,
+    "tag": "v194-phase1-fix1"
+  },
+  "phase2Result": {
+    "qaScore": 8.7,
+    "qaVerdict": "PASS",
+    "e2eResult": "16/16 PASS + 20/21 regression",
+    "tag": "v194-phase2-fix1",
+    "fixLoopCount": 1
+  },
+  "notes": "Phase 3 dev complete (Ron a4eb476). All P3-001 to P3-014 animations implemented. Moving to review."
 }
