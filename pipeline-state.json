@@ -1,10 +1,10 @@
 {
   "status": "running",
   "version": "v194-phase3",
-  "currentStage": "e2e-phase3",
+  "currentStage": "deploy-phase3-fix1",
   "phase": "phase3",
-  "fixLoopCount": 1,
-  "timestamp": "2026-03-07T09:11:05.107288",
+  "fixLoopCount": 2,
+  "timestamp": "2026-03-07T09:30:00+02:00",
   "branch": "feat/init-monorepo",
   "tag": "v194-phase3",
   "completedStages": [
@@ -37,7 +37,7 @@
   ],
   "failedStages": [],
   "inProgress": [
-    "e2e-phase3"
+    "deploy-phase3-fix1"
   ],
   "previousVersion": "v193",
   "phase1Result": {
@@ -78,7 +78,21 @@
       "M4"
     ]
   },
-  "notes": "Phase 3 deployed. voyager-api:v194-phase3 + voyager-web:v194-phase3 running. Login verified.",
+  "notes": "E2E fix: Ron restored Events+Logs to sidebar nav (62b1149). Redeploying as v194-phase3-fix1.",
   "foremanNotes": "Guardian respawned Foreman at 2026-03-07T08:45 \u2014 phase3 fix loop (LazyMotion critical fix)",
-  "deployedInK8s": "v194-phase3"
+  "deployedInK8s": "v194-phase3",
+  "e2ePhase3": {
+    "verdict": "FAIL",
+    "total": 37,
+    "passed": 35,
+    "failed": 2,
+    "skipped": 9,
+    "failures": [
+      "sidebar has Events link",
+      "sidebar has Logs link"
+    ],
+    "rootCause": "Nav regression: commit 2bb2c88 reverted Phase1 Events+Logs to AI Assistant+Dashboards",
+    "timestamp": "2026-03-07T07:18:41Z",
+    "evidenceFile": "pipeline-evidence/e2e-v194-phase3.json"
+  }
 }
