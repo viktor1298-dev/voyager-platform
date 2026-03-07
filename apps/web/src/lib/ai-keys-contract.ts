@@ -1,5 +1,5 @@
-export type UiAiProvider = 'claude' | 'openai'
-export type BackendAiProvider = 'claude' | 'openai'
+export type UiAiProvider = 'anthropic' | 'openai'
+export type BackendAiProvider = 'anthropic' | 'openai'
 
 export interface AiKeyRecord {
   provider: UiAiProvider
@@ -10,7 +10,7 @@ export interface AiKeyRecord {
 }
 
 const DEFAULT_MODEL_BY_PROVIDER: Record<UiAiProvider, string> = {
-  claude: 'claude-sonnet-4-20250514',
+  anthropic: 'claude-sonnet-4-20250514',
   openai: 'gpt-4o-mini',
 }
 
@@ -31,7 +31,7 @@ export function mapUiProviderToBackend(provider: UiAiProvider): BackendAiProvide
 
 export function mapBackendProviderToUi(provider: unknown): UiAiProvider | null {
   if (provider === 'openai') return 'openai'
-  if (provider === 'claude' || provider === 'anthropic') return 'claude'
+  if (provider === 'claude' || provider === 'anthropic') return 'anthropic'
   return null
 }
 

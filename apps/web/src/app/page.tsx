@@ -479,7 +479,7 @@ function ClusterCard({
             boxShadow: getStatusGlow(status),
             transition: 'all var(--duration-normal) ease',
             animationDelay: `${index * 50}ms`,
-            animationFillMode: 'both',
+            animationFillMode: 'forwards',
           } as React.CSSProperties
         }
         onMouseEnter={(e) => {
