@@ -1,10 +1,10 @@
 {
   "status": "running",
-  "version": "v194-phase3",
-  "currentStage": "deploy-phase3-fix1",
+  "version": "v194-phase3-fix1",
+  "currentStage": "e2e-phase3-fix2",
   "phase": "phase3",
   "fixLoopCount": 2,
-  "timestamp": "2026-03-07T09:29:00+02:00",
+  "timestamp": "2026-03-07T07:38:51Z",
   "branch": "feat/init-monorepo",
   "tag": "v194-phase3-fix1",
   "completedStages": [
@@ -35,12 +35,11 @@
     "merge-phase3",
     "deploy-phase3",
     "deploy-phase3-fix1",
-    "fix-phase3-e2e"
+    "fix-phase3-e2e",
+    "e2e-phase3-fix1"
   ],
-  "failedStages": [],
-  "inProgress": [
-    "deploy-phase3-fix1"
-  ],
+  "failedStages": ["e2e-phase3-fix1"],
+  "inProgress": ["e2e-phase3-fix2"],
   "previousVersion": "v193",
   "phase1Result": {
     "qaScore": 9.5,
@@ -66,22 +65,12 @@
     "fixCommit": "ad3120c",
     "previousReviewCommit": "a4eb476",
     "previousReviewScore": 4,
-    "blockers_resolved": [
-      "C1",
-      "H1",
-      "H2"
-    ],
-    "mediums_resolved": [
-      "M1",
-      "M2",
-      "M3"
-    ],
-    "mediums_deferred": [
-      "M4"
-    ]
+    "blockers_resolved": ["C1", "H1", "H2"],
+    "mediums_resolved": ["M1", "M2", "M3"],
+    "mediums_deferred": ["M4"]
   },
-  "notes": "v194-phase3-fix1 deployed. Nav fix in place.",
-  "foremanNotes": "Guardian respawned Foreman at 2026-03-07T08:45 \u2014 phase3 fix loop (LazyMotion critical fix)",
+  "notes": "selector bugs fixed — getByTestId for Settings nav + waitForURL for Alerts page. Both persistent test-bugs resolved. 13/13 targeted tests pass. Ready for full E2E run.",
+  "foremanNotes": "Guardian respawned Foreman at 2026-03-07T08:45 — phase3 fix loop (LazyMotion critical fix)",
   "deployedInK8s": "v194-phase3-fix1",
   "e2ePhase3": {
     "verdict": "FAIL",
@@ -96,5 +85,32 @@
     "rootCause": "Nav regression: commit 2bb2c88 reverted Phase1 Events+Logs to AI Assistant+Dashboards",
     "timestamp": "2026-03-07T07:18:41Z",
     "evidenceFile": "pipeline-evidence/e2e-v194-phase3.json"
+  },
+  "e2ePhase3Fix1": {
+    "verdict": "FAIL",
+    "total": 162,
+    "passed": 135,
+    "failed": 2,
+    "skipped": 27,
+    "navRegressionFixed": true,
+    "sidebarEventsLinkPass": true,
+    "sidebarLogsLinkPass": true,
+    "failures": [
+      {
+        "test": "responsive.spec.ts — mobile nav first tap should navigate immediately",
+        "classification": "test-bug",
+        "failedInVersions": 4,
+        "suggested_fix": "Use getByTestId('nav-item-settings') instead of getByRole"
+      },
+      {
+        "test": "optimistic-ui.spec.ts — page navigation renders with transition",
+        "classification": "test-bug",
+        "failedInVersions": 4,
+        "suggested_fix": "Use waitForURL(/\\/alerts/) instead of h1:has-text('Alerts')"
+      }
+    ],
+    "rootCause": "2 pre-existing test-bugs with bad selectors. Present in v194-phase1, v194-round3, v194-phase3, v194-phase3-fix1. NOT production regressions.",
+    "timestamp": "2026-03-07T07:38:51Z",
+    "evidenceFile": "pipeline-evidence/e2e-v194-phase3-fix1.json"
   }
 }
