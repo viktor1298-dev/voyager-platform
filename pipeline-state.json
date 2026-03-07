@@ -1,12 +1,12 @@
 {
   "status": "running",
   "version": "v194-phase3",
-  "currentStage": "deploy-phase3-fix1",
+  "currentStage": "e2e-phase3-fix1",
   "phase": "phase3",
   "fixLoopCount": 2,
-  "timestamp": "2026-03-07T09:30:00+02:00",
+  "timestamp": "2026-03-07T09:29:00+02:00",
   "branch": "feat/init-monorepo",
-  "tag": "v194-phase3",
+  "tag": "v194-phase3-fix1",
   "completedStages": [
     "dev-phase1",
     "review-phase1",
@@ -33,11 +33,12 @@
     "fix-phase3",
     "review-phase3-fix1",
     "merge-phase3",
-    "deploy-phase3"
+    "deploy-phase3",
+    "deploy-phase3-fix1"
   ],
   "failedStages": [],
   "inProgress": [
-    "deploy-phase3-fix1"
+    "e2e-phase3-fix1"
   ],
   "previousVersion": "v193",
   "phase1Result": {
@@ -78,9 +79,9 @@
       "M4"
     ]
   },
-  "notes": "E2E fix: Ron restored Events+Logs to sidebar nav (62b1149). Redeploying as v194-phase3-fix1.",
+  "notes": "v194-phase3-fix1 deployed. Nav fix in place.",
   "foremanNotes": "Guardian respawned Foreman at 2026-03-07T08:45 \u2014 phase3 fix loop (LazyMotion critical fix)",
-  "deployedInK8s": "v194-phase3",
+  "deployedInK8s": "v194-phase3-fix1",
   "e2ePhase3": {
     "verdict": "FAIL",
     "total": 37,
