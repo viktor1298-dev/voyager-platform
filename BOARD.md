@@ -3,43 +3,43 @@
 **Pipeline:** v194 | **Spec:** REDESIGN-PLAN.md  
 **Status:** 🔵 RUNNING  
 **Opened:** 2026-03-07  
-**Team:** Ron (frontend) · Dima (backend) · Lior (review) · Uri (deploy) · Yuval (E2E) · Mai (QA) · Gil (git)
+**Team:** Ron (frontend) · Shiri (frontend-2) · Dima (backend) · Lior (review) · Uri (deploy) · Yuval (E2E) · Mai (QA) · Gil (git)
 
 ---
 
 ## 🚨 Phase 1 — Foundation (Sprint 1–2)
 > **Goal:** New 6-item sidebar + path-based cluster routing + critical bug fixes
-> **Runs:** Ron (frontend) + Dima (backend) in parallel where possible
+> **Runs:** Ron (frontend) + Shiri (frontend-2) in parallel
 
-### Critical Bug Fixes (Fix First)
-- [ ] **BUG-RD-001** Fix cluster quick-links: `href="/clusters"` → `href={/clusters/${cluster.id}}`
+### Critical Bug Fixes
+- [x] **BUG-RD-001** Fix cluster quick-links: `href="/clusters"` → `href={/clusters/${cluster.id}}` *(Ron, 2026-03-07)*
 - [ ] **BUG-RD-002** Fix Services tab: remove empty stub, wire to real data (Phase 2 backend)
 - [ ] **BUG-RD-003** Fix Deployments tab: remove empty stub, wire to real data (Phase 2 backend)
 - [ ] **BUG-RD-004** Fix Pods tab: show stored pod data when cluster offline (no blank screen)
-- [ ] **BUG-RD-005** Fix Overview tab: remove duplicate stat cards
+- [x] **BUG-RD-005** Fix Overview tab: remove duplicate stat cards *(Ron, 2026-03-07)*
 
 ### Navigation & Routing
-- [ ] **P1-001** Refactor `config/navigation.ts` — reduce to 6 global items, remove cluster-specific entries
-- [ ] **P1-002** Rewrite `Sidebar.tsx` — `layoutId` active indicator, spring collapse, icon-only mode, `Cmd+B` toggle
-- [ ] **P1-003** Add auto-collapse logic to `AppLayout.tsx` — sidebar collapses on `/clusters/[id]/*`
-- [ ] **P1-004** Create `app/clusters/[id]/layout.tsx` — shared cluster header + 10-tab bar with `layoutId` underline
-- [ ] **P1-005** Migrate current cluster detail to `app/clusters/[id]/page.tsx` (Overview tab, default)
-- [ ] **P1-006** Create route stubs for all 10 cluster tabs: nodes/pods/deployments/services/namespaces/events/logs/metrics/autoscaling
-- [ ] **P1-007** Update `Breadcrumbs.tsx` — `Dashboard / Clusters / cluster-name / tab-name`
-- [ ] **P1-008** Add cluster quick-switch to sidebar footer (recent clusters, env color dots, link to `/clusters/[id]`)
+- [x] **P1-001** Refactor `config/navigation.ts` — reduce to 6 global items *(Ron, 2026-03-07)*
+- [x] **P1-002** Rewrite `Sidebar.tsx` — `layoutId` active indicator, `Cmd+B` toggle, flat 6 items *(Ron, 2026-03-07)*
+- [x] **P1-003** Add auto-collapse logic to `AppLayout.tsx` — sidebar collapses on `/clusters/[id]/*` *(Ron, 2026-03-07)*
+- [x] **P1-004** Create `app/clusters/[id]/layout.tsx` — shared cluster header + 10-tab bar with `layoutId` underline *(Ron, 2026-03-07)*
+- [x] **P1-005** Migrate current cluster detail to `app/clusters/[id]/page.tsx` (Overview tab) *(Ron, 2026-03-07)*
+- [x] **P1-006** Create route stubs for all 10 cluster tabs *(Ron, 2026-03-07)*
+- [x] **P1-007** Update `Breadcrumbs.tsx` — `Dashboard / Clusters / cluster-name / tab-name` *(Ron, 2026-03-07)*
+- [x] **P1-008** Add cluster quick-switch to sidebar footer (recent clusters, env color dots) *(Ron, 2026-03-07)*
 
 ### Settings Consolidation
-- [x] **P1-009** Expand `/settings` to tabbed layout — absorb: Users, Teams, Permissions, Webhooks, Feature Flags, Audit Log *(v194, 2025-07-20, שירי)*
-- [ ] **P1-010** Remove 6 admin items from sidebar (all moved into Settings tabs)
-- [x] **P1-011** Redirect old routes: `/users` → `/settings/users`, `/teams` → `/settings/teams`, etc. *(v194, 2025-07-20, שירי)*
+- [x] **P1-009** Expand `/settings` to tabbed layout — absorb: Users, Teams, Permissions, Webhooks, Feature Flags, Audit Log *(Shiri, 2026-03-07)*
+- [x] **P1-010** Remove 6 admin items from sidebar (done via P1-001 navigation refactor) *(Ron, 2026-03-07)*
+- [x] **P1-011** Redirect old routes: `/users` → `/settings/users`, `/teams` → `/settings/teams`, etc. *(Shiri, 2026-03-07)*
 
 ### Global Infrastructure
-- [ ] **P1-012** Add `MotionConfig reducedMotion="user"` to `providers.tsx`
-- [ ] **P1-013** Install `nuqs` (`pnpm add nuqs`) + configure for filter state
-- [ ] **P1-014** Update `lib/animation-constants.ts` with new DURATION/EASING/STAGGER values
-- [x] **P1-015** Merge Health page content into Dashboard overview *(v194, 2025-07-20, שירי)*
-- [x] **P1-016** Merge Anomalies into Alerts page as subsection *(v194, 2025-07-20, שירי)*
-- [ ] **P1-017** Remove `@tanstack/react-form` (0 imports, dead weight)
+- [x] **P1-012** Add `MotionConfig reducedMotion="user"` to `providers.tsx` *(Ron, 2026-03-07)*
+- [x] **P1-013** Install `nuqs` (`pnpm add nuqs`) *(Ron, 2026-03-07)*
+- [x] **P1-014** Update `lib/animation-constants.ts` with new DURATION/EASING/STAGGER values *(Ron, 2026-03-07)*
+- [x] **P1-015** Merge Health page content into Dashboard overview *(Shiri, 2026-03-07)*
+- [x] **P1-016** Merge Anomalies into Alerts page as subsection *(Shiri, 2026-03-07)*
+- [ ] **P1-017** Remove `@tanstack/react-form` — ⚠️ BLOCKED: actually used in login/users/teams pages
 
 ---
 
@@ -116,7 +116,7 @@
 ## 📋 Pipeline Checklist (per Phase)
 
 Each phase follows this flow:
-- [ ] Dev complete (Ron/Dima) → report to Discord
+- [ ] Dev complete (Ron/Shiri/Dima) → report to Discord
 - [ ] Code review (Lior) → 10/10 → APPROVED
 - [ ] Merge + tag (Gil) → `v194-phase1` / `v194-phase2` / `v194-phase3`
 - [ ] Deploy (Uri) → helm uninstall + helm install → image tag verified
