@@ -5,7 +5,8 @@ import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { PageTransition } from '@/components/animations'
 import { AnomalyWidget } from '@/components/anomalies/AnomalyWidget'
 import { ProviderLogo } from '@/components/ProviderLogo'
-import { SkeletonCard, SkeletonText } from '@/components/Skeleton'
+import { SkeletonCard, SkeletonText, Shimmer } from '@/components/Skeleton'
+import { HeartPulse, RefreshCw, Clock, Zap } from 'lucide-react'
 import {
   ENV_META,
   getClusterEnvironment,
@@ -272,6 +273,8 @@ function DashboardContent() {
         <div className="mb-6 max-w-sm">
           <AnomalyWidget />
         </div>
+
+        <SystemHealthSection />
 
         <div className="flex flex-col gap-4 mb-5">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
@@ -587,3 +590,118 @@ function SummaryCard({
   )
 }
 
+// ─── System Health Section (merged from /system-health) ──────────────────────
+
+const STATUS_COLORS_HEALTH: Record<string, string> = {
+  healthy: 'var(--color-status-active)',
+  degraded: 'var(--color-status-warning)',
+  critical: 'var(--color-status-error)',
+  unknown: 'var(--color-text-dim)',
+}
+
+const STATUS_LABELS_HEALTH: Record<string, string> = {
+  healthy: 'Healthy',
+  degraded: 'Degraded',
+  critical: 'Critical',
+  unknown: 'Unknown',
+}
+
+function timeAgoHealth(ts: string | Date | null): string {
+  if (!ts) return 'Never'
+  const diff = Date.now() - new Date(ts).getTime()
+  const seconds = Math.floor(diff / 1000)
+  if (seconds < 60) return `${seconds}s ago`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
+}
+
+function SystemHealthSection() {
+  const [checkingClusterId, setCheckingClusterId] = useState<string | null>(null)
+
+  const statusQuery = trpc.health.status.useQuery({}, { refetchInterval: 60_000 })
+  const utils = trpc.useUtils()
+
+  const handleCheck = useCallback(
+    async (clusterId: string) => {
+      setCheckingClusterId(clusterId)
+      try {
+        await utils.health.check.fetch({ clusterId })
+        utils.health.status.invalidate()
+      } finally {
+        setCheckingClusterId(null)
+      }
+    },
+    [utils],
+  )
+
+  const statuses = statusQuery.data ?? []
+
+  if (!statusQuery.isLoading && statuses.length === 0) return null
+
+  return (
+    <section className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <HeartPulse className="h-4 w-4 text-[var(--color-accent)]" />
+        <h2 className="text-sm font-bold text-[var(--color-text-primary)]">System Health</h2>
+        <span className="text-[10px] font-mono text-[var(--color-text-dim)] uppercase tracking-wider ml-1">
+          {statuses.length} clusters
+        </span>
+      </div>
+
+      {statusQuery.isLoading ? (
+        <div className="flex gap-3">
+          <Shimmer className="h-24 w-48 rounded-xl" />
+          <Shimmer className="h-24 w-48 rounded-xl" />
+          <Shimmer className="h-24 w-48 rounded-xl" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+          {statuses.map((s) => {
+            const color = STATUS_COLORS_HEALTH[s.status] ?? STATUS_COLORS_HEALTH.unknown
+            const label = STATUS_LABELS_HEALTH[s.status] ?? 'Unknown'
+            return (
+              <div
+                key={s.clusterId}
+                className="relative rounded-xl p-3 border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-all duration-200"
+                style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(var(--glass-blur))' }}
+              >
+                <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl" style={{ backgroundColor: color, opacity: 0.7 }} />
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="h-2 w-2 rounded-full animate-pulse-slow shrink-0" style={{ backgroundColor: color }} />
+                  <span className="text-xs font-bold text-[var(--color-text-primary)] truncate">{s.clusterName}</span>
+                </div>
+                <div className="flex items-center gap-3 text-[9px] text-[var(--color-text-muted)] font-mono mb-2">
+                  <span className="flex items-center gap-0.5">
+                    <Clock className="h-2.5 w-2.5" />
+                    {timeAgoHealth(s.checkedAt)}
+                  </span>
+                  {s.responseTimeMs !== null && (
+                    <span className="flex items-center gap-0.5">
+                      <Zap className="h-2.5 w-2.5" />
+                      {s.responseTimeMs}ms
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-[var(--color-border)]" style={{ color }}>{label}</span>
+                  <button
+                    type="button"
+                    className="text-[var(--color-accent)] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer disabled:opacity-50"
+                    disabled={checkingClusterId !== null}
+                    title="Check now"
+                    onClick={() => handleCheck(s.clusterId)}
+                  >
+                    <RefreshCw className={`h-3 w-3 ${checkingClusterId === s.clusterId ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </section>
+  )
+}
