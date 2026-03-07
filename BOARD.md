@@ -1,163 +1,125 @@
-# 🏗️ BOARD.md — Voyager v193
+# 🏗️ BOARD.md — Voyager v194 (UI Redesign)
 
-**Pipeline:** v193 | **Phase:** UI Polish Sprint  
-**Status:** ✅ DEPLOYED v193 (2026-03-06)  
-**Opened:** 2026-03-06  
-
----
-
-## 🔴 HIGH
-
-### [x] BUG-193-001 — Light Mode: Gauge Rings Invisible (CPU + Memory) ✅ v193 Ron 2026-03-06
-**Severity:** High | **Owner:** Ron | **Area:** Frontend / Theming
-
-**What's broken:**  
-In Light Mode, the circular gauge rings (donut charts) for CPU and Memory in the Resource Utilization widget are **completely invisible**. Only a small floating dot appears above the percentage number. In Dark Mode everything works perfectly — meaning the ring track color is identical to the light background (white on white).
-
-**Root cause:**  
-The gauge track SVG circle has a hardcoded or CSS-variable color that evaluates to white/transparent in Light Mode. Likely `stroke="var(--color-bg-card)"` or similar — which is white in Light mode.
-
-**How to fix:**  
-1. Find the radial/donut gauge component (search: `CircularProgress`, `RadialGauge`, `donut`, `stroke-dasharray`)
-2. The **track circle** (background ring) needs a visible color in both modes:
-   - Light mode: `stroke="rgba(0,0,0,0.10)"` → subtle gray ring
-   - Dark mode: `stroke="rgba(255,255,255,0.12)"` → subtle light ring
-3. Use a CSS variable: `var(--color-gauge-track)` defined in the theme:
-   ```css
-   /* light */ --color-gauge-track: rgba(0,0,0,0.10);
-   /* dark  */ --color-gauge-track: rgba(255,255,255,0.12);
-   ```
-4. The **progress arc** (filled portion) should use the existing accent color — already works.
-5. Test: Light Mode → CPU 0% and Memory 0% → both rings must show visible circles even at 0%.
-
-**Modern 2026 pattern:**  
-```tsx
-<circle
-  cx="50" cy="50" r="40"
-  fill="none"
-  strokeWidth="6"
-  stroke="var(--color-gauge-track)"  // ← track: visible in both modes
-  strokeLinecap="round"
-/>
-<circle
-  cx="50" cy="50" r="40"
-  fill="none"
-  strokeWidth="6"
-  stroke="var(--color-cpu)"           // ← progress arc
-  strokeDasharray={`${value * 2.51} 251`}
-  strokeLinecap="round"
-  transform="rotate(-90 50 50)"
-/>
-```
+**Pipeline:** v194 | **Spec:** REDESIGN-PLAN.md  
+**Status:** 🔵 RUNNING  
+**Opened:** 2026-03-07  
+**Team:** Ron (frontend) · Dima (backend) · Lior (review) · Uri (deploy) · Yuval (E2E) · Mai (QA) · Gil (git)
 
 ---
 
-### [x] BUG-193-002 — Stat Card Sparklines: Erratic + Clipping Outside Cards ✅ v193 Ron 2026-03-06
-**Severity:** High | **Owner:** Ron | **Area:** Frontend / Dashboard
+## 🚨 Phase 1 — Foundation (Sprint 1–2)
+> **Goal:** New 6-item sidebar + path-based cluster routing + critical bug fixes
+> **Runs:** Ron (frontend) + Dima (backend) in parallel where possible
 
-**What's broken:**  
-1. **Overflow/clipping:** Sparklines extend outside their card boundaries — peaks and valleys bleed above/below the card edges. The SVG is not constrained to its container.
-2. **Erratic/random movement:** The sparklines animate randomly (moving on their own) with no meaningful pattern. They should represent 24h historical data — not random noise.
-3. **24h deltas incorrect:** Labels like "+1 (24h)", "+5 (24h)" appear to be random mock data, not based on actual 24h history.
+### Critical Bug Fixes (Fix First)
+- [ ] **BUG-RD-001** Fix cluster quick-links: `href="/clusters"` → `href={/clusters/${cluster.id}}`
+- [ ] **BUG-RD-002** Fix Services tab: remove empty stub, wire to real data (Phase 2 backend)
+- [ ] **BUG-RD-003** Fix Deployments tab: remove empty stub, wire to real data (Phase 2 backend)
+- [ ] **BUG-RD-004** Fix Pods tab: show stored pod data when cluster offline (no blank screen)
+- [ ] **BUG-RD-005** Fix Overview tab: remove duplicate stat cards
 
-**How to fix:**
+### Navigation & Routing
+- [ ] **P1-001** Refactor `config/navigation.ts` — reduce to 6 global items, remove cluster-specific entries
+- [ ] **P1-002** Rewrite `Sidebar.tsx` — `layoutId` active indicator, spring collapse, icon-only mode, `Cmd+B` toggle
+- [ ] **P1-003** Add auto-collapse logic to `AppLayout.tsx` — sidebar collapses on `/clusters/[id]/*`
+- [ ] **P1-004** Create `app/clusters/[id]/layout.tsx` — shared cluster header + 10-tab bar with `layoutId` underline
+- [ ] **P1-005** Migrate current cluster detail to `app/clusters/[id]/page.tsx` (Overview tab, default)
+- [ ] **P1-006** Create route stubs for all 10 cluster tabs: nodes/pods/deployments/services/namespaces/events/logs/metrics/autoscaling
+- [ ] **P1-007** Update `Breadcrumbs.tsx` — `Dashboard / Clusters / cluster-name / tab-name`
+- [ ] **P1-008** Add cluster quick-switch to sidebar footer (recent clusters, env color dots, link to `/clusters/[id]`)
 
-**Part A — Fix overflow:**
-```tsx
-// Sparkline container must clip
-<div className="overflow-hidden" style={{ height: '40px' }}>
-  <SparklineChart data={data} />
-</div>
-```
-Ensure the SVG has `viewBox` and `preserveAspectRatio="none"` + parent has `overflow: hidden`.
+### Settings Consolidation
+- [x] **P1-009** Expand `/settings` to tabbed layout — absorb: Users, Teams, Permissions, Webhooks, Feature Flags, Audit Log *(v194, 2025-07-20, שירי)*
+- [ ] **P1-010** Remove 6 admin items from sidebar (all moved into Settings tabs)
+- [x] **P1-011** Redirect old routes: `/users` → `/settings/users`, `/teams` → `/settings/teams`, etc. *(v194, 2025-07-20, שירי)*
 
-**Part B — Fix erratic animation:**
-The sparkline data should NOT be randomly generated on every render. Instead:
-1. Generate 24h mock data ONCE (on mount) using `useMemo` with a **stable seed** based on the metric name:
-   ```tsx
-   const sparkData = useMemo(() => generateMockTimeSeries({
-     seed: metricName,      // stable seed = same shape every render
-     hours: 24,
-     points: 48,            // 1 point per 30min
-     baseline: currentValue,
-     variance: 0.15,        // 15% variance for realistic look
-   }), [metricName])        // only recalculate when metric changes
-   ```
-2. The 24h delta should be `currentValue - sparkData[0].value` (first point 24h ago vs now).
-3. On live refresh: append new point, drop oldest — smooth scrolling update.
-
-**Part C — 24h time axis:**  
-When the chart is hovered or in full widget view, show X axis with timestamps:
-```
-11:00 PM   1:00 AM   3:00 AM   5:00 AM   ...   11:00 PM (now)
-```
+### Global Infrastructure
+- [ ] **P1-012** Add `MotionConfig reducedMotion="user"` to `providers.tsx`
+- [ ] **P1-013** Install `nuqs` (`pnpm add nuqs`) + configure for filter state
+- [ ] **P1-014** Update `lib/animation-constants.ts` with new DURATION/EASING/STAGGER values
+- [x] **P1-015** Merge Health page content into Dashboard overview *(v194, 2025-07-20, שירי)*
+- [x] **P1-016** Merge Anomalies into Alerts page as subsection *(v194, 2025-07-20, שירי)*
+- [ ] **P1-017** Remove `@tanstack/react-form` (0 imports, dead weight)
 
 ---
 
-### [x] BUG-193-003 — Live Graphs: Poor Visual Quality vs 2026 Standard ✅ v193 Ron 2026-03-06
-**Severity:** High | **Owner:** Ron | **Area:** Frontend / Dashboard / Charts
+## 🟡 Phase 2 — Content Enrichment (Sprint 3–5)
+> **Goal:** Every cluster tab has real data. No stubs.
+> **Backend (Dima) first — Frontend (Ron) wires after**
 
-**What's broken (reference: Polymarket screenshot):**  
-The Anomaly Timeline and other live charts look amateurish compared to a professional chart like Polymarket's. Issues:
-- No clear time labels on X axis (just "24h" label, no actual timestamps)  
-- Y axis has no scale or grid lines  
-- Line is jagged/noisy instead of smooth  
-- No "current value" indicator (like Polymarket's "Target" badge)  
-- Chart doesn't clearly show 24h window start vs end
+### Backend — tRPC Routes (Dima)
+- [ ] **P2-001** tRPC: `cluster.deployments.listByCluster(clusterId)` — real K8s deployments
+- [ ] **P2-002** tRPC: `cluster.services.listByCluster(clusterId)` — real K8s services
+- [ ] **P2-003** tRPC: `cluster.namespaces.list(clusterId)` — namespaces + resource quotas
+- [ ] **P2-004** tRPC: `cluster.logs.stream(clusterId, podName, container)` — log streaming
+- [ ] **P2-005** tRPC: `cluster.pods.listStored(clusterId)` — last-known pod state for offline clusters
 
-**How to fix — professional chart standard (2026):**
-
-1. **X axis timestamps:** Show HH:MM every 4-6 hours across the 24h window
-   ```
-   11PM  3AM  7AM  11AM  3PM  7PM  11PM(now)
-   ```
-
-2. **Smooth line:** Use `type="monotone"` in Recharts or cubic bezier in custom SVG:
-   ```tsx
-   <Line type="monotone" dataKey="value" dot={false} strokeWidth={2} />
-   ```
-
-3. **Current value indicator:** A small badge/pill at the rightmost data point showing the current value (like Polymarket "Target")
-
-4. **Subtle grid:** Horizontal dashed grid lines at major Y axis values — low opacity (`rgba(255,255,255,0.06)`)
-
-5. **Gradient fill under line:** Semi-transparent gradient from line color to transparent:
-   ```tsx
-   <defs>
-     <linearGradient id="cpuGrad" x1="0" y1="0" x2="0" y2="1">
-       <stop offset="5%" stopColor="var(--color-cpu)" stopOpacity={0.3} />
-       <stop offset="95%" stopColor="var(--color-cpu)" stopOpacity={0} />
-     </linearGradient>
-   </defs>
-   <Area dataKey="value" fill="url(#cpuGrad)" stroke="var(--color-cpu)" />
-   ```
-
-6. **Zoom/pan hint:** Small "drag to zoom" or time-range selector (1H / 6H / 24H / 7D) at top-right of each chart widget
-
-7. **Responsive container:** Chart must resize cleanly without overflow at any viewport width
-
-**Reference:** The Polymarket chart shows: smooth orange line, clean timestamp X axis (HH:MM), adequate left/right padding, current value badge, dashed target line. This is the visual standard to reach.
+### Frontend — Cluster Tabs (Ron)
+- [ ] **P2-006** Deployments tab — wire to `trpc.cluster.deployments.listByCluster` (Name, Namespace, Ready, Image, Age)
+- [ ] **P2-007** Services tab — wire to `trpc.cluster.services.listByCluster` (Name, Type, ClusterIP, Ports, Age)
+- [ ] **P2-008** Namespaces tab — namespace list + resource quotas table
+- [ ] **P2-009** Logs tab — pod log streaming, pod selector dropdown, within cluster context
+- [ ] **P2-010** Pods tab — show stored pod data offline with "⚠️ Offline — data from [timestamp]" badge
+- [ ] **P2-011** Events tab — add SSE real-time updates
+- [ ] **P2-012** Autoscaling tab — move Karpenter page to `/clusters/[id]/autoscaling`
+- [ ] **P2-013** Command Palette — add cluster-tab shortcuts (e.g., "prod-cluster → Pods")
+- [ ] **P2-014** Keyboard shortcuts: `1`–`9` switch cluster tabs, `[` `]` prev/next tab
 
 ---
 
-## 📋 Pipeline Checklist
+## 🟢 Phase 3 — Animation Polish (Sprint 6–7)
+> **Goal:** Production-quality Motion v12 animations. Every interaction feels alive.
 
-- [x] BUG-193-001 — Light mode gauge rings ✅
-- [x] BUG-193-002 — Sparklines erratic + overflow ✅
-- [x] BUG-193-003 — Live charts 2026 quality ✅
-- [ ] Code review (Lior) — 10/10
-- [ ] Merge + tag v193 (Gil)
-- [x] Deploy v193 (Uri) — helm uninstall + install ✅ 2026-03-06 23:52 IST
-- [ ] E2E tests ≥88/96 (Yuval)
-- [ ] Desktop QA ≥8.5/10 (Mai)
+### Motion v12 Activation (Ron)
+- [ ] **P3-001** Sidebar spring collapse (`motion.aside` width: 56↔224px, `spring(300,30)`)
+- [ ] **P3-002** Active nav indicator `layoutId="sidebar-active-bg"` + left border bar
+- [ ] **P3-003** Tab underline `layoutId="cluster-tab-underline"` (`stiffness:500, damping:40`)
+- [ ] **P3-004** Tab content crossfade `AnimatePresence mode="wait"` (exit -4px, enter +8px, 200ms)
+- [ ] **P3-005** Data table row stagger with `useInView` (once, `-50px` margin, 30ms delay per row)
+- [ ] **P3-006** Animated stat count-up in cluster header (`useMotionValue + animate()`, 800ms decelerate)
+- [ ] **P3-007** Button micro-interactions: `whileHover={{scale:1.02}}` + `whileTap={{scale:0.97}}`
+- [ ] **P3-008** Card hover lift: `whileHover={{y:-2, boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}`
+- [ ] **P3-009** Skeleton → stagger entrance: `AnimatePresence mode="popLayout"` on all loading states
+- [ ] **P3-010** Shared element: cluster list icon → cluster detail icon (`layoutId="cluster-icon-{id}"`)
+
+### New Libraries (Ron)
+- [ ] **P3-011** Install `vaul` → drawer for pod detail, alert detail on mobile
+- [ ] **P3-012** Install `react-resizable-panels` → split-pane logs below cluster content
+- [ ] **P3-013** Wrap heavy animations with `LazyMotion + domAnimation` (saves ~23kb gzipped)
+
+### Cleanup
+- [ ] **P3-014** Remove dead code: unused hooks, old sidebar routes, duplicate motion polyfills
 
 ---
 
-## ✅ Completed (v192-fix)
-- [x] BUG-192-001 — Anomalies tab crash ✅
-- [x] BUG-192-002 — Light mode progress bars ✅
-- [x] BUG-192-003 — VA Avatar badge ✅
-- [x] BUG-192-004 — Widget colors hardcoded ✅
-- [x] BUG-192-005 — Add Widget broken ✅
-- [x] FEAT-192-001 — Live 24h graphs + refresh interval ✅
-- [x] BUG-192-006 — Cluster selection state ✅
+## 🧪 E2E Test Specs (Yuval — runs after each Phase deploy)
+
+### Phase 1 E2E
+- [ ] **E2E-P1** Write + run `tests/e2e/sidebar-redesign.spec.ts` (5 tests)
+- [ ] **E2E-P1** Write + run `tests/e2e/cluster-routing.spec.ts` (6 tests — deep links, back button)
+- [ ] **E2E-P1** Write + run `tests/e2e/settings-consolidation.spec.ts` (3 tests)
+- [ ] **E2E-P1** Write + run `tests/e2e/critical-bug-fixes.spec.ts` (2 tests — BUG-RD-001, RD-005)
+- [ ] **Gate:** 0 failures. All 16 tests pass.
+
+### Phase 2 E2E
+- [ ] **E2E-P2** Write + run `tests/e2e/cluster-tabs-data.spec.ts` (12 tests — all tabs with real data)
+- [ ] **E2E-P2** Write + run `tests/e2e/command-palette-enhanced.spec.ts` (4 tests)
+- [ ] **Gate:** 0 failures. All 16 tests pass.
+
+### Phase 3 E2E
+- [ ] **E2E-P3** Write + run `tests/e2e/animations-smoke.spec.ts` (7 tests)
+- [ ] **E2E-P3** Write + run `tests/e2e/responsive-redesign.spec.ts` (3 tests)
+- [ ] **Gate:** 0 failures. All 10 tests pass.
+
+---
+
+## 📋 Pipeline Checklist (per Phase)
+
+Each phase follows this flow:
+- [ ] Dev complete (Ron/Dima) → report to Discord
+- [ ] Code review (Lior) → 10/10 → APPROVED
+- [ ] Merge + tag (Gil) → `v194-phase1` / `v194-phase2` / `v194-phase3`
+- [ ] Deploy (Uri) → helm uninstall + helm install → image tag verified
+- [ ] E2E (Yuval) → all tests pass → evidence file written
+- [ ] QA (Mai) → desktop ≥8.5/10 → evidence file written
+- [ ] Guardian: all 5 gates → write `status: deployed-awaiting-review`
