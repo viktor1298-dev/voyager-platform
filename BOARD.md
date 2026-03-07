@@ -48,11 +48,11 @@
 > **Backend (Dima) first — Frontend (Ron) wires after**
 
 ### Backend — tRPC Routes (Dima)
-- [ ] **P2-001** tRPC: `cluster.deployments.listByCluster(clusterId)` — real K8s deployments
-- [ ] **P2-002** tRPC: `cluster.services.listByCluster(clusterId)` — real K8s services
-- [ ] **P2-003** tRPC: `cluster.namespaces.list(clusterId)` — namespaces + resource quotas
-- [ ] **P2-004** tRPC: `cluster.logs.stream(clusterId, podName, container)` — log streaming
-- [ ] **P2-005** tRPC: `cluster.pods.listStored(clusterId)` — last-known pod state for offline clusters
+- [x] **P2-001** tRPC: `cluster.deployments.listByCluster(clusterId)` — real K8s deployments ✅ v93f5f81 2026-03-07
+- [x] **P2-002** tRPC: `cluster.services.listByCluster(clusterId)` — real K8s services ✅ v93f5f81 2026-03-07
+- [x] **P2-003** tRPC: `cluster.namespaces.list(clusterId)` — namespaces + resource quotas ✅ v93f5f81 2026-03-07
+- [x] **P2-004** tRPC: `cluster.logs.stream(clusterId, podName, container)` — log streaming ✅ v93f5f81 2026-03-07
+- [x] **P2-005** tRPC: `cluster.pods.listStored(clusterId)` — last-known pod state for offline clusters ✅ v93f5f81 2026-03-07
 
 ### Frontend — Cluster Tabs (Ron)
 - [ ] **P2-006** Deployments tab — wire to `trpc.cluster.deployments.listByCluster` (Name, Namespace, Ready, Image, Age)
