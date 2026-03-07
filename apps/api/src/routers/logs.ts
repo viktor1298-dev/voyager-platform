@@ -280,6 +280,69 @@ export const logsRouter = router({
       }
     }),
 
+  stream: protectedProcedure
+    .input(
+      z.object({
+        clusterId: z.string().uuid(),
+        podName: z.string().min(1),
+        namespace: z.string().min(1),
+        container: z.string().optional(),
+        tailLines: z.number().int().positive().max(5000).default(500),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      if (ctx.user.role !== 'admin') {
+        await resolveClusterIdForNonAdmin({
+          db: ctx.db,
+          user: ctx.user,
+          clusterId: input.clusterId,
+        })
+      }
+
+      try {
+        const coreApi = await getCoreApiForCluster(input.clusterId)
+
+        // If no container specified, resolve from pod spec
+        let container = input.container
+        if (!container) {
+          const pod = normalizePodResponse(
+            await coreApi.readNamespacedPod({ name: input.podName, namespace: input.namespace }),
+          )
+          const containers = (pod.spec?.containers ?? []).map((c) => c.name).filter(Boolean)
+          container = containers[0] ?? undefined
+        }
+
+        const raw = await coreApi.readNamespacedPodLog({
+          name: input.podName,
+          namespace: input.namespace,
+          container,
+          tailLines: input.tailLines,
+          follow: false,
+          timestamps: true,
+        })
+
+        const text = normalizeLogResponse(raw)
+        const lines = text.split('\n').filter(Boolean)
+
+        return {
+          lines,
+          podName: input.podName,
+          container: container ?? null,
+          timestamp: new Date().toISOString(),
+        }
+      } catch (error) {
+        if (error instanceof TRPCError) throw error
+        const msg = error instanceof Error ? error.message : 'Unknown error'
+        if (msg.includes('404') || msg.includes('not found')) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: `Pod ${input.podName} not found` })
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to stream logs: ${msg}`,
+        })
+      }
+    }),
+
   get: protectedProcedure
     .input(
       z.object({
