@@ -290,6 +290,12 @@ export const logsRouter = router({
         tailLines: z.number().int().positive().max(5000).default(500),
       }),
     )
+    .output(z.object({
+      lines: z.array(z.string()),
+      podName: z.string(),
+      container: z.string().nullable(),
+      timestamp: z.string(),
+    }))
     .query(async ({ ctx, input }) => {
       if (ctx.user.role !== 'admin') {
         await resolveClusterIdForNonAdmin({

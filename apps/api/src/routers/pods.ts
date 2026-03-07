@@ -70,13 +70,18 @@ export const podsRouter = router({
 
   listStored: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid() }))
+    .output(z.object({
+      pods: z.array(z.any()),
+      offline: z.boolean(),
+      lastSeen: z.string().nullable(),
+    }))
     .query(async ({ input }) => {
       try {
         // Attempt live K8s fetch first
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
         const cachePrefix = `k8s:${input.clusterId}`
-        const podsResponse = await cached(`${cachePrefix}:pods:stored`, 15_000, () =>
+        const podsResponse = await cached(`${cachePrefix}:pods:stored`, 15, () =>
           coreV1.listPodForAllNamespaces(),
         )
 
