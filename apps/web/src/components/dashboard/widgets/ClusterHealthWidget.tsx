@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { DB_CLUSTER_REFETCH_MS, LIVE_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { useClusterContext } from '@/stores/cluster-context'
-import { normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
+import { ClusterHealthIndicator } from '@/components/ClusterHealthIndicator'
 
 const GAUGE_CENTER = 50
 const GAUGE_RADIUS = 40
@@ -60,13 +60,16 @@ export function ClusterHealthWidget() {
           <h3 className="text-sm font-semibold text-[var(--color-text-primary)] border-l-2 border-[var(--color-accent)] pl-2">Cluster Health Matrix</h3>
           <Link href="/clusters" className="text-[10px] text-[var(--color-accent)] hover:underline">View all →</Link>
         </div>
+        {/* IA-008: Use ClusterHealthIndicator for consistency */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {clusterList.map((c) => {
-            const health = normalizeLiveHealthStatus(c.healthStatus ?? undefined)
-            const dotClass = health === 'healthy' ? 'bg-[var(--color-status-active)]' : health === 'degraded' ? 'bg-[var(--color-status-warning)]' : 'bg-[var(--color-status-error)]'
             return (
-              <Link key={c.id} href={`/clusters/${c.id}`} className="flex items-center gap-2 px-2.5 py-2 rounded-xl border border-[var(--color-border)]/50 hover:bg-white/[0.04] transition-all">
-                <span className={`h-2.5 w-2.5 rounded-full ${dotClass} shrink-0 animate-pulse-slow`} />
+              <Link key={c.id} href={`/clusters/${c.id}`} className="group flex items-center gap-2 px-2.5 py-2 rounded-xl border border-[var(--color-border)]/50 hover:bg-white/[0.04] transition-all">
+                {c.source === 'db' ? (
+                  <ClusterHealthIndicator clusterId={c.id} size="md" showLatency={false} />
+                ) : (
+                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-status-active)] shrink-0 animate-pulse-slow" />
+                )}
                 <div className="min-w-0">
                   <span className="text-xs font-medium text-[var(--color-text-primary)] truncate block">{c.name}</span>
                   <span className="text-[10px] text-[var(--color-text-dim)] font-mono">{c.nodeCount} nodes · {c.provider}</span>

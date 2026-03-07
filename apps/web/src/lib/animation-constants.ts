@@ -95,3 +95,17 @@ export const cardHover = {
 export const cardTap = {
   scale: 0.995,
 } as const
+
+// IA-010: Dashboard IA Redesign animation constants
+export const healthDotVariants = {
+  healthy: { backgroundColor: 'var(--color-status-active)', scale: 1 as number },
+  degraded: { backgroundColor: 'var(--color-status-warning)', scale: [1, 1.3, 1] as number[] },
+  critical: { backgroundColor: 'var(--color-status-error)', scale: [1, 1.5, 1] as number[] },
+}
+
+export const statusChangeTransition = {
+  duration: DURATION.slow,
+  ease: EASING.default,
+} as const
+
+// checkButtonVariants removed — check button uses CSS opacity-0 group-hover:opacity-100 (no Motion conflict)

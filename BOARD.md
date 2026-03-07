@@ -127,6 +127,29 @@ Each phase follows this flow:
 
 ---
 
+## 🆕 Phase 6 — Dashboard IA Redesign (Single Source of Truth)
+> **Goal:** Eliminate duplication — SystemHealth + Clusters = one unified view
+> **Spec:** `DASHBOARD-REDESIGN-2026.md` | **Runs:** Ron (frontend)
+> **Reference:** Datadog/Rancher/Lens pattern — health is attribute of entity, not a section
+
+### P0 — Critical (Remove Duplication)
+- [x] **IA-001** Remove `SystemHealthSection` from `page.tsx` (~80 lines, ~380–440). Remove unused imports: `HeartPulse`, `RefreshCw`, `Clock`, `Zap`. Remove `STATUS_COLORS_HEALTH`, `STATUS_LABELS_HEALTH`, `timeAgoHealth` constants. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
+- [x] **IA-002** Add health aggregate counts to `CompactStatsBar`: `🟢 N · 🟡 N · 🔴 N` (Healthy/Degraded/Critical). Compute from cluster list via `getHealthGroup()`. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
+- [x] **IA-003** Remove leftover `mb-6` spacing after SystemHealthSection removal — clusters appear higher on page. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
+
+### P1 — Important (Progressive Disclosure)
+- [x] **IA-004** Enhance `HealthDot` → rich hover tooltip: status label, last check time-ago, responseTimeMs. Use existing `@/components/ui/tooltip`. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
+- [x] **IA-005** Add inline `HealthLatency` badge to `ClusterCard` — subtle `Nms` text next to health dot (was only in SystemHealthSection). *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
+- [x] **IA-006** Add "Check Now" hover button to `ClusterCard` — `RefreshCw` icon, `opacity-0 group-hover:opacity-100`. Recovers on-demand re-check functionality. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
+- [x] **IA-007** Create reusable `ClusterHealthIndicator` component (dot + tooltip + latency + optional onCheck). Used by cards + widget-mode. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
+
+### P2 — Polish (Animations)
+- [x] **IA-008** Update widget-mode `ClusterHealthWidget` to use `ClusterHealthIndicator` for cross-mode consistency. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
+- [x] **IA-009** Upgrade cluster cards: Motion `whileHover={{y:-2}}`, `layout` prop for filter reflow, `AnimatePresence mode="popLayout"` on filter. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
+- [x] **IA-010** Add `healthDotVariants` + `checkButtonVariants` to `animation-constants.ts` — healthy=still, degraded=pulse, critical=bigger pulse. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
+
+---
+
 ## 🆕 Phase 5 — Dashboard UX + Per-Node Metrics
 > **Goal:** Compact stat cards + per-node resource metrics (Vik: "I need to see which machine is loaded")
 > **Runs:** Ron (frontend) + Dima (backend) in parallel → v197
