@@ -52,7 +52,8 @@ test.describe('Responsive — Mobile Viewport', () => {
     await page.waitForTimeout(300); // wait for sidebar to open
 
     // Navigate to Settings (sidebar link href="/settings")
-    const settingsLink = page.getByRole('link', { name: /^settings$/i });
+    // Use data-testid to avoid strict mode violation (2 links with "Settings" label exist)
+    const settingsLink = page.getByTestId('nav-item-settings');
     await expect(settingsLink).toBeVisible({ timeout: 5_000 });
     await settingsLink.click();
 
