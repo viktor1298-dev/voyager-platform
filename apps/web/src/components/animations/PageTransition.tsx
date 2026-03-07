@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'motion/react'
+import { m } from 'motion/react'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { pageVariants } from '@/lib/animation-constants'
 import type { ReactNode } from 'react'
@@ -16,7 +16,7 @@ export function PageTransition({ children, className }: PageTransitionProps) {
   if (reduced) return <div className={className}>{children}</div>
 
   return (
-    <motion.div
+    <m.div
       className={className}
       initial="hidden"
       animate="visible"
@@ -24,6 +24,6 @@ export function PageTransition({ children, className }: PageTransitionProps) {
       variants={pageVariants}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }

@@ -3,9 +3,10 @@
 /**
  * P3-006: Animated stat count-up using useMotionValue + animate()
  * 800ms decelerate easing for numbers, instant for non-numeric values
+ * H1: Respects prefers-reduced-motion — skips animation when user prefers reduced
  */
 
-import { animate, motion, useMotionValue, useTransform } from 'motion/react'
+import { animate, m, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
 import { useEffect, useRef } from 'react'
 
 interface AnimatedStatCountProps {
@@ -24,13 +25,20 @@ function parseNum(val: string): number {
   return Number.isNaN(n) ? 0 : n
 }
 
-/** Animate a single number */
+/** Animate a single number — skips animation if user prefers reduced motion */
 function AnimatedNumber({ target, className }: { target: number; className?: string }) {
-  const count = useMotionValue(0)
+  const prefersReduced = useReducedMotion()
+  const count = useMotionValue(prefersReduced ? target : 0)
   const rounded = useTransform(count, (v) => Math.floor(v))
-  const prevTarget = useRef(0)
+  const prevTarget = useRef(prefersReduced ? target : 0)
 
   useEffect(() => {
+    if (prefersReduced) {
+      // Skip animation — jump to final value immediately
+      count.set(target)
+      prevTarget.current = target
+      return
+    }
     const from = prevTarget.current
     prevTarget.current = target
     const duration = target > 1000 ? 1.2 : 0.8
@@ -40,12 +48,12 @@ function AnimatedNumber({ target, className }: { target: number; className?: str
       from,
     })
     return () => controls.stop()
-  }, [target, count])
+  }, [target, count, prefersReduced])
 
   return (
-    <motion.span className={className}>
+    <m.span className={className}>
       {rounded}
-    </motion.span>
+    </m.span>
   )
 }
 

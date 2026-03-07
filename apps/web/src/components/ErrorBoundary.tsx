@@ -3,7 +3,7 @@
 import * as Sentry from '@sentry/nextjs'
 import { Component, type ReactNode } from 'react'
 import { AlertTriangle } from 'lucide-react'
-import { motion } from 'motion/react'
+import { m } from 'motion/react'
 
 interface Props {
   children: ReactNode
@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback
       return (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -54,7 +54,7 @@ export class ErrorBoundary extends Component<Props, State> {
           >
             Try Again
           </button>
-        </motion.div>
+        </m.div>
       )
     }
     return this.props.children
@@ -108,7 +108,7 @@ export function QueryError({ message, onRetry, title }: { message: string; onRet
   const displayDescription = parsed.description
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -128,6 +128,6 @@ export function QueryError({ message, onRetry, title }: { message: string; onRet
           Try Again
         </button>
       )}
-    </motion.div>
+    </m.div>
   )
 }

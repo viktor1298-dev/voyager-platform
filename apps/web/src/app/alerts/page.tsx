@@ -13,7 +13,7 @@ import { trpc } from '@/lib/trpc'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import { flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table'
 import { AlertTriangle, Bell, CheckCircle, ChevronDown, ChevronRight, History, Plus, Trash2 } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState, Fragment } from 'react'
 import { toast } from 'sonner'
@@ -438,7 +438,7 @@ function AnomaliesSection() {
                     <td colSpan={columns.length} className="p-0">
                       <AnimatePresence initial={false}>
                         {isExpanded && (
-                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                          <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
                             <div className="p-3 bg-black/10 dark:bg-white/[0.02] space-y-3">
                               <AnomalyCard anomaly={row.original} onAcknowledge={acknowledgeAnomaly} onResolve={resolveAnomaly} />
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -450,7 +450,7 @@ function AnomaliesSection() {
                                 ))}
                               </div>
                             </div>
-                          </motion.div>
+                          </m.div>
                         )}
                       </AnimatePresence>
                     </td>
@@ -465,9 +465,9 @@ function AnomaliesSection() {
       {/* Mobile cards */}
       <div className="md:hidden space-y-3">
         {table.getRowModel().rows.map((row) => (
-          <motion.div key={row.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+          <m.div key={row.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
             <AnomalyCard anomaly={row.original} onAcknowledge={acknowledgeAnomaly} onResolve={resolveAnomaly} />
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </div>

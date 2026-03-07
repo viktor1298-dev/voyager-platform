@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertTriangle, Loader2, Lock, Send, Settings, User } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -534,7 +534,7 @@ export function AiChat({
                 const isStreamingMessage = message.id === streamingMessageId
 
                 return (
-                  <motion.div
+                  <m.div
                     key={message.id}
                     initial={reduced ? false : { opacity: 0, y: 8 }}
                     animate={reduced ? {} : { opacity: 1, y: 0 }}
@@ -573,7 +573,7 @@ export function AiChat({
                         <User className="h-4 w-4" />
                       </div>
                     )}
-                  </motion.div>
+                  </m.div>
                 )
               })}
 

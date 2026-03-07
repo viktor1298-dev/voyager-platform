@@ -4,9 +4,10 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
 import { APP_VERSION } from '@/config/constants'
 import { navItems } from '@/config/navigation'
+import { EASING } from '@/lib/animation-constants'
 import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
 import { trpc } from '@/lib/trpc'
 
@@ -67,12 +68,12 @@ export function Sidebar({
         />
       )}
 
-      {/* P3-001: motion.aside with spring width animation */}
-      <motion.aside
+      {/* P3-001: m.aside with spring width animation */}
+      <m.aside
         data-testid="sidebar"
         animate={isDesktop ? { width: desktopWidth, x: 0 } : { x: mobileOpen ? 0 : -224 }}
         initial={false}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        transition={EASING.spring}
         style={{ width: isDesktop ? desktopWidth : 224 }}
         className="fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-50 overflow-hidden"
       >
@@ -114,25 +115,25 @@ export function Sidebar({
               >
                 {/* P3-002: Active background with layoutId spring + left accent border */}
                 {active && (
-                  <motion.div
+                  <m.div
                     layoutId="sidebar-active-bg"
                     className="absolute inset-0 bg-[var(--color-accent)]/10 rounded-lg sidebar-active-bar"
-                    transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                    transition={EASING.snappy}
                   />
                 )}
                 {/* P3-002: Left accent border bar */}
                 {active && (
-                  <motion.div
+                  <m.div
                     layoutId="sidebar-active-border"
                     className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[var(--color-accent)]"
-                    transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                    transition={EASING.snappy}
                   />
                 )}
 
                 <Icon className="sidebar-icon h-4 w-4 shrink-0 relative z-10" />
                 <AnimatePresence initial={false}>
                   {showLabels && (
-                    <motion.span
+                    <m.span
                       key="label"
                       initial={{ opacity: 0, width: 0 }}
                       animate={{ opacity: 1, width: 'auto' }}
@@ -141,7 +142,7 @@ export function Sidebar({
                       className="sidebar-label text-[13px] font-medium relative z-10 overflow-hidden whitespace-nowrap"
                     >
                       {item.label}
-                    </motion.span>
+                    </m.span>
                   )}
                 </AnimatePresence>
                 {showAlertsBadge && (
@@ -159,7 +160,7 @@ export function Sidebar({
           {/* Cluster quick-switch footer */}
           <AnimatePresence initial={false}>
             {showLabels && sidebarClusters.length > 0 && (
-              <motion.div
+              <m.div
                 key="cluster-footer"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -190,7 +191,7 @@ export function Sidebar({
                     )
                   })}
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </nav>
@@ -214,7 +215,7 @@ export function Sidebar({
         {/* Version display */}
         <AnimatePresence initial={false}>
           {showLabels && (
-            <motion.div
+            <m.div
               key="version"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -225,10 +226,10 @@ export function Sidebar({
               <div className="text-[10px] text-[var(--color-text-muted)] font-mono text-left whitespace-nowrap">
                 Voyager {APP_VERSION}
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
-      </motion.aside>
+      </m.aside>
     </>
   )
 }

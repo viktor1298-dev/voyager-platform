@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
 import { Send, X, Loader2 } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
@@ -111,7 +111,7 @@ export function InlineAiPanel({
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
+        <m.div
           initial={prefersReduced ? false : { opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={prefersReduced ? { opacity: 0 } : { opacity: 0, height: 0 }}
@@ -194,7 +194,7 @@ export function InlineAiPanel({
               </button>
             </form>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   )

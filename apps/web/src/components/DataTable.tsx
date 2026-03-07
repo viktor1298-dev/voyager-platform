@@ -23,9 +23,9 @@ import {
   ChevronsRight,
   Search,
 } from 'lucide-react'
-import { AnimatePresence, motion, useInView } from 'motion/react'
+import { AnimatePresence, m, useInView } from 'motion/react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
-import { STAGGER } from '@/lib/animation-constants'
+import { DURATION, EASING, STAGGER } from '@/lib/animation-constants'
 
 export interface DataTableProps<TData> {
   data: TData[]
@@ -58,6 +58,7 @@ export interface DataTableProps<TData> {
 }
 
 // P3-005: Staggered tbody using useInView (once, -50px margin)
+// M3: Uses callback ref to safely merge inView + external ref
 function AnimatedTbody({
   children,
   tbodyRef,
@@ -68,17 +69,15 @@ function AnimatedTbody({
   const inViewRef = useRef<HTMLTableSectionElement>(null)
   const isInView = useInView(inViewRef, { once: true, margin: '-50px 0px 0px 0px' })
 
-  // Merge refs
-  useEffect(() => {
-    if (inViewRef.current && tbodyRef) {
-      ;(tbodyRef as React.MutableRefObject<HTMLTableSectionElement | null>).current =
-        inViewRef.current
-    }
-  })
+  // Callback ref: merges inViewRef with external tbodyRef
+  const callbackRef = (node: HTMLTableSectionElement | null) => {
+    ;(inViewRef as React.MutableRefObject<HTMLTableSectionElement | null>).current = node
+    ;(tbodyRef as React.MutableRefObject<HTMLTableSectionElement | null>).current = node
+  }
 
   return (
-    <motion.tbody
-      ref={inViewRef}
+    <m.tbody
+      ref={callbackRef}
       variants={{
         hidden: { opacity: 1 },
         visible: { opacity: 1, transition: { staggerChildren: STAGGER.fast } },
@@ -87,7 +86,7 @@ function AnimatedTbody({
       animate={isInView ? 'visible' : 'hidden'}
     >
       {children}
-    </motion.tbody>
+    </m.tbody>
   )
 }
 
@@ -245,7 +244,7 @@ export function DataTable<TData>({
   // P3-005: row variants for stagger
   const rowVariants = {
     hidden: { opacity: 0, y: 6 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as [number,number,number,number] } },
+    visible: { opacity: 1, y: 0, transition: { duration: DURATION.normal, ease: EASING.default } },
   }
 
   return (
@@ -279,15 +278,15 @@ export function DataTable<TData>({
           WebkitBackdropFilter: 'blur(var(--glass-blur))',
         }}
       >
-        {/* P3-009: AnimatePresence mode="popLayout" for skeleton → data transition */}
-        <AnimatePresence mode="popLayout" initial={false}>
+        {/* P3-009: AnimatePresence mode="wait" for skeleton → data transition */}
+        <AnimatePresence mode="wait" initial={false}>
           {loading ? (
-            <motion.div
+            <m.div
               key="skeleton"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              transition={{ duration: DURATION.fast }}
             >
               {mobileCard && (
                 <div className="md:hidden p-3 space-y-3">
@@ -328,14 +327,14 @@ export function DataTable<TData>({
                   )}
                 </tbody>
               </table>
-            </motion.div>
+            </m.div>
           ) : sortedRows.length === 0 ? (
-            <motion.div
+            <m.div
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              transition={{ duration: DURATION.fast }}
             >
               {mobileCard && (
                 <div className="md:hidden flex flex-col items-center justify-center py-10 text-[var(--color-text-muted)]">
@@ -369,14 +368,14 @@ export function DataTable<TData>({
                   </tr>
                 </tbody>
               </table>
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div
+            <m.div
               key="data"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              transition={{ duration: DURATION.fast }}
             >
               {/* Mobile Cards */}
               {mobileCard && (
@@ -394,7 +393,7 @@ export function DataTable<TData>({
                 {renderTableHeader()}
                 <AnimatedTbody tbodyRef={tableBodyRef}>
                   {sortedRows.map((row) => (
-                    <motion.tr
+                    <m.tr
                       key={row.id}
                       data-row
                       tabIndex={0}
@@ -413,11 +412,11 @@ export function DataTable<TData>({
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       ))}
-                    </motion.tr>
+                    </m.tr>
                   ))}
                 </AnimatedTbody>
               </table>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
@@ -486,7 +485,7 @@ function PaginationBtn({
 }) {
   return (
     // P3-007: Button micro-interactions
-    <motion.button
+    <m.button
       type="button"
       onClick={onClick}
       disabled={disabled}
@@ -496,6 +495,6 @@ function PaginationBtn({
       className="p-1.5 rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
     >
       {children}
-    </motion.button>
+    </m.button>
   )
 }

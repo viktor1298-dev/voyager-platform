@@ -5,14 +5,14 @@
  * whileHover scale:1.02 + whileTap scale:0.97
  */
 
-import { motion } from 'motion/react'
+import { m } from 'motion/react'
 import type { ComponentPropsWithoutRef } from 'react'
 
-type MotionButtonProps = ComponentPropsWithoutRef<typeof motion.button>
+type MotionButtonProps = ComponentPropsWithoutRef<typeof m.button>
 
 export function MotionButton({ children, className, ...props }: MotionButtonProps) {
   return (
-    <motion.button
+    <m.button
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.97 }}
       transition={{ duration: 0.08, ease: 'easeOut' }}
@@ -20,6 +20,6 @@ export function MotionButton({ children, className, ...props }: MotionButtonProp
       {...props}
     >
       {children}
-    </motion.button>
+    </m.button>
   )
 }
