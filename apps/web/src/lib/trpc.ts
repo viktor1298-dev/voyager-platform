@@ -51,13 +51,29 @@ export function getTRPCClient() {
 }
 
 // Global error handler: redirect to login on UNAUTHORIZED
+// Handles both tRPC-formatted errors (data.code) and raw HTTP 401 responses
 export function handleTRPCError(error: unknown) {
-  if (
-    error &&
-    typeof error === 'object' &&
-    'data' in error &&
-    (error as { data?: { code?: string } }).data?.code === 'UNAUTHORIZED'
-  ) {
+  if (!error || typeof error !== 'object') return
+
+  const err = error as Record<string, unknown>
+
+  // tRPC error format: { data: { code: 'UNAUTHORIZED' } }
+  if ('data' in err && (err.data as { code?: string })?.code === 'UNAUTHORIZED') {
+    clearAuthAndRedirect()
+    return
+  }
+
+  // TRPCClientError with shape.data.code or top-level code
+  if ('shape' in err) {
+    const shape = err.shape as { data?: { code?: string } } | undefined
+    if (shape?.data?.code === 'UNAUTHORIZED') {
+      clearAuthAndRedirect()
+      return
+    }
+  }
+
+  // Raw HTTP 401 from non-tRPC middleware (e.g. auth guard)
+  if ('message' in err && typeof err.message === 'string' && err.message.includes('UNAUTHORIZED')) {
     clearAuthAndRedirect()
   }
 }

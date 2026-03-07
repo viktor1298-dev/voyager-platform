@@ -66,6 +66,15 @@ app.addHook('onRequest', async (request, reply) => {
     return
   }
 
+  // Skip auth guard for tRPC routes — tRPC handles its own auth via
+  // protectedProcedure/adminProcedure in createContext(). Doubling up causes:
+  //   1. Redundant getSession() DB calls on every request (perf hit)
+  //   2. Non-tRPC-formatted 401 responses that break the tRPC client error handler
+  //   3. Race conditions under concurrent background polling (multiple parallel getSession calls)
+  if (request.url.startsWith('/trpc')) {
+    return
+  }
+
   const headers = new Headers()
   for (const [key, value] of Object.entries(request.headers)) {
     if (value) {
