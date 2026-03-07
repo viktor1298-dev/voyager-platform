@@ -3,8 +3,10 @@
 import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Box, Cpu, Globe, Server } from 'lucide-react'
+import { motion } from 'motion/react'
 import { useParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
+import { AnimatedStatCount } from '@/components/AnimatedStatCount'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { LoadingState } from '@/components/LoadingState'
@@ -423,8 +425,11 @@ export default function ClusterOverviewPage() {
           { icon: Globe, label: 'Namespaces', value: String(cluster.namespaceCount || '—') },
           { icon: Cpu, label: 'Version', value: cluster.version },
         ].map((stat) => (
-          <div
+          // P3-008: Card hover lift
+          <motion.div
             key={stat.label}
+            whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
             className="rounded-xl bg-white/[0.03] border border-[var(--color-border)] p-3.5"
           >
             <div className="flex items-center gap-2 mb-1">
@@ -433,16 +438,16 @@ export default function ClusterOverviewPage() {
                 {stat.label}
               </span>
             </div>
-            <p
+            {/* P3-006: Animated stat count-up */}
+            <AnimatedStatCount
+              value={stat.value}
               className={`text-lg font-bold ${
                 stat.value === '—' || stat.value === '0' || stat.value === '0 / 0'
                   ? 'text-[var(--color-text-dim)] opacity-60'
                   : 'text-[var(--color-text-primary)]'
               }`}
-            >
-              {stat.value}
-            </p>
-          </div>
+            />
+          </motion.div>
         ))}
       </div>
 

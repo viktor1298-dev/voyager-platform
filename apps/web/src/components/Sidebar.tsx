@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { APP_VERSION } from '@/config/constants'
 import { navItems } from '@/config/navigation'
 import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
@@ -52,6 +52,9 @@ export function Sidebar({
 
   const showLabels = !isDesktop || mobileOpen || !collapsed
 
+  // P3-001: sidebar width values
+  const desktopWidth = collapsed ? 56 : 224
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -64,13 +67,14 @@ export function Sidebar({
         />
       )}
 
-      <aside
+      {/* P3-001: motion.aside with spring width animation */}
+      <motion.aside
         data-testid="sidebar"
-        className={`
-          fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-50 transition-all duration-200
-          ${isDesktop ? 'translate-x-0' : mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-          ${isDesktop ? (collapsed ? 'w-12' : 'w-48') : 'w-48'}
-        `}
+        animate={isDesktop ? { width: desktopWidth, x: 0 } : { x: mobileOpen ? 0 : -224 }}
+        initial={false}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        style={{ width: isDesktop ? desktopWidth : 224 }}
+        className="fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-50 overflow-hidden"
       >
         {/* Mobile close button */}
         {!isDesktop && mobileOpen && (
@@ -87,7 +91,7 @@ export function Sidebar({
         )}
 
         {/* Main nav — flat 6 items */}
-        <nav className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto">
+        <nav className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           {navItems.map((item) => {
             const active = isActive(item.id)
             const Icon = item.icon
@@ -106,9 +110,9 @@ export function Sidebar({
                     : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
                   }
                 `}
-                style={{ transition: 'color var(--duration-fast, 150ms) ease' }}
+                style={{ transition: 'color 150ms ease' }}
               >
-                {/* Active background with layoutId for spring animation */}
+                {/* P3-002: Active background with layoutId spring + left accent border */}
                 {active && (
                   <motion.div
                     layoutId="sidebar-active-bg"
@@ -116,13 +120,30 @@ export function Sidebar({
                     transition={{ type: 'spring', stiffness: 400, damping: 35 }}
                   />
                 )}
+                {/* P3-002: Left accent border bar */}
+                {active && (
+                  <motion.div
+                    layoutId="sidebar-active-border"
+                    className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[var(--color-accent)]"
+                    transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                  />
+                )}
 
                 <Icon className="sidebar-icon h-4 w-4 shrink-0 relative z-10" />
-                {showLabels && (
-                  <span className="sidebar-label text-[13px] font-medium relative z-10">
-                    {item.label}
-                  </span>
-                )}
+                <AnimatePresence initial={false}>
+                  {showLabels && (
+                    <motion.span
+                      key="label"
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: 'auto' }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+                      className="sidebar-label text-[13px] font-medium relative z-10 overflow-hidden whitespace-nowrap"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
                 {showAlertsBadge && (
                   <span
                     data-testid="alerts-badge"
@@ -136,33 +157,42 @@ export function Sidebar({
           })}
 
           {/* Cluster quick-switch footer */}
-          {showLabels && sidebarClusters.length > 0 && (
-            <div className="mt-2 border-t border-[var(--color-border)]/60 pt-2">
-              <p className="px-2 mb-1 text-[12px] uppercase tracking-widest font-mono font-bold text-slate-700 dark:text-slate-100">
-                Clusters
-              </p>
-              <div className="space-y-1">
-                {sidebarClusters.map((cluster) => {
-                  const env = getClusterEnvironment(cluster.name, cluster.provider)
-                  const color = ENV_META[env].color
-                  return (
-                    <Link
-                      key={cluster.id}
-                      href={`/clusters/${cluster.id}`}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/5"
-                    >
-                      <span
-                        className="h-1.5 w-1.5 rounded-full shrink-0"
-                        style={{ backgroundColor: color }}
-                      />
-                      <span className="truncate">{cluster.name}</span>
-                    </Link>
-                  )
-                })}
-              </div>
-            </div>
-          )}
+          <AnimatePresence initial={false}>
+            {showLabels && sidebarClusters.length > 0 && (
+              <motion.div
+                key="cluster-footer"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="mt-2 border-t border-[var(--color-border)]/60 pt-2"
+              >
+                <p className="px-2 mb-1 text-[12px] uppercase tracking-widest font-mono font-bold text-slate-700 dark:text-slate-100">
+                  Clusters
+                </p>
+                <div className="space-y-1">
+                  {sidebarClusters.map((cluster) => {
+                    const env = getClusterEnvironment(cluster.name, cluster.provider)
+                    const color = ENV_META[env].color
+                    return (
+                      <Link
+                        key={cluster.id}
+                        href={`/clusters/${cluster.id}`}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/5"
+                      >
+                        <span
+                          className="h-1.5 w-1.5 rounded-full shrink-0"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="truncate">{cluster.name}</span>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </nav>
 
         {/* Collapse toggle */}
@@ -182,14 +212,23 @@ export function Sidebar({
         )}
 
         {/* Version display */}
-        {showLabels && (
-          <div className="px-3 py-2 mt-0">
-            <div className="text-[10px] text-[var(--color-text-muted)] font-mono text-left">
-              Voyager {APP_VERSION}
-            </div>
-          </div>
-        )}
-      </aside>
+        <AnimatePresence initial={false}>
+          {showLabels && (
+            <motion.div
+              key="version"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="px-3 py-2 mt-0"
+            >
+              <div className="text-[10px] text-[var(--color-text-muted)] font-mono text-left whitespace-nowrap">
+                Voyager {APP_VERSION}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.aside>
     </>
   )
 }

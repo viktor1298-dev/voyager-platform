@@ -1,4 +1,5 @@
 import { Icon } from '@iconify/react'
+import { motion } from 'motion/react'
 
 const PROVIDER_ALIASES: Record<string, string> = {
   eks: 'aws',
@@ -22,9 +23,30 @@ const PROVIDER_ICONS: Record<string, { icon: string; color: string; bg: string }
 
 const DEFAULT_ICON = { icon: 'simple-icons:kubernetes', color: '#326CE5', bg: 'rgba(50, 108, 229, 0.12)' }
 
-export function ProviderLogo({ provider, size = 16 }: { provider: string; size?: number }) {
+interface ProviderLogoProps {
+  provider: string
+  size?: number
+  /** P3-010: layoutId for shared element transitions between cluster list → detail */
+  layoutId?: string
+}
+
+export function ProviderLogo({ provider, size = 16, layoutId }: ProviderLogoProps) {
   const normalized = PROVIDER_ALIASES[provider.toLowerCase()] || provider.toLowerCase()
   const { icon, color, bg } = PROVIDER_ICONS[normalized] ?? DEFAULT_ICON
+
+  if (layoutId) {
+    return (
+      <motion.div
+        layoutId={layoutId}
+        className="pointer-events-none select-none shrink-0 rounded-md flex items-center justify-center"
+        style={{ width: size + 8, height: size + 8, backgroundColor: bg, zIndex: 2 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      >
+        <Icon icon={icon} width={size} height={size} color={color} />
+      </motion.div>
+    )
+  }
+
   return (
     <div
       className="pointer-events-none select-none shrink-0 rounded-md flex items-center justify-center"

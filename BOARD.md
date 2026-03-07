@@ -71,24 +71,24 @@
 > **Goal:** Production-quality Motion v12 animations. Every interaction feels alive.
 
 ### Motion v12 Activation (Ron)
-- [ ] **P3-001** Sidebar spring collapse (`motion.aside` width: 56↔224px, `spring(300,30)`)
-- [ ] **P3-002** Active nav indicator `layoutId="sidebar-active-bg"` + left border bar
-- [ ] **P3-003** Tab underline `layoutId="cluster-tab-underline"` (`stiffness:500, damping:40`)
-- [ ] **P3-004** Tab content crossfade `AnimatePresence mode="wait"` (exit -4px, enter +8px, 200ms)
-- [ ] **P3-005** Data table row stagger with `useInView` (once, `-50px` margin, 30ms delay per row)
-- [ ] **P3-006** Animated stat count-up in cluster header (`useMotionValue + animate()`, 800ms decelerate)
-- [ ] **P3-007** Button micro-interactions: `whileHover={{scale:1.02}}` + `whileTap={{scale:0.97}}`
-- [ ] **P3-008** Card hover lift: `whileHover={{y:-2, boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}`
-- [ ] **P3-009** Skeleton → stagger entrance: `AnimatePresence mode="popLayout"` on all loading states
-- [ ] **P3-010** Shared element: cluster list icon → cluster detail icon (`layoutId="cluster-icon-{id}"`)
+- [x] **P3-001** Sidebar spring collapse (`motion.aside` width: 56↔224px, `spring(300,30)`) ✅ v0.3.1 2025-01
+- [x] **P3-002** Active nav indicator `layoutId="sidebar-active-bg"` + left border bar ✅ v0.3.1 2025-01
+- [x] **P3-003** Tab underline `layoutId="cluster-tab-underline"` (`stiffness:500, damping:40`) ✅ v0.3.1 2025-01
+- [x] **P3-004** Tab content crossfade `AnimatePresence mode="wait"` (exit -4px, enter +8px, 200ms) ✅ v0.3.1 2025-01
+- [x] **P3-005** Data table row stagger with `useInView` (once, `-50px` margin, 30ms delay per row) ✅ v0.3.1 2025-01
+- [x] **P3-006** Animated stat count-up in cluster header (`useMotionValue + animate()`, 800ms decelerate) ✅ v0.3.1 2025-01
+- [x] **P3-007** Button micro-interactions: `whileHover={{scale:1.02}}` + `whileTap={{scale:0.97}}` ✅ v0.3.1 2025-01
+- [x] **P3-008** Card hover lift: `whileHover={{y:-2, boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}` ✅ v0.3.1 2025-01
+- [x] **P3-009** Skeleton → stagger entrance: `AnimatePresence mode="popLayout"` on all loading states ✅ v0.3.1 2025-01
+- [x] **P3-010** Shared element: cluster list icon → cluster detail icon (`layoutId="cluster-icon-{id}"`) ✅ v0.3.1 2025-01
 
 ### New Libraries (Ron)
-- [ ] **P3-011** Install `vaul` → drawer for pod detail, alert detail on mobile
-- [ ] **P3-012** Install `react-resizable-panels` → split-pane logs below cluster content
-- [ ] **P3-013** Wrap heavy animations with `LazyMotion + domAnimation` (saves ~23kb gzipped)
+- [x] **P3-011** Install `vaul` → drawer for pod detail, alert detail on mobile ✅ v0.3.1 2025-01
+- [x] **P3-012** Install `react-resizable-panels` → split-pane logs below cluster content ✅ v0.3.1 2025-01
+- [x] **P3-013** Wrap heavy animations with `LazyMotion + domAnimation` (saves ~23kb gzipped) ✅ v0.3.1 2025-01
 
 ### Cleanup
-- [ ] **P3-014** Remove dead code: unused hooks, old sidebar routes, duplicate motion polyfills
+- [x] **P3-014** Remove dead code: unused hooks, old sidebar routes, duplicate motion polyfills ✅ v0.3.1 2025-01
 
 ---
 

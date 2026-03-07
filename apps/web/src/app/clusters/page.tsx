@@ -382,7 +382,8 @@ export default function ClustersPage() {
               <div className="flex items-center gap-2.5">
                 <span className={`h-2.5 w-2.5 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`} />
                 <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm flex-1">{row.name}</span>
-                <ProviderLogo provider={row.provider ?? 'default'} />
+                {/* P3-010: layoutId for shared element transition to cluster detail */}
+                <ProviderLogo provider={row.provider ?? 'default'} layoutId={`cluster-icon-${row.id}`} />
               </div>
 
               {/* Middle: Metrics grid */}

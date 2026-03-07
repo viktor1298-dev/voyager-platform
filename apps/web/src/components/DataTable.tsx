@@ -23,9 +23,11 @@ import {
   ChevronsRight,
   Search,
 } from 'lucide-react'
+import { AnimatePresence, motion, useInView } from 'motion/react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { STAGGER } from '@/lib/animation-constants'
 
-interface DataTableProps<TData> {
+export interface DataTableProps<TData> {
   data: TData[]
   columns: ColumnDef<TData, unknown>[]
   /** Global search enabled */
@@ -53,6 +55,40 @@ interface DataTableProps<TData> {
   loading?: boolean
   /** Loading skeleton rows count */
   skeletonRows?: number
+}
+
+// P3-005: Staggered tbody using useInView (once, -50px margin)
+function AnimatedTbody({
+  children,
+  tbodyRef,
+}: {
+  children: ReactNode
+  tbodyRef: React.RefObject<HTMLTableSectionElement | null>
+}) {
+  const inViewRef = useRef<HTMLTableSectionElement>(null)
+  const isInView = useInView(inViewRef, { once: true, margin: '-50px 0px 0px 0px' })
+
+  // Merge refs
+  useEffect(() => {
+    if (inViewRef.current && tbodyRef) {
+      ;(tbodyRef as React.MutableRefObject<HTMLTableSectionElement | null>).current =
+        inViewRef.current
+    }
+  })
+
+  return (
+    <motion.tbody
+      ref={inViewRef}
+      variants={{
+        hidden: { opacity: 1 },
+        visible: { opacity: 1, transition: { staggerChildren: STAGGER.fast } },
+      }}
+      initial="hidden"
+      animate={isInView ? 'visible' : 'hidden'}
+    >
+      {children}
+    </motion.tbody>
+  )
 }
 
 export function DataTable<TData>({
@@ -206,6 +242,12 @@ export function DataTable<TData>({
     </thead>
   )
 
+  // P3-005: row variants for stagger
+  const rowVariants = {
+    hidden: { opacity: 0, y: 6 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as [number,number,number,number] } },
+  }
+
   return (
     <div className="space-y-3 min-w-0">
       {/* Toolbar */}
@@ -237,128 +279,147 @@ export function DataTable<TData>({
           WebkitBackdropFilter: 'blur(var(--glass-blur))',
         }}
       >
-        {loading ? (
-          <>
-            {mobileCard && (
-              <div className="md:hidden p-3 space-y-3">
-                {Array.from({ length: Math.min(skeletonRows, 3) }, (_, index) => (
-                  <div
-                    key={`mobile-skeleton-${index + 1}`}
-                    className="rounded-lg p-4 border border-[var(--color-border)] bg-[var(--color-bg-card)] space-y-2"
-                  >
-                    <div className="skeleton-shimmer h-4 w-1/2 rounded" />
-                    <div className="skeleton-shimmer h-3 w-full rounded" />
-                    <div className="skeleton-shimmer h-3 w-3/4 rounded" />
-                  </div>
-                ))}
-              </div>
-            )}
-            <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
-              {renderTableHeader()}
-              <tbody>
-                {Array.from({ length: skeletonRows }, (_, index) => `skeleton-${index + 1}`).map(
-                  (skeletonKey) => (
-                    <tr
-                      key={skeletonKey}
-                      className="border-b border-[var(--color-table-separator)]"
+        {/* P3-009: AnimatePresence mode="popLayout" for skeleton → data transition */}
+        <AnimatePresence mode="popLayout" initial={false}>
+          {loading ? (
+            <motion.div
+              key="skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              {mobileCard && (
+                <div className="md:hidden p-3 space-y-3">
+                  {Array.from({ length: Math.min(skeletonRows, 3) }, (_, index) => (
+                    <div
+                      key={`mobile-skeleton-${index + 1}`}
+                      className="rounded-lg p-4 border border-[var(--color-border)] bg-[var(--color-bg-card)] space-y-2"
                     >
-                      <td
-                        className="py-1.5 px-3"
-                        colSpan={Math.max(table.getAllLeafColumns().length, columns.length, 1)}
-                      >
-                        <div className="flex gap-4">
-                          <div className="skeleton-shimmer h-4 flex-[2] rounded" />
-                          <div className="skeleton-shimmer h-4 flex-1 rounded" />
-                          <div className="skeleton-shimmer h-4 flex-1 rounded" />
-                          <div className="skeleton-shimmer h-4 flex-1 rounded" />
-                        </div>
-                      </td>
-                    </tr>
-                  ),
-                )}
-              </tbody>
-            </table>
-          </>
-        ) : sortedRows.length === 0 ? (
-          <>
-            {mobileCard && (
-              <div className="md:hidden flex flex-col items-center justify-center py-10 text-[var(--color-text-muted)]">
-                {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
-                <p className="text-sm font-medium">{emptyTitle}</p>
-                {emptyDescription && (
-                  <p className="text-xs text-[var(--color-text-dim)] mt-1">{emptyDescription}</p>
-                )}
-                {emptyAction && <div className="mt-4">{emptyAction}</div>}
-              </div>
-            )}
-
-            <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
-              {renderTableHeader()}
-              <tbody>
-                <tr className="border-b border-[var(--color-table-separator)]">
-                  <td
-                    colSpan={Math.max(table.getAllLeafColumns().length, 1)}
-                    className="py-16 text-center text-[var(--color-text-muted)]"
-                  >
-                    <div className="flex flex-col items-center justify-center">
-                      {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
-                      <p className="text-sm font-medium">{emptyTitle}</p>
-                      {emptyDescription && (
-                        <p className="text-xs text-[var(--color-text-dim)] mt-1">
-                          {emptyDescription}
-                        </p>
-                      )}
-                      {emptyAction && <div className="mt-4">{emptyAction}</div>}
+                      <div className="skeleton-shimmer h-4 w-1/2 rounded" />
+                      <div className="skeleton-shimmer h-3 w-full rounded" />
+                      <div className="skeleton-shimmer h-3 w-3/4 rounded" />
                     </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </>
-        ) : (
-          <>
-            {/* Mobile Cards */}
-            {mobileCard && (
-              <div className="md:hidden space-y-3 p-3">
-                {sortedRows.map((row, i) => (
-                  <div
-                    key={row.id}
-                  >
-                    {mobileCard(row.original, i)}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Desktop Table */}
-            <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
-              {renderTableHeader()}
-              <tbody ref={tableBodyRef}>
-                {sortedRows.map((row, i) => (
-                  <tr
-                    key={row.id}
-                    data-row
-                    tabIndex={0}
-                    onClick={() => onRowClick?.(row.original)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && onRowClick) {
-                        e.preventDefault()
-                        onRowClick(row.original)
-                      }
-                    }}
-                    className={`border-b border-[var(--color-table-separator)] hover:bg-muted/50 focus:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] focus:ring-inset transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="py-1.5 px-3">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
+                  ))}
+                </div>
+              )}
+              <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
+                {renderTableHeader()}
+                <tbody>
+                  {Array.from({ length: skeletonRows }, (_, index) => `skeleton-${index + 1}`).map(
+                    (skeletonKey) => (
+                      <tr
+                        key={skeletonKey}
+                        className="border-b border-[var(--color-table-separator)]"
+                      >
+                        <td
+                          className="py-1.5 px-3"
+                          colSpan={Math.max(table.getAllLeafColumns().length, columns.length, 1)}
+                        >
+                          <div className="flex gap-4">
+                            <div className="skeleton-shimmer h-4 flex-[2] rounded" />
+                            <div className="skeleton-shimmer h-4 flex-1 rounded" />
+                            <div className="skeleton-shimmer h-4 flex-1 rounded" />
+                            <div className="skeleton-shimmer h-4 flex-1 rounded" />
+                          </div>
+                        </td>
+                      </tr>
+                    ),
+                  )}
+                </tbody>
+              </table>
+            </motion.div>
+          ) : sortedRows.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              {mobileCard && (
+                <div className="md:hidden flex flex-col items-center justify-center py-10 text-[var(--color-text-muted)]">
+                  {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
+                  <p className="text-sm font-medium">{emptyTitle}</p>
+                  {emptyDescription && (
+                    <p className="text-xs text-[var(--color-text-dim)] mt-1">{emptyDescription}</p>
+                  )}
+                  {emptyAction && <div className="mt-4">{emptyAction}</div>}
+                </div>
+              )}
+              <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
+                {renderTableHeader()}
+                <tbody>
+                  <tr className="border-b border-[var(--color-table-separator)]">
+                    <td
+                      colSpan={Math.max(table.getAllLeafColumns().length, 1)}
+                      className="py-16 text-center text-[var(--color-text-muted)]"
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
+                        <p className="text-sm font-medium">{emptyTitle}</p>
+                        {emptyDescription && (
+                          <p className="text-xs text-[var(--color-text-dim)] mt-1">
+                            {emptyDescription}
+                          </p>
+                        )}
+                        {emptyAction && <div className="mt-4">{emptyAction}</div>}
+                      </div>
+                    </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
-        )}
+                </tbody>
+              </table>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="data"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              {/* Mobile Cards */}
+              {mobileCard && (
+                <div className="md:hidden space-y-3 p-3">
+                  {sortedRows.map((row, i) => (
+                    <div key={row.id}>
+                      {mobileCard(row.original, i)}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* P3-005: Desktop Table with staggered rows via useInView */}
+              <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
+                {renderTableHeader()}
+                <AnimatedTbody tbodyRef={tableBodyRef}>
+                  {sortedRows.map((row) => (
+                    <motion.tr
+                      key={row.id}
+                      data-row
+                      tabIndex={0}
+                      variants={rowVariants}
+                      onClick={() => onRowClick?.(row.original)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && onRowClick) {
+                          e.preventDefault()
+                          onRowClick(row.original)
+                        }
+                      }}
+                      className={`border-b border-[var(--color-table-separator)] hover:bg-muted/50 focus:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] focus:ring-inset transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="py-1.5 px-3">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </motion.tr>
+                  ))}
+                </AnimatedTbody>
+              </table>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Pagination */}
@@ -424,14 +485,17 @@ function PaginationBtn({
   'aria-label'?: string
 }) {
   return (
-    <button
+    // P3-007: Button micro-interactions
+    <motion.button
       type="button"
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.97 }}
       className="p-1.5 rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
     >
       {children}
-    </button>
+    </motion.button>
   )
 }
