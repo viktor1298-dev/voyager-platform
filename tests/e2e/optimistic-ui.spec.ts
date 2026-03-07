@@ -17,8 +17,8 @@ test.describe('Optimistic UI + Motion Animations', () => {
     await page.waitForURL(/\/alerts/, { timeout: 10_000 })
     await expect(page).toHaveURL(/\/alerts/)
 
-    // Navigate back to Clusters
-    await page.click('a[href="/clusters"]')
+    // Navigate back to Clusters — v196: sidebar Clusters is accordion (href="#"), navigate directly
+    await page.goto('/clusters')
     await expect(page.locator('h1:has-text("Clusters")')).toBeVisible({ timeout: 10_000 })
   })
 
@@ -77,7 +77,8 @@ test.describe('Optimistic UI + Motion Animations', () => {
     await page.waitForSelector('h1:has-text("Clusters")', { state: 'visible', timeout: 30000 })
     await expect(page.locator('h1:has-text("Clusters")')).toBeVisible({ timeout: 10_000 })
 
-    await page.click('a[href="/clusters"]')
+    // v196: sidebar Clusters is accordion (href="#"), navigate directly
+    await page.goto('/clusters')
     await expect(page.locator('h1:has-text("Clusters")')).toBeVisible({ timeout: 10_000 })
   })
 

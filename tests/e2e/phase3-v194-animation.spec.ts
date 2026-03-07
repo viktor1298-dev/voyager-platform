@@ -54,11 +54,13 @@ test.describe('P3-001: Sidebar nav item animations', () => {
     await page.goto(BASE_URL);
     await page.waitForLoadState('domcontentloaded');
 
-    const clustersLink = page.locator('a[href="/clusters"], nav a:has-text("Clusters")').first();
-    const isVisible = await clustersLink.isVisible({ timeout: 10_000 }).catch(() => false);
+    // v196: sidebar Clusters is accordion (href="#"), use data-testid or navigate directly
+    const clustersBtn = page.getByTestId('nav-item-clusters');
+    const isVisible = await clustersBtn.isVisible({ timeout: 10_000 }).catch(() => false);
 
     if (isVisible) {
-      await clustersLink.click();
+      // Navigate directly — clicking accordion just opens sub-nav, doesn't navigate
+      await page.goto(`${BASE_URL}/clusters`);
       await page.waitForURL(/\/clusters/, { timeout: 10_000 });
       await expect(page).toHaveURL(/\/clusters/);
     }
