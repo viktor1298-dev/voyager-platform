@@ -6,6 +6,7 @@ import {
   db,
   healthHistory,
   metricsHistory,
+  nodeMetricsHistory,
   events,
 } from '@voyager/db'
 import { protectedProcedure, router } from '../trpc.js'
@@ -422,5 +423,42 @@ export const metricsRouter = router({
         summary: { totalCpuAvg, totalMemAvg, totalPods, totalNodes, clusterCount: totalClusters },
         perCluster,
       }
+    }),
+
+  /** MX-003: Per-node time-series from nodeMetricsHistory */
+  nodeTimeSeries: protectedProcedure
+    .input(z.object({ clusterId: z.string().uuid(), range: timeRangeSchema }))
+    .query(async ({ input }) => {
+      const start = getTimeRangeStart(input.range)
+
+      const rows = await db
+        .select()
+        .from(nodeMetricsHistory)
+        .where(and(
+          eq(nodeMetricsHistory.clusterId, input.clusterId),
+          gte(nodeMetricsHistory.timestamp, start),
+        ))
+        .orderBy(nodeMetricsHistory.timestamp)
+
+      if (rows.length === 0) return []
+
+      // Group by nodeName
+      const nodeMap = new Map<string, { timestamps: string[]; cpuValues: number[]; memValues: number[]; cpuMillis: number[]; memMi: number[] }>()
+      for (const row of rows) {
+        if (!nodeMap.has(row.nodeName)) {
+          nodeMap.set(row.nodeName, { timestamps: [], cpuValues: [], memValues: [], cpuMillis: [], memMi: [] })
+        }
+        const node = nodeMap.get(row.nodeName)!
+        node.timestamps.push(new Date(row.timestamp).toISOString())
+        node.cpuValues.push(row.cpuPercent)
+        node.memValues.push(row.memPercent)
+        node.cpuMillis.push(row.cpuMillis)
+        node.memMi.push(row.memMi)
+      }
+
+      return Array.from(nodeMap.entries()).map(([nodeName, data]) => ({
+        nodeName,
+        ...data,
+      }))
     }),
 })

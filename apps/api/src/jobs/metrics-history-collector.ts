@@ -1,5 +1,5 @@
 import * as k8s from '@kubernetes/client-node'
-import { clusters, db, metricsHistory } from '@voyager/db'
+import { clusters, db, metricsHistory, nodeMetricsHistory } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
@@ -8,6 +8,7 @@ const COLLECT_INTERVAL_MS = 60 * 1000
 
 let intervalHandle: NodeJS.Timeout | null = null
 let isRunning = false
+let lastCollectTime: Date | null = null
 
 /** Parse pod network stats from K8s metrics-server (best-effort, returns null on failure) */
 async function collectNetworkBytes(
@@ -114,10 +115,38 @@ async function collectMetrics(): Promise<void> {
         networkBytesIn,
         networkBytesOut,
       })
+
+      // Per-node metrics (MX-002)
+      for (const nm of nodeMetrics.items) {
+        const nodeName = nm.metadata?.name ?? 'unknown'
+        const usedCpuNano = parseCpuToNano(nm.usage?.cpu ?? '0')
+        const usedMemBytes = parseMemToBytes(nm.usage?.memory ?? '0')
+        const alloc = allocMap.get(nodeName)
+
+        const nodeCpuPercent = alloc && alloc.cpu > 0
+          ? Math.round((usedCpuNano / alloc.cpu) * 1000) / 10
+          : 0
+        const nodeMemPercent = alloc && alloc.mem > 0
+          ? Math.round((usedMemBytes / alloc.mem) * 1000) / 10
+          : 0
+
+        await db.insert(nodeMetricsHistory).values({
+          clusterId: cluster.id,
+          nodeName,
+          timestamp: new Date(),
+          cpuPercent: nodeCpuPercent,
+          memPercent: nodeMemPercent,
+          cpuMillis: Math.round(usedCpuNano / 1_000_000),
+          memMi: Math.round(usedMemBytes / (1024 * 1024)),
+        })
+      }
     } catch (err) {
       console.warn(`[metrics-collector] failed for cluster ${cluster.id}`, err)
     }
   }
+
+  lastCollectTime = new Date()
+  console.log(`[metrics-collector] collected at ${lastCollectTime.toISOString()} for ${allClusters.length} clusters`)
 }
 
 export function startMetricsHistoryCollector(): void {
@@ -143,5 +172,14 @@ export function stopMetricsHistoryCollector(): void {
   if (intervalHandle) {
     clearInterval(intervalHandle)
     intervalHandle = null
+  }
+}
+
+/** MX-004: Health endpoint for metrics collector status */
+export function getCollectorStatus() {
+  return {
+    running: intervalHandle !== null,
+    lastCollectTime: lastCollectTime?.toISOString() ?? null,
+    intervalMs: COLLECT_INTERVAL_MS,
   }
 }

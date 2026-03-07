@@ -218,6 +218,11 @@ await registerMcpRoute(app)
 
 app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
 
+app.get('/health/metrics-collector', { config: { rateLimit: false } }, async () => {
+  const { getCollectorStatus } = await import('./jobs/metrics-history-collector.js')
+  return getCollectorStatus()
+})
+
 const start = async () => {
   try {
     // Schema is initialized by Helm sql/init.sql on postgres startup (no migrate() needed)

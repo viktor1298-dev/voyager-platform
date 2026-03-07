@@ -596,3 +596,17 @@ CREATE INDEX IF NOT EXISTS "karpenter_cache_cluster_type_observed_idx" ON "karpe
 -- user_ai_keys: update provider type if needed (v190 uses enum)
 -- Note: user_ai_keys table already created above with text provider; 
 -- ensure enum version is consistent
+
+-- Per-node metrics history (Phase 5 MX-002)
+CREATE TABLE IF NOT EXISTS "node_metrics_history" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "cluster_id" uuid NOT NULL REFERENCES "clusters"("id") ON DELETE CASCADE,
+  "node_name" text NOT NULL,
+  "timestamp" timestamp with time zone NOT NULL DEFAULT now(),
+  "cpu_percent" real NOT NULL,
+  "mem_percent" real NOT NULL,
+  "cpu_millis" integer NOT NULL DEFAULT 0,
+  "mem_mi" integer NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS "idx_node_metrics_cluster_ts" ON "node_metrics_history" ("cluster_id", "timestamp");
+CREATE INDEX IF NOT EXISTS "idx_node_metrics_node" ON "node_metrics_history" ("cluster_id", "node_name", "timestamp");
