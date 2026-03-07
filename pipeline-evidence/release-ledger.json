@@ -584,5 +584,19 @@
     "login": "ok",
     "imageVerification": "voyager-api:v196 voyager-web:v196",
     "bundleVerified": true
+  },
+  {
+    "version": "v197",
+    "timestamp": "2026-03-07T14:15:26.008361",
+    "phase": "Phase 5 Dashboard UX + Per-Node Metrics",
+    "changes": "Compact stats bar, smaller cards, anomaly badge, node metrics table, batch node inserts, health endpoint docs",
+    "deployedBy": "uri",
+    "status": "deployed",
+    "health": "ok",
+    "metrics_collector": "running",
+    "login": "ok",
+    "imageVerification": "voyager-api:v197 voyager-web:v197",
+    "bundleVerified": true,
+    "node_metrics_history_table": "created via init.sql"
   }
 ]

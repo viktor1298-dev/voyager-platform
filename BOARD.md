@@ -132,20 +132,20 @@ Each phase follows this flow:
 > **Runs:** Ron (frontend) + Dima (backend) in parallel → v197
 
 ### Stat Cards — Compact Redesign (Ron)
-- [ ] **DB-001** Replace 4 big stat cards with compact stats bar — one thin row: `N Nodes · N/N Pods · N Clusters · N Warnings`
-- [ ] **DB-002** Cluster cards — reduce height ~50%, horizontal layout, 50 clusters = reasonable scroll
-- [ ] **DB-003** Anomalies → inline badge on Alerts nav item in sidebar (remove AnomalyWidget from dashboard)
+- [x] **DB-001** Replace 4 big stat cards with compact stats bar — one thin row: `N Nodes · N/N Pods · N Clusters · N Warnings` *(v197 2026-03-07)*
+- [x] **DB-002** Cluster cards — reduce height ~50%, horizontal layout, 50 clusters = reasonable scroll *(v197 2026-03-07)*
+- [x] **DB-003** Anomalies → inline badge on Alerts nav item in sidebar (remove AnomalyWidget from dashboard) *(v197 2026-03-07)*
 
 ### Per-Node Metrics — Backend (Dima)
 - [x] **MX-001** Enable metrics-server in minikube *(Foreman pre-enabled 2026-03-07)*
-- [ ] **MX-002** New DB table `node_metrics_history` (clusterId, nodeName, timestamp, cpuPercent, memPercent, cpuMillis, memMi)
-- [ ] **MX-003** Collector: per-node insert each cycle + `getCollectorStatus()` export
-- [ ] **MX-004** tRPC route `metrics.nodeTimeSeries(clusterId, range)` → [{nodeName, timestamps, cpuValues, memValues, cpuMillis, memMi}]
-- [ ] **MX-005** `/health/metrics-collector` status endpoint
+- [x] **MX-002** New DB table `node_metrics_history` (clusterId, nodeName, timestamp, cpuPercent, memPercent, cpuMillis, memMi) *(v197 2026-03-07)*
+- [x] **MX-003** Collector: per-node insert each cycle + `getCollectorStatus()` export *(v197 2026-03-07)*
+- [x] **MX-004** tRPC route `metrics.nodeTimeSeries(clusterId, range)` → [{nodeName, timestamps, cpuValues, memValues, cpuMillis, memMi}] *(v197 2026-03-07)*
+- [x] **MX-005** `/health/metrics-collector` status endpoint *(v197 2026-03-07)*
 
 ### Per-Node Metrics — Frontend (Ron)
-- [ ] **MX-006** NodeMetricsTable component: node name + CPU/Mem progress bars + % + millicores/Mi values
-- [ ] **MX-007** MetricsEmptyState fallback: "⚠️ Metrics-server not detected on this cluster"
+- [x] **MX-006** NodeMetricsTable component: node name + CPU/Mem progress bars + % + millicores/Mi values *(v197 2026-03-07)*
+- [x] **MX-007** MetricsEmptyState fallback: "⚠️ Metrics-server not detected on this cluster" *(v197 2026-03-07)*
 
 ---
 

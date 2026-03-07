@@ -1,10 +1,10 @@
 {
   "status": "running",
   "version": "v197",
-  "currentStage": "phase5-dev",
+  "currentStage": "DEPLOYED",
   "phase": "Phase5",
   "fixLoopCount": 0,
-  "timestamp": "2026-03-07T11:33:00.000Z",
+  "timestamp": "2026-03-07T14:15:10.366834",
   "branch": "main",
   "tag": "v197",
   "mergeCommit": null,
@@ -28,7 +28,7 @@
     "phase5-dev-backend"
   ],
   "notes": "Phase 5: Dashboard UX compact + Metrics fix. Ron (frontend) + Dima (backend) in parallel.",
-  "deployedInK8s": "v196-fix1",
+  "deployedInK8s": "v197",
   "evidence": {
     "e2e-v195": "pipeline-evidence/e2e-v195.json",
     "qa-v195": "pipeline-evidence/qa-v195.json",
