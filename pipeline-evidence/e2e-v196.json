@@ -1,0 +1,71 @@
+{
+  "version": "v196",
+  "timestamp": "2026-03-07T10:18:56Z",
+  "total": 164,
+  "passed": 131,
+  "failed": 3,
+  "skipped": 30,
+  "gate": "0 failures required",
+  "playwright_exit_code": 0,
+  "base_url": "http://voyager-platform.voyagerlabs.co",
+  "duration_ms": 484510,
+  "changes_tested": [
+    "SB-002: data-collapsible attribute propagation",
+    "SB-003: Tooltips on collapsed nav items",
+    "SB-005: Clusters inline accordion",
+    "SB-006: CSS transition instead of Motion spring for width",
+    "SB-008: Active border 3px → 2px",
+    "SB-009: Cmd+B near-instant toggle",
+    "SB-010: Clusters parent active pill",
+    "SB-011: Inline cluster sub-nav"
+  ],
+  "failures": [
+    {
+      "test": "optimistic-ui.spec.ts — page navigation renders with transition",
+      "file": "tests/e2e/optimistic-ui.spec.ts",
+      "line": 21,
+      "error": "page.click: Test timeout of 45000ms exceeded — waiting for locator('a[href=\"/clusters\"]')",
+      "hypothesis": "v196 SB-005/SB-011 changed Clusters sidebar link from href='/clusters' to href='#' (accordion toggle). Selector a[href=\"/clusters\"] no longer matches the sidebar nav item. Reproduced on re-run.",
+      "classification": "test-bug",
+      "root_cause": "SB-005 inline accordion + SB-011 inline cluster sub-nav changed Clusters nav anchor href from /clusters to # (accordion parent). Tests using a[href=\"/clusters\"] selector are broken by intentional product change.",
+      "suggested_fix": "Replace page.click('a[href=\"/clusters\"]') with page.getByTestId('nav-item-clusters') or use page.locator('nav').getByText('Clusters').click() to handle the accordion parent. Then expand sub-nav and click actual /clusters link.",
+      "previously_known": true,
+      "previous_versions_failed": ["v194-phase1", "v194-round3", "v194-phase3"],
+      "repeated_failure": true
+    },
+    {
+      "test": "optimistic-ui.spec.ts — reduced motion preference disables animations",
+      "file": "tests/e2e/optimistic-ui.spec.ts",
+      "line": 80,
+      "error": "page.click: Test timeout of 45000ms exceeded — waiting for locator('a[href=\"/clusters\"]')",
+      "hypothesis": "Same root cause as above — a[href=\"/clusters\"] selector fails due to SB-005/SB-011 sidebar changes. href is now '#' on the accordion parent.",
+      "classification": "test-bug",
+      "root_cause": "SB-005 inline accordion + SB-011 changed Clusters nav anchor to href='#'. Selector no longer valid.",
+      "suggested_fix": "Same fix as above — use data-testid or nav text locator.",
+      "previously_known": true,
+      "repeated_failure": true
+    },
+    {
+      "test": "phase3-v194-animation.spec.ts — clicking a nav item navigates correctly",
+      "file": "tests/e2e/phase3-v194-animation.spec.ts",
+      "line": 62,
+      "error": "page.waitForURL: Timeout 10000ms exceeded — waiting for navigation to /clusters after clicking a[href=\"/clusters\"]",
+      "hypothesis": "Same root cause — Clusters nav link href changed to '#' by SB-005 accordion. Clicking it expands the accordion instead of navigating to /clusters. waitForURL(/clusters/) times out because navigation never happens.",
+      "classification": "test-bug",
+      "root_cause": "SB-005 inline accordion changes Clusters nav item from direct link to accordion toggle (href='#'). waitForURL after click fails because click opens sub-nav, not navigates.",
+      "suggested_fix": "After clicking accordion parent, click the actual /clusters sub-nav link. Or use page.getByTestId('nav-item-clusters-link') for direct navigation.",
+      "previously_known": false,
+      "new_in_v196": true,
+      "repeated_failure": true
+    }
+  ],
+  "analysis": {
+    "common_pattern": "All 3 failures share the same root cause: a[href='/clusters'] selector no longer valid after SB-005/SB-011 sidebar changes. The Clusters nav item is now an accordion parent (href='#') not a direct link.",
+    "classification": "test-bug — tests need selector updates to match v196 sidebar architecture",
+    "systemic": true,
+    "regression": false,
+    "product_is_working": true,
+    "note": "The Clusters inline accordion and sub-nav are working as designed in v196. The tests were written before SB-005/SB-011 changes and need to be updated to handle the new navigation structure."
+  },
+  "verdict": "FAIL"
+}

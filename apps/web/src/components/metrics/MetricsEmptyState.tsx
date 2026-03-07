@@ -6,7 +6,9 @@ interface MetricsEmptyStateProps {
   message?: string
 }
 
-export function MetricsEmptyState({ message = 'Collecting metrics data...' }: MetricsEmptyStateProps) {
+export function MetricsEmptyState({
+  message = '⚠️ Metrics-server not detected on this cluster. Enable it to see CPU/Memory charts.',
+}: MetricsEmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 gap-4">
       <div className="relative flex items-center justify-center">
@@ -15,7 +17,7 @@ export function MetricsEmptyState({ message = 'Collecting metrics data...' }: Me
           <Activity className="h-6 w-6 text-[hsl(262,83%,58%)]" />
         </div>
       </div>
-      <div className="text-center">
+      <div className="text-center max-w-sm">
         <p className="text-sm font-medium text-[var(--color-text-primary)]">{message}</p>
         <p className="text-xs text-[var(--color-text-muted)] mt-1">
           Metrics will appear as data is collected from the cluster

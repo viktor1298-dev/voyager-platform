@@ -10,6 +10,7 @@ import { navItems } from '@/config/navigation'
 import { EASING } from '@/lib/animation-constants'
 import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
 import { trpc } from '@/lib/trpc'
+import { useAnomalyCount } from '@/hooks/useAnomalyCount'
 import {
   Tooltip,
   TooltipContent,
@@ -37,6 +38,9 @@ export function Sidebar({
   const { data: unacknowledgedCount = 0 } = trpc.alerts.unacknowledgedCount.useQuery(undefined, {
     refetchInterval: 30000,
   })
+
+  // DB-003: anomaly count for Alerts badge
+  const anomalyCount = useAnomalyCount()
 
   // SB-010: Clusters accordion open state — open when on any /clusters/* route
   const isClustersRoute = pathname.startsWith('/clusters')
@@ -141,6 +145,8 @@ export function Sidebar({
               const active = isActive(item.id)
               const Icon = item.icon
               const showAlertsBadge = item.id === '/alerts' && unacknowledgedCount > 0
+              // DB-003: anomaly badge on Alerts nav item
+              const showAnomalyBadge = item.id === '/alerts' && anomalyCount.total > 0 && unacknowledgedCount === 0
               const isClustersItem = item.id === '/clusters'
 
               // SB-010: clusters parent is active when on any /clusters/* route
@@ -214,6 +220,20 @@ export function Sidebar({
                       className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 relative z-10"
                     >
                       {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
+                    </span>
+                  )}
+                  {/* DB-003: anomaly badge — shown when there are open anomalies and no unacknowledged alerts */}
+                  {showAnomalyBadge && (
+                    <span
+                      data-testid="anomaly-badge"
+                      className={[
+                        'ml-auto min-w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold px-1 relative z-10',
+                        anomalyCount.critical > 0
+                          ? 'bg-red-500 text-white'
+                          : 'bg-amber-500 text-white',
+                      ].join(' ')}
+                    >
+                      {anomalyCount.total > 99 ? '99+' : anomalyCount.total}
                     </span>
                   )}
                   {/* SB-005: ChevronDown for clusters accordion — rotates when open */}

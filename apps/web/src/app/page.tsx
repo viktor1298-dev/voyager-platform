@@ -3,7 +3,6 @@
 import { AppLayout } from '@/components/AppLayout'
 import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { PageTransition } from '@/components/animations'
-import { AnomalyWidget } from '@/components/anomalies/AnomalyWidget'
 import { DashboardGrid } from '@/components/dashboard/DashboardGrid'
 import { DashboardEditBar } from '@/components/dashboard/DashboardEditBar'
 import { WidgetLibraryDrawer } from '@/components/dashboard/WidgetLibraryDrawer'
@@ -324,44 +323,15 @@ function DashboardContent() {
         {/* Legacy hardcoded layout (hidden when widget mode active) */}
         {!widgetMode && (<>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-          <SummaryCard
-            icon={<Server className="h-4 w-4" />}
-            label="Total Nodes"
-            value={String(totalNodes)}
-            color="var(--color-accent)"
-            gradient="var(--gradient-text-default)"
-            isLoading={isLoading}
-          />
-          <SummaryCard
-            icon={<Box className="h-4 w-4" />}
-            label="Running Pods"
-            value={`${runningPods}/${liveData?.totalPods ?? 0}`}
-            color="var(--color-status-active)"
-            gradient="var(--gradient-text-healthy)"
-            isLoading={isLoading}
-          />
-          <SummaryCard
-            icon={<Database className="h-4 w-4" />}
-            label="Clusters"
-            value={String(clusterList.length)}
-            color="var(--color-accent)"
-            gradient="var(--gradient-text-default)"
-            isLoading={isLoading}
-          />
-          <SummaryCard
-            icon={<AlertTriangle className="h-4 w-4" />}
-            label="Warning Events"
-            value={String(warningEvents)}
-            color="var(--color-status-warning)"
-            gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'var(--gradient-text-default)'}
-            isLoading={isLoading}
-          />
-        </div>
-
-        <div className="mb-6 max-w-sm">
-          <AnomalyWidget />
-        </div>
+        {/* DB-001: Compact stats bar — replaces 4 SummaryCard grid */}
+        <CompactStatsBar
+          totalNodes={totalNodes}
+          runningPods={runningPods}
+          totalPods={liveData?.totalPods ?? 0}
+          clusterCount={clusterList.length}
+          warningEvents={warningEvents}
+          isLoading={isLoading}
+        />
 
         <SystemHealthSection />
 
@@ -490,12 +460,8 @@ function DashboardPageFallback() {
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
         </header>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </div>
+        {/* DB-001: compact stats bar skeleton */}
+        <div className="mb-5 h-9 rounded-lg bg-[var(--color-bg-secondary)]/40 border border-[var(--color-border)] animate-pulse" />
         <div className="space-y-3">
           <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
           <SkeletonText width="12rem" height="1.5rem" />
@@ -544,6 +510,7 @@ function HealthDot({ clusterId }: { clusterId: string }) {
   )
 }
 
+// DB-002: Compact ClusterCard — single horizontal row, ~50% shorter
 function ClusterCard({
   cluster,
   index,
@@ -562,13 +529,13 @@ function ClusterCard({
   return (
     <Link href={`/clusters/${cluster.id}`}>
       <div
-        className="cluster-card relative group rounded-xl min-h-[90px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 overflow-hidden"
+        className="cluster-card relative group rounded-lg cursor-pointer bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex items-center gap-2 overflow-hidden px-3 py-2"
         style={
           {
             '--status-color': getStatusColor(status),
             boxShadow: getStatusGlow(status),
             transition: 'all var(--duration-normal) ease',
-            animationDelay: `${index * 50}ms`,
+            animationDelay: `${index * 30}ms`,
             animationFillMode: 'forwards',
           } as React.CSSProperties
         }
@@ -582,100 +549,93 @@ function ClusterCard({
           e.currentTarget.style.transform = 'none'
         }}
       >
+        {/* Left accent bar */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
+          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-lg"
           style={{ backgroundColor: envMeta.color, opacity: 0.9 }}
         />
 
-        <div className="flex-1 min-w-0 p-4 pl-5 pb-2 sm:pb-4">
-          <div className="flex items-center gap-2">
-            <span
-              className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(status)}`}
-            />
-            <span className="text-sm font-bold text-[var(--color-text-primary)] truncate">{cluster.name}</span>
-            {cluster.source === 'db' && <HealthDot clusterId={cluster.id} />}
-          </div>
+        {/* Status dot */}
+        <span
+          className={`h-1.5 w-1.5 rounded-full shrink-0 animate-pulse-slow ml-1 ${getStatusDotClass(status)}`}
+        />
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono">
-            <span>K8s {cluster.version ?? '—'}</span>
-            <span>·</span>
-            <span>Nodes: {cluster.nodeCount}</span>
-            {cluster.source === 'live' && (
-              <>
-                <span>·</span>
-                <span>Pods: {runningPods}/{totalPods}</span>
-              </>
-            )}
-          </div>
-        </div>
+        {/* Name */}
+        <span className="text-xs font-semibold text-[var(--color-text-primary)] truncate flex-1 min-w-0">
+          {cluster.name}
+        </span>
+        {cluster.source === 'db' && <HealthDot clusterId={cluster.id} />}
 
-        <div className="flex w-full sm:w-auto flex-row flex-wrap sm:flex-col items-start sm:items-end justify-between gap-1 sm:gap-2 shrink-0 px-4 pb-4 sm:p-4 sm:pl-0">
-          <span
-            className={cn('text-[10px] font-mono px-2 py-0.5 rounded-md border', envMeta.badgeClass)}
-          >
-            {ENV_META[cluster.environment].label}
-          </span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
-              {cluster.provider}
-            </span>
-            <ProviderLogo provider={cluster.provider ?? 'default'} />
-          </div>
-          <span className="text-[9px] text-[var(--color-text-dim)]">{statusMeta.label}</span>
-        </div>
+        {/* Env badge */}
+        <span className={cn('text-[9px] font-mono px-1.5 py-0.5 rounded border shrink-0', envMeta.badgeClass)}>
+          {envMeta.label}
+        </span>
+
+        {/* Status label */}
+        <span className="text-[9px] text-[var(--color-text-dim)] shrink-0 hidden sm:block">{statusMeta.label}</span>
+
+        {/* Node count */}
+        <span className="text-[9px] font-mono text-[var(--color-text-muted)] shrink-0">
+          {cluster.nodeCount}n
+        </span>
+
+        {/* K8s version */}
+        <span className="text-[9px] font-mono text-[var(--color-text-dim)] shrink-0 hidden md:block">
+          {cluster.version ?? '—'}
+        </span>
       </div>
     </Link>
   )
 }
 
-function SummaryCard({
-  icon,
-  label,
-  value,
-  color,
-  gradient,
+// DB-001: Compact stats bar — replaces 4 large SummaryCard grid
+function CompactStatsBar({
+  totalNodes,
+  runningPods,
+  totalPods,
+  clusterCount,
+  warningEvents,
   isLoading,
 }: {
-  icon: React.ReactNode
-  label: string
-  value: string
-  color: string
-  gradient: string
+  totalNodes: number
+  runningPods: number
+  totalPods: number
+  clusterCount: number
+  warningEvents: number
   isLoading?: boolean
 }) {
+  if (isLoading) {
+    return (
+      <div className="mb-5 h-9 rounded-lg bg-[var(--color-bg-secondary)]/40 border border-[var(--color-border)] animate-pulse" />
+    )
+  }
+
+  const stats = [
+    { icon: <Server className="h-3 w-3" />, value: String(totalNodes), label: 'Nodes', color: 'var(--color-accent)' },
+    { icon: <Box className="h-3 w-3" />, value: `${runningPods}/${totalPods}`, label: 'Pods', color: 'var(--color-status-active)' },
+    { icon: <Database className="h-3 w-3" />, value: String(clusterCount), label: 'Clusters', color: 'var(--color-accent)' },
+    {
+      icon: <AlertTriangle className="h-3 w-3" />,
+      value: String(warningEvents),
+      label: 'Warnings',
+      color: warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-dim)',
+    },
+  ]
+
   return (
-    <div
-      className="rounded-2xl p-4 border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)]"
-      style={{
-        background: 'var(--glass-bg)',
-        backdropFilter: 'blur(var(--glass-blur))',
-        WebkitBackdropFilter: 'blur(var(--glass-blur))',
-        transition: 'all var(--duration-normal) ease',
-        boxShadow: 'var(--shadow-card)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'
-      }}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
-          {label}
-        </span>
-        <span style={{ color }}>{icon}</span>
-      </div>
-      {isLoading ? (
-        <SkeletonText width="3rem" height="2rem" />
-      ) : (
-        <div
-          className="text-2xl font-extrabold tracking-tight animate-count-up gradient-text"
-          style={{ backgroundImage: gradient }}
-        >
-          {value}
+    <div className="mb-5 inline-flex items-center gap-3 bg-[var(--color-bg-secondary)]/40 border border-[var(--color-border)] rounded-lg px-4 py-2 h-9 w-full overflow-x-auto">
+      {stats.map((stat, i) => (
+        <div key={stat.label} className="flex items-center gap-3 shrink-0">
+          {i > 0 && <span className="text-[var(--color-border)] text-xs select-none">·</span>}
+          <div className="inline-flex items-center gap-1.5">
+            <span style={{ color: stat.color }}>{stat.icon}</span>
+            <span className="text-xs font-mono font-semibold text-[var(--color-text-primary)]">
+              {stat.value}
+            </span>
+            <span className="text-[10px] text-[var(--color-text-muted)] hidden sm:inline">{stat.label}</span>
+          </div>
         </div>
-      )}
+      ))}
     </div>
   )
 }
