@@ -572,5 +572,17 @@
     "bundle_verified": "reducedMotion + motion chunks present",
     "deployed_by": "uri-devops",
     "next_stage": "e2e-phase3"
+  },
+  {
+    "version": "v196",
+    "timestamp": "2026-03-07T12:07:28.102377",
+    "phase": "Phase 4 sidebar polish",
+    "changes": "SB-002..SB-011 (8 items)",
+    "deployedBy": "uri",
+    "status": "deployed",
+    "health": "ok",
+    "login": "ok",
+    "imageVerification": "voyager-api:v196 voyager-web:v196",
+    "bundleVerified": true
   }
 ]

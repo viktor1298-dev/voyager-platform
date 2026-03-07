@@ -1,38 +1,37 @@
 {
-  "status": "merged",
+  "status": "deployed",
   "version": "v196",
-  "currentStage": "DONE",
+  "currentStage": "DEPLOYED",
   "phase": "sidebar-polish",
   "fixLoopCount": 0,
-  "timestamp": "2026-03-07T12:00:00.000Z",
+  "timestamp": "2026-03-07T12:07:06.737423",
   "branch": "main",
   "tag": "v196",
   "mergeCommit": "088cfb7",
-  "mergedBranch": "feat/sidebar-phase4-deleted",
   "completedStages": [
     "review-widgets",
     "sidebar-fix",
     "review-sidebar",
+    "merge-tag-v195",
+    "deploy-v195",
+    "e2e-v195",
+    "qa-v195",
     "phase4-dev",
     "review-phase4",
-    "merge-tag",
-    "push"
+    "merge-tag-v196"
   ],
   "failedStages": [],
-  "inProgress": [],
+  "inProgress": [
+    "build-deploy-v196"
+  ],
   "previousVersion": "v195",
-  "notes": "v196 merged. Phase 4 sidebar polish complete. SB-002..SB-011 all merged to main. Tag v196 pushed.",
+  "notes": "Phase 4 reviewed (10/10) and merged. Building and deploying v196.",
   "commits": [
-    "1fd7426",
-    "0c9625b",
-    "25ac00c",
-    "fcd11a1",
-    "b7de5ac",
-    "c1acaac",
+    "df28049",
+    "cfbae6e",
     "088cfb7"
   ],
-  "scope": "Phase 4 sidebar polish: SB-002 SB-003 SB-005 SB-006 SB-007 SB-008 SB-009 SB-010 SB-011",
-  "vikRequest": "Phase 4 sidebar polish items",
-  "deployedInK8s": "v195",
-  "phase4Items": ["SB-002", "SB-003", "SB-005", "SB-006", "SB-007", "SB-008", "SB-009", "SB-010", "SB-011"]
+  "scope": "Phase 4 sidebar polish: SB-002..SB-011",
+  "vikRequest": "1. Icon alignment in collapsed sidebar 2. CLUSTERS section header in expanded mode",
+  "deployedInK8s": "v196"
 }
