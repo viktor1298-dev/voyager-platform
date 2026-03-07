@@ -1,9 +1,9 @@
 {
   "status": "running",
-  "version": "v194-phase1",
+  "version": "v194-phase2-fix1",
   "currentStage": "DEPLOYED",
   "fixLoopCount": 1,
-  "timestamp": "2026-03-07T04:26:36.300081",
+  "timestamp": "2026-03-07T08:24:38.904910",
   "branch": "feat/init-monorepo",
   "tag": "v194-phase1",
   "completedStages": [
@@ -13,9 +13,15 @@
   ],
   "failedStages": [],
   "inProgress": [
-    "Deploy \u2014 Uri"
+    "Deploy \u2014 Uri (loading v194-phase2-fix1 into minikube)"
   ],
   "previousVersion": "v193",
-  "notes": "Phase 1 reviewed (7\u2192fixed\u219210), tagged v194-phase1, deploying",
-  "deployedInK8s": "v194-phase1"
+  "notes": "Phase 1 reviewed (7\u2192fixed\u219210), tagged v194-phase1, deploying | Guardian fix 2026-03-07T08:05: version drift corrected. State was v194-phase1 but K8s=v194-phase2 and devops loading v194-phase2-fix1. Review-phase2 CHANGES_REQUESTED (score 8). Foreman alive waiting for Uri build.",
+  "deployedInK8s": "v194-phase2-fix1",
+  "guardianVersionCorrection": {
+    "correctedAt": "2026-03-07T08:07:33.522858",
+    "from": "v194-phase1",
+    "to": "v194-phase2-fix1",
+    "reason": "K8s deployed v194-phase2; devops building v194-phase2-fix1; foreman-v194-phase2-3 alive"
+  }
 }
