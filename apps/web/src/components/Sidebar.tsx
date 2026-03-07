@@ -105,7 +105,8 @@ export function Sidebar({
                 onClick={() => setMobileOpen(false)}
                 data-testid={`nav-item-${item.id.replace(/\//g, '') || 'dashboard'}`}
                 className={`
-                  relative flex items-center gap-3 px-3 py-2.5 rounded-lg
+                  relative flex items-center py-2.5 rounded-lg
+                  ${showLabels ? 'gap-3 px-3' : 'justify-center px-0'}
                   ${active
                     ? 'text-[var(--color-text-primary)]'
                     : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
@@ -168,7 +169,7 @@ export function Sidebar({
                 transition={{ duration: 0.15 }}
                 className="mt-2 border-t border-[var(--color-border)]/60 pt-2"
               >
-                <p className="px-2 mb-1 text-[12px] uppercase tracking-widest font-mono font-bold text-slate-700 dark:text-slate-100">
+                <p className="px-2 mb-1 text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
                   Clusters
                 </p>
                 <div className="space-y-1">

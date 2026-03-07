@@ -1,27 +1,27 @@
 [
   {
-    "test": "alerts.spec.ts — should create a new alert rule",
+    "test": "alerts.spec.ts \u2014 should create a new alert rule",
     "failCount": 3,
     "root_cause": "dialog dismiss animation timeout",
     "firstSeen": "2026-02-28",
     "lastSeen": "2026-02-28"
   },
   {
-    "test": "alerts.spec.ts — should toggle alert enabled/disabled",
+    "test": "alerts.spec.ts \u2014 should toggle alert enabled/disabled",
     "failCount": 3,
     "root_cause": "dialog dismiss animation timeout",
     "firstSeen": "2026-02-28",
     "lastSeen": "2026-02-28"
   },
   {
-    "test": "api-tokens.spec.ts — newly created token appears in token list",
+    "test": "api-tokens.spec.ts \u2014 newly created token appears in token list",
     "failCount": 2,
     "root_cause": "dismiss button accessibility delay",
     "firstSeen": "2026-02-28",
     "lastSeen": "2026-02-28"
   },
   {
-    "test": "byok-flow.spec.ts — Settings BYOK actions keep UX clear for saved key vs raw key",
+    "test": "byok-flow.spec.ts \u2014 Settings BYOK actions keep UX clear for saved key vs raw key",
     "failCount": 3,
     "root_cause": "DB schema drift: user_ai_keys table missing created_at column. aiKeys.save returns 500 INTERNAL_SERVER_ERROR. seedByokKey() cannot seed data. Test is env-blocked until migration runs.",
     "suggested_fix": "Run DB migration to add created_at column to user_ai_keys table. Then re-enable test by removing test.skip.",
@@ -29,6 +29,34 @@
     "lastSeen": "2026-03-06",
     "classification": "env-blocked",
     "backend_bug": true,
-    "skip_reason": "aiKeys.save returns 500 — DB schema drift: user_ai_keys missing created_at column"
+    "skip_reason": "aiKeys.save returns 500 \u2014 DB schema drift: user_ai_keys missing created_at column"
+  },
+  {
+    "test": "optimistic-ui.spec.ts \u2014 page navigation renders with transition",
+    "failCount": 3,
+    "root_cause": "h1:has-text(Alerts) not found \u2014 Alerts page may not render h1 or timing issue",
+    "suggested_fix": "Use waitForURL(/\\/alerts/) instead of h1 selector",
+    "firstSeen": "2026-03-07",
+    "lastSeen": "2026-03-07",
+    "classification": "test-bug",
+    "failedInVersions": [
+      "v194-phase1",
+      "v194-round3",
+      "v194-phase3"
+    ]
+  },
+  {
+    "test": "responsive.spec.ts \u2014 mobile nav first tap should navigate immediately",
+    "failCount": 3,
+    "root_cause": "Strict mode violation: 2 Settings links found (sidebar nav-item-settings + mobile header link)",
+    "suggested_fix": "Use page.getByTestId(\"nav-item-settings\") instead of getByRole",
+    "firstSeen": "2026-03-07",
+    "lastSeen": "2026-03-07",
+    "classification": "test-bug",
+    "failedInVersions": [
+      "v194-phase1",
+      "v194-round3",
+      "v194-phase3"
+    ]
   }
 ]

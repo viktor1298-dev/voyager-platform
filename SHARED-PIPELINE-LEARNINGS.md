@@ -54,3 +54,20 @@ Flaky registry updated for byok-flow (failCount: 2)
 3. **foreman-resume SKILL.md location** — Skill is in `~/.openclaw/workspace/skills/foreman-resume/SKILL.md`, not in npm-global skills. Use `find` to locate if path is unclear.
 
 ---
+
+## v194 Phase 3 Pipeline — 2026-03-07
+
+### Top 3 Learnings
+
+1. **LazyMotion strict requires m.* not motion.* — affects ENTIRE codebase**
+   When adding `<LazyMotion features={domAnimation} strict>` to providers.tsx, ALL files using `motion.div/motion.span/etc` must be migrated to `m.div/m.span`. This isn't just the new files — it's every pre-existing file too (26 files in our case). Review should catch this before merge.
+   [SKILL-PATCH: code-review → add LazyMotion strict compatibility check to review checklist]
+
+2. **Worktree divergence causes nav regressions**
+   Ron's worktree had stale `navigation.ts` from before Phase 1 nav changes. Phase 3 animation work didn't touch this file, but the worktree diverged from main. Fix: Always run `git merge feat/init-monorepo` in worktree before starting new phase work, or verify key shared files match main.
+   [SKILL-PATCH: frontend-feature → add pre-work step: sync worktree with main branch for shared files]
+
+3. **Fix loop count tracking matters — 2 loops here was acceptable**
+   Loop 1 (LazyMotion crash) was a genuine architecture issue caught by review. Loop 2 (nav regression) was a worktree sync issue caught by E2E. Both were real bugs fixed quickly. Total pipeline time: ~1 hour for all 3 phases' fix loops.
+
+---

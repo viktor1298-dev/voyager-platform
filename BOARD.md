@@ -71,24 +71,27 @@
 > **Goal:** Production-quality Motion v12 animations. Every interaction feels alive.
 
 ### Motion v12 Activation (Ron)
-- [x] **P3-001** Sidebar spring collapse (`motion.aside` width: 56↔224px, `spring(300,30)`) ✅ v0.3.1 2025-01
-- [x] **P3-002** Active nav indicator `layoutId="sidebar-active-bg"` + left border bar ✅ v0.3.1 2025-01
-- [x] **P3-003** Tab underline `layoutId="cluster-tab-underline"` (`stiffness:500, damping:40`) ✅ v0.3.1 2025-01
-- [x] **P3-004** Tab content crossfade `AnimatePresence mode="wait"` (exit -4px, enter +8px, 200ms) ✅ v0.3.1 2025-01
-- [x] **P3-005** Data table row stagger with `useInView` (once, `-50px` margin, 30ms delay per row) ✅ v0.3.1 2025-01
-- [x] **P3-006** Animated stat count-up in cluster header (`useMotionValue + animate()`, 800ms decelerate) ✅ v0.3.1 2025-01
-- [x] **P3-007** Button micro-interactions: `whileHover={{scale:1.02}}` + `whileTap={{scale:0.97}}` ✅ v0.3.1 2025-01
-- [x] **P3-008** Card hover lift: `whileHover={{y:-2, boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}` ✅ v0.3.1 2025-01
-- [x] **P3-009** Skeleton → stagger entrance: `AnimatePresence mode="popLayout"` on all loading states ✅ v0.3.1 2025-01
-- [x] **P3-010** Shared element: cluster list icon → cluster detail icon (`layoutId="cluster-icon-{id}"`) ✅ v0.3.1 2025-01
+- [x] **P3-001** Sidebar spring collapse (`motion.aside` width: 56↔224px, `spring(300,30)`) ✅ v194-phase3 2026-03-07
+- [x] **P3-002** Active nav indicator `layoutId="sidebar-active-bg"` + left border bar ✅ v194-phase3 2026-03-07
+- [x] **P3-003** Tab underline `layoutId="cluster-tab-underline"` (`stiffness:500, damping:40`) ✅ v194-phase3 2026-03-07
+- [x] **P3-004** Tab content crossfade `AnimatePresence mode="wait"` (exit -4px, enter +8px, 200ms) ✅ v194-phase3 2026-03-07
+- [x] **P3-005** Data table row stagger with `useInView` (once, `-50px` margin, 30ms delay per row) ✅ v194-phase3 2026-03-07
+- [x] **P3-006** Animated stat count-up in cluster header (`useMotionValue + animate()`, 800ms decelerate) ✅ v194-phase3 2026-03-07
+- [x] **P3-007** Button micro-interactions: `whileHover={{scale:1.02}}` + `whileTap={{scale:0.97}}` ✅ v194-phase3 2026-03-07
+- [x] **P3-008** Card hover lift: `whileHover={{y:-2, boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}` ✅ v194-phase3 2026-03-07
+- [x] **P3-009** Skeleton → stagger entrance: `AnimatePresence mode="popLayout"` on all loading states ✅ v194-phase3 2026-03-07
+- [x] **P3-010** Shared element: cluster list icon → cluster detail icon (`layoutId="cluster-icon-{id}"`) ✅ v194-phase3 2026-03-07
 
 ### New Libraries (Ron)
-- [x] **P3-011** Install `vaul` → drawer for pod detail, alert detail on mobile ✅ v0.3.1 2025-01
-- [x] **P3-012** Install `react-resizable-panels` → split-pane logs below cluster content ✅ v0.3.1 2025-01
-- [x] **P3-013** Wrap heavy animations with `LazyMotion + domAnimation` (saves ~23kb gzipped) ✅ v0.3.1 2025-01
+- [ ] **P3-011** Install `vaul` → drawer for pod detail, alert detail on mobile
+- [ ] **P3-012** Install `react-resizable-panels` → split-pane logs below cluster content
+- [x] **P3-013** Wrap heavy animations with `LazyMotion + domAnimation` (saves ~23kb gzipped) ✅ v89b242a 2026-03-07
+  - **Review fix C1**: All `motion.*` → `m.*` across 26 files (LazyMotion strict-safe) ✅ fix/89b242a
+  - **Review fix H1**: AnimatedStatCount respects `prefers-reduced-motion` via `useReducedMotion` ✅
+  - **Review fix H2**: DataTable `AnimatePresence mode="popLayout"` → `mode="wait"` (spec P3-009) ✅
 
 ### Cleanup
-- [x] **P3-014** Remove dead code: unused hooks, old sidebar routes, duplicate motion polyfills ✅ v0.3.1 2025-01
+- [x] **P3-014** Remove dead code: unused hooks, old sidebar routes, duplicate motion polyfills ✅ v194-phase3 2026-03-07
 
 ---
 
@@ -119,7 +122,20 @@ Each phase follows this flow:
 - [ ] Dev complete (Ron/Shiri/Dima) → report to Discord
 - [ ] Code review (Lior) → 10/10 → APPROVED
 - [ ] Merge + tag (Gil) → `v194-phase1` / `v194-phase2` / `v194-phase3`
-- [ ] Deploy (Uri) → helm uninstall + helm install → image tag verified
+- [x] Deploy (Uri) → helm uninstall + helm install → image tag verified [v194-phase3 2026-03-07]
 - [ ] E2E (Yuval) → all tests pass → evidence file written
 - [ ] QA (Mai) → desktop ≥8.5/10 → evidence file written
 - [ ] Guardian: all 5 gates → write `status: deployed-awaiting-review`
+
+---
+
+## 🎛️ v194-widgets — Widget System Restore (2026-07-14)
+
+### Completed
+- [x] Restore DashboardGrid + DashboardEditBar + WidgetLibraryDrawer imports to page.tsx [v194-widgets 2026-07-14]
+- [x] Restore useDashboardLayout hooks (editMode, addWidget, resetToDefault, saveLayout) [v194-widgets 2026-07-14]
+- [x] Add Widgets toggle button to Dashboard header [v194-widgets 2026-07-14]
+- [x] Add Customize button (visible in widgetMode) [v194-widgets 2026-07-14]
+- [x] StatCardsWidget with 24h sparklines available via widget mode [v194-widgets 2026-07-14]
+- [x] Legacy cluster layout preserved (shown when widgetMode=false) [v194-widgets 2026-07-14]
+- [x] Build passes ✅ | Navigation v194 intact ✅ [v194-widgets 2026-07-14]

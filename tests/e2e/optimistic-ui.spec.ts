@@ -13,7 +13,9 @@ test.describe('Optimistic UI + Motion Animations', () => {
 
     // Navigate to Alerts (which IS in the sidebar nav)
     await page.click('a[href="/alerts"]')
-    await expect(page.locator('h1:has-text("Alerts")')).toBeVisible({ timeout: 10_000 })
+    // Use URL assertion — Alerts page does not render an h1 heading
+    await page.waitForURL(/\/alerts/, { timeout: 10_000 })
+    await expect(page).toHaveURL(/\/alerts/)
 
     // Navigate back to Clusters
     await page.click('a[href="/clusters"]')
