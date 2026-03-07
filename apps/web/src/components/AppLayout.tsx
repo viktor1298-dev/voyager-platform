@@ -2,7 +2,7 @@
 
 import { Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AuthGuard } from './AuthGuard'
 import { PresenceBar } from './PresenceBar'
 import { Sidebar } from './Sidebar'
@@ -26,11 +26,17 @@ function useDesktopLayout() {
   return isDesktop
 }
 
+// Matches /clusters/[id]/tab patterns (id + optional tab segment)
+const CLUSTER_DETAIL_RE = /^\/clusters\/[^/]+(?:\/[^/]+)?$/
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const isDesktop = useDesktopLayout()
+  // Remember the user's collapse preference before auto-collapse
+  const prevCollapsedRef = useRef(false)
+  const autoCollapsedRef = useRef(false)
 
   useEffect(() => {
     if (pathname) {
@@ -43,6 +49,24 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       setMobileOpen(false)
     }
   }, [isDesktop, mobileOpen])
+
+  // Auto-collapse sidebar when entering /clusters/[id] pages
+  useEffect(() => {
+    if (!isDesktop) return
+
+    const isClusterDetail = CLUSTER_DETAIL_RE.test(pathname ?? '')
+
+    if (isClusterDetail && !autoCollapsedRef.current) {
+      // Save current state and auto-collapse
+      prevCollapsedRef.current = collapsed
+      autoCollapsedRef.current = true
+      setCollapsed(true)
+    } else if (!isClusterDetail && autoCollapsedRef.current) {
+      // Restore previous state
+      autoCollapsedRef.current = false
+      setCollapsed(prevCollapsedRef.current)
+    }
+  }, [pathname, isDesktop]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <AuthGuard>
