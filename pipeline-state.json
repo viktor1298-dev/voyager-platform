@@ -1,10 +1,10 @@
 {
-  "status": "merged",
+  "status": "deployed",
   "version": "v199",
-  "currentStage": "merge-tag-v199",
+  "currentStage": "deploy-v199",
   "phase": "Phase6-fix",
   "fixLoopCount": 1,
-  "timestamp": "2026-03-07T18:33:00.000Z",
+  "timestamp": "2026-03-07T20:42:32.966088",
   "branch": "main",
   "tag": "v199",
   "mergeCommit": "f611410",
@@ -31,12 +31,13 @@
     "e2e-v198",
     "qa-v198",
     "dev-v199-cluster-name-fix",
-    "merge-tag-v199"
+    "merge-tag-v199",
+    "deploy-v199"
   ],
   "failedStages": [],
   "inProgress": [],
-  "notes": "v199 merged: fix/cluster-name-truncation → main. 2-row card layout for full cluster names. Tag v199 pushed.",
-  "deployedInK8s": "v198",
+  "notes": "v199 merged: fix/cluster-name-truncation \u2192 main. 2-row card layout for full cluster names. Tag v199 pushed.",
+  "deployedInK8s": "v199",
   "evidence": {
     "e2e-v195": "pipeline-evidence/e2e-v195.json",
     "qa-v195": "pipeline-evidence/qa-v195.json",

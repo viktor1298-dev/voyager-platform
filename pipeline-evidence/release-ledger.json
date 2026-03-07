@@ -598,5 +598,17 @@
     "imageVerification": "voyager-api:v197 voyager-web:v197",
     "bundleVerified": true,
     "node_metrics_history_table": "created via init.sql"
+  },
+  {
+    "version": "v199",
+    "sha": "f611410",
+    "timestamp": "2026-03-07T20:42:43.093000",
+    "deployer": "uri",
+    "status": "success",
+    "images": [
+      "voyager-api:v199",
+      "voyager-web:v199"
+    ],
+    "changes": "fix/cluster-name-truncation: 2-row card layout for full cluster names in dashboard"
   }
 ]
