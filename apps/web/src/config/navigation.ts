@@ -4,6 +4,7 @@ export type NavItem = {
   id: string
   label: string
   icon: typeof LayoutDashboard
+  badge?: number
 }
 
 export const navItems: NavItem[] = [

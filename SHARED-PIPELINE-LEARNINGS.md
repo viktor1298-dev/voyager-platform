@@ -71,3 +71,30 @@ Flaky registry updated for byok-flow (failCount: 2)
    Loop 1 (LazyMotion crash) was a genuine architecture issue caught by review. Loop 2 (nav regression) was a worktree sync issue caught by E2E. Both were real bugs fixed quickly. Total pipeline time: ~1 hour for all 3 phases' fix loops.
 
 ---
+
+## Pipeline v195→v196-fix1 (2026-03-07) — Foreman Learnings
+
+### 1. Git branch drift during deploy causes E2E to use stale test files
+Uri's deploy checkout left repo on `feat/init-monorepo` instead of `main`. Yuval ran tests from the wrong branch, making selector fixes invisible. **Fix:** Always `git checkout main` before E2E. [SKILL-PATCH: e2e-test-suite → add branch verification step]
+
+### 2. /trpc ingress route missing after helm install
+Helm chart template had `/trpc` path but deployed ingress didn't include it. Root cause: older chart revision used during initial install. **Fix:** Always `helm upgrade` after deploy to ensure latest chart. Add ingress path verification to deploy checklist.
+
+### 3. Test timeout for clusters table: waitForLoadState insufficient
+`domcontentloaded` fires before React hydration + tRPC data fetch. The clusters page shows "Loading..." for seconds. **Fix:** Add `waitForFunction` to wait for loading text to disappear before asserting table/empty state.
+
+---
+
+## v196-fix1 Pipeline Resume — 2026-03-07
+
+**Run**: v196-fix1 | **Stage resumed**: merged (Guardian down) | **Final**: deployed-awaiting-review
+
+### Top 3 Learnings
+
+1. **Check K8s state before spawning deploy** — v196-fix1 was already deployed and healthy. Running `kubectl get pods -o jsonpath=...` before spawning Uri saved an entire deploy cycle (~5 min). Always verify actual image tags before assuming deploy is needed.
+
+2. **Agent timeout ≠ task failure** — Yuval timed out at 15 min, but the evidence file was already written (134/134 pass). Always check `pipeline-evidence/` for evidence files before re-spawning. Timeout often means the agent was stuck on post-task work (self-improvement, learnings) not the actual task.
+
+3. **Pipeline-state vs actual state divergence** — `pipeline-state.json` said `status=merged` but K8s had v196-fix1 running. On resume, verify ACTUAL infrastructure state (pods, images, health, login) not just the JSON file. The source of truth is the cluster, not the state file.
+
+---

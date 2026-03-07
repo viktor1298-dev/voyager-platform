@@ -7,6 +7,7 @@ import { AutoRefreshToggle } from './AutoRefreshToggle'
 import { MetricsAreaChart, type MetricKey } from './MetricsAreaChart'
 import { NodeResourceBreakdown } from './NodeResourceBreakdown'
 import { MetricsEmptyState } from './MetricsEmptyState'
+import { NodeMetricsTable } from './NodeMetricsTable'
 import { useMetricsPreferences } from '@/stores/metrics-preferences'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -148,6 +149,11 @@ export function MetricsTimeSeriesPanel({
       {/* Node breakdown — only if live and data exists */}
       {isLive && nodes.length > 0 && !compact && (
         <NodeResourceBreakdown nodes={nodes} />
+      )}
+
+      {/* MX-005: Per-node metrics table from nodeTimeSeries route (Dima's new route) */}
+      {!compact && (
+        <NodeMetricsTable clusterId={clusterId} range={range} />
       )}
 
       {/* Last updated */}

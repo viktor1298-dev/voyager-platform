@@ -127,6 +127,28 @@ Each phase follows this flow:
 
 ---
 
+## 🆕 Phase 5 — Dashboard UX + Per-Node Metrics
+> **Goal:** Compact stat cards + per-node resource metrics (Vik: "I need to see which machine is loaded")
+> **Runs:** Ron (frontend) + Dima (backend) in parallel → v197
+
+### Stat Cards — Compact Redesign (Ron)
+- [ ] **DB-001** Replace 4 big stat cards with compact stats bar — one thin row: `N Nodes · N/N Pods · N Clusters · N Warnings`
+- [ ] **DB-002** Cluster cards — reduce height ~50%, horizontal layout, 50 clusters = reasonable scroll
+- [ ] **DB-003** Anomalies → inline badge on Alerts nav item in sidebar (remove AnomalyWidget from dashboard)
+
+### Per-Node Metrics — Backend (Dima)
+- [x] **MX-001** Enable metrics-server in minikube *(Foreman pre-enabled 2026-03-07)*
+- [ ] **MX-002** New DB table `node_metrics_history` (clusterId, nodeName, timestamp, cpuPercent, memPercent, cpuMillis, memMi)
+- [ ] **MX-003** Collector: per-node insert each cycle + `getCollectorStatus()` export
+- [ ] **MX-004** tRPC route `metrics.nodeTimeSeries(clusterId, range)` → [{nodeName, timestamps, cpuValues, memValues, cpuMillis, memMi}]
+- [ ] **MX-005** `/health/metrics-collector` status endpoint
+
+### Per-Node Metrics — Frontend (Ron)
+- [ ] **MX-006** NodeMetricsTable component: node name + CPU/Mem progress bars + % + millicores/Mi values
+- [ ] **MX-007** MetricsEmptyState fallback: "⚠️ Metrics-server not detected on this cluster"
+
+---
+
 ## 🆕 Phase 4 — Sidebar Polish (2026 Standards)
 > **Goal:** Fix sidebar UX issues found by Vik + apply 2026 best practices from SIDEBAR-RESEARCH-2026.md
 > **Runs:** Ron (frontend) — after v195 pipeline completes
