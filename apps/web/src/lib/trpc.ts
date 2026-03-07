@@ -2,7 +2,7 @@
 
 import {
   createTRPCReact,
-  httpBatchLink,
+  httpLink,
   httpSubscriptionLink,
   splitLink,
 } from '@trpc/react-query'
@@ -37,9 +37,10 @@ export function getTRPCClient() {
             }
           },
         }),
-        false: httpBatchLink({
+        false: httpLink({
           url,
           // Better-Auth uses cookies automatically — no manual token headers needed
+          // Note: switched from httpBatchLink to httpLink to avoid 404s on long batched URLs (nginx limit)
           fetch(url, options) {
             return fetch(url, { ...options, credentials: 'include' })
           },
