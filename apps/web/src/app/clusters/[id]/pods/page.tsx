@@ -45,7 +45,12 @@ export default function PodsPage() {
 
   const podsQuery = trpc.pods.list.useQuery(
     { clusterId: resolvedId },
-    { enabled: effectiveIsLive, refetchInterval: 30000 },
+    {
+      enabled: effectiveIsLive,
+      refetchInterval: 30000,
+      // Keep stale data visible even when offline
+      staleTime: 5 * 60 * 1000,
+    },
   )
 
   const [deletePodTarget, setDeletePodTarget] = useState<PodRow | null>(null)
@@ -58,7 +63,10 @@ export default function PodsPage() {
     ready: typeof p.ready === 'string' ? p.ready : null,
   } as PodRow))
 
-  if (!effectiveIsLive) {
+  // When cluster has credentials but live data failed, show offline warning + last-known data
+  const isOffline = isLive && liveFailed
+
+  if (!isLive && !podsQuery.data) {
     return (
       <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
         <p className="text-sm font-medium">Live data unavailable</p>
@@ -71,6 +79,22 @@ export default function PodsPage() {
 
   return (
     <>
+      {/* Offline warning banner */}
+      {isOffline && (
+        <div className="mb-3 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/[0.06] text-[var(--color-status-warning)]">
+          <span className="text-sm">⚠️</span>
+          <div>
+            <p className="text-[12px] font-medium">Cluster offline</p>
+            <p className="text-[11px] opacity-70">
+              Showing last-known pod data.
+              {podsQuery.dataUpdatedAt > 0
+                ? ` Last updated ${new Date(podsQuery.dataUpdatedAt).toLocaleTimeString()}.`
+                : ''}
+            </p>
+          </div>
+        </div>
+      )}
+
       <PodsGroupedByNamespace
         pods={pods}
         isLoading={podsQuery.isLoading}
