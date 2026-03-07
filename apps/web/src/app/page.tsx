@@ -4,9 +4,12 @@ import { AppLayout } from '@/components/AppLayout'
 import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { PageTransition } from '@/components/animations'
 import { AnomalyWidget } from '@/components/anomalies/AnomalyWidget'
+import { DashboardGrid } from '@/components/dashboard/DashboardGrid'
+import { DashboardEditBar } from '@/components/dashboard/DashboardEditBar'
+import { WidgetLibraryDrawer } from '@/components/dashboard/WidgetLibraryDrawer'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { SkeletonCard, SkeletonText, Shimmer } from '@/components/Skeleton'
-import { HeartPulse, RefreshCw, Clock, Zap } from 'lucide-react'
+import { HeartPulse, RefreshCw, Clock, Zap, LayoutGrid, Pencil } from 'lucide-react'
 import {
   ENV_META,
   getClusterEnvironment,
@@ -24,10 +27,12 @@ import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
 import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS, HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
+import { useDashboardLayout } from '@/stores/dashboard-layout'
 import { AlertTriangle, Box, Database, Server } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 interface ClusterCardData {
   id: string
@@ -226,14 +231,98 @@ function DashboardContent() {
     setFilters(next)
   }, [])
 
+  // M-P3-004: Dashboard widget customization
+  const editMode = useDashboardLayout((s) => s.editMode)
+  const setEditMode = useDashboardLayout((s) => s.setEditMode)
+  const addWidget = useDashboardLayout((s) => s.addWidget)
+  const resetToDefault = useDashboardLayout((s) => s.resetToDefault)
+  const getLayoutForServer = useDashboardLayout((s) => s.getLayoutForServer)
+  const applyServerLayout = useDashboardLayout((s) => s.applyServerLayout)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [widgetMode, setWidgetMode] = useState(false)
+
+  const saveLayoutMutation = trpc.dashboardLayout.save.useMutation({
+    onSuccess: () => toast.success('Layout saved'),
+    onError: () => toast.error('Failed to save layout'),
+  })
+
+  const serverLayoutQuery = trpc.dashboardLayout.get.useQuery(undefined)
+  useEffect(() => {
+    if (serverLayoutQuery.data) applyServerLayout(serverLayoutQuery.data)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverLayoutQuery.data])
+
+  const handleSaveLayout = async () => {
+    const layout = getLayoutForServer()
+    await saveLayoutMutation.mutateAsync(layout)
+    setEditMode(false)
+    setDrawerOpen(false)
+  }
+
+  const handleCancelEdit = () => {
+    setEditMode(false)
+    setDrawerOpen(false)
+  }
+
   let cardIndex = 0
 
   return (
     <AppLayout>
       <PageTransition>
-        <header className="mb-4">
+        <header className="mb-4 flex items-center justify-between">
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setWidgetMode((v) => !v)}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
+                widgetMode
+                  ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30'
+                  : 'text-[var(--color-text-secondary)] hover:bg-white/[0.06] border border-[var(--color-border)]',
+              )}
+              data-testid="toggle-widget-mode-btn"
+              title="Toggle widget dashboard mode"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Widgets</span>
+            </button>
+            {widgetMode && !editMode && (
+              <button
+                type="button"
+                onClick={() => setEditMode(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[var(--color-text-secondary)] hover:bg-white/[0.06] border border-[var(--color-border)] transition-all"
+                data-testid="customize-dashboard-btn"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Customize</span>
+              </button>
+            )}
+          </div>
         </header>
+
+        {/* M-P3-004: Widget dashboard mode */}
+        {widgetMode && (
+          <>
+            {editMode && (
+              <DashboardEditBar
+                onAddWidget={() => setDrawerOpen(true)}
+                onReset={resetToDefault}
+                onCancel={handleCancelEdit}
+                onSave={handleSaveLayout}
+              />
+            )}
+            <DashboardGrid />
+            <WidgetLibraryDrawer
+              open={drawerOpen}
+              onClose={() => setDrawerOpen(false)}
+              onAdd={(type) => { addWidget(type); setDrawerOpen(false) }}
+            />
+          </>
+        )}
+
+        {/* Legacy hardcoded layout (hidden when widget mode active) */}
+        {!widgetMode && (<>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <SummaryCard
@@ -387,6 +476,7 @@ function DashboardContent() {
             })}
           </div>
         )}
+        </>)}
       </PageTransition>
     </AppLayout>
   )
