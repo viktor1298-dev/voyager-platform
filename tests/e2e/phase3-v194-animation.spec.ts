@@ -119,6 +119,13 @@ test.describe('P3-003: DataTable row stagger animations', () => {
     await page.goto(`${BASE_URL}/clusters`);
     await page.waitForLoadState('domcontentloaded');
 
+    // Wait for React hydration + tRPC data fetch
+    // The clusters page may show "Loading..." for several seconds while tRPC resolves
+    await page.waitForFunction(
+      () => !document.body.textContent?.includes('Loading…') && !document.body.textContent?.includes('Loading...'),
+      { timeout: 30_000 }
+    ).catch(() => {/* proceed to check table/empty anyway */});
+
     // Table should render (animated or not)
     const tableOrRows = page.locator('table, [role="table"], [data-testid="data-table"], tr[data-row]').first();
     const isVisible = await tableOrRows.isVisible({ timeout: 15_000 }).catch(() => false);
