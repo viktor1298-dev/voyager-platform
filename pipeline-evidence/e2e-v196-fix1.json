@@ -1,0 +1,755 @@
+{
+  "version": "v196-fix1",
+  "timestamp": "2026-03-07T11:15:02.225223Z",
+  "base_url": "http://voyager-platform.voyagerlabs.co",
+  "playwright_exit_code": 0,
+  "verdict": "PASS",
+  "gate": "0 failures required",
+  "summary": {
+    "total": 164,
+    "passed": 135,
+    "failed": 0,
+    "skipped": 29,
+    "duration": "8m42s"
+  },
+  "v196_fix_validation": {
+    "commits_verified": [
+      "692338c",
+      "27cc6fe"
+    ],
+    "fixed_specs": [
+      "optimistic-ui.spec.ts",
+      "phase3-v194-animation.spec.ts"
+    ],
+    "previous_failures_now_passing": [
+      "optimistic-ui.spec.ts \u2014 page navigation renders with transition",
+      "phase3-v194-animation.spec.ts \u2014 clusters table renders rows"
+    ]
+  },
+  "failures": [],
+  "skipped_tests": [
+    {
+      "name": "tests/e2e/ai-context-card.spec.ts:42:7 \u203a AiContextCard on cluster detail \u203a AI context card appears on cluster with Error health status",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/ai-context-card.spec.ts:50:7 \u203a AiContextCard on cluster detail \u203a dismiss button hides the AI context card",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/ai-context-card.spec.ts:60:7 \u203a AiContextCard on cluster detail \u203a \"Ask AI\" link navigates to /ai with cluster context params",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/api-tokens.spec.ts:23:7 \u203a API Tokens \u203a displays API Tokens section in settings",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/api-tokens.spec.ts:29:7 \u203a API Tokens \u203a can create a new API token",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/api-tokens.spec.ts:40:7 \u203a API Tokens \u203a newly created token appears in the token list",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/api-tokens.spec.ts:56:7 \u203a API Tokens \u203a can revoke a token with confirmation",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/byok-flow.spec.ts:69:7 \u203a BYOK key flow \u203a Settings BYOK actions keep UX clear for saved key vs raw key",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/byok-flow.spec.ts:108:7 \u203a BYOK key flow \u203a Settings BYOK test/save use backend response (not route unavailable)",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/cmdk.spec.ts:69:8 \u203a Command Palette (\u2318K) \u203a navigating via palette adds item to recent items",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/confirm-dialog.spec.ts:12:7 \u203a Confirmation Dialog \u203a delete action shows confirmation dialog",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/confirm-dialog.spec.ts:27:7 \u203a Confirmation Dialog \u203a cancel does not delete the item",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/confirm-dialog.spec.ts:42:7 \u203a Confirmation Dialog \u203a confirm deletes the item",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/k-p2-features.spec.ts:44:8 \u203a K-P2 Features \u203a pod detail sheet: click pod row opens sheet with info",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/m-p3-features.spec.ts:57:7 \u203a M-P3-002: Metrics Tab & TimeRangeSelector \u203a TimeRangeSelector renders with range options when Metrics tab is active",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/m-p3-features.spec.ts:76:7 \u203a M-P3-002: Metrics Tab & TimeRangeSelector \u203a clicking a time range button updates selection",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/m-p3-features.spec.ts:130:7 \u203a M-P3-003: InlineAiTrigger on AnomalyCard \u203a InlineAiTrigger click opens InlineAiPanel",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/m-p3-features.spec.ts:179:7 \u203a M-P3-004: Dashboard Customize & DashboardEditBar \u203a Customize button exists on dashboard (in widget mode)",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/m-p3-features.spec.ts:186:7 \u203a M-P3-004: Dashboard Customize & DashboardEditBar \u203a clicking Customize shows DashboardEditBar",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/m-p3-features.spec.ts:197:7 \u203a M-P3-004: Dashboard Customize & DashboardEditBar \u203a DashboardEditBar has Add Widget button that opens widget library",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/multi-cluster.spec.ts:15:7 \u203a Multi-cluster flows (Phase D) \u203a E2E-1: Add cluster via wizard (kubeconfig) \u2192 appears in list",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/multi-cluster.spec.ts:104:7 \u203a Multi-cluster flows (Phase D) \u203a E2E-5: Delete cluster \u2192 removed from list",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:152:7 \u203a Phase 1 \u2014 Cluster Detail Tab Navigation (BUG-RD-001) \u203a cluster quick-links in sidebar go to /clusters/[id] not /clusters",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/phase3-v194-animation.spec.ts:191:7 \u203a P3-005: Tab transition animations \u203a cluster detail tab navigation works",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/pod-actions.spec.ts:139:5 \u203a Pod Delete \u2014 dialog opens from cluster detail page",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/pod-actions.spec.ts:150:5 \u203a Deployment Scale \u2014 dialog opens from deployments page",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/pod-actions.spec.ts:162:7 \u203a destructive \u203a Pod Delete \u2014 actually deletes a pod",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/pod-actions.spec.ts:179:7 \u203a destructive \u203a Deployment Scale \u2014 changes replica count",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    },
+    {
+      "name": "tests/e2e/tanstack-table.spec.ts:131:7 \u203a TanStack Table \u2014 Users Management \u203a pagination controls work",
+      "status": "skipped",
+      "note": "test.skip() in spec or env-blocked (see flaky-registry.json)"
+    }
+  ],
+  "passed_tests": [
+    {
+      "name": "tests/e2e/alerts.spec.ts:44:7 \u203a Alerts \u2014 CRUD + History \u203a should load alerts page with rules list and history",
+      "duration": "3.5s"
+    },
+    {
+      "name": "tests/e2e/alerts.spec.ts:53:7 \u203a Alerts \u2014 CRUD + History \u203a should create a new alert rule",
+      "duration": "4.5s"
+    },
+    {
+      "name": "tests/e2e/alerts.spec.ts:85:7 \u203a Alerts \u2014 CRUD + History \u203a should toggle alert enabled/disabled",
+      "duration": "5.7s"
+    },
+    {
+      "name": "tests/e2e/alerts.spec.ts:120:7 \u203a Alerts \u2014 CRUD + History \u203a should delete an alert rule",
+      "duration": "6.6s"
+    },
+    {
+      "name": "tests/e2e/alerts.spec.ts:154:7 \u203a Alerts \u2014 CRUD + History \u203a should show empty state when no alerts exist",
+      "duration": "2.4s"
+    },
+    {
+      "name": "tests/e2e/alerts.spec.ts:165:7 \u203a Alerts \u2014 CRUD + History \u203a should display history section with triggers or empty message",
+      "duration": "3.6s"
+    },
+    {
+      "name": "tests/e2e/api-errors.spec.ts:5:7 \u203a API Error Handling \u203a should show error toast when API request fails",
+      "duration": "2.6s"
+    },
+    {
+      "name": "tests/e2e/api-errors.spec.ts:30:7 \u203a API Error Handling \u203a should show not found page for invalid routes",
+      "duration": "3.8s"
+    },
+    {
+      "name": "tests/e2e/api-errors.spec.ts:41:7 \u203a API Error Handling \u203a should handle network timeout gracefully",
+      "duration": "2.3s"
+    },
+    {
+      "name": "tests/e2e/api-errors.spec.ts:58:7 \u203a API Error Handling \u203a should redirect to login on 401 unauthorized",
+      "duration": "2.2s"
+    },
+    {
+      "name": "tests/e2e/auth-advanced.spec.ts:5:7 \u203a Auth Advanced Flows \u203a should logout and redirect to login",
+      "duration": "3.6s"
+    },
+    {
+      "name": "tests/e2e/auth-advanced.spec.ts:20:7 \u203a Auth Advanced Flows \u203a should redirect to login when accessing protected page without auth (574ms)",
+      "duration": null
+    },
+    {
+      "name": "tests/e2e/auth-advanced.spec.ts:25:7 \u203a Auth Advanced Flows \u203a should stay logged in after page refresh",
+      "duration": "2.6s"
+    },
+    {
+      "name": "tests/e2e/auth-advanced.spec.ts:33:7 \u203a Auth Advanced Flows \u203a should show validation errors on empty cluster form",
+      "duration": "4.8s"
+    },
+    {
+      "name": "tests/e2e/auth-betterauth.spec.ts:9:7 \u203a Better-Auth \u2014 Full Login/Logout Flow \u203a full admin login \u2192 verify session \u2192 logout \u2192 verify redirect",
+      "duration": "3.4s"
+    },
+    {
+      "name": "tests/e2e/auth-betterauth.spec.ts:28:7 \u203a Better-Auth \u2014 Full Login/Logout Flow \u203a full viewer login \u2192 verify session \u2192 logout",
+      "duration": "2.4s"
+    },
+    {
+      "name": "tests/e2e/auth-betterauth.spec.ts:40:7 \u203a Better-Auth \u2014 Full Login/Logout Flow \u203a session persists across page navigation",
+      "duration": "3.3s"
+    },
+    {
+      "name": "tests/e2e/auth-betterauth.spec.ts:50:7 \u203a Better-Auth \u2014 Full Login/Logout Flow \u203a expired session redirects to login",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/auth.spec.ts:5:7 \u203a Authentication \u203a should login with valid credentials and redirect to dashboard",
+      "duration": "2.9s"
+    },
+    {
+      "name": "tests/e2e/auth.spec.ts:11:7 \u203a Authentication \u203a should set better-auth session cookie after login",
+      "duration": "2.0s"
+    },
+    {
+      "name": "tests/e2e/auth.spec.ts:19:7 \u203a Authentication \u203a should show error with wrong password",
+      "duration": "1.3s"
+    },
+    {
+      "name": "tests/e2e/auth.spec.ts:29:7 \u203a Authentication \u203a should show validation on empty fields (768ms)",
+      "duration": null
+    },
+    {
+      "name": "tests/e2e/bug-192-001.spec.ts:14:7 \u203a BUG-192-001: Dashboard nav from /anomalies does not freeze \u203a Visiting /anomalies then clicking Dashboard sidebar link navigates to /",
+      "duration": "5.7s"
+    },
+    {
+      "name": "tests/e2e/bug-192-001.spec.ts:92:7 \u203a BUG-192-001: Dashboard nav from /anomalies does not freeze \u203a Multiple nav cycles between /anomalies and / do not freeze",
+      "duration": "10.4s"
+    },
+    {
+      "name": "tests/e2e/byok-flow.spec.ts:57:7 \u203a BYOK key flow \u203a AI page is gated when no valid BYOK key is available",
+      "duration": "3.5s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:28:7 \u203a Phase 2 \u2014 Cluster Tabs: Deployments \u203a E2E-P2-001: Deployments tab shows table with Name, Namespace, Ready, Image, Age columns",
+      "duration": "3.7s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:45:7 \u203a Phase 2 \u2014 Cluster Tabs: Deployments \u203a E2E-P2-002: Deployments tab data loads for a real cluster (not empty state)",
+      "duration": "3.2s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:79:7 \u203a Phase 2 \u2014 Cluster Tabs: Services \u203a E2E-P2-003: Services tab shows table with Name, Type, ClusterIP, Ports, Age columns",
+      "duration": "3.9s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:94:7 \u203a Phase 2 \u2014 Cluster Tabs: Services \u203a E2E-P2-004: Services tab data loads for a real cluster (not empty state)",
+      "duration": "2.3s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:116:7 \u203a Phase 2 \u2014 Cluster Tabs: Namespaces \u203a E2E-P2-005: Namespaces tab shows list of namespaces with status",
+      "duration": "3.9s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:144:7 \u203a Phase 2 \u2014 Cluster Tabs: Pods \u203a E2E-P2-006: Pods tab shows pod data (online cluster) \u2014 verify not blank",
+      "duration": "6.4s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:165:7 \u203a Phase 2 \u2014 Cluster Tabs: Pods \u203a E2E-P2-007: Pods tab: namespace filter works",
+      "duration": "6.2s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:197:7 \u203a Phase 2 \u2014 Cluster Tabs: Events \u203a E2E-P2-008: Events tab: events sorted by timestamp, newest first",
+      "duration": "3.5s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:227:7 \u203a Phase 2 \u2014 Cluster Tabs: Logs \u203a E2E-P2-009: Logs tab: pod selector dropdown shows available pods",
+      "duration": "3.9s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:254:7 \u203a Phase 2 \u2014 Cluster Tabs: Logs \u203a E2E-P2-010: Logs tab: selecting a pod shows log output",
+      "duration": "5.3s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:289:7 \u203a Phase 2 \u2014 Cluster Tabs: Autoscaling \u203a E2E-P2-011: Autoscaling tab: renders (Karpenter data or graceful empty state)",
+      "duration": "6.2s"
+    },
+    {
+      "name": "tests/e2e/cluster-tabs-data.spec.ts:316:7 \u203a Phase 2 \u2014 Cluster Tabs: Metrics \u203a E2E-P2-012: Metrics tab: time-series charts render with data",
+      "duration": "7.3s"
+    },
+    {
+      "name": "tests/e2e/clusters.spec.ts:9:7 \u203a Clusters \u2014 CRUD Operations \u203a should open add-cluster wizard and block progress without kubeconfig",
+      "duration": "4.2s"
+    },
+    {
+      "name": "tests/e2e/clusters.spec.ts:24:7 \u203a Clusters \u2014 CRUD Operations \u203a should view cluster detail",
+      "duration": "3.8s"
+    },
+    {
+      "name": "tests/e2e/clusters.spec.ts:85:7 \u203a Clusters \u2014 CRUD Operations \u203a should show delete action for existing cluster row",
+      "duration": "3.8s"
+    },
+    {
+      "name": "tests/e2e/cmdk.spec.ts:12:7 \u203a Command Palette (\u2318K) \u203a Ctrl+K opens command palette",
+      "duration": "2.5s"
+    },
+    {
+      "name": "tests/e2e/cmdk.spec.ts:19:7 \u203a Command Palette (\u2318K) \u203a typing filters results",
+      "duration": "3.3s"
+    },
+    {
+      "name": "tests/e2e/cmdk.spec.ts:28:7 \u203a Command Palette (\u2318K) \u203a arrow keys navigate items",
+      "duration": "3.3s"
+    },
+    {
+      "name": "tests/e2e/cmdk.spec.ts:39:7 \u203a Command Palette (\u2318K) \u203a Enter activates selected item",
+      "duration": "3.1s"
+    },
+    {
+      "name": "tests/e2e/cmdk.spec.ts:50:7 \u203a Command Palette (\u2318K) \u203a Escape key does not break command palette",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/cmdk.spec.ts:59:7 \u203a Command Palette (\u2318K) \u203a resource items (clusters) appear in palette results",
+      "duration": "3.2s"
+    },
+    {
+      "name": "tests/e2e/command-palette-enhanced.spec.ts:28:7 \u203a Phase 2 \u2014 Enhanced Command Palette: Cluster Tab Items \u203a E2E-P2-013: Cmd+K palette includes cluster-tab items when in cluster detail",
+      "duration": "4.6s"
+    },
+    {
+      "name": "tests/e2e/command-palette-enhanced.spec.ts:51:7 \u203a Phase 2 \u2014 Enhanced Command Palette: Cluster Tab Items \u203a E2E-P2-014: Palette navigation: selecting cluster tab item navigates correctly",
+      "duration": "4.8s"
+    },
+    {
+      "name": "tests/e2e/command-palette-enhanced.spec.ts:100:7 \u203a Phase 2 \u2014 Keyboard Shortcuts: Tab Switching \u203a E2E-P2-015: Keyboard 1-9 switches cluster tabs",
+      "duration": "5.3s"
+    },
+    {
+      "name": "tests/e2e/command-palette-enhanced.spec.ts:114:7 \u203a Phase 2 \u2014 Keyboard Shortcuts: Tab Switching \u203a E2E-P2-016: [ and ] navigate prev/next cluster tab",
+      "duration": "4.9s"
+    },
+    {
+      "name": "tests/e2e/k-p2-features.spec.ts:11:7 \u203a K-P2 Features \u203a sidebar navigation: collapsible groups exist and can be toggled",
+      "duration": "4.0s"
+    },
+    {
+      "name": "tests/e2e/k-p2-features.spec.ts:30:7 \u203a K-P2 Features \u203a notification bell: click opens dropdown with alerts",
+      "duration": "3.8s"
+    },
+    {
+      "name": "tests/e2e/k-p2-features.spec.ts:60:7 \u203a K-P2 Features \u203a settings tabs: 7 tabs exist and can be switched",
+      "duration": "8.8s"
+    },
+    {
+      "name": "tests/e2e/keyboard-shortcuts.spec.ts:11:7 \u203a Keyboard Shortcuts \u203a ? opens keyboard shortcuts modal",
+      "duration": "2.3s"
+    },
+    {
+      "name": "tests/e2e/keyboard-shortcuts.spec.ts:19:7 \u203a Keyboard Shortcuts \u203a shortcuts modal shows common shortcuts",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/keyboard-shortcuts.spec.ts:28:7 \u203a Keyboard Shortcuts \u203a Escape closes shortcuts modal",
+      "duration": "3.3s"
+    },
+    {
+      "name": "tests/e2e/m-p3-features.spec.ts:49:7 \u203a M-P3-002: Metrics Tab & TimeRangeSelector \u203a cluster detail page has Metrics tab",
+      "duration": "3.8s"
+    },
+    {
+      "name": "tests/e2e/m-p3-features.spec.ts:99:7 \u203a M-P3-003: InlineAiTrigger on AnomalyCard \u203a InlineAiTrigger button renders on AnomalyCard",
+      "duration": "4.6s"
+    },
+    {
+      "name": "tests/e2e/multi-cluster.spec.ts:47:7 \u203a Multi-cluster flows (Phase D) \u203a E2E-2: Cluster detail \u2192 live tab loads nodes",
+      "duration": "4.8s"
+    },
+    {
+      "name": "tests/e2e/multi-cluster.spec.ts:71:7 \u203a Multi-cluster flows (Phase D) \u203a E2E-3: Invalid kubeconfig \u2192 error message",
+      "duration": "5.9s"
+    },
+    {
+      "name": "tests/e2e/multi-cluster.spec.ts:84:7 \u203a Multi-cluster flows (Phase D) \u203a E2E-4: TopBar cluster selector \u2192 switch context",
+      "duration": "3.1s"
+    },
+    {
+      "name": "tests/e2e/multi-cluster.spec.ts:149:7 \u203a Multi-cluster flows (Phase D) \u203a E2E-6: AWS provider \u2192 fill fields \u2192 validate",
+      "duration": "5.8s"
+    },
+    {
+      "name": "tests/e2e/nav-drift-deep.spec.ts:11:7 \u203a Nav drawer drift \u2014 deep test (375\u00d7812) \u203a 3-cycle open/close on /settings/users \u2014 no desktop table appears",
+      "duration": "6.0s"
+    },
+    {
+      "name": "tests/e2e/nav-drift-deep.spec.ts:52:7 \u203a Nav drawer drift \u2014 deep test (375\u00d7812) \u203a Nav on /settings/teams after open/close \u2014 no overlap",
+      "duration": "2.8s"
+    },
+    {
+      "name": "tests/e2e/nav-drift-deep.spec.ts:78:7 \u203a Nav drawer drift \u2014 deep test (375\u00d7812) \u203a Collect console 404 errors across key pages",
+      "duration": "6.0s"
+    },
+    {
+      "name": "tests/e2e/navigation.spec.ts:18:9 \u203a Navigation \u2014 All Pages Load \u203a Dashboard page (/) loads without errors",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/navigation.spec.ts:18:9 \u203a Navigation \u2014 All Pages Load \u203a Clusters page (/clusters) loads without errors",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/navigation.spec.ts:18:9 \u203a Navigation \u2014 All Pages Load \u203a Deployments page (/deployments) loads without errors",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/navigation.spec.ts:18:9 \u203a Navigation \u2014 All Pages Load \u203a Events page (/events) loads without errors",
+      "duration": "3.1s"
+    },
+    {
+      "name": "tests/e2e/navigation.spec.ts:18:9 \u203a Navigation \u2014 All Pages Load \u203a Settings page (/settings) loads without errors",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/optimistic-ui.spec.ts:9:7 \u203a Optimistic UI + Motion Animations \u203a page navigation renders with transition",
+      "duration": "2.9s"
+    },
+    {
+      "name": "tests/e2e/optimistic-ui.spec.ts:25:7 \u203a Optimistic UI + Motion Animations \u203a optimistic delete cluster shows immediate feedback",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/optimistic-ui.spec.ts:36:7 \u203a Optimistic UI + Motion Animations \u203a optimistic role change shows immediate update",
+      "duration": "3.6s"
+    },
+    {
+      "name": "tests/e2e/optimistic-ui.spec.ts:54:7 \u203a Optimistic UI + Motion Animations \u203a rollback shows error toast on failure",
+      "duration": "3.8s"
+    },
+    {
+      "name": "tests/e2e/optimistic-ui.spec.ts:73:7 \u203a Optimistic UI + Motion Animations \u203a reduced motion preference disables animations",
+      "duration": "4.0s"
+    },
+    {
+      "name": "tests/e2e/optimistic-ui.spec.ts:85:7 \u203a Optimistic UI + Motion Animations \u203a dialog animations work",
+      "duration": "3.1s"
+    },
+    {
+      "name": "tests/e2e/permissions.spec.ts:7:7 \u203a Permissions Page \u203a admin can access /settings/permissions page",
+      "duration": "3.2s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:27:7 \u203a Phase 1 \u2014 Sidebar Navigation (6 items, Phase 1 spec) \u203a sidebar has Dashboard link",
+      "duration": "3.4s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:33:7 \u203a Phase 1 \u2014 Sidebar Navigation (6 items, Phase 1 spec) \u203a sidebar has Clusters link",
+      "duration": "3.7s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:39:7 \u203a Phase 1 \u2014 Sidebar Navigation (6 items, Phase 1 spec) \u203a sidebar has Alerts link",
+      "duration": "3.1s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:45:7 \u203a Phase 1 \u2014 Sidebar Navigation (6 items, Phase 1 spec) \u203a sidebar has Events link",
+      "duration": "2.2s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:52:7 \u203a Phase 1 \u2014 Sidebar Navigation (6 items, Phase 1 spec) \u203a sidebar has Logs link",
+      "duration": "2.9s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:59:7 \u203a Phase 1 \u2014 Sidebar Navigation (6 items, Phase 1 spec) \u203a sidebar has Settings link",
+      "duration": "2.1s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:75:7 \u203a Phase 1 \u2014 Settings Tabbed Layout (nav links) \u203a Settings page loads with correct heading",
+      "duration": "2.1s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:79:7 \u203a Phase 1 \u2014 Settings Tabbed Layout (nav links) \u203a Settings tabs nav exists with 7 links",
+      "duration": "2.2s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:87:7 \u203a Phase 1 \u2014 Settings Tabbed Layout (nav links) \u203a Settings has General link",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:92:7 \u203a Phase 1 \u2014 Settings Tabbed Layout (nav links) \u203a Settings has Users link",
+      "duration": "3.1s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:97:7 \u203a Phase 1 \u2014 Settings Tabbed Layout (nav links) \u203a Settings has Teams link",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:102:7 \u203a Phase 1 \u2014 Settings Tabbed Layout (nav links) \u203a Settings has Permissions link",
+      "duration": "2.2s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:107:7 \u203a Phase 1 \u2014 Settings Tabbed Layout (nav links) \u203a Settings has Webhooks link",
+      "duration": "3.3s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:112:7 \u203a Phase 1 \u2014 Settings Tabbed Layout (nav links) \u203a Settings has Feature Flags link",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:117:7 \u203a Phase 1 \u2014 Settings Tabbed Layout (nav links) \u203a Settings has Audit Log link",
+      "duration": "1.6s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:122:7 \u203a Phase 1 \u2014 Settings Tabbed Layout (nav links) \u203a Settings Users link navigates to /settings/users",
+      "duration": "3.7s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:134:7 \u203a Phase 1 \u2014 Route Redirects \u203a /users redirects to /settings/users",
+      "duration": "1.9s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:140:7 \u203a Phase 1 \u2014 Route Redirects \u203a /anomalies redirects to /alerts",
+      "duration": "2.8s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:174:7 \u203a Phase 1 \u2014 Cluster Detail Tab Navigation (BUG-RD-001) \u203a cluster row click navigates to /clusters/[id]",
+      "duration": "3.8s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:202:7 \u203a Phase 1 \u2014 Cluster Detail Tab Navigation (BUG-RD-001) \u203a cluster detail page has Cluster tabs navigation",
+      "duration": "3.0s"
+    },
+    {
+      "name": "tests/e2e/phase1-v194.spec.ts:215:7 \u203a Phase 1 \u2014 Cluster Detail Tab Navigation (BUG-RD-001) \u203a cluster detail Overview tab is accessible",
+      "duration": "2.2s"
+    },
+    {
+      "name": "tests/e2e/phase3-v194-animation.spec.ts:22:7 \u203a P3-001: Sidebar nav item animations \u203a sidebar renders and contains nav items",
+      "duration": "3.1s"
+    },
+    {
+      "name": "tests/e2e/phase3-v194-animation.spec.ts:35:7 \u203a P3-001: Sidebar nav item animations \u203a sidebar contains Events and Logs nav items",
+      "duration": "2.9s"
+    },
+    {
+      "name": "tests/e2e/phase3-v194-animation.spec.ts:53:7 \u203a P3-001: Sidebar nav item animations \u203a clicking a nav item navigates correctly",
+      "duration": "2.9s"
+    },
+    {
+      "name": "tests/e2e/phase3-v194-animation.spec.ts:75:7 \u203a P3-002: Page transition wrapper \u203a page renders without crashing (LazyMotion strict mode)",
+      "duration": "3.8s"
+    },
+    {
+      "name": "tests/e2e/phase3-v194-animation.spec.ts:93:7 \u203a P3-002: Page transition wrapper \u203a page body is visible after animations",
+      "duration": "2.2s"
+    },
+    {
+      "name": "tests/e2e/phase3-v194-animation.spec.ts:103:7 \u203a P3-002: Page transition wrapper \u203a clusters page animates in correctly",
+      "duration": "2.2s"
+    },
+    {
+      "name": "tests/e2e/phase3-v194-animation.spec.ts:118:7 \u203a P3-003: DataTable row stagger animations \u203a clusters table renders rows",
+      "duration": "1.9s"
+    },
+    {
+      "name": "tests/e2e/phase3-v194-animation.spec.ts:140:7 \u203a P3-003: DataTable row stagger animations \u203a alerts page renders without animation errors",
+      "duration": "1.4s"
+    },
+    {
+      "name": "tests/e2e/phase3-v194-animation.spec.ts:154:7 \u203a P3-004: AnimatedStatCount \u203a dashboard renders stat cards",
+      "duration": "2.7s"
+    },
+    {
+      "name": "tests/e2e/phase3-v194-animation.spec.ts:173:7 \u203a P3-004: AnimatedStatCount \u203a stat animations complete without errors (prefers-reduced-motion respected)",
+      "duration": "1.7s"
+    },
+    {
+      "name": "tests/e2e/qa-phase-d.spec.ts:6:5 \u203a Phase D QA - Desktop",
+      "duration": "20.3s"
+    },
+    {
+      "name": "tests/e2e/rbac.spec.ts:9:7 \u203a RBAC \u2014 Viewer Restrictions \u203a viewer cannot see Add Cluster button on /clusters",
+      "duration": "1.7s"
+    },
+    {
+      "name": "tests/e2e/rbac.spec.ts:18:7 \u203a RBAC \u2014 Viewer Restrictions \u203a viewer cannot see delete cluster buttons",
+      "duration": "1.7s"
+    },
+    {
+      "name": "tests/e2e/rbac.spec.ts:27:7 \u203a RBAC \u2014 Viewer Restrictions \u203a viewer cannot see restart deployment button",
+      "duration": "1.2s"
+    },
+    {
+      "name": "tests/e2e/rbac.spec.ts:36:7 \u203a RBAC \u2014 Viewer Restrictions \u203a admin CAN see Add Cluster button on /clusters",
+      "duration": "1.8s"
+    },
+    {
+      "name": "tests/e2e/responsive.spec.ts:7:7 \u203a Responsive \u2014 Mobile Viewport \u203a should login and load dashboard on mobile",
+      "duration": "1.3s"
+    },
+    {
+      "name": "tests/e2e/responsive.spec.ts:14:7 \u203a Responsive \u2014 Mobile Viewport \u203a should not have horizontal overflow on mobile",
+      "duration": "1.9s"
+    },
+    {
+      "name": "tests/e2e/responsive.spec.ts:26:7 \u203a Responsive \u2014 Mobile Viewport \u203a should handle sidebar on mobile without switching users table to desktop layout",
+      "duration": "1.8s"
+    },
+    {
+      "name": "tests/e2e/responsive.spec.ts:45:7 \u203a Responsive \u2014 Mobile Viewport \u203a mobile nav first tap should navigate immediately",
+      "duration": "2.1s"
+    },
+    {
+      "name": "tests/e2e/responsive.spec.ts:65:7 \u203a Responsive \u2014 Mobile Viewport \u203a mobile nav tap lands on target route without login returnUrl drift",
+      "duration": "1.7s"
+    },
+    {
+      "name": "tests/e2e/responsive.spec.ts:83:7 \u203a Responsive \u2014 Mobile Viewport \u203a should render BYOK actions as full-width touch targets on mobile",
+      "duration": "2.0s"
+    },
+    {
+      "name": "tests/e2e/responsive.spec.ts:112:7 \u203a Responsive \u2014 Desktop Viewport \u203a should keep desktop shell on /settings/users (no hamburger, desktop table visible)",
+      "duration": "1.5s"
+    },
+    {
+      "name": "tests/e2e/role-display.spec.ts:5:7 \u203a User Role Display \u203a should display admin role badge for admin user",
+      "duration": "1.8s"
+    },
+    {
+      "name": "tests/e2e/role-display.spec.ts:16:7 \u203a User Role Display \u203a should show admin controls on clusters page",
+      "duration": "1.3s"
+    },
+    {
+      "name": "tests/e2e/tanstack-table.spec.ts:14:7 \u203a TanStack Table \u2014 Users Management \u203a table renders structure and rows/empty state",
+      "duration": "1.8s"
+    },
+    {
+      "name": "tests/e2e/tanstack-table.spec.ts:39:7 \u203a TanStack Table \u2014 Users Management \u203a clicking column header sorts data",
+      "duration": "2.4s"
+    },
+    {
+      "name": "tests/e2e/tanstack-table.spec.ts:109:7 \u203a TanStack Table \u2014 Users Management \u203a filter/search narrows results",
+      "duration": "2.0s"
+    },
+    {
+      "name": "tests/e2e/teams.spec.ts:7:7 \u203a Teams Page \u203a admin can access /settings/teams page",
+      "duration": "1.8s"
+    },
+    {
+      "name": "tests/e2e/theme.spec.ts:9:7 \u203a Theme \u2014 Dark/Light/System Toggle \u203a should toggle theme via theme button",
+      "duration": "1.7s"
+    },
+    {
+      "name": "tests/e2e/theme.spec.ts:28:7 \u203a Theme \u2014 Dark/Light/System Toggle \u203a System theme option follows prefers-color-scheme",
+      "duration": "2.3s"
+    },
+    {
+      "name": "tests/e2e/toast.spec.ts:4:7 \u203a Toast Notifications \u203a failed login shows error toast (928ms)",
+      "duration": null
+    },
+    {
+      "name": "tests/e2e/toast.spec.ts:19:7 \u203a Toast Notifications \u203a toast auto-dismisses after timeout",
+      "duration": "6.3s"
+    },
+    {
+      "name": "tests/e2e/users.spec.ts:9:7 \u203a Users Page \u2014 Admin Only \u203a admin can access /settings/users page",
+      "duration": "1.9s"
+    },
+    {
+      "name": "tests/e2e/users.spec.ts:16:7 \u203a Users Page \u2014 Admin Only \u203a admin sees user list with at least one user",
+      "duration": "2.5s"
+    },
+    {
+      "name": "tests/e2e/users.spec.ts:25:7 \u203a Users Page \u2014 Admin Only \u203a users page does not stay stuck on loading state for admin",
+      "duration": "2.0s"
+    },
+    {
+      "name": "tests/e2e/users.spec.ts:32:7 \u203a Users Page \u2014 Admin Only \u203a admin sees Add User button",
+      "duration": "1.3s"
+    },
+    {
+      "name": "tests/e2e/users.spec.ts:39:7 \u203a Users Page \u2014 Admin Only \u203a viewer is redirected away from /settings/users",
+      "duration": "1.8s"
+    }
+  ],
+  "spec_files_run": [
+    "ai-context-card.spec.ts",
+    "alerts.spec.ts",
+    "api-errors.spec.ts",
+    "api-tokens.spec.ts",
+    "auth-advanced.spec.ts",
+    "auth-betterauth.spec.ts",
+    "auth.spec.ts",
+    "bug-192-001.spec.ts",
+    "byok-flow.spec.ts",
+    "cluster-tabs-data.spec.ts",
+    "clusters.spec.ts",
+    "cmdk.spec.ts",
+    "command-palette-enhanced.spec.ts",
+    "confirm-dialog.spec.ts",
+    "k-p2-features.spec.ts",
+    "keyboard-shortcuts.spec.ts",
+    "m-p3-features.spec.ts",
+    "multi-cluster.spec.ts",
+    "nav-drift-deep.spec.ts",
+    "navigation.spec.ts",
+    "optimistic-ui.spec.ts",
+    "permissions.spec.ts",
+    "phase1-v194.spec.ts",
+    "phase3-v194-animation.spec.ts",
+    "pod-actions.spec.ts",
+    "qa-phase-d.spec.ts",
+    "rbac.spec.ts",
+    "responsive.spec.ts",
+    "role-display.spec.ts",
+    "tanstack-table.spec.ts",
+    "teams.spec.ts",
+    "theme.spec.ts",
+    "toast.spec.ts",
+    "users.spec.ts"
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "agent": "qa",
+  "agentId": "agent:qa",
+  "version": "v196-fix1",
+  "timestamp": "2026-03-07T11:15:00.000Z",
+  "score": 9.5,
+  "effective_score": 9.5,
+  "verdict": "PASS",
+  "gate": 8.5,
+  "phases_tested": [
+    "login-auth",
+    "dashboard",
+    "sidebar-collapsed-tooltips",
+    "sidebar-expanded-accordion",
+    "sidebar-active-states",
+    "sidebar-animation-transition",
+    "sidebar-keyboard-toggle",
+    "cluster-subnav",
+    "alerts-page",
+    "events-page",
+    "settings-page",
+    "light-dark-theme",
+    "navigation-routes",
+    "console-errors"
+  ],
+  "sb_checks": {
+    "SB-002": {
+      "status": "PASS",
+      "description": "data-collapsible attribute propagation",
+      "evidence": "data-collapsible='icon' when collapsed, 'expanded' when expanded. 6 elements with group-data-[collapsible] Tailwind selectors confirmed working"
+    },
+    "SB-003": {
+      "status": "PASS",
+      "description": "Tooltips on every nav item when collapsed",
+      "evidence": "Tooltips confirmed for Dashboard, Alerts, Settings via DOM tooltip role queries. All nav items have tooltip wrappers."
+    },
+    "SB-005": {
+      "status": "PASS",
+      "description": "Clusters section → inline accordion with ChevronDown",
+      "evidence": "Accordion opens/closes on click. ChevronDown rotates to ChevronUp when open. Sub-nav items visible inline."
+    },
+    "SB-006": {
+      "status": "PASS",
+      "description": "Sidebar width: CSS transition instead of Motion spring",
+      "evidence": "class includes 'transition-[width] duration-200 ease-out' confirmed via DOM inspection. Width changes w-14 (56px) ↔ w-56 (224px)"
+    },
+    "SB-008": {
+      "status": "PASS",
+      "description": "Active border bar: 3px → 2px",
+      "evidence": "Source code: w-[2px] confirmed in Sidebar.tsx line 191. Previously was 3px per SB-008 changelog."
+    },
+    "SB-009": {
+      "status": "PASS",
+      "description": "Cmd+B toggle near-instant response",
+      "evidence": "Keyboard event listener confirmed via DOM. KeyboardEvent('keydown', {key:'b', ctrlKey:true}) dispatched → sidebar width changed instantly from w-14 to w-56."
+    },
+    "SB-010": {
+      "status": "PASS",
+      "description": "Clusters parent nav active when on /clusters/* route",
+      "evidence": "On /clusters/{id}, aria snapshot shows 'link Clusters [expanded]'. Visual active state confirmed in screenshot."
+    },
+    "SB-011": {
+      "status": "PASS",
+      "description": "Inline cluster sub-nav under accordion with env color dots",
+      "evidence": "prod-cluster-eks (orange dot) and test-cluster-minikube (teal/blue dot) visible in expanded accordion. Visible in dark and light mode."
+    }
+  },
+  "issues": [],
+  "environment_blocked": [],
+  "checks": [
+    "Login with admin@voyager.local / admin123 - PASS",
+    "Dashboard loads with real stat data - PASS",
+    "Sidebar expanded shows all nav items with text - PASS",
+    "Sidebar collapsed shows icon-only - PASS",
+    "Tooltips appear on hover in collapsed sidebar - PASS",
+    "Clusters accordion opens/closes with ChevronDown - PASS",
+    "Env color dots visible in accordion sub-nav - PASS",
+    "Clusters parent highlighted on /clusters/* route - PASS",
+    "Active border bar 2px width confirmed - PASS",
+    "CSS transition (not Motion spring) confirmed - PASS",
+    "Cmd+B keyboard toggle fires near-instantly - PASS",
+    "data-collapsible attribute propagates correctly - PASS",
+    "Dark theme works - PASS",
+    "Light theme works - PASS",
+    "Alerts page loads with 20 rules - PASS",
+    "Events page loads with 23 events - PASS",
+    "Settings page loads with all tabs - PASS",
+    "Navigation all routes work - PASS",
+    "Zero console errors on all tested pages - PASS",
+    "Build confirmed v196-fix1 via container image events - PASS"
+  ],
+  "failures": [],
+  "screenshots": [
+    "screenshots/v196-fix1-01-login.png",
+    "screenshots/v196-fix1-02-after-login.png",
+    "screenshots/v196-fix1-03-clusters-accordion.png",
+    "screenshots/v196-fix1-05-cluster-detail-active.png",
+    "screenshots/v196-fix1-06-cluster-route-active-state.png",
+    "screenshots/v196-fix1-07-sidebar-collapsed.png",
+    "screenshots/v196-fix1-09-tooltip-collapsed-hover.png",
+    "screenshots/v196-fix1-10-tooltip-clusters.png",
+    "screenshots/v196-fix1-12-tooltip-settings.png",
+    "screenshots/v196-fix1-15-cmdb-expanded.png",
+    "screenshots/v196-fix1-16-active-border-bar.png",
+    "screenshots/v196-fix1-17-light-mode-sidebar.png",
+    "screenshots/v196-fix1-18-light-mode-accordion.png",
+    "screenshots/v196-fix1-19-alerts-page.png",
+    "screenshots/v196-fix1-20-settings-active.png",
+    "screenshots/v196-fix1-21-events-nav.png"
+  ]
+}
