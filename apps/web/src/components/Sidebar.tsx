@@ -1,15 +1,21 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, m } from 'motion/react'
 import { APP_VERSION } from '@/config/constants'
 import { navItems } from '@/config/navigation'
 import { EASING } from '@/lib/animation-constants'
 import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
 import { trpc } from '@/lib/trpc'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 export function Sidebar({
   collapsed,
@@ -32,18 +38,33 @@ export function Sidebar({
     refetchInterval: 30000,
   })
 
+  // SB-010: Clusters accordion open state — open when on any /clusters/* route
+  const isClustersRoute = pathname.startsWith('/clusters')
+  const [clustersOpen, setClustersOpen] = useState(isClustersRoute)
+
+  // Keep accordion open when navigating into clusters
+  useEffect(() => {
+    if (isClustersRoute) setClustersOpen(true)
+  }, [isClustersRoute])
+
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/'
     return pathname.startsWith(path)
   }
 
-  // Cmd+B keyboard shortcut to toggle collapsed
+  // SB-009: track if toggle was keyboard-triggered for near-instant duration
+  const keyboardToggleRef = useRef(false)
+
+  // SB-009: Cmd+B keyboard shortcut — near-instant (duration-50), not full spring
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
         e.preventDefault()
         if (isDesktop) {
+          keyboardToggleRef.current = true
           setCollapsed(!collapsed)
+          // Reset flag after the transition would fire
+          setTimeout(() => { keyboardToggleRef.current = false }, 100)
         }
       }
     }
@@ -53,8 +74,8 @@ export function Sidebar({
 
   const showLabels = !isDesktop || mobileOpen || !collapsed
 
-  // P3-001: sidebar width values
-  const desktopWidth = collapsed ? 56 : 224
+  // SB-002 / SB-006: collapsed state as data attribute + CSS transition for width
+  const collapsibleState = (isDesktop && collapsed) ? 'icon' : 'expanded'
 
   return (
     <>
@@ -68,14 +89,35 @@ export function Sidebar({
         />
       )}
 
-      {/* P3-001: m.aside with spring width animation */}
-      <m.aside
+      {/*
+        SB-002: data-collapsible propagated from aside so child group selectors work.
+        SB-006: CSS transition-[width] duration-200 ease-out instead of Motion spring for width.
+                Keep Motion only for layoutId active indicator (SB-007 preserved).
+      */}
+      <aside
         data-testid="sidebar"
-        animate={isDesktop ? { width: desktopWidth, x: 0 } : { x: mobileOpen ? 0 : -224 }}
-        initial={false}
-        transition={EASING.spring}
-        style={{ width: isDesktop ? desktopWidth : 224 }}
-        className="fixed left-0 top-14 bottom-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col py-3 z-50 overflow-hidden"
+        data-collapsible={collapsibleState}
+        className={[
+          'group fixed left-0 top-14 bottom-0',
+          'bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)]',
+          'flex flex-col py-3 z-50 overflow-hidden',
+          // SB-006: hardware-accelerated CSS width transition
+          'transition-[width] duration-200 ease-out',
+          // Desktop width based on collapsed state
+          isDesktop
+            ? collapsed ? 'w-14' : 'w-56'
+            : 'w-56',
+          // SB-009: Mobile translation uses CSS transition too
+          !isDesktop
+            ? mobileOpen ? 'translate-x-0' : '-translate-x-full'
+            : '',
+          !isDesktop ? 'transition-transform duration-200 ease-out' : '',
+        ].filter(Boolean).join(' ')}
+        style={
+          !isDesktop
+            ? { transform: mobileOpen ? 'translateX(0)' : 'translateX(-224px)' }
+            : undefined
+        }
       >
         {/* Mobile close button */}
         {!isDesktop && mobileOpen && (
@@ -91,111 +133,176 @@ export function Sidebar({
           </div>
         )}
 
-        {/* Main nav — flat 6 items */}
-        <nav className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-          {navItems.map((item) => {
-            const active = isActive(item.id)
-            const Icon = item.icon
-            const showAlertsBadge = item.id === '/alerts' && unacknowledgedCount > 0
+        {/* Main nav — flat items + clusters accordion */}
+        {/* SB-003: TooltipProvider wraps nav so tooltips work in collapsed mode */}
+        <TooltipProvider delayDuration={300}>
+          <nav className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+            {navItems.map((item) => {
+              const active = isActive(item.id)
+              const Icon = item.icon
+              const showAlertsBadge = item.id === '/alerts' && unacknowledgedCount > 0
+              const isClustersItem = item.id === '/clusters'
 
-            return (
-              <Link
-                key={item.id}
-                href={item.id}
-                onClick={() => setMobileOpen(false)}
-                data-testid={`nav-item-${item.id.replace(/\//g, '') || 'dashboard'}`}
-                className={`
-                  relative flex items-center py-2.5 rounded-lg
-                  ${showLabels ? 'gap-3 px-3' : 'justify-center px-0'}
-                  ${active
-                    ? 'text-[var(--color-text-primary)]'
-                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-                  }
-                `}
-                style={{ transition: 'color 150ms ease' }}
-              >
-                {/* P3-002: Active background with layoutId spring + left accent border */}
-                {active && (
-                  <m.div
-                    layoutId="sidebar-active-bg"
-                    className="absolute inset-0 bg-[var(--color-accent)]/10 rounded-lg sidebar-active-bar"
-                    transition={EASING.snappy}
-                  />
-                )}
-                {/* P3-002: Left accent border bar */}
-                {active && (
-                  <m.div
-                    layoutId="sidebar-active-border"
-                    className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[var(--color-accent)]"
-                    transition={EASING.snappy}
-                  />
-                )}
+              // SB-010: clusters parent is active when on any /clusters/* route
+              const isNavActive = isClustersItem ? isClustersRoute : active
 
-                <Icon className="sidebar-icon h-4 w-4 shrink-0 relative z-10" />
-                <AnimatePresence initial={false}>
-                  {showLabels && (
-                    <m.span
-                      key="label"
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: 'auto' }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
-                      className="sidebar-label text-[13px] font-medium relative z-10 overflow-hidden whitespace-nowrap"
-                    >
-                      {item.label}
-                    </m.span>
+              const navLink = (
+                <Link
+                  key={item.id}
+                  href={isClustersItem ? '#' : item.id}
+                  onClick={(e) => {
+                    if (isClustersItem) {
+                      e.preventDefault()
+                      setClustersOpen((prev) => !prev)
+                    } else {
+                      setMobileOpen(false)
+                    }
+                  }}
+                  data-testid={`nav-item-${item.id.replace(/\//g, '') || 'dashboard'}`}
+                  aria-expanded={isClustersItem ? clustersOpen : undefined}
+                  className={[
+                    'relative flex items-center py-2.5 rounded-lg',
+                    // SB-002: respond to data-collapsible via group selectors
+                    'gap-3 px-3',
+                    'group-data-[collapsible=icon]:gap-0',
+                    'group-data-[collapsible=icon]:justify-center',
+                    'group-data-[collapsible=icon]:px-0',
+                    'group-data-[collapsible=icon]:mx-auto',
+                    'group-data-[collapsible=icon]:w-10',
+                    'group-data-[collapsible=icon]:h-10',
+                    isNavActive
+                      ? 'text-[var(--color-text-primary)]'
+                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
+                  ].join(' ')}
+                  style={{ transition: 'color 150ms ease' }}
+                >
+                  {/* P3-002 / SB-007: Active background with layoutId spring + left accent border */}
+                  {isNavActive && (
+                    <m.div
+                      layoutId="sidebar-active-bg"
+                      className="absolute inset-0 bg-[var(--color-accent)]/10 rounded-lg sidebar-active-bar"
+                      transition={EASING.snappy}
+                    />
                   )}
-                </AnimatePresence>
-                {showAlertsBadge && (
-                  <span
-                    data-testid="alerts-badge"
-                    className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 relative z-10"
-                  >
-                    {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
-                  </span>
-                )}
-              </Link>
-            )
-          })}
+                  {/* SB-008: Reduce active border bar from 3px → 2px */}
+                  {isNavActive && (
+                    <m.div
+                      layoutId="sidebar-active-border"
+                      className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full bg-[var(--color-accent)]"
+                      transition={EASING.snappy}
+                    />
+                  )}
 
-          {/* Cluster quick-switch footer */}
-          <AnimatePresence initial={false}>
-            {showLabels && sidebarClusters.length > 0 && (
-              <m.div
-                key="cluster-footer"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="mt-2 border-t border-[var(--color-border)]/60 pt-2"
-              >
-                <p className="px-2 mb-1 text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
-                  Clusters
-                </p>
-                <div className="space-y-1">
-                  {sidebarClusters.map((cluster) => {
-                    const env = getClusterEnvironment(cluster.name, cluster.provider)
-                    const color = ENV_META[env].color
-                    return (
-                      <Link
-                        key={cluster.id}
-                        href={`/clusters/${cluster.id}`}
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/5"
+                  <Icon className="sidebar-icon h-4 w-4 shrink-0 relative z-10" />
+                  <AnimatePresence initial={false}>
+                    {showLabels && (
+                      <m.span
+                        key="label"
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: 'auto' }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+                        className="sidebar-label text-[13px] font-medium relative z-10 overflow-hidden whitespace-nowrap flex-1"
                       >
-                        <span
-                          className="h-1.5 w-1.5 rounded-full shrink-0"
-                          style={{ backgroundColor: color }}
-                        />
-                        <span className="truncate">{cluster.name}</span>
-                      </Link>
-                    )
-                  })}
+                        {item.label}
+                      </m.span>
+                    )}
+                  </AnimatePresence>
+                  {showAlertsBadge && (
+                    <span
+                      data-testid="alerts-badge"
+                      className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 relative z-10"
+                    >
+                      {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
+                    </span>
+                  )}
+                  {/* SB-005: ChevronDown for clusters accordion — rotates when open */}
+                  {isClustersItem && showLabels && (
+                    <m.div
+                      animate={{ rotate: clustersOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                      className="relative z-10 ml-auto"
+                    >
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+                    </m.div>
+                  )}
+                </Link>
+              )
+
+              // SB-003: Wrap in Tooltip when collapsed (desktop icon mode)
+              const wrappedNavLink =
+                isDesktop && collapsed ? (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>{navLink}</TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={8} className="text-xs">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <div key={item.id}>{navLink}</div>
+                )
+
+              return (
+                <div key={item.id}>
+                  {wrappedNavLink}
+
+                  {/* SB-005 / SB-011: Inline accordion sub-nav for Clusters */}
+                  {isClustersItem && (
+                    <AnimatePresence initial={false}>
+                      {clustersOpen && showLabels && (
+                        <m.div
+                          key="clusters-subnav"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                          className="overflow-hidden"
+                        >
+                          {/* SB-011: cluster sub-nav — cluster name + current tab context */}
+                          <div className="mt-0.5 space-y-0.5">
+                            {sidebarClusters.length > 0 ? (
+                              sidebarClusters.map((cluster) => {
+                                const env = getClusterEnvironment(cluster.name, cluster.provider)
+                                const color = ENV_META[env].color
+                                const clusterPath = `/clusters/${cluster.id}`
+                                const isClusterActive = pathname.startsWith(clusterPath)
+
+                                return (
+                                  <Link
+                                    key={cluster.id}
+                                    href={clusterPath}
+                                    onClick={() => setMobileOpen(false)}
+                                    className={[
+                                      'flex items-center gap-2 pl-9 pr-3 py-1.5 rounded-md text-[12px]',
+                                      'transition-colors duration-150',
+                                      isClusterActive
+                                        ? 'text-[var(--color-text-primary)] bg-[var(--color-accent)]/5'
+                                        : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/5',
+                                    ].join(' ')}
+                                  >
+                                    <span
+                                      className="h-1.5 w-1.5 rounded-full shrink-0"
+                                      style={{ backgroundColor: color }}
+                                    />
+                                    <span className="truncate">{cluster.name}</span>
+                                  </Link>
+                                )
+                              })
+                            ) : (
+                              <p className="pl-9 pr-3 py-1.5 text-[11px] text-[var(--color-text-muted)]">
+                                No clusters
+                              </p>
+                            )}
+                          </div>
+                        </m.div>
+                      )}
+                    </AnimatePresence>
+                  )}
                 </div>
-              </m.div>
-            )}
-          </AnimatePresence>
-        </nav>
+              )
+            })}
+          </nav>
+        </TooltipProvider>
 
         {/* Collapse toggle */}
         {isDesktop && (
@@ -230,7 +337,7 @@ export function Sidebar({
             </m.div>
           )}
         </AnimatePresence>
-      </m.aside>
+      </aside>
     </>
   )
 }
