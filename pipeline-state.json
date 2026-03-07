@@ -1,13 +1,15 @@
 {
-  "status": "deployed",
-  "version": "v196",
-  "currentStage": "DEPLOYED",
+  "status": "merged",
+  "version": "v196-fix1",
+  "currentStage": "merged-v196-fix1",
   "phase": "sidebar-polish",
-  "fixLoopCount": 0,
-  "timestamp": "2026-03-07T12:07:06.737423",
+  "fixLoopCount": 1,
+  "timestamp": "2026-03-07T10:22:00.000Z",
   "branch": "main",
-  "tag": "v196",
-  "mergeCommit": "088cfb7",
+  "tag": "v196-fix1",
+  "mergeCommit": "27cc6fe",
+  "mergedSHA": "27cc6fe",
+  "mergedBranch": "fix/e2e-v196-selectors-deleted",
   "completedStages": [
     "review-widgets",
     "sidebar-fix",
@@ -18,20 +20,23 @@
     "qa-v195",
     "phase4-dev",
     "review-phase4",
-    "merge-tag-v196"
+    "merge-tag-v196",
+    "build-deploy-v196",
+    "e2e-fix-v196",
+    "merge-tag-v196-fix1"
   ],
-  "failedStages": [],
-  "inProgress": [
-    "build-deploy-v196"
-  ],
-  "previousVersion": "v195",
-  "notes": "Phase 4 reviewed (10/10) and merged. Building and deploying v196.",
+  "failedStages": ["e2e-v196-attempt1"],
+  "inProgress": [],
+  "previousVersion": "v196",
+  "notes": "E2E selector fixes merged. fix/e2e-v196-selectors → main as v196-fix1. Tests updated for accordion navigation.",
   "commits": [
     "df28049",
     "cfbae6e",
-    "088cfb7"
+    "088cfb7",
+    "692338c",
+    "27cc6fe"
   ],
-  "scope": "Phase 4 sidebar polish: SB-002..SB-011",
+  "scope": "Phase 4 sidebar polish: SB-002..SB-011 + E2E test fixes",
   "vikRequest": "1. Icon alignment in collapsed sidebar 2. CLUSTERS section header in expanded mode",
   "deployedInK8s": "v196"
 }
