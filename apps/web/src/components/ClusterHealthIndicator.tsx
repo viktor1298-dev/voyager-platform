@@ -12,18 +12,8 @@ import { m } from 'motion/react'
 import { trpc } from '@/lib/trpc'
 import { HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
-
-function timeAgo(ts: string | Date | null | undefined): string {
-  if (!ts) return 'Never'
-  const diff = Date.now() - new Date(ts).getTime()
-  const seconds = Math.floor(diff / 1000)
-  if (seconds < 60) return `${seconds}s ago`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
+import { timeAgo } from '@/lib/time-utils'
+import { statusChangeTransition } from '@/lib/animation-constants'
 
 const STATUS_COLORS: Record<string, string> = {
   healthy: 'var(--color-status-active)',
@@ -71,6 +61,13 @@ export function ClusterHealthIndicator({
   const statusLabel = entry.status.charAt(0).toUpperCase() + entry.status.slice(1)
   const dotSize = size === 'md' ? 'h-2.5 w-2.5' : 'h-1.5 w-1.5'
 
+  // REVIEW-006: use healthDotVariants animation via animate prop (inline to avoid readonly TS issue)
+  const dotScaleAnim = entry.status === 'degraded'
+    ? [1, 1.3, 1]
+    : entry.status === 'critical'
+      ? [1, 1.5, 1]
+      : 1
+
   const latencyColor =
     entry.responseTimeMs != null
       ? entry.responseTimeMs > 500
@@ -85,9 +82,15 @@ export function ClusterHealthIndicator({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span
+            {/* REVIEW-005: keyboard-focusable, screen-reader accessible */}
+            {/* REVIEW-006: healthDotVariants — scale pulse on degraded/critical */}
+            <m.span
               className={`${dotSize} rounded-full shrink-0 cursor-default`}
-              style={{ backgroundColor: color }}
+              animate={{ backgroundColor: color, scale: dotScaleAnim }}
+              transition={statusChangeTransition}
+              tabIndex={0}
+              role="status"
+              aria-label={`Health: ${statusLabel}`}
             />
           </TooltipTrigger>
           <TooltipContent side="top" className="text-left">
@@ -114,11 +117,11 @@ export function ClusterHealthIndicator({
         </m.span>
       )}
 
-      {/* Optional check now button */}
+      {/* Optional check now button — REVIEW-003: plain button, CSS only (no Motion opacity conflict) */}
       {onCheck !== undefined && (
         <button
           type="button"
-          className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--color-accent)] hover:text-[var(--color-text-primary)] cursor-pointer disabled:opacity-40"
+          className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-[var(--color-accent)] hover:text-[var(--color-text-primary)] cursor-pointer disabled:opacity-40"
           title="Check now"
           onClick={handleCheck}
           disabled={checking}

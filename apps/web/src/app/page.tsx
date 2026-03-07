@@ -6,11 +6,10 @@ import { PageTransition } from '@/components/animations'
 import { DashboardGrid } from '@/components/dashboard/DashboardGrid'
 import { DashboardEditBar } from '@/components/dashboard/DashboardEditBar'
 import { WidgetLibraryDrawer } from '@/components/dashboard/WidgetLibraryDrawer'
-import { ProviderLogo } from '@/components/ProviderLogo'
-import { SkeletonCard, SkeletonText, Shimmer } from '@/components/Skeleton'
-import { RefreshCw, LayoutGrid, Pencil } from 'lucide-react'
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
+import { SkeletonCard, SkeletonText } from '@/components/Skeleton'
+import { LayoutGrid, Pencil } from 'lucide-react'
 import { m, AnimatePresence } from 'motion/react'
+import { ClusterHealthIndicator } from '@/components/ClusterHealthIndicator'
 import {
   ENV_META,
   getClusterEnvironment,
@@ -27,7 +26,7 @@ import {
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
-import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS, HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
+import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { useDashboardLayout } from '@/stores/dashboard-layout'
 import { AlertTriangle, Box, Database, Server } from 'lucide-react'
 import Link from 'next/link'
@@ -431,9 +430,9 @@ function DashboardContent() {
                             <div className="flex-1 h-px bg-[var(--color-border)]/30" />
                           </div>
 
-                          {/* IA-009: AnimatePresence for filter reflow */}
-                          <AnimatePresence mode="popLayout">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                          {/* IA-009: AnimatePresence for filter reflow — REVIEW-004: wraps m.div children directly */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                            <AnimatePresence mode="popLayout">
                               {clusters.map((cluster) => {
                                 const idx = cardIndex++
                                 return (
@@ -441,13 +440,11 @@ function DashboardContent() {
                                     key={cluster.id}
                                     cluster={cluster}
                                     index={idx}
-                                    runningPods={runningPods}
-                                    totalPods={liveData?.totalPods ?? 0}
                                   />
                                 )
                               })}
-                            </div>
-                          </AnimatePresence>
+                            </AnimatePresence>
+                          </div>
                         </div>
                       )
                     })}
@@ -496,116 +493,19 @@ export default function DashboardPage() {
   )
 }
 
-// IA-004: timeAgo utility for health tooltip
-function timeAgo(ts: string | Date | null | undefined): string {
-  if (!ts) return 'Never'
-  const diff = Date.now() - new Date(ts).getTime()
-  const seconds = Math.floor(diff / 1000)
-  if (seconds < 60) return `${seconds}s ago`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
-
-// IA-004: HealthDot with rich hover tooltip (status label, last-check time, responseTimeMs)
-function HealthDot({ clusterId }: { clusterId: string }) {
-  const statusQuery = trpc.health.status.useQuery({}, {
-    refetchInterval: HEALTH_STATUS_REFETCH_MS,
-  })
-  const entry = statusQuery.data?.find((s) => s.clusterId === clusterId)
-  if (!entry || entry.status === 'unknown') return null
-
-  const colors: Record<string, string> = {
-    healthy: 'var(--color-status-active)',
-    degraded: 'var(--color-status-warning)',
-    critical: 'var(--color-status-error)',
-  }
-  const color = colors[entry.status] ?? 'var(--color-text-dim)'
-  const statusLabel = entry.status.charAt(0).toUpperCase() + entry.status.slice(1)
-
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span
-            className="h-1.5 w-1.5 rounded-full shrink-0 cursor-default"
-            style={{ backgroundColor: color }}
-          />
-        </TooltipTrigger>
-        <TooltipContent side="top" className="text-left">
-          <div className="space-y-0.5 text-xs">
-            <div className="font-semibold">{statusLabel}</div>
-            <div className="text-[var(--color-text-muted)]">Last check: {timeAgo(entry.checkedAt)}</div>
-            {entry.responseTimeMs != null && (
-              <div className="text-[var(--color-text-muted)]">Response: {entry.responseTimeMs}ms</div>
-            )}
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  )
-}
-
-// IA-005: HealthLatency — subtle latency badge next to HealthDot
-function HealthLatency({ clusterId }: { clusterId: string }) {
-  const statusQuery = trpc.health.status.useQuery({}, {
-    refetchInterval: HEALTH_STATUS_REFETCH_MS,
-  })
-  const entry = statusQuery.data?.find((s) => s.clusterId === clusterId)
-  if (!entry || entry.responseTimeMs == null) return null
-
-  const latencyColor =
-    entry.responseTimeMs > 500
-      ? 'var(--color-status-error)'
-      : entry.responseTimeMs > 200
-        ? 'var(--color-status-warning)'
-        : 'var(--color-text-dim)'
-
-  return (
-    <m.span
-      className="text-[9px] font-mono shrink-0"
-      style={{ color: latencyColor }}
-      animate={{ color: latencyColor }}
-      transition={{ duration: 0.3 }}
-    >
-      {entry.responseTimeMs}ms
-    </m.span>
-  )
-}
-
 // DB-002: Compact ClusterCard — single horizontal row, ~50% shorter
-// IA-005: includes HealthLatency badge | IA-006: "Check Now" hover button | IA-009: Motion animations
+// IA-007: uses ClusterHealthIndicator (single subscription, no duplicates)
+// IA-009: Motion animations
 function ClusterCard({
   cluster,
   index,
-  runningPods,
-  totalPods,
 }: {
   cluster: ClusterCardData
   index: number
-  runningPods: number
-  totalPods: number
 }) {
   const status = cluster.status ?? 'unknown'
   const statusMeta = STATUS_META[normalizeHealth(status)]
   const envMeta = ENV_META[cluster.environment]
-
-  // IA-006: Check Now state
-  const [checking, setChecking] = useState(false)
-  const utils = trpc.useUtils()
-  const handleCheck = useCallback(async (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setChecking(true)
-    try {
-      await utils.health.check.fetch({ clusterId: cluster.id })
-      await utils.health.status.invalidate()
-    } finally {
-      setChecking(false)
-    }
-  }, [utils, cluster.id])
 
   return (
     <Link href={`/clusters/${cluster.id}`}>
@@ -642,12 +542,14 @@ function ClusterCard({
           {cluster.name}
         </span>
 
-        {/* IA-004+005: HealthDot (tooltip) + HealthLatency */}
+        {/* IA-007: ClusterHealthIndicator — single subscription, replaces HealthDot + HealthLatency + inline check */}
         {cluster.source === 'db' && (
-          <>
-            <HealthDot clusterId={cluster.id} />
-            <HealthLatency clusterId={cluster.id} />
-          </>
+          <ClusterHealthIndicator
+            clusterId={cluster.id}
+            size="sm"
+            showLatency
+            onCheck={() => {}}
+          />
         )}
 
         {/* Env badge */}
@@ -667,27 +569,6 @@ function ClusterCard({
         <span className="text-[9px] font-mono text-[var(--color-text-dim)] shrink-0 hidden md:block">
           {cluster.version ?? '—'}
         </span>
-
-        {/* IA-006: Check Now hover button */}
-        {cluster.source === 'db' && (
-          <AnimatePresence>
-            <m.button
-              key="check-now"
-              type="button"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 0, scale: 1 }}
-              whileHover={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.15 }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-[var(--color-accent)] hover:text-[var(--color-text-primary)] cursor-pointer disabled:opacity-40"
-              title="Check now"
-              onClick={handleCheck}
-              disabled={checking}
-            >
-              <RefreshCw className={`h-3 w-3 ${checking ? 'animate-spin' : ''}`} />
-            </m.button>
-          </AnimatePresence>
-        )}
       </m.div>
     </Link>
   )
