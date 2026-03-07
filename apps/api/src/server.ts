@@ -71,7 +71,8 @@ app.addHook('onRequest', async (request, reply) => {
   //   1. Redundant getSession() DB calls on every request (perf hit)
   //   2. Non-tRPC-formatted 401 responses that break the tRPC client error handler
   //   3. Race conditions under concurrent background polling (multiple parallel getSession calls)
-  if (request.url.startsWith('/trpc')) {
+  // Also check /api/trpc/* — requests from ingress arrive with /api prefix
+  if (request.url.startsWith('/trpc') || request.url.startsWith('/api/trpc')) {
     return
   }
 
