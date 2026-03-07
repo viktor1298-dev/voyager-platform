@@ -129,6 +129,34 @@ Each phase follows this flow:
 
 ---
 
+---
+
+## 🆕 Phase 4 — Sidebar Polish (2026 Standards)
+> **Goal:** Fix sidebar UX issues found by Vik + apply 2026 best practices from SIDEBAR-RESEARCH-2026.md
+> **Runs:** Ron (frontend) — after v195 pipeline completes
+> **Reference:** `SIDEBAR-RESEARCH-2026.md`
+
+### Icon Alignment (Collapsed Mode)
+- [ ] **SB-001** Fix icon centering in collapsed mode — apply `group-data-[collapsible=icon]:justify-center`, `group-data-[collapsible=icon]:px-0`, `group-data-[collapsible=icon]:size-10` to `SidebarMenuButton`
+- [ ] **SB-002** Add `data-collapsible` attribute propagation from `<aside>` to child nav items so Tailwind group selectors work correctly
+- [ ] **SB-003** Add tooltip (`title` or shadcn `Tooltip`) on every nav item when collapsed — critical UX gap per research
+
+### Section Header Typography
+- [ ] **SB-004** Replace `font-mono font-bold tracking-widest` on section labels (like "CLUSTERS") with `text-[11px] font-medium tracking-wide text-muted-foreground` — 2022 Material pattern → 2026 subtle style
+- [ ] **SB-005** Convert "CLUSTERS" active section from header label → inline accordion: parent item has `ChevronDown` that rotates, sub-items indent `pl-4` — no more awkward section header below nav items
+
+### Animation Refinements
+- [ ] **SB-006** Switch sidebar `width` animation from Motion spring → CSS `transition-[width] duration-200 ease-out` (hardware-accelerated, prevents jank)
+- [ ] **SB-007** Keep Motion `layoutId="sidebar-active-bg"` for active indicator sliding — this IS the premium 2026 pattern ✅
+- [ ] **SB-008** Reduce active border bar from 3px → 2px (2026 standard per research)
+- [ ] **SB-009** `Cmd+B` toggle: near-instant `duration-50` (not the full spring animation — keyboard users expect instant response)
+
+### Active State when Deep in Section
+- [ ] **SB-010** Parent nav item (e.g., "Clusters") shows as active with background pill when user is on any `/clusters/*` route
+- [ ] **SB-011** When inside cluster, show inline sub-nav (cluster name + tabs) as collapsible under parent — not as floating header
+
+---
+
 ## 🎛️ v194-widgets — Widget System Restore (2026-07-14)
 
 ### Completed
@@ -139,3 +167,15 @@ Each phase follows this flow:
 - [x] StatCardsWidget with 24h sparklines available via widget mode [v194-widgets 2026-07-14]
 - [x] Legacy cluster layout preserved (shown when widgetMode=false) [v194-widgets 2026-07-14]
 - [x] Build passes ✅ | Navigation v194 intact ✅ [v194-widgets 2026-07-14]
+
+---
+
+## 🔄 v195 — DashboardGrid + StatCardsWidget + Sidebar Visual Fixes (2026-03-07)
+
+### Merged to main ✅
+- [x] DashboardGrid widget system restored [1fd7426]
+- [x] StatCardsWidget with 24h sparklines [0c9625b]
+- [x] Sidebar: center icons in collapsed mode + subtle cluster header [fcd11a1]
+- [x] Merge commit: `b7de5ac` → main [v195 2026-03-07]
+- [x] Tag `v195` created and pushed ✅
+- [x] Review score: 10/10 PASS (widget review + sidebar delta review) ✅

@@ -1,44 +1,19 @@
 {
-  "status": "running",
-  "version": "v194",
-  "currentStage": "e2e-phase2",
-  "phase": "phase2",
-  "fixLoopCount": 1,
-  "timestamp": "2026-03-07T07:00:00+02:00",
-  "branch": "feat/init-monorepo",
-  "tag": "v194-phase2",
-  "completedStages": [
-    "dev-phase1",
-    "review-phase1",
-    "merge-phase1",
-    "deploy-phase1",
-    "e2e-phase1",
-    "fix-phase1",
-    "deploy-fix1",
-    "qa-phase1-fix1",
-    "dev-phase2-backend",
-    "dev-phase2-frontend",
-    "review-phase2",
-    "fix-phase2",
-    "merge-phase2",
-    "deploy-phase2"
-  ],
+  "status": "merged",
+  "version": "v195",
+  "currentStage": "complete",
+  "phase": "widget-restore",
+  "fixLoopCount": 0,
+  "timestamp": "2026-03-07T10:38:00+02:00",
+  "branch": "main",
+  "tag": "v195",
+  "completedStages": ["review-widgets", "sidebar-fix", "review-sidebar", "merge", "tag", "push"],
   "failedStages": [],
-  "inProgress": [
-    "e2e-phase2"
-  ],
-  "previousVersion": "v193",
-  "phase1Result": {
-    "qaScore": 9.5,
-    "qaVerdict": "PASS",
-    "e2eResult": "21/21 PASS",
-    "tag": "v194-phase1-fix1"
-  },
-  "deployGate": {
-    "imageTagVerified": true,
-    "healthCheck": 200,
-    "loginWorks": true
-  },
-  "notes": "Phase 2 deployed. E2E running.",
-  "foremanNotes": "Guardian 07:45: QA FAIL 8.2/10. BUG-2 (sidebar) assigned to frontend agent. BUG-1 (401 auth storm - HIGH) UNADDRESSED - backend tRPC auth regression on polling endpoints. Fix needed before QA re-run can pass."
+  "inProgress": [],
+  "previousVersion": "v194-phase3-fix1",
+  "notes": "v195 merged to main (b7de5ac) + tagged v195 + pushed. All 4 commits verified on main.",
+  "commits": ["1fd7426", "0c9625b", "25ac00c", "fcd11a1"],
+  "mergeCommit": "b7de5ac",
+  "mergedBranch": "feat/init-monorepo",
+  "scope": "DashboardGrid + StatCardsWidget + sparklines 24h + sidebar visual fixes"
 }
