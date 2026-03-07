@@ -512,7 +512,7 @@ function ClusterCard({
       {/* IA-009: Motion card with whileHover y:-2 and layout prop */}
       <m.div
         layout
-        className="cluster-card relative group rounded-lg cursor-pointer bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] flex items-center gap-2 overflow-hidden px-3 py-2"
+        className="cluster-card relative group rounded-lg cursor-pointer bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] flex flex-col px-3 py-2"
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -532,43 +532,46 @@ function ClusterCard({
           style={{ backgroundColor: envMeta.color, opacity: 0.9 }}
         />
 
-        {/* Status dot */}
-        <span
-          className={`h-1.5 w-1.5 rounded-full shrink-0 animate-pulse-slow ml-1 ${getStatusDotClass(status)}`}
-        />
-
-        {/* Name */}
-        <span className="text-xs font-semibold text-[var(--color-text-primary)] truncate flex-1 min-w-0">
-          {cluster.name}
-        </span>
-
-        {/* IA-007: ClusterHealthIndicator — single subscription, replaces HealthDot + HealthLatency + inline check */}
-        {cluster.source === 'db' && (
-          <ClusterHealthIndicator
-            clusterId={cluster.id}
-            size="sm"
-            showLatency
-            onCheck={() => {}}
+        {/* Row 1: Status dot + full cluster name */}
+        <div className="flex items-start gap-1.5 ml-1">
+          <span
+            className={`h-1.5 w-1.5 rounded-full shrink-0 animate-pulse-slow mt-[3px] ${getStatusDotClass(status)}`}
           />
-        )}
+          <span className="text-xs font-semibold text-[var(--color-text-primary)] whitespace-normal break-words leading-tight">
+            {cluster.name}
+          </span>
+        </div>
 
-        {/* Env badge */}
-        <span className={cn('text-[9px] font-mono px-1.5 py-0.5 rounded border shrink-0', envMeta.badgeClass)}>
-          {envMeta.label}
-        </span>
+        {/* Row 2: env badge + health indicator + version + node count */}
+        <div className="flex items-center gap-1.5 ml-1 mt-1 flex-wrap">
+          {/* Env badge */}
+          <span className={cn('text-[9px] font-mono px-1.5 py-0.5 rounded border shrink-0', envMeta.badgeClass)}>
+            {envMeta.label}
+          </span>
 
-        {/* Status label */}
-        <span className="text-[9px] text-[var(--color-text-dim)] shrink-0 hidden sm:block">{statusMeta.label}</span>
+          {/* IA-007: ClusterHealthIndicator — single subscription, replaces HealthDot + HealthLatency + inline check */}
+          {cluster.source === 'db' && (
+            <ClusterHealthIndicator
+              clusterId={cluster.id}
+              size="sm"
+              showLatency
+              onCheck={() => {}}
+            />
+          )}
 
-        {/* Node count */}
-        <span className="text-[9px] font-mono text-[var(--color-text-muted)] shrink-0">
-          {cluster.nodeCount}n
-        </span>
+          {/* Node count */}
+          <span className="text-[10px] font-mono text-[var(--color-text-muted)] shrink-0">
+            {cluster.nodeCount}n
+          </span>
 
-        {/* K8s version */}
-        <span className="text-[9px] font-mono text-[var(--color-text-dim)] shrink-0 hidden md:block">
-          {cluster.version ?? '—'}
-        </span>
+          {/* K8s version */}
+          <span className="text-[10px] font-mono text-[var(--color-text-dim)] shrink-0">
+            {cluster.version ?? '—'}
+          </span>
+
+          {/* Status label */}
+          <span className="text-[10px] text-[var(--color-text-dim)] shrink-0">{statusMeta.label}</span>
+        </div>
       </m.div>
     </Link>
   )
