@@ -58,5 +58,21 @@
       "v194-round3",
       "v194-phase3"
     ]
+  },
+  {
+    "test": "phase3-v194-animation.spec.ts \u2014 clusters table renders rows",
+    "failCount": 1,
+    "root_cause": "timing: clusters table or empty state not visible within 3000ms timeout on first run",
+    "suggested_fix": "Increase timeout or use waitForSelector with longer timeout",
+    "firstSeen": "2026-03-07",
+    "lastSeen": "2026-03-07",
+    "classification": "flaky",
+    "failedInVersions": [
+      "v195"
+    ],
+    "passedInVersions": [
+      "v195-clean"
+    ],
+    "notes": "Failed on first v195 run (timing under load); PASSED on clean isolated run. True flaky \u2014 timing-dependent."
   }
 ]

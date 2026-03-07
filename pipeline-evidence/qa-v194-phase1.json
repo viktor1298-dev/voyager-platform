@@ -1,0 +1,223 @@
+{
+  "version": "v194-phase1",
+  "tester": "Mai",
+  "score": 7.5,
+  "verdict": "FAIL",
+  "timestamp": "2026-03-07T03:31:00.000Z",
+  "gate": 8.5,
+  "checklist": {
+    "login_flow": {
+      "status": "PASS",
+      "notes": "Login with admin@voyager.local / admin123 works. Logout → redirect to /login with returnUrl. Login form placeholders are NOT actual values (user must type credentials manually even when placeholders show them) — minor UX issue."
+    },
+    "sidebar_6_items": {
+      "status": "FAIL",
+      "expected": ["Dashboard", "Clusters", "Alerts", "Events", "Logs", "Settings"],
+      "actual": ["Dashboard", "Clusters", "Alerts", "AI Assistant", "Dashboards", "Settings"],
+      "notes": "Sidebar has AI Assistant (/ai) and Dashboards (/dashboards) instead of Events (/events) and Logs (/logs). The /events and /logs pages exist and work but are NOT in the sidebar. This deviates from Phase 1 spec."
+    },
+    "sidebar_no_admin_items": {
+      "status": "PASS",
+      "notes": "No admin items (Users, Teams, Permissions, Webhooks, Feature Flags, Audit Log) visible in sidebar — all moved to /settings tabs."
+    },
+    "sidebar_collapse_on_cluster_pages": {
+      "status": "PASS",
+      "notes": "Sidebar auto-collapses to icon-only mode on /clusters/[id] pages. Expand button visible and works."
+    },
+    "sidebar_cmdb_toggle": {
+      "status": "PASS",
+      "notes": "Collapse/expand button works. Cmd+B keyboard shortcut not tested (browser automation limitation)."
+    },
+    "settings_all_tabs": {
+      "status": "PASS",
+      "tabs_found": ["General", "Users", "Teams", "Permissions", "Webhooks", "Feature Flags", "Audit Log"],
+      "notes": "All 7 Settings tabs present and load content."
+    },
+    "settings_general_tab": {
+      "status": "PASS",
+      "notes": "Cluster Connection, Platform Info, AI BYOK, Registered Clusters, About — all sections present with data."
+    },
+    "settings_users_tab": {
+      "status": "PASS",
+      "notes": "Users table loads with 2 users."
+    },
+    "settings_teams_tab": {
+      "status": "PASS",
+      "notes": "Teams table loads with data."
+    },
+    "settings_permissions_tab": {
+      "status": "PASS",
+      "notes": "Permissions section loads with data."
+    },
+    "settings_webhooks_tab": {
+      "status": "PASS",
+      "notes": "2 webhook endpoints visible."
+    },
+    "settings_feature_flags_tab": {
+      "status": "PASS",
+      "notes": "Feature Flags tab works at /settings/features (NOT /settings/feature-flags which 404s)."
+    },
+    "settings_audit_log_tab": {
+      "status": "PASS",
+      "notes": "Audit Log loads with 646 entries."
+    },
+    "route_redirect_users": {
+      "status": "PASS",
+      "notes": "/users → /settings/users redirect works correctly."
+    },
+    "route_redirect_teams": {
+      "status": "PASS",
+      "notes": "/teams → /settings/teams redirect works correctly."
+    },
+    "route_redirect_anomalies": {
+      "status": "PASS",
+      "notes": "/anomalies → /alerts redirect works correctly."
+    },
+    "cluster_detail_routing": {
+      "status": "PASS",
+      "notes": "/clusters/[id] routes work with full UUID IDs."
+    },
+    "cluster_detail_10_tabs": {
+      "status": "PASS",
+      "tabs_found": ["Overview", "Nodes", "Pods", "Deployments", "Services", "Namespaces", "Events", "Logs", "Metrics", "Autoscaling"],
+      "notes": "All 10 cluster detail tabs present."
+    },
+    "cluster_overview_no_duplicates": {
+      "status": "PASS",
+      "notes": "No duplicate stat cards in cluster Overview. Shows: Nodes 1, Pods 13/13, Namespaces 6, Version v1.33."
+    },
+    "cluster_breadcrumbs": {
+      "status": "PASS",
+      "notes": "Breadcrumbs work: Home > Clusters > test-cluster-minikube > [tab]."
+    },
+    "cluster_nodes_tab": {
+      "status": "PASS",
+      "notes": "Nodes tab shows 1 node (minikube, Ready, control-plane, v1.33.0, Debian GNU/Linux 12)."
+    },
+    "cluster_pods_tab": {
+      "status": "PASS",
+      "notes": "Pods tab loads (with ~3s delay) showing all 13 pods across 3 namespaces."
+    },
+    "cluster_deployments_tab": {
+      "status": "PASS",
+      "notes": "Deployments tab shows 'data coming in Phase 2' placeholder — expected behavior for Phase 1."
+    },
+    "dashboard_cluster_cards": {
+      "status": "PASS",
+      "notes": "Dashboard shows 2 cluster cards (prod-cluster-eks, test-cluster-minikube) with proper data."
+    },
+    "dashboard_quick_links": {
+      "status": "PASS",
+      "notes": "Clicking cluster card navigates to correct /clusters/[uuid] detail page."
+    },
+    "dashboard_health_info": {
+      "status": "PASS",
+      "notes": "System Health section visible on Dashboard with 2 clusters and status."
+    },
+    "dashboard_stat_cards": {
+      "status": "PASS",
+      "notes": "Total Nodes, Running Pods, Clusters, Warning Events stats present."
+    },
+    "alerts_anomalies_section": {
+      "status": "PASS",
+      "notes": "Anomalies section visible on /alerts with 12 detected, filterable by severity/status/cluster."
+    },
+    "dark_mode": {
+      "status": "PASS",
+      "notes": "Dark mode works. Theme toggle cycles Dark → Light → System."
+    },
+    "light_mode": {
+      "status": "PASS",
+      "notes": "Light mode works with full functionality."
+    },
+    "console_errors": {
+      "status": "FAIL",
+      "errors": [
+        {
+          "url": "/trpc/events.list,clusters.live,clusters.list,metrics.currentStats,alerts.unacknowledgedCount,nodes.list,events.list,anomalies.list",
+          "status": 404,
+          "severity": "medium",
+          "notes": "Combined tRPC batch query returns 404. Pages still load data (fallback to individual queries likely). Present on Dashboard and Cluster detail pages."
+        },
+        {
+          "url": "/settings/feature-flags",
+          "status": 404,
+          "severity": "low",
+          "notes": "Wrong URL navigated during testing — correct URL is /settings/features. Not a production bug."
+        }
+      ]
+    }
+  },
+  "issues": [
+    {
+      "id": "ISSUE-001",
+      "severity": "high",
+      "page": "Sidebar (all pages)",
+      "title": "Sidebar has wrong items — AI Assistant + Dashboards instead of Events + Logs",
+      "steps": "Open any page and look at sidebar navigation",
+      "expected": "6 items: Dashboard, Clusters, Alerts, Events, Logs, Settings",
+      "actual": "6 items: Dashboard, Clusters, Alerts, AI Assistant, Dashboards, Settings",
+      "notes": "Events (/events) and Logs (/logs) pages exist and work but are NOT linked from sidebar. AI Assistant and Dashboards (coming soon placeholder) are in sidebar instead.",
+      "screenshot": "screenshots/01-landing.png"
+    },
+    {
+      "id": "ISSUE-002",
+      "severity": "medium",
+      "page": "All pages",
+      "title": "tRPC batch endpoint returns 404 — console errors on every page",
+      "steps": "Open browser console on any page",
+      "expected": "No 404 errors for tRPC endpoints",
+      "actual": "404 on /trpc/events.list,clusters.live,... batch query",
+      "notes": "Present on Dashboard and Cluster detail pages. Data still loads (fallback appears to work) but generates persistent console errors.",
+      "screenshot": null
+    },
+    {
+      "id": "ISSUE-003",
+      "severity": "low",
+      "page": "/login",
+      "title": "Login form placeholders not treated as values — must type credentials manually",
+      "steps": "1. Logout. 2. See login form with placeholders showing admin@voyager.local. 3. Click Sign In without typing.",
+      "expected": "Form either auto-fills or placeholder values are correctly ignored",
+      "actual": "Clicking Sign In without typing shows 'Invalid email address' + 'Password is required' — confusing UX",
+      "notes": "Functional: login works when credentials are typed. UX/accessibility issue only.",
+      "screenshot": "screenshots/21-login-success.png"
+    },
+    {
+      "id": "ISSUE-004",
+      "severity": "info",
+      "page": "/dashboards",
+      "title": "Dashboards page is Coming Soon placeholder",
+      "steps": "Navigate to /dashboards",
+      "expected": "Either not in sidebar or fully functional",
+      "actual": "Sidebar item leads to empty placeholder page",
+      "notes": "Not critical but means a sidebar item leads to a dead-end, consuming valuable navigation real estate.",
+      "screenshot": "screenshots/26-dashboards-page.png"
+    }
+  ],
+  "what_works": [
+    "Login/logout flow functional",
+    "Settings page all 7 tabs present and load data (General, Users, Teams, Permissions, Webhooks, Feature Flags, Audit Log)",
+    "Route redirects: /users → /settings/users, /teams → /settings/teams, /anomalies → /alerts",
+    "Cluster detail /clusters/[id] with 10 tabs (Overview, Nodes, Pods, Deployments, Services, Namespaces, Events, Logs, Metrics, Autoscaling)",
+    "Cluster Overview shows correct data with NO duplicate stat cards",
+    "Breadcrumbs: Home > Clusters > cluster-name > tab-name",
+    "Sidebar collapses on cluster detail pages (auto-collapse behavior)",
+    "Sidebar collapse/expand button works",
+    "Dashboard: cluster cards with working quick-links to /clusters/[uuid]",
+    "Dashboard: System Health section visible",
+    "Dashboard: Anomalies summary card present",
+    "Alerts page: Alert Rules (16+ rules), Recent Triggers, Anomalies (12 detected) all visible",
+    "Both dark mode and light mode work (theme toggle cycles)",
+    "Cluster Nodes tab: shows real node data",
+    "Cluster Pods tab: loads all 13 pods (with brief delay)",
+    "/events page exists and shows 50 events with filtering",
+    "/logs page exists and works with pod selector"
+  ],
+  "recommendations": [
+    "CRITICAL: Fix sidebar — replace 'AI Assistant' and 'Dashboards' links with 'Events' (/events) and 'Logs' (/logs) per Phase 1 spec. AI Assistant can remain accessible via /ai but should not replace core spec items.",
+    "FIX: Investigate tRPC batch endpoint 404 — the combined query format appears unsupported. Either implement the batch handler or remove the batch query and use individual queries consistently.",
+    "UX: Login form — either use HTML `value` attribute for pre-filled credentials or remove placeholder-only pre-fills that mislead users into thinking credentials are already entered.",
+    "DECIDE: Either remove 'Dashboards' sidebar item (Coming Soon placeholder is not production-ready) or mark it clearly as 'coming soon' with a badge.",
+    "NOTE: /settings/feature-flags 404 is expected since the correct URL is /settings/features — no redirect exists. Consider adding redirect for backwards compatibility."
+  ]
+}

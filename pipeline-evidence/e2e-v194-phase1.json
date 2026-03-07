@@ -1,0 +1,196 @@
+{
+  "version": "v194-phase1",
+  "tester": "Yuval",
+  "branch": "feat/init-monorepo",
+  "baseUrl": "http://voyager-platform.voyagerlabs.co",
+  "totalTests": 137,
+  "passed": 96,
+  "failed": 25,
+  "skipped": 16,
+  "verdict": "FAIL",
+  "gate": "0 failures required",
+  "timestamp": "2026-03-07T05:20:00.000Z",
+  "duration": "21.0m",
+  "phase1Tests": {
+    "total": 22,
+    "passed": 21,
+    "skipped": 1,
+    "failed": 0,
+    "note": "All Phase 1-specific tests PASSED ✅"
+  },
+  "phase1Verifications": {
+    "sidebar6Items": "PASS",
+    "settingsTabbed7Tabs": "PASS",
+    "routeRedirects": "PASS",
+    "clusterDetailTabs": "PASS",
+    "bugRD001ClusterLinks": "PASS"
+  },
+  "failures": [
+    {
+      "test": "alerts.spec.ts:165 — should display history section with triggers or empty message",
+      "error": "strict mode violation: locator resolved to 2 elements",
+      "hypothesis": "Selector matches both the empty state message and a dropdown option",
+      "classification": "test-bug"
+    },
+    {
+      "test": "api-tokens.spec.ts:17 — displays API Tokens section in settings",
+      "error": "Timeout after 45s",
+      "hypothesis": "API tokens page failed to load within timeout",
+      "classification": "env-blocked or code-bug"
+    },
+    {
+      "test": "api-tokens.spec.ts:23 — can create a new API token",
+      "error": "Timeout after 45s",
+      "hypothesis": "Token creation flow incomplete or stuck",
+      "classification": "env-blocked or code-bug"
+    },
+    {
+      "test": "api-tokens.spec.ts:34 — newly created token appears in the token list",
+      "error": "Timeout after 45s",
+      "hypothesis": "Token list page did not reload",
+      "classification": "env-blocked or code-bug"
+    },
+    {
+      "test": "api-tokens.spec.ts:50 — can revoke a token with confirmation",
+      "error": "Timeout after 45s",
+      "hypothesis": "Token revoke dialog or action hung",
+      "classification": "env-blocked or code-bug"
+    },
+    {
+      "test": "byok-flow.spec.ts:108 — Settings BYOK test/save use backend response",
+      "error": "Timeout after 45s",
+      "hypothesis": "BYOK save/test backend call hung or returned error",
+      "classification": "env-blocked"
+    },
+    {
+      "test": "confirm-dialog.spec.ts:12 — delete action shows confirmation dialog",
+      "error": "Timeout after 45s",
+      "hypothesis": "Confirmation dialog failed to render",
+      "classification": "code-bug"
+    },
+    {
+      "test": "confirm-dialog.spec.ts:27 — cancel does not delete the item",
+      "error": "Timeout after 45s",
+      "hypothesis": "Cancel flow stuck or dialog didn't appear",
+      "classification": "code-bug"
+    },
+    {
+      "test": "confirm-dialog.spec.ts:42 — confirm deletes the item",
+      "error": "Timeout after 45s",
+      "hypothesis": "Confirm delete stuck or dialog didn't appear",
+      "classification": "code-bug"
+    },
+    {
+      "test": "k-p2-features.spec.ts:60 — settings tabs: 7 tabs exist and can be switched",
+      "error": "Assertion failed after 11.2s",
+      "hypothesis": "Tab switching validation failed (Phase 2 feature, not Phase 1)",
+      "classification": "code-bug"
+    },
+    {
+      "test": "m-p3-features.spec.ts:57 — TimeRangeSelector renders with range options when Metrics tab is active",
+      "error": "Timeout/assertion failed after 20.5s",
+      "hypothesis": "Metrics tab Time Range Selector not rendering",
+      "classification": "code-bug"
+    },
+    {
+      "test": "m-p3-features.spec.ts:74 — clicking a time range button updates selection",
+      "error": "Timeout/assertion failed after 20.8s",
+      "hypothesis": "Time range button interaction broken",
+      "classification": "code-bug"
+    },
+    {
+      "test": "m-p3-features.spec.ts:175 — Customize button exists on dashboard (in widget mode)",
+      "error": "Timeout/assertion failed after 19.1s",
+      "hypothesis": "Dashboard widget mode Customize button not found",
+      "classification": "code-bug"
+    },
+    {
+      "test": "m-p3-features.spec.ts:180 — clicking Customize shows DashboardEditBar",
+      "error": "Timeout/assertion failed after 21.1s",
+      "hypothesis": "Dashboard edit bar not shown on customize click",
+      "classification": "code-bug"
+    },
+    {
+      "test": "m-p3-features.spec.ts:189 — DashboardEditBar has Add Widget button that opens widget library",
+      "error": "Timeout/assertion failed after 19.3s",
+      "hypothesis": "Widget library not opening",
+      "classification": "code-bug"
+    },
+    {
+      "test": "optimistic-ui.spec.ts:9 — page navigation renders with transition",
+      "error": "Timeout after 45s",
+      "hypothesis": "Page transition animation not completing",
+      "classification": "code-bug"
+    },
+    {
+      "test": "optimistic-ui.spec.ts:32 — optimistic role change shows immediate update",
+      "error": "Timeout after 45s",
+      "hypothesis": "Optimistic UI role change stuck",
+      "classification": "code-bug"
+    },
+    {
+      "test": "permissions.spec.ts:7 — admin can access /permissions page",
+      "error": "Timeout/assertion failed after 32.8s",
+      "hypothesis": "Permissions page failed to load",
+      "classification": "code-bug"
+    },
+    {
+      "test": "responsive.spec.ts:45 — mobile nav first tap should navigate immediately",
+      "error": "Assertion failed after 3.7s",
+      "hypothesis": "Mobile nav first tap navigation broken",
+      "classification": "code-bug"
+    },
+    {
+      "test": "responsive.spec.ts:58 — mobile nav tap lands on target route without login returnUrl drift",
+      "error": "Timeout after 45s",
+      "hypothesis": "Mobile nav routing stuck or returnUrl drift present",
+      "classification": "code-bug"
+    },
+    {
+      "test": "responsive.spec.ts:71 — should render BYOK actions as full-width touch targets on mobile",
+      "error": "Timeout after 45s",
+      "hypothesis": "Mobile BYOK actions not rendering",
+      "classification": "code-bug"
+    },
+    {
+      "test": "responsive.spec.ts:101 — should keep desktop shell on /users (no hamburger, desktop table visible)",
+      "error": "Test not found in worker process (0ms)",
+      "hypothesis": "Test file structure changed or worker crash",
+      "classification": "test-infra"
+    },
+    {
+      "test": "teams.spec.ts:7 — admin can access /teams page",
+      "error": "Test not found in worker process (0ms)",
+      "hypothesis": "Test file structure changed or worker crash",
+      "classification": "test-infra"
+    },
+    {
+      "test": "users.spec.ts:9 — admin can access /users page",
+      "error": "Test not found in worker process (0ms)",
+      "hypothesis": "Test file structure changed or worker crash (redirects to /settings/users?)",
+      "classification": "test-infra or code-bug (route redirect)"
+    },
+    {
+      "test": "users.spec.ts:39 — viewer is redirected away from /users",
+      "error": "Test not found in worker process (0ms)",
+      "hypothesis": "Test file structure changed or worker crash (route redirect active)",
+      "classification": "test-infra or code-bug (route redirect)"
+    }
+  ],
+  "analysis": {
+    "patterns": [
+      "45s timeouts (14 tests) — indicates element not rendering or backend hung",
+      "Test not found in worker (4 tests) — worker crash or route redirect breaking tests",
+      "Assertion failures on UI elements (7 tests) — features not working as expected"
+    ],
+    "rootCauses": [
+      "API Tokens page completely broken (4 failures) — likely backend issue or DB migration missing",
+      "Confirm Dialog component not rendering (3 failures) — critical UX component broken",
+      "Mobile responsive tests failing (3 failures) — mobile layout broken",
+      "Phase 2/3 features broken (6 failures) — metrics, dashboard customize, time range selectors",
+      "/users route redirect causing test worker crashes (2-4 failures) — test files need update for new /settings/users route"
+    ],
+    "impact": "CRITICAL — 25/137 failures (18.2%). Phase 1 features work correctly, but significant regressions in existing features.",
+    "recommendation": "DO NOT DEPLOY. Fix critical regressions before Phase 1 can ship."
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "version": "v194-phase2",
+  "reviewer": "Lior",
+  "timestamp": "2026-03-07T06:52:00.000Z",
+  "score": 8,
+  "verdict": "CHANGES_REQUESTED",
+  "test_coverage_checked": true,
+  "files_reviewed": [
+    "apps/api/src/routers/deployments.ts",
+    "apps/api/src/routers/services.ts",
+    "apps/api/src/routers/namespaces.ts",
+    "apps/api/src/routers/logs.ts",
+    "apps/api/src/routers/pods.ts",
+    "apps/web/src/app/clusters/[id]/deployments/page.tsx",
+    "apps/web/src/app/clusters/[id]/services/page.tsx",
+    "apps/web/src/app/clusters/[id]/namespaces/page.tsx",
+    "apps/web/src/app/clusters/[id]/logs/page.tsx",
+    "apps/web/src/app/clusters/[id]/pods/page.tsx",
+    "apps/web/src/app/clusters/[id]/events/page.tsx",
+    "apps/web/src/app/clusters/[id]/autoscaling/page.tsx",
+    "apps/web/src/components/CommandPalette.tsx",
+    "apps/web/src/app/clusters/[id]/layout.tsx"
+  ],
+  "lines_changed": 1150,
+  "backend": {
+    "score": 8,
+    "issues": [
+      {
+        "severity": "HIGH",
+        "description": "pods.listStored cache TTL is 15_000 (seconds) = 4+ hours. All other routers use 15-30 seconds. Redis setEx() takes seconds, not ms. This will serve stale pod data for hours.",
+        "file": "apps/api/src/routers/pods.ts",
+        "line": 79,
+        "fix": "Change `15_000` to `15` (15 seconds) to match existing pods.list pattern on line 18"
+      },
+      {
+        "severity": "MEDIUM",
+        "description": "logs.stream procedure has no .output() schema. All other procedures in this router and other routers use explicit output schemas for type safety and OpenAPI generation.",
+        "file": "apps/api/src/routers/logs.ts",
+        "line": 283,
+        "fix": "Add .output(z.object({ lines: z.array(z.string()), podName: z.string(), container: z.string().nullable(), timestamp: z.string() }))"
+      },
+      {
+        "severity": "MEDIUM",
+        "description": "pods.listStored has no .output() schema. Missing output validation means no type safety guarantee for the frontend and no OpenAPI docs.",
+        "file": "apps/api/src/routers/pods.ts",
+        "line": 71,
+        "fix": "Add explicit .output() Zod schema matching the return shape { pods: z.array(...), offline: z.boolean(), lastSeen: z.string().nullable() }"
+      },
+      {
+        "severity": "LOW",
+        "description": "services.listByCluster is an exact duplicate of services.list — same input, same logic, same output. Creates maintenance burden for zero benefit.",
+        "file": "apps/api/src/routers/services.ts",
+        "line": 79,
+        "fix": "Consider making listByCluster delegate to the list procedure internally, or remove it entirely since the frontend uses services.list"
+      },
+      {
+        "severity": "LOW",
+        "description": "logs.stream procedure is added but not used by any frontend page (logs page uses logs.get and logs.pods). Dead code until consumed.",
+        "file": "apps/api/src/routers/logs.ts",
+        "line": 283,
+        "fix": "Either wire frontend to use logs.stream or document as planned future use"
+      }
+    ]
+  },
+  "frontend": {
+    "score": 8,
+    "issues": [
+      {
+        "severity": "MEDIUM",
+        "description": "PIPE-005 Visual Anti-Pattern: Deployments ready column shows 0/0 in GREEN. Logic `const ok = a === b` treats 0/0 as healthy. Zero replicas with zero ready is not a success state.",
+        "file": "apps/web/src/app/clusters/[id]/deployments/page.tsx",
+        "line": 56,
+        "fix": "Change to: `const ok = a === b && Number(a) > 0` — show muted/dim color for 0/0"
+      },
+      {
+        "severity": "MEDIUM",
+        "description": "Unused variable `podOptions` in logs page. Assigned via useMemo but never referenced — `pods` is used directly everywhere.",
+        "file": "apps/web/src/app/clusters/[id]/logs/page.tsx",
+        "line": 31,
+        "fix": "Remove `const podOptions = useMemo(() => pods, [pods])` — it's dead code"
+      },
+      {
+        "severity": "MEDIUM",
+        "description": "Unused import `useParams` in CommandPalette.tsx. Only usePathname and useRouter are actually used.",
+        "file": "apps/web/src/components/CommandPalette.tsx",
+        "line": 5,
+        "fix": "Remove `useParams` from the import"
+      },
+      {
+        "severity": "LOW",
+        "description": "Events page mobileCard prop has inconsistent indentation (6 spaces vs 8 spaces for sibling props). Cosmetic but violates code style.",
+        "file": "apps/web/src/app/clusters/[id]/events/page.tsx",
+        "line": 161,
+        "fix": "Align mobileCard indentation with other DataTable props (8 spaces)"
+      },
+      {
+        "severity": "LOW",
+        "description": "Multiple pages use unsafe cast `(dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials` — repeated 7+ times across cluster pages. Should be a typed helper or the clusters.get output schema should include hasCredentials.",
+        "file": "apps/web/src/app/clusters/[id]/deployments/page.tsx",
+        "line": 110,
+        "fix": "Extract to a shared hook like `useClusterCredentials(id)` or add hasCredentials to the tRPC output type"
+      },
+      {
+        "severity": "LOW",
+        "description": "Log viewer line coloring uses broad regex `/error|fatal|panic/i` which would highlight lines containing words like 'terror', 'waterfall', etc. False positive risk.",
+        "file": "apps/web/src/app/clusters/[id]/logs/page.tsx",
+        "line": 214,
+        "fix": "Use word-boundary matching: `/\\b(error|fatal|panic)\\b/i`"
+      },
+      {
+        "severity": "NITPICK",
+        "description": "Keyboard shortcut keys 1-9 in layout.tsx could conflict with browser shortcuts in some locales. Consider showing shortcut hints in the tab UI.",
+        "file": "apps/web/src/app/clusters/[id]/layout.tsx",
+        "line": 50,
+        "fix": "No action needed — modifier check already prevents conflicts. Consider adding visual hint."
+      }
+    ]
+  },
+  "criticalFindings": [],
+  "architectureCheck": {
+    "migrateCallInServerTs": false,
+    "helmValuesOk": true,
+    "notes": "server.ts has only comments about migrate being removed — correct. No runtime schema changes."
+  },
+  "e2eCheck": {
+    "orphanedTests": false,
+    "missingTests": true,
+    "notes": "No E2E tests exist for new Phase 2 features (deployments table, services table, namespaces table, logs viewer, autoscaling page, keyboard shortcuts 1-9/[/], command palette cluster tabs). Existing keyboard-shortcuts.spec.ts only tests ? modal. Missing test coverage does not block since these are new pages replacing placeholder stubs, but should be added."
+  },
+  "notes": "Overall solid Phase 2 implementation. Backend adds useful procedures with proper auth (protectedProcedure), good error handling, and caching. Frontend follows existing tRPC patterns correctly (trpc.router.method.useQuery). One HIGH issue: pods.listStored has 15,000 second cache TTL (should be 15s). Three MEDIUM issues: PIPE-005 green-on-zero visual bug, unused variable, unused import. Architecture check passes — no migrate() calls, no schema conflicts. Frontend correctly uses existing list procedures rather than the new listByCluster/listStored. Recommend fixing the HIGH and MEDIUM issues before merge.",
+  "env_blocked_items": [],
+  "findings": [
+    {"severity": "HIGH", "description": "pods.listStored cache TTL 15_000 seconds (4+ hrs) — should be 15", "file": "apps/api/src/routers/pods.ts", "line": 79},
+    {"severity": "MEDIUM", "description": "PIPE-005: Deployments ready 0/0 shown in green", "file": "apps/web/src/app/clusters/[id]/deployments/page.tsx", "line": 56},
+    {"severity": "MEDIUM", "description": "Unused podOptions variable in logs page", "file": "apps/web/src/app/clusters/[id]/logs/page.tsx", "line": 31},
+    {"severity": "MEDIUM", "description": "Unused useParams import in CommandPalette", "file": "apps/web/src/components/CommandPalette.tsx", "line": 5},
+    {"severity": "MEDIUM", "description": "Missing .output() schema on logs.stream", "file": "apps/api/src/routers/logs.ts", "line": 283},
+    {"severity": "MEDIUM", "description": "Missing .output() schema on pods.listStored", "file": "apps/api/src/routers/pods.ts", "line": 71},
+    {"severity": "LOW", "description": "services.listByCluster is duplicate of services.list", "file": "apps/api/src/routers/services.ts", "line": 79},
+    {"severity": "LOW", "description": "logs.stream added but unused by frontend", "file": "apps/api/src/routers/logs.ts", "line": 283},
+    {"severity": "LOW", "description": "Events page mobileCard indentation inconsistency", "file": "apps/web/src/app/clusters/[id]/events/page.tsx", "line": 161},
+    {"severity": "LOW", "description": "Repeated unsafe hasCredentials cast across 7+ files", "file": "apps/web/src/app/clusters/[id]/deployments/page.tsx", "line": 110},
+    {"severity": "LOW", "description": "Log line regex matches partial words (terror, waterfall)", "file": "apps/web/src/app/clusters/[id]/logs/page.tsx", "line": 214}
+  ]
+}

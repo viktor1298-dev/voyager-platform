@@ -1,0 +1,105 @@
+{
+  "version": "v194-phase1",
+  "reviewer": "Lior",
+  "score": 7,
+  "findings": [
+    {
+      "severity": "HIGH",
+      "description": "New TypeScript errors: 'claude' renamed to 'anthropic' in PROVIDERS array but UiAiProvider type ('claude' | 'openai') not updated — 3 TS errors",
+      "file": "apps/web/src/app/settings/page.tsx",
+      "line": 35
+    },
+    {
+      "severity": "HIGH",
+      "description": "E2E test bug-192-001.spec.ts will break: expects page.url().toContain('/anomalies') but /anomalies now redirects to /alerts",
+      "file": "tests/e2e/bug-192-001.spec.ts",
+      "line": 27
+    },
+    {
+      "severity": "MEDIUM",
+      "description": "E2E test k-p2-features.spec.ts 'settings tabs: 4 tabs' will break: old Radix Tabs (role=tab) removed, new layout uses plain Link elements without role=tab",
+      "file": "tests/e2e/k-p2-features.spec.ts",
+      "line": 64
+    },
+    {
+      "severity": "MEDIUM",
+      "description": "PIPE-005 visual anti-pattern: animationFillMode 'both' on animate-slide-up which starts with opacity:0 — can cause flash on first render",
+      "file": "apps/web/src/app/page.tsx",
+      "line": 482
+    },
+    {
+      "severity": "MEDIUM",
+      "description": "Dead code in cluster overview: PodsGroupedByNamespace, NamespacePodGroup, formatMemoryKi, DeletePodDialog components + podsQuery (makes unnecessary API call) + pod-related state — all extracted to /pods/page.tsx but not cleaned from overview",
+      "file": "apps/web/src/app/clusters/[id]/page.tsx",
+      "line": 344
+    },
+    {
+      "severity": "LOW",
+      "description": "Missing aria-current on cluster tab links — settings layout has aria-current={isActive ? 'page' : undefined} but cluster layout doesn't",
+      "file": "apps/web/src/app/clusters/[id]/layout.tsx",
+      "line": 115
+    },
+    {
+      "severity": "LOW",
+      "description": "Duplicated data-fetching logic: each cluster tab page independently fetches clusters.get + clusters.live (same queries as layout). Should share via context or layout props",
+      "file": "apps/web/src/app/clusters/[id]/nodes/page.tsx",
+      "line": 141
+    },
+    {
+      "severity": "LOW",
+      "description": "nuqs package installed (v2.8.9) but never imported or used anywhere in the codebase — dead dependency",
+      "file": "apps/web/package.json",
+      "line": 37
+    }
+  ],
+  "approved": false,
+  "verdict": "CHANGES_REQUESTED",
+  "test_coverage_checked": true,
+  "files_reviewed": [
+    "apps/web/src/config/navigation.ts",
+    "apps/web/src/components/Sidebar.tsx",
+    "apps/web/src/components/AppLayout.tsx",
+    "apps/web/src/components/Breadcrumbs.tsx",
+    "apps/web/src/components/providers.tsx",
+    "apps/web/src/lib/animation-constants.ts",
+    "apps/web/src/app/clusters/[id]/layout.tsx",
+    "apps/web/src/app/clusters/[id]/page.tsx",
+    "apps/web/src/app/clusters/[id]/nodes/page.tsx",
+    "apps/web/src/app/clusters/[id]/pods/page.tsx",
+    "apps/web/src/app/clusters/[id]/events/page.tsx",
+    "apps/web/src/app/clusters/[id]/metrics/page.tsx",
+    "apps/web/src/app/clusters/[id]/deployments/page.tsx",
+    "apps/web/src/app/clusters/[id]/services/page.tsx",
+    "apps/web/src/app/clusters/[id]/namespaces/page.tsx",
+    "apps/web/src/app/clusters/[id]/logs/page.tsx",
+    "apps/web/src/app/clusters/[id]/autoscaling/page.tsx",
+    "apps/web/src/app/settings/layout.tsx",
+    "apps/web/src/app/settings/page.tsx",
+    "apps/web/src/app/settings/users/page.tsx",
+    "apps/web/src/app/settings/teams/page.tsx",
+    "apps/web/src/app/settings/permissions/page.tsx",
+    "apps/web/src/app/settings/webhooks/page.tsx",
+    "apps/web/src/app/settings/features/page.tsx",
+    "apps/web/src/app/settings/audit/page.tsx",
+    "apps/web/src/app/users/page.tsx",
+    "apps/web/src/app/teams/page.tsx",
+    "apps/web/src/app/permissions/page.tsx",
+    "apps/web/src/app/webhooks/page.tsx",
+    "apps/web/src/app/features/page.tsx",
+    "apps/web/src/app/audit/page.tsx",
+    "apps/web/src/app/system-health/page.tsx",
+    "apps/web/src/app/anomalies/page.tsx",
+    "apps/web/src/app/feature-flags/page.tsx",
+    "apps/web/src/app/page.tsx",
+    "apps/web/src/app/alerts/page.tsx",
+    "apps/web/package.json",
+    "apps/web/src/lib/ai-keys-contract.ts",
+    "tests/e2e/bug-192-001.spec.ts",
+    "tests/e2e/k-p2-features.spec.ts",
+    "tests/e2e/navigation.spec.ts",
+    "tests/e2e/users.spec.ts"
+  ],
+  "lines_changed": 9594,
+  "env_blocked_items": [],
+  "timestamp": "2026-03-07T04:05:00+02:00"
+}

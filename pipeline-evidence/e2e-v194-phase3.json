@@ -1,0 +1,122 @@
+{
+  "version": "v194-phase3",
+  "totalTests": 144,
+  "passed": 131,
+  "failed": 7,
+  "skipped": 28,
+  "verdict": "FAIL",
+  "gate": "0 failures required",
+  "timestamp": "2026-03-07T07:22:00.000Z",
+  "phase": "phase3",
+  "runner": "yuval",
+  "baseUrl": "http://voyager-platform.voyagerlabs.co",
+  "playwrightVersion": "1.58.2",
+  "batchBreakdown": {
+    "phase3Animation": { "total": 13, "passed": 11, "failed": 2, "skipped": 0 },
+    "regression1": { "total": 87, "passed": 77, "failed": 4, "skipped": 6 },
+    "regression2": { "total": 66, "passed": 43, "failed": 1, "skipped": 22 }
+  },
+  "failures": [
+    {
+      "test": "phase3-v194-animation.spec.ts — Phase 3 — Reduced Motion Compliance: page loads without error under prefers-reduced-motion: reduce",
+      "file": "phase3-v194-animation.spec.ts",
+      "line": 318,
+      "error": "locator('main, [role=main], body > div').first() resolved to <div hidden=''>",
+      "hypothesis": "The app uses Next.js SPA routing — there is no <main> element. The fallback selector also resolves to a hidden Next.js portal div. The page renders correctly (other tests pass), but this test has a flawed selector.",
+      "classification": "test-bug",
+      "suggested_fix": "Replace locator('main').first() with a content-specific selector like page.locator('[data-testid=\"app-shell\"], .sidebar, nav').first() or use page.locator('body').toBeVisible().",
+      "severity": "test-bug",
+      "regression": false
+    },
+    {
+      "test": "phase3-v194-animation.spec.ts — Phase 3 — Mobile Drawer (Vaul): mobile viewport: page renders correctly without overflow",
+      "file": "phase3-v194-animation.spec.ts",
+      "line": 504,
+      "error": "locator('main, [role=main], body > div').first() resolved to <div hidden=''>",
+      "hypothesis": "Same root cause as reduced-motion test above. The overflow check itself passed (bodyWidth=390px, no overflow), but the subsequent 'main content visible' assertion uses the same flawed <main> selector.",
+      "classification": "test-bug",
+      "suggested_fix": "Use page.locator('[data-testid*=\"sidebar\"], [data-testid*=\"layout\"]').first().toBeVisible() instead of locator('main')",
+      "severity": "test-bug",
+      "regression": false
+    },
+    {
+      "test": "phase1-v194.spec.ts — Phase 1 — Sidebar Navigation: sidebar has Events link",
+      "file": "phase1-v194.spec.ts",
+      "line": 49,
+      "error": "locator('aside, [role=complementary]').first().getByRole('link', { name: /events/i }).first() — element(s) not found",
+      "hypothesis": "REGRESSION — Phase 2 evidence shows this test passed (20/21 in phase1Regression). Screenshot confirms sidebar still shows 'AI Assistant' and 'Dashboards' instead of 'Events' and 'Logs'. Phase 3 appears to have reverted or broken the sidebar nav item renaming from Phase 1.",
+      "classification": "code-bug",
+      "suggested_fix": "Verify sidebar nav items in Phase 3 deployment. The sidebar should have Events (replacing AI Assistant) and Logs links per the Phase 1 spec. Screenshot evidence: sidebar shows 'AI Assistant' and 'Dashboards' nav items.",
+      "severity": "CRITICAL — Phase 1 regression",
+      "regression": true,
+      "previousStatus": "PASS in e2e-v194-phase2.json (phase1Regression.passed=20/21)"
+    },
+    {
+      "test": "phase1-v194.spec.ts — Phase 1 — Sidebar Navigation: sidebar has Logs link",
+      "file": "phase1-v194.spec.ts",
+      "line": 56,
+      "error": "locator('aside, [role=complementary]').first().getByRole('link', { name: /^logs$/i }).first() — element(s) not found",
+      "hypothesis": "REGRESSION — Same as Events link above. Sidebar shows 'Dashboards' instead of 'Logs'. This is the same Phase 1 regression.",
+      "classification": "code-bug",
+      "suggested_fix": "Same fix as Events link — restore sidebar nav items 'Events' and 'Logs' that were implemented in Phase 1.",
+      "severity": "CRITICAL — Phase 1 regression",
+      "regression": true,
+      "previousStatus": "PASS in e2e-v194-phase2.json"
+    },
+    {
+      "test": "responsive.spec.ts — Responsive — Mobile Viewport: mobile nav first tap should navigate immediately",
+      "file": "responsive.spec.ts",
+      "line": 56,
+      "error": "getByRole('link', { name: /^settings$/i }) resolved to 2 elements (strict mode violation)",
+      "hypothesis": "FLAKY — Failed in Round3 AND Phase1. Two Settings links exist in DOM (sidebar nav + mobile header). Strict mode violation. The sidebar now likely shows both a data-testid='nav-item-settings' and a mobile title='Settings' link.",
+      "classification": "test-bug",
+      "suggested_fix": "Use page.getByTestId('nav-item-settings') instead of getByRole('link', { name: /^settings$/i }) to avoid the 2-element strict mode violation.",
+      "severity": "test-bug",
+      "regression": false,
+      "flaky": true,
+      "failedInVersions": ["v194-round3", "v194-phase1", "v194-phase3"]
+    },
+    {
+      "test": "responsive.spec.ts — Responsive — Mobile Viewport: mobile nav tap lands on target route without login returnUrl drift",
+      "file": "responsive.spec.ts",
+      "line": 74,
+      "error": "getByRole('link', { name: /^events$/i }) — element(s) not found",
+      "hypothesis": "REGRESSION linked to sidebar Events/Logs regression. This test navigates to /events via sidebar, but the sidebar no longer has an 'Events' nav item (shows 'AI Assistant' instead). Same root cause as phase1-v194 failures.",
+      "classification": "code-bug",
+      "suggested_fix": "Fix sidebar nav items to restore Events/Logs links (same fix as phase1-v194 failures above).",
+      "severity": "CRITICAL — Phase 1 regression (cascading)",
+      "regression": true
+    },
+    {
+      "test": "optimistic-ui.spec.ts — Optimistic UI + Motion Animations: page navigation renders with transition",
+      "file": "optimistic-ui.spec.ts",
+      "line": 16,
+      "error": "locator('h1:has-text(\"Alerts\")') — element(s) not found",
+      "hypothesis": "FLAKY — Failed in Round3 AND Phase1. The test navigates to /alerts and expects h1 containing 'Alerts'. The Alerts page may render the title differently (e.g. not as h1, or with different capitalization, or the nav click goes to a different route). Could be timing issue.",
+      "classification": "test-bug",
+      "suggested_fix": "Use waitForURL(/\\/alerts/) after navigation instead of h1:has-text. The h1 may not exist on the Alerts page — use [data-testid='page-title'] or page.locator('h1, h2').first() with a broader selector.",
+      "severity": "test-bug",
+      "regression": false,
+      "flaky": true,
+      "failedInVersions": ["v194-round3", "v194-phase1", "v194-phase3"]
+    }
+  ],
+  "failureSummary": {
+    "testBugs": 4,
+    "codeRegressions": 3,
+    "flaky": 2,
+    "newRegressions": 3,
+    "criticalRegressions": [
+      "sidebar Events link missing (Phase 1 regression introduced by Phase 3)",
+      "sidebar Logs link missing (Phase 1 regression introduced by Phase 3)",
+      "responsive Events nav fails due to missing Events sidebar link"
+    ]
+  },
+  "notes": {
+    "phase3AnimationTests": "11/13 passed. 2 failures are test-bugs (wrong selector for Next.js SPA layout — no <main> element exists)",
+    "sidebarRegression": "CRITICAL: Phase 3 appears to have reverted sidebar nav items. Screenshot shows 'AI Assistant' and 'Dashboards' in sidebar instead of 'Events' and 'Logs' (Phase 1 nav items). This passed in phase2 evidence.",
+    "flakies": "optimistic-ui.spec.ts:9 and responsive.spec.ts:45 are confirmed flaky (3 consecutive version failures)",
+    "byokSkipped": "byok-flow.spec.ts — 1 test skipped (env-blocked: DB schema drift, known since phase2)",
+    "podActionsSkipped": "pod-actions.spec.ts — 4 tests skipped (no live K8s pods, expected for test environment)"
+  }
+}

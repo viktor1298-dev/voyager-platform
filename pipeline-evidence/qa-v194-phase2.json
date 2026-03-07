@@ -1,0 +1,170 @@
+{
+  "version": "v194-phase2",
+  "qa": "Mai",
+  "timestamp": "2026-03-07T07:35:00+02:00",
+  "score": 8.2,
+  "verdict": "FAIL",
+  "gate": 8.5,
+  "desktop": {
+    "score": 8.2,
+    "findings": [
+      {
+        "id": "PASS-1",
+        "severity": "pass",
+        "area": "Deployments tab",
+        "result": "Real deployment data shown — 7 deployments with Name, Namespace, Ready, Image, Status, Age. Namespace filter works (tested 'voyager' filter: 5/5 deployments shown)"
+      },
+      {
+        "id": "PASS-2",
+        "severity": "pass",
+        "area": "Services tab",
+        "result": "Real service data shown — 9 services with Name, Type, ClusterIP, Ports, Age. NOT a stub."
+      },
+      {
+        "id": "PASS-3",
+        "severity": "pass",
+        "area": "Namespaces tab",
+        "result": "6 namespaces listed: default, ingress-nginx, kube-node-lease, kube-public, kube-system, voyager. All Active."
+      },
+      {
+        "id": "PASS-4",
+        "severity": "pass",
+        "area": "Pods tab",
+        "result": "13 pods shown, grouped by namespace (ingress-nginx:1, kube-system:7, voyager:5). All Running."
+      },
+      {
+        "id": "INFO-4",
+        "severity": "info",
+        "area": "Pods tab - offline banner",
+        "result": "No offline fallback banner visible — cluster IS online. Acceptable behavior. Banner likely only shows when cluster is offline."
+      },
+      {
+        "id": "PASS-5",
+        "severity": "pass",
+        "area": "Events tab",
+        "result": "48 events shown, sorted newest first (~27m ago). Live blue dot indicator visible. Pagination: 1-25 of 48."
+      },
+      {
+        "id": "PASS-6",
+        "severity": "pass",
+        "area": "Logs tab",
+        "result": "Pod selector dropdown with 13 pods. Switching pods works — voyager-api shows real JSON API logs. Auto-scroll and line count controls present."
+      },
+      {
+        "id": "PASS-7",
+        "severity": "pass",
+        "area": "Autoscaling tab",
+        "result": "Graceful empty state: 'No autoscaling configured. Karpenter is not installed or has no NodePools configured for this cluster.' — correct for minikube."
+      },
+      {
+        "id": "PASS-8",
+        "severity": "pass",
+        "area": "Metrics tab",
+        "result": "'Collecting metrics data...' state shown with proper message. NOT a blank stub. Time range selectors and metric type toggles all present."
+      },
+      {
+        "id": "PASS-9",
+        "severity": "pass",
+        "area": "Command Palette",
+        "result": "Cmd+K opens palette. 'Cluster Tabs' section shows all 10 tabs: Overview(1), Nodes(2), Pods(3), Deployments(4), Services(5), Namespaces(6), Events(7), Logs(8), Metrics(9), Autoscaling(—). Also shows Navigation, Clusters, Resources, Actions groups."
+      },
+      {
+        "id": "PASS-10",
+        "severity": "pass",
+        "area": "Keyboard shortcuts 1-9",
+        "result": "Keys 1-9 navigate to respective tabs (verified: key 1 → Overview, key 4 → Deployments). Command palette also opens simultaneously — minor UX quirk but navigation works."
+      },
+      {
+        "id": "PASS-11",
+        "severity": "pass",
+        "area": "Keyboard shortcuts [ and ]",
+        "result": "[ navigates to previous tab (Deployments → Pods), ] navigates to next tab (Pods → Deployments). Works correctly."
+      },
+      {
+        "id": "BUG-1",
+        "severity": "high",
+        "area": "Console errors — 401 Unauthorized storm",
+        "result": "HUNDREDS of 401 Unauthorized errors from tRPC background polling endpoints: clusters.list, health.status, presence.subscribe, presence.heartbeat, clusters.live, events.list, alerts.unacknowledgedCount, metrics.currentStats, presence.getOnlineUsers. Auth token not being properly maintained for subscription/polling connections. Plus ERR_INCOMPLETE_CHUNKED_ENCODING on presence.subscribe. UI still functions but backend is spamming retries."
+      },
+      {
+        "id": "BUG-2",
+        "severity": "medium",
+        "area": "Sidebar composition (Phase 1 regression)",
+        "result": "Sidebar shows: Dashboard, Clusters, Alerts, Events, Logs, Settings. Expected per Phase 1 spec: Dashboard, Clusters, Alerts, AI Assistant, Dashboards, Settings. Events and Logs present instead of AI Assistant and Dashboards. The 6-item count matches but composition diverges from spec."
+      },
+      {
+        "id": "PASS-12",
+        "severity": "pass",
+        "area": "Phase 1 — Cluster quick-links",
+        "result": "Sidebar shows CLUSTERS section with prod-cluster-eks and test-cluster-minikube as quick-links. /clusters/{id} navigation works correctly."
+      },
+      {
+        "id": "PASS-13",
+        "severity": "pass",
+        "area": "Phase 1 — Settings tabs",
+        "result": "/settings/users ✅, /settings/teams ✅. Settings tabs: General, Users, Teams, Permissions, Webhooks, Feature Flags, Audit Log all present."
+      },
+      {
+        "id": "PASS-14",
+        "severity": "pass",
+        "area": "Phase 1 — Breadcrumbs",
+        "result": "Breadcrumbs correct on all tested pages: Home > Clusters > test-cluster-minikube > [Tab], Home > Settings > Users, Home > Settings > Teams."
+      }
+    ]
+  },
+  "regressions": [
+    {
+      "id": "REG-1",
+      "area": "Sidebar navigation",
+      "description": "Sidebar shows Events+Logs instead of expected AI Assistant+Dashboards. Phase 1 spec says 6 items: Dashboard, Clusters, Alerts, AI Assistant, Dashboards, Settings. Current: Dashboard, Clusters, Alerts, Events, Logs, Settings."
+    },
+    {
+      "id": "REG-2",
+      "area": "Console 401 storm",
+      "description": "Continuous 401 Unauthorized errors on all tRPC background endpoints. Session auth not maintained for subscription/polling connections. This is a backend auth regression that degrades performance and will exhaust clients."
+    }
+  ],
+  "checks": [
+    "Deployments tab - real data with namespace filter",
+    "Services tab - real data, not stub",
+    "Namespaces tab - namespace list with status",
+    "Pods tab - pod data grouped by namespace",
+    "Pods tab - offline banner check (N/A, cluster online)",
+    "Events tab - live indicator, sorted newest first",
+    "Logs tab - pod selector, log output on pod switch",
+    "Autoscaling tab - graceful empty state",
+    "Metrics tab - collecting state, not blank stub",
+    "Command Palette - Cluster Tabs section with shortcuts",
+    "Keyboard shortcuts 1-9 tab navigation",
+    "Keyboard shortcuts [ and ] prev/next navigation",
+    "Sidebar 6 items check (count OK, composition differs)",
+    "Cluster quick-links in sidebar",
+    "Settings tabs /settings/users, /settings/teams",
+    "Breadcrumbs on cluster detail and settings pages",
+    "Browser console error check"
+  ],
+  "failures": [
+    "BUG-1: Hundreds of 401 Unauthorized console errors from tRPC background polling — auth not maintained for subscriptions (HIGH severity)",
+    "BUG-2: Sidebar shows Events+Logs instead of AI Assistant+Dashboards vs Phase 1 spec (MEDIUM severity — Phase 1 regression)"
+  ],
+  "screenshots": [
+    "screenshots/v194-phase2-05-deployments.png",
+    "screenshots/v194-phase2-06-deployments-ns-filter.png",
+    "screenshots/v194-phase2-07-services.png",
+    "screenshots/v194-phase2-08-namespaces.png",
+    "screenshots/v194-phase2-09-pods.png",
+    "screenshots/v194-phase2-10-events.png",
+    "screenshots/v194-phase2-11-logs.png",
+    "screenshots/v194-phase2-11b-logs-voyager-api.png",
+    "screenshots/v194-phase2-12-autoscaling.png",
+    "screenshots/v194-phase2-13-metrics.png",
+    "screenshots/v194-phase2-14-command-palette.png",
+    "screenshots/v194-phase2-15-keyboard-1.png",
+    "screenshots/v194-phase2-16-settings-users.png",
+    "screenshots/v194-phase2-17-settings-teams.png",
+    "screenshots/v194-phase2-18-clusters-list.png",
+    "screenshots/v194-phase2-19-cluster-quicklink.png",
+    "screenshots/v194-phase2-20-final-overview.png"
+  ],
+  "notes": "Phase 2 feature implementation is excellent — all 10 cluster tabs have real data or appropriate empty states. Command palette, keyboard shortcuts ([, ], 1-9), and breadcrumbs all work correctly. The gate FAILS on: (1) high-severity 401 auth storm in browser console from background tRPC polling, (2) sidebar shows Events+Logs instead of AI Assistant+Dashboards vs Phase 1 spec. The 401s in particular indicate a backend auth regression that could affect real-time features under load."
+}

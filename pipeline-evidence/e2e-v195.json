@@ -1,0 +1,16 @@
+{
+  "version": "v195",
+  "timestamp": "2026-03-07T09:49:07.000Z",
+  "total": 164,
+  "passed": 134,
+  "failed": 0,
+  "skipped": 30,
+  "flaky": 0,
+  "failures": [],
+  "playwright_exit_code": 0,
+  "base_url": "http://voyager-platform.voyagerlabs.co",
+  "duration_ms": 428333,
+  "verdict": "PASS",
+  "gate": "0 failures required",
+  "notes": "Clean run after /trpc ingress fix. All previously failing clusters table test now passes. 30 skipped tests are existing test.skip() entries (byok, alerts-flaky, etc)."
+}

@@ -1,0 +1,134 @@
+{
+  "score": 4,
+  "verdict": "CHANGES_REQUESTED",
+  "test_coverage_checked": true,
+  "files_reviewed": [
+    "apps/web/src/components/Sidebar.tsx",
+    "apps/web/src/app/clusters/[id]/layout.tsx",
+    "apps/web/src/components/DataTable.tsx",
+    "apps/web/src/components/AnimatedStatCount.tsx",
+    "apps/web/src/components/MobileDrawer.tsx",
+    "apps/web/src/components/MotionButton.tsx",
+    "apps/web/src/components/providers.tsx",
+    "apps/web/src/components/AppLayout.tsx",
+    "apps/web/src/components/ProviderLogo.tsx",
+    "apps/web/src/app/clusters/[id]/logs/page.tsx",
+    "apps/web/src/app/clusters/[id]/page.tsx",
+    "apps/web/src/app/clusters/page.tsx",
+    "apps/web/src/components/dashboard/widgets/StatCardsWidget.tsx",
+    "apps/web/src/components/shared/DataTable.tsx",
+    "apps/web/src/components/ResponsiveTable.tsx",
+    "apps/web/src/lib/animation-constants.ts",
+    "apps/web/package.json",
+    "BOARD.md"
+  ],
+  "lines_changed": 591,
+  "env_blocked_items": [],
+  "commit": "a4eb476",
+  "branch": "main",
+  "phase": "phase3",
+  "reviewer": "lior",
+  "timestamp": "2026-03-07T08:43:00+02:00",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "id": "C1",
+      "description": "LazyMotion strict + motion.* = runtime crash. All 9 component files import `motion` from 'motion/react' and use motion.div/motion.aside/motion.tr etc. With `<LazyMotion features={domAnimation} strict>` in providers.tsx, EVERY motion.* element will throw a runtime error. Must use `m.*` from 'motion/react-m' instead, or remove `strict` prop.",
+      "file": "apps/web/src/components/providers.tsx",
+      "line": 72,
+      "affected_files": [
+        "Sidebar.tsx", "AppLayout.tsx", "DataTable.tsx", "AnimatedStatCount.tsx",
+        "MotionButton.tsx", "ProviderLogo.tsx", "layout.tsx", "page.tsx", "StatCardsWidget.tsx"
+      ],
+      "fix": "Option A (recommended): Change all `import { motion } from 'motion/react'` to `import * as m from 'motion/react-m'` and replace motion.div → m.div, motion.aside → m.aside, etc. in all 9 files. Option B: Remove `strict` from LazyMotion (loses bundle-size enforcement)."
+    },
+    {
+      "severity": "HIGH",
+      "id": "H1",
+      "description": "AnimatedStatCount uses imperative animate() which bypasses MotionConfig reducedMotion='user'. Users with prefers-reduced-motion will still see count-up animations.",
+      "file": "apps/web/src/components/AnimatedStatCount.tsx",
+      "line": 35,
+      "fix": "Add `const prefersReduced = useReducedMotion()` from motion/react. If true, skip animate() and render the final value immediately."
+    },
+    {
+      "severity": "HIGH",
+      "id": "H2",
+      "description": "DataTable AnimatePresence uses mode='popLayout' but wraps div>table structure. popLayout requires layout animations and can cause visual glitches with table elements. The spec calls for mode='wait' on tab content switches.",
+      "file": "apps/web/src/components/DataTable.tsx",
+      "line": 282,
+      "fix": "Change `<AnimatePresence mode=\"popLayout\">` to `<AnimatePresence mode=\"wait\">` to match spec P3-009 and avoid layout conflicts with table elements."
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "M1",
+      "description": "Sidebar uses two layoutId animations ('sidebar-active-bg' + 'sidebar-active-border') with different spring configs (stiffness:400, damping:35) than the spec's spring(300,30). While the snappier config works for small elements, it deviates from animation-constants.ts EASING.spring spec.",
+      "file": "apps/web/src/components/Sidebar.tsx",
+      "line": 117,
+      "fix": "Use EASING.snappy from animation-constants.ts for consistency: `transition={EASING.snappy}` (which is stiffness:500, damping:40), or document the rationale for the custom values."
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "M2",
+      "description": "DataTable rowVariants defines inline easing [0.25, 0.1, 0.25, 1] instead of using EASING.default from animation-constants.ts. Duration 0.2 also duplicates DURATION.normal.",
+      "file": "apps/web/src/components/DataTable.tsx",
+      "line": 245,
+      "fix": "Import EASING and DURATION from '@/lib/animation-constants' and use them: `transition: { duration: DURATION.normal, ease: EASING.default }`"
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "M3",
+      "description": "AnimatedStatCount ref merge pattern is fragile — runs on every render without deps, uses MutableRefObject cast, and doesn't handle ref cleanup.",
+      "file": "apps/web/src/components/DataTable.tsx",
+      "line": 72,
+      "fix": "Use a callback ref or `useMergeRefs` pattern from a utility library."
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "M4",
+      "description": "No E2E test coverage for Phase 3 animations. m-p3-features.spec.ts covers M-P3 (Metrics), not P3 (animations). New components AnimatedStatCount, MobileDrawer, MotionButton have zero test coverage.",
+      "file": "tests/e2e/",
+      "line": 0,
+      "fix": "Add basic E2E smoke tests for sidebar collapse animation, tab transitions, and drawer open/close. At minimum, verify sidebar data-testid='sidebar' changes width on collapse toggle click."
+    },
+    {
+      "severity": "LOW",
+      "id": "L1",
+      "description": "MotionButton component is exported but only used in DataTable PaginationBtn inline. The reusable component is never imported elsewhere.",
+      "file": "apps/web/src/components/MotionButton.tsx",
+      "line": 1,
+      "fix": "Either use MotionButton in PaginationBtn and other buttons, or remove the standalone component and keep the inline pattern."
+    },
+    {
+      "severity": "LOW",
+      "id": "L2",
+      "description": "MobileDrawer is created but never imported/used anywhere in the changed files. It's a dead export until wired up.",
+      "file": "apps/web/src/components/MobileDrawer.tsx",
+      "line": 1,
+      "fix": "Wire MobileDrawer into pod detail or alert detail views, or mark as TODO with a comment."
+    },
+    {
+      "severity": "LOW",
+      "id": "L3",
+      "description": "Sidebar label AnimatePresence transition uses hardcoded duration:0.15 and custom easing instead of DURATION.fast and EASING.default from animation-constants.ts.",
+      "file": "apps/web/src/components/Sidebar.tsx",
+      "line": 132,
+      "fix": "Use DURATION.fast (which equals 0.15) from constants for consistency."
+    },
+    {
+      "severity": "NITPICK",
+      "id": "N1",
+      "description": "BOARD.md marks items as 'v0.3.1 2025-01' but date should be 2026-03 and version should match v194.",
+      "file": "BOARD.md",
+      "line": 74,
+      "fix": "Update dates and version tags to match actual release."
+    },
+    {
+      "severity": "NITPICK",
+      "id": "N2",
+      "description": "logs/page.tsx panel layout has awkward JSX nesting — inner div is opened after Panel but closed before panel resize handle, making the structure hard to follow.",
+      "file": "apps/web/src/app/clusters/[id]/logs/page.tsx",
+      "line": 103,
+      "fix": "Consider extracting the upper panel content into a separate component for readability."
+    }
+  ]
+}

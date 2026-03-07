@@ -1,0 +1,41 @@
+{
+  "version": "v193",
+  "timestamp": "2026-03-06T23:56:00+02:00",
+  "agent": "yuval (testing)",
+  "total": 115,
+  "passed": 96,
+  "failed": 1,
+  "skipped": 18,
+  "gate": "FAIL",
+  "verdict": "FAIL",
+  "exit_code": 1,
+  "base_url": "http://voyager-platform.voyagerlabs.co",
+  "duration_ms": 516000,
+  "failures": [
+    {
+      "test": "bug-192-001.spec.ts — Multiple nav cycles between /anomalies and / do not freeze",
+      "file": "tests/e2e/bug-192-001.spec.ts:92",
+      "error": "Test timeout of 45000ms exceeded — locator.fill: element detached from DOM at helpers.ts:33",
+      "classification": "test-bug",
+      "hypothesis": "beforeEach calls login() after Test 1 leaves an active session. login() navigates to /login but server detects valid session and immediately redirects → password field detaches during fill.",
+      "suggested_fix": "Add `await page.context().clearCookies()` before `page.goto('/login')` in login() helper, OR add test.use({ storageState: undefined }) to reset state between tests.",
+      "is_regression": false,
+      "is_new_test": true,
+      "git_tracked": false,
+      "note": "bug-192-001.spec.ts is UNTRACKED (not committed to git). Was not part of v192 suite. Test itself has a session isolation bug in beforeEach. NOT a code regression — v193 changes are visual-only (gauge rings, sparklines, chart quality). The underlying BUG-192-001 functionality (single nav cycle test) PASSES."
+    }
+  ],
+  "skipped_tests": [
+    "ai-context-card.spec.ts × 3 (test.skip)",
+    "byok-flow.spec.ts — Settings BYOK actions (test.skip — DB schema drift, env-blocked)",
+    "cmdk.spec.ts — navigating via palette adds to recent items (test.skip)",
+    "confirm-dialog.spec.ts × 3 (test.skip)",
+    "k-p2-features.spec.ts — pod detail sheet (test.skip)",
+    "m-p3-features.spec.ts — InlineAiTrigger click opens panel (test.skip)",
+    "multi-cluster.spec.ts — E2E-1, E2E-4, E2E-5 (test.skip)",
+    "pod-actions.spec.ts × 4 (test.skip)",
+    "tanstack-table.spec.ts — pagination controls (test.skip)"
+  ],
+  "what_changed_v193": "3 UI bugs fixed: BUG-193-001 gauge rings, BUG-193-002 sparklines, BUG-193-003 chart quality. Visual-only. No backend, no test changes.",
+  "notes": "96 tests passed (same as v192 96-test passing set). 1 failure is a test-bug in an untracked file (bug-192-001.spec.ts) — session isolation issue in beforeEach, NOT a code regression. The gate is FAIL per 0-failure rule. Recommend: fix test isolation bug (clearCookies in beforeEach) OR commit the test.skip for the multi-cycle test with explanation, then re-run."
+}

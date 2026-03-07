@@ -1,0 +1,116 @@
+{
+  "version": "v192-fix",
+  "score": 5.5,
+  "pass": false,
+  "gate": 8.5,
+  "commit": "7f6d2e8",
+  "timestamp": "2026-03-06T19:40:00.000Z",
+  "agent": "mai",
+  "tester": "Mai 🎨 Visual QA Specialist",
+  "browser": "Chromium (openclaw profile)",
+  "viewport": "1280x905",
+  "summary": "BUG-192-001 (navigation away from /anomalies) is STILL PRESENT in v192-fix. The InlineAiPanel infinite loop fix (commit 7f6d2e8) did NOT resolve the root navigation block. Sidebar clicks from /anomalies call preventDefault but do not invoke pushState — the route change never happens. All other pages work correctly.",
+
+  "primary_fix_verified": false,
+  "primary_fix_note": "BUG-192-001: After visiting /anomalies, clicking ANY sidebar link (Dashboard, Clusters, etc.) does NOT navigate away. URL stays /anomalies, page content unchanged. Confirmed via: (1) browser act click, (2) JS element.click(), (3) keyboard Enter on focused link — all fail. pushState is never called. The infinite loop is gone (stable console), but the navigation block persists.",
+
+  "bugs": [
+    {
+      "id": "BUG-192-001",
+      "severity": "critical",
+      "status": "still-present",
+      "title": "Navigation away from /anomalies is blocked",
+      "description": "Clicking any sidebar link while on /anomalies does nothing. The React Router's onClick calls preventDefault (confirmed), but history.pushState is never called. Route change does not occur. Page stays on /anomalies.",
+      "repro": "1. Navigate to /anomalies. 2. Click any sidebar link (Dashboard, Clusters, Settings, etc.). 3. Nothing happens — stays on /anomalies.",
+      "root_cause_hypothesis": "The InlineAiPanel fix (commit 7f6d2e8) stopped the infinite loop but something on the /anomalies page is still blocking navigation via React Router's internal logic. Possible useBlocker or router blocker state still active.",
+      "fix_hint": "Check if InlineAiPanel (or its parent) still has a useBlocker or router blocker hook mounted. The blocker may be preventing navigation even without the loop.",
+      "first_seen": "v191 (previous QA score 7.8/10 FAIL)"
+    },
+    {
+      "id": "BUG-TRPC-001",
+      "severity": "medium",
+      "status": "new",
+      "title": "tRPC batched route 404: events.list + ai.keySettingsStatus combo",
+      "description": "The batched tRPC call including events.list,clusters.live,clusters.list,metrics.currentStats,alerts.unacknowledgedCount,ai.keySettingsStatus returns 404. This causes polling retries on every page load.",
+      "repro": "Open browser console on any page, see repeating 404 errors for the batch endpoint.",
+      "fix_hint": "Check if ai.keySettingsStatus endpoint exists on the backend — it may be missing from the router."
+    },
+    {
+      "id": "BUG-SSE-001",
+      "severity": "low",
+      "status": "new",
+      "title": "presence.subscribe SSE stream dropping periodically",
+      "description": "ERR_INCOMPLETE_CHUNKED_ENCODING on /trpc/presence.subscribe every ~60-80 seconds. SSE reconnects automatically but causes console noise.",
+      "repro": "Open browser console, wait 2 minutes, observe periodic presence.subscribe ERR_INCOMPLETE_CHUNKED_ENCODING."
+    }
+  ],
+
+  "test_results": {
+    "dashboard": {
+      "status": "pass",
+      "notes": "Loads with real data: 1 node, 13/13 pods, 2 clusters, 12 anomalies. Stats, charts, recent events all displayed. Navigation FROM dashboard works."
+    },
+    "anomalies_page_load": {
+      "status": "pass",
+      "notes": "Page loads correctly with 12 anomalies, table with severity/type/cluster/title/detected/status columns, filter dropdowns (severity/status/cluster) all work."
+    },
+    "anomalies_navigation_away": {
+      "status": "FAIL",
+      "notes": "CRITICAL: BUG-192-001 still present. Clicking Dashboard/Clusters/Settings from sidebar while on /anomalies does NOT navigate. pushState not called."
+    },
+    "clusters_page": {
+      "status": "pass",
+      "notes": "Loads 2 clusters (prod-cluster-eks: Error, test-cluster-minikube: Healthy). Table with name/provider/health/access/version/nodes/endpoint/last-seen all working."
+    },
+    "cluster_detail": {
+      "status": "pass",
+      "notes": "Overview/Nodes/Pods/Services/Deployments/Events/Metrics tabs all work. Real data: 1 node, 13 pods across 3 namespaces (ingress-nginx, kube-system, voyager)."
+    },
+    "settings_tabs": {
+      "status": "pass",
+      "notes": "General (cluster connection, platform info), AI Configuration (BYOK form), API Tokens (9 tokens listed), Clusters — all tabs work."
+    },
+    "dark_mode": {
+      "status": "pass",
+      "notes": "Theme toggle works, dark mode renders cleanly with proper contrast."
+    },
+    "feature_flags": {
+      "status": "pass",
+      "notes": "3 flags with targeting rules and activity logs. audit_log_enabled ON, sse_subscriptions ON, webhook_deliveries_ui OFF."
+    },
+    "webhooks": {
+      "status": "pass",
+      "notes": "Empty state renders correctly with Add Webhook CTA."
+    },
+    "users": {
+      "status": "pass",
+      "notes": "2 users shown (Voyager Admin + Viewer User), user management table works."
+    },
+    "ai_assistant": {
+      "status": "pass",
+      "notes": "Page loads, shows BYOK lock state. Analyze Health, Show Recommendations, Explain Events buttons present."
+    },
+    "inline_ai_panel_loop": {
+      "status": "pass",
+      "notes": "No infinite loop observed. Console errors are stable (no rapid-fire requests from InlineAiPanel). The specific fix of commit 7f6d2e8 for the infinite loop IS working."
+    }
+  },
+
+  "scoring": {
+    "total": 5.5,
+    "breakdown": {
+      "core_navigation": "0/3 (BUG-192-001: navigation from /anomalies completely broken)",
+      "dashboard": "1/1",
+      "anomalies_page": "0.5/1 (loads OK but navigation away broken)",
+      "clusters": "1/1",
+      "cluster_detail_tabs": "1/1",
+      "settings_tabs": "0.5/0.5",
+      "dark_mode": "0.5/0.5",
+      "other_pages": "0.5/0.5 (feature flags, webhooks, users, AI assistant)",
+      "console_errors": "0/1 (2x tRPC 404 + SSE drop)",
+      "inline_loop_fix": "0/0.5 (loop fixed, but nav still broken = partial credit not given)"
+    },
+    "gate": 8.5,
+    "verdict": "FAIL"
+  }
+}
