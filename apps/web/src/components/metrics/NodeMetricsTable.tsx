@@ -1,25 +1,26 @@
 'use client'
 
 import { trpc } from '@/lib/trpc'
-import { cn } from '@/lib/utils'
-import { AlertTriangle, Server } from 'lucide-react'
+import { Server } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import type { MetricsRange } from './TimeRangeSelector'
 
 interface NodeMetricsTableProps {
   clusterId: string
-  range: string
+  range: MetricsRange
 }
 
-function getColorClass(percent: number | null | undefined): string {
-  if (percent == null) return 'var(--color-text-dim)'
-  if (percent > 85) return 'hsl(0,84%,60%)'
-  if (percent > 65) return 'hsl(48,96%,53%)'
-  return 'hsl(142,71%,45%)'
+function getColor(percent: number): string {
+  if (percent < 1) return 'var(--color-text-dim)' // idle/no data
+  if (percent > 85) return 'hsl(0,84%,60%)' // red — high
+  if (percent > 65) return 'hsl(48,96%,53%)' // yellow — warning
+  return 'hsl(142,71%,45%)' // green — normal
 }
 
 function PercentBar({ value }: { value: number | null | undefined }) {
-  const color = getColorClass(value)
-  const pct = Math.min(value ?? 0, 100)
+  const v = value ?? 0
+  const color = getColor(v)
+  const pct = Math.min(v, 100)
 
   return (
     <div className="flex items-center gap-2 min-w-[80px]">
@@ -37,22 +38,21 @@ function PercentBar({ value }: { value: number | null | undefined }) {
 }
 
 export function NodeMetricsTable({ clusterId, range }: NodeMetricsTableProps) {
-  // MX-005: Wire up nodeTimeSeries when Dima adds it — optional/conditional
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const nodeTimeSeriesQuery = (trpc.metrics as any).nodeTimeSeries?.useQuery?.(
+  const refetchInterval = 30_000
+
+  const { data: rawData, isLoading, error } = trpc.metrics.nodeTimeSeries.useQuery(
     { clusterId, range },
-    { staleTime: 30_000, retry: false },
+    { refetchInterval, staleTime: 30_000, enabled: Boolean(clusterId) },
   )
 
-  const isLoading = nodeTimeSeriesQuery?.isLoading ?? false
-  const error = nodeTimeSeriesQuery?.error ?? null
-  const data: Array<{
-    name: string
-    cpuPercent: number | null
-    memPercent: number | null
-    cpuMillicores: number | null
-    memMi: number | null
-  }> = nodeTimeSeriesQuery?.data ?? []
+  // Transform time-series arrays → latest value per node
+  const nodes = (rawData ?? []).map((node) => ({
+    name: node.nodeName,
+    cpuPercent: node.cpuValues.length > 0 ? node.cpuValues[node.cpuValues.length - 1] : 0,
+    memPercent: node.memValues.length > 0 ? node.memValues[node.memValues.length - 1] : 0,
+    cpuMillicores: node.cpuMillis.length > 0 ? node.cpuMillis[node.cpuMillis.length - 1] : 0,
+    memMi: node.memMi.length > 0 ? node.memMi[node.memMi.length - 1] : 0,
+  }))
 
   if (isLoading) {
     return (
@@ -65,8 +65,8 @@ export function NodeMetricsTable({ clusterId, range }: NodeMetricsTableProps) {
     )
   }
 
-  if (error || data.length === 0) {
-    return null // Silently hide when route doesn't exist yet
+  if (error || nodes.length === 0) {
+    return null // Silently hide when no data
   }
 
   return (
@@ -74,7 +74,7 @@ export function NodeMetricsTable({ clusterId, range }: NodeMetricsTableProps) {
       <div className="px-4 py-3 border-b border-[var(--color-border)]/50 flex items-center gap-2">
         <Server className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
         <span className="text-xs font-semibold text-[var(--color-text-primary)]">Per-Node Metrics</span>
-        <span className="text-[10px] font-mono text-[var(--color-text-muted)]">({data.length} nodes)</span>
+        <span className="text-[10px] font-mono text-[var(--color-text-muted)]">({nodes.length} nodes)</span>
       </div>
 
       <div className="overflow-x-auto">
@@ -89,7 +89,7 @@ export function NodeMetricsTable({ clusterId, range }: NodeMetricsTableProps) {
             </tr>
           </thead>
           <tbody>
-            {data.map((node) => (
+            {nodes.map((node) => (
               <tr
                 key={node.name}
                 className="border-b border-[var(--color-border)]/20 last:border-0 hover:bg-white/[0.02] transition-colors"
