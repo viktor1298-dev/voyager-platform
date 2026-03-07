@@ -1,1 +1,5 @@
-export { default } from '@/app/features/page'
+import { redirect } from 'next/navigation'
+
+export default function Page() {
+  redirect('/settings/features')
+}
