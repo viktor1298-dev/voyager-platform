@@ -603,5 +603,46 @@
     "stage": "e2e",
     "notes": "E2E run #2 in progress. Run #1: 9 failures (1 flaky, 8 test-bugs). Real bug found: aiKeys.save API 500 due to missing created_at column.",
     "was_corrected": false
+  },
+  {
+    "timestamp": "2026-03-07T07:37:27.945899",
+    "version": "v194",
+    "stage": "e2e-phase2-complete-qa-pending",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 6,
+    "board_items_remaining": 36,
+    "e2e_phase2": "PASS-16/16",
+    "qa_phase2": "pending",
+    "agents_active": [
+      "foreman",
+      "qa",
+      "testing",
+      "devops"
+    ],
+    "was_corrected": false
+  },
+  {
+    "timestamp": "2026-03-07T07:49:04.816732",
+    "version": "v194",
+    "stage": "e2e-phase2-qa-failing",
+    "verdict": "NOT_COMPLETE",
+    "gates_checked": 6,
+    "board_items_remaining": 36,
+    "e2e_phase2": "PASS-16/16",
+    "qa_phase2": "FAIL-8.2/8.5",
+    "qa_bugs": [
+      "BUG-1: 401 auth storm (HIGH)",
+      "BUG-2: sidebar regression (MEDIUM)"
+    ],
+    "agents_active": [
+      "foreman",
+      "frontend",
+      "developer",
+      "qa",
+      "testing"
+    ],
+    "foreman_action": "spawned frontend to fix BUG-2 sidebar; BUG-1 401 auth storm unaddressed",
+    "guardian_action": "noted BUG-1 in pipeline-state.json foremanNotes; no stall detected",
+    "was_corrected": false
   }
 ]

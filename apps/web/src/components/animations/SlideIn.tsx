@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'motion/react'
+import { m } from 'motion/react'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { DURATION, EASING } from '@/lib/animation-constants'
 import type { ReactNode } from 'react'
@@ -29,7 +29,7 @@ export function SlideIn({ children, className, direction = 'up', delay = 0 }: Sl
   const offset = offsets[direction]
 
   return (
-    <motion.div
+    <m.div
       className={className}
       initial={{ opacity: 0, ...offset }}
       animate={{ opacity: 1, x: 0, y: 0 }}
@@ -37,6 +37,6 @@ export function SlideIn({ children, className, direction = 'up', delay = 0 }: Sl
       transition={{ duration: DURATION.normal, ease: EASING.default, delay }}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }

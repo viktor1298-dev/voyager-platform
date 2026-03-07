@@ -15,7 +15,7 @@ import {
 import { ChevronDown, ChevronRight, ClipboardList, Search, X } from 'lucide-react'
 import { Fragment, useMemo, useState } from 'react'
 import { keepPreviousData } from '@tanstack/react-query'
-import { motion, AnimatePresence } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
 import { useRouter } from 'next/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useEffect } from 'react'
@@ -224,11 +224,11 @@ export default function SettingsAuditPage() {
                       {row.getIsExpanded() && row.original.details && (
                         <tr key={`${row.id}-expanded`}>
                           <td colSpan={columns.length} className="px-4 py-0">
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                            <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
                               <pre className="text-[11px] font-mono text-[var(--color-text-muted)] bg-[var(--color-bg-primary)] rounded-lg p-4 my-2 overflow-x-auto">
                                 {JSON.stringify(row.original.details, null, 2)}
                               </pre>
-                            </motion.div>
+                            </m.div>
                           </td>
                         </tr>
                       )}

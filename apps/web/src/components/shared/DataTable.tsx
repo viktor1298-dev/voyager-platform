@@ -6,3 +6,4 @@
  * Import from here (not @/components/DataTable) in all new pages.
  */
 export { DataTable } from '@/components/DataTable'
+export type { DataTableProps } from '@/components/DataTable'

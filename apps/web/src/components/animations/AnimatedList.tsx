@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { listContainerVariants, listItemVariants } from '@/lib/animation-constants'
 import type { ReactNode } from 'react'
@@ -37,7 +37,7 @@ export function AnimatedList<T>({
   }
 
   return (
-    <motion.div
+    <m.div
       className={className}
       variants={listContainerVariants}
       initial="hidden"
@@ -45,7 +45,7 @@ export function AnimatedList<T>({
     >
       <AnimatePresence mode="popLayout">
         {items.map((item, i) => (
-          <motion.div
+          <m.div
             key={keyExtractor(item)}
             className={itemClassName}
             variants={listItemVariants}
@@ -53,9 +53,9 @@ export function AnimatedList<T>({
             exit="exit"
           >
             {renderItem(item, i)}
-          </motion.div>
+          </m.div>
         ))}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   )
 }

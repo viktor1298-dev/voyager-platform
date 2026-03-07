@@ -1,13 +1,13 @@
 'use client'
 
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
 import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { ProviderLogo } from '@/components/ProviderLogo'
 import { trpc } from '@/lib/trpc'
-import { Icon } from '@iconify/react'
 
 const CLUSTER_TABS = [
   { id: 'overview', label: 'Overview', path: '' },
@@ -22,20 +22,7 @@ const CLUSTER_TABS = [
   { id: 'autoscaling', label: 'Autoscaling', path: '/autoscaling' },
 ] as const
 
-function providerIcon(provider: string): string {
-  const map: Record<string, string> = {
-    minikube: 'simple-icons:kubernetes',
-    aws: 'simple-icons:amazonaws',
-    eks: 'simple-icons:amazoneks',
-    gcp: 'simple-icons:googlecloud',
-    gke: 'simple-icons:googlecloud',
-    azure: 'simple-icons:microsoftazure',
-    aks: 'simple-icons:microsoftazure',
-    digitalocean: 'simple-icons:digitalocean',
-    linode: 'simple-icons:linode',
-  }
-  return map[(provider ?? '').toLowerCase()] ?? 'simple-icons:kubernetes'
-}
+// P3-014: providerIcon removed — replaced by ProviderLogo component with layoutId support
 
 export default function ClusterLayout({ children }: { children: React.ReactNode }) {
   const { id } = useParams<{ id: string }>()
@@ -115,12 +102,12 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
         style={{ boxShadow: 'var(--shadow-card)' }}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-9 w-9 rounded-xl bg-white/[0.05] border border-[var(--color-border)] flex items-center justify-center shrink-0">
-            <Icon
-              icon={providerIcon(((dbCluster.data as Record<string, unknown> | undefined)?.provider as string) ?? 'kubernetes')}
-              className="h-5 w-5 text-[var(--color-accent)]"
-            />
-          </div>
+          {/* P3-010: Shared element transition from cluster list icon */}
+          <ProviderLogo
+            provider={((dbCluster.data as Record<string, unknown> | undefined)?.provider as string) ?? 'kubernetes'}
+            size={20}
+            layoutId={`cluster-icon-${id}`}
+          />
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)] truncate">
               {clusterName}
@@ -162,7 +149,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
                 {tab.label}
                 {/* Active tab underline with layoutId spring animation */}
                 {isActive && (
-                  <motion.div
+                  <m.div
                     layoutId="cluster-tab-underline"
                     className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--color-accent)]"
                     transition={{ type: 'spring', stiffness: 500, damping: 40 }}
@@ -176,7 +163,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
 
       {/* Tab Content with AnimatePresence */}
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={pathname}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -184,7 +171,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
           transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
         >
           {children}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </AppLayout>
   )

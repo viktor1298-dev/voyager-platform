@@ -520,38 +520,15 @@
     "notes": "Phase 1 UI redesign \u2014 types, tests, dead code cleanup"
   },
   {
-    "version": "v194-phase2-fix1",
-    "timestamp": "2026-03-07T08:24:49.493457",
-    "status": "deployed",
-    "changes": [
-      "fix(api): onRequest hook skips /trpc AND /api/trpc routes (fixes 401 on background polling)",
-      "fix(nav): sidebar AI Assistant + Dashboards per redesign spec",
-      "fix(api): also skip auth for /api/trpc/* routes (ingress prefix)"
-    ],
-    "pods": {
-      "voyager-api": "v194-phase2-fix1",
-      "voyager-web": "v194-phase2-fix1"
-    },
-    "health": "ok",
-    "login": "admin@voyager.local token verified"
-  },
-  {
-    "version": "v194-phase3",
-    "timestamp": "2026-03-07T09:09:36.099666",
-    "status": "deployed",
-    "commit": "89b242a",
-    "changes": [
-      "feat(phase3): animation polish \u2014 P3-001 to P3-014 complete",
-      "fix(phase3): LazyMotion strict crash fix + accessibility (review C1, H1, H2)",
-      "feat: spring animations, stagger effects, useReducedMotion support"
-    ],
-    "pods": {
-      "voyager-api": "v194-phase3",
-      "voyager-web": "v194-phase3"
-    },
-    "health": "ok",
-    "login": "admin@voyager.local token verified",
-    "reviewScore": 10,
-    "reviewVerdict": "APPROVED"
+    "version": "v194-phase2",
+    "deployer": "Uri",
+    "webImage": "voyager-web:v194-phase2",
+    "apiImage": "voyager-api:v194-phase2",
+    "helmRevision": 1,
+    "podsRunning": true,
+    "healthCheck": 200,
+    "loginSmoke": true,
+    "timestamp": "2026-03-07T05:16:07.958124Z",
+    "notes": "Phase 2 frontend merge \u2014 review fixes, cache TTL, output schemas, zero-replicas, dead code cleanup"
   }
 ]

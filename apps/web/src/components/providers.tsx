@@ -1,7 +1,7 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { MotionConfig } from 'motion/react'
+import { LazyMotion, MotionConfig, domAnimation } from 'motion/react'
 import { ThemeProvider } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
@@ -67,7 +67,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   )
   const [trpcClient] = useState(() => getTRPCClient())
 
+  // P3-013: LazyMotion saves ~23kb gzipped by loading only domAnimation features
   return (
+    <LazyMotion features={domAnimation} strict>
     <MotionConfig reducedMotion="user">
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
@@ -94,5 +96,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
       </trpc.Provider>
     </ThemeProvider>
     </MotionConfig>
+    </LazyMotion>
   )
 }

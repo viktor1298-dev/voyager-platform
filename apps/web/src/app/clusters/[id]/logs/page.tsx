@@ -3,6 +3,7 @@
 import { RefreshCw } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from 'react-resizable-panels'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc'
 
@@ -99,7 +100,11 @@ export default function LogsPage() {
   }
 
   return (
-    <div className="space-y-3">
+    // P3-012: react-resizable-panels split-pane layout
+    <PanelGroup orientation="vertical" className="min-h-[60vh]">
+      {/* Upper panel: Controls + Log output */}
+      <Panel defaultSize={75} minSize={30} className="flex flex-col">
+    <div className="space-y-3 h-full flex flex-col">
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Pod selector */}
@@ -193,7 +198,7 @@ export default function LogsPage() {
       {/* Log output */}
       <div
         ref={preRef}
-        className="rounded-xl border border-[var(--color-border)] bg-[#0d0d0d] overflow-auto max-h-[60vh] p-4"
+        className="rounded-xl border border-[var(--color-border)] bg-[#0d0d0d] overflow-auto flex-1 p-4"
         role="log"
         aria-live="polite"
         aria-label={`Logs for ${selectedPod}`}
@@ -232,5 +237,41 @@ export default function LogsPage() {
         </p>
       )}
     </div>
+      </Panel>
+
+      {/* Resize handle */}
+      <PanelResizeHandle className="h-2 flex items-center justify-center group cursor-row-resize my-1">
+        <div className="h-1 w-16 rounded-full bg-[var(--color-border)] group-hover:bg-[var(--color-accent)]/60 transition-colors" />
+      </PanelResizeHandle>
+
+      {/* Lower panel: Info / metadata */}
+      <Panel defaultSize={25} minSize={10} className="overflow-auto">
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 h-full">
+          <p className="text-[11px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider mb-3">
+            Pod Info
+          </p>
+          {selectedPod ? (
+            <div className="space-y-1.5">
+              <div className="flex gap-2 text-[12px]">
+                <span className="text-[var(--color-text-dim)] w-24 shrink-0">Pod:</span>
+                <span className="font-mono text-[var(--color-text-secondary)] truncate">{selectedPod}</span>
+              </div>
+              {selectedContainer && (
+                <div className="flex gap-2 text-[12px]">
+                  <span className="text-[var(--color-text-dim)] w-24 shrink-0">Container:</span>
+                  <span className="font-mono text-[var(--color-text-secondary)]">{selectedContainer}</span>
+                </div>
+              )}
+              <div className="flex gap-2 text-[12px]">
+                <span className="text-[var(--color-text-dim)] w-24 shrink-0">Lines shown:</span>
+                <span className="font-mono text-[var(--color-text-secondary)]">{logLines.length} / {tailLines}</span>
+              </div>
+            </div>
+          ) : (
+            <p className="text-[12px] text-[var(--color-text-dim)] font-mono">Select a pod above to view logs.</p>
+          )}
+        </div>
+      </Panel>
+    </PanelGroup>
   )
 }

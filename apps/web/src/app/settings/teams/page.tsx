@@ -2,7 +2,7 @@
 
 import { useForm } from '@tanstack/react-form'
 import type { ColumnDef } from '@tanstack/react-table'
-import { motion } from 'motion/react'
+import { m } from 'motion/react'
 import { Plus, Users } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -179,7 +179,7 @@ export default function SettingsTeamsPage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 md:hidden">
             {teams.map((team, index) => (
-              <motion.button
+              <m.button
                 key={team.id}
                 type="button"
                 initial={{ opacity: 0, y: 12 }}
@@ -194,7 +194,7 @@ export default function SettingsTeamsPage() {
                     <span key={member.userId} className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[10px] font-semibold text-[var(--color-text-secondary)]">{member.avatar}</span>
                   ))}
                 </div>
-              </motion.button>
+              </m.button>
             ))}
           </div>
         </div>

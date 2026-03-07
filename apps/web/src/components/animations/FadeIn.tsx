@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'motion/react'
+import { m } from 'motion/react'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { fadeVariants, DURATION, EASING } from '@/lib/animation-constants'
 import type { ReactNode } from 'react'
@@ -17,7 +17,7 @@ export function FadeIn({ children, className, delay = 0 }: FadeInProps) {
   if (reduced) return <div className={className}>{children}</div>
 
   return (
-    <motion.div
+    <m.div
       className={className}
       initial="hidden"
       animate="visible"
@@ -31,6 +31,6 @@ export function FadeIn({ children, className, delay = 0 }: FadeInProps) {
       }}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }
