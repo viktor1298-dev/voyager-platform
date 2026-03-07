@@ -1,18 +1,28 @@
 {
   "status": "deployed-awaiting-review",
   "version": "v196-fix1",
-  "currentStage": "COMPLETE",
+  "currentStage": "deployed-v196-fix1",
   "phase": "sidebar-polish",
   "fixLoopCount": 1,
-  "timestamp": "2026-03-07T13:15:00.000Z",
+  "timestamp": "2026-03-07T11:25:00.000Z",
   "branch": "main",
   "tag": "v196-fix1",
   "mergeCommit": "27cc6fe",
   "completedStages": [
-    "deploy-v195", "e2e-v195", "qa-v195",
-    "phase4-dev", "review-phase4", "merge-tag-v196",
-    "build-deploy-v196", "e2e-fix", "merge-v196-fix1",
-    "build-deploy-v196-fix1", "e2e-v196-fix1", "qa-v196-fix1"
+    "deploy-v195",
+    "e2e-v195",
+    "qa-v195",
+    "phase4-dev",
+    "review-phase4",
+    "merge-tag-v196",
+    "build-deploy-v196",
+    "e2e-fix",
+    "merge-v196-fix1",
+    "build-deploy-v196-fix1",
+    "e2e-v196-fix1",
+    "qa-v196-fix1",
+    "e2e-v196-fix1",
+    "qa-v196-fix1"
   ],
   "failedStages": [],
   "inProgress": [],
@@ -24,5 +34,19 @@
     "review-v196": "pipeline-evidence/review-v196-phase4.json",
     "e2e-v196-fix1": "pipeline-evidence/e2e-v196-fix1.json",
     "qa-v196-fix1": "pipeline-evidence/qa-v196-fix1.json"
+  },
+  "e2e": {
+    "total": 164,
+    "passed": 134,
+    "failed": 0,
+    "skipped": 30,
+    "verdict": "PASS"
+  },
+  "qa": {
+    "score": 9.2,
+    "verdict": "PASS",
+    "gate": 8.5,
+    "checks": 32,
+    "failures": 0
   }
 }
