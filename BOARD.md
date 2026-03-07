@@ -85,7 +85,10 @@
 ### New Libraries (Ron)
 - [ ] **P3-011** Install `vaul` → drawer for pod detail, alert detail on mobile
 - [ ] **P3-012** Install `react-resizable-panels` → split-pane logs below cluster content
-- [ ] **P3-013** Wrap heavy animations with `LazyMotion + domAnimation` (saves ~23kb gzipped)
+- [x] **P3-013** Wrap heavy animations with `LazyMotion + domAnimation` (saves ~23kb gzipped) ✅ v89b242a 2026-03-07
+  - **Review fix C1**: All `motion.*` → `m.*` across 26 files (LazyMotion strict-safe) ✅ fix/89b242a
+  - **Review fix H1**: AnimatedStatCount respects `prefers-reduced-motion` via `useReducedMotion` ✅
+  - **Review fix H2**: DataTable `AnimatePresence mode="popLayout"` → `mode="wait"` (spec P3-009) ✅
 
 ### Cleanup
 - [ ] **P3-014** Remove dead code: unused hooks, old sidebar routes, duplicate motion polyfills
