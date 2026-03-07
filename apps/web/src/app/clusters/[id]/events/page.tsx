@@ -7,6 +7,8 @@ import { severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 
+const REFETCH_INTERVAL = 10000
+
 interface EventRow {
   id: string
   type: string
@@ -96,14 +98,14 @@ export default function EventsPage() {
 
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: resolvedId },
-    { enabled: isLive, refetchInterval: 30000, retry: false, staleTime: 30000 },
+    { enabled: isLive, refetchInterval: REFETCH_INTERVAL, retry: false, staleTime: 30000 },
   )
   const liveFailed = isLive && liveQuery.isError
   const effectiveIsLive = isLive && !liveFailed
 
   const dbEvents = trpc.events.list.useQuery(
     { clusterId: resolvedId, limit: 50 },
-    { enabled: !effectiveIsLive },
+    { enabled: !effectiveIsLive, refetchInterval: REFETCH_INTERVAL },
   )
 
   const liveData = liveQuery.data
@@ -130,16 +132,33 @@ export default function EventsPage() {
           : null,
       }))
 
+  const isAutoRefreshing = effectiveIsLive ? liveQuery.isFetching : dbEvents.isFetching
+
   return (
-    <DataTable
-      data={events}
-      columns={eventColumns}
-      loading={effectiveIsLive ? liveQuery.isLoading : dbEvents.isLoading}
-      emptyTitle="No events found"
-      searchable
-      paginated
-      pageSize={25}
-      searchPlaceholder="Search events…"
+    <div className="space-y-3">
+      {/* Live indicator */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span
+            className={`h-2 w-2 rounded-full ${isAutoRefreshing ? 'bg-[var(--color-status-active)] animate-pulse' : 'bg-[var(--color-text-dim)]'}`}
+            aria-label={isAutoRefreshing ? 'Auto-refreshing' : 'Idle'}
+          />
+          <span className="text-[11px] text-[var(--color-text-muted)]">
+            {isAutoRefreshing ? 'Live — auto-refreshing every 10s' : 'Events'}
+          </span>
+        </div>
+        <span className="text-[11px] font-mono text-[var(--color-text-dim)]">{events.length} events</span>
+      </div>
+
+      <DataTable
+        data={events}
+        columns={eventColumns}
+        loading={effectiveIsLive ? liveQuery.isLoading : dbEvents.isLoading}
+        emptyTitle="No events found"
+        searchable
+        paginated
+        pageSize={25}
+        searchPlaceholder="Search events…"
       mobileCard={(event) => {
         const isWarning = event.type === 'Warning'
         return (
@@ -160,6 +179,7 @@ export default function EventsPage() {
           </div>
         )
       }}
-    />
+      />
+    </div>
   )
 }

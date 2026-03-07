@@ -2,13 +2,26 @@
 
 import { Command } from 'cmdk'
 import { Bot, Box, Clock, FolderOpen, Key, Layers, Package, Search, Server } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { navItems } from '@/config/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
 import { AiCommandPaletteProvider } from '@/components/ai/AiCommandPaletteProvider'
+
+const CLUSTER_TAB_SHORTCUTS = [
+  { id: 'overview', label: 'Overview', path: '' },
+  { id: 'nodes', label: 'Nodes', path: '/nodes' },
+  { id: 'pods', label: 'Pods', path: '/pods' },
+  { id: 'deployments', label: 'Deployments', path: '/deployments' },
+  { id: 'services', label: 'Services', path: '/services' },
+  { id: 'namespaces', label: 'Namespaces', path: '/namespaces' },
+  { id: 'events', label: 'Events', path: '/events' },
+  { id: 'logs', label: 'Logs', path: '/logs' },
+  { id: 'metrics', label: 'Metrics', path: '/metrics' },
+  { id: 'autoscaling', label: 'Autoscaling', path: '/autoscaling' },
+] as const
 
 const MAX_RECENT = 5
 const RECENT_KEY = 'voyager-command-palette-recent'
@@ -39,17 +52,25 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const router = useRouter()
+  const pathname = usePathname()
   const isAdmin = useIsAdmin()
   const [recentItems, setRecentItems] = useState<RecentItem[]>([])
   const { activeClusterId } = useClusterContext()
 
+  // Detect if we're inside a cluster route
+  const clusterRouteMatch = pathname.match(/^\/clusters\/([^/]+)/)
+  const currentClusterId = clusterRouteMatch ? clusterRouteMatch[1] : null
+
   // Fetch resource data for fuzzy search
   const clustersQuery = trpc.clusters.list.useQuery(undefined, { enabled: open, staleTime: 30000 })
-  const deploymentsQuery = trpc.deployments.list.useQuery(undefined, {
-    enabled: open,
-    staleTime: 30000,
-  })
-  const servicesQuery = trpc.services.list.useQuery(undefined, { enabled: open, staleTime: 30000 })
+  const deploymentsQuery = trpc.deployments.list.useQuery(
+    { clusterId: activeClusterId ?? '' },
+    { enabled: open && !!activeClusterId, staleTime: 30000 },
+  )
+  const servicesQuery = trpc.services.list.useQuery(
+    { clusterId: activeClusterId ?? '' },
+    { enabled: open && !!activeClusterId, staleTime: 30000 },
+  )
   const podsQuery = trpc.pods.list.useQuery(
     { clusterId: activeClusterId ?? '' },
     { enabled: open && !!activeClusterId, staleTime: 30000 },
@@ -99,13 +120,23 @@ export function CommandPalette() {
     }
 
     for (const d of deploymentsQuery.data ?? []) {
-      if (d.name && d.id)
-        items.push({ label: d.name, path: `/deployments/${d.id}`, type: 'Deployment', icon: Box })
+      if (d.name && d.clusterId)
+        items.push({
+          label: `${d.namespace}/${d.name}`,
+          path: `/clusters/${d.clusterId}/deployments`,
+          type: 'Deployment',
+          icon: Box,
+        })
     }
 
     for (const s of servicesQuery.data ?? []) {
-      if (s.name && s.id)
-        items.push({ label: s.name, path: `/services/${s.id}`, type: 'Service', icon: Layers })
+      if (s.name)
+        items.push({
+          label: `${s.namespace}/${s.name}`,
+          path: activeClusterId ? `/clusters/${activeClusterId}/services` : '/services',
+          type: 'Service',
+          icon: Layers,
+        })
     }
 
     for (const p of podsQuery.data ?? []) {
@@ -193,6 +224,26 @@ export function CommandPalette() {
                     <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
                       {item.type}
                     </span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {/* Cluster Tabs — only visible when inside /clusters/[id] */}
+            {currentClusterId && (
+              <Command.Group heading="Cluster Tabs" className={headingClass}>
+                {CLUSTER_TAB_SHORTCUTS.map((tab, i) => (
+                  <Command.Item
+                    key={tab.id}
+                    value={`Go to cluster tab ${tab.label}`}
+                    onSelect={() => navigate(`/clusters/${currentClusterId}${tab.path}`, tab.label, 'Cluster Tab')}
+                    className={itemClass}
+                  >
+                    <Server className="h-4 w-4 shrink-0 text-[var(--color-accent)]" />
+                    <span>{tab.label}</span>
+                    <kbd className="ml-auto text-[9px] font-mono px-1 py-0.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-dim)]">
+                      {i + 1 <= 9 ? i + 1 : '—'}
+                    </kbd>
                   </Command.Item>
                 ))}
               </Command.Group>
