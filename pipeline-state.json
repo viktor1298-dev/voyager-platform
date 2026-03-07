@@ -1,13 +1,13 @@
 {
-  "status": "running",
-  "version": "v197",
-  "currentStage": "DEPLOYED",
-  "phase": "Phase5",
-  "fixLoopCount": 0,
-  "timestamp": "2026-03-07T14:15:10.366834",
+  "status": "merged",
+  "version": "v199",
+  "currentStage": "merge-tag-v199",
+  "phase": "Phase6-fix",
+  "fixLoopCount": 1,
+  "timestamp": "2026-03-07T18:33:00.000Z",
   "branch": "main",
-  "tag": "v197",
-  "mergeCommit": null,
+  "tag": "v199",
+  "mergeCommit": "f611410",
   "completedStages": [
     "deploy-v195",
     "e2e-v195",
@@ -20,22 +20,33 @@
     "merge-v196-fix1",
     "build-deploy-v196-fix1",
     "e2e-v196-fix1",
-    "qa-v196-fix1"
+    "qa-v196-fix1",
+    "phase5-dev",
+    "review-v197",
+    "merge-tag-v197",
+    "phase6-dev",
+    "review-v198",
+    "merge-tag-v198",
+    "deploy-v198",
+    "e2e-v198",
+    "qa-v198",
+    "dev-v199-cluster-name-fix",
+    "merge-tag-v199"
   ],
   "failedStages": [],
-  "inProgress": [
-    "phase5-dev-frontend",
-    "phase5-dev-backend"
-  ],
-  "notes": "Phase 5: Dashboard UX compact + Metrics fix. Ron (frontend) + Dima (backend) in parallel.",
-  "deployedInK8s": "v197",
+  "inProgress": [],
+  "notes": "v199 merged: fix/cluster-name-truncation → main. 2-row card layout for full cluster names. Tag v199 pushed.",
+  "deployedInK8s": "v198",
   "evidence": {
     "e2e-v195": "pipeline-evidence/e2e-v195.json",
     "qa-v195": "pipeline-evidence/qa-v195.json",
     "review-v196": "pipeline-evidence/review-v196-phase4.json",
     "e2e-v196-fix1": "pipeline-evidence/e2e-v196-fix1.json",
-    "qa-v196-fix1": "pipeline-evidence/qa-v196-fix1.json"
+    "qa-v196-fix1": "pipeline-evidence/qa-v196-fix1.json",
+    "review-v198": "pipeline-evidence/review-v198-phase6.json",
+    "e2e-v198": "pipeline-evidence/e2e-v198.json",
+    "qa-v198": "pipeline-evidence/qa-v198.json"
   },
-  "mergedSHA": "c4ed475e5ac1e9c7ecc253c6a162768857866993",
-  "mergedBranch": "feat/phase5-metrics-backend-deleted"
+  "mergedSHA": "f611410",
+  "mergedBranch": "fix/cluster-name-truncation-deleted"
 }
