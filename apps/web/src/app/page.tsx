@@ -8,7 +8,9 @@ import { DashboardEditBar } from '@/components/dashboard/DashboardEditBar'
 import { WidgetLibraryDrawer } from '@/components/dashboard/WidgetLibraryDrawer'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { SkeletonCard, SkeletonText, Shimmer } from '@/components/Skeleton'
-import { HeartPulse, RefreshCw, Clock, Zap, LayoutGrid, Pencil } from 'lucide-react'
+import { RefreshCw, LayoutGrid, Pencil } from 'lucide-react'
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
+import { m, AnimatePresence } from 'motion/react'
 import {
   ENV_META,
   getClusterEnvironment,
@@ -161,6 +163,13 @@ function DashboardContent() {
       .reduce((sum, c) => sum + c.nodeCount, 0)
   const runningPods = liveData?.runningPods ?? 0
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
+
+  // IA-002: aggregate health counts for CompactStatsBar
+  const healthCounts = useMemo(() => {
+    const counts = { healthy: 0, degraded: 0, critical: 0 }
+    for (const c of clusterList) counts[getHealthGroup(c.status)]++
+    return counts
+  }, [clusterList])
 
   const filterOptions = useMemo(() => {
     const statuses = new Set<string>()
@@ -330,10 +339,9 @@ function DashboardContent() {
           totalPods={liveData?.totalPods ?? 0}
           clusterCount={clusterList.length}
           warningEvents={warningEvents}
+          healthCounts={healthCounts}
           isLoading={isLoading}
         />
-
-        <SystemHealthSection />
 
         <div className="flex flex-col gap-4 mb-5">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
@@ -423,20 +431,23 @@ function DashboardContent() {
                             <div className="flex-1 h-px bg-[var(--color-border)]/30" />
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                            {clusters.map((cluster) => {
-                              const idx = cardIndex++
-                              return (
-                                <ClusterCard
-                                  key={cluster.id}
-                                  cluster={cluster}
-                                  index={idx}
-                                  runningPods={runningPods}
-                                  totalPods={liveData?.totalPods ?? 0}
-                                />
-                              )
-                            })}
-                          </div>
+                          {/* IA-009: AnimatePresence for filter reflow */}
+                          <AnimatePresence mode="popLayout">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                              {clusters.map((cluster) => {
+                                const idx = cardIndex++
+                                return (
+                                  <ClusterCard
+                                    key={cluster.id}
+                                    cluster={cluster}
+                                    index={idx}
+                                    runningPods={runningPods}
+                                    totalPods={liveData?.totalPods ?? 0}
+                                  />
+                                )
+                              })}
+                            </div>
+                          </AnimatePresence>
                         </div>
                       )
                     })}
@@ -485,6 +496,20 @@ export default function DashboardPage() {
   )
 }
 
+// IA-004: timeAgo utility for health tooltip
+function timeAgo(ts: string | Date | null | undefined): string {
+  if (!ts) return 'Never'
+  const diff = Date.now() - new Date(ts).getTime()
+  const seconds = Math.floor(diff / 1000)
+  if (seconds < 60) return `${seconds}s ago`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
+}
+
+// IA-004: HealthDot with rich hover tooltip (status label, last-check time, responseTimeMs)
 function HealthDot({ clusterId }: { clusterId: string }) {
   const statusQuery = trpc.health.status.useQuery({}, {
     refetchInterval: HEALTH_STATUS_REFETCH_MS,
@@ -498,19 +523,60 @@ function HealthDot({ clusterId }: { clusterId: string }) {
     critical: 'var(--color-status-error)',
   }
   const color = colors[entry.status] ?? 'var(--color-text-dim)'
-  const checkedAt = entry.checkedAt ? new Date(entry.checkedAt).toLocaleString() : 'Never'
-  const tooltip = `Health: ${entry.status} | Last check: ${checkedAt}${entry.responseTimeMs != null ? ` | ${entry.responseTimeMs}ms` : ''}`
+  const statusLabel = entry.status.charAt(0).toUpperCase() + entry.status.slice(1)
 
   return (
-    <span
-      className="h-1.5 w-1.5 rounded-full shrink-0"
-      style={{ backgroundColor: color }}
-      title={tooltip}
-    />
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            className="h-1.5 w-1.5 rounded-full shrink-0 cursor-default"
+            style={{ backgroundColor: color }}
+          />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-left">
+          <div className="space-y-0.5 text-xs">
+            <div className="font-semibold">{statusLabel}</div>
+            <div className="text-[var(--color-text-muted)]">Last check: {timeAgo(entry.checkedAt)}</div>
+            {entry.responseTimeMs != null && (
+              <div className="text-[var(--color-text-muted)]">Response: {entry.responseTimeMs}ms</div>
+            )}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
+// IA-005: HealthLatency — subtle latency badge next to HealthDot
+function HealthLatency({ clusterId }: { clusterId: string }) {
+  const statusQuery = trpc.health.status.useQuery({}, {
+    refetchInterval: HEALTH_STATUS_REFETCH_MS,
+  })
+  const entry = statusQuery.data?.find((s) => s.clusterId === clusterId)
+  if (!entry || entry.responseTimeMs == null) return null
+
+  const latencyColor =
+    entry.responseTimeMs > 500
+      ? 'var(--color-status-error)'
+      : entry.responseTimeMs > 200
+        ? 'var(--color-status-warning)'
+        : 'var(--color-text-dim)'
+
+  return (
+    <m.span
+      className="text-[9px] font-mono shrink-0"
+      style={{ color: latencyColor }}
+      animate={{ color: latencyColor }}
+      transition={{ duration: 0.3 }}
+    >
+      {entry.responseTimeMs}ms
+    </m.span>
   )
 }
 
 // DB-002: Compact ClusterCard — single horizontal row, ~50% shorter
+// IA-005: includes HealthLatency badge | IA-006: "Check Now" hover button | IA-009: Motion animations
 function ClusterCard({
   cluster,
   index,
@@ -526,28 +592,39 @@ function ClusterCard({
   const statusMeta = STATUS_META[normalizeHealth(status)]
   const envMeta = ENV_META[cluster.environment]
 
+  // IA-006: Check Now state
+  const [checking, setChecking] = useState(false)
+  const utils = trpc.useUtils()
+  const handleCheck = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setChecking(true)
+    try {
+      await utils.health.check.fetch({ clusterId: cluster.id })
+      await utils.health.status.invalidate()
+    } finally {
+      setChecking(false)
+    }
+  }, [utils, cluster.id])
+
   return (
     <Link href={`/clusters/${cluster.id}`}>
-      <div
-        className="cluster-card relative group rounded-lg cursor-pointer bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex items-center gap-2 overflow-hidden px-3 py-2"
+      {/* IA-009: Motion card with whileHover y:-2 and layout prop */}
+      <m.div
+        layout
+        className="cluster-card relative group rounded-lg cursor-pointer bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] flex items-center gap-2 overflow-hidden px-3 py-2"
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        whileHover={{ y: -2, boxShadow: getStatusGlowHover(status) }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1], delay: index * 0.03 }}
         style={
           {
             '--status-color': getStatusColor(status),
             boxShadow: getStatusGlow(status),
-            transition: 'all var(--duration-normal) ease',
-            animationDelay: `${index * 30}ms`,
-            animationFillMode: 'forwards',
           } as React.CSSProperties
         }
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = getStatusGlowHover(status)
-          e.currentTarget.style.transform =
-            'scale(var(--card-hover-scale)) translateY(var(--card-hover-y))'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = getStatusGlow(status)
-          e.currentTarget.style.transform = 'none'
-        }}
       >
         {/* Left accent bar */}
         <div
@@ -564,7 +641,14 @@ function ClusterCard({
         <span className="text-xs font-semibold text-[var(--color-text-primary)] truncate flex-1 min-w-0">
           {cluster.name}
         </span>
-        {cluster.source === 'db' && <HealthDot clusterId={cluster.id} />}
+
+        {/* IA-004+005: HealthDot (tooltip) + HealthLatency */}
+        {cluster.source === 'db' && (
+          <>
+            <HealthDot clusterId={cluster.id} />
+            <HealthLatency clusterId={cluster.id} />
+          </>
+        )}
 
         {/* Env badge */}
         <span className={cn('text-[9px] font-mono px-1.5 py-0.5 rounded border shrink-0', envMeta.badgeClass)}>
@@ -583,18 +667,41 @@ function ClusterCard({
         <span className="text-[9px] font-mono text-[var(--color-text-dim)] shrink-0 hidden md:block">
           {cluster.version ?? '—'}
         </span>
-      </div>
+
+        {/* IA-006: Check Now hover button */}
+        {cluster.source === 'db' && (
+          <AnimatePresence>
+            <m.button
+              key="check-now"
+              type="button"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 0, scale: 1 }}
+              whileHover={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.15 }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-[var(--color-accent)] hover:text-[var(--color-text-primary)] cursor-pointer disabled:opacity-40"
+              title="Check now"
+              onClick={handleCheck}
+              disabled={checking}
+            >
+              <RefreshCw className={`h-3 w-3 ${checking ? 'animate-spin' : ''}`} />
+            </m.button>
+          </AnimatePresence>
+        )}
+      </m.div>
     </Link>
   )
 }
 
 // DB-001: Compact stats bar — replaces 4 large SummaryCard grid
+// IA-002: enhanced with health aggregate counts
 function CompactStatsBar({
   totalNodes,
   runningPods,
   totalPods,
   clusterCount,
   warningEvents,
+  healthCounts,
   isLoading,
 }: {
   totalNodes: number
@@ -602,6 +709,7 @@ function CompactStatsBar({
   totalPods: number
   clusterCount: number
   warningEvents: number
+  healthCounts?: { healthy: number; degraded: number; critical: number }
   isLoading?: boolean
 }) {
   if (isLoading) {
@@ -636,122 +744,27 @@ function CompactStatsBar({
           </div>
         </div>
       ))}
+      {/* IA-002: health aggregate dots after Clusters */}
+      {healthCounts && (
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="text-[var(--color-border)] text-xs select-none">·</span>
+          <div className="inline-flex items-center gap-1.5">
+            <span className="text-[10px] text-[var(--color-text-muted)] hidden sm:inline">Health</span>
+            <span className="inline-flex items-center gap-1 text-xs font-mono">
+              <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: 'var(--color-status-active)' }} />
+              <span className="text-[var(--color-text-primary)] font-semibold">{healthCounts.healthy}</span>
+              <span className="text-[var(--color-border)] mx-0.5">·</span>
+              <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: 'var(--color-status-warning)' }} />
+              <span className="text-[var(--color-text-primary)] font-semibold">{healthCounts.degraded}</span>
+              <span className="text-[var(--color-border)] mx-0.5">·</span>
+              <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: 'var(--color-status-error)' }} />
+              <span className="text-[var(--color-text-primary)] font-semibold">{healthCounts.critical}</span>
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-// ─── System Health Section (merged from /system-health) ──────────────────────
-
-const STATUS_COLORS_HEALTH: Record<string, string> = {
-  healthy: 'var(--color-status-active)',
-  degraded: 'var(--color-status-warning)',
-  critical: 'var(--color-status-error)',
-  unknown: 'var(--color-text-dim)',
-}
-
-const STATUS_LABELS_HEALTH: Record<string, string> = {
-  healthy: 'Healthy',
-  degraded: 'Degraded',
-  critical: 'Critical',
-  unknown: 'Unknown',
-}
-
-function timeAgoHealth(ts: string | Date | null): string {
-  if (!ts) return 'Never'
-  const diff = Date.now() - new Date(ts).getTime()
-  const seconds = Math.floor(diff / 1000)
-  if (seconds < 60) return `${seconds}s ago`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
-
-function SystemHealthSection() {
-  const [checkingClusterId, setCheckingClusterId] = useState<string | null>(null)
-
-  const statusQuery = trpc.health.status.useQuery({}, { refetchInterval: 60_000 })
-  const utils = trpc.useUtils()
-
-  const handleCheck = useCallback(
-    async (clusterId: string) => {
-      setCheckingClusterId(clusterId)
-      try {
-        await utils.health.check.fetch({ clusterId })
-        utils.health.status.invalidate()
-      } finally {
-        setCheckingClusterId(null)
-      }
-    },
-    [utils],
-  )
-
-  const statuses = statusQuery.data ?? []
-
-  if (!statusQuery.isLoading && statuses.length === 0) return null
-
-  return (
-    <section className="mb-6">
-      <div className="flex items-center gap-2 mb-3">
-        <HeartPulse className="h-4 w-4 text-[var(--color-accent)]" />
-        <h2 className="text-sm font-bold text-[var(--color-text-primary)]">System Health</h2>
-        <span className="text-[10px] font-mono text-[var(--color-text-dim)] uppercase tracking-wider ml-1">
-          {statuses.length} clusters
-        </span>
-      </div>
-
-      {statusQuery.isLoading ? (
-        <div className="flex gap-3">
-          <Shimmer className="h-24 w-48 rounded-xl" />
-          <Shimmer className="h-24 w-48 rounded-xl" />
-          <Shimmer className="h-24 w-48 rounded-xl" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-          {statuses.map((s) => {
-            const color = STATUS_COLORS_HEALTH[s.status] ?? STATUS_COLORS_HEALTH.unknown
-            const label = STATUS_LABELS_HEALTH[s.status] ?? 'Unknown'
-            return (
-              <div
-                key={s.clusterId}
-                className="relative rounded-xl p-3 border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-all duration-200"
-                style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(var(--glass-blur))' }}
-              >
-                <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl" style={{ backgroundColor: color, opacity: 0.7 }} />
-                <div className="flex items-center gap-1.5 mb-2">
-                  <span className="h-2 w-2 rounded-full animate-pulse-slow shrink-0" style={{ backgroundColor: color }} />
-                  <span className="text-xs font-bold text-[var(--color-text-primary)] truncate">{s.clusterName}</span>
-                </div>
-                <div className="flex items-center gap-3 text-[9px] text-[var(--color-text-muted)] font-mono mb-2">
-                  <span className="flex items-center gap-0.5">
-                    <Clock className="h-2.5 w-2.5" />
-                    {timeAgoHealth(s.checkedAt)}
-                  </span>
-                  {s.responseTimeMs !== null && (
-                    <span className="flex items-center gap-0.5">
-                      <Zap className="h-2.5 w-2.5" />
-                      {s.responseTimeMs}ms
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-[var(--color-border)]" style={{ color }}>{label}</span>
-                  <button
-                    type="button"
-                    className="text-[var(--color-accent)] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer disabled:opacity-50"
-                    disabled={checkingClusterId !== null}
-                    title="Check now"
-                    onClick={() => handleCheck(s.clusterId)}
-                  >
-                    <RefreshCw className={`h-3 w-3 ${checkingClusterId === s.clusterId ? 'animate-spin' : ''}`} />
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </section>
-  )
-}
+// IA-001: SystemHealthSection removed — data merged into ClusterCard (HealthDot tooltip + HealthLatency) and CompactStatsBar (IA-002)
