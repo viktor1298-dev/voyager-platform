@@ -126,3 +126,16 @@ Each phase follows this flow:
 - [ ] E2E (Yuval) → all tests pass → evidence file written
 - [ ] QA (Mai) → desktop ≥8.5/10 → evidence file written
 - [ ] Guardian: all 5 gates → write `status: deployed-awaiting-review`
+
+---
+
+## 🎛️ v194-widgets — Widget System Restore (2026-07-14)
+
+### Completed
+- [x] Restore DashboardGrid + DashboardEditBar + WidgetLibraryDrawer imports to page.tsx [v194-widgets 2026-07-14]
+- [x] Restore useDashboardLayout hooks (editMode, addWidget, resetToDefault, saveLayout) [v194-widgets 2026-07-14]
+- [x] Add Widgets toggle button to Dashboard header [v194-widgets 2026-07-14]
+- [x] Add Customize button (visible in widgetMode) [v194-widgets 2026-07-14]
+- [x] StatCardsWidget with 24h sparklines available via widget mode [v194-widgets 2026-07-14]
+- [x] Legacy cluster layout preserved (shown when widgetMode=false) [v194-widgets 2026-07-14]
+- [x] Build passes ✅ | Navigation v194 intact ✅ [v194-widgets 2026-07-14]
