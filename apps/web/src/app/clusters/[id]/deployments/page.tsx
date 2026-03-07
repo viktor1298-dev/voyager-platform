@@ -49,7 +49,7 @@ const columns: ColumnDef<DeploymentRow, unknown>[] = [
     cell: ({ getValue }) => {
       const val = getValue<string>()
       const [a, b] = val.split('/')
-      const ok = a === b
+      const ok = a === b && Number(a) > 0
       return (
         <span
           className="font-mono text-[12px] px-1.5 py-0.5 rounded"

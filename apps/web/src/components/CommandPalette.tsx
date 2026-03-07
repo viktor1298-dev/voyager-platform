@@ -2,7 +2,7 @@
 
 import { Command } from 'cmdk'
 import { Bot, Box, Clock, FolderOpen, Key, Layers, Package, Search, Server } from 'lucide-react'
-import { useParams, usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { navItems } from '@/config/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'

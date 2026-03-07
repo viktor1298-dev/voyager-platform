@@ -27,9 +27,6 @@ export default function LogsPage() {
   const [autoScroll, setAutoScroll] = useState(true)
   const [tailLines, setTailLines] = useState(200)
 
-  // Derive pod options
-  const podOptions = useMemo(() => pods, [pods])
-
   const currentPod = useMemo(
     () => pods.find((p) => `${p.namespace}/${p.name}` === selectedPod),
     [pods, selectedPod],
