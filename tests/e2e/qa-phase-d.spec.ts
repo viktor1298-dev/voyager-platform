@@ -100,7 +100,7 @@ test('Phase D QA - Desktop', async ({ page }) => {
   await page.screenshot({ path: '/tmp/qa-dashboard.png' });
   console.log('📸 Dashboard screenshot');
 
-  await page.goto('http://voyager-platform.voyagerlabs.co/teams');
+  await page.goto('http://voyager-platform.voyagerlabs.co/settings/teams');
   await page.waitForTimeout(3000);
   await page.screenshot({ path: '/tmp/qa-teams.png' });
   console.log('📸 Teams screenshot');

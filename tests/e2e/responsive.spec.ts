@@ -25,7 +25,7 @@ test.describe('Responsive — Mobile Viewport', () => {
 
   test('should handle sidebar on mobile without switching users table to desktop layout', async ({ page }) => {
     await login(page);
-    await page.goto('/users');
+    await page.goto('/settings/users');
 
     const sidebar = page.locator('[data-testid="sidebar"]');
     const menuButton = page.getByRole('button', { name: /open navigation menu|close navigation menu/i });
@@ -44,7 +44,7 @@ test.describe('Responsive — Mobile Viewport', () => {
 
   test('mobile nav first tap should navigate immediately', async ({ page }) => {
     await login(page);
-    await page.goto('/users');
+    await page.goto('/settings/users');
 
     const menuButton = page.getByRole('button', { name: /open navigation menu|close navigation menu/i });
     await menuButton.click();
@@ -98,9 +98,9 @@ test.describe('Responsive — Mobile Viewport', () => {
 test.describe('Responsive — Desktop Viewport', () => {
   test.use({ viewport: { width: 1920, height: 1080 } });
 
-  test('should keep desktop shell on /users (no hamburger, desktop table visible)', async ({ page }) => {
+  test('should keep desktop shell on /settings/users (no hamburger, desktop table visible)', async ({ page }) => {
     await login(page);
-    await page.goto('/users');
+    await page.goto('/settings/users');
 
     await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 15_000 });
     await expect(page.getByRole('button', { name: /open navigation menu|close navigation menu/i })).toBeHidden();

@@ -167,9 +167,14 @@ test.describe('Alerts — CRUD + History', () => {
     await expect(page.getByText('Recent Triggers')).toBeVisible({ timeout: 15_000 });
 
     // Either shows trigger entries or "No alert triggers yet"
-    const hasEntries = page.locator('text=ACK').or(page.locator('text=NEW'));
     const emptyHistory = page.getByText(/no alert triggers yet/i);
 
-    await expect(hasEntries.first().or(emptyHistory)).toBeVisible({ timeout: 10_000 });
+    // Use poll to avoid strict-mode issues when both ACK and NEW entries may exist
+    await expect.poll(async () => {
+      const ackCount = await page.locator('text=ACK').count();
+      const newCount = await page.locator('text=NEW').count();
+      const emptyCount = await emptyHistory.count();
+      return ackCount > 0 || newCount > 0 || emptyCount > 0;
+    }, { timeout: 10_000 }).toBe(true);
   });
 });

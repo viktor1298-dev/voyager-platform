@@ -30,8 +30,8 @@ test.describe('Optimistic UI + Motion Animations', () => {
   })
 
   test('optimistic role change shows immediate update', async ({ page }) => {
-    await page.getByRole('link', { name: /users/i }).first().click()
-    await expect(page).toHaveURL(/\/users/, { timeout: 10_000 })
+    await page.goto('/settings/users')
+    await expect(page).toHaveURL(/\/settings\/users/, { timeout: 10_000 })
     await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 10_000 })
 
     const roleBtn = page.locator('button:has-text("Promote"), button:has-text("Demote")').first()
