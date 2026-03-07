@@ -8,14 +8,14 @@ import { login } from './helpers';
 test.describe('Nav drawer drift — deep test (375×812)', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
-  test('3-cycle open/close on /users — no desktop table appears', async ({ page }) => {
+  test('3-cycle open/close on /settings/users — no desktop table appears', async ({ page }) => {
     const consoleErrors: string[] = [];
     page.on('console', m => {
       if (m.type() === 'error') consoleErrors.push(m.text());
     });
 
     await login(page);
-    await page.goto('/users');
+    await page.goto('/settings/users');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(500);
 
@@ -49,9 +49,9 @@ test.describe('Nav drawer drift — deep test (375×812)', () => {
     expect(overflow).toBe(false);
   });
 
-  test('Nav on /teams after open/close — no overlap', async ({ page }) => {
+  test('Nav on /settings/teams after open/close — no overlap', async ({ page }) => {
     await login(page);
-    await page.goto('/teams');
+    await page.goto('/settings/teams');
     await page.waitForLoadState('domcontentloaded');
 
     const openBtn = page.getByRole('button', { name: /open navigation menu/i }).first();
@@ -82,7 +82,7 @@ test.describe('Nav drawer drift — deep test (375×812)', () => {
     });
 
     await login(page);
-    for (const route of ['/', '/users', '/teams', '/settings']) {
+    for (const route of ['/', '/settings/users', '/settings/teams', '/settings']) {
       await page.goto(route);
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(800);

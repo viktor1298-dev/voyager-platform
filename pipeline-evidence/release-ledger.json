@@ -518,5 +518,21 @@
     "loginSmoke": true,
     "timestamp": "2026-03-07T02:26:30.000Z",
     "notes": "Phase 1 UI redesign \u2014 types, tests, dead code cleanup"
+  },
+  {
+    "version": "v194-phase2-fix1",
+    "timestamp": "2026-03-07T08:24:49.493457",
+    "status": "deployed",
+    "changes": [
+      "fix(api): onRequest hook skips /trpc AND /api/trpc routes (fixes 401 on background polling)",
+      "fix(nav): sidebar AI Assistant + Dashboards per redesign spec",
+      "fix(api): also skip auth for /api/trpc/* routes (ingress prefix)"
+    ],
+    "pods": {
+      "voyager-api": "v194-phase2-fix1",
+      "voyager-web": "v194-phase2-fix1"
+    },
+    "health": "ok",
+    "login": "admin@voyager.local token verified"
   }
 ]

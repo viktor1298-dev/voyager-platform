@@ -4,8 +4,8 @@ import { login } from './helpers'
 test.describe('TanStack Table — Users Management', () => {
   test.beforeEach(async ({ page }) => {
     await login(page)
-    await page.getByRole('link', { name: /users/i }).first().click()
-    await expect(page).toHaveURL(/\/users/, { timeout: 10_000 })
+    await page.goto('/settings/users')
+    await expect(page).toHaveURL(/\/settings\/users/, { timeout: 10_000 })
     await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({
       timeout: 10_000,
     })

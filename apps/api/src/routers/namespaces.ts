@@ -7,11 +7,19 @@ import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_CACHE_TTL = 30
 
+const resourceQuotaSchema = z.object({
+  cpuLimit: z.string().nullable().optional(),
+  memLimit: z.string().nullable().optional(),
+  cpuUsed: z.string().nullable().optional(),
+  memUsed: z.string().nullable().optional(),
+})
+
 const namespaceSummarySchema = z.object({
   name: z.string(),
   status: z.string().nullable().optional(),
   labels: z.record(z.string(), z.string()).nullable().optional(),
   createdAt: z.union([z.string(), z.date()]).nullable().optional(),
+  resourceQuota: resourceQuotaSchema.nullable().optional(),
 })
 
 export const namespacesRouter = router({
@@ -22,16 +30,44 @@ export const namespacesRouter = router({
       try {
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const response = await cached(`k8s:${input.clusterId}:namespaces`, K8S_CACHE_TTL, () =>
-          coreV1.listNamespace(),
-        )
 
-        return response.items.map((ns) => ({
-          name: ns.metadata?.name ?? '',
-          status: ns.status?.phase ?? null,
-          labels: (ns.metadata?.labels as Record<string, string>) ?? null,
-          createdAt: ns.metadata?.creationTimestamp ?? null,
-        }))
+        const [nsResponse, quotaResponse] = await Promise.all([
+          cached(`k8s:${input.clusterId}:namespaces`, K8S_CACHE_TTL, () =>
+            coreV1.listNamespace(),
+          ),
+          cached(`k8s:${input.clusterId}:resource-quotas`, K8S_CACHE_TTL, () =>
+            coreV1.listResourceQuotaForAllNamespaces(),
+          ).catch(() => ({ items: [] as k8s.V1ResourceQuota[] })),
+        ])
+
+        // Build a map of namespace → aggregated resource quota
+        const quotaMap = new Map<string, { cpuLimit: string | null; memLimit: string | null; cpuUsed: string | null; memUsed: string | null }>()
+        for (const quota of quotaResponse.items ?? []) {
+          const ns = quota.metadata?.namespace ?? ''
+          if (!ns) continue
+          const hard = quota.status?.hard ?? {}
+          const used = quota.status?.used ?? {}
+          // If multiple quotas exist per namespace, take the first one found
+          if (!quotaMap.has(ns)) {
+            quotaMap.set(ns, {
+              cpuLimit: hard['limits.cpu'] ?? hard['cpu'] ?? null,
+              memLimit: hard['limits.memory'] ?? hard['memory'] ?? null,
+              cpuUsed: used['limits.cpu'] ?? used['cpu'] ?? null,
+              memUsed: used['limits.memory'] ?? used['memory'] ?? null,
+            })
+          }
+        }
+
+        return nsResponse.items.map((ns) => {
+          const name = ns.metadata?.name ?? ''
+          return {
+            name,
+            status: ns.status?.phase ?? null,
+            labels: (ns.metadata?.labels as Record<string, string>) ?? null,
+            createdAt: ns.metadata?.creationTimestamp ?? null,
+            resourceQuota: quotaMap.get(name) ?? null,
+          }
+        })
       } catch (error) {
         if (error instanceof TRPCError) throw error
         throw new TRPCError({

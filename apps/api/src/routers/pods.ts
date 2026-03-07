@@ -68,6 +68,52 @@ export const podsRouter = router({
       }
     }),
 
+  listStored: protectedProcedure
+    .input(z.object({ clusterId: z.string().uuid() }))
+    .output(z.object({
+      pods: z.array(z.any()),
+      offline: z.boolean(),
+      lastSeen: z.string().nullable(),
+    }))
+    .query(async ({ input }) => {
+      try {
+        // Attempt live K8s fetch first
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const cachePrefix = `k8s:${input.clusterId}`
+        const podsResponse = await cached(`${cachePrefix}:pods:stored`, 15, () =>
+          coreV1.listPodForAllNamespaces(),
+        )
+
+        return {
+          pods: podsResponse.items.map((p) => ({
+            name: p.metadata?.name ?? '',
+            namespace: p.metadata?.namespace ?? '',
+            status: p.status?.phase ?? 'Unknown',
+            createdAt: p.metadata?.creationTimestamp
+              ? new Date(p.metadata.creationTimestamp as unknown as string).toISOString()
+              : null,
+            nodeName: p.spec?.nodeName ?? null,
+          })),
+          offline: false,
+          lastSeen: new Date().toISOString(),
+        }
+      } catch {
+        // Cluster is offline or unreachable — return graceful degradation (BUG-RD-004)
+        return {
+          pods: [] as Array<{
+            name: string
+            namespace: string
+            status: string
+            createdAt: string | null
+            nodeName: string | null
+          }>,
+          offline: true,
+          lastSeen: null,
+        }
+      }
+    }),
+
   delete: adminProcedure
     .input(z.object({
       clusterId: z.string().uuid(),

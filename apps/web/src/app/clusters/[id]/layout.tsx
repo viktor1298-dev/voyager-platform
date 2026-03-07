@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion } from 'motion/react'
 import Link from 'next/link'
-import { useParams, usePathname } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { trpc } from '@/lib/trpc'
@@ -39,9 +40,57 @@ function providerIcon(provider: string): string {
 export default function ClusterLayout({ children }: { children: React.ReactNode }) {
   const { id } = useParams<{ id: string }>()
   const pathname = usePathname()
+  const router = useRouter()
 
   const dbCluster = trpc.clusters.get.useQuery({ id }, { staleTime: 30000 })
   const clusterName = (dbCluster.data?.name as string | undefined) ?? id
+
+  // Keyboard shortcuts: 1–9 for tabs, [ and ] for prev/next
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Skip if user is typing in an input/textarea/contenteditable
+      const target = e.target as HTMLElement
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable
+      ) return
+      // Skip if modifier keys are pressed
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+
+      const tabsCount = CLUSTER_TABS.length
+      const currentTabIndex = CLUSTER_TABS.findIndex((tab) => {
+        const base = `/clusters/${id}`
+        const rest = pathname.replace(base, '')
+        if (!rest || rest === '/') return tab.id === 'overview'
+        const segment = rest.replace(/^\//, '').split('/')[0]
+        return tab.id === (segment || 'overview')
+      })
+
+      if (e.key >= '1' && e.key <= '9') {
+        const idx = Number(e.key) - 1
+        if (idx < tabsCount) {
+          e.preventDefault()
+          const tab = CLUSTER_TABS[idx]
+          if (tab) router.push(`/clusters/${id}${tab.path}`)
+        }
+      } else if (e.key === '[') {
+        e.preventDefault()
+        const prevIdx = (currentTabIndex - 1 + tabsCount) % tabsCount
+        const tab = CLUSTER_TABS[prevIdx]
+        if (tab) router.push(`/clusters/${id}${tab.path}`)
+      } else if (e.key === ']') {
+        e.preventDefault()
+        const nextIdx = (currentTabIndex + 1) % tabsCount
+        const tab = CLUSTER_TABS[nextIdx]
+        if (tab) router.push(`/clusters/${id}${tab.path}`)
+      }
+    }
+
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [id, pathname, router])
 
   // Determine active tab from pathname
   const getActiveTab = () => {

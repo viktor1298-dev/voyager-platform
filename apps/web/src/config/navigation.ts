@@ -1,4 +1,4 @@
-import { Bell, Bot, LayoutDashboard, LayoutGrid, Server, Settings } from 'lucide-react'
+import { Bell, Bot, LayoutDashboard, PieChart, Server, Settings } from 'lucide-react'
 
 export type NavItem = {
   id: string
@@ -11,6 +11,6 @@ export const navItems: NavItem[] = [
   { id: '/clusters', label: 'Clusters', icon: Server },
   { id: '/alerts', label: 'Alerts', icon: Bell },
   { id: '/ai', label: 'AI Assistant', icon: Bot },
-  { id: '/dashboards', label: 'Dashboards', icon: LayoutGrid },
+  { id: '/dashboards', label: 'Dashboards', icon: PieChart },
   { id: '/settings', label: 'Settings', icon: Settings },
 ] as const

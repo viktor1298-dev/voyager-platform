@@ -76,6 +76,39 @@ export const servicesRouter = router({
       }
     }),
 
+  // Alias for consistency with BOARD naming convention (P2-002)
+  listByCluster: protectedProcedure
+    .input(z.object({ clusterId: z.string().uuid(), namespace: z.string().optional() }))
+    .output(z.array(serviceSummarySchema))
+    .query(async ({ input }) => {
+      try {
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const cacheKey = `k8s:${input.clusterId}:services:${input.namespace ?? 'all'}`
+
+        const response = await cached(cacheKey, K8S_CACHE_TTL, () =>
+          input.namespace
+            ? coreV1.listNamespacedService({ namespace: input.namespace })
+            : coreV1.listServiceForAllNamespaces(),
+        )
+
+        return response.items.map((svc) => ({
+          name: svc.metadata?.name ?? '',
+          namespace: svc.metadata?.namespace ?? '',
+          type: svc.spec?.type ?? 'ClusterIP',
+          clusterIP: svc.spec?.clusterIP ?? null,
+          ports: mapPorts(svc.spec?.ports),
+          createdAt: svc.metadata?.creationTimestamp ?? null,
+        }))
+      } catch (error) {
+        if (error instanceof TRPCError) throw error
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to list services: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        })
+      }
+    }),
+
   get: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid(), name: z.string(), namespace: z.string() }))
     .output(serviceSummarySchema)
