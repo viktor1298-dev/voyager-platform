@@ -15,11 +15,11 @@ import type { MetricsRange } from './TimeRangeSelector'
 
 export interface MetricsDataPoint {
   timestamp: string
-  cpu: number
-  memory: number
-  pods: number
-  networkBytesIn?: number
-  networkBytesOut?: number
+  cpu: number | null
+  memory: number | null
+  pods: number | null
+  networkBytesIn?: number | null
+  networkBytesOut?: number | null
 }
 
 export type MetricKey = 'cpu' | 'memory' | 'pods' | 'networkIn' | 'networkOut'
@@ -83,8 +83,7 @@ function formatBytes(bytes: number): string {
 }
 
 /**
- * BUG-193-003: Format X-axis timestamps with HH:MM for 24h range,
- * showing every 4-6 hours to avoid crowding.
+ * Format X-axis timestamps — Grafana-style clean labels per range.
  */
 function formatXAxis(iso: string, range: MetricsRange): string {
   const d = new Date(iso)
@@ -92,32 +91,31 @@ function formatXAxis(iso: string, range: MetricsRange): string {
 
   switch (range) {
     case '1h':
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     case '6h':
       return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     case '24h':
-      // Show HH:MM — recharts interval handles tick density
       return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     case '7d':
-      return d.toLocaleDateString([], { weekday: 'short', hour: '2-digit' })
+      return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
     default:
       return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 }
 
 /**
- * Determine tick interval to show approximately every 4-6 hours for 24h range.
+ * Calculate tick interval for Grafana-quality X-axis labels.
+ * Returns a numeric interval (show every Nth tick) based on data density and range.
  */
-function getTickInterval(data: MetricsDataPoint[], range: MetricsRange): number | 'preserveStartEnd' {
-  if (range === '24h') {
-    // Show ~6 ticks: every 4 hours = every (total/6) points
-    const target = Math.max(1, Math.floor(data.length / 6))
-    return target
+function getTickInterval(data: MetricsDataPoint[], range: MetricsRange): number {
+  const len = data.length
+  if (len === 0) return 0
+  switch (range) {
+    case '1h':  return Math.max(1, Math.floor(len / 6))   // ~6 ticks = every 10 min
+    case '6h':  return Math.max(1, Math.floor(len / 6))   // ~6 ticks = every 1h
+    case '24h': return Math.max(1, Math.floor(len / 6))   // ~6 ticks = every 4h
+    case '7d':  return Math.max(1, Math.floor(len / 7))   // 7 ticks = every day
+    default:    return Math.max(1, Math.floor(len / 6))
   }
-  if (range === '7d') {
-    return Math.max(1, Math.floor(data.length / 7))
-  }
-  return 'preserveStartEnd'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -165,7 +163,14 @@ function CurrentValueBadge({
   activeMetrics: MetricKey[]
 }) {
   if (!data.length) return null
-  const lastPoint = data[data.length - 1]
+  // Find last non-null data point for badge display
+  let lastPoint: MetricsDataPoint | null = null
+  for (let i = data.length - 1; i >= 0; i--) {
+    if (data[i] && data[i].cpu !== null) {
+      lastPoint = data[i]
+      break
+    }
+  }
   if (!lastPoint) return null
 
   return (
@@ -210,11 +215,11 @@ export function MetricsAreaChart({
   const hasNetwork = activeMetrics.includes('networkIn') || activeMetrics.includes('networkOut')
   const hasPods = activeMetrics.includes('pods')
 
-  // Enrich data with aliased keys for recharts
+  // Enrich data — preserve nulls for gap rendering (connectNulls=false)
   const chartData = data.map((d) => ({
     ...d,
-    networkBytesIn: d.networkBytesIn ?? 0,
-    networkBytesOut: d.networkBytesOut ?? 0,
+    networkBytesIn: d.networkBytesIn ?? (d.cpu === null ? null : 0),
+    networkBytesOut: d.networkBytesOut ?? (d.cpu === null ? null : 0),
   }))
 
   const tickInterval = getTickInterval(data, range)
@@ -318,6 +323,7 @@ export function MetricsAreaChart({
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
                 isAnimationActive={false}
+                connectNulls={false}
               />
             )
           })}

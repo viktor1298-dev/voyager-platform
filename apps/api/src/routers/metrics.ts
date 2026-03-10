@@ -40,12 +40,14 @@ function bucketTimestamp(ts: Date, intervalMs: number, start: number): string {
 }
 
 export const metricsRouter = router({
-  /** IP2-003: Cluster health timeline from healthHistory table */
+  /** IP2-003: Cluster health timeline from healthHistory table.
+   *  Returns FULL time range with null-filled gaps (Grafana-style). */
   clusterHealth: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
     .query(async ({ input }) => {
       const { intervalMs, points } = TIME_RANGE_CONFIG[input.range]
       const start = getTimeRangeStart(input.range)
+      const startMs = start.getTime()
 
       const rows = await db
         .select()
@@ -53,9 +55,6 @@ export const metricsRouter = router({
         .where(gte(healthHistory.checkedAt, start))
         .orderBy(healthHistory.checkedAt)
 
-      if (rows.length === 0) return []
-
-      const startMs = start.getTime()
       const buckets = new Map<string, { healthy: number; degraded: number; offline: number; total: number }>()
 
       for (const row of rows) {
@@ -68,20 +67,38 @@ export const metricsRouter = router({
         else b.offline++
       }
 
-      return Array.from(buckets.entries()).map(([timestamp, b]) => ({
-        timestamp,
-        healthy: b.total > 0 ? Math.round((b.healthy / b.total) * 100) : 0,
-        degraded: b.total > 0 ? Math.round((b.degraded / b.total) * 100) : 0,
-        offline: b.total > 0 ? Math.round((b.offline / b.total) * 100) : 0,
-      }))
+      // Generate FULL time range — fill missing buckets with null
+      const result = []
+      for (let i = 0; i < points; i++) {
+        const bucketTime = new Date(startMs + (i + 1) * intervalMs).toISOString()
+        const existing = buckets.get(bucketTime)
+        if (existing) {
+          result.push({
+            timestamp: bucketTime,
+            healthy: existing.total > 0 ? Math.round((existing.healthy / existing.total) * 100) : 0,
+            degraded: existing.total > 0 ? Math.round((existing.degraded / existing.total) * 100) : 0,
+            offline: existing.total > 0 ? Math.round((existing.offline / existing.total) * 100) : 0,
+          })
+        } else {
+          result.push({
+            timestamp: bucketTime,
+            healthy: null,
+            degraded: null,
+            offline: null,
+          })
+        }
+      }
+      return result
     }),
 
-  /** IP2-004: Resource usage timeline from metricsHistory table */
+  /** IP2-004: Resource usage timeline from metricsHistory table.
+   *  Returns FULL time range with null-filled gaps (Grafana-style). */
   resourceUsage: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
     .query(async ({ input }) => {
-      const { intervalMs } = TIME_RANGE_CONFIG[input.range]
+      const { intervalMs, points } = TIME_RANGE_CONFIG[input.range]
       const start = getTimeRangeStart(input.range)
+      const startMs = start.getTime()
 
       const rows = await db
         .select()
@@ -89,9 +106,6 @@ export const metricsRouter = router({
         .where(gte(metricsHistory.timestamp, start))
         .orderBy(metricsHistory.timestamp)
 
-      if (rows.length === 0) return []
-
-      const startMs = start.getTime()
       const buckets = new Map<string, { cpuSum: number; memSum: number; count: number }>()
 
       for (const row of rows) {
@@ -103,11 +117,26 @@ export const metricsRouter = router({
         b.count++
       }
 
-      return Array.from(buckets.entries()).map(([timestamp, b]) => ({
-        timestamp,
-        cpu: Math.round(b.cpuSum / b.count),
-        memory: Math.round(b.memSum / b.count),
-      }))
+      // Generate FULL time range — fill missing buckets with null
+      const result = []
+      for (let i = 0; i < points; i++) {
+        const bucketTime = new Date(startMs + (i + 1) * intervalMs).toISOString()
+        const existing = buckets.get(bucketTime)
+        if (existing) {
+          result.push({
+            timestamp: bucketTime,
+            cpu: Math.round(existing.cpuSum / existing.count),
+            memory: Math.round(existing.memSum / existing.count),
+          })
+        } else {
+          result.push({
+            timestamp: bucketTime,
+            cpu: null,
+            memory: null,
+          })
+        }
+      }
+      return result
     }),
 
   /** IP2-005: Uptime history from healthHistory records */
@@ -273,12 +302,14 @@ export const metricsRouter = router({
       }
     }),
 
-  /** M-P3-002: Per-cluster time-series from metricsHistory, bucketed by range */
+  /** M-P3-002: Per-cluster time-series from metricsHistory, bucketed by range.
+   *  Returns FULL time range with null-filled gaps (Grafana-style). */
   history: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid(), range: timeRangeSchema }))
     .query(async ({ input }) => {
-      const { intervalMs } = TIME_RANGE_CONFIG[input.range]
+      const { intervalMs, points } = TIME_RANGE_CONFIG[input.range]
       const start = getTimeRangeStart(input.range)
+      const startMs = start.getTime()
 
       const rows = await db
         .select()
@@ -289,9 +320,7 @@ export const metricsRouter = router({
         ))
         .orderBy(metricsHistory.timestamp)
 
-      if (rows.length === 0) return []
-
-      const startMs = start.getTime()
+      // Build bucket map from DB rows
       const buckets = new Map<string, {
         cpuSum: number; memSum: number; podSum: number
         netInSum: number; netOutSum: number; count: number
@@ -309,16 +338,32 @@ export const metricsRouter = router({
         b.count++
       }
 
-      return Array.from(buckets.entries())
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([timestamp, b]) => ({
-          timestamp,
-          cpu: Math.round(b.cpuSum / b.count * 10) / 10,
-          memory: Math.round(b.memSum / b.count * 10) / 10,
-          pods: Math.round(b.podSum / b.count),
-          networkBytesIn: Math.round(b.netInSum / b.count),
-          networkBytesOut: Math.round(b.netOutSum / b.count),
-        }))
+      // Generate FULL time range — fill missing buckets with null
+      const result = []
+      for (let i = 0; i < points; i++) {
+        const bucketTime = new Date(startMs + (i + 1) * intervalMs).toISOString()
+        const existing = buckets.get(bucketTime)
+        if (existing) {
+          result.push({
+            timestamp: bucketTime,
+            cpu: Math.round((existing.cpuSum / existing.count) * 10) / 10,
+            memory: Math.round((existing.memSum / existing.count) * 10) / 10,
+            pods: Math.round(existing.podSum / existing.count),
+            networkBytesIn: Math.round(existing.netInSum / existing.count),
+            networkBytesOut: Math.round(existing.netOutSum / existing.count),
+          })
+        } else {
+          result.push({
+            timestamp: bucketTime,
+            cpu: null,
+            memory: null,
+            pods: null,
+            networkBytesIn: null,
+            networkBytesOut: null,
+          })
+        }
+      }
+      return result
     }),
 
   /** M-P3-002: Live per-node resource snapshot from K8s metrics-server */
