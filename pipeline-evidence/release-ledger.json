@@ -572,5 +572,20 @@
     "bundle_verified": "reducedMotion + motion chunks present",
     "deployed_by": "uri-devops",
     "next_stage": "e2e-phase3"
+  },
+  {
+    "version": "v200",
+    "tag": "v200",
+    "commit": "a622c27cdfa84988e80874cf8d07c448118d57bb",
+    "timestamp": "2026-03-12T23:12:36.868301",
+    "images": {
+      "api": "voyager-api:v200",
+      "web": "voyager-web:v200"
+    },
+    "helm_revision": 1,
+    "pods": "all Running 0 restarts",
+    "health": "200 OK - {status:ok}",
+    "deployed_by": "uri-devops",
+    "context": "Full fresh deploy - no previous release existed"
   }
 ]
