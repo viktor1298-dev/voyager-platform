@@ -574,41 +574,18 @@
     "next_stage": "e2e-phase3"
   },
   {
-    "version": "v196",
-    "timestamp": "2026-03-07T12:07:28.102377",
-    "phase": "Phase 4 sidebar polish",
-    "changes": "SB-002..SB-011 (8 items)",
-    "deployedBy": "uri",
-    "status": "deployed",
-    "health": "ok",
-    "login": "ok",
-    "imageVerification": "voyager-api:v196 voyager-web:v196",
-    "bundleVerified": true
-  },
-  {
-    "version": "v197",
-    "timestamp": "2026-03-07T14:15:26.008361",
-    "phase": "Phase 5 Dashboard UX + Per-Node Metrics",
-    "changes": "Compact stats bar, smaller cards, anomaly badge, node metrics table, batch node inserts, health endpoint docs",
-    "deployedBy": "uri",
-    "status": "deployed",
-    "health": "ok",
-    "metrics_collector": "running",
-    "login": "ok",
-    "imageVerification": "voyager-api:v197 voyager-web:v197",
-    "bundleVerified": true,
-    "node_metrics_history_table": "created via init.sql"
-  },
-  {
-    "version": "v199",
-    "sha": "f611410",
-    "timestamp": "2026-03-07T20:42:43.093000",
-    "deployer": "uri",
-    "status": "success",
-    "images": [
-      "voyager-api:v199",
-      "voyager-web:v199"
-    ],
-    "changes": "fix/cluster-name-truncation: 2-row card layout for full cluster names in dashboard"
+    "version": "v200",
+    "tag": "v200",
+    "commit": "a622c27cdfa84988e80874cf8d07c448118d57bb",
+    "timestamp": "2026-03-12T23:12:36.868301",
+    "images": {
+      "api": "voyager-api:v200",
+      "web": "voyager-web:v200"
+    },
+    "helm_revision": 1,
+    "pods": "all Running 0 restarts",
+    "health": "200 OK - {status:ok}",
+    "deployed_by": "uri-devops",
+    "context": "Full fresh deploy - no previous release existed"
   }
 ]

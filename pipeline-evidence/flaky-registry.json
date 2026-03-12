@@ -33,16 +33,17 @@
   },
   {
     "test": "optimistic-ui.spec.ts \u2014 page navigation renders with transition",
-    "failCount": 3,
-    "root_cause": "h1:has-text(Alerts) not found \u2014 Alerts page may not render h1 or timing issue",
-    "suggested_fix": "Use waitForURL(/\\/alerts/) instead of h1 selector",
+    "failCount": 4,
+    "root_cause": "v196: a[href=\"/clusters\"] selector broken \u2014 SB-005/SB-011 changed Clusters nav to accordion parent href=\"#\"",
+    "suggested_fix": "Use data-testid selector or navigate via sub-nav link after expanding accordion",
     "firstSeen": "2026-03-07",
     "lastSeen": "2026-03-07",
     "classification": "test-bug",
     "failedInVersions": [
       "v194-phase1",
       "v194-round3",
-      "v194-phase3"
+      "v194-phase3",
+      "v196"
     ]
   },
   {
