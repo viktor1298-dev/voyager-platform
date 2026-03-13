@@ -139,3 +139,21 @@ Each phase follows this flow:
 - [x] StatCardsWidget with 24h sparklines available via widget mode [v194-widgets 2026-07-14]
 - [x] Legacy cluster layout preserved (shown when widgetMode=false) [v194-widgets 2026-07-14]
 - [x] Build passes ✅ | Navigation v194 intact ✅ [v194-widgets 2026-07-14]
+
+---
+
+## 🔧 v201 — Stale Deploy Fix + Metrics Fix (2026-03-13)
+
+### Completed
+- [x] Deployed v201 with --no-cache from commit c522cbf (metrics RBAC + timeout/error fix) [v201 2026-03-13]
+- [x] Fixed stale deploy: voyager-web pod was 21h old (running v200), rebuilt and redeployed both images [v201 2026-03-13]
+- [x] Pushed unpushed c522cbf commit to origin/feat/init-monorepo [v201 2026-03-13]
+- [x] Verified both pods running v201 with matching git-sha labels [v201 2026-03-13]
+- [x] Updated build-deploy SKILL.md with stale deploy prevention rules [v201 2026-03-13]
+- [x] Updated release-ledger.json with v201 entry [v201 2026-03-13]
+
+### Root Cause Analysis (Stale Deploy)
+- voyager-web pod was NOT restarted during v200 metrics deploy
+- c522cbf commit was locally committed but not pushed to origin
+- Build agent used cached Docker layers (no --no-cache)
+- Process fix: added Step 0.5 to SKILL.md with git-sync check + --no-cache mandatory rule
