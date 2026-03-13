@@ -41,6 +41,20 @@ async function collectNetworkBytes(
   }
 }
 
+/** Per-cluster metrics collection timeout (ms) */
+const CLUSTER_TIMEOUT_MS = 15_000
+
+/** Wrap a promise with a timeout */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Timeout after ${ms}ms: ${label}`)), ms)
+    promise.then(
+      (v) => { clearTimeout(timer); resolve(v) },
+      (e) => { clearTimeout(timer); reject(e) },
+    )
+  })
+}
+
 async function collectMetrics(): Promise<void> {
   const allClusters = await db
     .select({ id: clusters.id })
@@ -49,15 +63,30 @@ async function collectMetrics(): Promise<void> {
 
   for (const cluster of allClusters) {
     try {
-      const kc = await clusterClientPool.getClient(cluster.id)
+      let kc: k8s.KubeConfig
+      try {
+        kc = await withTimeout(
+          clusterClientPool.getClient(cluster.id),
+          CLUSTER_TIMEOUT_MS,
+          `getClient(${cluster.id})`,
+        )
+      } catch (err) {
+        // Skip clusters with invalid/missing credentials (e.g. demo seed clusters)
+        console.warn(`[metrics-collector] skipping cluster ${cluster.id} — cannot create client:`, err instanceof Error ? err.message : err)
+        continue
+      }
       const coreApi = kc.makeApiClient(k8s.CoreV1Api)
       const metricsClient = new k8s.Metrics(kc)
 
-      const [nodeMetrics, nodesRes, podsRes] = await Promise.all([
-        metricsClient.getNodeMetrics(),
-        coreApi.listNode(),
-        coreApi.listPodForAllNamespaces(),
-      ])
+      const [nodeMetrics, nodesRes, podsRes] = await withTimeout(
+        Promise.all([
+          metricsClient.getNodeMetrics(),
+          coreApi.listNode(),
+          coreApi.listPodForAllNamespaces(),
+        ]),
+        CLUSTER_TIMEOUT_MS,
+        `metrics-fetch(${cluster.id})`,
+      )
 
       let totalCpuUsageNano = 0
       let totalMemUsageBytes = 0
