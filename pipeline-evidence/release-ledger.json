@@ -587,5 +587,36 @@
     "health": "200 OK - {status:ok}",
     "deployed_by": "uri-devops",
     "context": "Full fresh deploy - no previous release existed"
+  },
+  {
+    "version": "v201",
+    "tag": "v201",
+    "commit": "c522cbf31bd4e756fc0d6606a87ec74bc113e43e",
+    "timestamp": "2026-03-13T18:30:41.337235Z",
+    "phase": "metrics-fix-stale-deploy-fix",
+    "changes": [
+      "fix: metrics collection RBAC + timeout/error handling (c522cbf)",
+      "fix: stale deploy \u2014 web pod was 21h old, running v200 while api was updated",
+      "fix: pushed unpushed c522cbf commit to origin",
+      "process: rebuilt both images with --no-cache + git-sha label verification"
+    ],
+    "images": {
+      "api": "voyager-api:v201",
+      "web": "voyager-web:v201"
+    },
+    "git_sha_api": "c522cbf31bd4e756fc0d6606a87ec74bc113e43e",
+    "git_sha_web": "c522cbf31bd4e756fc0d6606a87ec74bc113e43e",
+    "helm_revision": 1,
+    "pods": "all Running 0 restarts",
+    "health": "200 OK",
+    "bundle_verified": "MetricsEmptyState + MetricsTimeSeriesPanel strings found in bundle",
+    "deployed_by": "uri-devops",
+    "stale_deploy_investigation": {
+      "was_deployed": "v200 (web pod 21h old, api pod 21min old)",
+      "should_be": "v201 with c522cbf metrics fix",
+      "gap": "web pod not restarted during metrics fix deploy; c522cbf was not pushed to origin",
+      "root_cause": "deploy agent only restarted api, not web; git push not done after commit"
+    },
+    "next_stage": "awaiting-review"
   }
 ]
