@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { trpc } from '@/lib/trpc'
 import { TimeRangeSelector } from './TimeRangeSelector'
 import { AutoRefreshToggle } from './AutoRefreshToggle'
@@ -10,6 +10,9 @@ import { MetricsEmptyState } from './MetricsEmptyState'
 import { useMetricsPreferences } from '@/stores/metrics-preferences'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+
+/** Max time (ms) to wait before showing timeout message instead of spinner */
+const LOADING_TIMEOUT_MS = 30_000
 
 interface MetricsTimeSeriesPanelProps {
   clusterId: string
@@ -44,6 +47,8 @@ export function MetricsTimeSeriesPanel({
     {
       refetchInterval,
       staleTime: 30_000,
+      retry: 2,
+      retryDelay: 3000,
     },
   )
 
@@ -53,12 +58,37 @@ export function MetricsTimeSeriesPanel({
       refetchInterval,
       staleTime: 30_000,
       enabled: isLive,
+      retry: 1,
     },
   )
 
   const isLoading = historyQuery.isLoading
+  const isError = historyQuery.isError
   const data = historyQuery.data ?? []
   const nodes = nodeQuery.data ?? []
+
+  // Track how long we've been in loading state to detect timeout
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false)
+  const loadingStartRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (isLoading && !loadingStartRef.current) {
+      loadingStartRef.current = Date.now()
+      setLoadingTimedOut(false)
+      const timer = setTimeout(() => setLoadingTimedOut(true), LOADING_TIMEOUT_MS)
+      return () => clearTimeout(timer)
+    }
+    if (!isLoading) {
+      loadingStartRef.current = null
+      setLoadingTimedOut(false)
+    }
+  }, [isLoading])
+
+  const handleRetry = () => {
+    setLoadingTimedOut(false)
+    loadingStartRef.current = null
+    historyQuery.refetch()
+  }
 
   function toggleMetric(key: MetricKey) {
     setActiveMetrics((prev) =>
@@ -129,12 +159,29 @@ export function MetricsTimeSeriesPanel({
 
       {/* Chart area */}
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
-        {isLoading ? (
+        {isError ? (
+          <MetricsEmptyState
+            status="error"
+            message="Failed to load metrics"
+            detail={historyQuery.error?.message ?? 'An unexpected error occurred while fetching metrics data.'}
+            onRetry={handleRetry}
+          />
+        ) : isLoading && loadingTimedOut ? (
+          <MetricsEmptyState
+            status="unavailable"
+            message="Unable to collect metrics"
+            detail="Metrics server may not be available or is taking too long to respond."
+            onRetry={handleRetry}
+          />
+        ) : isLoading ? (
           <div className="space-y-2" style={{ height: chartHeight }}>
             <Skeleton className="h-full w-full rounded-lg" />
           </div>
         ) : data.length === 0 ? (
-          <MetricsEmptyState />
+          <MetricsEmptyState
+            status="empty"
+            onRetry={handleRetry}
+          />
         ) : (
           <MetricsAreaChart
             data={data}
