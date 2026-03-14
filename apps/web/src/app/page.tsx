@@ -460,13 +460,18 @@ function DashboardContent() {
                   const totalInEnvironment = Object.values(clustersByHealth).reduce((sum, clusters) => sum + clusters.length, 0)
                   if (totalInEnvironment === 0) return null
                   const meta = ENV_META[environment]
+                  const environmentSummary = HEALTH_GROUP_ORDER.map((healthGroup) => ({
+                    key: healthGroup,
+                    value: clustersByHealth[healthGroup].length,
+                    meta: HEALTH_GROUP_META[healthGroup],
+                  }))
 
                   return (
                     <section
                       key={environment}
                       className="rounded-2xl border border-[var(--color-border)]/80 bg-[var(--color-bg-card)]/78 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.16)] backdrop-blur sm:p-5 2xl:p-6"
                     >
-                      <div className="mb-4 flex flex-wrap items-center gap-3 2xl:mb-5">
+                      <div className="mb-5 flex flex-wrap items-center gap-3 2xl:mb-6">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: meta.color }} />
                         <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{meta.sectionLabel}</h3>
                         <span className="rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/70 px-2 py-0.5 text-[11px] font-medium tabular-nums text-[var(--color-text-dim)]">
@@ -475,39 +480,79 @@ function DashboardContent() {
                         <div className="h-px min-w-[80px] flex-1 bg-[var(--color-border)]/40" />
                       </div>
 
-                      <div className="space-y-5">
-                        {HEALTH_GROUP_ORDER.map((healthGroup) => {
-                          const clusters = clustersByHealth[healthGroup]
-                          if (clusters.length === 0) return null
-                          const healthMeta = HEALTH_GROUP_META[healthGroup]
-                          const GroupIcon = healthMeta.icon
+                      <div className="grid gap-5 3xl:grid-cols-[280px_minmax(0,1fr)] 3xl:items-start">
+                        <aside className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/50 p-4 2xl:p-5">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--color-text-dim)]">
+                            {meta.label} environment
+                          </p>
+                          <p className="mt-2 text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">
+                            {totalInEnvironment} active clusters in this lane
+                          </p>
+                          <p className="mt-2 text-sm text-[var(--color-text-dim)]">
+                            Wide view groups clusters by health so operators can scan problem areas first without losing environment context.
+                          </p>
 
-                          return (
-                            <div key={healthGroup} className="space-y-3">
-                              <div className="flex items-center gap-2.5">
-                                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/70">
-                                  <GroupIcon className="h-3.5 w-3.5" style={{ color: healthMeta.dotColor }} />
-                                </span>
-                                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
-                                  {healthMeta.label}
-                                </span>
-                                <span className="text-[11px] font-medium tabular-nums text-[var(--color-text-dim)]">
-                                  {clusters.length}
-                                </span>
-                                <div className="h-px flex-1 bg-[var(--color-border)]/30" />
+                          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 3xl:grid-cols-1">
+                            {environmentSummary.map((item) => (
+                              <div
+                                key={item.key}
+                                className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-card)]/72 px-3 py-3"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/70"
+                                  >
+                                    <item.meta.icon className="h-3.5 w-3.5" style={{ color: item.meta.dotColor }} />
+                                  </span>
+                                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-dim)]">
+                                    {item.meta.label}
+                                  </span>
+                                </div>
+                                <p className="mt-3 text-2xl font-semibold tracking-tight text-[var(--color-text-primary)] tabular-nums">
+                                  {item.value}
+                                </p>
                               </div>
+                            ))}
+                          </div>
+                        </aside>
 
-                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                                <AnimatePresence mode="popLayout">
-                                  {clusters.map((cluster) => {
-                                    const idx = cardIndex++
-                                    return <ClusterCard key={cluster.id} cluster={cluster} index={idx} />
-                                  })}
-                                </AnimatePresence>
+                        <div className="grid gap-4 2xl:grid-cols-2 3xl:grid-cols-3 3xl:gap-5">
+                          {HEALTH_GROUP_ORDER.map((healthGroup) => {
+                            const clusters = clustersByHealth[healthGroup]
+                            if (clusters.length === 0) return null
+                            const healthMeta = HEALTH_GROUP_META[healthGroup]
+                            const GroupIcon = healthMeta.icon
+
+                            return (
+                              <div
+                                key={healthGroup}
+                                className="flex h-full min-h-[220px] flex-col rounded-2xl border border-[var(--color-border)]/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.018))] p-3.5 2xl:p-4"
+                              >
+                                <div className="mb-3 flex items-center gap-2.5">
+                                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/70">
+                                    <GroupIcon className="h-3.5 w-3.5" style={{ color: healthMeta.dotColor }} />
+                                  </span>
+                                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
+                                    {healthMeta.label}
+                                  </span>
+                                  <span className="text-[11px] font-medium tabular-nums text-[var(--color-text-dim)]">
+                                    {clusters.length}
+                                  </span>
+                                  <div className="h-px flex-1 bg-[var(--color-border)]/30" />
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-1 4xl:grid-cols-2">
+                                  <AnimatePresence mode="popLayout">
+                                    {clusters.map((cluster) => {
+                                      const idx = cardIndex++
+                                      return <ClusterCard key={cluster.id} cluster={cluster} index={idx} />
+                                    })}
+                                  </AnimatePresence>
+                                </div>
                               </div>
-                            </div>
-                          )
-                        })}
+                            )
+                          })}
+                        </div>
                       </div>
                     </section>
                   )

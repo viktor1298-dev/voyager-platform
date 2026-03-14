@@ -30,15 +30,18 @@ test.describe('Theme — Dark/Light/System Toggle', () => {
     const btn = page.locator('[data-testid="theme-toggle"]').first();
     await expect(btn).toBeVisible({ timeout: 5000 });
 
-    // Cycle until current theme is System
-    for (let i = 0; i < 4; i++) {
+    const isSystemActive = async () => {
       const label = (await btn.getAttribute('aria-label')) ?? '';
-      if (/current theme:\s*system/i.test(label)) break;
+      const title = (await btn.getAttribute('title')) ?? '';
+      return /active:\s*system/i.test(title) || /current theme:\s*system/i.test(label);
+    };
+
+    for (let i = 0; i < 4; i++) {
+      if (await isSystemActive()) break;
       await btn.click();
     }
 
-    const systemLabel = (await btn.getAttribute('aria-label')) ?? '';
-    expect(systemLabel).toMatch(/current theme:\s*system/i);
+    expect(await isSystemActive()).toBeTruthy();
 
     await page.emulateMedia({ colorScheme: 'dark' });
     await expect.poll(async () => ((await html.getAttribute('class')) ?? '').includes('dark')).toBeTruthy();

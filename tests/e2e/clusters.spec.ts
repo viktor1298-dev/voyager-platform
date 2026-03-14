@@ -48,10 +48,10 @@ test.describe('Clusters — CRUD Operations', () => {
       return;
     }
 
-    // Check for empty state row (e.g. "No clusters found")
+    // Check for current empty state row contract ("No clusters")
     const firstRowText = await firstRow.innerText();
-    if (/no clusters found/i.test(firstRowText)) {
-      test.skip(true, 'Table shows "No clusters found" — no data to navigate to');
+    if (/^\s*no clusters\s*$/i.test(firstRowText)) {
+      test.skip(true, 'Table shows "No clusters" — no data to navigate to');
       return;
     }
 

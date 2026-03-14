@@ -164,7 +164,7 @@ Each phase follows this flow:
 
 ### Mai Dashboard UX pass
 - [x] Main dashboard hierarchy rebalanced so CompactStatsBar/KPIs lead visually and Dashboard title is de-emphasized [v204-mai-ux 2026-03-14]
-- [x] Large desktop dashboard layout expanded to denser 3–4 column cluster grids with grouped environment + health sections [v204-mai-ux 2026-03-14]
+- [x] Large desktop dashboard layout expanded to a true wide-screen board: environment summary rail + health-group columns with 3–4 card rows at 1920px [v210-review-blockers 2026-03-15]
 - [x] Status accessibility improved with explicit ✓ Healthy / ⚠ Warning / ✕ Critical labels and icons (not color-only) [v204-mai-ux 2026-03-14]
 - [x] Filter chips active state strengthened with filled accent styling and clearer contrast [v204-mai-ux 2026-03-14]
 - [x] Secondary labels/metadata contrast improved for dark mode in dashboard surfaces [v204-mai-ux 2026-03-14]
