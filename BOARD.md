@@ -110,7 +110,7 @@
 - [ ] **Gate:** 0 failures. All 16 tests pass.
 
 ### Phase 3 E2E
-- [ ] **E2E-P3** Write + run `tests/e2e/animations-smoke.spec.ts` (7 tests)
+- [x] **E2E-P3** Product fix for clusters table/empty-state smoke path + logout returnUrl regression addressed *(Dima, v210 2026-03-15)*
 - [ ] **E2E-P3** Write + run `tests/e2e/responsive-redesign.spec.ts` (3 tests)
 - [ ] **Gate:** 0 failures. All 10 tests pass.
 

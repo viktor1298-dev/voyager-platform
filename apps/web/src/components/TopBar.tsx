@@ -46,13 +46,24 @@ export function TopBar() {
     }
 
     try {
-      await authClient.signOut()
-    } finally {
-      useAuthStore.getState().clearUser()
+      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
+      const returnUrl = currentPath.startsWith('/') && !currentPath.startsWith('//') ? currentPath : '/'
+
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {},
+        },
+      })
+
       const loginUrl = new URL('/login', window.location.origin)
       loginUrl.searchParams.set('loggedOut', '1')
       loginUrl.searchParams.set('loggedOutAt', String(loggedOutAt))
+      if (returnUrl !== '/') {
+        loginUrl.searchParams.set('returnUrl', returnUrl)
+      }
       window.location.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
+    } finally {
+      useAuthStore.getState().clearUser()
     }
   }
 

@@ -368,7 +368,7 @@ export default function ClustersPage() {
         onRowClick={(row) => router.push(`/clusters/${row.id}`)}
         loading={clusters.isLoading}
         emptyIcon={<Database className="h-10 w-10" />}
-        emptyTitle="No clusters found"
+        emptyTitle="No clusters"
         mobileCard={(row) => {
           const liveStatus = normalizeLiveHealthStatus(row.healthStatus ?? row.status)
           const relation = getPermissionForCluster(row.id)

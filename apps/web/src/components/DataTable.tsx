@@ -337,7 +337,7 @@ export function DataTable<TData>({
               transition={{ duration: DURATION.fast }}
             >
               {mobileCard && (
-                <div className="md:hidden flex flex-col items-center justify-center py-10 text-[var(--color-text-muted)]">
+                <div data-testid="empty-state" className="md:hidden flex flex-col items-center justify-center py-10 text-[var(--color-text-muted)]">
                   {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
                   <p className="text-sm font-medium">{emptyTitle}</p>
                   {emptyDescription && (
@@ -354,7 +354,7 @@ export function DataTable<TData>({
                       colSpan={Math.max(table.getAllLeafColumns().length, 1)}
                       className="py-16 text-center text-[var(--color-text-muted)]"
                     >
-                      <div className="flex flex-col items-center justify-center">
+                      <div data-testid="empty-state" className="flex flex-col items-center justify-center">
                         {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
                         <p className="text-sm font-medium">{emptyTitle}</p>
                         {emptyDescription && (
