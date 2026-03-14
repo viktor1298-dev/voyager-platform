@@ -20,7 +20,7 @@ api:
   port: 4000
 
 migrate:
-  enabled: false  # Migration is handled by the API on startup — no separate job needed
+  enabled: false  # Schema/init is handled by Helm sql/init.sql; API startup must not run migrate()
   image:
     repository: voyager-api-migrate
     tag: ""

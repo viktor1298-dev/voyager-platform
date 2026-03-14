@@ -37,6 +37,8 @@ function LoginPageContent() {
   const searchParams = useSearchParams()
   const [timeTick, setTimeTick] = useState(0)
   const [legacyLoggedOutStartedAt] = useState(() => Date.now())
+  const [isRedirectingAfterLogin, setIsRedirectingAfterLogin] = useState(false)
+  const [shouldBypassLoggedOutRedirect, setShouldBypassLoggedOutRedirect] = useState(false)
   const { data: session, isPending } = authClient.useSession()
   const providersQuery = trpc.sso.getProviders.useQuery(undefined, { retry: false })
 
@@ -68,7 +70,7 @@ function LoginPageContent() {
 
   const isTimestampedGraceActive = hasValidTimestampedLoggedOut && timestampedGraceRemainingMs > 0
   const isLegacyGraceActive = loggedOutFlag && !loggedOutAtRaw && legacyGraceRemainingMs > 0
-  const isLoggedOutRedirect = isTimestampedGraceActive || isLegacyGraceActive
+  const isLoggedOutRedirect = !shouldBypassLoggedOutRedirect && (isTimestampedGraceActive || isLegacyGraceActive)
 
   useEffect(() => {
     if (!isLoggedOutRedirect) return
@@ -96,11 +98,49 @@ function LoginPageContent() {
   }, [isLoggedOutRedirect, loggedOutFlag, searchParams])
 
   useEffect(() => {
-    if (isLoggedOutRedirect) return
+    if (!session?.user) return
+    if (!loggedOutFlag && !loggedOutAtRaw) return
+
+    setShouldBypassLoggedOutRedirect(true)
+  }, [loggedOutAtRaw, loggedOutFlag, session])
+
+  useEffect(() => {
+    if (isLoggedOutRedirect || isRedirectingAfterLogin) return
     if (!isPending && session?.user) {
       router.replace(returnUrl)
+      router.refresh()
     }
-  }, [isLoggedOutRedirect, isPending, returnUrl, router, session])
+  }, [isLoggedOutRedirect, isPending, isRedirectingAfterLogin, returnUrl, router, session])
+
+  async function redirectAfterSuccessfulLogin() {
+    setShouldBypassLoggedOutRedirect(true)
+    setIsRedirectingAfterLogin(true)
+
+    const maxAttempts = 8
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const sessionResult = await authClient.getSession()
+      if (sessionResult.data?.user) {
+        const user = sessionResult.data.user
+        useAuthStore.getState().setUser({
+          id: user.id,
+          email: user.email,
+          name: (user.name && !/^<[^>]+>$/.test(user.name.trim())) ? user.name : user.email,
+          role: (user as { role?: string }).role === 'admin' ? 'admin' : 'viewer',
+        })
+
+        router.replace(returnUrl)
+        router.refresh()
+        return
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, 150 * (attempt + 1)))
+    }
+
+    setIsRedirectingAfterLogin(false)
+    toast.error('Login succeeded but session is still loading', {
+      description: 'Please wait a moment and try again if you are not redirected automatically.',
+    })
+  }
 
   const microsoftProvider = providersQuery.data?.find((provider) => provider.id === 'microsoft-entra-id' && provider.enabled)
 
@@ -149,6 +189,8 @@ function LoginPageContent() {
         return
       }
 
+      const signedInEmail = data?.user?.email ?? value.email
+
       if (data?.user) {
         useAuthStore.getState().setUser({
           id: data.user.id,
@@ -156,9 +198,10 @@ function LoginPageContent() {
           name: (data.user.name && !/^<[^>]+>$/.test(data.user.name.trim())) ? data.user.name : data.user.email,
           role: (data.user as { role?: string }).role === 'admin' ? 'admin' : 'viewer',
         })
-        toast.success('Welcome back!', { description: `Signed in as ${data.user.email}` })
-        router.replace(returnUrl)
       }
+
+      toast.success('Welcome back!', { description: `Signed in as ${signedInEmail}` })
+      await redirectAfterSuccessfulLogin()
     },
   })
 
@@ -239,10 +282,10 @@ function LoginPageContent() {
             {(isSubmitting) => (
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isRedirectingAfterLogin}
                 className="w-full rounded-lg bg-[var(--color-accent)] py-2 font-medium text-white transition hover:opacity-90 disabled:opacity-50 min-h-[44px]"
               >
-                {isSubmitting ? 'Signing in...' : 'Sign In'}
+                {isSubmitting || isRedirectingAfterLogin ? 'Signing in...' : 'Sign In'}
               </button>
             )}
           </form.Subscribe>
