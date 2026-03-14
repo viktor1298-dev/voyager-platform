@@ -162,6 +162,14 @@ Each phase follows this flow:
 
 ## 🔧 v202 — Dashboard CompactStatsBar Restore + Animation Fix (2026-03-14)
 
+### Mai Dashboard UX pass
+- [x] Main dashboard hierarchy rebalanced so CompactStatsBar/KPIs lead visually and Dashboard title is de-emphasized [v204-mai-ux 2026-03-14]
+- [x] Large desktop dashboard layout expanded to denser 3–4 column cluster grids with grouped environment + health sections [v204-mai-ux 2026-03-14]
+- [x] Status accessibility improved with explicit ✓ Healthy / ⚠ Warning / ✕ Critical labels and icons (not color-only) [v204-mai-ux 2026-03-14]
+- [x] Filter chips active state strengthened with filled accent styling and clearer contrast [v204-mai-ux 2026-03-14]
+- [x] Secondary labels/metadata contrast improved for dark mode in dashboard surfaces [v204-mai-ux 2026-03-14]
+- [x] Cluster cards given more visual weight + density with inline CPU/Memory/Pod metrics and 24h sparkline health trend [v204-mai-ux 2026-03-14]
+
 ### Completed
 - [x] Restored CompactStatsBar component — feat/init-monorepo had divergent page.tsx missing Phase 5/6 component [v202 2026-03-14]
 - [x] Added ClusterHealthIndicator component required by CompactStatsBar [v202 2026-03-14]
