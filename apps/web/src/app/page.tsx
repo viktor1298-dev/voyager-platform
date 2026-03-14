@@ -311,13 +311,13 @@ function DashboardContent() {
       <PageTransition>
         <header className="mb-3 flex items-start justify-between gap-4">
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[var(--color-text-muted)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[var(--color-text-dim)]">
               Operations overview
             </p>
-            <h1 className="text-base font-semibold tracking-tight text-[var(--color-text-secondary)] sm:text-lg">
+            <h1 className="text-base font-semibold tracking-tight text-[var(--color-text-primary)] sm:text-lg">
               Dashboard
             </h1>
-            <p className="max-w-2xl text-sm text-[var(--color-text-secondary)]">
+            <p className="max-w-2xl text-sm text-[var(--color-text-dim)]">
               KPI-first snapshot of cluster health, capacity, and warning pressure across your fleet.
             </p>
           </div>
@@ -388,18 +388,18 @@ function DashboardContent() {
             <section className="mb-6 rounded-2xl border border-[var(--color-border)]/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] px-4 py-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)] backdrop-blur sm:px-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                 <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/75 px-3 py-1 text-[11px] font-medium text-[var(--color-text-secondary)]">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/75 px-3 py-1 text-[11px] font-medium text-[var(--color-text-dim)]">
                     <ShieldAlert className="h-3.5 w-3.5 text-[var(--color-accent)]" />
                     <span>Clusters</span>
-                    <span className="text-[var(--color-text-muted)]">{clusterList.filter((c) => c.source === 'live').length} live</span>
+                    <span className="text-[var(--color-text-dim)]">{clusterList.filter((c) => c.source === 'live').length} live</span>
                     <span className="text-[var(--color-border)]">•</span>
-                    <span className="text-[var(--color-text-muted)]">{clusterList.filter((c) => c.source === 'db').length} registered</span>
+                    <span className="text-[var(--color-text-dim)]">{clusterList.filter((c) => c.source === 'db').length} registered</span>
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold tracking-tight text-[var(--color-text-primary)] sm:text-2xl">
                       Fleet inventory and health breakdown
                     </h2>
-                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                    <p className="mt-1 text-sm text-[var(--color-text-dim)]">
                       Explore environments, isolate problem clusters fast, and compare operational density at a glance.
                     </p>
                   </div>
@@ -419,7 +419,7 @@ function DashboardContent() {
                             'flex min-h-[44px] items-center gap-2 rounded-xl px-3.5 py-2 text-[11px] font-semibold tracking-wide transition-all duration-200',
                             isActive
                               ? 'border border-transparent bg-[var(--color-accent)] text-white shadow-[0_10px_28px_rgba(91,135,255,0.35)]'
-                              : 'border border-transparent text-[var(--color-text-secondary)] hover:border-[var(--color-border)] hover:bg-white/[0.04] hover:text-[var(--color-text-primary)]',
+                              : 'border border-transparent text-[var(--color-text-dim)] hover:border-[var(--color-border)] hover:bg-white/[0.04] hover:text-[var(--color-text-primary)]',
                           )}
                         >
                           <span
@@ -427,7 +427,7 @@ function DashboardContent() {
                             style={{ backgroundColor: isActive ? 'rgba(255,255,255,0.9)' : color }}
                           />
                           <span className="capitalize">{filter}</span>
-                          <span className={cn('tabular-nums', isActive ? 'text-white/85' : 'text-[var(--color-text-muted)]')}>
+                          <span className={cn('tabular-nums', isActive ? 'text-white/85' : 'text-[var(--color-text-dim)]')}>
                             {envCounts[filter]}
                           </span>
                         </button>
@@ -454,7 +454,7 @@ function DashboardContent() {
             ) : visibleClusters.length === 0 ? (
               <p className="text-[var(--color-text-secondary)]">No clusters match the current filters.</p>
             ) : (
-              <div className="space-y-7">
+              <div className="space-y-7 3xl:space-y-8">
                 {ENV_ORDER.map((environment) => {
                   const clustersByHealth = groupedByEnvironment[environment]
                   const totalInEnvironment = Object.values(clustersByHealth).reduce((sum, clusters) => sum + clusters.length, 0)
@@ -464,12 +464,12 @@ function DashboardContent() {
                   return (
                     <section
                       key={environment}
-                      className="rounded-2xl border border-[var(--color-border)]/80 bg-[var(--color-bg-card)]/78 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.16)] backdrop-blur sm:p-5"
+                      className="rounded-2xl border border-[var(--color-border)]/80 bg-[var(--color-bg-card)]/78 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.16)] backdrop-blur sm:p-5 2xl:p-6"
                     >
-                      <div className="mb-4 flex flex-wrap items-center gap-3">
+                      <div className="mb-4 flex flex-wrap items-center gap-3 2xl:mb-5">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: meta.color }} />
                         <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{meta.sectionLabel}</h3>
-                        <span className="rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/70 px-2 py-0.5 text-[11px] font-medium tabular-nums text-[var(--color-text-secondary)]">
+                        <span className="rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/70 px-2 py-0.5 text-[11px] font-medium tabular-nums text-[var(--color-text-dim)]">
                           {totalInEnvironment} clusters
                         </span>
                         <div className="h-px min-w-[80px] flex-1 bg-[var(--color-border)]/40" />
@@ -488,10 +488,10 @@ function DashboardContent() {
                                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/70">
                                   <GroupIcon className="h-3.5 w-3.5" style={{ color: healthMeta.dotColor }} />
                                 </span>
-                                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">
+                                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
                                   {healthMeta.label}
                                 </span>
-                                <span className="text-[11px] font-medium tabular-nums text-[var(--color-text-muted)]">
+                                <span className="text-[11px] font-medium tabular-nums text-[var(--color-text-dim)]">
                                   {clusters.length}
                                 </span>
                                 <div className="h-px flex-1 bg-[var(--color-border)]/30" />
@@ -603,7 +603,7 @@ function ClusterCard({
               <h3 className="line-clamp-2 text-base font-semibold leading-tight text-[var(--color-text-primary)]">
                 {cluster.name}
               </h3>
-              <p className="mt-1 text-[12px] font-medium text-[var(--color-text-secondary)]">
+              <p className="mt-1 text-[12px] font-medium text-[var(--color-text-dim)]">
                 {cluster.provider} {cluster.version ? `• Kubernetes ${cluster.version}` : '• Version unavailable'}
               </p>
             </div>
@@ -623,12 +623,12 @@ function ClusterCard({
         <div className="mt-4 rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/48 p-3">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-dim)]">
                 Status summary
               </p>
               <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{statusSummary}</p>
             </div>
-            <span className="rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-card)]/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
+            <span className="rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-card)]/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-dim)]">
               {sourceSummary}
             </span>
           </div>
@@ -644,7 +644,7 @@ function ClusterCard({
               key={metric.label}
               className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/36 px-3 py-2.5"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-dim)]">
                 {metric.label}
               </p>
               <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{metric.value}</p>
@@ -656,20 +656,20 @@ function ClusterCard({
           {capabilityBadges.map((badge) => (
             <span
               key={badge}
-              className="inline-flex items-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]"
+              className="inline-flex items-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-dim)]"
             >
               {badge}
             </span>
           ))}
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 pl-2 text-[11px] font-medium text-[var(--color-text-secondary)]">
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 pl-2 text-[11px] font-medium text-[var(--color-text-dim)]">
           <span className="inline-flex items-center gap-1.5">
-            <Server className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
+            <Server className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
             {cluster.nodeCount} {cluster.nodeCount === 1 ? 'node' : 'nodes'}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <Database className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
+            <Database className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
             Source: {cluster.source === 'live' ? 'live stream' : 'registered'}
           </span>
         </div>
@@ -734,13 +734,13 @@ function CompactStatsBar({
     <section className="mb-6 rounded-3xl border border-[var(--color-border)]/80 bg-[linear-gradient(135deg,rgba(91,135,255,0.16),rgba(255,255,255,0.02))] p-4 shadow-[0_26px_70px_rgba(0,0,0,0.22)] backdrop-blur sm:p-5">
       <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--color-text-secondary)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--color-text-dim)]">
             Main KPIs
           </p>
           <h2 className="mt-1 text-xl font-semibold tracking-tight text-[var(--color-text-primary)] sm:text-2xl">
             Operations pulse
           </h2>
-          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+          <p className="mt-1 text-sm text-[var(--color-text-dim)]">
             Make this the first thing your eye lands on: fleet volume, pod health, and warning pressure.
           </p>
         </div>
@@ -785,13 +785,13 @@ function CompactStatsBar({
               >
                 {stat.icon}
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--color-text-dim)]">
                 {stat.label}
               </span>
             </div>
             <div className="mt-4">
               <p className="text-2xl font-semibold tracking-tight text-[var(--color-text-primary)]">{stat.value}</p>
-              <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{stat.helper}</p>
+              <p className="mt-1 text-xs text-[var(--color-text-dim)]">{stat.helper}</p>
             </div>
           </div>
         ))}
