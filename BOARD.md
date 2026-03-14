@@ -157,3 +157,18 @@ Each phase follows this flow:
 - c522cbf commit was locally committed but not pushed to origin
 - Build agent used cached Docker layers (no --no-cache)
 - Process fix: added Step 0.5 to SKILL.md with git-sync check + --no-cache mandatory rule
+
+---
+
+## 🔧 v202 — Dashboard CompactStatsBar Restore + Animation Fix (2026-03-14)
+
+### Completed
+- [x] Restored CompactStatsBar component — feat/init-monorepo had divergent page.tsx missing Phase 5/6 component [v202 2026-03-14]
+- [x] Added ClusterHealthIndicator component required by CompactStatsBar [v202 2026-03-14]
+- [x] Added statusChangeTransition export to animation-constants.ts [v202 2026-03-14]
+- [x] Built both images with --no-cache and git-sha label (SHA: 8e16f40) [v202 2026-03-14]
+- [x] Verified SHA labels match on both images [v202 2026-03-14]
+- [x] Deployed v202 — all 5 pods Running 0 restarts [v202 2026-03-14]
+- [x] Health endpoint OK: {"status":"ok"} [v202 2026-03-14]
+- [x] Updated release-ledger.json with v202 entry [v202 2026-03-14]
+- [x] Main branch already up to date with feat/init-monorepo (previous merge included these commits)

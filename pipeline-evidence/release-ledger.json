@@ -637,5 +637,29 @@
     "status": "deployed",
     "healthCheck": "ok",
     "notes": "CompactStatsBar restored from main branch. Root cause: feat/init-monorepo had a divergent page.tsx (Phase 6 fork) that was missing CompactStatsBar and ClusterHealthIndicator components."
+  },
+  {
+    "version": "v202",
+    "tag": "v202",
+    "commit": "8e16f4097317fb2a730c970a18613c1bba93086a",
+    "timestamp": "2026-03-14T03:46:07.856222+00:00",
+    "phase": "dashboard-compact-stats-fix",
+    "changes": [
+      "fix: restore CompactStatsBar from main \u2014 feat/init-monorepo had divergent page.tsx (e493aa7)",
+      "fix: add ClusterHealthIndicator component required by CompactStatsBar (c1d3e27)",
+      "fix: add statusChangeTransition export to animation-constants (8e16f40)"
+    ],
+    "images": {
+      "api": "voyager-api:v202",
+      "web": "voyager-web:v202"
+    },
+    "git_sha_api": "8e16f4097317fb2a730c970a18613c1bba93086a",
+    "git_sha_web": "8e16f4097317fb2a730c970a18613c1bba93086a",
+    "helm_revision": 1,
+    "pods": "all 5 Running 0 restarts",
+    "health": "200 OK",
+    "bundle_verified": "build compiled without TypeScript errors, 35 routes, dashboard page included",
+    "deployed_by": "uri-devops",
+    "next_stage": "awaiting-review"
   }
 ]
