@@ -3,13 +3,13 @@
 import { AppLayout } from '@/components/AppLayout'
 import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { PageTransition } from '@/components/animations'
-import { AnomalyWidget } from '@/components/anomalies/AnomalyWidget'
 import { DashboardGrid } from '@/components/dashboard/DashboardGrid'
 import { DashboardEditBar } from '@/components/dashboard/DashboardEditBar'
 import { WidgetLibraryDrawer } from '@/components/dashboard/WidgetLibraryDrawer'
-import { ProviderLogo } from '@/components/ProviderLogo'
-import { SkeletonCard, SkeletonText, Shimmer } from '@/components/Skeleton'
-import { HeartPulse, RefreshCw, Clock, Zap, LayoutGrid, Pencil } from 'lucide-react'
+import { SkeletonCard, SkeletonText } from '@/components/Skeleton'
+import { LayoutGrid, Pencil } from 'lucide-react'
+import { m, AnimatePresence } from 'motion/react'
+import { ClusterHealthIndicator } from '@/components/ClusterHealthIndicator'
 import {
   ENV_META,
   getClusterEnvironment,
@@ -26,7 +26,7 @@ import {
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
-import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS, HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
+import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { useDashboardLayout } from '@/stores/dashboard-layout'
 import { AlertTriangle, Box, Database, Server } from 'lucide-react'
 import Link from 'next/link'
@@ -162,6 +162,13 @@ function DashboardContent() {
       .reduce((sum, c) => sum + c.nodeCount, 0)
   const runningPods = liveData?.runningPods ?? 0
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
+
+  // IA-002: aggregate health counts for CompactStatsBar
+  const healthCounts = useMemo(() => {
+    const counts = { healthy: 0, degraded: 0, critical: 0 }
+    for (const c of clusterList) counts[getHealthGroup(c.status)]++
+    return counts
+  }, [clusterList])
 
   const filterOptions = useMemo(() => {
     const statuses = new Set<string>()
@@ -324,46 +331,16 @@ function DashboardContent() {
         {/* Legacy hardcoded layout (hidden when widget mode active) */}
         {!widgetMode && (<>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-          <SummaryCard
-            icon={<Server className="h-4 w-4" />}
-            label="Total Nodes"
-            value={String(totalNodes)}
-            color="var(--color-accent)"
-            gradient="var(--gradient-text-default)"
-            isLoading={isLoading}
-          />
-          <SummaryCard
-            icon={<Box className="h-4 w-4" />}
-            label="Running Pods"
-            value={`${runningPods}/${liveData?.totalPods ?? 0}`}
-            color="var(--color-status-active)"
-            gradient="var(--gradient-text-healthy)"
-            isLoading={isLoading}
-          />
-          <SummaryCard
-            icon={<Database className="h-4 w-4" />}
-            label="Clusters"
-            value={String(clusterList.length)}
-            color="var(--color-accent)"
-            gradient="var(--gradient-text-default)"
-            isLoading={isLoading}
-          />
-          <SummaryCard
-            icon={<AlertTriangle className="h-4 w-4" />}
-            label="Warning Events"
-            value={String(warningEvents)}
-            color="var(--color-status-warning)"
-            gradient={warningEvents > 0 ? 'var(--gradient-text-warning)' : 'var(--gradient-text-default)'}
-            isLoading={isLoading}
-          />
-        </div>
-
-        <div className="mb-6 max-w-sm">
-          <AnomalyWidget />
-        </div>
-
-        <SystemHealthSection />
+        {/* DB-001: Compact stats bar — replaces 4 SummaryCard grid */}
+        <CompactStatsBar
+          totalNodes={totalNodes}
+          runningPods={runningPods}
+          totalPods={liveData?.totalPods ?? 0}
+          clusterCount={clusterList.length}
+          warningEvents={warningEvents}
+          healthCounts={healthCounts}
+          isLoading={isLoading}
+        />
 
         <div className="flex flex-col gap-4 mb-5">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
@@ -453,19 +430,20 @@ function DashboardContent() {
                             <div className="flex-1 h-px bg-[var(--color-border)]/30" />
                           </div>
 
+                          {/* IA-009: AnimatePresence for filter reflow — REVIEW-004: wraps m.div children directly */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                            {clusters.map((cluster) => {
-                              const idx = cardIndex++
-                              return (
-                                <ClusterCard
-                                  key={cluster.id}
-                                  cluster={cluster}
-                                  index={idx}
-                                  runningPods={runningPods}
-                                  totalPods={liveData?.totalPods ?? 0}
-                                />
-                              )
-                            })}
+                            <AnimatePresence mode="popLayout">
+                              {clusters.map((cluster) => {
+                                const idx = cardIndex++
+                                return (
+                                  <ClusterCard
+                                    key={cluster.id}
+                                    cluster={cluster}
+                                    index={idx}
+                                  />
+                                )
+                              })}
+                            </AnimatePresence>
                           </div>
                         </div>
                       )
@@ -490,12 +468,8 @@ function DashboardPageFallback() {
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Dashboard</h1>
         </header>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </div>
+        {/* DB-001: compact stats bar skeleton */}
+        <div className="mb-5 h-9 rounded-lg bg-[var(--color-bg-secondary)]/40 border border-[var(--color-border)] animate-pulse" />
         <div className="space-y-3">
           <h2 className="text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">Clusters</h2>
           <SkeletonText width="12rem" height="1.5rem" />
@@ -519,41 +493,15 @@ export default function DashboardPage() {
   )
 }
 
-function HealthDot({ clusterId }: { clusterId: string }) {
-  const statusQuery = trpc.health.status.useQuery({}, {
-    refetchInterval: HEALTH_STATUS_REFETCH_MS,
-  })
-  const entry = statusQuery.data?.find((s) => s.clusterId === clusterId)
-  if (!entry || entry.status === 'unknown') return null
-
-  const colors: Record<string, string> = {
-    healthy: 'var(--color-status-active)',
-    degraded: 'var(--color-status-warning)',
-    critical: 'var(--color-status-error)',
-  }
-  const color = colors[entry.status] ?? 'var(--color-text-dim)'
-  const checkedAt = entry.checkedAt ? new Date(entry.checkedAt).toLocaleString() : 'Never'
-  const tooltip = `Health: ${entry.status} | Last check: ${checkedAt}${entry.responseTimeMs != null ? ` | ${entry.responseTimeMs}ms` : ''}`
-
-  return (
-    <span
-      className="h-1.5 w-1.5 rounded-full shrink-0"
-      style={{ backgroundColor: color }}
-      title={tooltip}
-    />
-  )
-}
-
+// DB-002: Compact ClusterCard — single horizontal row, ~50% shorter
+// IA-007: uses ClusterHealthIndicator (single subscription, no duplicates)
+// IA-009: Motion animations
 function ClusterCard({
   cluster,
   index,
-  runningPods,
-  totalPods,
 }: {
   cluster: ClusterCardData
   index: number
-  runningPods: number
-  totalPods: number
 }) {
   const status = cluster.status ?? 'unknown'
   const statusMeta = STATUS_META[normalizeHealth(status)]
@@ -561,237 +509,146 @@ function ClusterCard({
 
   return (
     <Link href={`/clusters/${cluster.id}`}>
-      <div
-        className="cluster-card relative group rounded-xl min-h-[90px] cursor-pointer bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] animate-slide-up flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 overflow-hidden"
+      {/* IA-009: Motion card with whileHover y:-2 and layout prop */}
+      <m.div
+        layout
+        className="cluster-card relative group rounded-lg cursor-pointer bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] flex flex-col px-3 py-2"
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        whileHover={{ y: -2, boxShadow: getStatusGlowHover(status) }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1], delay: index * 0.03 }}
         style={
           {
             '--status-color': getStatusColor(status),
             boxShadow: getStatusGlow(status),
-            transition: 'all var(--duration-normal) ease',
-            animationDelay: `${index * 50}ms`,
-            animationFillMode: 'forwards',
           } as React.CSSProperties
         }
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = getStatusGlowHover(status)
-          e.currentTarget.style.transform =
-            'scale(var(--card-hover-scale)) translateY(var(--card-hover-y))'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = getStatusGlow(status)
-          e.currentTarget.style.transform = 'none'
-        }}
       >
+        {/* Left accent bar */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
+          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-lg"
           style={{ backgroundColor: envMeta.color, opacity: 0.9 }}
         />
 
-        <div className="flex-1 min-w-0 p-4 pl-5 pb-2 sm:pb-4">
-          <div className="flex items-center gap-2">
-            <span
-              className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(status)}`}
-            />
-            <span className="text-sm font-bold text-[var(--color-text-primary)] truncate">{cluster.name}</span>
-            {cluster.source === 'db' && <HealthDot clusterId={cluster.id} />}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[10px] text-[var(--color-text-muted)] font-mono">
-            <span>K8s {cluster.version ?? '—'}</span>
-            <span>·</span>
-            <span>Nodes: {cluster.nodeCount}</span>
-            {cluster.source === 'live' && (
-              <>
-                <span>·</span>
-                <span>Pods: {runningPods}/{totalPods}</span>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="flex w-full sm:w-auto flex-row flex-wrap sm:flex-col items-start sm:items-end justify-between gap-1 sm:gap-2 shrink-0 px-4 pb-4 sm:p-4 sm:pl-0">
+        {/* Row 1: Status dot + full cluster name */}
+        <div className="flex items-start gap-1.5 ml-1">
           <span
-            className={cn('text-[10px] font-mono px-2 py-0.5 rounded-md border', envMeta.badgeClass)}
-          >
-            {ENV_META[cluster.environment].label}
+            className={`h-1.5 w-1.5 rounded-full shrink-0 animate-pulse-slow mt-[3px] ${getStatusDotClass(status)}`}
+          />
+          <span className="text-xs font-semibold text-[var(--color-text-primary)] whitespace-normal break-words leading-tight">
+            {cluster.name}
           </span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-accent)] border border-[var(--color-border)]">
-              {cluster.provider}
-            </span>
-            <ProviderLogo provider={cluster.provider ?? 'default'} />
-          </div>
-          <span className="text-[9px] text-[var(--color-text-dim)]">{statusMeta.label}</span>
         </div>
-      </div>
+
+        {/* Row 2: env badge + health indicator + version + node count */}
+        <div className="flex items-center gap-1.5 ml-1 mt-1 flex-wrap">
+          {/* Env badge */}
+          <span className={cn('text-[9px] font-mono px-1.5 py-0.5 rounded border shrink-0', envMeta.badgeClass)}>
+            {envMeta.label}
+          </span>
+
+          {/* IA-007: ClusterHealthIndicator — single subscription, replaces HealthDot + HealthLatency + inline check */}
+          {cluster.source === 'db' && (
+            <ClusterHealthIndicator
+              clusterId={cluster.id}
+              size="sm"
+              showLatency
+              onCheck={() => {}}
+            />
+          )}
+
+          {/* Node count */}
+          <span className="text-[10px] font-mono text-[var(--color-text-muted)] shrink-0">
+            {cluster.nodeCount}n
+          </span>
+
+          {/* K8s version */}
+          <span className="text-[10px] font-mono text-[var(--color-text-dim)] shrink-0">
+            {cluster.version ?? '—'}
+          </span>
+
+          {/* Status label */}
+          <span className="text-[10px] text-[var(--color-text-dim)] shrink-0">{statusMeta.label}</span>
+        </div>
+      </m.div>
     </Link>
   )
 }
 
-function SummaryCard({
-  icon,
-  label,
-  value,
-  color,
-  gradient,
+// DB-001: Compact stats bar — replaces 4 large SummaryCard grid
+// IA-002: enhanced with health aggregate counts
+function CompactStatsBar({
+  totalNodes,
+  runningPods,
+  totalPods,
+  clusterCount,
+  warningEvents,
+  healthCounts,
   isLoading,
 }: {
-  icon: React.ReactNode
-  label: string
-  value: string
-  color: string
-  gradient: string
+  totalNodes: number
+  runningPods: number
+  totalPods: number
+  clusterCount: number
+  warningEvents: number
+  healthCounts?: { healthy: number; degraded: number; critical: number }
   isLoading?: boolean
 }) {
+  if (isLoading) {
+    return (
+      <div className="mb-5 h-9 rounded-lg bg-[var(--color-bg-secondary)]/40 border border-[var(--color-border)] animate-pulse" />
+    )
+  }
+
+  const stats = [
+    { icon: <Server className="h-3 w-3" />, value: String(totalNodes), label: 'Nodes', color: 'var(--color-accent)' },
+    { icon: <Box className="h-3 w-3" />, value: `${runningPods}/${totalPods}`, label: 'Pods', color: 'var(--color-status-active)' },
+    { icon: <Database className="h-3 w-3" />, value: String(clusterCount), label: 'Clusters', color: 'var(--color-accent)' },
+    {
+      icon: <AlertTriangle className="h-3 w-3" />,
+      value: String(warningEvents),
+      label: 'Warnings',
+      color: warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-dim)',
+    },
+  ]
+
   return (
-    <div
-      className="rounded-2xl p-4 border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)]"
-      style={{
-        background: 'var(--glass-bg)',
-        backdropFilter: 'blur(var(--glass-blur))',
-        WebkitBackdropFilter: 'blur(var(--glass-blur))',
-        transition: 'all var(--duration-normal) ease',
-        boxShadow: 'var(--shadow-card)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--glow-accent-hover)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)'
-      }}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
-          {label}
-        </span>
-        <span style={{ color }}>{icon}</span>
-      </div>
-      {isLoading ? (
-        <SkeletonText width="3rem" height="2rem" />
-      ) : (
-        <div
-          className="text-2xl font-extrabold tracking-tight animate-count-up gradient-text"
-          style={{ backgroundImage: gradient }}
-        >
-          {value}
+    <div className="mb-5 inline-flex items-center gap-3 bg-[var(--color-bg-secondary)]/40 border border-[var(--color-border)] rounded-lg px-4 py-2 h-9 w-full overflow-x-auto">
+      {stats.map((stat, i) => (
+        <div key={stat.label} className="flex items-center gap-3 shrink-0">
+          {i > 0 && <span className="text-[var(--color-border)] text-xs select-none">·</span>}
+          <div className="inline-flex items-center gap-1.5">
+            <span style={{ color: stat.color }}>{stat.icon}</span>
+            <span className="text-xs font-mono font-semibold text-[var(--color-text-primary)]">
+              {stat.value}
+            </span>
+            <span className="text-[10px] text-[var(--color-text-muted)] hidden sm:inline">{stat.label}</span>
+          </div>
+        </div>
+      ))}
+      {/* IA-002: health aggregate dots after Clusters */}
+      {healthCounts && (
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="text-[var(--color-border)] text-xs select-none">·</span>
+          <div className="inline-flex items-center gap-1.5">
+            <span className="text-[10px] text-[var(--color-text-muted)] hidden sm:inline">Health</span>
+            <span className="inline-flex items-center gap-1 text-xs font-mono">
+              <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: 'var(--color-status-active)' }} />
+              <span className="text-[var(--color-text-primary)] font-semibold">{healthCounts.healthy}</span>
+              <span className="text-[var(--color-border)] mx-0.5">·</span>
+              <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: 'var(--color-status-warning)' }} />
+              <span className="text-[var(--color-text-primary)] font-semibold">{healthCounts.degraded}</span>
+              <span className="text-[var(--color-border)] mx-0.5">·</span>
+              <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: 'var(--color-status-error)' }} />
+              <span className="text-[var(--color-text-primary)] font-semibold">{healthCounts.critical}</span>
+            </span>
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-// ─── System Health Section (merged from /system-health) ──────────────────────
-
-const STATUS_COLORS_HEALTH: Record<string, string> = {
-  healthy: 'var(--color-status-active)',
-  degraded: 'var(--color-status-warning)',
-  critical: 'var(--color-status-error)',
-  unknown: 'var(--color-text-dim)',
-}
-
-const STATUS_LABELS_HEALTH: Record<string, string> = {
-  healthy: 'Healthy',
-  degraded: 'Degraded',
-  critical: 'Critical',
-  unknown: 'Unknown',
-}
-
-function timeAgoHealth(ts: string | Date | null): string {
-  if (!ts) return 'Never'
-  const diff = Date.now() - new Date(ts).getTime()
-  const seconds = Math.floor(diff / 1000)
-  if (seconds < 60) return `${seconds}s ago`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
-
-function SystemHealthSection() {
-  const [checkingClusterId, setCheckingClusterId] = useState<string | null>(null)
-
-  const statusQuery = trpc.health.status.useQuery({}, { refetchInterval: 60_000 })
-  const utils = trpc.useUtils()
-
-  const handleCheck = useCallback(
-    async (clusterId: string) => {
-      setCheckingClusterId(clusterId)
-      try {
-        await utils.health.check.fetch({ clusterId })
-        utils.health.status.invalidate()
-      } finally {
-        setCheckingClusterId(null)
-      }
-    },
-    [utils],
-  )
-
-  const statuses = statusQuery.data ?? []
-
-  if (!statusQuery.isLoading && statuses.length === 0) return null
-
-  return (
-    <section className="mb-6">
-      <div className="flex items-center gap-2 mb-3">
-        <HeartPulse className="h-4 w-4 text-[var(--color-accent)]" />
-        <h2 className="text-sm font-bold text-[var(--color-text-primary)]">System Health</h2>
-        <span className="text-[10px] font-mono text-[var(--color-text-dim)] uppercase tracking-wider ml-1">
-          {statuses.length} clusters
-        </span>
-      </div>
-
-      {statusQuery.isLoading ? (
-        <div className="flex gap-3">
-          <Shimmer className="h-24 w-48 rounded-xl" />
-          <Shimmer className="h-24 w-48 rounded-xl" />
-          <Shimmer className="h-24 w-48 rounded-xl" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-          {statuses.map((s) => {
-            const color = STATUS_COLORS_HEALTH[s.status] ?? STATUS_COLORS_HEALTH.unknown
-            const label = STATUS_LABELS_HEALTH[s.status] ?? 'Unknown'
-            return (
-              <div
-                key={s.clusterId}
-                className="relative rounded-xl p-3 border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-all duration-200"
-                style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(var(--glass-blur))' }}
-              >
-                <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl" style={{ backgroundColor: color, opacity: 0.7 }} />
-                <div className="flex items-center gap-1.5 mb-2">
-                  <span className="h-2 w-2 rounded-full animate-pulse-slow shrink-0" style={{ backgroundColor: color }} />
-                  <span className="text-xs font-bold text-[var(--color-text-primary)] truncate">{s.clusterName}</span>
-                </div>
-                <div className="flex items-center gap-3 text-[9px] text-[var(--color-text-muted)] font-mono mb-2">
-                  <span className="flex items-center gap-0.5">
-                    <Clock className="h-2.5 w-2.5" />
-                    {timeAgoHealth(s.checkedAt)}
-                  </span>
-                  {s.responseTimeMs !== null && (
-                    <span className="flex items-center gap-0.5">
-                      <Zap className="h-2.5 w-2.5" />
-                      {s.responseTimeMs}ms
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-[var(--color-border)]" style={{ color }}>{label}</span>
-                  <button
-                    type="button"
-                    className="text-[var(--color-accent)] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer disabled:opacity-50"
-                    disabled={checkingClusterId !== null}
-                    title="Check now"
-                    onClick={() => handleCheck(s.clusterId)}
-                  >
-                    <RefreshCw className={`h-3 w-3 ${checkingClusterId === s.clusterId ? 'animate-spin' : ''}`} />
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </section>
-  )
-}
+// IA-001: SystemHealthSection removed — data merged into ClusterCard (HealthDot tooltip + HealthLatency) and CompactStatsBar (IA-002)
