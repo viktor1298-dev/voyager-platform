@@ -39,15 +39,20 @@ export function TopBar() {
 
     setIsLoggingOut(true)
 
+    const loggedOutAt = Date.now()
+
     if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem('logoutInProgress', String(Date.now()))
+      window.sessionStorage.setItem('logoutInProgress', String(loggedOutAt))
     }
 
     try {
       await authClient.signOut()
     } finally {
       useAuthStore.getState().clearUser()
-      window.location.href = `/login?loggedOut=1&loggedOutAt=${Date.now()}`
+      const loginUrl = new URL('/login', window.location.origin)
+      loginUrl.searchParams.set('loggedOut', '1')
+      loginUrl.searchParams.set('loggedOutAt', String(loggedOutAt))
+      window.location.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
     }
   }
 

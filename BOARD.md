@@ -119,10 +119,10 @@
 ## 📋 Pipeline Checklist (per Phase)
 
 Each phase follows this flow:
-- [ ] Dev complete (Ron/Shiri/Dima) → report to Discord
-- [ ] Code review (Lior) → 10/10 → APPROVED
+- [x] Dev complete (Ron/Shiri/Dima) → report to Discord [v207 2026-03-14 auth/logout follow-up: middleware cookie expiry + protected-route returnUrl fix]
+- [ ] Code review (Lior) → 10/10 → APPROVED *(reviewed v204 2026-03-14 — CHANGES_REQUESTED)*
 - [ ] Merge + tag (Gil) → `v194-phase1` / `v194-phase2` / `v194-phase3`
-- [x] Deploy (Uri) → helm uninstall + helm install → image tag verified [v194-phase3 2026-03-07]
+- [x] Deploy (Uri) → helm uninstall + helm install → image tag verified [v205 2026-03-14]
 - [ ] E2E (Yuval) → all tests pass → evidence file written
 - [ ] QA (Mai) → desktop ≥8.5/10 → evidence file written
 - [ ] Guardian: all 5 gates → write `status: deployed-awaiting-review`

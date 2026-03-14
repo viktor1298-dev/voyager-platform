@@ -103,11 +103,19 @@ function LoginPageContent() {
     if (typeof window === 'undefined') return
     if (!isTimestampedGraceActive) return
 
-    const expectedSearch = `?loggedOut=1&loggedOutAt=${parsedLoggedOutAt}`
+    const normalizedParams = new URLSearchParams()
+    normalizedParams.set('loggedOut', '1')
+    normalizedParams.set('loggedOutAt', String(parsedLoggedOutAt))
+
+    if (returnUrl !== '/') {
+      normalizedParams.set('returnUrl', returnUrl)
+    }
+
+    const expectedSearch = `?${normalizedParams.toString()}`
     if (window.location.pathname === '/login' && window.location.search !== expectedSearch) {
       window.history.replaceState(null, '', `/login${expectedSearch}`)
     }
-  }, [isTimestampedGraceActive, parsedLoggedOutAt])
+  }, [isTimestampedGraceActive, parsedLoggedOutAt, returnUrl])
 
   useEffect(() => {
     if (!session?.user) return

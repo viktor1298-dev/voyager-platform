@@ -12,6 +12,25 @@ function hasUsableSessionCookie(request: NextRequest): boolean {
   return candidateCookies.some((value) => typeof value === 'string' && value.trim().length > 0)
 }
 
+function expireAuthCookies(response: NextResponse) {
+  const expiredAt = new Date(0)
+
+  for (const cookieName of [SESSION_COOKIE_NAME, SECURE_SESSION_COOKIE_NAME, HOST_SESSION_COOKIE_NAME]) {
+    response.cookies.set({
+      name: cookieName,
+      value: '',
+      expires: expiredAt,
+      maxAge: 0,
+      path: '/',
+      sameSite: 'lax',
+      secure: cookieName !== SESSION_COOKIE_NAME,
+      httpOnly: true,
+    })
+  }
+
+  return response
+}
+
 export function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
 
@@ -29,15 +48,14 @@ export function middleware(request: NextRequest) {
       if (loggedOutAt.trim().length > 0) {
         loginUrl.searchParams.set('loggedOutAt', loggedOutAt)
       }
-    } else if (pathname === '/' && !request.nextUrl.search) {
-      return NextResponse.redirect(loginUrl)
-    } else if (pathname === '/clusters' && !request.nextUrl.search) {
-      return NextResponse.redirect(loginUrl)
-    } else {
+      if (pathname !== '/login') {
+        loginUrl.searchParams.set('returnUrl', requestedPath)
+      }
+    } else if (pathname !== '/login') {
       loginUrl.searchParams.set('returnUrl', requestedPath)
     }
 
-    return NextResponse.redirect(loginUrl)
+    return expireAuthCookies(NextResponse.redirect(loginUrl))
   }
 
   return NextResponse.next()

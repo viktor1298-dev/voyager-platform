@@ -35,38 +35,36 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (isPublicPath(pathname)) return
     if (!isHydrated || !isSessionResolved || hasValidSession) return
 
-    const logoutInProgress = typeof window !== 'undefined' && Boolean(window.sessionStorage.getItem('logoutInProgress')?.trim())
+    const loginUrl = new URL('/login', window.location.origin)
+    const currentParams = new URLSearchParams(queryString)
+    const loggedOutAt = currentParams.get('loggedOutAt')
+    const logoutInProgress = typeof window !== 'undefined' && window.sessionStorage.getItem('logoutInProgress')?.trim()
 
     if (logoutInProgress) {
-      const loginUrl = new URL('/login', window.location.origin)
       loginUrl.searchParams.set('loggedOut', '1')
-      loginUrl.searchParams.set('loggedOutAt', String(Date.now()))
-      router.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
-      return
-    }
-
-    if (pathname === '/' && !queryString) {
-      router.replace('/login')
-      return
-    }
-
-    if (pathname === '/clusters' && !queryString) {
-      router.replace('/login')
-      return
-    }
-
-    const loginUrl = new URL('/login', window.location.origin)
-    if (queryString.includes('loggedOut=1')) {
-      loginUrl.searchParams.set('loggedOut', '1')
-      const loggedOutAt = new URLSearchParams(queryString).get('loggedOutAt')
-      if (loggedOutAt && loggedOutAt.trim().length > 0) {
-        loginUrl.searchParams.set('loggedOutAt', loggedOutAt)
+      loginUrl.searchParams.set('loggedOutAt', logoutInProgress)
+      if (requestedReturnUrl !== '/login') {
+        loginUrl.searchParams.set('returnUrl', requestedReturnUrl)
       }
       router.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
       return
     }
 
-    loginUrl.searchParams.set('returnUrl', requestedReturnUrl)
+    if (currentParams.get('loggedOut') === '1') {
+      loginUrl.searchParams.set('loggedOut', '1')
+      if (loggedOutAt && loggedOutAt.trim().length > 0) {
+        loginUrl.searchParams.set('loggedOutAt', loggedOutAt)
+      }
+      if (pathname !== '/login' && requestedReturnUrl !== '/login') {
+        loginUrl.searchParams.set('returnUrl', requestedReturnUrl)
+      }
+      router.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
+      return
+    }
+
+    if (pathname !== '/login') {
+      loginUrl.searchParams.set('returnUrl', requestedReturnUrl)
+    }
     router.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
   }, [hasValidSession, isHydrated, isSessionResolved, pathname, queryString, requestedReturnUrl, router])
 
