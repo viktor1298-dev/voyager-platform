@@ -22,19 +22,15 @@ interface SparklinePoint {
 
 interface ResourceSparklineProps {
   clusterId: string
-  /** Number of rightmost data points to show (default: 12 = last ~5min at 1h range with 60 buckets) */
   points?: number
-  /** Width in pixels (default: 80) */
   width?: number
-  /** Height in pixels (default: 28) */
   height?: number
   showTooltip?: boolean
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function SparklineTooltip({ active, payload }: any) {
+function SparklineTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload?: SparklinePoint }> }) {
   if (!active || !payload?.length) return null
-  const d = payload[0]?.payload as SparklinePoint | undefined
+  const d = payload[0]?.payload
   if (!d) return null
   return (
     <div className="rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-[10px] font-mono shadow-lg">
@@ -61,17 +57,19 @@ export function ResourceSparkline({
 
   const sparkData: SparklinePoint[] = useMemo(() => {
     if (!data?.length) return []
-    // Take the last N points for the sparkline
-    return data.slice(-points).map((d) => ({
-      cpu: d.cpu,
-      memory: d.memory,
-    }))
+    return data
+      .filter((d) => typeof d.cpu === 'number' && typeof d.memory === 'number')
+      .slice(-points)
+      .map((d) => ({
+        cpu: d.cpu as number,
+        memory: d.memory as number,
+      }))
   }, [data, points])
 
   if (isLoading) {
     return (
       <div
-        className="rounded bg-white/5 animate-pulse"
+        className="animate-pulse rounded bg-white/5"
         style={{ width, height }}
         aria-label="Loading sparkline..."
       />
@@ -85,7 +83,7 @@ export function ResourceSparkline({
         style={{ width, height }}
         title="Insufficient data for sparkline"
       >
-        <span className="text-[9px] text-[var(--color-text-dim)] font-mono">—</span>
+        <span className="font-mono text-[9px] text-[var(--color-text-dim)]">—</span>
       </div>
     )
   }
@@ -126,11 +124,11 @@ export function ResourceSparkline({
           />
         </LineChart>
       </ResponsiveContainer>
-      <div className="flex flex-col gap-0.5 shrink-0">
-        <span className="text-[9px] font-mono tabular-nums leading-none" style={{ color: cpuColor }}>
+      <div className="shrink-0 flex flex-col gap-0.5">
+        <span className="font-mono tabular-nums leading-none text-[9px]" style={{ color: cpuColor }}>
           {lastPoint?.cpu ?? 0}%
         </span>
-        <span className="text-[9px] font-mono tabular-nums leading-none" style={{ color: memColor }}>
+        <span className="font-mono tabular-nums leading-none text-[9px]" style={{ color: memColor }}>
           {lastPoint?.memory ?? 0}%
         </span>
       </div>

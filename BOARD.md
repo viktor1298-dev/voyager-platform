@@ -171,4 +171,5 @@ Each phase follows this flow:
 - [x] Deployed v202 — all 5 pods Running 0 restarts [v202 2026-03-14]
 - [x] Health endpoint OK: {"status":"ok"} [v202 2026-03-14]
 - [x] Updated release-ledger.json with v202 entry [v202 2026-03-14]
+- [x] Refactored Metrics page into dedicated CPU/Memory/Network/Pods panels with backend-native 30s/1m/5m/1h/6h/24h/7d ranges + bucket-window tooltips from `bucketStart`/`bucketEnd` [v203 2026-03-14]
 - [x] Main branch already up to date with feat/init-monorepo (previous merge included these commits)

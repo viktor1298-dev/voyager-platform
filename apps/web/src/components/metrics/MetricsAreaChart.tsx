@@ -8,21 +8,23 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
   ReferenceLine,
 } from 'recharts'
 import type { MetricsRange } from './TimeRangeSelector'
 
 export interface MetricsDataPoint {
   timestamp: string
-  cpu: number
-  memory: number
-  pods: number
-  networkBytesIn?: number
-  networkBytesOut?: number
+  bucketStart?: string | null
+  bucketEnd?: string | null
+  cpu: number | null
+  memory: number | null
+  pods: number | null
+  networkBytesIn?: number | null
+  networkBytesOut?: number | null
 }
 
 export type MetricKey = 'cpu' | 'memory' | 'pods' | 'networkIn' | 'networkOut'
+export type MetricFamily = 'cpu' | 'memory' | 'network' | 'pods'
 
 interface MetricsAreaChartProps {
   data: MetricsDataPoint[]
@@ -36,7 +38,8 @@ const METRIC_CONFIG: Record<MetricKey, {
   color: string
   gradientId: string
   yAxis: string
-  dataKey: string
+  dataKey: keyof MetricsDataPoint
+  family: MetricFamily
 }> = {
   cpu: {
     label: 'CPU %',
@@ -44,6 +47,7 @@ const METRIC_CONFIG: Record<MetricKey, {
     gradientId: 'cpuGradient',
     yAxis: 'percent',
     dataKey: 'cpu',
+    family: 'cpu',
   },
   memory: {
     label: 'Memory %',
@@ -51,6 +55,7 @@ const METRIC_CONFIG: Record<MetricKey, {
     gradientId: 'memGradient',
     yAxis: 'percent',
     dataKey: 'memory',
+    family: 'memory',
   },
   pods: {
     label: 'Pods',
@@ -58,6 +63,7 @@ const METRIC_CONFIG: Record<MetricKey, {
     gradientId: 'podsGradient',
     yAxis: 'count',
     dataKey: 'pods',
+    family: 'pods',
   },
   networkIn: {
     label: 'Net In',
@@ -65,6 +71,7 @@ const METRIC_CONFIG: Record<MetricKey, {
     gradientId: 'netInGradient',
     yAxis: 'bytes',
     dataKey: 'networkBytesIn',
+    family: 'network',
   },
   networkOut: {
     label: 'Net Out',
@@ -72,79 +79,113 @@ const METRIC_CONFIG: Record<MetricKey, {
     gradientId: 'netOutGradient',
     yAxis: 'bytes',
     dataKey: 'networkBytesOut',
+    family: 'network',
   },
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}GB`
-  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
-  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)}KB`
-  return `${bytes}B`
+export function getMetricConfig(key: MetricKey) {
+  return METRIC_CONFIG[key]
 }
 
-/**
- * BUG-193-003: Format X-axis timestamps with HH:MM for 24h range,
- * showing every 4-6 hours to avoid crowding.
- */
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${bytes.toFixed(0)} B`
+}
+
+function formatMetricValue(metric: MetricKey, value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return '—'
+  if (metric === 'networkIn' || metric === 'networkOut') return formatBytes(value)
+  if (metric === 'pods') return `${Math.round(value)}`
+  return `${value.toFixed(1)}%`
+}
+
 function formatXAxis(iso: string, range: MetricsRange): string {
   const d = new Date(iso)
-  if (!iso || isNaN(d.getTime())) return ''
+  if (!iso || Number.isNaN(d.getTime())) return ''
 
-  switch (range) {
-    case '1h':
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    case '6h':
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    case '24h':
-      // Show HH:MM — recharts interval handles tick density
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    case '7d':
-      return d.toLocaleDateString([], { weekday: 'short', hour: '2-digit' })
-    default:
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-}
-
-/**
- * Determine tick interval to show approximately every 4-6 hours for 24h range.
- */
-function getTickInterval(data: MetricsDataPoint[], range: MetricsRange): number | 'preserveStartEnd' {
-  if (range === '24h') {
-    // Show ~6 ticks: every 4 hours = every (total/6) points
-    const target = Math.max(1, Math.floor(data.length / 6))
-    return target
-  }
   if (range === '7d') {
-    return Math.max(1, Math.floor(data.length / 7))
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
   }
-  return 'preserveStartEnd'
+
+  if (range === '24h') {
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
+  if (range === '6h' || range === '1h') {
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomTooltip({ active, payload, label }: any) {
+function getTickInterval(data: MetricsDataPoint[], range: MetricsRange): number | 'preserveStartEnd' {
+  switch (range) {
+    case '30s':
+    case '1m':
+    case '5m':
+      return Math.max(0, Math.floor(data.length / 4))
+    case '1h':
+      return Math.max(1, Math.floor(data.length / 6))
+    case '6h':
+      return Math.max(1, Math.floor(data.length / 6))
+    case '24h':
+      return Math.max(1, Math.floor(data.length / 6))
+    case '7d':
+      return Math.max(1, Math.floor(data.length / 7))
+    default:
+      return 'preserveStartEnd'
+  }
+}
+
+function formatDateTime(iso?: string | null) {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${d.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })}`
+}
+
+function getBucketWindowLabel(point?: MetricsDataPoint | null, fallbackLabel?: string) {
+  const startLabel = formatDateTime(point?.bucketStart)
+  const endLabel = formatDateTime(point?.bucketEnd)
+
+  if (startLabel && endLabel) return `${startLabel} → ${endLabel}`
+  if (startLabel) return startLabel
+  if (endLabel) return endLabel
+  return fallbackLabel ? formatDateTime(fallbackLabel) ?? String(fallbackLabel) : ''
+}
+
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean
+  payload?: Array<{ name: string; value: number | null; color: string; dataKey: string; payload?: MetricsDataPoint }>
+  label?: string
+}) {
   if (!active || !payload?.length) return null
+
+  const point = payload[0]?.payload
+  const bucketLabel = getBucketWindowLabel(point, label)
+
   return (
-    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-2.5 shadow-xl text-xs">
-      <p className="text-[var(--color-text-muted)] font-mono mb-1.5">
-        {label ? (() => {
-          const d = new Date(label as string)
-          return isNaN(d.getTime()) ? String(label) : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })
-        })() : ''}
-      </p>
-      {payload.map((entry: { name: string; value: number; color: string }) => {
-        const isBytes = entry.name === 'Net In' || entry.name === 'Net Out'
-        const isPods = entry.name === 'Pods'
-        const displayVal = isBytes
-          ? formatBytes(entry.value)
-          : isPods
-          ? String(entry.value)
-          : `${entry.value}%`
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-2.5 text-xs shadow-xl">
+      <p className="mb-1 font-mono text-[10px] uppercase tracking-wide text-[var(--color-text-dim)]">Bucket window</p>
+      <p className="mb-1.5 font-mono text-[var(--color-text-muted)]">{bucketLabel}</p>
+      {payload.map((entry) => {
+        const metricKey = (Object.entries(METRIC_CONFIG).find(([, cfg]) => cfg.label === entry.name)?.[0] ?? 'cpu') as MetricKey
         return (
-          <div key={entry.name} className="flex items-center gap-2 mb-0.5">
+          <div key={`${entry.name}-${entry.dataKey}`} className="mb-0.5 flex items-center gap-2">
             <span className="h-2 w-2 rounded-full" style={{ background: entry.color }} />
             <span className="text-[var(--color-text-secondary)]">{entry.name}:</span>
             <span className="font-mono font-medium text-[var(--color-text-primary)]">
-              {displayVal}
+              {formatMetricValue(metricKey, entry.value)}
             </span>
           </div>
         )
@@ -153,10 +194,6 @@ function CustomTooltip({ active, payload, label }: any) {
   )
 }
 
-/**
- * BUG-193-003: Current value badge rendered at rightmost data point.
- * Appears as a pill showing the latest value for each active metric.
- */
 function CurrentValueBadge({
   data,
   activeMetrics,
@@ -164,38 +201,41 @@ function CurrentValueBadge({
   data: MetricsDataPoint[]
   activeMetrics: MetricKey[]
 }) {
-  if (!data.length) return null
-  const lastPoint = data[data.length - 1]
-  if (!lastPoint) return null
+  const latestPoint = [...data].reverse().find((point) =>
+    activeMetrics.some((key) => {
+      const value = point[METRIC_CONFIG[key].dataKey]
+      return typeof value === 'number'
+    }),
+  )
+
+  if (!latestPoint) return null
+
+  const bucketLabel = getBucketWindowLabel(latestPoint, latestPoint.timestamp)
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap mt-1">
-      {activeMetrics.map((key) => {
-        const cfg = METRIC_CONFIG[key]
-        if (!cfg) return null
-        const dataKey = cfg.dataKey as keyof MetricsDataPoint
-        const raw = lastPoint[dataKey]
-        const value = typeof raw === 'number' ? raw : 0
-        const isBytes = key === 'networkIn' || key === 'networkOut'
-        const isPods = key === 'pods'
-        const displayVal = isBytes ? formatBytes(value) : isPods ? `${value}` : `${value}%`
-
-        return (
-          <span
-            key={key}
-            className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full border"
-            style={{
-              color: cfg.color,
-              borderColor: `color-mix(in srgb, ${cfg.color} 40%, transparent)`,
-              background: `color-mix(in srgb, ${cfg.color} 10%, transparent)`,
-            }}
-            title={`Current ${cfg.label}`}
-          >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: cfg.color }} />
-            {cfg.label.split(' ')[0]}: <strong>{displayVal}</strong>
-          </span>
-        )
-      })}
+    <div className="mt-1 space-y-1.5">
+      <p className="text-[10px] font-mono text-[var(--color-text-dim)]">Current bucket: {bucketLabel}</p>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {activeMetrics.map((key) => {
+          const cfg = METRIC_CONFIG[key]
+          const raw = latestPoint[cfg.dataKey]
+          return (
+            <span
+              key={key}
+              className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-mono"
+              style={{
+                color: cfg.color,
+                borderColor: `color-mix(in srgb, ${cfg.color} 40%, transparent)`,
+                background: `color-mix(in srgb, ${cfg.color} 10%, transparent)`,
+              }}
+              title={`Current ${cfg.label}`}
+            >
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: cfg.color }} />
+              {cfg.label}: <strong>{formatMetricValue(key, typeof raw === 'number' ? raw : null)}</strong>
+            </span>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -206,47 +246,45 @@ export function MetricsAreaChart({
   activeMetrics = ['cpu', 'memory'],
   height = 280,
 }: MetricsAreaChartProps) {
-  const hasCpuOrMem = activeMetrics.includes('cpu') || activeMetrics.includes('memory')
-  const hasNetwork = activeMetrics.includes('networkIn') || activeMetrics.includes('networkOut')
-  const hasPods = activeMetrics.includes('pods')
-
-  // Enrich data with aliased keys for recharts
   const chartData = data.map((d) => ({
     ...d,
-    networkBytesIn: d.networkBytesIn ?? 0,
-    networkBytesOut: d.networkBytesOut ?? 0,
+    bucketStart: d.bucketStart ?? null,
+    bucketEnd: d.bucketEnd ?? null,
+    networkBytesIn: d.networkBytesIn ?? null,
+    networkBytesOut: d.networkBytesOut ?? null,
   }))
 
+  const primaryMetric = activeMetrics[0]
+  const primaryConfig = primaryMetric ? METRIC_CONFIG[primaryMetric] : null
   const tickInterval = getTickInterval(data, range)
-
-  // BUG-193-003: Subtle horizontal grid at key % values
-  const gridLines = hasCpuOrMem ? [25, 50, 75] : []
+  const gridLines = primaryConfig?.yAxis === 'percent' ? [25, 50, 75] : []
 
   return (
     <div>
       <ResponsiveContainer width="100%" height={height}>
-        <AreaChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+        <AreaChart
+          key={`${range}-${activeMetrics.join('-')}-${data.length}`}
+          data={chartData}
+          margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
+        >
           <defs>
-            {Object.entries(METRIC_CONFIG).map(([, cfg]) => (
-              <linearGradient key={cfg.gradientId} id={cfg.gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={cfg.color} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={cfg.color} stopOpacity={0} />
-              </linearGradient>
-            ))}
+            {activeMetrics.map((key) => {
+              const cfg = METRIC_CONFIG[key]
+              return (
+                <linearGradient key={cfg.gradientId} id={cfg.gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={cfg.color} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={cfg.color} stopOpacity={0} />
+                </linearGradient>
+              )
+            })}
           </defs>
 
-          {/* BUG-193-003: Subtle horizontal dashed grid lines */}
-          <CartesianGrid
-            strokeDasharray="3 6"
-            stroke="var(--color-grid-line)"
-            vertical={false}
-          />
+          <CartesianGrid strokeDasharray="3 6" stroke="var(--color-grid-line)" vertical={false} />
 
-          {/* BUG-193-003: Reference lines at 25/50/75% for visual scale */}
           {gridLines.map((val) => (
             <ReferenceLine
               key={val}
-              yAxisId="percent"
+              yAxisId={primaryConfig?.yAxis}
               y={val}
               stroke="var(--color-grid-line-subtle)"
               strokeDasharray="4 4"
@@ -260,9 +298,11 @@ export function MetricsAreaChart({
             tickLine={false}
             axisLine={false}
             interval={tickInterval}
+            minTickGap={24}
             padding={{ left: 8, right: 8 }}
           />
-          {hasCpuOrMem && (
+
+          {primaryConfig?.yAxis === 'percent' && (
             <YAxis
               yAxisId="percent"
               domain={[0, 100]}
@@ -274,37 +314,33 @@ export function MetricsAreaChart({
               ticks={[0, 25, 50, 75, 100]}
             />
           )}
-          {hasPods && (
+
+          {primaryConfig?.yAxis === 'count' && (
             <YAxis
               yAxisId="count"
-              orientation={hasCpuOrMem ? 'right' : 'left'}
+              allowDecimals={false}
               tick={{ fontSize: 11, fill: 'var(--color-text-dim)' }}
               tickLine={false}
               axisLine={false}
               width={36}
             />
           )}
-          {hasNetwork && (
+
+          {primaryConfig?.yAxis === 'bytes' && (
             <YAxis
               yAxisId="bytes"
-              orientation="right"
-              tickFormatter={(v) => formatBytes(v)}
+              tickFormatter={(v) => formatBytes(Number(v))}
               tick={{ fontSize: 11, fill: 'var(--color-text-dim)' }}
               tickLine={false}
               axisLine={false}
-              width={48}
+              width={64}
             />
           )}
+
           <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
-            iconType="circle"
-            iconSize={8}
-          />
 
           {activeMetrics.map((key) => {
             const cfg = METRIC_CONFIG[key]
-            if (!cfg) return null
             return (
               <Area
                 key={key}
@@ -317,6 +353,7 @@ export function MetricsAreaChart({
                 strokeWidth={2}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
+                connectNulls={false}
                 isAnimationActive={false}
               />
             )
@@ -324,8 +361,7 @@ export function MetricsAreaChart({
         </AreaChart>
       </ResponsiveContainer>
 
-      {/* BUG-193-003: Current value badge row */}
-      <CurrentValueBadge data={data} activeMetrics={activeMetrics} />
+      <CurrentValueBadge data={chartData} activeMetrics={activeMetrics} />
     </div>
   )
 }

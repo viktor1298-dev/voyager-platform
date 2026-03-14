@@ -1,0 +1,40 @@
+{
+  "agent": "qa",
+  "agentId": "agent:qa",
+  "version": "voyager-metrics-timeline-20260314",
+  "timestamp": "2026-03-14T16:30:05+02:00",
+  "score": 4.4,
+  "verdict": "FAIL",
+  "gate": 8.5,
+  "sha": "58a8407",
+  "checks": [
+    "Login/session accessibility confirmed",
+    "Navigated to cluster detail for test-cluster-minikube",
+    "Validated Metrics tab presence and chart widget behavior",
+    "Checked available time ranges against requested monitoring expectations",
+    "Inspected CPU %, Memory %, Net In, Net Out, Pods series behavior",
+    "Compared x-axis spacing and labels in 1h and 7d states",
+    "Checked chart interaction state while switching metrics and ranges",
+    "Checked probable tooltip rendering behavior",
+    "Checked console for JS errors",
+    "Checked light/dark theme parity around metrics widget"
+  ],
+  "failures": [
+    "Missing short monitoring ranges: 30s, 1m, 5m not available in UI",
+    "Metrics are not rendered as four dedicated graphs; instead they are mixed as toggleable series in one shared chart, reducing clarity",
+    "7d x-axis labeling is severely under-rendered / effectively single-label, not Grafana-style evenly distributed timeline ticks",
+    "Chart axes become unreadable with mixed units on same canvas (percent, bytes, pod counts) using unlabeled right-side multi-axis numbers",
+    "Switching metric pills/ranges can blank the chart entirely while controls remain visible",
+    "Metric selection state is inconsistent; clicked pill and rendered/active series do not reliably match",
+    "Hover tooltip appears empty/fragile under interaction probing; exact timestamp/value verification is not reliable",
+    "Auto-refresh / range-change behavior does not preserve stable monitoring-chart readability",
+    "Theme toggle does not provide clear dark/light parity evidence on this screen"
+  ],
+  "screenshots": [
+    "/home/vkzone/.openclaw/workspace-qa/screenshots/metrics-overview-1h-light.png",
+    "/home/vkzone/.openclaw/workspace-qa/screenshots/metrics-cpu-1h-light.png",
+    "/home/vkzone/.openclaw/workspace-qa/screenshots/metrics-multiseries-7d-light.png",
+    "/home/vkzone/.openclaw/workspace-qa/screenshots/metrics-all-series-1h-light.png",
+    "/home/vkzone/.openclaw/workspace-qa/screenshots/metrics-blank-dark.png"
+  ]
+}
