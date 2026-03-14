@@ -45,7 +45,6 @@ export function TopBar() {
     } finally {
       const loggedOutAt = Date.now()
       router.replace(`/login?loggedOut=1&loggedOutAt=${loggedOutAt}`)
-      router.refresh()
       setIsLoggingOut(false)
     }
   }
