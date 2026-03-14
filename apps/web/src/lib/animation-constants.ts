@@ -95,3 +95,8 @@ export const cardHover = {
 export const cardTap = {
   scale: 0.995,
 } as const
+
+export const statusChangeTransition = {
+  duration: DURATION.slow,
+  ease: EASING.default,
+} as const
