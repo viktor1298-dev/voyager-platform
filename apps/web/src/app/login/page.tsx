@@ -11,7 +11,11 @@ import { useAuthStore } from '@/stores/auth'
 import { toast } from 'sonner'
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email is required')
+    .refine((value) => /^[^\s@]+@[^\s@]+$/.test(value), 'Invalid email address'),
   password: z.string().min(1, 'Password is required'),
 })
 
