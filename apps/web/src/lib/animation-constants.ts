@@ -103,9 +103,11 @@ export const healthDotVariants = {
   critical: { backgroundColor: 'var(--color-status-error)', scale: [1, 1.5, 1] as number[] },
 }
 
+
 export const statusChangeTransition = {
   duration: DURATION.slow,
   ease: EASING.default,
 } as const
 
 // checkButtonVariants removed — check button uses CSS opacity-0 group-hover:opacity-100 (no Motion conflict)
+
