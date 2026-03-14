@@ -90,31 +90,41 @@ function LoginPageContent() {
   }, [isLoggedOutRedirect, isTimestampedGraceActive, legacyGraceRemainingMs, timestampedGraceRemainingMs])
 
   useEffect(() => {
-    if (!loggedOutFlag || isLoggedOutRedirect) return
+    if (!loggedOutFlag) return
 
-    const nextParams = new URLSearchParams(searchParams.toString())
-    nextParams.delete('loggedOut')
-    nextParams.delete('loggedOutAt')
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem('logoutInProgress')
+    }
 
-    const nextQuery = nextParams.toString()
-    const nextUrl = nextQuery.length > 0 ? `/login?${nextQuery}` : '/login'
-    window.history.replaceState(window.history.state, '', nextUrl)
-  }, [isLoggedOutRedirect, loggedOutFlag, searchParams])
+    useAuthStore.getState().clearUser()
+  }, [loggedOutFlag])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!isTimestampedGraceActive) return
+
+    const expectedSearch = `?loggedOut=1&loggedOutAt=${parsedLoggedOutAt}`
+    if (window.location.pathname === '/login' && window.location.search !== expectedSearch) {
+      window.history.replaceState(null, '', `/login${expectedSearch}`)
+    }
+  }, [isTimestampedGraceActive, parsedLoggedOutAt])
 
   useEffect(() => {
     if (!session?.user) return
     if (!loggedOutFlag && !loggedOutAtRaw) return
+    if (isTimestampedGraceActive || isLegacyGraceActive) return
 
     setShouldBypassLoggedOutRedirect(true)
-  }, [loggedOutAtRaw, loggedOutFlag, session])
+  }, [isLegacyGraceActive, isTimestampedGraceActive, loggedOutAtRaw, loggedOutFlag, session])
 
   useEffect(() => {
     if (isLoggedOutRedirect || isRedirectingAfterLogin) return
+    if (loggedOutFlag && (isTimestampedGraceActive || isLegacyGraceActive)) return
     if (!isPending && session?.user) {
       router.replace(returnUrl)
       router.refresh()
     }
-  }, [isLoggedOutRedirect, isPending, isRedirectingAfterLogin, returnUrl, router, session])
+  }, [isLegacyGraceActive, isLoggedOutRedirect, isPending, isRedirectingAfterLogin, isTimestampedGraceActive, loggedOutFlag, returnUrl, router, session])
 
   async function redirectAfterSuccessfulLogin() {
     setShouldBypassLoggedOutRedirect(true)

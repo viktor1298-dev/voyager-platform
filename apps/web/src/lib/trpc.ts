@@ -12,9 +12,40 @@ export const trpc = createTRPCReact<AppRouter>()
 
 function clearAuthAndRedirect() {
   if (typeof window === 'undefined') return
-  if (!window.location.pathname.startsWith('/login')) {
-    window.location.href = '/login'
+
+  if (window.sessionStorage.getItem('logoutInProgress')?.trim()) {
+    return
   }
+
+  const { pathname, search } = window.location
+  if (pathname.startsWith('/login')) return
+
+  if (pathname === '/' && !search) {
+    window.location.href = '/login'
+    return
+  }
+
+  if (pathname === '/clusters' && !search) {
+    window.location.href = '/login'
+    return
+  }
+
+  const loginUrl = new URL('/login', window.location.origin)
+  const currentSearchParams = new URLSearchParams(search)
+
+  if (currentSearchParams.get('loggedOut') === '1') {
+    loginUrl.searchParams.set('loggedOut', '1')
+    const loggedOutAt = currentSearchParams.get('loggedOutAt')
+    if (loggedOutAt && loggedOutAt.trim().length > 0) {
+      loginUrl.searchParams.set('loggedOutAt', loggedOutAt)
+    }
+    window.location.href = `${loginUrl.pathname}?${loginUrl.searchParams.toString()}`
+    return
+  }
+
+  const requestedReturnUrl = `${pathname}${search}`
+  loginUrl.searchParams.set('returnUrl', requestedReturnUrl)
+  window.location.href = `${loginUrl.pathname}?${loginUrl.searchParams.toString()}`
 }
 
 function getBaseUrl(): string {

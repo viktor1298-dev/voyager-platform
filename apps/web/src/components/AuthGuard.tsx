@@ -35,9 +35,40 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (isPublicPath(pathname)) return
     if (!isHydrated || !isSessionResolved || hasValidSession) return
 
-    const returnUrl = encodeURIComponent(requestedReturnUrl)
-    router.replace(`/login?returnUrl=${returnUrl}`)
-  }, [hasValidSession, isHydrated, isSessionResolved, pathname, requestedReturnUrl, router])
+    const logoutInProgress = typeof window !== 'undefined' && Boolean(window.sessionStorage.getItem('logoutInProgress')?.trim())
+
+    if (logoutInProgress) {
+      const loginUrl = new URL('/login', window.location.origin)
+      loginUrl.searchParams.set('loggedOut', '1')
+      loginUrl.searchParams.set('loggedOutAt', String(Date.now()))
+      router.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
+      return
+    }
+
+    if (pathname === '/' && !queryString) {
+      router.replace('/login')
+      return
+    }
+
+    if (pathname === '/clusters' && !queryString) {
+      router.replace('/login')
+      return
+    }
+
+    const loginUrl = new URL('/login', window.location.origin)
+    if (queryString.includes('loggedOut=1')) {
+      loginUrl.searchParams.set('loggedOut', '1')
+      const loggedOutAt = new URLSearchParams(queryString).get('loggedOutAt')
+      if (loggedOutAt && loggedOutAt.trim().length > 0) {
+        loginUrl.searchParams.set('loggedOutAt', loggedOutAt)
+      }
+      router.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
+      return
+    }
+
+    loginUrl.searchParams.set('returnUrl', requestedReturnUrl)
+    router.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
+  }, [hasValidSession, isHydrated, isSessionResolved, pathname, queryString, requestedReturnUrl, router])
 
   if (!pathname) return null
   if (isPublicPath(pathname)) return <>{children}</>

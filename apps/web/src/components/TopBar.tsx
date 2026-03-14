@@ -1,11 +1,10 @@
 'use client'
 
+import { authClient } from '@/lib/auth-client'
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
 import { useClusterContext } from '@/stores/cluster-context'
 import { LogOut, Search } from 'lucide-react'
-import { useTheme } from 'next-themes'
-import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { NotificationsPanel } from './NotificationsPanel'
 import { ThemeToggle } from './ThemeToggle'
@@ -28,24 +27,27 @@ function statusDot(status: ClusterStatus): string {
 }
 
 export function TopBar() {
-  const router = useRouter()
-  const { resolvedTheme } = useTheme()
   const logoSrc = '/logo-mark.svg'
   const user = useAuthStore((s) => s.user)
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
-  const handleLogout = async () => {
+  const handleLogout = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
     if (isLoggingOut) return
 
     setIsLoggingOut(true)
+
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('logoutInProgress', String(Date.now()))
+    }
+
     try {
-      await useAuthStore.getState().logout()
+      await authClient.signOut()
     } finally {
-      const loggedOutAt = Date.now()
-      router.replace(`/login?loggedOut=1&loggedOutAt=${loggedOutAt}`)
-      setIsLoggingOut(false)
+      useAuthStore.getState().clearUser()
+      window.location.href = `/login?loggedOut=1&loggedOutAt=${Date.now()}`
     }
   }
 
@@ -172,9 +174,9 @@ export function TopBar() {
           type="button"
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="flex items-center gap-1.5 px-2.5 min-h-[44px] min-w-[44px] justify-center rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-status-error)] hover:bg-[var(--color-status-error)]/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           aria-label={isLoggingOut ? 'Logging out' : 'Logout'}
           title={isLoggingOut ? 'Logging out…' : 'Logout'}
+          className="flex items-center gap-1.5 px-2.5 min-h-[44px] min-w-[44px] justify-center rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-status-error)] hover:bg-[var(--color-status-error)]/10 transition-colors disabled:opacity-60"
         >
           <LogOut className="h-4 w-4" />
           <span className="hidden sm:inline text-[11px] font-medium">Logout</span>
