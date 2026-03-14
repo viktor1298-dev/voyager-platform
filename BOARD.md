@@ -168,7 +168,7 @@ Each phase follows this flow:
 - [x] Status accessibility improved with explicit ✓ Healthy / ⚠ Warning / ✕ Critical labels and icons (not color-only) [v204-mai-ux 2026-03-14]
 - [x] Filter chips active state strengthened with filled accent styling and clearer contrast [v204-mai-ux 2026-03-14]
 - [x] Secondary labels/metadata contrast improved for dark mode in dashboard surfaces [v204-mai-ux 2026-03-14]
-- [x] Cluster cards given more visual weight + density with inline CPU/Memory/Pod metrics and 24h sparkline health trend [v204-mai-ux 2026-03-14]
+- [x] Cluster cards keep higher visual weight/density with truthful status summary, source/version/node metadata, and capability badges (removed synthetic CPU/Memory/Pods + fake 24h trend) [v209-mai-ux-fix 2026-03-14]
 
 ### Completed
 - [x] Restored CompactStatsBar component — feat/init-monorepo had divergent page.tsx missing Phase 5/6 component [v202 2026-03-14]

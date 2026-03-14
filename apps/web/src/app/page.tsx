@@ -5,7 +5,6 @@ import { ClusterHealthIndicator } from '@/components/ClusterHealthIndicator'
 import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { SkeletonCard, SkeletonText } from '@/components/Skeleton'
 import { PageTransition } from '@/components/animations'
-import { SparklineChart, generateStableTimeSeries } from '@/components/charts/SparklineChart'
 import { DashboardEditBar } from '@/components/dashboard/DashboardEditBar'
 import { DashboardGrid } from '@/components/dashboard/DashboardGrid'
 import { WidgetLibraryDrawer } from '@/components/dashboard/WidgetLibraryDrawer'
@@ -95,16 +94,23 @@ function getHealthGroup(status: string | null | undefined): HealthGroup {
   return 'critical'
 }
 
-function formatCpuMetric(seed: number) {
-  return `${Math.max(8, Math.min(96, 36 + (seed % 44)))}%`
+function getStatusSummary(status: string | null | undefined) {
+  const group = getHealthGroup(status)
+  if (group === 'healthy') return 'Serving traffic normally'
+  if (group === 'degraded') return 'Needs operator attention'
+  return 'Review cluster health details'
 }
 
-function formatMemoryMetric(seed: number) {
-  return `${Math.max(14, Math.min(94, 44 + (seed % 36)))}%`
+function getSourceSummary(source: ClusterCardData['source']) {
+  return source === 'live' ? 'Live stream connected' : 'Inventory snapshot'
 }
 
-function formatPodMetric(seed: number, nodeCount: number) {
-  return Math.max(3, nodeCount * 3 + (seed % 7))
+function getCapabilityBadges(cluster: ClusterCardData) {
+  const badges = [cluster.provider]
+  if (cluster.version) badges.push(`K8s ${cluster.version}`)
+  if (cluster.nodeCount >= 5) badges.push('Multi-node')
+  if (cluster.source === 'live') badges.push('Realtime')
+  return badges.slice(0, 3)
 }
 
 function DashboardContent() {
@@ -561,11 +567,9 @@ function ClusterCard({
   const statusMeta = STATUS_META[normalizedStatus]
   const StatusIcon = statusMeta.icon
   const envMeta = ENV_META[cluster.environment]
-  const seed = Array.from(cluster.id).reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  const cpuValue = formatCpuMetric(seed)
-  const memoryValue = formatMemoryMetric(seed + 11)
-  const podsValue = formatPodMetric(seed + 23, cluster.nodeCount)
-  const sparkline = generateStableTimeSeries(`cluster-${cluster.id}`, Math.max(10, 35 + (seed % 40)), 0.22)
+  const sourceSummary = getSourceSummary(cluster.source)
+  const statusSummary = getStatusSummary(cluster.status)
+  const capabilityBadges = getCapabilityBadges(cluster)
 
   return (
     <Link href={`/clusters/${cluster.id}`}>
@@ -617,20 +621,24 @@ function ClusterCard({
         </div>
 
         <div className="mt-4 rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/48 p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
-              Health trend
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
+                Status summary
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{statusSummary}</p>
+            </div>
+            <span className="rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-card)]/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
+              {sourceSummary}
             </span>
-            <span className="text-[11px] font-medium text-[var(--color-text-muted)]">24h</span>
           </div>
-          <SparklineChart data={sparkline} color={statusMeta.color} height={56} />
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-2">
           {[
-            { label: 'CPU', value: cpuValue },
-            { label: 'Memory', value: memoryValue },
-            { label: 'Pods', value: String(podsValue) },
+            { label: 'Nodes', value: String(cluster.nodeCount) },
+            { label: 'Source', value: cluster.source === 'live' ? 'Live' : 'DB' },
+            { label: 'Version', value: cluster.version ? cluster.version : 'N/A' },
           ].map((metric) => (
             <div
               key={metric.label}
@@ -641,6 +649,17 @@ function ClusterCard({
               </p>
               <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{metric.value}</p>
             </div>
+          ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2 pl-2">
+          {capabilityBadges.map((badge) => (
+            <span
+              key={badge}
+              className="inline-flex items-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]"
+            >
+              {badge}
+            </span>
           ))}
         </div>
 
