@@ -67,7 +67,7 @@ function AnimatedTbody({
   tbodyRef: React.RefObject<HTMLTableSectionElement | null>
 }) {
   const inViewRef = useRef<HTMLTableSectionElement>(null)
-  const isInView = useInView(inViewRef, { once: true, margin: '-50px 0px 0px 0px' })
+  const isInView = useInView(inViewRef, { once: true })
 
   // Callback ref: merges inViewRef with external tbodyRef
   const callbackRef = (node: HTMLTableSectionElement | null) => {
@@ -388,18 +388,16 @@ export function DataTable<TData>({
                 </div>
               )}
 
-              {/* P3-005: Desktop Table with staggered rows via useInView */}
               <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
                 {renderTableHeader()}
                 <AnimatedTbody tbodyRef={tableBodyRef}>
                   {sortedRows.map((row) => (
-                    <m.tr
+                    <tr
                       key={row.id}
                       data-row
                       tabIndex={onRowClick ? 0 : -1}
                       role={onRowClick ? 'button' : undefined}
                       aria-label={onRowClick ? 'Open row details' : undefined}
-                      variants={rowVariants}
                       onClick={() => onRowClick?.(row.original)}
                       onKeyDown={(e) => {
                         if (!onRowClick) return
@@ -415,7 +413,7 @@ export function DataTable<TData>({
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       ))}
-                    </m.tr>
+                    </tr>
                   ))}
                 </AnimatedTbody>
               </table>

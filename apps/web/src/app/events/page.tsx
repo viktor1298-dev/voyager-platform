@@ -57,6 +57,7 @@ export default function EventsPage() {
   const [isClient, setIsClient] = useState(false)
 
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
+  const hasActiveCluster = Boolean(activeClusterId)
 
   const eventsQuery = trpc.clusters.liveEvents.useQuery(
     { clusterId: activeClusterId ?? '', limit: 50 },
