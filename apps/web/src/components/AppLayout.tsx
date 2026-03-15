@@ -108,7 +108,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <PresenceBar />
         <div
           key={pathname}
-          className="p-3 sm:p-6 max-w-[1400px] w-full max-w-[100vw] overflow-x-hidden bg-dot-grid min-h-full"
+          className="p-3 sm:p-5 max-w-[1400px] w-full max-w-[100vw] overflow-x-hidden bg-dot-grid min-h-full"
         >
           {children}
         </div>

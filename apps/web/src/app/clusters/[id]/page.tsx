@@ -381,8 +381,38 @@ export default function ClusterOverviewPage() {
       ? normalizeLiveHealthStatus(cluster.healthStatus ?? cluster.status)
       : 'unknown'
 
+  const isUnreachable = normalizedStatus === 'error' || normalizedStatus === 'unknown' || liveFailed
+  const lastContactAgo = cluster.lastConnectedAt ? timeAgo(cluster.lastConnectedAt) : null
+
   return (
     <>
+      {/* Unreachable cluster warning banner */}
+      {isUnreachable && (
+        <div className="mb-4 flex items-start gap-3 px-4 py-3 rounded-xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/[0.06]">
+          <span className="text-lg mt-0.5">⚠️</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-[var(--color-status-warning)]">
+              This cluster is currently unreachable
+            </p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+              {lastContactAgo
+                ? `Last contact: ${lastContactAgo}. Displaying last known data.`
+                : 'No contact history available. Check cluster connectivity and credentials.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              dbCluster.refetch()
+              if (effectiveIsLive) liveQuery.refetch()
+            }}
+            className="shrink-0 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-status-warning)]/30 text-[var(--color-status-warning)] hover:bg-[var(--color-status-warning)]/10 transition-colors cursor-pointer"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
+
       {/* AI Context Card for unhealthy clusters */}
       {(normalizedStatus === 'error' || normalizedStatus === 'degraded') && (
         <AiContextCard
@@ -414,7 +444,7 @@ export default function ClusterOverviewPage() {
       })()}
 
       {/* Overview Stats — single set, no duplicates (BUG-RD-005 fixed) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         {[
           { icon: Server, label: 'Nodes', value: String(cluster.nodeCount) },
           {
@@ -439,6 +469,11 @@ export default function ClusterOverviewPage() {
               <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
                 {stat.label}
               </span>
+              {isUnreachable && (
+                <span className="text-[8px] font-mono px-1 py-0.5 rounded bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)] ml-auto">
+                  STALE
+                </span>
+              )}
             </div>
             {/* P3-006: Animated stat count-up */}
             <AnimatedStatCount
@@ -454,8 +489,18 @@ export default function ClusterOverviewPage() {
       </div>
 
       {/* Real-time time-series charts */}
-      <div className="mb-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
-        <MetricsTimeSeriesPanel clusterId={resolvedId} isLive={effectiveIsLive} compact />
+      <div className="mb-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+        {isUnreachable && !effectiveIsLive ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="rounded-full bg-white/[0.04] p-3 mb-3">
+              <Cpu className="h-5 w-5 text-[var(--color-text-dim)]" />
+            </div>
+            <p className="text-sm font-medium text-[var(--color-text-muted)]">No data available</p>
+            <p className="text-xs text-[var(--color-text-dim)] mt-1">Cluster is offline — metrics unavailable</p>
+          </div>
+        ) : (
+          <MetricsTimeSeriesPanel clusterId={resolvedId} isLive={effectiveIsLive} compact />
+        )}
       </div>
 
       {/* Recent Events Preview */}

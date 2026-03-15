@@ -167,6 +167,8 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
   const [validationState, setValidationState] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
   const [validationError, setValidationError] = useState<string>('')
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const [submitAttempted, setSubmitAttempted] = useState(false)
 
   const currentProvider = CLUSTER_PROVIDERS.find((p) => p.id === provider)!
 
@@ -392,59 +394,114 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
             <div className="space-y-3">
               {provider === 'kubeconfig' && (
                 <>
-                  <FileDrop label="Kubeconfig file" file={kubeFile} onFile={setKubeFile} onError={setUploadError} accept=".yaml,.yml,.conf" />
+                  <FileDrop label="Kubeconfig file *" file={kubeFile} onFile={setKubeFile} onError={setUploadError} accept=".yaml,.yml,.conf" />
                   <div>
-                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Or paste kubeconfig text</label>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Or paste kubeconfig text <span className="text-red-400">*</span></label>
                     <textarea
                       rows={6}
                       value={kubeText}
                       onChange={(e) => setKubeText(e.target.value)}
-                      placeholder="apiVersion: v1..."
+                      placeholder="apiVersion: v1&#10;clusters:&#10;- cluster:&#10;    server: https://api.example.com:6443"
                       className={inputClass}
                     />
+                    {(submitAttempted) && !kubeFile && !kubeText.trim() && (
+                      <p className="text-[11px] text-red-400 mt-1">Upload a kubeconfig file or paste the YAML content</p>
+                    )}
                   </div>
                 </>
               )}
 
               {provider === 'aws' && (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <input value={awsAccessKey} onChange={(e) => setAwsAccessKey(e.target.value)} placeholder="Access Key ID" className={inputClass} />
-                  <input type="password" value={awsSecretKey} onChange={(e) => setAwsSecretKey(e.target.value)} placeholder="Secret Access Key" className={inputClass} />
-                  <input value={awsRegion} onChange={(e) => setAwsRegion(e.target.value)} placeholder="Region (e.g. us-east-1)" className={inputClass} />
-                  <input value={awsEndpoint} onChange={(e) => setAwsEndpoint(e.target.value)} placeholder="Endpoint (optional)" className={inputClass} />
+                  <div>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Access Key ID <span className="text-red-400">*</span></label>
+                    <input value={awsAccessKey} onChange={(e) => setAwsAccessKey(e.target.value)} onBlur={() => setTouched(t => ({ ...t, awsAccessKey: true }))} placeholder="AKIAIOSFODNN7EXAMPLE" className={inputClass} />
+                    {(touched.awsAccessKey || submitAttempted) && !awsAccessKey.trim() && (
+                      <p className="text-[11px] text-red-400 mt-1">Access Key ID is required</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Secret Access Key <span className="text-red-400">*</span></label>
+                    <input type="password" value={awsSecretKey} onChange={(e) => setAwsSecretKey(e.target.value)} onBlur={() => setTouched(t => ({ ...t, awsSecretKey: true }))} placeholder="Secret Access Key" className={inputClass} />
+                    {(touched.awsSecretKey || submitAttempted) && !awsSecretKey.trim() && (
+                      <p className="text-[11px] text-red-400 mt-1">Secret Access Key is required</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Region <span className="text-red-400">*</span></label>
+                    <input value={awsRegion} onChange={(e) => setAwsRegion(e.target.value)} onBlur={() => setTouched(t => ({ ...t, awsRegion: true }))} placeholder="us-east-1" className={inputClass} />
+                    {(touched.awsRegion || submitAttempted) && !awsRegion.trim() && (
+                      <p className="text-[11px] text-red-400 mt-1">Region is required</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Endpoint</label>
+                    <input value={awsEndpoint} onChange={(e) => setAwsEndpoint(e.target.value)} placeholder="arn:aws:eks:us-east-1:123456789:cluster/my-cluster" className={inputClass} />
+                  </div>
                 </div>
               )}
 
               {provider === 'azure' && (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <input value={azureSubscriptionId} onChange={(e) => setAzureSubscriptionId(e.target.value)} placeholder="Subscription ID" className={inputClass} />
-                  <input value={azureResourceGroup} onChange={(e) => setAzureResourceGroup(e.target.value)} placeholder="Resource Group" className={inputClass} />
-                  <input value={azureClusterName} onChange={(e) => setAzureClusterName(e.target.value)} placeholder="Cluster Name" className={inputClass} />
+                  <div>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Subscription ID <span className="text-red-400">*</span></label>
+                    <input value={azureSubscriptionId} onChange={(e) => setAzureSubscriptionId(e.target.value)} onBlur={() => setTouched(t => ({ ...t, azureSubscriptionId: true }))} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className={inputClass} />
+                    {(touched.azureSubscriptionId || submitAttempted) && !azureSubscriptionId.trim() && (
+                      <p className="text-[11px] text-red-400 mt-1">Subscription ID is required</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Resource Group <span className="text-red-400">*</span></label>
+                    <input value={azureResourceGroup} onChange={(e) => setAzureResourceGroup(e.target.value)} onBlur={() => setTouched(t => ({ ...t, azureResourceGroup: true }))} placeholder="my-resource-group" className={inputClass} />
+                    {(touched.azureResourceGroup || submitAttempted) && !azureResourceGroup.trim() && (
+                      <p className="text-[11px] text-red-400 mt-1">Resource Group is required</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Cluster Name <span className="text-red-400">*</span></label>
+                    <input value={azureClusterName} onChange={(e) => setAzureClusterName(e.target.value)} onBlur={() => setTouched(t => ({ ...t, azureClusterName: true }))} placeholder="https://myaks.eastus.azmk8s.io" className={inputClass} />
+                    {(touched.azureClusterName || submitAttempted) && !azureClusterName.trim() && (
+                      <p className="text-[11px] text-red-400 mt-1">Cluster Name is required</p>
+                    )}
+                  </div>
                 </div>
               )}
 
               {provider === 'gke' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Service Account JSON</label>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Service Account JSON <span className="text-red-400">*</span></label>
                     <textarea
                       rows={6}
                       value={gkeServiceAccountJson}
                       onChange={(e) => setGkeServiceAccountJson(e.target.value)}
+                      onBlur={() => setTouched(t => ({ ...t, gkeServiceAccountJson: true }))}
                       placeholder={`{\n  "type": "service_account"\n}`}
                       className={inputClass}
                     />
+                    {(touched.gkeServiceAccountJson || submitAttempted) && !gkeServiceAccountJson.trim() && (
+                      <p className="text-[11px] text-red-400 mt-1">Service Account JSON is required</p>
+                    )}
                   </div>
-                  <input value={gkeEndpoint} onChange={(e) => setGkeEndpoint(e.target.value)} placeholder="Endpoint (optional)" className={inputClass} />
+                  <div>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Endpoint</label>
+                    <input value={gkeEndpoint} onChange={(e) => setGkeEndpoint(e.target.value)} placeholder="https://35.xxx.xxx.xxx" className={inputClass} />
+                  </div>
                 </div>
               )}
 
               {provider === 'minikube' && (
                 <div className="space-y-3">
-                  <FileDrop label="CA cert" file={minikubeCaCert} onFile={setMinikubeCaCert} onError={setUploadError} />
-                  <FileDrop label="Client cert" file={minikubeClientCert} onFile={setMinikubeClientCert} onError={setUploadError} />
-                  <FileDrop label="Client key" file={minikubeClientKey} onFile={setMinikubeClientKey} onError={setUploadError} />
-                  <input value={minikubeEndpoint} onChange={(e) => setMinikubeEndpoint(e.target.value)} placeholder="https://127.0.0.1:8443" className={inputClass} />
+                  <FileDrop label="CA cert *" file={minikubeCaCert} onFile={setMinikubeCaCert} onError={setUploadError} />
+                  <FileDrop label="Client cert *" file={minikubeClientCert} onFile={setMinikubeClientCert} onError={setUploadError} />
+                  <FileDrop label="Client key *" file={minikubeClientKey} onFile={setMinikubeClientKey} onError={setUploadError} />
+                  <div>
+                    <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Endpoint <span className="text-red-400">*</span></label>
+                    <input value={minikubeEndpoint} onChange={(e) => setMinikubeEndpoint(e.target.value)} onBlur={() => setTouched(t => ({ ...t, minikubeEndpoint: true }))} placeholder="https://192.168.49.2:8443" className={inputClass} />
+                    {(touched.minikubeEndpoint || submitAttempted) && !minikubeEndpoint.trim() && (
+                      <p className="text-[11px] text-red-400 mt-1">Endpoint URL is required</p>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -475,14 +532,25 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                 <p className="text-[var(--color-text-secondary)]">Endpoint: <span className="text-[var(--color-text-primary)] break-all">{computedEndpoint}</span></p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <select value={environment} onChange={(e) => setEnvironment(e.target.value as Environment)} className={inputClass}>
-                  <option value="production">Production</option>
-                  <option value="staging">Staging</option>
-                  <option value="development">Development</option>
-                </select>
-                <input value={nameOverride} onChange={(e) => setNameOverride(e.target.value)} placeholder={`Name override (default: ${suggestedName})`} className={inputClass} />
+                <div>
+                  <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Environment</label>
+                  <select value={environment} onChange={(e) => setEnvironment(e.target.value as Environment)} className={inputClass}>
+                    <option value="production">Production</option>
+                    <option value="staging">Staging</option>
+                    <option value="development">Development</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Cluster Name</label>
+                  <input value={nameOverride} onChange={(e) => setNameOverride(e.target.value)} onBlur={() => setTouched(t => ({ ...t, clusterName: true }))} placeholder={`Default: ${suggestedName}`} className={inputClass} />
+                  <p className="text-[10px] text-[var(--color-text-dim)] mt-1">Leave blank to use: {suggestedName}</p>
+                </div>
               </div>
-              {!endpointValid && <p className="text-xs text-red-400">A valid API endpoint is required to create this cluster.</p>}
+              {!endpointValid && (
+                <p className="text-xs text-red-400">
+                  Enter a valid endpoint URL (e.g., https://api.example.com:6443)
+                </p>
+              )}
             </div>
           )}
         </motion.div>
@@ -498,8 +566,16 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
           disabled={pending || !canGoNext}
           onClick={() => {
             if (step < 4) {
+              if (step === 2 && !step2Valid) {
+                setSubmitAttempted(true)
+                return
+              }
               if (step === 3 && validationState === 'error') return
               setStep((s) => s + 1)
+              return
+            }
+            if (!endpointValid || !finalName) {
+              setSubmitAttempted(true)
               return
             }
             void submit()

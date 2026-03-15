@@ -35,7 +35,9 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
   const clusterRouteSegment = dbCluster.data
     ? getClusterRouteSegment({ id: dbCluster.data.id, name: dbCluster.data.name })
     : routeSegment
-  const clusterName = (dbCluster.data?.name as string | undefined) ?? clusterId
+  const clusterName = (dbCluster.data?.name as string | undefined) ?? null
+  const isClusterLoading = dbCluster.isLoading
+  const isNotFound = !isClusterLoading && !dbCluster.data && dbCluster.error
 
   // Keyboard shortcuts: 1–9 for tabs, [ and ] for prev/next
   useEffect(() => {
@@ -95,15 +97,42 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
   }
   const activeTab = getActiveTab()
 
+  // Show "Cluster not found" page when cluster doesn't exist
+  if (isNotFound) {
+    return (
+      <AppLayout>
+        <Breadcrumbs segmentLabels={{ [routeSegment]: 'Not Found' }} />
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="rounded-full bg-[var(--color-status-error)]/10 p-4 mb-4">
+            <svg className="h-8 w-8 text-[var(--color-status-error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Cluster not found</h1>
+          <p className="text-sm text-[var(--color-text-muted)] mb-6 max-w-md">
+            The cluster you're looking for doesn't exist or you don't have permission to view it.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push('/clusters')}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            ← Back to Clusters
+          </button>
+        </div>
+      </AppLayout>
+    )
+  }
+
   return (
     <AppLayout>
       <Breadcrumbs
-        segmentLabels={{ [routeSegment]: clusterName }}
+        segmentLabels={{ [routeSegment]: clusterName ?? 'Loading...' }}
       />
 
       {/* Cluster Header */}
       <div
-        className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-5 mb-4"
+        className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-4 mb-3"
         style={{ boxShadow: 'var(--shadow-card)' }}
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -114,25 +143,34 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
             layoutId={`cluster-icon-${clusterId}`}
           />
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)] truncate">
-              {clusterName}
-            </h1>
-            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              <span className="text-[11px] font-mono text-[var(--color-text-muted)]">
-                {(dbCluster.data as Record<string, unknown> | undefined)?.provider as string ?? '—'}
-              </span>
-              {(dbCluster.data?.status as string | undefined) && (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
-                  {dbCluster.data?.status as string}
-                </span>
-              )}
-            </div>
+            {isClusterLoading ? (
+              <div className="space-y-1.5">
+                <div className="h-6 w-48 rounded-md bg-white/[0.06] animate-pulse" />
+                <div className="h-4 w-24 rounded-md bg-white/[0.04] animate-pulse" />
+              </div>
+            ) : (
+              <>
+                <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)] truncate">
+                  {clusterName ?? 'Unknown Cluster'}
+                </h1>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <span className="text-[11px] font-mono text-[var(--color-text-muted)]">
+                    {(dbCluster.data as Record<string, unknown> | undefined)?.provider as string ?? '—'}
+                  </span>
+                  {(dbCluster.data?.status as string | undefined) && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
+                      {dbCluster.data?.status as string}
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
 
       {/* 10-Tab Bar */}
-      <div className="mb-4 border-b border-[var(--color-border)] overflow-x-auto">
+      <div className="mb-3 border-b border-[var(--color-border)] overflow-x-auto">
         <nav
           className="flex items-end gap-0 min-w-max"
           aria-label="Cluster tabs"

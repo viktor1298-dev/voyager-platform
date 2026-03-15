@@ -1,6 +1,7 @@
 'use client'
 
 import type { ColumnDef } from '@tanstack/react-table'
+import { RefreshCw, Server } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DataTable } from '@/components/DataTable'
@@ -187,13 +188,31 @@ export default function NodesPage() {
       }))
 
   const metricsAvailable = effectiveIsLive && nodes.some((n) => n.cpuPercent != null)
+  const isOffline = isLive && liveFailed
+  const nodesQuery = effectiveIsLive ? liveQuery : dbNodes
 
   return (
     <DataTable
       data={nodes}
       columns={makeNodeColumns(metricsAvailable)}
       loading={effectiveIsLive ? liveQuery.isLoading : dbNodes.isLoading}
-      emptyTitle="No nodes found"
+      emptyIcon={<Server className="h-10 w-10" />}
+      emptyTitle={isOffline ? 'Cluster is currently offline' : 'No nodes found in this cluster'}
+      emptyDescription={
+        isOffline
+          ? 'Node data is unavailable while the cluster is offline. Check cluster connectivity and try again.'
+          : 'Nodes appear here when your cluster has worker nodes registered. Check cluster connectivity.'
+      }
+      emptyAction={
+        <button
+          type="button"
+          onClick={() => nodesQuery.refetch()}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
+        >
+          <RefreshCw className="h-3 w-3" />
+          Refresh
+        </button>
+      }
       paginated
       pageSize={25}
       mobileCard={(node) => (

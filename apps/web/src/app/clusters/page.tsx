@@ -353,7 +353,7 @@ export default function ClustersPage() {
       )}
 
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
             Clusters

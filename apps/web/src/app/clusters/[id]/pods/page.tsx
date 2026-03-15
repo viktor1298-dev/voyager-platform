@@ -70,10 +70,15 @@ export default function PodsPage() {
 
   if (!isLive && !podsQuery.data) {
     return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-        <p className="text-sm font-medium">Live data unavailable</p>
-        <p className="text-xs text-[var(--color-text-dim)] mt-1">
-          Connect cluster credentials to view pods in real time.
+      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
+        <div className="rounded-full bg-white/[0.04] p-3 mb-3">
+          <svg className="h-8 w-8 text-[var(--color-text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        </div>
+        <p className="text-sm font-medium text-[var(--color-text-muted)]">Live data unavailable</p>
+        <p className="text-xs text-[var(--color-text-dim)] mt-1 max-w-xs">
+          Connect cluster credentials to view pods in real time. Pod data requires an active connection to the cluster API.
         </p>
       </div>
     )
@@ -176,7 +181,19 @@ function PodsGroupedByNamespace({ pods, isLoading, isAdmin, onDeletePod, onSelec
     </div>
   )
 
-  if (pods.length === 0) return <p className="text-[12px] text-[var(--color-text-muted)] py-4">No pods found.</p>
+  if (pods.length === 0) return (
+    <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
+      <div className="rounded-full bg-white/[0.04] p-3 mb-3">
+        <svg className="h-8 w-8 text-[var(--color-text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      </div>
+      <p className="text-sm font-medium text-[var(--color-text-muted)]">No pods found in this cluster</p>
+      <p className="text-xs text-[var(--color-text-dim)] mt-1 max-w-xs">
+        Pods appear here when workloads are running in your cluster. Check that your cluster is connected and has active deployments.
+      </p>
+    </div>
+  )
 
   return (
     <div className="space-y-2">
