@@ -28,7 +28,7 @@ export default function DashboardsPage() {
             Shared Dashboards
           </h1>
           <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-            Create and share custom dashboards with your teamotion. Pin metrics, charts, and cluster
+            Create and share custom dashboards with your team. Pin metrics, charts, and cluster
             summaries into a single view.
           </p>
         </div>
@@ -47,13 +47,13 @@ export default function DashboardsPage() {
             { label: 'Live Metrics', desc: 'Real-time cluster data widgets' },
           ].map((item) => (
             <div
-              key={itemotion.label}
+              key={item.label}
               className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 text-left"
             >
               <p className="text-[12px] font-semibold text-[var(--color-text-primary)] mb-1">
-                {itemotion.label}
+                {item.label}
               </p>
-              <p className="text-[11px] text-[var(--color-text-dim)]">{itemotion.desc}</p>
+              <p className="text-[11px] text-[var(--color-text-dim)]">{item.desc}</p>
             </div>
           ))}
         </div>

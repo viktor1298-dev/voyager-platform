@@ -7,7 +7,7 @@ web:
   replicaCount: 1
   image:
     repository: voyager-web
-    tag: dev
+    tag: v215
     pullPolicy: IfNotPresent
   port: 3000
 
@@ -15,7 +15,7 @@ api:
   replicaCount: 1
   image:
     repository: voyager-api
-    tag: dev
+    tag: v215
     pullPolicy: IfNotPresent
   port: 4000
 
