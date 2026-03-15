@@ -1,13 +1,15 @@
 import { test, expect, type Page } from '@playwright/test';
+import { login } from './helpers';
 
 const getPaletteInput = (page: Page) => page.getByPlaceholder('Search commands, clusters, services…');
 const getPaletteItems = (page: Page) => page.locator('[cmdk-item]');
 
 async function openPalette(page: Page) {
+  await login(page);
   await page.goto('/');
-  await expect(page.locator('body')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: /open command palette/i })).toBeVisible({ timeout: 15_000 });
   await page.getByRole('button', { name: /open command palette/i }).click();
-  await expect(getPaletteInput(page)).toBeVisible({ timeout: 3000 });
+  await expect(getPaletteInput(page)).toBeVisible({ timeout: 5_000 });
 }
 
 test.describe('Command Palette (⌘K)', () => {
@@ -50,29 +52,28 @@ test.describe('Command Palette (⌘K)', () => {
     await openPalette(page);
 
     const dashboardItem = getPaletteItems(page).filter({ hasText: /dashboard/i }).first();
-    await expect(dashboardItem).toBeVisible({ timeout: 5000 });
+    await expect(dashboardItem).toBeVisible({ timeout: 5_000 });
   });
 
-  test.skip('navigating via palette adds item to recent items', async ({ page }) => {
+  test.skip('navigating via palette adds item to recent items', 'Recent-items persistence is env-dependent and not part of the current v215 failure set', async ({ page }) => {
     await openPalette(page);
 
     const firstItem = getPaletteItems(page).first();
-    await expect(firstItem).toBeVisible({ timeout: 5000 });
+    await expect(firstItem).toBeVisible({ timeout: 5_000 });
     const itemText = await firstItem.textContent();
     await firstItem.click();
 
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1500);
+    await expect(page).not.toHaveURL(/\/login/);
 
     await page.getByRole('button', { name: /open command palette/i }).click();
-    await expect(getPaletteInput(page)).toBeVisible({ timeout: 5000 });
+    await expect(getPaletteInput(page)).toBeVisible({ timeout: 5_000 });
 
     const recentSection = page.getByText('Recent').first();
-    await expect(recentSection).toBeVisible({ timeout: 5000 });
+    await expect(recentSection).toBeVisible({ timeout: 5_000 });
 
     if (itemText) {
       const recentItem = getPaletteItems(page).filter({ hasText: itemText.trim().substring(0, 20) }).first();
-      await expect(recentItem).toBeVisible({ timeout: 3000 });
+      await expect(recentItem).toBeVisible({ timeout: 3_000 });
     }
   });
 });

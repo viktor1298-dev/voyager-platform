@@ -1,6 +1,5 @@
 /**
  * Deep nav drawer drift test — multi-cycle open/close on multiple routes
- * If drift was real, desktop table should appear after nav open on mobile
  */
 import { test, expect } from '@playwright/test';
 import { login } from './helpers';
@@ -9,15 +8,9 @@ test.describe('Nav drawer drift — deep test (375×812)', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
   test('3-cycle open/close on /settings/users — no desktop table appears', async ({ page }) => {
-    const consoleErrors: string[] = [];
-    page.on('console', m => {
-      if (m.type() === 'error') consoleErrors.push(m.text());
-    });
-
     await login(page);
     await page.goto('/settings/users');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 15_000 });
 
     const openBtn = page.getByRole('button', { name: /open navigation menu/i }).first();
     const closeBtn = page.getByRole('button', { name: /close navigation menu/i }).first();
@@ -26,33 +19,27 @@ test.describe('Nav drawer drift — deep test (375×812)', () => {
       const hasOpen = await openBtn.isVisible({ timeout: 3_000 }).catch(() => false);
       if (hasOpen) {
         await openBtn.click();
-        await page.waitForTimeout(400);
       }
       const hasClose = await closeBtn.isVisible({ timeout: 3_000 }).catch(() => false);
       if (hasClose) {
         await closeBtn.click();
-        await page.waitForTimeout(400);
       }
     }
 
-    // After 3 open/close cycles:
-    // - Desktop table should NOT be visible
-    // - No horizontal overflow
     const desktopTable = page.locator('table').first();
     const tableVisible = await desktopTable.isVisible().catch(() => false);
     const overflow = await page.evaluate(() =>
       document.documentElement.scrollWidth > document.documentElement.clientWidth
     );
 
-    console.log(`After 3 cycles: table=${tableVisible}, overflow=${overflow}`);
-    expect(tableVisible).toBe(false); // no desktop layout drift
+    expect(tableVisible).toBe(false);
     expect(overflow).toBe(false);
   });
 
   test('Nav on /settings/teams after open/close — no overlap', async ({ page }) => {
     await login(page);
     await page.goto('/settings/teams');
-    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByRole('heading', { name: /^teams$/i })).toBeVisible({ timeout: 15_000 });
 
     const openBtn = page.getByRole('button', { name: /open navigation menu/i }).first();
     const closeBtn = page.getByRole('button', { name: /close navigation menu/i }).first();
@@ -60,18 +47,15 @@ test.describe('Nav drawer drift — deep test (375×812)', () => {
     const hasOpen = await openBtn.isVisible({ timeout: 3_000 }).catch(() => false);
     if (hasOpen) {
       await openBtn.click();
-      await page.waitForTimeout(400);
       const hasClose = await closeBtn.isVisible({ timeout: 3_000 }).catch(() => false);
       if (hasClose) {
         await closeBtn.click();
-        await page.waitForTimeout(400);
       }
     }
 
     const overflow = await page.evaluate(() =>
       document.documentElement.scrollWidth > document.documentElement.clientWidth
     );
-    console.log(`Teams after nav: overflow=${overflow}`);
     expect(overflow).toBe(false);
   });
 
@@ -84,19 +68,26 @@ test.describe('Nav drawer drift — deep test (375×812)', () => {
     await login(page);
     for (const route of ['/', '/settings/users', '/settings/teams', '/settings']) {
       await page.goto(route);
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(800);
+      await expect(page.locator('body')).toBeVisible({ timeout: 15_000 });
     }
 
     const notFound404 = errors.filter(e => e.msg.includes('404') || e.msg.includes('Failed to load resource'));
-    const serious = errors.filter(e => !e.msg.includes('404') && !e.msg.includes('Failed to load resource') && !e.msg.includes('favicon') && !e.msg.includes('BYOK') && !e.msg.includes('tRPC') && !e.msg.includes('trpc') && !e.msg.includes('fetch') && !e.msg.includes('AbortError'));
+    const serious = errors.filter(e =>
+      !e.msg.includes('404') &&
+      !e.msg.includes('Failed to load resource') &&
+      !e.msg.includes('favicon') &&
+      !e.msg.includes('BYOK') &&
+      !e.msg.includes('tRPC') &&
+      !e.msg.includes('trpc') &&
+      !e.msg.includes('fetch') &&
+      !e.msg.includes('AbortError')
+    );
 
-    console.log(`404/resource errors: ${notFound404.length}`);
-    notFound404.forEach(e => console.log(`  [${e.url}] ${e.msg.slice(0, 100)}`));
-    console.log(`Other serious errors: ${serious.length}`);
-    serious.forEach(e => console.log(`  [${e.url}] ${e.msg.slice(0, 100)}`));
+    test.info().annotations.push({
+      type: 'note',
+      description: `Ignored ${notFound404.length} known 404/resource console errors across key pages`,
+    });
 
-    // 404s from static assets are acceptable — only app logic errors matter
     expect(serious.length).toBe(0);
   });
 });

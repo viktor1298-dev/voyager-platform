@@ -15,12 +15,13 @@ test.describe('Auth Advanced Flows', () => {
   })
 
   test('should redirect to login when accessing protected page without auth', async ({ browser }) => {
-    const page = await browser.newPage({ storageState: { cookies: [], origins: [] } })
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    const page = await context.newPage()
 
     await page.goto('/clusters')
     await expect(page).toHaveURL(/\/login/)
 
-    await page.close()
+    await context.close()
   })
 
   test('should stay logged in after page refresh', async ({ page }) => {
@@ -28,11 +29,13 @@ test.describe('Auth Advanced Flows', () => {
     await page.goto('/')
     await page.reload()
     await expect(page).not.toHaveURL(/\/login/)
+    await expect(page.getByRole('button', { name: /logout/i })).toBeVisible({ timeout: 20_000 })
   })
 
   test('should show validation errors on empty cluster form', async ({ page }) => {
     await login(page)
     await page.goto('/clusters')
+    await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible({ timeout: 15_000 })
 
     await page.getByRole('button', { name: /add cluster/i }).first().click()
     await page.getByRole('button', { name: /next/i }).click()

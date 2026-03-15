@@ -1,19 +1,3 @@
-/**
- * Phase 1 — v194 E2E Tests
- *
- * Verifies Phase 1 structural changes:
- * 1. Sidebar has 6 items (Dashboard, Clusters, Alerts, Events, Logs, Settings)
- * 2. Settings has tabbed layout — implemented as <nav aria-label="Settings tabs"> with links:
- *    General, Users, Teams, Permissions, Webhooks, Feature Flags, Audit Log
- * 3. Old routes redirect: /users → /settings/users, /anomalies → /alerts
- * 4. Cluster detail at /clusters/[id] has tab navigation:
- *    <nav aria-label="Cluster tabs"> with Overview, Nodes, Pods, Deployments, Services, Namespaces, Events, Logs, Metrics, Autoscaling
- * 5. BUG-RD-001: Cluster quick-links go to /clusters/${id} (not /clusters)
- *
- * NOTE: Tabs are implemented as <nav> links, NOT [role="tab"] ARIA elements.
- * Use nav[aria-label="..."] > a selectors.
- */
-
 import { test, expect } from '@playwright/test';
 import { login } from './helpers';
 
@@ -21,43 +5,41 @@ test.describe('Phase 1 — Sidebar Navigation (6 items, Phase 1 spec)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
     await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('[data-testid="sidebar"]')).toBeVisible({ timeout: 15_000 });
   });
 
   test('sidebar has Dashboard link', async ({ page }) => {
-    const sidebar = page.locator('aside, [role="complementary"]').first();
+    const sidebar = page.locator('[data-testid="sidebar"]');
     const link = sidebar.getByRole('link', { name: /dashboard/i });
     await expect(link.first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('sidebar has Clusters link', async ({ page }) => {
-    const sidebar = page.locator('aside, [role="complementary"]').first();
+    const sidebar = page.locator('[data-testid="sidebar"]');
     const link = sidebar.getByRole('link', { name: /clusters/i });
     await expect(link.first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('sidebar has Alerts link', async ({ page }) => {
-    const sidebar = page.locator('aside, [role="complementary"]').first();
+    const sidebar = page.locator('[data-testid="sidebar"]');
     const link = sidebar.getByRole('link', { name: /alerts/i });
     await expect(link.first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('sidebar has Events link', async ({ page }) => {
-    const sidebar = page.locator('aside, [role="complementary"]').first();
-    // Phase 1 spec: Events replaces AI Assistant in sidebar nav
+    const sidebar = page.locator('[data-testid="sidebar"]');
     const link = sidebar.getByRole('link', { name: /events/i });
     await expect(link.first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('sidebar has Logs link', async ({ page }) => {
-    const sidebar = page.locator('aside, [role="complementary"]').first();
-    // Phase 1 spec: Logs replaces Dashboards in sidebar nav
+    const sidebar = page.locator('[data-testid="sidebar"]');
     const link = sidebar.getByRole('link', { name: /^logs$/i });
     await expect(link.first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('sidebar has Settings link', async ({ page }) => {
-    const sidebar = page.locator('aside, [role="complementary"]').first();
+    const sidebar = page.locator('[data-testid="sidebar"]');
     const link = sidebar.getByRole('link', { name: /settings/i });
     await expect(link.first()).toBeVisible({ timeout: 10_000 });
   });
@@ -67,8 +49,6 @@ test.describe('Phase 1 — Settings Tabbed Layout (nav links)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
     await page.goto('/settings');
-    await page.waitForLoadState('domcontentloaded');
-    // Wait for settings page to fully render (heading visible)
     await expect(page.getByRole('heading', { name: /settings/i, level: 1 })).toBeVisible({ timeout: 15_000 });
   });
 
@@ -77,7 +57,6 @@ test.describe('Phase 1 — Settings Tabbed Layout (nav links)', () => {
   });
 
   test('Settings tabs nav exists with 7 links', async ({ page }) => {
-    // From snapshot: <nav aria-label="Settings tabs"> with 7 links
     const settingsNav = page.getByRole('navigation', { name: /settings tabs/i });
     await expect(settingsNav).toBeVisible({ timeout: 10_000 });
     const links = settingsNav.getByRole('link');
@@ -123,6 +102,7 @@ test.describe('Phase 1 — Settings Tabbed Layout (nav links)', () => {
     const settingsNav = page.getByRole('navigation', { name: /settings tabs/i });
     await settingsNav.getByRole('link', { name: /users/i }).click();
     await expect(page).toHaveURL(/\/settings\/users/, { timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 15_000 });
   });
 });
 
@@ -151,10 +131,9 @@ test.describe('Phase 1 — Cluster Detail Tab Navigation (BUG-RD-001)', () => {
 
   test('cluster quick-links in sidebar go to /clusters/[id] not /clusters', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('[data-testid="sidebar"]')).toBeVisible({ timeout: 15_000 });
 
-    // From snapshot: sidebar cluster quick-links use /clusters/${id} URLs
-    const sidebar = page.locator('aside, [role="complementary"]').first();
+    const sidebar = page.locator('[data-testid="sidebar"]');
     const clusterLinks = sidebar.locator('a[href^="/clusters/"]');
 
     const count = await clusterLinks.count();
@@ -165,7 +144,6 @@ test.describe('Phase 1 — Cluster Detail Tab Navigation (BUG-RD-001)', () => {
 
     const firstLink = clusterLinks.first();
     const href = await firstLink.getAttribute('href');
-    // BUG-RD-001: href should be /clusters/${id} not /clusters
     expect(href).toMatch(/\/clusters\/.+/);
     expect(href).not.toBe('/clusters');
     expect(href).not.toBe('/clusters/');
@@ -183,46 +161,30 @@ test.describe('Phase 1 — Cluster Detail Tab Navigation (BUG-RD-001)', () => {
       return;
     }
 
-    const firstRow = table.locator('tbody tr').first();
+    const firstRow = page.locator('tr[data-row]').first();
     await expect(firstRow).toBeVisible({ timeout: 10_000 });
 
-    const firstRowText = await firstRow.innerText().catch(() => '');
-    if (/no clusters found/i.test(firstRowText)) {
-      test.skip(true, 'No clusters in DB — skipping BUG-RD-001 check');
-      return;
-    }
-
-    // Click a cluster row to navigate to detail
     await firstRow.click();
-    // BUG-RD-001: should go to /clusters/${id} not /clusters
     await expect(page).toHaveURL(/\/clusters\/.+/, { timeout: 10_000 });
     expect(page.url()).not.toMatch(/^https?:\/\/[^/]+\/clusters\/?$/);
   });
 
   test('cluster detail page has Cluster tabs navigation', async ({ page }) => {
-    // Direct navigate to a known cluster ID (from DOM snapshot)
     await page.goto('/clusters/550e8400-e29b-41d4-a716-446655440001');
-    await page.waitForLoadState('domcontentloaded');
 
-    // From snapshot: <nav aria-label="Cluster tabs"> with Overview, Nodes, Pods...
     const clusterNav = page.getByRole('navigation', { name: /cluster tabs/i });
     await expect(clusterNav).toBeVisible({ timeout: 15_000 });
-
-    // Check for Overview link as first tab
     await expect(clusterNav.getByRole('link', { name: /overview/i })).toBeVisible({ timeout: 10_000 });
   });
 
   test('cluster detail Overview tab is accessible', async ({ page }) => {
     await page.goto('/clusters/550e8400-e29b-41d4-a716-446655440001');
-    await page.waitForLoadState('domcontentloaded');
 
     const clusterNav = page.getByRole('navigation', { name: /cluster tabs/i });
     await expect(clusterNav).toBeVisible({ timeout: 15_000 });
 
-    // All expected tabs from snapshot
     const expectedTabs = ['Overview', 'Nodes', 'Pods', 'Deployments', 'Services', 'Namespaces', 'Events', 'Logs', 'Metrics', 'Autoscaling'];
     for (const tab of expectedTabs.slice(0, 5)) {
-      // Check first 5 to avoid excessive test time
       await expect(clusterNav.getByRole('link', { name: new RegExp(tab, 'i') })).toBeVisible({ timeout: 5_000 });
     }
   });

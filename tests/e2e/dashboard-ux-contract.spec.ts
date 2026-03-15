@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
-
-const BASE_URL = process.env.BASE_URL ?? 'http://voyager-platform.voyagerlabs.co';
+import { login } from './helpers';
 
 test.describe('Dashboard UX contract', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await login(page);
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('body')).toBeVisible({ timeout: 15_000 });
   });
 
@@ -13,15 +13,16 @@ test.describe('Dashboard UX contract', () => {
   });
 
   test('active environment filter state is reflected in URL and visible chip semantics', async ({ page }) => {
-    await page.goto(`${BASE_URL}?environment=prod`, { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('Env: prod')).toBeVisible({ timeout: 15_000 });
+    await page.goto('/?environment=prod', { waitUntil: 'domcontentloaded' });
+    const envChip = page.getByText(/env:\s*prod/i).first();
+    await expect(envChip).toBeVisible({ timeout: 15_000 });
     await expect(page).toHaveURL(/environment=prod/);
 
-    const clearButton = page.getByRole('button', { name: /clear/i });
+    const clearButton = page.getByRole('button', { name: /clear/i }).first();
     await expect(clearButton).toBeVisible();
     await clearButton.click();
 
-    await expect(page.getByText('Env: prod')).toHaveCount(0);
+    await expect(envChip).toHaveCount(0);
     await expect(page).not.toHaveURL(/environment=prod/);
   });
 

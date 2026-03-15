@@ -1,25 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { login } from './helpers';
 
-const BASE_URL = process.env.BASE_URL ?? 'http://voyager-platform.voyagerlabs.co';
-
-/**
- * M-P3 Feature E2E Tests
- * Covers: M-P3-002 (Metrics tab), M-P3-003 (InlineAiTrigger), M-P3-004 (Dashboard customize)
- *
- * FIX v192: clusters/page.tsx uses <tr data-row> rows with router.push() onClick, NOT <a href="/clusters/..."> links.
- * Navigation to cluster detail is done via:
- *   - Row click: [data-row] (desktop table)
- *   - Eye icon button: button[aria-label^="View cluster"] (ClusterActions component)
- *
- * FIX v192: Dashboard "Customize" button is inside widgetMode guard.
- * Must click [data-testid="toggle-widget-mode-btn"] first, then [data-testid="customize-dashboard-btn"].
- */
-
 /** Navigate to the first cluster's detail page from the clusters list */
 async function navigateToFirstCluster(page: import('@playwright/test').Page) {
-  await page.goto(`${BASE_URL}/clusters`);
-  await page.waitForLoadState('domcontentloaded');
+  await page.goto('/clusters');
 
   const viewBtn = page.locator('button[aria-label^="View cluster"]').first();
   const hasViewBtn = await viewBtn.isVisible({ timeout: 15_000 }).catch(() => false);
@@ -33,7 +17,6 @@ async function navigateToFirstCluster(page: import('@playwright/test').Page) {
   }
 
   await page.waitForURL(/\/clusters\/[^/]+/, { timeout: 15_000 });
-  await page.waitForLoadState('domcontentloaded');
 }
 
 test.describe('M-P3-002: Metrics Tab & TimeRangeSelector', () => {
@@ -52,7 +35,7 @@ test.describe('M-P3-002: Metrics Tab & TimeRangeSelector', () => {
     test.skip(!process.env.PHASE3_READY, 'Phase 3 feature not yet built — skip until PHASE3_READY');
     await navigateToFirstCluster(page);
 
-    const metricsTab = page.locator('[role="tab"]:has-text("Metrics"), button:has-text("Metrics")').first();
+    const metricsTab = page.locator('[role="tab"]:has-text("Metrics"), button:has-text("Metrics"), a:has-text("Metrics")').first();
     await expect(metricsTab).toBeVisible({ timeout: 15_000 });
     await metricsTab.click();
 
@@ -67,7 +50,7 @@ test.describe('M-P3-002: Metrics Tab & TimeRangeSelector', () => {
     test.skip(!process.env.PHASE3_READY, 'Phase 3 feature not yet built — skip until PHASE3_READY');
     await navigateToFirstCluster(page);
 
-    const metricsTab = page.locator('[role="tab"]:has-text("Metrics"), button:has-text("Metrics")').first();
+    const metricsTab = page.locator('[role="tab"]:has-text("Metrics"), button:has-text("Metrics"), a:has-text("Metrics")').first();
     await expect(metricsTab).toBeVisible({ timeout: 15_000 });
     await metricsTab.click();
 
@@ -104,8 +87,7 @@ test.describe('M-P3-003: InlineAiTrigger on AnomalyCard', () => {
     if (hasAnomalies) {
       await expect(aiTrigger).toBeVisible({ timeout: 10_000 });
     } else {
-      await page.goto(BASE_URL);
-      await page.waitForLoadState('domcontentloaded');
+      await page.goto('/');
       const dashAiTrigger = page
         .locator('[data-testid="inline-ai-trigger"], button:has-text("Ask AI")')
         .first();
@@ -143,14 +125,11 @@ test.describe('M-P3-004: Dashboard Customize & DashboardEditBar', () => {
   });
 
   async function enterWidgetModeAndCustomize(page: import('@playwright/test').Page) {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    await page.goto('/');
 
     const widgetModeBtn = page.locator('[data-testid="toggle-widget-mode-btn"]');
     await expect(widgetModeBtn).toBeVisible({ timeout: 15_000 });
     await widgetModeBtn.click();
-    await page.waitForTimeout(300);
 
     const customizeBtn = page.locator('[data-testid="customize-dashboard-btn"]');
     await expect(customizeBtn).toBeVisible({ timeout: 10_000 });

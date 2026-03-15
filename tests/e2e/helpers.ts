@@ -51,12 +51,26 @@ export async function loginAsAdmin(page: Page): Promise<void> {
 }
 
 export async function ensureViewerExists(): Promise<void> {
+  const baseUrl = process.env.BASE_URL;
+  if (!baseUrl) throw new Error('BASE_URL is required for E2E tests');
+  const headers = {
+    'Content-Type': 'application/json',
+    Origin: baseUrl,
+  };
+
+  const signIn = async () =>
+    fetch(`${baseUrl}/api/auth/sign-in/email`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        email: TEST_VIEWER.email,
+        password: TEST_VIEWER.password,
+      }),
+    });
+
   try {
-    const baseUrl = process.env.BASE_URL || 'http://localhost:9000';
-    const headers = {
-      'Content-Type': 'application/json',
-      Origin: baseUrl,
-    };
+    const existing = await signIn();
+    if (existing.ok) return;
 
     await fetch(`${baseUrl}/api/auth/sign-up/email`, {
       method: 'POST',
@@ -68,8 +82,11 @@ export async function ensureViewerExists(): Promise<void> {
       }),
     });
 
-    // Ignore failures (already exists, etc.)
-  } catch {
-    // User may already exist
+    const created = await signIn();
+    if (!created.ok) {
+      throw new Error(`viewer sign-in still failing after ensure: ${created.status}`);
+    }
+  } catch (error) {
+    throw new Error(`ensureViewerExists failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

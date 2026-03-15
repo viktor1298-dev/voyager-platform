@@ -81,7 +81,6 @@ test.describe('Better-Auth — Full Login/Logout Flow', () => {
     const loggedOutAt = new URL(loggedOutUrl).searchParams.get('loggedOutAt')
     expect(loggedOutAt).toMatch(/^\d+$/)
 
-    await page.waitForTimeout(2_000)
     await expect(page).toHaveURL(new RegExp(`/login\\?loggedOut=1&loggedOutAt=${loggedOutAt}$`))
 
     await page.getByLabel(/email/i).fill(process.env.E2E_ADMIN_EMAIL ?? 'admin@voyager.local')
@@ -89,8 +88,6 @@ test.describe('Better-Auth — Full Login/Logout Flow', () => {
     await page.getByRole('button', { name: /sign in|log in|login/i }).click()
 
     await expect(page).not.toHaveURL(/\/login/, { timeout: 20_000 })
-    await page.waitForTimeout(2_000)
-    await expect(page).not.toHaveURL(/\/login/, { timeout: 5_000 })
     await expect(page.getByRole('button', { name: /logout/i })).toBeVisible({ timeout: 20_000 })
   })
 
