@@ -91,6 +91,12 @@ export function CommandPalette() {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         setOpen((o) => !o)
+        return
+      }
+
+      if (e.key === 'Escape') {
+        setOpen(false)
+        setSearch('')
       }
     }
     document.addEventListener('keydown', handler)

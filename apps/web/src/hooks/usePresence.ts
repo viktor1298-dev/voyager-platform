@@ -182,7 +182,7 @@ export function usePresence() {
           return
         }
 
-        console.error('[presence] subscription error', state.error)
+        console.warn('[presence] subscription unavailable', { message: state.error.message })
       },
       onError(error) {
         if (isTransientPresenceError(error)) {
@@ -196,7 +196,7 @@ export function usePresence() {
           return
         }
 
-        console.error('[presence] subscription fatal error', error)
+        console.warn('[presence] subscription unavailable', { message: error.message })
       },
     })
 

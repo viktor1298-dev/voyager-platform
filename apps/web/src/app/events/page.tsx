@@ -237,10 +237,10 @@ export default function EventsPage() {
           searchable
           searchPlaceholder="Search events..."
           toolbar={filterBar}
-          loading={eventsQuery.isLoading}
+          loading={hasActiveCluster ? eventsQuery.isLoading : false}
           emptyIcon={<Calendar className="h-8 w-8" />}
-          emptyTitle="All quiet in the last hour"
-          emptyDescription="No Kubernetes events found. Adjust the time range filter to see historical events."
+          emptyTitle={hasActiveCluster ? 'All quiet in the last hour' : 'Select a cluster first'}
+          emptyDescription={hasActiveCluster ? 'No Kubernetes events found. Adjust the time range filter to see historical events.' : 'Choose an active cluster from the top bar to load live Kubernetes events.'}
           mobileCard={(event) => {
             const isWarning = event.type === 'Warning'
             return (
