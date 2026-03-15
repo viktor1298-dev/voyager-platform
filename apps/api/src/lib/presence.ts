@@ -117,26 +117,42 @@ export function subscribeToPresence(signal?: AbortSignal): AsyncIterableIterator
   const queue: PresenceUpdateEvent[] = []
   let resolve: (() => void) | null = null
   let done = false
+  let destroyed = false
+
+  const cleanup = () => {
+    if (destroyed) return
+    destroyed = true
+    presenceEmitter.off('presence:update', handler)
+  }
 
   const handler = (event: PresenceUpdateEvent) => {
-    queue.push(event)
-    if (resolve) {
-      resolve()
-      resolve = null
+    if (destroyed || done) return
+    try {
+      queue.push(event)
+      if (resolve) {
+        resolve()
+        resolve = null
+      }
+    } catch {
+      // Guard against writes after cleanup — silently ignore
     }
   }
 
   presenceEmitter.on('presence:update', handler)
 
   if (signal) {
-    signal.addEventListener('abort', () => {
-      done = true
-      presenceEmitter.off('presence:update', handler)
-      if (resolve) {
-        resolve()
-        resolve = null
-      }
-    })
+    signal.addEventListener(
+      'abort',
+      () => {
+        cleanup()
+        done = true
+        if (resolve) {
+          resolve()
+          resolve = null
+        }
+      },
+      { once: true },
+    )
   }
 
   queue.push({
@@ -161,12 +177,12 @@ export function subscribeToPresence(signal?: AbortSignal): AsyncIterableIterator
     },
     async return() {
       done = true
-      presenceEmitter.off('presence:update', handler)
+      cleanup()
       return { done: true, value: undefined }
     },
     async throw() {
       done = true
-      presenceEmitter.off('presence:update', handler)
+      cleanup()
       return { done: true, value: undefined }
     },
     [Symbol.asyncIterator]() {
