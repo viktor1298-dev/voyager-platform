@@ -26,16 +26,16 @@ export function PageHeader({ title, description, breadcrumb, actions, className 
           {breadcrumb.map((item, i) => (
             <span key={i} className="flex items-center gap-1.5">
               {i > 0 && <span className="opacity-40">/</span>}
-              {itemotion.href ? (
+              {item.href ? (
                 <a
-                  href={itemotion.href}
+                  href={item.href}
                   className="hover:text-[var(--color-text-primary)] transition-colors"
                 >
-                  {itemotion.label}
+                  {item.label}
                 </a>
               ) : (
                 <span className={i === breadcrumb.length - 1 ? 'text-[var(--color-text-secondary)]' : ''}>
-                  {itemotion.label}
+                  {item.label}
                 </span>
               )}
             </span>

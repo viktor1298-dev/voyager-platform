@@ -20,15 +20,15 @@ async function openFirstClusterDetails(page: Page) {
     return
   }
 
-  // Check for empty state — table may render a <tr> for "No clusters found"
-  const noDataText = page.getByText(/no clusters found/i)
+  // Check for empty state — table may render a <tr> for "No clusters"
+  const noDataText = page.getByText(/no clusters/i)
   if (await noDataText.isVisible({ timeout: 3_000 }).catch(() => false)) {
     test.skip(true, 'No clusters in table — seed data may be missing')
     return
   }
 
   // Only click rows that have actual cluster data (a link or name cell with text)
-  const firstDataRow = table.locator('tbody tr').filter({ hasNot: page.getByText(/no clusters found/i) }).first()
+  const firstDataRow = table.locator('tbody tr').filter({ hasNot: page.getByText(/no clusters/i) }).first()
   try {
     await expect(firstDataRow).toBeVisible({ timeout: 10_000 })
     await expect(firstDataRow).toContainText(/.+/, { timeout: 10_000 })
@@ -71,7 +71,7 @@ async function tryGetFirstPodRow(page: Page): Promise<Locator | null> {
     const rowCount = await rows.count().catch(() => 0)
     if (rowCount > 0) {
       const firstRow = rows.first()
-      const hasDelete = await firstRow.locator('button[title^="Delete pod"]').count().catch(() => 0)
+      const hasDelete = await firstRow.locator('button[aria-label^="Delete pod"]').count().catch(() => 0)
       if (hasDelete > 0) return firstRow
     }
   }
@@ -91,11 +91,12 @@ async function openDeletePodDialogFromFirstPod(page: Page) {
   const podName = (await cells.nth(0).innerText({ timeout: 10_000 })).trim()
   const podNamespace = (await cells.nth(1).innerText({ timeout: 10_000 })).trim()
 
-  const deleteButton = firstPodRow.locator('button[title^="Delete pod"]').first()
+  const deleteButton = firstPodRow.locator('button[aria-label^="Delete pod"]').first()
   await expect(deleteButton).toBeVisible({ timeout: 10_000 })
   await deleteButton.click()
 
-  const dialog = page.getByRole('dialog', { name: /delete pod/i })
+  // DeletePodDialog has role="dialog" but no aria-label — locate via role then filter by content
+  const dialog = page.locator('[role="dialog"]').filter({ hasText: /Delete Pod/i })
   await expect(dialog).toBeVisible({ timeout: 10_000 })
 
   return { dialog, podName, podNamespace }

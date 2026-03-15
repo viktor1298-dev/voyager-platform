@@ -94,16 +94,16 @@ export function Sidebar({
         {/* Main nav — flat 6 items */}
         <nav className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           {navItems.map((item) => {
-            const active = isActive(itemotion.id)
-            const Icon = itemotion.icon
-            const showAlertsBadge = itemotion.id === '/alerts' && unacknowledgedCount > 0
+            const active = isActive(item.id)
+            const Icon = item.icon
+            const showAlertsBadge = item.id === '/alerts' && unacknowledgedCount > 0
 
             return (
               <Link
-                key={itemotion.id}
-                href={itemotion.id}
+                key={item.id}
+                href={item.id}
                 onClick={() => setMobileOpen(false)}
-                data-testid={`nav-item-${itemotion.id.replace(/\//g, '') || 'dashboard'}`}
+                data-testid={`nav-item-${item.id.replace(/\//g, '') || 'dashboard'}`}
                 className={`
                   relative flex items-center py-2.5 rounded-lg
                   ${showLabels ? 'gap-3 px-3' : 'justify-center px-0'}
@@ -142,7 +142,7 @@ export function Sidebar({
                       transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
                       className="sidebar-label text-[13px] font-medium relative z-10 overflow-hidden whitespace-nowrap"
                     >
-                      {itemotion.label}
+                      {item.label}
                     </motion.span>
                   )}
                 </AnimatePresence>

@@ -8,7 +8,7 @@ import { TableSkeleton } from '@/components/shared/TableSkeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 function getMcpSnippet(): string {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://voyager-platformotion.voyagerlabs.co'
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://voyager-platform.voyagerlabs.co'
   return JSON.stringify(
     {
       mcpServers: {

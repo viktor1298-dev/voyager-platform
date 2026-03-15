@@ -206,15 +206,15 @@ function WebhooksContent() {
       <AnimatedList
         className="mt-3 space-y-3"
         items={expandedWebhookId ? webhooks.filter((w) => w.id === expandedWebhookId) : []}
-        keyExtractor={(item) => itemotion.id}
+        keyExtractor={(item) => item.id}
         renderItem={(item) => (
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
-            <h3 className="mb-3 text-sm font-semibold text-[var(--color-text-primary)]">Recent deliveries for {itemotion.url}</h3>
-            {itemotion.deliveries.length === 0 ? (
+            <h3 className="mb-3 text-sm font-semibold text-[var(--color-text-primary)]">Recent deliveries for {item.url}</h3>
+            {item.deliveries.length === 0 ? (
               <p className="text-xs text-[var(--color-text-muted)]">No deliveries yet</p>
             ) : (
               <div className="space-y-2">
-                {itemotion.deliveries.map((d) => (
+                {item.deliveries.map((d) => (
                   <div key={d.id} className="grid grid-cols-3 gap-2 rounded-md border border-[var(--color-border)]/70 bg-[var(--color-bg-surface)] px-3 py-2 text-xs">
                     <span className="text-[var(--color-text-secondary)]">Status: {d.statusCode}</span>
                     <span className="text-[var(--color-text-muted)]">{formatDate(d.timestamp)}</span>
@@ -292,7 +292,7 @@ function WebhooksContent() {
           if (!deleteTarget) return
           try {
             await mockAdminApi.webhooks.delete({ id: deleteTarget.id })
-            setWebhooks((prev) => prev.filter((item) => itemotion.id !== deleteTarget.id))
+            setWebhooks((prev) => prev.filter((item) => item.id !== deleteTarget.id))
             toast.success('Webhook deleted')
             setDeleteTarget(null)
           } catch { toast.error('Failed to delete webhook') }

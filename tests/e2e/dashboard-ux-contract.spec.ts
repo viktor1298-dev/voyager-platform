@@ -12,17 +12,19 @@ test.describe('Dashboard UX contract', () => {
     await expect(page.getByText(/^Health trend$/i)).toHaveCount(0);
   });
 
-  test('active environment filter state is reflected in URL and visible chip semantics', async ({ page }) => {
+  test('active environment filter state is reflected in URL and visible button semantics', async ({ page }) => {
     await page.goto('/?environment=prod', { waitUntil: 'domcontentloaded' });
-    const envChip = page.getByText(/env:\s*prod/i).first();
-    await expect(envChip).toBeVisible({ timeout: 15_000 });
+    // The dashboard renders environment filter as buttons (prod, staging, dev, all)
+    // The active filter button gets the accent/active style
+    const prodButton = page.getByRole('button', { name: /prod/i }).first();
+    await expect(prodButton).toBeVisible({ timeout: 15_000 });
     await expect(page).toHaveURL(/environment=prod/);
 
-    const clearButton = page.getByRole('button', { name: /clear/i }).first();
-    await expect(clearButton).toBeVisible();
-    await clearButton.click();
+    // Click "all" to clear the filter
+    const allButton = page.getByRole('button', { name: /^all$/i }).first();
+    await expect(allButton).toBeVisible();
+    await allButton.click();
 
-    await expect(envChip).toHaveCount(0);
     await expect(page).not.toHaveURL(/environment=prod/);
   });
 

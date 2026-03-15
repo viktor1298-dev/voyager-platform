@@ -495,21 +495,21 @@ function DashboardContent() {
                           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 3xl:grid-cols-1">
                             {environmentSummary.map((item) => (
                               <div
-                                key={itemotion.key}
+                                key={item.key}
                                 className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-card)]/72 px-3 py-3"
                               >
                                 <div className="flex items-center gap-2">
                                   <span
                                     className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/70"
                                   >
-                                    <itemotion.meta.icon className="h-3.5 w-3.5" style={{ color: itemotion.meta.dotColor }} />
+                                    <item.meta.icon className="h-3.5 w-3.5" style={{ color: item.meta.dotColor }} />
                                   </span>
                                   <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-dim)]">
-                                    {itemotion.meta.label}
+                                    {item.meta.label}
                                   </span>
                                 </div>
                                 <p className="mt-3 text-2xl font-semibold tracking-tight text-[var(--color-text-primary)] tabular-nums">
-                                  {itemotion.value}
+                                  {item.value}
                                 </p>
                               </div>
                             ))}
@@ -800,17 +800,17 @@ function CompactStatsBar({
               ] as const
             ).map((item) => (
               <span
-                key={itemotion.key}
+                key={item.key}
                 className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold"
                 style={{
-                  color: itemotion.tone,
-                  borderColor: `${itemotion.tone}55`,
-                  backgroundColor: `${itemotion.tone}14`,
+                  color: item.tone,
+                  borderColor: `${item.tone}55`,
+                  backgroundColor: `${item.tone}14`,
                 }}
               >
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: itemotion.tone }} />
-                {itemotion.label}
-                <span className="tabular-nums text-[var(--color-text-primary)]">{itemotion.value}</span>
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.tone }} />
+                {item.label}
+                <span className="tabular-nums text-[var(--color-text-primary)]">{item.value}</span>
               </span>
             ))}
           </div>

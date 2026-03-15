@@ -185,7 +185,7 @@ export default function SettingsGeneralPage() {
   const hasRawKeyInput = apiKeyInput.trim().length > 0
 
   const providerConfig = useMemo(
-    () => PROVIDERS.find((item) => itemotion.value === provider) ?? PROVIDERS[0],
+    () => PROVIDERS.find((item) => item.value === provider) ?? PROVIDERS[0],
     [provider],
   )
 
@@ -360,8 +360,8 @@ export default function SettingsGeneralPage() {
               className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             >
               {PROVIDERS.map((item) => (
-                <option key={itemotion.value} value={itemotion.value}>
-                  {itemotion.label}
+                <option key={item.value} value={item.value}>
+                  {item.label}
                 </option>
               ))}
             </select>
