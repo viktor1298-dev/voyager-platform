@@ -14,6 +14,7 @@ import { Dialog } from '@/components/ui/dialog'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { usePermission } from '@/hooks/usePermission'
+import { getClusterRouteSegment } from '@/components/cluster-route'
 import { getClusterEnvironment, getClusterTags } from '@/lib/cluster-meta'
 import { normalizeLiveHealthStatus, healthBadgeVariant, healthBadgeLabel, type LiveHealthStatus } from '@/lib/cluster-status'
 import { getBestRelationForUser, getRelationBadgeClass, type Relation } from '@/lib/mock-access-control'
@@ -64,7 +65,17 @@ type ClusterRow = {
 }
 
 // P1-010: Primary action (view) + destructive (delete) in correct order
-function ClusterActions({ clusterId, clusterName, onDelete }: { clusterId: string; clusterName: string; onDelete: () => void }) {
+function ClusterActions({
+  clusterId,
+  clusterName,
+  clusterRouteSegment,
+  onDelete,
+}: {
+  clusterId: string
+  clusterName: string
+  clusterRouteSegment: string
+  onDelete: () => void
+}) {
   const canDelete = usePermission('cluster', clusterId, 'admin')
   const router = useRouter()
   return (
@@ -76,7 +87,7 @@ function ClusterActions({ clusterId, clusterName, onDelete }: { clusterId: strin
               type="button"
               onClick={(e) => {
                 e.stopPropagation()
-                router.push(`/clusters/${clusterId}`)
+                router.push(`/clusters/${clusterRouteSegment}`)
               }}
               className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors cursor-pointer"
               aria-label={`View cluster ${clusterName}`}
@@ -315,6 +326,7 @@ export default function ClustersPage() {
           <ClusterActions
             clusterId={row.original.id}
             clusterName={row.original.name}
+            clusterRouteSegment={getClusterRouteSegment(row.original)}
             onDelete={() => setDeleteTarget({ id: row.original.id, name: row.original.name })}
           />
         ),
@@ -365,7 +377,7 @@ export default function ClustersPage() {
       <DataTable
         data={filteredClusters}
         columns={columns}
-        onRowClick={(row) => router.push(`/clusters/${row.id}`)}
+        onRowClick={(row) => router.push(`/clusters/${getClusterRouteSegment(row)}`)}
         loading={clusters.isLoading}
         emptyIcon={<Database className="h-10 w-10" />}
         emptyTitle="No clusters"
@@ -374,9 +386,11 @@ export default function ClustersPage() {
           const relation = getPermissionForCluster(row.id)
           const tags = getClusterTags({ name: row.name, provider: row.provider ?? undefined, source: 'db' })
           return (
-            <div
-              onClick={() => router.push(`/clusters/${row.id}`)}
-              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 cursor-pointer active:bg-white/[0.03] space-y-3"
+            <button
+              type="button"
+              onClick={() => router.push(`/clusters/${getClusterRouteSegment(row)}`)}
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 cursor-pointer active:bg-white/[0.03] space-y-3 text-left"
+              aria-label={`View cluster ${row.name}`}
             >
               {/* Top: Status dot + Name */}
               <div className="flex items-center gap-2.5">
@@ -410,7 +424,7 @@ export default function ClustersPage() {
                   {formatLastSeen(row.updatedAt, isClient)}
                 </span>
               </div>
-            </div>
+            </button>
           )
         }}
       />

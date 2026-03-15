@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ProviderLogo } from '@/components/ProviderLogo'
+import { getClusterIdFromRouteSegment, getClusterRouteSegment } from '@/components/cluster-route'
 import { trpc } from '@/lib/trpc'
 
 const CLUSTER_TABS = [
@@ -25,12 +26,16 @@ const CLUSTER_TABS = [
 // P3-014: providerIcon removed — replaced by ProviderLogo component with layoutId support
 
 export default function ClusterLayout({ children }: { children: React.ReactNode }) {
-  const { id } = useParams<{ id: string }>()
+  const { id: routeSegment } = useParams<{ id: string }>()
+  const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const pathname = usePathname()
   const router = useRouter()
 
-  const dbCluster = trpc.clusters.get.useQuery({ id }, { staleTime: 30000 })
-  const clusterName = (dbCluster.data?.name as string | undefined) ?? id
+  const dbCluster = trpc.clusters.get.useQuery({ id: clusterId }, { staleTime: 30000 })
+  const clusterRouteSegment = dbCluster.data
+    ? getClusterRouteSegment({ id: dbCluster.data.id, name: dbCluster.data.name })
+    : routeSegment
+  const clusterName = (dbCluster.data?.name as string | undefined) ?? clusterId
 
   // Keyboard shortcuts: 1–9 for tabs, [ and ] for prev/next
   useEffect(() => {
@@ -48,7 +53,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
 
       const tabsCount = CLUSTER_TABS.length
       const currentTabIndex = CLUSTER_TABS.findIndex((tab) => {
-        const base = `/clusters/${id}`
+        const base = `/clusters/${clusterRouteSegment}`
         const rest = pathname.replace(base, '')
         if (!rest || rest === '/') return tab.id === 'overview'
         const segment = rest.replace(/^\//, '').split('/')[0]
@@ -60,29 +65,29 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
         if (idx < tabsCount) {
           e.preventDefault()
           const tab = CLUSTER_TABS[idx]
-          if (tab) router.push(`/clusters/${id}${tab.path}`)
+          if (tab) router.push(`/clusters/${clusterRouteSegment}${tab.path}`)
         }
       } else if (e.key === '[') {
         e.preventDefault()
         const prevIdx = (currentTabIndex - 1 + tabsCount) % tabsCount
         const tab = CLUSTER_TABS[prevIdx]
-        if (tab) router.push(`/clusters/${id}${tab.path}`)
+        if (tab) router.push(`/clusters/${clusterRouteSegment}${tab.path}`)
       } else if (e.key === ']') {
         e.preventDefault()
         const nextIdx = (currentTabIndex + 1) % tabsCount
         const tab = CLUSTER_TABS[nextIdx]
-        if (tab) router.push(`/clusters/${id}${tab.path}`)
+        if (tab) router.push(`/clusters/${clusterRouteSegment}${tab.path}`)
       }
     }
 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [id, pathname, router])
+  }, [clusterRouteSegment, pathname, router])
 
   // Determine active tab from pathname
   const getActiveTab = () => {
     // Strip the /clusters/[id] prefix
-    const base = `/clusters/${id}`
+    const base = `/clusters/${clusterRouteSegment}`
     const rest = pathname.replace(base, '')
     if (!rest || rest === '/') return 'overview'
     const segment = rest.replace(/^\//, '').split('/')[0]
@@ -93,7 +98,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
   return (
     <AppLayout>
       <Breadcrumbs
-        segmentLabels={{ [id]: clusterName }}
+        segmentLabels={{ [routeSegment]: clusterName }}
       />
 
       {/* Cluster Header */}
@@ -106,7 +111,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
           <ProviderLogo
             provider={((dbCluster.data as Record<string, unknown> | undefined)?.provider as string) ?? 'kubernetes'}
             size={20}
-            layoutId={`cluster-icon-${id}`}
+            layoutId={`cluster-icon-${clusterId}`}
           />
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)] truncate">
@@ -134,7 +139,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
         >
           {CLUSTER_TABS.map((tab) => {
             const isActive = activeTab === tab.id
-            const href = `/clusters/${id}${tab.path}`
+            const href = `/clusters/${clusterRouteSegment}${tab.path}`
             return (
               <Link
                 key={tab.id}

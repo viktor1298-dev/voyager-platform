@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from '@tanstack/react-table'
 import { useParams } from 'next/navigation'
+import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DataTable } from '@/components/DataTable'
 import { Progress } from '@/components/ui/progress'
 import { nodeStatusColor } from '@/lib/status-utils'
@@ -139,10 +140,11 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
 }
 
 export default function NodesPage() {
-  const { id } = useParams<{ id: string }>()
+  const { id: routeSegment } = useParams<{ id: string }>()
+  const clusterId = getClusterIdFromRouteSegment(routeSegment)
 
-  const dbCluster = trpc.clusters.get.useQuery({ id })
-  const resolvedId = dbCluster.data?.id ?? id
+  const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
+  const resolvedId = dbCluster.data?.id ?? clusterId
   const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
   const isLive = hasCredentials
 

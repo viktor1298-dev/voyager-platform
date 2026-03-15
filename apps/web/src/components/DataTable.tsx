@@ -396,11 +396,14 @@ export function DataTable<TData>({
                     <m.tr
                       key={row.id}
                       data-row
-                      tabIndex={0}
+                      tabIndex={onRowClick ? 0 : -1}
+                      role={onRowClick ? 'button' : undefined}
+                      aria-label={onRowClick ? 'Open row details' : undefined}
                       variants={rowVariants}
                       onClick={() => onRowClick?.(row.original)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' && onRowClick) {
+                        if (!onRowClick) return
+                        if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
                           onRowClick(row.original)
                         }

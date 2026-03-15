@@ -2,6 +2,7 @@
 
 import { ChevronDown, Trash2 } from 'lucide-react'
 import { useParams } from 'next/navigation'
+import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { PodDetailSheet } from '@/components/PodDetailSheet'
@@ -28,11 +29,12 @@ interface PodRow {
 }
 
 export default function PodsPage() {
-  const { id } = useParams<{ id: string }>()
+  const { id: routeSegment } = useParams<{ id: string }>()
+  const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const isAdmin = useIsAdmin()
 
-  const dbCluster = trpc.clusters.get.useQuery({ id })
-  const resolvedId = dbCluster.data?.id ?? id
+  const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
+  const resolvedId = dbCluster.data?.id ?? clusterId
   const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
   const isLive = hasCredentials
 
