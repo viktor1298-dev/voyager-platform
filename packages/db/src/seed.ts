@@ -1,5 +1,5 @@
 import { db } from './client.js'
-import { events, clusters, featureFlags, nodes, user } from './schema/index.js'
+import { events, clusters, featureFlags, nodes } from './schema/index.js'
 
 async function seed() {
   if (process.env.NODE_ENV === 'production') {
@@ -9,12 +9,14 @@ async function seed() {
 
   console.log('🌱 Seeding database...')
 
-  // Clean existing data
+  // Clean existing domain data only.
+  // Do NOT delete Better-Auth users here: removing/recreating user rows without
+  // matching account credentials breaks email/password login (401 INVALID_EMAIL_OR_PASSWORD)
+  // after seed runs.
   await db.delete(events)
   await db.delete(nodes)
   await db.delete(featureFlags)
   await db.delete(clusters)
-  await db.delete(user)
 
   // Insert clusters
   const [minikube, productionEks, stagingAks, analyticsGke, devK3s] = await db
@@ -84,23 +86,7 @@ async function seed() {
 
   console.log('✅ Inserted 5 clusters')
 
-  await db.insert(user).values([
-    {
-      id: 'admin-001',
-      name: 'Voyager Admin',
-      email: 'admin@voyager.local',
-      emailVerified: true,
-      role: 'admin',
-    },
-    {
-      id: 'viewer-001',
-      name: 'Viewer User',
-      email: 'viewer@voyager.local',
-      emailVerified: true,
-      role: 'viewer',
-    },
-  ])
-  console.log('✅ Inserted 2 users')
+  console.log('ℹ️ Skipped raw auth user upserts in seed — bootstrap users are ensured via Better-Auth at API startup')
 
   // Insert nodes
   const nodeData = [

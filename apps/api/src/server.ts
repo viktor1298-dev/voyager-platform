@@ -13,6 +13,7 @@ import { auth } from './lib/auth.js'
 import { resolveExternalRequestUrl } from './lib/auth-request.js'
 import { mapAuthRouteErrorToBody, mapAuthRouteErrorToStatus } from './lib/auth-error-mapping.js'
 import { ensureAdminUser } from './lib/ensure-admin-user.js'
+import { ensureViewerUser } from './lib/ensure-viewer-user.js'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
 import { startHealthSync } from './jobs/health-sync.js'
@@ -241,6 +242,7 @@ const start = async () => {
     // Schema is initialized by Helm sql/init.sql on postgres startup (no migrate() needed)
 
     await ensureAdminUser({ allowLocalDevDefaults: false })
+    await ensureViewerUser()
 
     const PORT = Number.parseInt(process.env.PORT || '4000', 10)
     const HOST = process.env.HOST || '0.0.0.0'
