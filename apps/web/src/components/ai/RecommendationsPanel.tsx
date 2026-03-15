@@ -60,7 +60,7 @@ export function RecommendationsPanel({
   const sortedItems = useMemo(
     () =>
       initialItems
-        .filter((item) => !dismissedIds.includes(item.id))
+        .filter((item) => !dismissedIds.includes(itemotion.id))
         .sort((a, b) => {
           const order = descending ? -1 : 1
           return (severityWeight[a.severity] - severityWeight[b.severity]) * order
@@ -92,15 +92,15 @@ export function RecommendationsPanel({
         )}
 
         {sortedItems.map((item) => {
-          const badge = severityStyles[item.severity]
+          const badge = severityStyles[itemotion.severity]
           return (
             <article
-              key={item.id}
+              key={itemotion.id}
               className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3"
             >
               <div className="mb-2 flex items-start justify-between gap-2">
                 <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                  {item.title}
+                  {itemotion.title}
                 </h3>
                 <span
                   className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${badge.className}`}
@@ -110,15 +110,15 @@ export function RecommendationsPanel({
                 </span>
               </div>
 
-              <p className="text-sm text-[var(--color-text-secondary)]">{item.description}</p>
-              <p className="mt-2 text-xs text-[var(--color-text-dim)]">Action: {item.action}</p>
+              <p className="text-sm text-[var(--color-text-secondary)]">{itemotion.description}</p>
+              <p className="mt-2 text-xs text-[var(--color-text-dim)]">Action: {itemotion.action}</p>
 
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     if (!clusterId) return
-                    dismissRecommendation(clusterId, item.id)
+                    dismissRecommendation(clusterId, itemotion.id)
                     toast.success('Recommendation dismissed')
                   }}
                   className="inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] px-2.5 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-white/[0.04]"
@@ -131,7 +131,7 @@ export function RecommendationsPanel({
                   type="button"
                   onClick={() => {
                     if (!clusterId) return
-                    dismissRecommendation(clusterId, item.id)
+                    dismissRecommendation(clusterId, itemotion.id)
                     toast.success('Marked as resolved')
                   }}
                   className="inline-flex items-center gap-1 rounded-lg bg-[var(--color-accent)] px-2.5 py-1.5 text-xs font-medium text-white hover:opacity-90"

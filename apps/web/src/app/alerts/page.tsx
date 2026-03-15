@@ -13,7 +13,7 @@ import { trpc } from '@/lib/trpc'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import { flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table'
 import { AlertTriangle, Bell, CheckCircle, ChevronDown, ChevronRight, History, Plus, Trash2 } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState, Fragment } from 'react'
 import { toast } from 'sonner'
@@ -117,9 +117,9 @@ export default function AlertsPage() {
   }, [alertsQuery, historyQuery])
 
   const handleCreate = useCallback(() => {
-    const threshold = Number(form.threshold)
-    if (!form.name || Number.isNaN(threshold)) return
-    createMut.mutate({ name: form.name, metric: form.metric, operator: form.operator, threshold, clusterFilter: form.clusterFilter || undefined })
+    const threshold = Number(formotion.threshold)
+    if (!formotion.name || Number.isNaN(threshold)) return
+    createMut.mutate({ name: formotion.name, metric: formotion.metric, operator: formotion.operator, threshold, clusterFilter: formotion.clusterFilter || undefined })
   }, [form, createMut])
 
   const alerts: AlertRow[] = alertsQuery.data ?? []
@@ -168,15 +168,15 @@ export default function AlertsPage() {
         {/* Create Modal */}
         <Dialog open={showCreate} onClose={() => { setShowCreate(false); setForm(INITIAL_FORM) }} title="Create Alert Rule">
           <div className="space-y-3">
-            <input type="text" placeholder="Alert name" aria-label="Alert name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputClass} />
-            <select value={form.metric} aria-label="Metric" onChange={(e) => setForm((f) => ({ ...f, metric: e.target.value as Metric }))} className={inputClass}>
-              {METRICS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+            <input type="text" placeholder="Alert name" aria-label="Alert name" value={formotion.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={inputClass} />
+            <select value={formotion.metric} aria-label="Metric" onChange={(e) => setForm((f) => ({ ...f, metric: e.target.value as Metric }))} className={inputClass}>
+              {METRICS.map((m) => <option key={motion.value} value={motion.value}>{motion.label}</option>)}
             </select>
-            <select value={form.operator} aria-label="Operator" onChange={(e) => setForm((f) => ({ ...f, operator: e.target.value as Operator }))} className={inputClass}>
+            <select value={formotion.operator} aria-label="Operator" onChange={(e) => setForm((f) => ({ ...f, operator: e.target.value as Operator }))} className={inputClass}>
               {OPERATORS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-            <input type="number" placeholder="Threshold value" aria-label="Threshold value" value={form.threshold} onChange={(e) => setForm((f) => ({ ...f, threshold: e.target.value }))} className={inputClass} />
-            <input type="text" placeholder="Cluster filter (optional)" aria-label="Cluster filter" value={form.clusterFilter} onChange={(e) => setForm((f) => ({ ...f, clusterFilter: e.target.value }))} className={inputClass} />
+            <input type="number" placeholder="Threshold value" aria-label="Threshold value" value={formotion.threshold} onChange={(e) => setForm((f) => ({ ...f, threshold: e.target.value }))} className={inputClass} />
+            <input type="text" placeholder="Cluster filter (optional)" aria-label="Cluster filter" value={formotion.clusterFilter} onChange={(e) => setForm((f) => ({ ...f, clusterFilter: e.target.value }))} className={inputClass} />
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <button type="button" onClick={() => { setShowCreate(false); setForm(INITIAL_FORM) }} className={btnSecondary}>Cancel</button>
@@ -313,12 +313,12 @@ function AnomaliesSection() {
   }, [anomalies, severityFilter, statusFilter, clusterFilter])
 
   const acknowledgeAnomaly = (id: string) => {
-    setAnomalies((prev) => prev.map((item) => (item.id === id ? { ...item, status: 'acknowledged' } : item)))
+    setAnomalies((prev) => prev.map((item) => (itemotion.id === id ? { ...item, status: 'acknowledged' } : item)))
     toast.success('Anomaly acknowledged')
   }
 
   const resolveAnomaly = (id: string) => {
-    setAnomalies((prev) => prev.map((item) => (item.id === id ? { ...item, status: 'resolved' } : item)))
+    setAnomalies((prev) => prev.map((item) => (itemotion.id === id ? { ...item, status: 'resolved' } : item)))
     toast.success('Anomaly resolved')
   }
 
@@ -438,7 +438,7 @@ function AnomaliesSection() {
                     <td colSpan={columns.length} className="p-0">
                       <AnimatePresence initial={false}>
                         {isExpanded && (
-                          <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
                             <div className="p-3 bg-black/10 dark:bg-white/[0.02] space-y-3">
                               <AnomalyCard anomaly={row.original} onAcknowledge={acknowledgeAnomaly} onResolve={resolveAnomaly} />
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -450,7 +450,7 @@ function AnomaliesSection() {
                                 ))}
                               </div>
                             </div>
-                          </m.div>
+                          </motion.div>
                         )}
                       </AnimatePresence>
                     </td>
@@ -465,9 +465,9 @@ function AnomaliesSection() {
       {/* Mobile cards */}
       <div className="md:hidden space-y-3">
         {table.getRowModel().rows.map((row) => (
-          <m.div key={row.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+          <motion.div key={row.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
             <AnomalyCard anomaly={row.original} onAcknowledge={acknowledgeAnomaly} onResolve={resolveAnomaly} />
-          </m.div>
+          </motion.div>
         ))}
       </div>
     </div>

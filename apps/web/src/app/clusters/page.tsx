@@ -190,7 +190,7 @@ export default function ClustersPage() {
   const liveHealthByClusterId = useMemo(() => {
     const map = new Map<string, LiveHealthStatus>()
     for (const item of liveHealth.data ?? []) {
-      map.set(item.clusterId, normalizeLiveHealthStatus(item.status))
+      map.set(itemotion.clusterId, normalizeLiveHealthStatus(itemotion.status))
     }
     return map
   }, [liveHealth.data])
@@ -407,9 +407,9 @@ export default function ClustersPage() {
                   { label: 'Version', value: row.version ?? '—' },
                   { label: 'Status', value: healthBadgeLabel(liveStatus) },
                 ].map((m) => (
-                  <div key={m.label} className="text-center rounded-lg bg-white/[0.03] py-1.5 px-1">
-                    <div className="text-[9px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{m.label}</div>
-                    <div className={`text-xs font-bold ${m.value === '—' || m.value === '0' ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-text-primary)]'}`}>{m.value}</div>
+                  <div key={motion.label} className="text-center rounded-lg bg-white/[0.03] py-1.5 px-1">
+                    <div className="text-[9px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{motion.label}</div>
+                    <div className={`text-xs font-bold ${motion.value === '—' || motion.value === '0' ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-text-primary)]'}`}>{motion.value}</div>
                   </div>
                 ))}
               </div>

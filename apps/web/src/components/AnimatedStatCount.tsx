@@ -6,7 +6,7 @@
  * H1: Respects prefers-reduced-motion — skips animation when user prefers reduced
  */
 
-import { animate, m, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
+import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
 import { useEffect, useRef } from 'react'
 
 interface AnimatedStatCountProps {
@@ -51,9 +51,9 @@ function AnimatedNumber({ target, className }: { target: number; className?: str
   }, [target, count, prefersReduced])
 
   return (
-    <m.span className={className}>
+    <motion.span className={className}>
       {rounded}
-    </m.span>
+    </motion.span>
   )
 }
 

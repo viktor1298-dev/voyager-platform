@@ -2,7 +2,7 @@
 
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { cn } from '@/lib/utils'
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { Search, X } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef } from 'react'
@@ -186,7 +186,7 @@ export function FilterBar({
 
       <AnimatePresence>
         {activeChips.length > 0 && (
-          <m.div
+          <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: -4 }}
             animate={reduceMotion ? {} : { opacity: 1, y: 0 }}
             exit={reduceMotion ? {} : { opacity: 0, y: -4 }}
@@ -194,13 +194,13 @@ export function FilterBar({
             className="flex flex-wrap items-center gap-2"
           >
             {activeChips.map((chip) => (
-              <m.span
+              <motion.span
                 key={chip.key}
                 layout
                 className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)]/80 bg-[var(--color-bg-secondary)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)]"
               >
                 {chip.label}
-              </m.span>
+              </motion.span>
             ))}
             <button
               type="button"
@@ -210,7 +210,7 @@ export function FilterBar({
               <X className="h-3 w-3" />
               Clear
             </button>
-          </m.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

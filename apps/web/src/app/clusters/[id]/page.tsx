@@ -3,7 +3,7 @@
 import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Box, Cpu, Globe, Server } from 'lucide-react'
-import { m } from 'motion/react'
+import { motion } from 'motion/react'
 import { useParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatedStatCount } from '@/components/AnimatedStatCount'
@@ -428,7 +428,7 @@ export default function ClusterOverviewPage() {
           { icon: Cpu, label: 'Version', value: cluster.version },
         ].map((stat) => (
           // P3-008: Card hover lift
-          <m.div
+          <motion.div
             key={stat.label}
             whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
@@ -449,7 +449,7 @@ export default function ClusterOverviewPage() {
                   : 'text-[var(--color-text-primary)]'
               }`}
             />
-          </m.div>
+          </motion.div>
         ))}
       </div>
 

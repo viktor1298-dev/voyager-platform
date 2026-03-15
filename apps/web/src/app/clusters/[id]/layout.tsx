@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -154,7 +154,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
                 {tab.label}
                 {/* Active tab underline with layoutId spring animation */}
                 {isActive && (
-                  <m.div
+                  <motion.div
                     layoutId="cluster-tab-underline"
                     className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--color-accent)]"
                     transition={{ type: 'spring', stiffness: 500, damping: 40 }}
@@ -168,7 +168,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
 
       {/* Tab Content with AnimatePresence */}
       <AnimatePresence mode="wait">
-        <m.div
+        <motion.div
           key={pathname}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -176,7 +176,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
           transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
         >
           {children}
-        </m.div>
+        </motion.div>
       </AnimatePresence>
     </AppLayout>
   )

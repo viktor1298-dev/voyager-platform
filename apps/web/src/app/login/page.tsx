@@ -246,7 +246,7 @@ function LoginPageContent() {
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            form.handleSubmit()
+            formotion.handleSubmit()
           }}
           className="space-y-4"
         >
@@ -254,7 +254,7 @@ function LoginPageContent() {
             <label htmlFor="email" className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]">
               Email
             </label>
-            <form.Field name="email">
+            <formotion.Field name="email">
               {(field) => (
                 <>
                   <input
@@ -272,14 +272,14 @@ function LoginPageContent() {
                   )}
                 </>
               )}
-            </form.Field>
+            </formotion.Field>
           </div>
 
           <div>
             <label htmlFor="password" className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]">
               Password
             </label>
-            <form.Field name="password">
+            <formotion.Field name="password">
               {(field) => (
                 <>
                   <input
@@ -297,10 +297,10 @@ function LoginPageContent() {
                   )}
                 </>
               )}
-            </form.Field>
+            </formotion.Field>
           </div>
 
-          <form.Subscribe selector={(s) => s.isSubmitting}>
+          <formotion.Subscribe selector={(s) => s.isSubmitting}>
             {(isSubmitting) => (
               <button
                 type="submit"
@@ -310,7 +310,7 @@ function LoginPageContent() {
                 {isSubmitting || isRedirectingAfterLogin ? 'Signing in...' : 'Sign In'}
               </button>
             )}
-          </form.Subscribe>
+          </formotion.Subscribe>
         </form>
       </div>
     </PageTransition>

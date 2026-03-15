@@ -43,7 +43,7 @@ function getRecentItems(): RecentItem[] {
 }
 
 function addRecentItem(item: Omit<RecentItem, 'timestamp'>) {
-  const items = getRecentItems().filter((r) => r.path !== item.path)
+  const items = getRecentItems().filter((r) => r.path !== itemotion.path)
   items.unshift({ ...item, timestamp: Date.now() })
   localStorage.setItem(RECENT_KEY, JSON.stringify(items.slice(0, MAX_RECENT)))
 }
@@ -58,7 +58,7 @@ export function CommandPalette() {
   const { activeClusterId } = useClusterContext()
 
   // Detect if we're inside a cluster route
-  const clusterRouteMatch = pathname.match(/^\/clusters\/([^/]+)/)
+  const clusterRouteMatch = pathname?.match(/^\/clusters\/([^/]+)/) ?? null
   const currentClusterId = clusterRouteMatch ? clusterRouteMatch[1] : null
 
   // Fetch resource data for fuzzy search
@@ -114,7 +114,7 @@ export function CommandPalette() {
   )
 
   const filteredItems = navItems.filter(
-    (item) => !('adminOnly' in item && item.adminOnly) || isAdmin,
+    (item) => !('adminOnly' in item && itemotion.adminOnly) || isAdmin,
   )
 
   const resourceItems = useMemo(() => {
@@ -220,15 +220,15 @@ export function CommandPalette() {
               <Command.Group heading="Recent" className={headingClass}>
                 {recentItems.map((item) => (
                   <Command.Item
-                    key={`recent-${item.path}`}
-                    value={`Recent ${item.label} ${item.type}`}
-                    onSelect={() => navigate(item.path, item.label, item.type)}
+                    key={`recent-${itemotion.path}`}
+                    value={`Recent ${itemotion.label} ${itemotion.type}`}
+                    onSelect={() => navigate(itemotion.path, itemotion.label, itemotion.type)}
                     className={itemClass}
                   >
                     <Clock className="h-4 w-4 shrink-0 text-[var(--color-text-dim)]" />
-                    <span>{item.label}</span>
+                    <span>{itemotion.label}</span>
                     <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
-                      {item.type}
+                      {itemotion.type}
                     </span>
                   </Command.Item>
                 ))}
@@ -258,18 +258,18 @@ export function CommandPalette() {
             {/* Navigation */}
             <Command.Group heading="Navigation" className={headingClass}>
               {filteredItems.map((item) => {
-                const Icon = item.icon
+                const Icon = itemotion.icon
                 return (
                   <Command.Item
-                    key={item.id}
-                    value={`Go to ${item.label}`}
-                    onSelect={() => navigate(item.id, item.label, 'Navigation')}
+                    key={itemotion.id}
+                    value={`Go to ${itemotion.label}`}
+                    onSelect={() => navigate(itemotion.id, itemotion.label, 'Navigation')}
                     className={itemClass}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    <span>{item.label}</span>
+                    <span>{itemotion.label}</span>
                     <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
-                      {item.id}
+                      {itemotion.id}
                     </span>
                   </Command.Item>
                 )
@@ -293,16 +293,16 @@ export function CommandPalette() {
                 {resourceItems
                   .filter((i) => i.type === 'Cluster')
                   .map((item) => {
-                    const RIcon = item.icon
+                    const RIcon = itemotion.icon
                     return (
                       <Command.Item
-                        key={`resource-${item.path}`}
-                        value={`Cluster ${item.label}`}
-                        onSelect={() => navigate(item.path, item.label, item.type)}
+                        key={`resource-${itemotion.path}`}
+                        value={`Cluster ${itemotion.label}`}
+                        onSelect={() => navigate(itemotion.path, itemotion.label, itemotion.type)}
                         className={itemClass}
                       >
                         <RIcon className="h-4 w-4 shrink-0" />
-                        <span>{item.label}</span>
+                        <span>{itemotion.label}</span>
                         <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
                           cluster
                         </span>
@@ -319,18 +319,18 @@ export function CommandPalette() {
                   .filter((i) => i.type !== 'Cluster')
                   .slice(0, 20)
                   .map((item) => {
-                    const RIcon = item.icon
+                    const RIcon = itemotion.icon
                     return (
                       <Command.Item
-                        key={`resource-${item.path}-${item.label}`}
-                        value={`${item.type} ${item.label}`}
-                        onSelect={() => navigate(item.path, item.label, item.type)}
+                        key={`resource-${itemotion.path}-${itemotion.label}`}
+                        value={`${itemotion.type} ${itemotion.label}`}
+                        onSelect={() => navigate(itemotion.path, itemotion.label, itemotion.type)}
                         className={itemClass}
                       >
                         <RIcon className="h-4 w-4 shrink-0" />
-                        <span className="flex-1 truncate">{item.label}</span>
+                        <span className="flex-1 truncate">{itemotion.label}</span>
                         <span className="ml-2 text-[10px] text-[var(--color-text-dim)] font-mono shrink-0">
-                          {item.type.toLowerCase()}
+                          {itemotion.type.toLowerCase()}
                         </span>
                         <kbd className="ml-2 hidden sm:inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shrink-0">
                           ↵ Open

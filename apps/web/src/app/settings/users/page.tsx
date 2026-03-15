@@ -168,7 +168,7 @@ export default function SettingsUsersPage() {
   useEffect(() => {
     const onRefresh = () => usersQuery.refetch()
     const onNew = () => {
-      addForm.reset()
+      addFormotion.reset()
       setShowAdd(true)
     }
     document.addEventListener('voyager:refresh', onRefresh)
@@ -177,7 +177,7 @@ export default function SettingsUsersPage() {
       document.removeEventListener('voyager:refresh', onRefresh)
       document.removeEventListener('voyager:new', onNew)
     }
-  }, [usersQuery, addForm.reset])
+  }, [usersQuery, addFormotion.reset])
 
   const users = useMemo(() => {
     const rawUsers: unknown[] = Array.isArray(usersQuery.data) ? usersQuery.data : []
@@ -294,7 +294,7 @@ export default function SettingsUsersPage() {
           type="button"
           className={`${btnPrimary} w-full sm:w-auto`}
           onClick={() => {
-            addForm.reset()
+            addFormotion.reset()
             setShowAdd(true)
           }}
         >
@@ -341,11 +341,11 @@ export default function SettingsUsersPage() {
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            addForm.handleSubmit()
+            addFormotion.handleSubmit()
           }}
           className="space-y-4"
         >
-          <addForm.Field name="name">
+          <addFormotion.Field name="name">
             {(field) => (
               <label className="block">
                 <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">Name</span>
@@ -353,8 +353,8 @@ export default function SettingsUsersPage() {
                 {field.state.meta.errors?.length > 0 && <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map(String).join(', ')}</p>}
               </label>
             )}
-          </addForm.Field>
-          <addForm.Field name="email">
+          </addFormotion.Field>
+          <addFormotion.Field name="email">
             {(field) => (
               <label className="block">
                 <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">Email</span>
@@ -362,8 +362,8 @@ export default function SettingsUsersPage() {
                 {field.state.meta.errors?.length > 0 && <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map(String).join(', ')}</p>}
               </label>
             )}
-          </addForm.Field>
-          <addForm.Field name="password">
+          </addFormotion.Field>
+          <addFormotion.Field name="password">
             {(field) => (
               <label className="block">
                 <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">Password</span>
@@ -371,8 +371,8 @@ export default function SettingsUsersPage() {
                 {field.state.meta.errors?.length > 0 && <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map(String).join(', ')}</p>}
               </label>
             )}
-          </addForm.Field>
-          <addForm.Field name="role">
+          </addFormotion.Field>
+          <addFormotion.Field name="role">
             {(field) => (
               <label className="block">
                 <span className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">Role</span>
@@ -382,16 +382,16 @@ export default function SettingsUsersPage() {
                 </select>
               </label>
             )}
-          </addForm.Field>
+          </addFormotion.Field>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" className={btnSecondary} onClick={() => setShowAdd(false)}>Cancel</button>
-            <addForm.Subscribe selector={(s) => s.isSubmitting}>
+            <addFormotion.Subscribe selector={(s) => s.isSubmitting}>
               {(isSubmitting) => (
                 <button type="submit" className={btnPrimary} disabled={isSubmitting || createUser.isPending}>
                   {createUser.isPending ? 'Creating…' : 'Create User'}
                 </button>
               )}
-            </addForm.Subscribe>
+            </addFormotion.Subscribe>
           </div>
         </form>
       </Dialog>

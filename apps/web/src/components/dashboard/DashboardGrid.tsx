@@ -70,7 +70,7 @@ export function DashboardGrid({ intervalMs = 300_000 as RefreshIntervalMs }: { i
 
   useEffect(() => {
     import('react-grid-layout').then((m) => {
-      setGridComponent(() => m.Responsive)
+      setGridComponent(() => motion.Responsive)
       import('react-grid-layout/css/styles.css').catch(() => null)
     })
   }, [])

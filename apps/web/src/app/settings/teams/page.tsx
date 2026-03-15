@@ -2,7 +2,7 @@
 
 import { useForm } from '@tanstack/react-form'
 import type { ColumnDef } from '@tanstack/react-table'
-import { m } from 'motion/react'
+import { motion } from 'motion/react'
 import { Plus, Users } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -87,7 +87,7 @@ export default function SettingsTeamsPage() {
     },
   })
 
-  const selectedTeam = teams.find((team) => team.id === selectedTeamId) ?? null
+  const selectedTeam = teams.find((team) => teamotion.id === selectedTeamId) ?? null
 
   const teamColumns = useMemo<ColumnDef<Team, unknown>[]>(() => [
     { accessorKey: 'name', header: 'Name', cell: ({ row }) => <span className="font-semibold text-[var(--color-text-primary)]">{row.original.name}</span> },
@@ -110,9 +110,9 @@ export default function SettingsTeamsPage() {
             if (!selectedTeam) return
             const role = event.target.value as TeamRole
             try {
-              await mockAccessControlApi.teams.setMemberRole({ teamId: selectedTeam.id, userId: row.original.userId, role })
-              setTeams((prev) => prev.map((team) => team.id === selectedTeam.id
-                ? { ...team, members: team.members.map((member) => member.userId === row.original.userId ? { ...member, role } : member) }
+              await mockAccessControlApi.teams.setMemberRole({ teamId: selectedTeamotion.id, userId: row.original.userId, role })
+              setTeams((prev) => prev.map((team) => teamotion.id === selectedTeamotion.id
+                ? { ...team, members: teamotion.members.map((member) => member.userId === row.original.userId ? { ...member, role } : member) }
                 : team))
               toast.success('Team role updated')
             } catch { toast.error('Failed to update team role') }
@@ -131,9 +131,9 @@ export default function SettingsTeamsPage() {
           onClick={async () => {
             if (!selectedTeam) return
             try {
-              await mockAccessControlApi.teams.removeMember({ teamId: selectedTeam.id, userId: row.original.userId })
-              setTeams((prev) => prev.map((team) => team.id === selectedTeam.id
-                ? { ...team, members: team.members.filter((member) => member.userId !== row.original.userId) }
+              await mockAccessControlApi.teams.removeMember({ teamId: selectedTeamotion.id, userId: row.original.userId })
+              setTeams((prev) => prev.map((team) => teamotion.id === selectedTeamotion.id
+                ? { ...team, members: teamotion.members.filter((member) => member.userId !== row.original.userId) }
                 : team))
               toast.success('Member removed')
             } catch { toast.error('Failed to remove member') }
@@ -175,26 +175,26 @@ export default function SettingsTeamsPage() {
       <div className="grid gap-4 xl:grid-cols-[1.1fr_1fr]">
         <div className="space-y-4">
           <div className="hidden md:block">
-            <DataTable data={teams} columns={teamColumns} searchable searchPlaceholder="Search teams…" loading={isLoading} onRowClick={(team) => setSelectedTeamId(team.id)} emptyIcon={<Users className="h-10 w-10" />} emptyTitle="No teams" />
+            <DataTable data={teams} columns={teamColumns} searchable searchPlaceholder="Search teams…" loading={isLoading} onRowClick={(team) => setSelectedTeamId(teamotion.id)} emptyIcon={<Users className="h-10 w-10" />} emptyTitle="No teams" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 md:hidden">
             {teams.map((team, index) => (
-              <m.button
-                key={team.id}
+              <motion.button
+                key={teamotion.id}
                 type="button"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.04 }}
-                onClick={() => setSelectedTeamId(team.id)}
-                className={`rounded-xl border p-4 text-left transition ${selectedTeamId === team.id ? 'border-[var(--color-accent)] bg-[var(--color-bg-card)]' : 'border-[var(--color-border)] bg-[var(--color-bg-card)]/80 hover:border-[var(--color-accent)]/40'}`}
+                onClick={() => setSelectedTeamId(teamotion.id)}
+                className={`rounded-xl border p-4 text-left transition ${selectedTeamId === teamotion.id ? 'border-[var(--color-accent)] bg-[var(--color-bg-card)]' : 'border-[var(--color-border)] bg-[var(--color-bg-card)]/80 hover:border-[var(--color-accent)]/40'}`}
               >
-                <p className="text-sm font-semibold text-[var(--color-text-primary)]">{team.name}</p>
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">{teamotion.name}</p>
                 <div className="mt-2 flex -space-x-2">
-                  {team.members.slice(0, 4).map((member) => (
+                  {teamotion.members.slice(0, 4).map((member) => (
                     <span key={member.userId} className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[10px] font-semibold text-[var(--color-text-secondary)]">{member.avatar}</span>
                   ))}
                 </div>
-              </m.button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -203,9 +203,9 @@ export default function SettingsTeamsPage() {
           {selectedTeam ? (
             <>
               <div className="mb-4">
-                <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{selectedTeam.name}</h3>
-                <p className="text-sm text-[var(--color-text-secondary)]">{selectedTeam.description}</p>
-                <div className="mt-2"><Badge variant="outline">Created {formatDate(selectedTeam.createdAt)}</Badge></div>
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{selectedTeamotion.name}</h3>
+                <p className="text-sm text-[var(--color-text-secondary)]">{selectedTeamotion.description}</p>
+                <div className="mt-2"><Badge variant="outline">Created {formatDate(selectedTeamotion.createdAt)}</Badge></div>
               </div>
 
               <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_130px_auto]">
@@ -220,7 +220,7 @@ export default function SettingsTeamsPage() {
                   className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-white/[0.06]"
                   onClick={async () => {
                     try {
-                      await mockAccessControlApi.teams.addMember({ teamId: selectedTeam.id, userId: memberToAdd, role: roleToAdd })
+                      await mockAccessControlApi.teams.addMember({ teamId: selectedTeamotion.id, userId: memberToAdd, role: roleToAdd })
                       const next = await mockAccessControlApi.teams.list()
                       setTeams(next)
                       toast.success('Member added')
@@ -232,7 +232,7 @@ export default function SettingsTeamsPage() {
               </div>
 
               <DataTable
-                data={selectedTeam.members}
+                data={selectedTeamotion.members}
                 columns={memberColumns}
                 emptyTitle="No members"
                 mobileCard={(member) => (
@@ -253,8 +253,8 @@ export default function SettingsTeamsPage() {
       </div>
 
       <Dialog open={showCreate} onClose={() => setShowCreate(false)} title="Create Team">
-        <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); createForm.handleSubmit() }}>
-          <createForm.Field name="name">
+        <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); createFormotion.handleSubmit() }}>
+          <createFormotion.Field name="name">
             {(field) => (
               <label className="block">
                 <span className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Name</span>
@@ -262,8 +262,8 @@ export default function SettingsTeamsPage() {
                 {field.state.meta.errors.length > 0 && <span className="text-xs text-red-300">{field.state.meta.errors.map(String).join(', ')}</span>}
               </label>
             )}
-          </createForm.Field>
-          <createForm.Field name="description">
+          </createFormotion.Field>
+          <createFormotion.Field name="description">
             {(field) => (
               <label className="block">
                 <span className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Description</span>
@@ -271,7 +271,7 @@ export default function SettingsTeamsPage() {
                 {field.state.meta.errors.length > 0 && <span className="text-xs text-red-300">{field.state.meta.errors.map(String).join(', ')}</span>}
               </label>
             )}
-          </createForm.Field>
+          </createFormotion.Field>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setShowCreate(false)} className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm">Cancel</button>
             <button type="submit" className="rounded-lg bg-[var(--color-accent)] px-3 py-2 text-sm text-white">Create</button>

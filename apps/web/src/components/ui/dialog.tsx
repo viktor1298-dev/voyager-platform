@@ -1,7 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { type ReactNode, useEffect, useRef } from 'react'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { dialogVariants, overlayVariants } from '@/lib/animation-constants'
@@ -29,7 +29,7 @@ export function Dialog({ open, onClose, children, title }: DialogProps) {
   return (
     <AnimatePresence>
       {open && (
-        <m.div
+        <motion.div
           ref={overlayRef}
           className="fixed inset-0 z-50 flex items-center justify-center"
           onClick={(e) => {
@@ -39,14 +39,14 @@ export function Dialog({ open, onClose, children, title }: DialogProps) {
           animate={reduced ? undefined : 'visible'}
           exit={reduced ? undefined : 'exit'}
         >
-          <m.div
+          <motion.div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             variants={reduced ? undefined : overlayVariants}
             initial={reduced ? undefined : 'hidden'}
             animate={reduced ? undefined : 'visible'}
             exit={reduced ? undefined : 'exit'}
           />
-          <m.div
+          <motion.div
             className="relative w-full max-w-lg max-w-[calc(100vw-2rem)] mx-4 rounded-xl border border-[var(--color-border)] p-4 sm:p-6 shadow-2xl"
             style={{ background: 'var(--elevated)' }}
             variants={reduced ? undefined : dialogVariants}
@@ -67,8 +67,8 @@ export function Dialog({ open, onClose, children, title }: DialogProps) {
               </button>
             </div>
             {children}
-          </m.div>
-        </m.div>
+          </motion.div>
+        </motion.div>
       )}
     </AnimatePresence>
   )

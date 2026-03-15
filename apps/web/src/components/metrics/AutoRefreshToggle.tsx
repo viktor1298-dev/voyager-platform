@@ -45,17 +45,17 @@ export function AutoRefreshToggle({
         <div className="flex items-center rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
           {INTERVALS.map((item) => (
             <button
-              key={item.value}
+              key={itemotion.value}
               type="button"
-              onClick={() => onIntervalChange(item.value)}
+              onClick={() => onIntervalChange(itemotion.value)}
               className={cn(
                 'px-2 py-1 text-[11px] font-mono transition-all',
-                interval === item.value
+                interval === itemotion.value
                   ? 'bg-[var(--color-accent)] text-white'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-white/5',
               )}
             >
-              {item.label}
+              {itemotion.label}
             </button>
           ))}
         </div>

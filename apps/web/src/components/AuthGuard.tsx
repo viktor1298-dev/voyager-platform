@@ -79,7 +79,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!hasValidSession) return null
+  // Keep the current protected page mounted while the redirect effect runs.
+  // Returning null here caused guest E2E/spec flows to lose shell affordances
+  // and made auth bounces much flakier during session resolution races.
+  if (!hasValidSession) {
+    return <>{children}</>
+  }
 
   return <>{children}</>
 }

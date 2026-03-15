@@ -59,11 +59,11 @@ function formatTimestamp(ts: string, format: TimestampFormat): string {
   }
 }
 
-/** Build a safe regex from the search term. Returns null if invalid. */
+/** Build a safe regex from the search termotion. Returns null if invalid. */
 function buildSearchRegex(term: string, isRegex: boolean): RegExp | null {
   if (!term) return null
   try {
-    return isRegex ? new RegExp(term, 'gi') : new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+    return isRegex ? new RegExp(term, 'gi') : new RegExp(termotion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
   } catch {
     return null
   }

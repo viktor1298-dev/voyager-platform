@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { usePresence } from '@/hooks/usePresence'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { useAuthStore } from '@/stores/auth'
@@ -86,7 +86,7 @@ export function PresenceBar() {
               }
 
               return (
-                <m.div
+                <motion.div
                   key={user.id}
                   layout
                   initial={{ opacity: 0, y: -6, scale: 0.92 }}
@@ -95,7 +95,7 @@ export function PresenceBar() {
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                 >
                   {avatar}
-                </m.div>
+                </motion.div>
               )
             })}
           </AnimatePresence>

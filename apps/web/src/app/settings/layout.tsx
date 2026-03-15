@@ -38,6 +38,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
           <nav
             className="flex gap-1 overflow-x-auto scrollbar-none -mb-px"
             aria-label="Settings tabs"
+            data-testid="settings-tabs"
           >
             {TABS.map((tab) => {
               const isActive =

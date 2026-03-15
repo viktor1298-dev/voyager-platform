@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { CircleDollarSign, RefreshCw, Server, Timer } from 'lucide-react'
-import { m } from 'motion/react'
+import { motion } from 'motion/react'
 import { useSearchParams } from 'next/navigation'
 import { useMemo } from 'react'
 import { toast } from 'sonner'
@@ -435,7 +435,7 @@ export default function KarpenterPage() {
 
           <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {topology.map((pool, index) => (
-              <m.div
+              <motion.div
                 key={pool.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -457,7 +457,7 @@ export default function KarpenterPage() {
                     </li>
                   ))}
                 </ul>
-              </m.div>
+              </motion.div>
             ))}
           </div>
         </section>

@@ -2,7 +2,7 @@
 
 import { getTRPCClient } from '@/lib/trpc'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { CheckCircle2, Loader2, UploadCloud } from 'lucide-react'
 import { useEffect, useMemo, useState, type DragEvent } from 'react'
 
@@ -342,7 +342,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
       </div>
 
       <AnimatePresence mode="wait">
-        <m.div
+        <motion.div
           key={step}
           initial={reduced ? undefined : { opacity: 0, y: 10 }}
           animate={reduced ? undefined : { opacity: 1, y: 0 }}
@@ -485,7 +485,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
               {!endpointValid && <p className="text-xs text-red-400">A valid API endpoint is required to create this cluster.</p>}
             </div>
           )}
-        </m.div>
+        </motion.div>
       </AnimatePresence>
 
       <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3">

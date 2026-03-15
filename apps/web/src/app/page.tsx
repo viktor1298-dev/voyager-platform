@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
 import { useDashboardLayout } from '@/stores/dashboard-layout'
 import { AlertTriangle, Box, CheckCircle2, Database, LayoutGrid, Pencil, Server, ShieldAlert, TriangleAlert, XCircle } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
@@ -495,21 +495,21 @@ function DashboardContent() {
                           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 3xl:grid-cols-1">
                             {environmentSummary.map((item) => (
                               <div
-                                key={item.key}
+                                key={itemotion.key}
                                 className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-card)]/72 px-3 py-3"
                               >
                                 <div className="flex items-center gap-2">
                                   <span
                                     className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/70"
                                   >
-                                    <item.meta.icon className="h-3.5 w-3.5" style={{ color: item.meta.dotColor }} />
+                                    <itemotion.meta.icon className="h-3.5 w-3.5" style={{ color: itemotion.meta.dotColor }} />
                                   </span>
                                   <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-dim)]">
-                                    {item.meta.label}
+                                    {itemotion.meta.label}
                                   </span>
                                 </div>
                                 <p className="mt-3 text-2xl font-semibold tracking-tight text-[var(--color-text-primary)] tabular-nums">
-                                  {item.value}
+                                  {itemotion.value}
                                 </p>
                               </div>
                             ))}
@@ -618,7 +618,7 @@ function ClusterCard({
 
   return (
     <Link href={`/clusters/${cluster.id}`}>
-      <m.div
+      <motion.div
         layout
         className="group relative flex h-full cursor-pointer flex-col rounded-2xl border border-[var(--color-border)]/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] px-4 py-4 shadow-[0_16px_38px_rgba(0,0,0,0.16)] transition-colors hover:border-[var(--color-border-hover)]"
         initial={{ opacity: 0, y: 6 }}
@@ -718,7 +718,7 @@ function ClusterCard({
             Source: {cluster.source === 'live' ? 'live stream' : 'registered'}
           </span>
         </div>
-      </m.div>
+      </motion.div>
     </Link>
   )
 }
@@ -800,17 +800,17 @@ function CompactStatsBar({
               ] as const
             ).map((item) => (
               <span
-                key={item.key}
+                key={itemotion.key}
                 className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold"
                 style={{
-                  color: item.tone,
-                  borderColor: `${item.tone}55`,
-                  backgroundColor: `${item.tone}14`,
+                  color: itemotion.tone,
+                  borderColor: `${itemotion.tone}55`,
+                  backgroundColor: `${itemotion.tone}14`,
                 }}
               >
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.tone }} />
-                {item.label}
-                <span className="tabular-nums text-[var(--color-text-primary)]">{item.value}</span>
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: itemotion.tone }} />
+                {itemotion.label}
+                <span className="tabular-nums text-[var(--color-text-primary)]">{itemotion.value}</span>
               </span>
             ))}
           </div>

@@ -29,6 +29,7 @@ function statusDot(status: ClusterStatus): string {
 export function TopBar() {
   const logoSrc = '/logo-mark.svg'
   const user = useAuthStore((s) => s.user)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
   const [isLoggingOut, setIsLoggingOut] = useState(false)

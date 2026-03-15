@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { APP_VERSION } from '@/config/constants'
 import { navItems } from '@/config/navigation'
 import { EASING } from '@/lib/animation-constants'
@@ -68,8 +68,8 @@ export function Sidebar({
         />
       )}
 
-      {/* P3-001: m.aside with spring width animation */}
-      <m.aside
+      {/* P3-001: motion.aside with spring width animation */}
+      <motion.aside
         data-testid="sidebar"
         animate={isDesktop ? { width: desktopWidth, x: 0 } : { x: mobileOpen ? 0 : -224 }}
         initial={false}
@@ -94,16 +94,16 @@ export function Sidebar({
         {/* Main nav — flat 6 items */}
         <nav className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           {navItems.map((item) => {
-            const active = isActive(item.id)
-            const Icon = item.icon
-            const showAlertsBadge = item.id === '/alerts' && unacknowledgedCount > 0
+            const active = isActive(itemotion.id)
+            const Icon = itemotion.icon
+            const showAlertsBadge = itemotion.id === '/alerts' && unacknowledgedCount > 0
 
             return (
               <Link
-                key={item.id}
-                href={item.id}
+                key={itemotion.id}
+                href={itemotion.id}
                 onClick={() => setMobileOpen(false)}
-                data-testid={`nav-item-${item.id.replace(/\//g, '') || 'dashboard'}`}
+                data-testid={`nav-item-${itemotion.id.replace(/\//g, '') || 'dashboard'}`}
                 className={`
                   relative flex items-center py-2.5 rounded-lg
                   ${showLabels ? 'gap-3 px-3' : 'justify-center px-0'}
@@ -116,7 +116,7 @@ export function Sidebar({
               >
                 {/* P3-002: Active background with layoutId spring + left accent border */}
                 {active && (
-                  <m.div
+                  <motion.div
                     layoutId="sidebar-active-bg"
                     className="absolute inset-0 bg-[var(--color-accent)]/10 rounded-lg sidebar-active-bar"
                     transition={EASING.snappy}
@@ -124,7 +124,7 @@ export function Sidebar({
                 )}
                 {/* P3-002: Left accent border bar */}
                 {active && (
-                  <m.div
+                  <motion.div
                     layoutId="sidebar-active-border"
                     className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[var(--color-accent)]"
                     transition={EASING.snappy}
@@ -134,7 +134,7 @@ export function Sidebar({
                 <Icon className="sidebar-icon h-4 w-4 shrink-0 relative z-10" />
                 <AnimatePresence initial={false}>
                   {showLabels && (
-                    <m.span
+                    <motion.span
                       key="label"
                       initial={{ opacity: 0, width: 0 }}
                       animate={{ opacity: 1, width: 'auto' }}
@@ -142,8 +142,8 @@ export function Sidebar({
                       transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
                       className="sidebar-label text-[13px] font-medium relative z-10 overflow-hidden whitespace-nowrap"
                     >
-                      {item.label}
-                    </m.span>
+                      {itemotion.label}
+                    </motion.span>
                   )}
                 </AnimatePresence>
                 {showAlertsBadge && (
@@ -161,7 +161,7 @@ export function Sidebar({
           {/* Cluster quick-switch footer */}
           <AnimatePresence initial={false}>
             {showLabels && sidebarClusters.length > 0 && (
-              <m.div
+              <motion.div
                 key="cluster-footer"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -192,7 +192,7 @@ export function Sidebar({
                     )
                   })}
                 </div>
-              </m.div>
+              </motion.div>
             )}
           </AnimatePresence>
         </nav>
@@ -216,7 +216,7 @@ export function Sidebar({
         {/* Version display */}
         <AnimatePresence initial={false}>
           {showLabels && (
-            <m.div
+            <motion.div
               key="version"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -227,10 +227,10 @@ export function Sidebar({
               <div className="text-[10px] text-[var(--color-text-muted)] font-mono text-left whitespace-nowrap">
                 Voyager {APP_VERSION}
               </div>
-            </m.div>
+            </motion.div>
           )}
         </AnimatePresence>
-      </m.aside>
+      </motion.aside>
     </>
   )
 }

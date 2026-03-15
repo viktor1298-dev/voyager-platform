@@ -76,7 +76,7 @@ function AnimatedTbody({
   }
 
   return (
-    <m.tbody
+    <motion.tbody
       ref={callbackRef}
       variants={{
         hidden: { opacity: 1 },
@@ -86,7 +86,7 @@ function AnimatedTbody({
       animate={isInView ? 'visible' : 'hidden'}
     >
       {children}
-    </m.tbody>
+    </motion.tbody>
   )
 }
 
@@ -281,7 +281,7 @@ export function DataTable<TData>({
         {/* P3-009: AnimatePresence mode="wait" for skeleton → data transition */}
         <AnimatePresence mode="wait" initial={false}>
           {loading ? (
-            <m.div
+            <motion.div
               key="skeleton"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -327,9 +327,9 @@ export function DataTable<TData>({
                   )}
                 </tbody>
               </table>
-            </m.div>
+            </motion.div>
           ) : sortedRows.length === 0 ? (
-            <m.div
+            <motion.div
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -368,9 +368,9 @@ export function DataTable<TData>({
                   </tr>
                 </tbody>
               </table>
-            </m.div>
+            </motion.div>
           ) : (
-            <m.div
+            <motion.div
               key="data"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -417,7 +417,7 @@ export function DataTable<TData>({
                   ))}
                 </AnimatedTbody>
               </table>
-            </m.div>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
@@ -486,7 +486,7 @@ function PaginationBtn({
 }) {
   return (
     // P3-007: Button micro-interactions
-    <m.button
+    <motion.button
       type="button"
       onClick={onClick}
       disabled={disabled}
@@ -496,6 +496,6 @@ function PaginationBtn({
       className="p-1.5 rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
     >
       {children}
-    </m.button>
+    </motion.button>
   )
 }

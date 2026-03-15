@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertTriangle, Bell, Container, LayoutGrid, Server } from 'lucide-react'
-import { animate, m, useMotionValue } from 'motion/react'
+import { animate, motion, useMotionValue } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 import { SkeletonText } from '@/components/Skeleton'
 import { SparklineChart, generateStableTimeSeries } from '@/components/charts/SparklineChart'
@@ -58,7 +58,7 @@ function StatCard({
 }) {
   return (
     // P3-008: Card hover lift
-    <m.div
+    <motion.div
       whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
       className={cn(
@@ -94,7 +94,7 @@ function StatCard({
           <SparklineChart data={sparklineData} color={sparklineColor ?? color} height={50} />
         </div>
       )}
-    </m.div>
+    </motion.div>
   )
 }
 

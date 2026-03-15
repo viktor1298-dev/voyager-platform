@@ -8,7 +8,7 @@
 
 import { useCallback, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
-import { m } from 'motion/react'
+import { motion } from 'motion/react'
 import { trpc } from '@/lib/trpc'
 import { HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
@@ -84,7 +84,7 @@ export function ClusterHealthIndicator({
           <TooltipTrigger asChild>
             {/* REVIEW-005: keyboard-focusable, screen-reader accessible */}
             {/* REVIEW-006: healthDotVariants — scale pulse on degraded/critical */}
-            <m.span
+            <motion.span
               className={`${dotSize} rounded-full shrink-0 cursor-default`}
               animate={{ backgroundColor: color, scale: dotScaleAnim }}
               transition={statusChangeTransition}
@@ -107,14 +107,14 @@ export function ClusterHealthIndicator({
 
       {/* IA-005: optional latency badge */}
       {showLatency && entry.responseTimeMs != null && (
-        <m.span
+        <motion.span
           className="text-[9px] font-mono"
           style={{ color: latencyColor }}
           animate={{ color: latencyColor }}
           transition={{ duration: 0.3 }}
         >
           {entry.responseTimeMs}ms
-        </m.span>
+        </motion.span>
       )}
 
       {/* Optional check now button — REVIEW-003: plain button, CSS only (no Motion opacity conflict) */}
