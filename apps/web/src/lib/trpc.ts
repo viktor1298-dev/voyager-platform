@@ -6,6 +6,7 @@ import {
   httpSubscriptionLink,
   splitLink,
 } from '@trpc/react-query'
+import { retryLink } from '@trpc/client'
 import type { AppRouter } from '@voyager/api/types'
 
 export const trpc = createTRPCReact<AppRouter>()
@@ -58,6 +59,34 @@ export function getTRPCClient() {
 
   return trpc.createClient({
     links: [
+      retryLink({
+        retry({ op, attempts, error }) {
+          if (op.type !== 'subscription') {
+            return false
+          }
+
+          if (attempts >= 6) {
+            return false
+          }
+
+          const message = error.message.toLowerCase()
+          return [
+            'err_incomplete_chunked_encoding',
+            'fetch failed',
+            'networkerror',
+            'network error',
+            'failed to fetch',
+            'load failed',
+            'stream closed',
+            'stream interrupted',
+            'timeout',
+            'aborted',
+          ].some((fragment) => message.includes(fragment))
+        },
+        retryDelayMs(attempt: number) {
+          return Math.min(1_000 * 2 ** (attempt - 1), 15_000)
+        },
+      }),
       splitLink({
         condition: (op) => op.type === 'subscription',
         true: httpSubscriptionLink({

@@ -14,6 +14,7 @@
 ### Critical Bug Fixes
 - [x] **BUG-RD-001** Fix cluster quick-links: `href="/clusters"` → `href={/clusters/${cluster.id}}` *(Ron, 2026-03-07)*
 - [ ] **BUG-RD-002** Fix Services tab: remove empty stub, wire to real data (Phase 2 backend)
+- [x] **BUG-RD-006** Fix Clusters presence subscription disconnect UX: resilient reconnect + transient SSE noise downgraded *(Dima, 2026-03-15)*
 - [ ] **BUG-RD-003** Fix Deployments tab: remove empty stub, wire to real data (Phase 2 backend)
 - [ ] **BUG-RD-004** Fix Pods tab: show stored pod data when cluster offline (no blank screen)
 - [x] **BUG-RD-005** Fix Overview tab: remove duplicate stat cards *(Ron, 2026-03-07)*

@@ -1,8 +1,11 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { TRPCClientError, getUntypedClient } from '@trpc/client'
+import type { TRPCConnectionState } from '@trpc/client/unstable-internals'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useRef } from 'react'
+import { getTRPCClient, trpc } from '@/lib/trpc'
 import { AWAY_AFTER_MS, type PresenceUser, usePresenceStore } from '@/stores/presence'
 
 interface BackendPresenceUser {
@@ -21,8 +24,8 @@ interface PresenceEventPayload {
   users?: BackendPresenceUser[]
 }
 
-const RECONNECT_BASE_DELAY_MS = 1_000
-const RECONNECT_MAX_DELAY_MS = 15_000
+const TRANSIENT_DISCONNECT_WARNING_THRESHOLD = 3
+const PERSISTENT_DISCONNECT_ERROR_THRESHOLD = 6
 
 function mapIncomingUser(user: BackendPresenceUser): PresenceUser | null {
   const id = user.id ?? user.userId
@@ -63,9 +66,64 @@ async function fetchPresenceInitial(): Promise<PresenceUser[]> {
     .filter((user): user is PresenceUser => user !== null)
 }
 
+function applyPresencePayload(
+  payload: PresenceEventPayload,
+  options: {
+    setOnlineUsers: (users: PresenceUser[]) => void
+    upsertUser: (user: PresenceUser) => void
+    removeUser: (userId: string) => void
+  },
+) {
+  if (Array.isArray(payload.users)) {
+    const users = payload.users
+      .map((user) => mapIncomingUser(user))
+      .filter((user): user is PresenceUser => user !== null)
+
+    if (payload.reason === 'snapshot') {
+      options.setOnlineUsers(users)
+      return
+    }
+
+    options.setOnlineUsers(users)
+    return
+  }
+
+  if ((payload.reason === 'remove' || payload.reason === 'offline') && payload.userId) {
+    options.removeUser(payload.userId)
+  }
+}
+
+function isTransientPresenceError(error: unknown) {
+  if (!(error instanceof TRPCClientError)) {
+    return false
+  }
+
+  const code = error.data?.code
+  if (code && ['TIMEOUT', 'CLIENT_CLOSED_REQUEST', 'INTERNAL_SERVER_ERROR'].includes(code)) {
+    return true
+  }
+
+  const message = error.message.toLowerCase()
+  return [
+    'err_incomplete_chunked_encoding',
+    'fetch failed',
+    'networkerror',
+    'network error',
+    'failed to fetch',
+    'load failed',
+    'stream closed',
+    'stream interrupted',
+    'the operation was aborted',
+    'aborted',
+  ].some((fragment) => message.includes(fragment))
+}
+
 export function usePresence() {
+  const utils = trpc.useUtils()
+  const clientRef = useRef(getUntypedClient(getTRPCClient()))
   const pathname = usePathname()
   const lastHeartbeatRef = useRef(Date.now())
+  const consecutiveDisconnectsRef = useRef(0)
   const setOnlineUsers = usePresenceStore((s) => s.setOnlineUsers)
   const upsertUser = usePresenceStore((s) => s.upsertUser)
   const removeUser = usePresenceStore((s) => s.removeUser)
@@ -84,89 +142,73 @@ export function usePresence() {
   }, [initialPresenceQuery.data, setOnlineUsers])
 
   useEffect(() => {
-    let eventSource: EventSource | null = null
-    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
-    let reconnectAttempts = 0
-    let isUnmounted = false
-
-    const clearReconnectTimer = () => {
-      if (!reconnectTimeout) return
-      clearTimeout(reconnectTimeout)
-      reconnectTimeout = null
-    }
-
-    const scheduleReconnect = () => {
-      if (isUnmounted || reconnectTimeout) return
-
-      const delay = Math.min(RECONNECT_BASE_DELAY_MS * 2 ** reconnectAttempts, RECONNECT_MAX_DELAY_MS)
-      reconnectAttempts += 1
-
-      reconnectTimeout = setTimeout(() => {
-        reconnectTimeout = null
-        connect()
-      }, delay)
-    }
-
-    const connect = () => {
-      if (isUnmounted) return
-
-      eventSource?.close()
-      eventSource = new EventSource('/trpc/presence.subscribe', { withCredentials: true })
-
-      eventSource.onopen = () => {
-        reconnectAttempts = 0
-        clearReconnectTimer()
-      }
-
-      eventSource.onmessage = (event) => {
-        try {
-          const payload = JSON.parse(event.data) as PresenceEventPayload
-
-          if (Array.isArray(payload.users)) {
-            const users = payload.users
-              .map((user) => mapIncomingUser(user))
-              .filter((user): user is PresenceUser => user !== null)
-
-            if (payload.reason === 'snapshot') {
-              setOnlineUsers(users)
-              return
-            }
-
-            users.forEach((user) => upsertUser(user))
-            return
-          }
-
-          if (payload.reason === 'remove' || payload.reason === 'offline') {
-            if (payload.userId) removeUser(payload.userId)
-          }
-        } catch {
-          // no-op: ignore malformed event payloads
+    const subscription = clientRef.current.subscription('presence.subscribe', undefined, {
+      onData(payload) {
+        consecutiveDisconnectsRef.current = 0
+        applyPresencePayload(payload as PresenceEventPayload, {
+          setOnlineUsers,
+          upsertUser,
+          removeUser,
+        })
+      },
+      onConnectionStateChange(state: TRPCConnectionState<TRPCClientError<any>>) {
+        if (state.state === 'pending') {
+          consecutiveDisconnectsRef.current = 0
+          return
         }
-      }
 
-      eventSource.onerror = () => {
-        eventSource?.close()
-        scheduleReconnect()
-      }
-    }
+        if (state.state !== 'connecting' || !state.error) {
+          return
+        }
 
-    connect()
+        const attempt = consecutiveDisconnectsRef.current + 1
+        consecutiveDisconnectsRef.current = attempt
 
-    return () => {
-      isUnmounted = true
-      clearReconnectTimer()
-      eventSource?.close()
-    }
+        if (isTransientPresenceError(state.error)) {
+          if (attempt === 1 || attempt === TRANSIENT_DISCONNECT_WARNING_THRESHOLD) {
+            console.warn('[presence] subscription disconnected, retrying', {
+              attempt,
+              message: state.error.message,
+            })
+          }
+
+          if (attempt >= PERSISTENT_DISCONNECT_ERROR_THRESHOLD) {
+            console.error('[presence] subscription still failing after repeated retries', {
+              attempt,
+              message: state.error.message,
+            })
+          }
+
+          return
+        }
+
+        console.error('[presence] subscription error', state.error)
+      },
+      onError(error) {
+        if (isTransientPresenceError(error)) {
+          const attempt = consecutiveDisconnectsRef.current
+          if (attempt >= PERSISTENT_DISCONNECT_ERROR_THRESHOLD) {
+            console.error('[presence] subscription failed after retry exhaustion', {
+              attempt,
+              message: error.message,
+            })
+          }
+          return
+        }
+
+        console.error('[presence] subscription fatal error', error)
+      },
+    })
+
+    return () => subscription.unsubscribe()
   }, [removeUser, setOnlineUsers, upsertUser])
 
   useEffect(() => {
     const sendHeartbeat = async () => {
-      await fetch('/trpc/presence.heartbeat', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPage: pathname }),
-      }).catch(() => undefined)
+      await utils.client.mutation('presence.heartbeat', { currentPage: pathname, avatar: null }).catch((error) => {
+        const message = error instanceof Error ? error.message : String(error)
+        console.warn('[presence] heartbeat failed', { message })
+      })
 
       lastHeartbeatRef.current = Date.now()
       setMyStatus('online')
@@ -178,7 +220,7 @@ export function usePresence() {
     }, 30_000)
 
     return () => clearInterval(interval)
-  }, [pathname, setMyStatus])
+  }, [pathname, setMyStatus, utils.client])
 
   useEffect(() => {
     const interval = setInterval(() => {
