@@ -23,7 +23,7 @@ import {
   ChevronsRight,
   Search,
 } from 'lucide-react'
-import { AnimatePresence, m, useInView } from 'motion/react'
+import { AnimatePresence, motion, useInView } from 'motion/react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { DURATION, EASING, STAGGER } from '@/lib/animation-constants'
 
