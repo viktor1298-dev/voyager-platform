@@ -157,7 +157,7 @@ export default function SettingsUsersPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
-  const addForm = useForm({
+  const addFormation = useForm({
     defaultValues: { name: '', email: '', password: '', role: 'viewer' as 'admin' | 'viewer' },
     validators: { onChange: createUserSchema },
     onSubmit: async ({ value }) => {
