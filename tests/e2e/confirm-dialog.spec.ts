@@ -1,9 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { login } from './helpers';
 
 test.describe('Confirmation Dialog', () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
     await page.goto('/settings/users', { waitUntil: 'domcontentloaded' });
     await expect(page).toHaveURL(/\/settings\/users/, { timeout: 15_000 });
     await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible({ timeout: 20_000 });

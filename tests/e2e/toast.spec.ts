@@ -1,11 +1,13 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Toast Notifications', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test('failed login shows error toast', async ({ page }) => {
     await page.goto('/login');
     await page.getByLabel(/email/i).fill('wrong@example.com');
     await page.getByLabel(/password/i).fill('wrongpassword');
-    await page.getByRole('button', { name: /sign in|log in|login/i }).click();
+    await page.keyboard.press('Enter');
 
     // Sonner renders toasts in [data-sonner-toaster] or as ol > li
     const toast = page.locator('[data-sonner-toast], [role="status"]').first();
@@ -20,7 +22,7 @@ test.describe('Toast Notifications', () => {
     await page.goto('/login');
     await page.getByLabel(/email/i).fill('wrong@example.com');
     await page.getByLabel(/password/i).fill('wrongpassword');
-    await page.getByRole('button', { name: /sign in|log in|login/i }).click();
+    await page.keyboard.press('Enter');
 
     const toast = page.locator('[data-sonner-toast], [role="status"]').first();
     await expect(toast).toBeVisible({ timeout: 5000 });

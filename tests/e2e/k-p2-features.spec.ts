@@ -1,12 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { login } from './helpers';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://voyager-platform.voyagerlabs.co';
 
 test.describe('K-P2 Features', () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page);
-  });
 
   test('sidebar navigation: collapsible groups exist and can be toggled', async ({ page }) => {
     await page.goto(BASE_URL);

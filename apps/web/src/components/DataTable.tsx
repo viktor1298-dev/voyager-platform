@@ -217,7 +217,7 @@ export function DataTable<TData>({
                     type="button"
                     aria-label={plainHeader ? `Sort by ${plainHeader}` : undefined}
                     className="flex items-center gap-1 cursor-pointer hover:text-[var(--color-text-secondary)]"
-                    onClick={header.column.getToggleSortingHandler()}
+                    onClick={(event) => header.column.getToggleSortingHandler()?.(event)}
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
                     <span className="ml-0.5">
