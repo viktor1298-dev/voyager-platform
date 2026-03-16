@@ -7,12 +7,16 @@ const geistSans = localFont({
   src: './fonts/GeistVF.woff2',
   variable: '--font-geist-sans',
   weight: '100 900',
+  display: 'swap',
+  preload: true,
 })
 
 const geistMono = localFont({
   src: './fonts/GeistMonoVF.woff2',
   variable: '--font-geist-mono',
   weight: '100 900',
+  display: 'swap',
+  preload: true,
 })
 
 export const metadata: Metadata = {
@@ -30,6 +34,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Item #7: Preload font files to prevent console warnings */}
+        <link rel="preload" href="/fonts/GeistVF.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/GeistMonoVF.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <div className="h-0.5 w-full bg-gradient-to-r from-teal-500 to-indigo-500 fixed top-0 left-0 z-[200]" />
         <Providers>{children}</Providers>
