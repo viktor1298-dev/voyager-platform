@@ -151,20 +151,25 @@ test.describe('Phase 1 — Cluster Detail Tab Navigation (BUG-RD-001)', () => {
 
   test('cluster row click navigates to /clusters/[id]', async ({ page }) => {
     await page.goto('/clusters');
-    const table = page.locator('table').first();
-    const queryError = page.getByText(/failed to load data/i);
 
-    await expect(table.or(queryError)).toBeVisible({ timeout: 15_000 });
+    const queryError = page.getByText(/failed to load data/i);
+    // With ≤5 clusters the page renders card buttons; with >5 it renders DataTable rows
+    const clusterCard = page.locator('button[aria-label^="View cluster"]').first();
+    const dataRow = page.locator('tr[data-row]').first();
+
+    await expect(clusterCard.or(dataRow).or(queryError)).toBeVisible({ timeout: 15_000 });
 
     if (await queryError.isVisible()) {
       test.skip(true, 'Cluster list API returned an error — skipping BUG-RD-001 check');
       return;
     }
 
-    const firstRow = page.locator('tr[data-row]').first();
-    await expect(firstRow).toBeVisible({ timeout: 10_000 });
+    if (await clusterCard.isVisible().catch(() => false)) {
+      await clusterCard.click();
+    } else {
+      await dataRow.click();
+    }
 
-    await firstRow.click();
     await expect(page).toHaveURL(/\/clusters\/.+/, { timeout: 10_000 });
     expect(page.url()).not.toMatch(/^https?:\/\/[^/]+\/clusters\/?$/);
   });

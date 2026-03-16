@@ -84,13 +84,16 @@ test.describe('P3-003: DataTable row stagger animations', () => {
     await page.goto('/clusters');
     await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible({ timeout: 15_000 });
 
+    // With ≤5 clusters the page renders card buttons; with >5 it renders a DataTable
+    const clusterCard = page.locator('button[aria-label^="View cluster"]').first();
     const tableOrRows = page.locator('table, [role="table"], [data-testid="data-table"], tr[data-row]').first();
-    const isVisible = await tableOrRows.isVisible({ timeout: 15_000 }).catch(() => false);
-
     const emptyState = page.locator('[data-testid="empty-state"], text=No clusters').first();
+
+    const hasCards = await clusterCard.isVisible({ timeout: 15_000 }).catch(() => false);
+    const hasTable = await tableOrRows.isVisible({ timeout: 3_000 }).catch(() => false);
     const hasEmpty = await emptyState.isVisible({ timeout: 3_000 }).catch(() => false);
 
-    expect(isVisible || hasEmpty).toBeTruthy();
+    expect(hasCards || hasTable || hasEmpty).toBeTruthy();
   });
 
   test('alerts page renders without animation errors', async ({ page }) => {
@@ -134,14 +137,15 @@ test.describe('P3-005: Tab transition animations', () => {
   test('cluster detail tab navigation works', async ({ page }) => {
     await page.goto('/clusters');
 
-    const viewBtn = page.locator('button[aria-label^="View cluster"]').first();
+    // With ≤5 clusters the page renders card buttons; with >5 it renders DataTable rows
+    const clusterCard = page.locator('button[aria-label^="View cluster"]').first();
     const dataRow = page.locator('tr[data-row]').first();
 
-    const hasViewBtn = await viewBtn.isVisible({ timeout: 10_000 }).catch(() => false);
+    const hasCard = await clusterCard.isVisible({ timeout: 10_000 }).catch(() => false);
     const hasRow = await dataRow.isVisible({ timeout: 3_000 }).catch(() => false);
 
-    if (hasViewBtn) {
-      await viewBtn.click();
+    if (hasCard) {
+      await clusterCard.click();
       await page.waitForURL(/\/clusters\/[^/]+/, { timeout: 10_000 });
       await expect(page.locator('body').first()).toBeVisible();
 

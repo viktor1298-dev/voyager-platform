@@ -5,14 +5,15 @@ import { login } from './helpers';
 async function navigateToFirstCluster(page: import('@playwright/test').Page) {
   await page.goto('/clusters');
 
-  const viewBtn = page.locator('button[aria-label^="View cluster"]').first();
-  const hasViewBtn = await viewBtn.isVisible({ timeout: 15_000 }).catch(() => false);
+  // With ≤5 clusters the page renders card buttons; with >5 it renders a DataTable
+  const clusterCard = page.locator('button[aria-label^="View cluster"]').first();
+  const dataRow = page.locator('tr[data-row]').first();
 
-  if (hasViewBtn) {
-    await viewBtn.click();
+  await expect(clusterCard.or(dataRow)).toBeVisible({ timeout: 15_000 });
+
+  if (await clusterCard.isVisible().catch(() => false)) {
+    await clusterCard.click();
   } else {
-    const dataRow = page.locator('tr[data-row]').first();
-    await expect(dataRow).toBeVisible({ timeout: 15_000 });
     await dataRow.click();
   }
 

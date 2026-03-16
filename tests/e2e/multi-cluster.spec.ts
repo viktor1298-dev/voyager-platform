@@ -38,19 +38,26 @@ test.describe('Multi-cluster flows (Phase D)', () => {
     await page.getByRole('button', { name: /add cluster/i }).click();
 
     await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible();
-    await expect(page.locator('tr[data-row]').filter({ hasText: clusterName }).first()).toBeVisible({ timeout: 15_000 });
+    // With ≤5 clusters the page shows cards; with >5 it shows DataTable rows
+    const cardMatch = page.locator(`button[aria-label="View cluster ${clusterName}"]`);
+    const rowMatch = page.locator('tr[data-row]').filter({ hasText: clusterName }).first();
+    await expect(cardMatch.or(rowMatch)).toBeVisible({ timeout: 15_000 });
   });
 
   test('E2E-2: Cluster detail → live tab loads nodes', async ({ page }) => {
     await page.goto('/clusters');
     await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible({ timeout: 15_000 });
 
-    const table = page.locator('table').first();
-    await expect(table).toBeVisible();
-    const firstRow = page.locator('tr[data-row]').first();
-    await expect(firstRow).toBeVisible({ timeout: 15_000 });
+    // With ≤5 clusters the page renders card buttons; with >5 it renders DataTable rows
+    const clusterCard = page.locator('button[aria-label^="View cluster"]').first();
+    const dataRow = page.locator('tr[data-row]').first();
+    await expect(clusterCard.or(dataRow)).toBeVisible({ timeout: 15_000 });
 
-    await firstRow.click();
+    if (await clusterCard.isVisible().catch(() => false)) {
+      await clusterCard.click();
+    } else {
+      await dataRow.click();
+    }
 
     await expect(page).toHaveURL(/\/clusters\/.+/);
     await expect(page.getByText(/loading cluster details/i)).toBeHidden({ timeout: 20_000 }).catch(() => {});
@@ -100,33 +107,50 @@ test.describe('Multi-cluster flows (Phase D)', () => {
     await page.goto('/clusters');
     await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible({ timeout: 15_000 });
 
+    // With ≤5 clusters the page shows cards; with >5 it shows DataTable rows
+    const cards = page.locator('button[aria-label^="View cluster"]');
     const rows = page.locator('tr[data-row]');
-    await expect(rows.first()).toBeVisible({ timeout: 15_000 });
+    await expect(cards.first().or(rows.first())).toBeVisible({ timeout: 15_000 });
 
-    const rowCount = await rows.count();
-    if (rowCount === 0) {
-      test.skip(true, 'No rows in cluster table');
-    }
+    const isCardLayout = await cards.first().isVisible().catch(() => false);
 
-    let row = rows.first();
     let clusterName = '';
-    for (let i = rowCount - 1; i >= 0; i--) {
-      try {
-        const candidate = rows.nth(i);
-        const name = (await candidate.locator('td').first().innerText({ timeout: 3_000 })).trim();
-        if (name && /^e2e-kube-/.test(name)) {
-          row = candidate;
+    if (isCardLayout) {
+      const cardCount = await cards.count();
+      if (cardCount === 0) {
+        test.skip(true, 'No cluster cards found');
+      }
+      for (let i = cardCount - 1; i >= 0; i--) {
+        const label = await cards.nth(i).getAttribute('aria-label') ?? '';
+        const name = label.replace(/^View cluster\s+/i, '').trim();
+        if (/^e2e-kube-/.test(name)) {
           clusterName = name;
           break;
         }
-      } catch {
-        continue;
+      }
+    } else {
+      const rowCount = await rows.count();
+      if (rowCount === 0) {
+        test.skip(true, 'No rows in cluster table');
+      }
+      for (let i = rowCount - 1; i >= 0; i--) {
+        try {
+          const candidate = rows.nth(i);
+          const name = (await candidate.locator('td').first().innerText({ timeout: 3_000 })).trim();
+          if (name && /^e2e-kube-/.test(name)) {
+            clusterName = name;
+            break;
+          }
+        } catch {
+          continue;
+        }
       }
     }
     test.skip(!clusterName, 'No e2e-created cluster (e2e-kube-*) found to delete');
 
-    await row.hover();
-    await row.getByRole('button', { name: /delete cluster/i }).click();
+    // The delete button is always visible (not only on hover) in card layout
+    const deleteBtn = page.getByRole('button', { name: new RegExp(`Delete cluster ${clusterName}`, 'i') });
+    await deleteBtn.click();
 
     await expect(page.getByRole('heading', { name: /delete cluster/i })).toBeVisible();
     await page.getByRole('button', { name: /^delete$/i }).click();

@@ -15,9 +15,8 @@ test.describe('Login Error Notifications', () => {
     const alert = page.locator('[role="alert"]').first();
     await expect(alert).toBeVisible({ timeout: 5000 });
 
-    // Alert should contain error-related text
-    const alertText = await alert.textContent();
-    expect(alertText?.toLowerCase()).toMatch(/error|invalid|failed|incorrect|credentials/);
+    // Alert should contain error-related text (wait for async text to load)
+    await expect(alert).toHaveText(/error|invalid|failed|incorrect|credentials/i, { timeout: 5000 });
   });
 
   test('error alert persists until next submission', async ({ page }) => {
