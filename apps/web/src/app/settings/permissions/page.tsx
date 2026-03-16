@@ -158,7 +158,10 @@ export default function SettingsPermissionsPage() {
 
       <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
         <h3 className="mb-3 text-sm font-semibold text-[var(--color-text-primary)]">Permission Matrix</h3>
-        <DataTable data={matrixRows} columns={matrixColumns} searchable searchPlaceholder="Search users/teams…" loading={isLoading} />
+        {/* Zebra striping for dense matrix readability */}
+        <div className="[&_tbody_tr:nth-child(even)]:bg-white/[0.02] dark:[&_tbody_tr:nth-child(even)]:bg-white/[0.03] [&_tbody_tr:nth-child(odd)]:bg-transparent">
+          <DataTable data={matrixRows} columns={matrixColumns} searchable searchPlaceholder="Search users/teams…" loading={isLoading} />
+        </div>
       </section>
 
       <ConfirmDialog

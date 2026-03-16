@@ -25,16 +25,20 @@ export function PresenceBar() {
 
   return (
     <div className="h-10 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/85 backdrop-blur-lg flex items-center justify-between px-3 sm:px-6">
-      {/* Left: ONLINE indicator */}
-      <div className="flex items-center gap-2 min-w-0">
+      {/* Left: ONLINE indicator — dot + count (no redundant text) */}
+      <div className="flex items-center gap-1.5 min-w-0" title={`${count} user${count !== 1 ? 's' : ''} online`}>
         {/* Pulsing green dot */}
-        <span
-          className="h-2 w-2 rounded-full shrink-0 animate-pulse-slow"
-          style={{ backgroundColor: count > 0 ? 'var(--color-status-active, #22c55e)' : 'var(--color-text-dim)' }}
-          aria-hidden="true"
-        />
-        <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-dim)] uppercase select-none">
-          Online
+        <span className="relative flex h-2 w-2 shrink-0">
+          {count > 0 && (
+            <span
+              className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+              style={{ backgroundColor: 'var(--color-status-active, #22c55e)' }}
+            />
+          )}
+          <span
+            className="relative inline-flex rounded-full h-2 w-2"
+            style={{ backgroundColor: count > 0 ? 'var(--color-status-active, #22c55e)' : 'var(--color-text-dim)' }}
+          />
         </span>
         {/* Count badge */}
         <span
@@ -43,7 +47,6 @@ export function PresenceBar() {
             backgroundColor: count > 0 ? 'var(--color-status-active, #22c55e)' : 'rgba(255,255,255,0.06)',
             color: count > 0 ? '#fff' : 'var(--color-text-dim)',
           }}
-          title={`${count} user${count !== 1 ? 's' : ''} online`}
         >
           {count}
         </span>

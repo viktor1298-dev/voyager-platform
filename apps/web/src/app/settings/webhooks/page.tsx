@@ -128,7 +128,23 @@ function WebhooksContent() {
       {
         accessorKey: 'successRate',
         header: 'Success Rate',
-        cell: ({ row }) => <span className="text-[11px] font-medium text-[var(--color-text-primary)]">{row.original.successRate}%</span>,
+        cell: ({ row }) => {
+          const rate = row.original.successRate
+          const color = rate > 90 ? 'var(--color-status-active, #22c55e)' : rate >= 70 ? 'var(--color-status-warning, #f59e0b)' : 'var(--color-status-error, #ef4444)'
+          return (
+            <div className="flex items-center gap-2 min-w-[80px]">
+              <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{ width: `${rate}%`, backgroundColor: color }}
+                />
+              </div>
+              <span className="text-[11px] font-medium tabular-nums" style={{ color }}>
+                {rate}%
+              </span>
+            </div>
+          )
+        },
       },
       {
         id: 'actions',

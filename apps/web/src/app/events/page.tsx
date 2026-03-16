@@ -225,10 +225,17 @@ export default function EventsPage() {
             Events
           </h1>
           <p
-            className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1"
+            className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1 flex items-center gap-1.5"
             suppressHydrationWarning
           >
-            {events.length} events · auto-refresh 30s
+            {events.length} events ·{' '}
+            <span className="inline-flex items-center gap-1">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-status-active)] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-status-active)]" />
+              </span>
+              auto-refresh 30s
+            </span>
           </p>
         </div>
 

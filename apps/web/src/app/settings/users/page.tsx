@@ -240,7 +240,7 @@ export default function SettingsUsersPage() {
         cell: ({ row }) => {
           const u = row.original
           if (u.id === currentUserId)
-            return <span className="text-[10px] text-[var(--color-text-dim)] font-mono">You</span>
+            return <Badge variant="secondary" className="text-[11px] font-semibold px-2 py-0.5 bg-[var(--color-accent)]/15 text-[var(--color-accent)] border border-[var(--color-accent)]/25">You</Badge>
           return (
             <div className="flex items-center gap-2">
               <UserActions

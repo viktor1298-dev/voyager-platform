@@ -12,7 +12,7 @@ import {
   useReactTable,
   getSortedRowModel,
 } from '@tanstack/react-table'
-import { ChevronDown, ChevronRight, ClipboardList, Search, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronRight, ClipboardList, Search, X } from 'lucide-react'
 import { Fragment, useMemo, useState } from 'react'
 import { keepPreviousData } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
@@ -45,6 +45,37 @@ const ACTION_COLORS: Record<string, { variant: 'success' | 'destructive' | 'seco
 function ActionBadge({ action }: { action: string }) {
   const config = ACTION_COLORS[action.toLowerCase()] ?? { variant: 'outline' as const }
   return <Badge variant={config.variant}>{action}</Badge>
+}
+
+function TruncatedId({ value }: { value: string | null | undefined }) {
+  const [copied, setCopied] = useState(false)
+
+  if (!value) return <span className="text-[var(--color-text-dim)]">—</span>
+
+  const isLong = value.length > 12
+  const display = isLong ? `${value.slice(0, 8)}…` : value
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // clipboard API may fail in some contexts
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="inline-flex items-center gap-1 text-[var(--color-text-muted)] font-mono text-[11px] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
+      title={`${value}\nClick to copy`}
+    >
+      {display}
+      {copied && <Check className="h-3 w-3 text-[var(--color-status-active)]" />}
+    </button>
+  )
 }
 
 const ACTION_OPTIONS = ['create', 'update', 'delete', 'restart', 'scale', 'login', 'logout']
@@ -112,7 +143,7 @@ export default function SettingsAuditPage() {
       },
       {
         accessorKey: 'resourceId', header: 'Resource ID',
-        cell: ({ row }) => <span className="text-[var(--color-text-muted)] font-mono text-[11px]">{row.original.resourceId}</span>,
+        cell: ({ row }) => <TruncatedId value={row.original.resourceId} />,
       },
       {
         accessorKey: 'ipAddress', header: 'IP Address',
