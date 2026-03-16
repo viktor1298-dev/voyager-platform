@@ -22,7 +22,7 @@ import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Database, Eye, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Database, Eye, HelpCircle, Plus, Trash2, XCircle } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -118,6 +118,20 @@ function ClusterActions({
       </div>
     </TooltipProvider>
   )
+}
+
+/** Fix #4: Health icon alongside color for accessibility */
+function HealthIcon({ status }: { status: string }) {
+  switch (status) {
+    case 'healthy':
+      return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+    case 'degraded':
+      return <AlertTriangle className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
+    case 'critical':
+      return <XCircle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
+    default:
+      return <HelpCircle className="h-3.5 w-3.5 text-[var(--color-text-dim)]" aria-hidden="true" />
+  }
 }
 
 export default function ClustersPage() {
@@ -240,6 +254,12 @@ export default function ClustersPage() {
 
   const onFiltersChange = useCallback((next: FilterValue) => setFilters(next), [])
 
+  /** Fix #5: Only show endpoint column if any cluster has an endpoint value */
+  const hasAnyEndpoint = useMemo(
+    () => filteredClusters.some((c) => c.endpoint && c.endpoint.trim() !== ''),
+    [filteredClusters],
+  )
+
   const columns = useMemo<ColumnDef<ClusterRow, unknown>[]>(
     () => [
       {
@@ -254,7 +274,7 @@ export default function ClustersPage() {
         header: 'Provider',
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <ProviderLogo provider={row.original.provider ?? 'default'} />
+            <ProviderLogo provider={row.original.provider ?? 'default'} size={20} />
             <span className="text-xs text-[var(--color-text-secondary)] font-mono uppercase">
               {row.original.provider}
             </span>
@@ -268,6 +288,7 @@ export default function ClustersPage() {
           const liveStatus = normalizeLiveHealthStatus(row.original.healthStatus ?? row.original.status)
           return (
             <div className="flex items-center gap-2">
+              <HealthIcon status={liveStatus} />
               <span className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`} />
               <Badge variant={healthBadgeVariant(liveStatus)}>
                 {healthBadgeLabel(liveStatus)}
@@ -299,14 +320,14 @@ export default function ClustersPage() {
           <span className="text-xs text-[var(--color-text-secondary)] font-mono tabular-nums">{row.original.nodeCount}</span>
         ),
       },
-      {
-        accessorKey: 'endpoint',
+      ...(hasAnyEndpoint ? [{
+        accessorKey: 'endpoint' as const,
         header: 'Endpoint',
-        cell: ({ row }) => (
+        cell: ({ row }: { row: { original: ClusterRow } }) => (
           <span className="text-xs text-[var(--color-text-secondary)] font-mono max-w-[200px] truncate block">{row.original.endpoint ?? '—'}</span>
         ),
         meta: { className: 'hidden lg:table-cell' },
-      },
+      } as ColumnDef<ClusterRow, unknown>] : []),
       {
         id: 'lastSeen',
         accessorFn: (row) => row.updatedAt,
@@ -332,7 +353,7 @@ export default function ClustersPage() {
         ),
       } as ColumnDef<ClusterRow, unknown>,
     ],
-    [getPermissionForCluster, isAdmin, isClient],
+    [getPermissionForCluster, hasAnyEndpoint, isAdmin, isClient],
   )
 
   const toCreateClusterInput = useCallback((payload: AddClusterWizardPayload): CreateClusterInput => {
@@ -374,6 +395,60 @@ export default function ClustersPage() {
 
       <FilterBar options={filterOptions} onChange={onFiltersChange} className="mb-4" />
 
+      {/* Fix #1: Card layout for ≤5 clusters, DataTable for larger sets */}
+      {!clusters.isLoading && filteredClusters.length > 0 && filteredClusters.length <= 5 ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredClusters.map((row) => {
+            const liveStatus = normalizeLiveHealthStatus(row.healthStatus ?? row.status)
+            const relation = getPermissionForCluster(row.id)
+            const tags = getClusterTags({ name: row.name, provider: row.provider ?? undefined, source: 'db' })
+            return (
+              <button
+                key={row.id}
+                type="button"
+                onClick={() => router.push(`/clusters/${getClusterRouteSegment(row)}`)}
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 cursor-pointer hover:border-[var(--color-accent)]/40 hover:bg-white/[0.02] transition-colors space-y-3 text-left"
+                aria-label={`View cluster ${row.name}`}
+              >
+                {/* Top: Provider + Name + Health */}
+                <div className="flex items-center gap-2.5">
+                  <ProviderLogo provider={row.provider ?? 'default'} size={20} layoutId={`cluster-icon-${row.id}`} />
+                  <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm flex-1">{row.name}</span>
+                  <HealthIcon status={liveStatus} />
+                  <Badge variant={healthBadgeVariant(liveStatus)}>
+                    {healthBadgeLabel(liveStatus)}
+                  </Badge>
+                </div>
+
+                {/* Metrics grid */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'Nodes', value: String(row.nodeCount) },
+                    { label: 'Version', value: row.version ?? '—' },
+                    { label: 'Provider', value: (row.provider ?? '—').toUpperCase() },
+                  ].map((m) => (
+                    <div key={m.label} className="text-center rounded-lg bg-white/[0.03] py-1.5 px-1">
+                      <div className="text-[9px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{m.label}</div>
+                      <div className={`text-xs font-bold ${m.value === '—' || m.value === '0' ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-text-primary)]'}`}>{m.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Bottom: Tags + Access + Last Seen */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {relation && <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>}
+                  {tags.slice(0, 3).map((tag) => (
+                    <span key={tag} className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-white/[0.05] text-[var(--color-text-dim)] border border-[var(--color-border)]">{tag}</span>
+                  ))}
+                  <span className="ml-auto text-[10px] text-[var(--color-text-dim)]" suppressHydrationWarning>
+                    {formatLastSeen(row.updatedAt, isClient)}
+                  </span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      ) : (
       <DataTable
         data={filteredClusters}
         columns={columns}
@@ -428,6 +503,7 @@ export default function ClustersPage() {
           )
         }}
       />
+      )}
 
       {/* Add Cluster Modal */}
       <Dialog open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Cluster">

@@ -27,6 +27,17 @@ interface PresenceEventPayload {
 const TRANSIENT_DISCONNECT_WARNING_THRESHOLD = 3
 const PERSISTENT_DISCONNECT_ERROR_THRESHOLD = 6
 
+/** Fix #6: Exponential backoff config for SSE presence reconnect */
+const BACKOFF_BASE_MS = 2_000
+const BACKOFF_MAX_MS = 60_000
+const BACKOFF_JITTER_MS = 1_000
+
+function getBackoffDelay(attempt: number): number {
+  const delay = Math.min(BACKOFF_BASE_MS * 2 ** (attempt - 1), BACKOFF_MAX_MS)
+  const jitter = Math.random() * BACKOFF_JITTER_MS
+  return delay + jitter
+}
+
 function mapIncomingUser(user: BackendPresenceUser): PresenceUser | null {
   const id = user.id ?? user.userId
   if (!id) return null
@@ -134,6 +145,8 @@ export function usePresence() {
     queryFn: fetchPresenceInitial,
     staleTime: 15_000,
     refetchInterval: 45_000,
+    retry: 3,
+    retryDelay: (attempt) => getBackoffDelay(attempt),
   })
 
   useEffect(() => {
@@ -165,20 +178,25 @@ export function usePresence() {
         consecutiveDisconnectsRef.current = attempt
 
         if (isTransientPresenceError(state.error)) {
-          if (attempt === 1 || attempt === TRANSIENT_DISCONNECT_WARNING_THRESHOLD) {
-            console.warn('[presence] subscription disconnected, retrying', {
+          const backoffMs = getBackoffDelay(attempt)
+          // Fix #6: Only log on meaningful thresholds to reduce console noise
+          if (attempt === TRANSIENT_DISCONNECT_WARNING_THRESHOLD) {
+            console.warn('[presence] subscription disconnected, retrying with backoff', {
               attempt,
+              nextRetryMs: Math.round(backoffMs),
               message: state.error.message,
             })
           }
 
-          if (attempt >= PERSISTENT_DISCONNECT_ERROR_THRESHOLD) {
-            console.error('[presence] subscription still failing after repeated retries', {
+          if (attempt === PERSISTENT_DISCONNECT_ERROR_THRESHOLD) {
+            console.error('[presence] subscription still failing — backing off to max interval', {
               attempt,
+              backoffMs: Math.round(backoffMs),
               message: state.error.message,
             })
           }
 
+          // Suppress all other transient errors (attempt 1, 2, 4, 5, 7+)
           return
         }
 
@@ -187,9 +205,11 @@ export function usePresence() {
       onError(error) {
         if (isTransientPresenceError(error)) {
           const attempt = consecutiveDisconnectsRef.current
-          if (attempt >= PERSISTENT_DISCONNECT_ERROR_THRESHOLD) {
+          // Fix #6: Only log at the persistent threshold, suppress all others
+          if (attempt >= PERSISTENT_DISCONNECT_ERROR_THRESHOLD && attempt % PERSISTENT_DISCONNECT_ERROR_THRESHOLD === 0) {
             console.error('[presence] subscription failed after retry exhaustion', {
               attempt,
+              backoffMs: Math.round(getBackoffDelay(attempt)),
               message: error.message,
             })
           }
@@ -205,9 +225,9 @@ export function usePresence() {
 
   useEffect(() => {
     const sendHeartbeat = async () => {
-      await utils.client.mutation('presence.heartbeat', { currentPage: pathname, avatar: null }).catch((error) => {
-        const message = error instanceof Error ? error.message : String(error)
-        console.warn('[presence] heartbeat failed', { message })
+      await utils.client.mutation('presence.heartbeat', { currentPage: pathname, avatar: null }).catch(() => {
+        // Fix #6: Silently swallow heartbeat failures — transient SSE/chunked encoding errors
+        // are expected every ~60s and should not flood the console
       })
 
       lastHeartbeatRef.current = Date.now()

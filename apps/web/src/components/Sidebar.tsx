@@ -92,7 +92,7 @@ export function Sidebar({
         )}
 
         {/* Main nav — flat 6 items */}
-        <nav className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+        <nav className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden" aria-label="Main navigation">
           {navItems.map((item) => {
             const active = isActive(item.id)
             const Icon = item.icon
@@ -105,7 +105,7 @@ export function Sidebar({
                 onClick={() => setMobileOpen(false)}
                 data-testid={`nav-item-${item.id.replace(/\//g, '') || 'dashboard'}`}
                 className={`
-                  relative flex items-center py-2.5 rounded-lg
+                  relative flex items-center py-2.5 rounded-lg overflow-hidden
                   ${showLabels ? 'gap-3 px-3' : 'justify-center px-0'}
                   ${active
                     ? 'text-[var(--color-text-primary)]'
@@ -146,13 +146,21 @@ export function Sidebar({
                     </motion.span>
                   )}
                 </AnimatePresence>
-                {showAlertsBadge && (
+                {showAlertsBadge && showLabels && (
                   <span
                     data-testid="alerts-badge"
                     className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 relative z-10"
                   >
                     {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
                   </span>
+                )}
+                {/* Show small indicator dot when collapsed with alerts */}
+                {showAlertsBadge && !showLabels && (
+                  <span
+                    data-testid="alerts-badge"
+                    className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 z-10"
+                    aria-label={`${unacknowledgedCount} unacknowledged alerts`}
+                  />
                 )}
               </Link>
             )

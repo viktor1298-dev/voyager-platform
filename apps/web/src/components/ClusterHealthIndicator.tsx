@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, HelpCircle, RefreshCw, XCircle } from 'lucide-react'
 import { motion } from 'motion/react'
 import { trpc } from '@/lib/trpc'
 import { HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
@@ -60,6 +60,21 @@ export function ClusterHealthIndicator({
   const color = STATUS_COLORS[entry.status] ?? 'var(--color-text-dim)'
   const statusLabel = entry.status.charAt(0).toUpperCase() + entry.status.slice(1)
   const dotSize = size === 'md' ? 'h-2.5 w-2.5' : 'h-1.5 w-1.5'
+  const iconSize = size === 'md' ? 'h-4 w-4' : 'h-3 w-3'
+
+  /** Fix #4: Icon alongside color dot for accessibility — not color-only */
+  const HealthStatusIcon = () => {
+    switch (entry.status) {
+      case 'healthy':
+        return <CheckCircle2 className={`${iconSize} text-emerald-400`} aria-hidden="true" />
+      case 'degraded':
+        return <AlertTriangle className={`${iconSize} text-amber-400`} aria-hidden="true" />
+      case 'critical':
+        return <XCircle className={`${iconSize} text-red-400`} aria-hidden="true" />
+      default:
+        return <HelpCircle className={`${iconSize} text-[var(--color-text-dim)]`} aria-hidden="true" />
+    }
+  }
 
   // REVIEW-006: use healthDotVariants animation via animate prop (inline to avoid readonly TS issue)
   const dotScaleAnim = entry.status === 'degraded'
@@ -79,6 +94,7 @@ export function ClusterHealthIndicator({
 
   return (
     <span className="inline-flex items-center gap-1 shrink-0">
+      <HealthStatusIcon />
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -96,7 +112,7 @@ export function ClusterHealthIndicator({
           <TooltipContent side="top" className="text-left">
             <div className="space-y-0.5 text-xs">
               <div className="font-semibold">{statusLabel}</div>
-              <div className="text-[var(--color-text-muted)]">Last check: {timeAgo(entry.checkedAt)}</div>
+              <div className="text-[var(--color-text-muted)]">Last check: {entry.checkedAt ? timeAgo(entry.checkedAt) : '—'}</div>
               {entry.responseTimeMs != null && (
                 <div className="text-[var(--color-text-muted)]">Response: {entry.responseTimeMs}ms</div>
               )}
