@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown, Trash2 } from 'lucide-react'
+import { ChevronDown, Search, Trash2, AlertTriangle } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { useMemo, useState } from 'react'
@@ -57,6 +57,7 @@ export default function PodsPage() {
 
   const [deletePodTarget, setDeletePodTarget] = useState<PodRow | null>(null)
   const [selectedPod, setSelectedPod] = useState<PodRow | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const pods: PodRow[] = (podsQuery.data ?? []).map((p: Record<string, unknown>, i) => ({
     id: `pod-${i}`,
@@ -64,6 +65,17 @@ export default function PodsPage() {
     restartCount: typeof p.restartCount === 'number' ? p.restartCount : null,
     ready: typeof p.ready === 'string' ? p.ready : null,
   } as PodRow))
+
+  const filteredPods = useMemo(() => {
+    if (!searchQuery.trim()) return pods
+    const q = searchQuery.toLowerCase().trim()
+    return pods.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.namespace.toLowerCase().includes(q) ||
+        p.status.toLowerCase().includes(q),
+    )
+  }, [pods, searchQuery])
 
   // When cluster has credentials but live data failed, show offline warning + last-known data
   const isOffline = isLive && liveFailed
@@ -102,8 +114,26 @@ export default function PodsPage() {
         </div>
       )}
 
+      {/* Search / filter bar */}
+      <div className="mb-3 relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--color-text-dim)]" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Filter pods by name, namespace, or status…"
+          className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] pl-9 pr-3 py-2 text-[13px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] transition-colors"
+          aria-label="Filter pods"
+        />
+        {searchQuery && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-[var(--color-text-muted)]">
+            {filteredPods.length}/{pods.length}
+          </span>
+        )}
+      </div>
+
       <PodsGroupedByNamespace
-        pods={pods}
+        pods={filteredPods}
         isLoading={podsQuery.isLoading}
         isAdmin={isAdmin === true}
         onDeletePod={setDeletePodTarget}
@@ -129,6 +159,7 @@ export default function PodsPage() {
 }
 
 function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: string; onClose: () => void }) {
+  const [confirmText, setConfirmText] = useState('')
   const utils = trpc.useUtils()
   const deleteMutation = trpc.pods.delete.useMutation({
     onSuccess: () => {
@@ -139,18 +170,55 @@ function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: 
     onError: (err) => toast.error(`Failed to delete pod: ${err.message}`),
   })
 
+  const podShortName = pod.name.length > 20 ? pod.name.slice(0, 20) : pod.name
+  const isConfirmed = confirmText === 'delete'
+
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={onClose} role="presentation">
-      <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-5 w-96 max-w-[calc(100vw-2rem)] shadow-xl" onClick={(e) => e.stopPropagation()} role="dialog">
-        <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-1">Delete Pod</h3>
-        <p className="text-[11px] text-[var(--color-text-muted)] mb-4 font-mono">{pod.namespace}/{pod.name}</p>
-        <p className="text-[12px] text-[var(--color-text-secondary)] mb-4">
-          K8s will restart it automatically.
-        </p>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center" onClick={onClose} role="presentation">
+      <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-5 w-[420px] max-w-[calc(100vw-2rem)] shadow-xl" onClick={(e) => e.stopPropagation()} role="alertdialog" aria-labelledby="delete-pod-title" aria-describedby="delete-pod-desc">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="shrink-0 rounded-full bg-red-500/10 p-2">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
+          </div>
+          <div>
+            <h3 id="delete-pod-title" className="text-sm font-bold text-[var(--color-text-primary)]">Delete Pod</h3>
+            <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 font-mono break-all">{pod.namespace}/{pod.name}</p>
+          </div>
+        </div>
+        <div id="delete-pod-desc" className="space-y-2 mb-4">
+          <p className="text-[12px] text-[var(--color-text-secondary)]">
+            Are you sure you want to delete this pod? If it&apos;s managed by a Deployment or ReplicaSet, Kubernetes will automatically restart it.
+          </p>
+          <div className="rounded-lg border border-[var(--color-status-warning)]/30 bg-[var(--color-status-warning)]/[0.06] px-3 py-2">
+            <p className="text-[11px] text-[var(--color-status-warning)]">
+              ⚠️ This action cannot be undone. Running processes inside the pod will be terminated.
+            </p>
+          </div>
+        </div>
+        <div className="mb-4">
+          <label htmlFor="confirm-delete" className="text-[11px] text-[var(--color-text-muted)] mb-1 block">
+            Type <span className="font-mono font-bold text-[var(--color-text-primary)]">delete</span> to confirm
+          </label>
+          <input
+            id="confirm-delete"
+            type="text"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder="delete"
+            className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-1.5 text-[12px] font-mono text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:ring-1 focus:ring-red-500/50"
+            autoComplete="off"
+            autoFocus
+          />
+        </div>
         <div className="flex gap-2 justify-end">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] hover:bg-white/[0.04] transition-colors">Cancel</button>
-          <button type="button" onClick={() => deleteMutation.mutate({ clusterId, namespace: pod.namespace, podName: pod.name })} disabled={deleteMutation.isPending} className="px-3 py-1.5 rounded-lg text-[12px] font-medium bg-red-600 text-white hover:opacity-90 disabled:opacity-50">
-            {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors">Cancel</button>
+          <button
+            type="button"
+            onClick={() => deleteMutation.mutate({ clusterId, namespace: pod.namespace, podName: pod.name })}
+            disabled={!isConfirmed || deleteMutation.isPending}
+            className="px-3 py-1.5 rounded-lg text-[12px] font-medium bg-red-600 text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {deleteMutation.isPending ? 'Deleting...' : 'Delete Pod'}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import type { ColumnDef } from '@tanstack/react-table'
+import { Activity } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DataTable } from '@/components/DataTable'
@@ -156,7 +157,9 @@ export default function EventsPage() {
         data={events}
         columns={eventColumns}
         loading={effectiveIsLive ? liveQuery.isLoading : dbEvents.isLoading}
-        emptyTitle="No events found"
+        emptyIcon={<Activity className="h-10 w-10" />}
+        emptyTitle="No events recorded yet"
+        emptyDescription="Kubernetes events appear here when something notable happens in your cluster — like pod scheduling, container crashes, scaling operations, or configuration changes. Events are typically retained for 1 hour by default."
         searchable
         paginated
         pageSize={25}

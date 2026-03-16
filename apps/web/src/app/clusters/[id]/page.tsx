@@ -11,7 +11,6 @@ import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { LoadingState } from '@/components/LoadingState'
-import { Progress } from '@/components/ui/progress'
 import { AiContextCard } from '@/components/AiContextCard'
 import { AiInsightBanner } from '@/components/ai/AiInsightBanner'
 import { MetricsTimeSeriesPanel } from '@/components/metrics/MetricsTimeSeriesPanel'
@@ -123,11 +122,19 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
         const v = getValue<number | null>()
         if (v == null) return metricsUnavailableCell()
         return (
-          <div className="flex items-center gap-2 min-w-[80px]">
-            <Progress value={v} className="h-1.5 flex-1" />
-            <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">
-              {v}%
-            </span>
+          <div className="flex items-center gap-2 min-w-[100px]">
+            <div className="relative flex-1 h-4 rounded-full bg-[var(--color-track)] overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full transition-all"
+                style={{
+                  width: `${Math.max(v, 2)}%`,
+                  background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
+                }}
+              />
+              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
+                {v}%
+              </span>
+            </div>
           </div>
         )
       },
@@ -148,11 +155,19 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
         const v = getValue<number | null>()
         if (v == null) return metricsUnavailableCell()
         return (
-          <div className="flex items-center gap-2 min-w-[80px]">
-            <Progress value={v} className="h-1.5 flex-1" />
-            <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">
-              {v}%
-            </span>
+          <div className="flex items-center gap-2 min-w-[100px]">
+            <div className="relative flex-1 h-4 rounded-full bg-[var(--color-track)] overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full transition-all"
+                style={{
+                  width: `${Math.max(v, 2)}%`,
+                  background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
+                }}
+              />
+              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
+                {v}%
+              </span>
+            </div>
           </div>
         )
       },

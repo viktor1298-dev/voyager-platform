@@ -156,17 +156,26 @@ export function MetricsTimeSeriesPanel({
             </p>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {!compact && (
-            <AutoRefreshToggle
-              enabled={autoRefresh}
-              interval={refreshInterval}
-              onToggle={setAutoRefresh}
-              onIntervalChange={setRefreshInterval}
-            />
-          )}
+        {!compact ? (
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">Refresh</span>
+              <AutoRefreshToggle
+                enabled={autoRefresh}
+                interval={refreshInterval}
+                onToggle={setAutoRefresh}
+                onIntervalChange={setRefreshInterval}
+              />
+            </div>
+            <div className="h-8 w-px bg-[var(--color-border)] hidden sm:block" aria-hidden="true" />
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">Time Range</span>
+              <TimeRangeSelector value={range} onChange={setRange} />
+            </div>
+          </div>
+        ) : (
           <TimeRangeSelector value={range} onChange={setRange} />
-        </div>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">

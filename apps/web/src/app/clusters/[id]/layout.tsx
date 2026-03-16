@@ -194,7 +194,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
                 {isActive && (
                   <motion.div
                     layoutId="cluster-tab-underline"
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--color-accent)]"
+                    className="absolute bottom-0 left-0 right-0 h-[3px] rounded-t-full bg-[var(--color-accent)]"
                     transition={{ type: 'spring', stiffness: 500, damping: 40 }}
                   />
                 )}

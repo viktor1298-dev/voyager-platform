@@ -1,5 +1,6 @@
 'use client'
 
+import { ExternalLink, HelpCircle } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -75,10 +76,34 @@ export default function AutoscalingPage() {
   if (noKarpenter) {
     return (
       <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+        <div className="rounded-full bg-white/[0.04] p-3 mb-3">
+          <HelpCircle className="h-8 w-8 text-[var(--color-text-dim)]" />
+        </div>
         <p className="text-sm font-medium">No autoscaling configured</p>
-        <p className="text-xs text-[var(--color-text-dim)] mt-1">
+        <p className="text-xs text-[var(--color-text-dim)] mt-1 max-w-md text-center">
           Karpenter is not installed or has no NodePools configured for this cluster.
+          Set up autoscaling to automatically provision and manage nodes based on workload demands.
         </p>
+        <div className="flex items-center gap-3 mt-4">
+          <a
+            href="https://karpenter.sh/docs/getting-started/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Karpenter Setup Guide
+          </a>
+          <a
+            href="https://karpenter.sh/docs/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Documentation
+          </a>
+        </div>
       </div>
     )
   }
@@ -87,6 +112,20 @@ export default function AutoscalingPage() {
 
   return (
     <div className="space-y-6">
+      {/* Docs link header */}
+      <div className="flex items-center justify-end">
+        <a
+          href="https://karpenter.sh/docs/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+          Karpenter Docs
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      </div>
+
       {/* Metrics Summary */}
       {metrics && (
         <section>
