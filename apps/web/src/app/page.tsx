@@ -20,8 +20,8 @@ import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
 import { useDashboardLayout } from '@/stores/dashboard-layout'
-import { AlertTriangle, Box, CheckCircle2, Database, LayoutGrid, Pencil, Server, ShieldAlert, TriangleAlert, XCircle } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
+import { AlertTriangle, Box, CheckCircle2, ChevronDown, Database, LayoutGrid, Pencil, Server, ShieldAlert, TriangleAlert, XCircle } from 'lucide-react'
+import { AnimatePresence, m } from 'motion/react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
@@ -311,7 +311,7 @@ function DashboardContent() {
       <PageTransition>
         <header className="mb-3 flex items-start justify-between gap-4">
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[var(--color-text-dim)]">
+            <p className="text-[10px] font-semibold tracking-[0.08em] text-[var(--color-text-dim)]">
               Operations overview
             </p>
             <h1 className="text-base font-semibold tracking-tight text-[var(--color-text-primary)] sm:text-lg">
@@ -482,7 +482,7 @@ function DashboardContent() {
 
                       <div className="grid gap-5 3xl:grid-cols-[280px_minmax(0,1fr)] 3xl:items-start">
                         <aside className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/50 p-4 2xl:p-5">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--color-text-dim)]">
+                          <p className="text-[10px] font-semibold tracking-[0.08em] text-[var(--color-text-dim)]">
                             {meta.label} environment
                           </p>
                           <p className="mt-2 text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">
@@ -504,7 +504,7 @@ function DashboardContent() {
                                   >
                                     <item.meta.icon className="h-3.5 w-3.5" style={{ color: item.meta.dotColor }} />
                                   </span>
-                                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-dim)]">
+                                  <span className="text-[11px] font-semibold tracking-[0.04em] text-[var(--color-text-dim)]">
                                     {item.meta.label}
                                   </span>
                                 </div>
@@ -532,7 +532,7 @@ function DashboardContent() {
                                   <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/70">
                                     <GroupIcon className="h-3.5 w-3.5" style={{ color: healthMeta.dotColor }} />
                                   </span>
-                                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
+                                  <span className="text-[11px] font-semibold tracking-[0.04em] text-[var(--color-text-dim)]">
                                     {healthMeta.label}
                                   </span>
                                   <span className="text-[11px] font-medium tabular-nums text-[var(--color-text-dim)]">
@@ -571,7 +571,7 @@ function DashboardPageFallback() {
     <AppLayout>
       <PageTransition>
         <header className="mb-3">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[var(--color-text-muted)]">
+          <p className="text-[10px] font-semibold tracking-[0.08em] text-[var(--color-text-muted)]">
             Operations overview
           </p>
           <h1 className="mt-1 text-base font-semibold text-[var(--color-text-secondary)]">Dashboard</h1>
@@ -618,7 +618,7 @@ function ClusterCard({
 
   return (
     <Link href={`/clusters/${cluster.id}`}>
-      <motion.div
+      <m.div
         layout
         className="group relative flex h-full cursor-pointer flex-col rounded-2xl border border-[var(--color-border)]/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] px-4 py-4 shadow-[0_16px_38px_rgba(0,0,0,0.16)] transition-colors hover:border-[var(--color-border-hover)]"
         initial={{ opacity: 0, y: 6 }}
@@ -668,12 +668,12 @@ function ClusterCard({
         <div className="mt-4 rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/48 p-3">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-dim)]">
+              <p className="text-[11px] font-semibold tracking-[0.04em] text-[var(--color-text-dim)]">
                 Status summary
               </p>
               <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{statusSummary}</p>
             </div>
-            <span className="rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-card)]/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-dim)]">
+            <span className="rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-card)]/80 px-2.5 py-1 text-[10px] font-medium tracking-[0.02em] text-[var(--color-text-dim)]">
               {sourceSummary}
             </span>
           </div>
@@ -689,7 +689,7 @@ function ClusterCard({
               key={metric.label}
               className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/36 px-3 py-2.5"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-dim)]">
+              <p className="text-[10px] font-semibold tracking-[0.04em] text-[var(--color-text-dim)]">
                 {metric.label}
               </p>
               <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{metric.value}</p>
@@ -697,11 +697,12 @@ function ClusterCard({
           ))}
         </div>
 
+        {/* Fix #3: tag chips are display-only — no hover change, no pointer, select-none */}
         <div className="mt-4 flex flex-wrap gap-2 pl-2">
           {capabilityBadges.map((badge) => (
             <span
               key={badge}
-              className="inline-flex items-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-dim)]"
+              className="pointer-events-none inline-flex select-none items-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/55 px-2.5 py-1 text-[10px] font-medium tracking-[0.04em] text-[var(--color-text-dim)]"
             >
               {badge}
             </span>
@@ -718,7 +719,7 @@ function ClusterCard({
             Source: {cluster.source === 'live' ? 'live stream' : 'registered'}
           </span>
         </div>
-      </motion.div>
+      </m.div>
     </Link>
   )
 }
@@ -740,34 +741,37 @@ function CompactStatsBar({
   healthCounts?: { healthy: number; degraded: number; critical: number }
   isLoading?: boolean
 }) {
+  const [expanded, setExpanded] = useState(false)
+
   if (isLoading) {
-    return <div className="mb-6 h-28 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/40 animate-pulse" />
+    return <div className="mb-5 h-14 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/40 animate-pulse" />
   }
 
+  /* Fix #6: normalize icon sizes — all KPI icons use h-3.5 w-3.5 consistently */
   const stats = [
     {
-      icon: <Server className="h-4 w-4" />,
+      icon: <Server className="h-3.5 w-3.5" />,
       value: String(totalNodes),
       label: 'Nodes',
       accent: 'var(--color-accent)',
       helper: 'Active compute capacity',
     },
     {
-      icon: <Box className="h-4 w-4" />,
+      icon: <Box className="h-3.5 w-3.5" />,
       value: `${runningPods}/${totalPods}`,
       label: 'Pods',
       accent: 'var(--color-status-active)',
       helper: 'Running vs observed',
     },
     {
-      icon: <Database className="h-4 w-4" />,
+      icon: <Database className="h-3.5 w-3.5" />,
       value: String(clusterCount),
       label: 'Clusters',
       accent: 'var(--color-accent)',
       helper: 'Fleet-wide inventory',
     },
     {
-      icon: <AlertTriangle className="h-4 w-4" />,
+      icon: <AlertTriangle className="h-3.5 w-3.5" />,
       value: String(warningEvents),
       label: 'Warnings',
       accent: warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-secondary)',
@@ -776,70 +780,106 @@ function CompactStatsBar({
   ]
 
   return (
-    <section className="mb-6 rounded-3xl border border-[var(--color-border)]/80 bg-[linear-gradient(135deg,rgba(91,135,255,0.16),rgba(255,255,255,0.02))] p-4 shadow-[0_26px_70px_rgba(0,0,0,0.22)] backdrop-blur sm:p-5">
-      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--color-text-dim)]">
-            Main KPIs
-          </p>
-          <h2 className="mt-1 text-xl font-semibold tracking-tight text-[var(--color-text-primary)] sm:text-2xl">
-            Operations pulse
-          </h2>
-          <p className="mt-1 text-sm text-[var(--color-text-dim)]">
-            Make this the first thing your eye lands on: fleet volume, pod health, and warning pressure.
-          </p>
-        </div>
-
-        {healthCounts && (
-          <div className="flex flex-wrap items-center gap-2">
-            {(
-              [
-                { key: 'healthy', label: '✓ Healthy', value: healthCounts.healthy, tone: 'var(--color-status-active)' },
-                { key: 'degraded', label: '⚠ Warning', value: healthCounts.degraded, tone: 'var(--color-status-warning)' },
-                { key: 'critical', label: '✕ Critical', value: healthCounts.critical, tone: 'var(--color-status-error)' },
-              ] as const
-            ).map((item) => (
-              <span
-                key={item.key}
-                className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold"
-                style={{
-                  color: item.tone,
-                  borderColor: `${item.tone}55`,
-                  backgroundColor: `${item.tone}14`,
-                }}
-              >
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.tone }} />
-                {item.label}
-                <span className="tabular-nums text-[var(--color-text-primary)]">{item.value}</span>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-2xl border border-[var(--color-border)]/80 bg-[var(--color-bg-card)]/72 p-4 shadow-[0_14px_34px_rgba(0,0,0,0.16)]"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <span
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border"
-                style={{ color: stat.accent, borderColor: `${stat.accent}44`, backgroundColor: `${stat.accent}18` }}
-              >
-                {stat.icon}
-              </span>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--color-text-dim)]">
-                {stat.label}
-              </span>
+    <section className="mb-5">
+      {/* Collapsed: compact KPI strip — always visible */}
+      <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/40 backdrop-blur">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors hover:bg-white/[0.03]"
+          aria-expanded={expanded}
+          aria-controls="operations-pulse-panel"
+          data-testid="operations-pulse-toggle"
+        >
+          <div className="flex items-center gap-4 overflow-x-auto">
+            <span className="shrink-0 text-[11px] font-semibold tracking-[0.04em] text-[var(--color-text-dim)]">
+              Operations pulse
+            </span>
+            <div className="flex items-center gap-3">
+              {stats.map((stat) => (
+                <span key={stat.label} className="inline-flex shrink-0 items-center gap-1.5 text-xs">
+                  <span
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-md"
+                    style={{ color: stat.accent, backgroundColor: `${stat.accent}18` }}
+                  >
+                    {stat.icon}
+                  </span>
+                  <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">{stat.value}</span>
+                  <span className="text-[var(--color-text-dim)]">{stat.label}</span>
+                </span>
+              ))}
             </div>
-            <div className="mt-4">
-              <p className="text-2xl font-semibold tracking-tight text-[var(--color-text-primary)]">{stat.value}</p>
-              <p className="mt-1 text-xs text-[var(--color-text-dim)]">{stat.helper}</p>
-            </div>
+            {healthCounts && (
+              <div className="hidden items-center gap-2 lg:flex">
+                <span className="mx-1 h-4 w-px bg-[var(--color-border)]/60" />
+                {(
+                  [
+                    { key: 'healthy', label: 'Healthy', value: healthCounts.healthy, tone: 'var(--color-status-active)' },
+                    { key: 'degraded', label: 'Warning', value: healthCounts.degraded, tone: 'var(--color-status-warning)' },
+                    { key: 'critical', label: 'Critical', value: healthCounts.critical, tone: 'var(--color-status-error)' },
+                  ] as const
+                ).map((item) => (
+                  <span
+                    key={item.key}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-medium"
+                    style={{ color: item.tone }}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: item.tone }} />
+                    <span className="tabular-nums">{item.value}</span>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-        ))}
+          <ChevronDown
+            className={cn(
+              'h-4 w-4 shrink-0 text-[var(--color-text-dim)] transition-transform duration-200',
+              expanded && 'rotate-180',
+            )}
+          />
+        </button>
+
+        {/* Expanded: detailed KPI cards */}
+        <AnimatePresence>
+          {expanded && (
+            <m.div
+              id="operations-pulse-panel"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="border-t border-[var(--color-border)]/50 px-4 pb-4 pt-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {stats.map((stat) => (
+                    <div
+                      key={stat.label}
+                      className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-card)]/60 p-3"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        {/* Fix #6: normalized icon container — h-8 w-8 rounded-xl consistently */}
+                        <span
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-xl border"
+                          style={{ color: stat.accent, borderColor: `${stat.accent}44`, backgroundColor: `${stat.accent}18` }}
+                        >
+                          {stat.icon}
+                        </span>
+                        <span className="text-[10px] font-semibold tracking-[0.04em] text-[var(--color-text-dim)]">
+                          {stat.label}
+                        </span>
+                      </div>
+                      <div className="mt-3">
+                        <p className="text-xl font-semibold tracking-tight text-[var(--color-text-primary)]">{stat.value}</p>
+                        <p className="mt-0.5 text-[11px] text-[var(--color-text-dim)]">{stat.helper}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </m.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   )

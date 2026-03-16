@@ -117,16 +117,18 @@ export function ClusterHealthIndicator({
         </motion.span>
       )}
 
-      {/* Optional check now button — REVIEW-003: plain button, CSS only (no Motion opacity conflict) */}
+      {/* Fix #4: "Check now" always visible at low opacity, full on hover — closer to health dot */}
       {onCheck !== undefined && (
         <button
           type="button"
-          className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-[var(--color-accent)] hover:text-[var(--color-text-primary)] cursor-pointer disabled:opacity-40"
+          className="ml-0.5 inline-flex shrink-0 items-center gap-1 rounded-md border border-transparent px-1 py-0.5 text-[9px] font-medium text-[var(--color-accent)] opacity-50 transition-all hover:border-[var(--color-accent)]/25 hover:bg-[var(--color-accent)]/10 hover:opacity-100 disabled:opacity-30"
           title="Check now"
+          aria-label={`Run health check for cluster ${clusterId}`}
           onClick={handleCheck}
           disabled={checking}
         >
           <RefreshCw className={`h-3 w-3 ${checking ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Check</span>
         </button>
       )}
     </span>
