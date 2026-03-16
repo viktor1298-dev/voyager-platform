@@ -1,10 +1,10 @@
 {
   "version": "v223",
-  "status": "running",
-  "currentStage": "DEPLOYED",
+  "status": "deployed-awaiting-review",
+  "currentStage": "merge-tag-v223",
   "phase": "build-deploy-v223",
   "fixLoopCount": 0,
-  "timestamp": "2026-03-16T21:00:50.683098",
+  "timestamp": "2026-03-16T22:27:00+02:00",
   "branch": "feat/init-monorepo",
   "tag": "v221",
   "baseVersion": "v206",
@@ -38,7 +38,11 @@
     "dev-frontend-v222-batch2-dashboard",
     "dev-frontend-v222-batch3-clusters-sidebar",
     "dev-frontend-v222-batch4-cluster-detail",
-    "dev-frontend-v222-batch5-settings-global"
+    "dev-frontend-v222-batch5-settings-global",
+    "build-deploy-v223",
+    "e2e-v223",
+    "fix-e2e-tests-v223",
+    "review-v223"
   ],
   "failedStages": [
     "e2e-v205",
@@ -48,10 +52,8 @@
     "e2e-v216",
     "e2e-v217"
   ],
-  "inProgress": [
-    "build-deploy-v223"
-  ],
-  "notes": "UX Audit ALL 5 BATCHES COMPLETE: 38/38 items fixed. Batches: Login \u2705 (7), Dashboard \u2705 (6), Clusters \u2705 (7), Detail \u2705 (8), Polish \u2705 (11). Building v223 for deploy + E2E.",
+  "inProgress": [],
+  "notes": "UX Audit ALL 5 BATCHES COMPLETE: 38/38 items fixed. Batches: Login \u2705 (7), Dashboard \u2705 (6), Clusters \u2705 (7), Detail \u2705 (8), Polish \u2705 (11). Building v223 for deploy + E2E. | QA v223 PASS (9.3/10, mai). E2E v223 PASS (0 failures). Foreman stalled before receiving QA result. Guardian respawning Foreman at 2026-03-16T22:16:02.972666.",
   "blockedReason": null,
   "deployedInK8s": "v223",
   "evidence": {
@@ -70,7 +72,9 @@
     "e2e-v220": "pipeline-evidence/e2e-v220.json",
     "qa-v220": "pipeline-evidence/qa-v220.json",
     "review-v221": "pipeline-evidence/review-v221.json",
-    "qa-v221-batch1": "pipeline-evidence/qa-v221.json"
+    "qa-v221-batch1": "pipeline-evidence/qa-v221.json",
+    "e2e-v223": "pipeline-evidence/e2e-v223.json",
+    "review-v223": "pipeline-evidence/review-v223.json"
   },
   "gates": {
     "e2e": {
@@ -89,6 +93,11 @@
       "status": "PASS",
       "score": 10.0,
       "items": "7/7"
+    },
+    "review": {
+      "status": "PASS",
+      "score": 10,
+      "verdict": "APPROVED"
     }
   },
   "uxAudit": {
@@ -188,13 +197,27 @@
         "multi-cluster.spec.ts: getByPlaceholder('us-east-1') matched 2 elements \u2014 added exact:true"
       ],
       "fix": "e34aa5a"
+    },
+    "v223": {
+      "source": "e2e-v223",
+      "testBugs": 9,
+      "areas": [
+        "8x cluster tests: selectors expect table but UI uses card layout",
+        "1x toast test: textContent() timing issue"
+      ],
+      "note": "Zero code bugs. All failures are test selector mismatches."
     }
   },
   "e2eRerunCount": 3,
   "gitPushPending": false,
   "gitPushNote": "Pushed 16 commits (92a0f0c..e34aa5a) on 2026-03-16 after Vik refreshed GitHub token. Branch synced.",
-  "foremanRespawnCount": 3,
-  "guardianNote": "Foreman resumed pipeline after Guardian respawn. All gates passed. Awaiting Guardian final verification.",
-  "completedAt": null,
-  "verifiedBy": null
+  "foremanRespawnCount": 5,
+  "guardianNote": "Guardian respawned Foreman at 2026-03-16T21:10 IST to run E2E+QA for v223. Deploy complete, audit 38/38 done. | Guardian declared deployed-awaiting-review at 2026-03-16T22:15 IST \u2014 all 6 gates passed.",
+  "completedAt": "2026-03-16T22:15:00+02:00",
+  "verifiedBy": "guardian",
+  "foremanSpawnedAt": "2026-03-16T19:13:32.300904",
+  "evidenceFiles": [
+    "qa-v223.json",
+    "e2e-v223.json"
+  ]
 }

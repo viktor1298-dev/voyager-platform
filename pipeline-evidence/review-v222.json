@@ -1,0 +1,56 @@
+{
+  "score": 9,
+  "verdict": "CHANGES_REQUESTED",
+  "test_coverage_checked": true,
+  "files_reviewed": [
+    "apps/web/src/app/page.tsx",
+    "apps/web/src/components/ClusterHealthIndicator.tsx"
+  ],
+  "lines_changed": 198,
+  "commit": "52c4919",
+  "branch": "worktree/ron",
+  "base_commit": "a4f933c",
+  "reviewed_at": "2026-03-16T19:32:00+02:00",
+  "reviewer": "lior",
+  "env_blocked_items": [],
+  "summary": "UX Audit Batch 2 — 6 dashboard fixes. Clean, well-scoped work. One medium issue: new motion.div in CompactStatsBar collapsible should use m.div for LazyMotion strict consistency, and missing aria-controls on the toggle. All other changes (ALLCAPS removal, tag chips, Check Now button, KPI icon normalization) are excellent.",
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "description": "New motion.div added at line 844 for CompactStatsBar collapse animation. With LazyMotion strict={true} in providers.tsx, the convention should be m.div (from motion/react-m). The entire codebase currently uses motion.* which works at runtime with Motion v12.34.0, but for strict mode correctness and bundle optimization, the new code should follow the m.* pattern. Since this is a codebase-wide pre-existing pattern, downgraded from HIGH to MEDIUM — but the new code should not add to the debt.",
+      "file": "apps/web/src/app/page.tsx",
+      "line": 844,
+      "fix": "Import { m } from 'motion/react' and use <m.div> instead of <motion.div> for the collapsible animation. Note: this is also a pre-existing issue at line 621 (ClusterCard)."
+    },
+    {
+      "severity": "LOW",
+      "description": "Toggle button has aria-expanded but lacks aria-controls pointing to the expanded panel's id. Minor a11y gap for screen readers.",
+      "file": "apps/web/src/app/page.tsx",
+      "line": 796,
+      "fix": "Add id='operations-pulse-panel' to the expanded motion.div and aria-controls='operations-pulse-panel' to the button."
+    },
+    {
+      "severity": "LOW",
+      "description": "CompactStatsBar starts collapsed (useState(false)). The E2E test phase3-v194-animation.spec.ts:107 'dashboard renders stat cards' uses soft detection ([data-testid*='stat']) — won't fail but will now report 'No stat cards in test env'. Consider adding a test that clicks the toggle and verifies expanded state.",
+      "file": "apps/web/src/app/page.tsx",
+      "line": 744,
+      "fix": "No code change needed, but a new E2E test for the collapsible Operations Pulse toggle (data-testid='operations-pulse-toggle') would improve coverage."
+    },
+    {
+      "severity": "NITPICK",
+      "description": "Health counts in collapsed bar use hidden lg:flex — on smaller screens the health summary is invisible. Consider a compact mobile representation.",
+      "file": "apps/web/src/app/page.tsx",
+      "line": 816,
+      "fix": "Optional: show health dot counts on mobile with a more compact layout."
+    }
+  ],
+  "positive_findings": [
+    "Clean ALLCAPS removal across 8+ elements — consistent tracking-[0.04em]/[0.08em] replacement",
+    "Capability badges properly made non-interactive with pointer-events-none + select-none",
+    "Check Now button well-implemented: opacity-50 baseline visible, aria-label with clusterId, responsive label",
+    "KPI icon sizes properly normalized: h-3.5 w-3.5 icons, h-8 w-8 containers, rounded-xl",
+    "Collapsible CompactStatsBar is clean — good AnimatePresence usage, data-testid added, aria-expanded present",
+    "No architecture violations: no server.ts changes, no migrate(), no schema changes",
+    "Env badges correctly retain uppercase as the sole exception"
+  ]
+}
