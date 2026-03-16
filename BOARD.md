@@ -122,7 +122,7 @@
 Each phase follows this flow:
 - [x] Dev complete (Ron/Shiri/Dima) → report to Discord [v207 2026-03-14 auth/logout follow-up: middleware cookie expiry + protected-route returnUrl fix]
 - [x] Code review (Lior) → 10/10 APPROVED → evidence: pipeline-evidence/review-v223.json *(v223, 2026-03-16)*
-- [ ] Merge + tag (Gil) → `v194-phase1` / `v194-phase2` / `v194-phase3`
+- [x] Merge + tag (Gil) → committed e611e53, pushed to origin/feat/init-monorepo. v223 tag at 8db0ac6 (deployed images match) *(v223, 2026-03-16)*
 - [x] Deploy (Uri) → helm uninstall + helm install → image tag verified [v205 2026-03-14]
 - [x] E2E (Yuval) → 113/0/39 PASS → evidence: pipeline-evidence/e2e-v223.json *(v223, 2026-03-16)*
 - [x] QA (Mai) → 9.3/10 PASS → evidence: pipeline-evidence/qa-v223.json *(v223, 2026-03-16)*

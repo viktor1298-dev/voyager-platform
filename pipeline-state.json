@@ -1,10 +1,10 @@
 {
   "version": "v223",
   "status": "deployed-awaiting-review",
-  "currentStage": "merge-tag-v223",
+  "currentStage": "deployed-awaiting-review",
   "phase": "build-deploy-v223",
   "fixLoopCount": 0,
-  "timestamp": "2026-03-16T22:27:00+02:00",
+  "timestamp": "2026-03-16T22:31:32.221295+02:00",
   "branch": "feat/init-monorepo",
   "tag": "v221",
   "baseVersion": "v206",
@@ -42,7 +42,8 @@
     "build-deploy-v223",
     "e2e-v223",
     "fix-e2e-tests-v223",
-    "review-v223"
+    "review-v223",
+    "merge-tag-v223"
   ],
   "failedStages": [
     "e2e-v205",
@@ -53,7 +54,7 @@
     "e2e-v217"
   ],
   "inProgress": [],
-  "notes": "UX Audit ALL 5 BATCHES COMPLETE: 38/38 items fixed. Batches: Login \u2705 (7), Dashboard \u2705 (6), Clusters \u2705 (7), Detail \u2705 (8), Polish \u2705 (11). Building v223 for deploy + E2E. | QA v223 PASS (9.3/10, mai). E2E v223 PASS (0 failures). Foreman stalled before receiving QA result. Guardian respawning Foreman at 2026-03-16T22:16:02.972666.",
+  "notes": "ALL GATES PASS for v223: E2E 113/0/39, QA 9.3/10, Review 10/10 APPROVED. BOARD.md 1 remaining item (Guardian self-check). Deployed voyager-api:v223 + voyager-web:v223. Git pushed commit e611e53. Status: deployed-awaiting-review.",
   "blockedReason": null,
   "deployedInK8s": "v223",
   "evidence": {
