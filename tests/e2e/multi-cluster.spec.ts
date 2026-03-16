@@ -140,9 +140,9 @@ test.describe('Multi-cluster flows (Phase D)', () => {
     await page.getByRole('radio', { name: /aws eks/i }).click();
     await page.getByRole('button', { name: /go to next step|next/i }).click();
 
-    await page.getByLabel(/access key id/i).fill('AKIAE2EEXAMPLE');
-    await page.getByLabel(/secret access key/i).fill('secret-test-value');
-    await page.getByLabel(/region/i).fill('us-east-1');
+    await page.getByPlaceholder('AKIAIOSFODNN7EXAMPLE').fill('AKIAE2EEXAMPLE');
+    await page.getByPlaceholder('Secret Access Key').fill('secret-test-value');
+    await page.getByPlaceholder('us-east-1').fill('us-west-2');
 
     const next = page.getByRole('button', { name: /go to next step|next/i });
     await expect(next).toBeEnabled();
