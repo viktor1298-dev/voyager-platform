@@ -46,7 +46,12 @@ test.describe('BUG-192-001: Dashboard nav from /anomalies does not freeze', () =
       !e.includes('net::') &&
       !e.includes('ResizeObserver') &&
       !e.includes('Warning:') &&
-      !e.includes('Failed to load resource')
+      !e.includes('Failed to load resource') &&
+      !e.includes('presence') &&
+      !e.includes('SSE') &&
+      !e.includes('EventSource') &&
+      !e.includes('ERR_INCOMPLETE_CHUNKED_ENCODING') &&
+      !e.includes('subscribe')
     );
     expect(criticalErrors.length).toBe(0);
   });

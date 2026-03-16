@@ -21,7 +21,7 @@ test.describe('Dashboard UX contract', () => {
     await expect(page).toHaveURL(/environment=prod/);
 
     // Click "all" to clear the filter
-    const allButton = page.getByRole('button', { name: /^all$/i }).first();
+    const allButton = page.getByRole('button', { name: /^all/i }).first();
     await expect(allButton).toBeVisible({ timeout: 15_000 });
     await allButton.click();
 
