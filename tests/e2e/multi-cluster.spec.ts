@@ -142,7 +142,7 @@ test.describe('Multi-cluster flows (Phase D)', () => {
 
     await page.getByPlaceholder('AKIAIOSFODNN7EXAMPLE').fill('AKIAE2EEXAMPLE');
     await page.getByPlaceholder('Secret Access Key').fill('secret-test-value');
-    await page.getByPlaceholder('us-east-1').fill('us-west-2');
+    await page.getByPlaceholder('us-east-1', { exact: true }).fill('us-west-2');
 
     const next = page.getByRole('button', { name: /go to next step|next/i });
     await expect(next).toBeEnabled();
