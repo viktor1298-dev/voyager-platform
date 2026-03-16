@@ -37,15 +37,15 @@ export function VoyagerLogo({ className = '', size = 48 }: { className?: string;
         fill="url(#logoGradient)"
         opacity="0.7"
       />
-      {/* Exhaust flame */}
+      {/* Exhaust flame — colors from CSS variables */}
       <path
         d="M28 52C28 52 30 60 32 60C34 60 36 52 36 52C36 52 34 56 32 56C30 56 28 52 28 52Z"
-        fill="#f59e0b"
+        fill="var(--color-logo-flame-outer, #f59e0b)"
         opacity="0.8"
       />
       <path
         d="M30 53C30 53 31 58 32 58C33 58 34 53 34 53C34 53 33 56 32 56C31 56 30 53 30 53Z"
-        fill="#fbbf24"
+        fill="var(--color-logo-flame-inner, #fbbf24)"
         opacity="0.9"
       />
       {/* Stars */}
@@ -57,9 +57,9 @@ export function VoyagerLogo({ className = '', size = 48 }: { className?: string;
       <circle cx="14" cy="30" r="0.8" fill="currentColor" opacity="0.3" />
       <defs>
         <linearGradient id="logoGradient" x1="14" y1="8" x2="50" y2="60" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#7c8cf8" />
-          <stop offset="0.5" stopColor="#6366f1" />
-          <stop offset="1" stopColor="#818cf8" />
+          <stop stopColor="var(--color-logo-gradient-start, #7c8cf8)" />
+          <stop offset="0.5" stopColor="var(--color-logo-gradient-mid, #6366f1)" />
+          <stop offset="1" stopColor="var(--color-logo-gradient-end, #818cf8)" />
         </linearGradient>
       </defs>
     </svg>

@@ -118,6 +118,14 @@
   --color-chart-info: #38bdf8;
   --color-accent: #7c8cf8;
 
+  /* VoyagerLogo gradient stops */
+  --color-logo-gradient-start: #7c8cf8;
+  --color-logo-gradient-mid: #6366f1;
+  --color-logo-gradient-end: #818cf8;
+  /* VoyagerLogo exhaust flame */
+  --color-logo-flame-outer: #f59e0b;
+  --color-logo-flame-inner: #fbbf24;
+
   /* Glow effects */
   --glow-healthy: 0 0 20px rgba(16, 185, 129, 0.15);
   --glow-healthy-hover: 0 0 30px rgba(16, 185, 129, 0.25);
@@ -206,6 +214,13 @@ html.light {
   --color-chart-warning: #d97706;
   --color-chart-info: #0284c7;
   --color-accent: #6366f1;
+
+  /* VoyagerLogo gradient stops (light mode) */
+  --color-logo-gradient-start: #6366f1;
+  --color-logo-gradient-mid: #4f46e5;
+  --color-logo-gradient-end: #6366f1;
+  --color-logo-flame-outer: #d97706;
+  --color-logo-flame-inner: #f59e0b;
 
   --glass-bg: rgba(255, 255, 255, 0.6);
   --glass-border: rgba(0, 0, 0, 0.06);

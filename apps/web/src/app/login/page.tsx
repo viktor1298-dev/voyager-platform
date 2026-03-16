@@ -240,13 +240,13 @@ function LoginPageContent() {
               Navigate your Kubernetes fleet with confidence. Monitor, manage, and optimize — all in one place.
             </p>
 
-            {/* Decorative dots grid */}
+            {/* Decorative dots grid — deterministic opacity to avoid hydration mismatch */}
             <div className="mt-12 grid grid-cols-5 gap-2 opacity-20">
               {Array.from({ length: 25 }).map((_, i) => (
                 <div
                   key={i}
                   className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]"
-                  style={{ opacity: Math.random() * 0.7 + 0.3 }}
+                  style={{ opacity: ((i * 7 + 3) % 10) / 10 * 0.7 + 0.3 }}
                 />
               ))}
             </div>
@@ -354,21 +354,20 @@ function LoginPageContent() {
                     )}
                   </form.Field>
 
-                  {/* Forgot password link (Item #4) */}
+                  {/* Forgot password (Item #4) — uses <button> for a11y since it triggers an action, not navigation */}
                   <div className="mt-1.5 text-right">
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault()
+                    <button
+                      type="button"
+                      onClick={() => {
                         toast.info('Contact your administrator to reset your password.', {
                           description: 'Password reset is managed by your organization admin.',
                           duration: 5000,
                         })
                       }}
-                      className="text-xs text-[var(--color-accent)] hover:underline focus:outline-none focus:underline"
+                      className="text-xs text-[var(--color-accent)] hover:underline focus:outline-none focus:underline bg-transparent border-none cursor-pointer p-0"
                     >
                       Forgot password?
-                    </a>
+                    </button>
                   </div>
                 </div>
 
