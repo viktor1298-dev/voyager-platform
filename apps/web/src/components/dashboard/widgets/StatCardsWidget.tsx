@@ -74,14 +74,14 @@ function StatCard({
       }}
     >
       <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="text-[10px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono truncate">
+        <span className="text-xs text-[var(--color-text-dim)] uppercase tracking-wider font-mono truncate">
           {label}
         </span>
         {isLoading ? (
           <SkeletonText width="2.5rem" height="1.5rem" />
         ) : (
           <div
-            className={cn('text-2xl font-semibold tabular-nums tracking-tight', gradient !== 'none' && 'gradient-text')}
+            className={cn('text-2xl font-semibold font-mono tabular-nums tracking-tight', gradient !== 'none' && 'gradient-text')}
             style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
           >
             <AnimatedNumber value={value} />

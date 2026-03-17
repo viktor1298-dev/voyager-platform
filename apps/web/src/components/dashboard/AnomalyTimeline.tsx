@@ -98,9 +98,9 @@ function TimelineDistributionBar({ anomalies }: { anomalies: Anomaly[] }) {
         })}
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[9px] text-[var(--color-text-dim)] font-mono">-24h</span>
-        <span className="text-[9px] text-[var(--color-text-dim)] font-mono">-12h</span>
-        <span className="text-[9px] text-[var(--color-text-dim)] font-mono">now</span>
+        <span className="text-xs text-[var(--color-text-dim)] font-mono">-24h</span>
+        <span className="text-xs text-[var(--color-text-dim)] font-mono">-12h</span>
+        <span className="text-xs text-[var(--color-text-dim)] font-mono">now</span>
       </div>
     </div>
   )
@@ -119,7 +119,7 @@ function SeveritySummary({ anomalies }: { anomalies: Anomaly[] }) {
       {(['critical', 'warning', 'info'] as const).map((sev) => (
         <span
           key={sev}
-          className="flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded"
+          className="flex items-center gap-1 text-xs font-mono px-1.5 py-0.5 rounded"
           style={{
             color: SEVERITY_COLORS[sev],
             background: `color-mix(in srgb, ${SEVERITY_COLORS[sev]} 10%, transparent)`,
@@ -163,7 +163,7 @@ export function AnomalyTimeline() {
         </h3>
         <Link
           href="/anomalies"
-          className="text-[10px] font-medium text-[var(--color-accent)] hover:underline"
+          className="text-xs font-medium text-[var(--color-accent)] hover:underline"
         >
           View all →
         </Link>
@@ -195,15 +195,15 @@ export function AnomalyTimeline() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-[var(--color-text-dim)] font-mono">
+                    <span className="text-xs text-[var(--color-text-dim)] font-mono">
                       {a.cluster}
                     </span>
-                    <span className="text-[10px] text-[var(--color-text-dim)]">·</span>
-                    <span className="text-[10px] text-[var(--color-text-dim)] font-mono">
+                    <span className="text-xs text-[var(--color-text-dim)]">·</span>
+                    <span className="text-xs text-[var(--color-text-dim)] font-mono">
                       {a.type}
                     </span>
-                    <span className="text-[10px] text-[var(--color-text-dim)]">·</span>
-                    <span className="text-[10px] text-[var(--color-text-dim)] font-mono">
+                    <span className="text-xs text-[var(--color-text-dim)]">·</span>
+                    <span className="text-xs text-[var(--color-text-dim)] font-mono">
                       {timeAgo(a.detectedAt)}
                     </span>
                   </div>

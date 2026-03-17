@@ -12,6 +12,7 @@ import { authClient, getAuthBaseUrl } from '@/lib/auth-client'
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
 import { toast } from 'sonner'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const loginSchema = z.object({
   email: z
@@ -409,6 +410,8 @@ function LoginPageContent() {
 }
 
 export default function LoginPage() {
+  usePageTitle('Login')
+
   return (
     <Suspense fallback={null}>
       <LoginPageContent />

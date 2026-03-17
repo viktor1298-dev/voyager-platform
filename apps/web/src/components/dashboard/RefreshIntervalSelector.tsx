@@ -44,7 +44,7 @@ export function RefreshIntervalSelector({
       {/* LIVE pulsing indicator */}
       <div
         className={cn(
-          'flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-all duration-300',
+          'flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-300',
           isLive
             ? 'bg-[var(--color-status-healthy)]/15 text-[var(--color-status-healthy)] border border-[var(--color-status-healthy)]/30'
             : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-dim)] border border-[var(--color-border)]',

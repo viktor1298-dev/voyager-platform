@@ -23,7 +23,7 @@ function SparklineTooltip({
 }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-[11px] shadow-lg">
+    <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs shadow-lg">
       <span className="font-mono font-medium text-[var(--color-text-primary)]">
         {payload[0]?.value ?? 0}{unit ? ` ${unit}` : ''}
       </span>

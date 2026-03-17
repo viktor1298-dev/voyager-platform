@@ -5,6 +5,7 @@ import { Compass, Home, Search, BarChart3, Server, Bell, Settings, Activity } fr
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const POPULAR_PAGES = [
   { href: '/', label: 'Dashboard', icon: BarChart3 },
@@ -15,6 +16,8 @@ const POPULAR_PAGES = [
 ]
 
 export default function NotFoundPage() {
+  usePageTitle('404 — Not Found')
+
   const router = useRouter()
   const [query, setQuery] = useState('')
 
@@ -64,7 +67,7 @@ export default function NotFoundPage() {
 
         {/* Popular pages */}
         <div className="mb-8">
-          <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mb-3">Popular pages</p>
+          <p className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider mb-3">Popular pages</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {POPULAR_PAGES.map((page) => {
               const Icon = page.icon

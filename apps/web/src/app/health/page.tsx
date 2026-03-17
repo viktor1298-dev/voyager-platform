@@ -7,6 +7,7 @@ import { TableSkeleton } from '@/components/Skeleton'
 import { trpc } from '@/lib/trpc'
 import { normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { timeAgo } from '@/lib/time-utils'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import {
   Activity,
   AlertTriangle,
@@ -83,6 +84,8 @@ function UptimeBars({ history }: { history: Array<{ status: string; checkedAt: s
 }
 
 export default function HealthPage() {
+  usePageTitle('System Health')
+
   const healthQuery = trpc.health.status.useQuery({}, { refetchInterval: 30_000 })
   const eventsQuery = trpc.events.list.useQuery(
     { limit: 20 },
@@ -156,7 +159,7 @@ export default function HealthPage() {
                     {avgLatency != null ? `${avgLatency}ms` : '—'}
                   </span>
                 </div>
-                <span className="text-[10px] text-[var(--color-text-dim)]">Avg API Latency</span>
+                <span className="text-xs text-[var(--color-text-dim)]">Avg API Latency</span>
               </div>
               <div>
                 <div className="flex items-center gap-1.5 justify-end">
@@ -165,7 +168,7 @@ export default function HealthPage() {
                     {warningEvents.length}
                   </span>
                 </div>
-                <span className="text-[10px] text-[var(--color-text-dim)]">Warnings (recent)</span>
+                <span className="text-xs text-[var(--color-text-dim)]">Warnings (recent)</span>
               </div>
               <div>
                 <div className="flex items-center gap-1.5 justify-end">
@@ -174,7 +177,7 @@ export default function HealthPage() {
                     {normalEvents.length}
                   </span>
                 </div>
-                <span className="text-[10px] text-[var(--color-text-dim)]">Events (recent)</span>
+                <span className="text-xs text-[var(--color-text-dim)]">Events (recent)</span>
               </div>
             </div>
           </div>
@@ -197,9 +200,9 @@ export default function HealthPage() {
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-x-auto mb-6">
             {/* Header */}
             <div className="grid grid-cols-6 gap-2 px-4 py-3 border-b border-[var(--color-border)] bg-white/[0.02] min-w-[600px]">
-              <span className="text-[10px] font-bold text-[var(--color-text-dim)] uppercase col-span-2">Cluster</span>
+              <span className="text-xs font-bold text-[var(--color-text-dim)] uppercase col-span-2">Cluster</span>
               {COMPONENT_NAMES.map((name) => (
-                <span key={name} className="text-[10px] font-bold text-[var(--color-text-dim)] uppercase text-center">
+                <span key={name} className="text-xs font-bold text-[var(--color-text-dim)] uppercase text-center">
                   {name}
                 </span>
               ))}
@@ -227,7 +230,7 @@ export default function HealthPage() {
                     <span className="text-sm text-[var(--color-text-primary)] font-medium truncate">
                       {entry.clusterName}
                     </span>
-                    <span className="text-[10px] text-[var(--color-text-dim)] font-mono ml-auto">
+                    <span className="text-xs text-[var(--color-text-dim)] font-mono ml-auto">
                       {entry.responseTimeMs != null ? `${entry.responseTimeMs}ms` : ''}
                     </span>
                   </div>
@@ -278,7 +281,7 @@ export default function HealthPage() {
                     <div className="h-1.5 rounded-full bg-[var(--color-border)] overflow-hidden">
                       <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
                     </div>
-                    <p className="text-[10px] text-[var(--color-text-dim)] mt-1">
+                    <p className="text-xs text-[var(--color-text-dim)] mt-1">
                       {ms < LATENCY_GOOD ? 'Excellent' : ms < LATENCY_WARN ? 'Moderate' : 'Slow'} response
                     </p>
                   </div>
@@ -317,7 +320,7 @@ export default function HealthPage() {
                         ? `Last sync: ${timeAgo(entry.checkedAt as string)}`
                         : 'Never synced'}
                     </p>
-                    <p className="text-[10px] text-[var(--color-text-dim)] mt-0.5">
+                    <p className="text-xs text-[var(--color-text-dim)] mt-0.5">
                       Provider: {entry.provider}
                     </p>
                   </div>
@@ -340,12 +343,12 @@ export default function HealthPage() {
                     <span className="text-xs font-medium text-[var(--color-text-secondary)]">
                       {entry.clusterName}
                     </span>
-                    <span className="text-[10px] text-[var(--color-text-dim)] font-mono">
+                    <span className="text-xs text-[var(--color-text-dim)] font-mono">
                       {normalizeLiveHealthStatus(entry.status).toUpperCase()}
                     </span>
                   </div>
                   <UptimeBars history={historyMap[entry.clusterId] ?? []} />
-                  <div className="flex justify-between mt-1.5 text-[10px] text-[var(--color-text-dim)] font-mono">
+                  <div className="flex justify-between mt-1.5 text-xs text-[var(--color-text-dim)] font-mono">
                     <span>24h ago</span>
                     <span>Now</span>
                   </div>
@@ -361,7 +364,7 @@ export default function HealthPage() {
                 ].map(({ color, label }) => (
                   <div key={label} className="flex items-center gap-1.5">
                     <span className={`h-2.5 w-2.5 rounded-sm ${color}`} />
-                    <span className="text-[10px] text-[var(--color-text-dim)]">{label}</span>
+                    <span className="text-xs text-[var(--color-text-dim)]">{label}</span>
                   </div>
                 ))}
               </div>
@@ -414,7 +417,7 @@ export default function HealthPage() {
                   <div className="flex-1 min-w-0 pb-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span
-                        className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                        className={`text-xs font-bold uppercase px-1.5 py-0.5 rounded ${
                           isWarning
                             ? 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)]'
                             : 'bg-[var(--color-border)] text-[var(--color-text-dim)]'
@@ -427,7 +430,7 @@ export default function HealthPage() {
                           {event.reason}
                         </span>
                       )}
-                      <span className="text-[10px] text-[var(--color-text-dim)] ml-auto">
+                      <span className="text-xs text-[var(--color-text-dim)] ml-auto">
                         {event.timestamp ? timeAgo(event.timestamp as string) : '—'}
                       </span>
                     </div>
@@ -437,7 +440,7 @@ export default function HealthPage() {
                       </p>
                     )}
                     {event.namespace && (
-                      <p className="text-[10px] text-[var(--color-text-dim)] mt-0.5 font-mono">
+                      <p className="text-xs text-[var(--color-text-dim)] mt-0.5 font-mono">
                         ns: {event.namespace}
                       </p>
                     )}

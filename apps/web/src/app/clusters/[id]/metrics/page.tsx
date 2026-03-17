@@ -4,8 +4,11 @@ import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { MetricsTimeSeriesPanel } from '@/components/metrics/MetricsTimeSeriesPanel'
 import { trpc } from '@/lib/trpc'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export default function MetricsPage() {
+  usePageTitle('Cluster Metrics')
+
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
 

@@ -15,6 +15,7 @@ import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { usePermission } from '@/hooks/usePermission'
 import { authClient } from '@/lib/auth-client'
 import { trpc } from '@/lib/trpc'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const createUserSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -82,7 +83,7 @@ function UserActions({
         type="button"
         onClick={onToggleRole}
         disabled={pending}
-        className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[10px] font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
+        className="inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-xs font-medium text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
       >
         <UserCog className="h-3 w-3" />
         {user.role === 'admin' ? 'Demote' : 'Promote'}
@@ -102,6 +103,8 @@ function UserActions({
 export const dynamic = 'force-dynamic'
 
 export default function SettingsUsersPage() {
+  usePageTitle('Settings — Users')
+
   const router = useRouter()
   const { data: session, isPending: isSessionPending } = authClient.useSession()
   const currentUserId = session?.user?.id
@@ -199,7 +202,7 @@ export default function SettingsUsersPage() {
         header: 'Email',
         enableSorting: true,
         cell: ({ row }) => (
-          <span className="text-[var(--color-text-muted)] font-mono text-[12px]">
+          <span className="text-[var(--color-text-muted)] font-mono text-xs">
             {row.original.email}
           </span>
         ),
@@ -228,7 +231,7 @@ export default function SettingsUsersPage() {
         header: 'Created',
         accessorFn: (row) => row.createdAt,
         cell: ({ row }) => (
-          <span className="text-[var(--color-text-muted)] text-[12px]">
+          <span className="text-[var(--color-text-muted)] text-xs">
             {formatDate(row.original.createdAt)}
           </span>
         ),
@@ -240,7 +243,7 @@ export default function SettingsUsersPage() {
         cell: ({ row }) => {
           const u = row.original
           if (u.id === currentUserId)
-            return <Badge variant="secondary" className="text-[11px] font-semibold px-2 py-0.5 bg-[var(--color-accent)]/15 text-[var(--color-accent)] border border-[var(--color-accent)]/25">You</Badge>
+            return <Badge variant="secondary" className="text-xs font-semibold px-2 py-0.5 bg-[var(--color-accent)]/15 text-[var(--color-accent)] border border-[var(--color-accent)]/25">You</Badge>
           return (
             <div className="flex items-center gap-2">
               <UserActions
@@ -286,7 +289,7 @@ export default function SettingsUsersPage() {
           <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
             User Management
           </h2>
-          <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
+          <p className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
             {`${users.length} users`}
           </p>
         </div>

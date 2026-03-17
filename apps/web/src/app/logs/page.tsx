@@ -10,6 +10,7 @@ import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
 import { Download, FileText, Pause, Play, RefreshCw, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 /** Try to pretty-print JSON log messages */
 function tryFormatJson(message: string): string {
@@ -121,6 +122,8 @@ function SelectField({
 }
 
 export default function LogsPage() {
+  usePageTitle('Logs')
+
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const [selectedNamespace, setSelectedNamespace] = useState<string>('')
   const [selectedPods, setSelectedPods] = useState<string[]>([]) // keys: namespace/pod
@@ -501,7 +504,7 @@ export default function LogsPage() {
                     <span className="text-xs text-[var(--color-log-dim)] font-mono">
                       {selectedTargets.length} pod(s) • {selectedLevels.join(', ')}
                       {isRegexMode && searchTerm && !regexError && (
-                        <span className="ml-2 rounded bg-[var(--color-accent)]/20 px-1.5 py-0.5 text-[10px] text-[var(--color-accent)]">
+                        <span className="ml-2 rounded bg-[var(--color-accent)]/20 px-1.5 py-0.5 text-xs text-[var(--color-accent)]">
                           regex
                         </span>
                       )}

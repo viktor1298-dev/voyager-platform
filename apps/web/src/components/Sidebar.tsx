@@ -140,7 +140,7 @@ export function Sidebar({
                       animate={{ opacity: 1, width: 'auto' }}
                       exit={{ opacity: 0, width: 0 }}
                       transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
-                      className="sidebar-label text-[13px] font-medium relative z-10 overflow-hidden whitespace-nowrap"
+                      className="sidebar-label text-sm font-medium relative z-10 overflow-hidden whitespace-nowrap"
                     >
                       {item.label}
                     </motion.span>
@@ -149,7 +149,7 @@ export function Sidebar({
                 {showAlertsBadge && showLabels && (
                   <span
                     data-testid="alerts-badge"
-                    className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 relative z-10"
+                    className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold px-1 relative z-10"
                   >
                     {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
                   </span>
@@ -177,7 +177,7 @@ export function Sidebar({
                 transition={{ duration: 0.15 }}
                 className="mt-2 border-t border-[var(--color-border)]/60 pt-2"
               >
-                <p className="px-2 mb-1 text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
+                <p className="px-2 mb-1 text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
                   Clusters
                 </p>
                 <div className="space-y-1">
@@ -189,7 +189,7 @@ export function Sidebar({
                         key={cluster.id}
                         href={`/clusters/${cluster.id}`}
                         onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/5"
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/5"
                       >
                         <span
                           className="h-1.5 w-1.5 rounded-full shrink-0"
@@ -232,7 +232,7 @@ export function Sidebar({
               transition={{ duration: 0.15 }}
               className="px-3 py-2 mt-0"
             >
-              <div className="text-[11px] text-[var(--color-text-secondary)] font-mono text-left whitespace-nowrap opacity-70">
+              <div className="text-xs text-[var(--color-text-secondary)] font-mono text-left whitespace-nowrap opacity-70">
                 Voyager {APP_VERSION}
               </div>
             </motion.div>

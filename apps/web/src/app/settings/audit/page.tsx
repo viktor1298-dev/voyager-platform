@@ -19,6 +19,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useRouter } from 'next/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useEffect } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 type AuditEntry = {
   id: string
@@ -69,7 +70,7 @@ function TruncatedId({ value }: { value: string | null | undefined }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center gap-1 text-[var(--color-text-muted)] font-mono text-[11px] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1 text-[var(--color-text-muted)] font-mono text-xs hover:text-[var(--color-accent)] transition-colors cursor-pointer"
       title={`${value}\nClick to copy`}
     >
       {display}
@@ -84,6 +85,8 @@ const PAGE_SIZE = 20
 export const dynamic = 'force-dynamic'
 
 export default function SettingsAuditPage() {
+  usePageTitle('Settings — Audit Log')
+
   const router = useRouter()
   const isAdmin = useIsAdmin()
   const [sorting, setSorting] = useState<SortingState>([{ id: 'timestamp', desc: true }])
@@ -127,11 +130,11 @@ export default function SettingsAuditPage() {
       },
       {
         accessorKey: 'timestamp', header: 'Timestamp',
-        cell: ({ row }) => <span className="text-[var(--color-text-muted)] font-mono text-[11px] whitespace-nowrap">{new Date(row.original.timestamp).toLocaleString()}</span>,
+        cell: ({ row }) => <span className="text-[var(--color-text-muted)] font-mono text-xs whitespace-nowrap">{new Date(row.original.timestamp).toLocaleString()}</span>,
       },
       {
         accessorKey: 'userEmail', header: 'User',
-        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">{row.original.userEmail}</span>,
+        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] font-mono text-xs">{row.original.userEmail}</span>,
       },
       {
         accessorKey: 'action', header: 'Action',
@@ -147,7 +150,7 @@ export default function SettingsAuditPage() {
       },
       {
         accessorKey: 'ipAddress', header: 'IP Address',
-        cell: ({ row }) => <span className="text-[var(--color-text-dim)] font-mono text-[11px]">{row.original.ipAddress}</span>,
+        cell: ({ row }) => <span className="text-[var(--color-text-dim)] font-mono text-xs">{row.original.ipAddress}</span>,
       },
     ],
     [],
@@ -182,7 +185,7 @@ export default function SettingsAuditPage() {
 
       <div className="mb-6">
         <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Audit Log</h2>
-        <p className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">{total} entries</p>
+        <p className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">{total} entries</p>
       </div>
 
       {/* Filters */}
@@ -203,7 +206,7 @@ export default function SettingsAuditPage() {
         <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(0) }} className={selectClass} title="From date" />
         <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(0) }} className={selectClass} title="To date" />
         {(actionFilter || emailSearch || dateFrom || dateTo) && (
-          <button type="button" onClick={() => { setActionFilter(''); setEmailSearch(''); setDateFrom(''); setDateTo(''); setPage(0) }} className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] underline cursor-pointer">
+          <button type="button" onClick={() => { setActionFilter(''); setEmailSearch(''); setDateFrom(''); setDateTo(''); setPage(0) }} className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] underline cursor-pointer">
             Clear all
           </button>
         )}
@@ -217,7 +220,7 @@ export default function SettingsAuditPage() {
               {table.getHeaderGroups().map((hg) => (
                 <tr key={hg.id} className="border-b border-[var(--color-border)]">
                   {hg.headers.map((header) => (
-                    <th key={header.id} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-dim)]" style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }} onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}>
+                    <th key={header.id} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-dim)]" style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }} onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}>
                       <span className={header.column.getCanSort() ? 'cursor-pointer select-none' : ''}>
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getIsSorted() === 'asc' ? ' ↑' : header.column.getIsSorted() === 'desc' ? ' ↓' : ''}
@@ -256,7 +259,7 @@ export default function SettingsAuditPage() {
                         <tr key={`${row.id}-expanded`}>
                           <td colSpan={columns.length} className="px-4 py-0">
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                              <pre className="text-[11px] font-mono text-[var(--color-text-muted)] bg-[var(--color-bg-primary)] rounded-lg p-4 my-2 overflow-x-auto">
+                              <pre className="text-xs font-mono text-[var(--color-text-muted)] bg-[var(--color-bg-primary)] rounded-lg p-4 my-2 overflow-x-auto">
                                 {JSON.stringify(row.original.details, null, 2)}
                               </pre>
                             </motion.div>

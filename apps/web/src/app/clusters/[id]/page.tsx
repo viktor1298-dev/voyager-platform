@@ -18,6 +18,7 @@ import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-statu
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 function asText(value: unknown, fallback = '—'): string {
   if (typeof value === 'string') {
@@ -54,7 +55,7 @@ interface EventRow {
 function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>[] {
   const metricsUnavailableCell = () => (
     <span
-      className="text-[var(--color-text-dim)] text-[11px] italic"
+      className="text-[var(--color-text-dim)] text-xs italic"
       title="Install metrics-server in your cluster to enable resource metrics"
     >
       {metricsAvailable ? '—' : 'metrics-server required'}
@@ -94,7 +95,7 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
       accessorKey: 'kubeletVersion',
       header: 'Kubelet',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
           {getValue<string>()}
         </span>
       ),
@@ -103,14 +104,14 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
       accessorKey: 'os',
       header: 'OS',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-muted)] text-[12px]">{getValue<string>()}</span>
+        <span className="text-[var(--color-text-muted)] text-xs">{getValue<string>()}</span>
       ),
     },
     {
       accessorKey: 'cpu',
       header: 'CPU',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
           {getValue<string>()}
         </span>
       ),
@@ -131,7 +132,7 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
                   background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
                 }}
               />
-              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
                 {v}%
               </span>
             </div>
@@ -143,7 +144,7 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
       accessorKey: 'memory',
       header: 'Memory',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
           {getValue<string>()}
         </span>
       ),
@@ -164,7 +165,7 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
                   background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
                 }}
               />
-              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
                 {v}%
               </span>
             </div>
@@ -182,7 +183,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
     cell: ({ getValue }) => {
       const ts = getValue<string | null>()
       return (
-        <span className="text-[var(--color-text-dim)] font-mono text-[11px] whitespace-nowrap">
+        <span className="text-[var(--color-text-dim)] font-mono text-xs whitespace-nowrap">
           {ts ? timeAgo(ts) : '—'}
         </span>
       )
@@ -195,7 +196,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
       const type = getValue<string>()
       return (
         <span
-          className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+          className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
           style={{
             color: severityColor(type),
             background: `color-mix(in srgb, ${severityColor(type)} 15%, transparent)`,
@@ -219,7 +220,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
     accessorKey: 'message',
     header: 'Message',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-muted)] text-[12px] max-w-[400px] truncate block">
+      <span className="text-[var(--color-text-muted)] text-xs max-w-[400px] truncate block">
         {getValue<string>()}
       </span>
     ),
@@ -227,6 +228,8 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
 ]
 
 export default function ClusterOverviewPage() {
+  usePageTitle('Cluster Overview')
+
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
 
@@ -481,11 +484,11 @@ export default function ClusterOverviewPage() {
           >
             <div className="flex items-center gap-2 mb-1">
               <stat.icon className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
-              <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
+              <span className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
                 {stat.label}
               </span>
               {isUnreachable && (
-                <span className="text-[8px] font-mono px-1 py-0.5 rounded bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)] ml-auto">
+                <span className="text-xs font-mono px-1 py-0.5 rounded bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)] ml-auto">
                   STALE
                 </span>
               )}
@@ -493,7 +496,7 @@ export default function ClusterOverviewPage() {
             {/* P3-006: Animated stat count-up */}
             <AnimatedStatCount
               value={stat.value}
-              className={`text-lg font-bold ${
+              className={`text-lg font-bold font-mono tabular-nums ${
                 stat.value === '—' || stat.value === '0' || stat.value === '0 / 0'
                   ? 'text-[var(--color-text-dim)] opacity-60'
                   : 'text-[var(--color-text-primary)]'
@@ -527,7 +530,7 @@ export default function ClusterOverviewPage() {
             className="flex items-center gap-3 py-2 border-b border-[var(--color-border)]/30 last:border-0"
           >
             <span
-              className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+              className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
               style={{
                 color: severityColor(event.type),
                 background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)`,
@@ -541,13 +544,13 @@ export default function ClusterOverviewPage() {
             <span className="flex-1 text-xs text-[var(--color-text-muted)] truncate">
               {event.message}
             </span>
-            <span className="text-[10px] text-[var(--color-text-dim)] font-mono shrink-0">
+            <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
               {event.timestamp ? timeAgo(event.timestamp) : '—'}
             </span>
           </div>
         ))}
         {events.length === 0 && (
-          <p className="text-[12px] text-[var(--color-text-muted)] py-2">No recent events.</p>
+          <p className="text-xs text-[var(--color-text-muted)] py-2">No recent events.</p>
         )}
       </div>
 

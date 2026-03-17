@@ -33,7 +33,7 @@ function SparklineTooltip({ active, payload }: { active?: boolean; payload?: Arr
   const d = payload[0]?.payload
   if (!d) return null
   return (
-    <div className="rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-[10px] font-mono shadow-lg">
+    <div className="rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs font-mono shadow-lg">
       <div style={{ color: 'hsl(262,83%,58%)' }}>CPU {d.cpu}%</div>
       <div style={{ color: 'hsl(199,89%,48%)' }}>Mem {d.memory}%</div>
     </div>
@@ -83,7 +83,7 @@ export function ResourceSparkline({
         style={{ width, height }}
         title="Insufficient data for sparkline"
       >
-        <span className="font-mono text-[9px] text-[var(--color-text-dim)]">—</span>
+        <span className="font-mono text-xs text-[var(--color-text-dim)]">—</span>
       </div>
     )
   }
@@ -125,10 +125,10 @@ export function ResourceSparkline({
         </LineChart>
       </ResponsiveContainer>
       <div className="shrink-0 flex flex-col gap-0.5">
-        <span className="font-mono tabular-nums leading-none text-[9px]" style={{ color: cpuColor }}>
+        <span className="font-mono tabular-nums leading-none text-xs" style={{ color: cpuColor }}>
           {lastPoint?.cpu ?? 0}%
         </span>
-        <span className="font-mono tabular-nums leading-none text-[9px]" style={{ color: memColor }}>
+        <span className="font-mono tabular-nums leading-none text-xs" style={{ color: memColor }}>
           {lastPoint?.memory ?? 0}%
         </span>
       </div>

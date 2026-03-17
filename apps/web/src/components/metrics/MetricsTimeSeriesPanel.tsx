@@ -159,7 +159,7 @@ export function MetricsTimeSeriesPanel({
         {!compact ? (
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex flex-col items-end gap-1">
-              <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">Refresh</span>
+              <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-dim)]">Refresh</span>
               <AutoRefreshToggle
                 enabled={autoRefresh}
                 interval={refreshInterval}
@@ -169,7 +169,7 @@ export function MetricsTimeSeriesPanel({
             </div>
             <div className="h-8 w-px bg-[var(--color-border)] hidden sm:block" aria-hidden="true" />
             <div className="flex flex-col items-end gap-1">
-              <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">Time Range</span>
+              <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-dim)]">Time Range</span>
               <TimeRangeSelector value={range} onChange={setRange} />
             </div>
           </div>
@@ -188,7 +188,7 @@ export function MetricsTimeSeriesPanel({
               type="button"
               onClick={() => toggleMetric(metricKey)}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-mono font-medium transition-all',
+                'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-mono font-medium transition-all',
                 active
                   ? 'border-transparent text-white'
                   : 'border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
@@ -279,7 +279,7 @@ export function MetricsTimeSeriesPanel({
       {isLive && nodes.length > 0 && !compact && <NodeResourceBreakdown nodes={nodes} />}
 
       {historyQuery.dataUpdatedAt > 0 && !compact && (
-        <p className="text-right font-mono text-[10px] text-[var(--color-text-dim)]">
+        <p className="text-right font-mono text-xs text-[var(--color-text-dim)]">
           Last updated: {new Date(historyQuery.dataUpdatedAt).toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',

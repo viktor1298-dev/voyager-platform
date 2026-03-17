@@ -7,8 +7,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from 'react-resizable-panels'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export default function LogsPage() {
+  usePageTitle('Cluster Logs')
+
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
 
@@ -111,14 +114,14 @@ export default function LogsPage() {
       <div className="flex flex-wrap items-center gap-3">
         {/* Pod selector */}
         <div className="flex items-center gap-2">
-          <label htmlFor="pod-select" className="text-[12px] text-[var(--color-text-muted)] shrink-0">
+          <label htmlFor="pod-select" className="text-xs text-[var(--color-text-muted)] shrink-0">
             Pod:
           </label>
           <select
             id="pod-select"
             value={selectedPod}
             onChange={(e) => setSelectedPod(e.target.value)}
-            className="text-[12px] font-mono rounded-lg px-2 py-1 bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] max-w-[260px]"
+            className="text-xs font-mono rounded-lg px-2 py-1 bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] max-w-[260px]"
           >
             {podsQuery.isLoading && (
               <option value="">Loading pods…</option>
@@ -137,14 +140,14 @@ export default function LogsPage() {
         {/* Container selector */}
         {currentPod && currentPod.containers.length > 1 && (
           <div className="flex items-center gap-2">
-            <label htmlFor="container-select" className="text-[12px] text-[var(--color-text-muted)] shrink-0">
+            <label htmlFor="container-select" className="text-xs text-[var(--color-text-muted)] shrink-0">
               Container:
             </label>
             <select
               id="container-select"
               value={selectedContainer}
               onChange={(e) => setSelectedContainer(e.target.value)}
-              className="text-[12px] font-mono rounded-lg px-2 py-1 bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
+              className="text-xs font-mono rounded-lg px-2 py-1 bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
             >
               {currentPod.containers.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -155,14 +158,14 @@ export default function LogsPage() {
 
         {/* Tail lines */}
         <div className="flex items-center gap-2">
-          <label htmlFor="tail-select" className="text-[12px] text-[var(--color-text-muted)] shrink-0">
+          <label htmlFor="tail-select" className="text-xs text-[var(--color-text-muted)] shrink-0">
             Lines:
           </label>
           <select
             id="tail-select"
             value={tailLines}
             onChange={(e) => setTailLines(Number(e.target.value))}
-            className="text-[12px] font-mono rounded-lg px-2 py-1 bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
+            className="text-xs font-mono rounded-lg px-2 py-1 bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
           >
             <option value={50}>50</option>
             <option value={100}>100</option>
@@ -181,7 +184,7 @@ export default function LogsPage() {
             onChange={(e) => setAutoScroll(e.target.checked)}
             className="accent-[var(--color-accent)] h-3.5 w-3.5"
           />
-          <span className="text-[12px] text-[var(--color-text-muted)]">Auto-scroll</span>
+          <span className="text-xs text-[var(--color-text-muted)]">Auto-scroll</span>
         </label>
 
         {/* Refresh button */}
@@ -189,7 +192,7 @@ export default function LogsPage() {
           type="button"
           onClick={() => void logsQuery.refetch()}
           disabled={logsQuery.isFetching}
-          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] disabled:opacity-50 transition-colors"
+          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] disabled:opacity-50 transition-colors"
           aria-label="Refresh logs"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${logsQuery.isFetching ? 'animate-spin' : ''}`} />
@@ -210,13 +213,13 @@ export default function LogsPage() {
             {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-4 w-full opacity-30" />)}
           </div>
         ) : logsQuery.isError ? (
-          <p className="text-[12px] text-[var(--color-status-error)] font-mono">
+          <p className="text-xs text-[var(--color-status-error)] font-mono">
             Error: {logsQuery.error?.message ?? 'Failed to fetch logs'}
           </p>
         ) : logLines.length === 0 ? (
-          <p className="text-[12px] text-[var(--color-text-dim)] font-mono">No log output.</p>
+          <p className="text-xs text-[var(--color-text-dim)] font-mono">No log output.</p>
         ) : (
-          <pre className="text-[12px] font-mono text-green-400/90 whitespace-pre-wrap break-all leading-5">
+          <pre className="text-xs font-mono text-green-400/90 whitespace-pre-wrap break-all leading-5">
             {logLines.map((line, i) => {
               const isError = /error|fatal|panic/i.test(line)
               const isWarn = /warn/i.test(line)
@@ -234,7 +237,7 @@ export default function LogsPage() {
       </div>
 
       {!logsQuery.isLoading && logLines.length > 0 && (
-        <p className="text-[11px] text-[var(--color-text-dim)] font-mono">
+        <p className="text-xs text-[var(--color-text-dim)] font-mono">
           {logLines.length} line{logLines.length !== 1 ? 's' : ''}
         </p>
       )}
@@ -249,28 +252,28 @@ export default function LogsPage() {
       {/* Lower panel: Info / metadata */}
       <Panel defaultSize={25} minSize={10} className="overflow-auto">
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 h-full">
-          <p className="text-[11px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider mb-3">
+          <p className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider mb-3">
             Pod Info
           </p>
           {selectedPod ? (
             <div className="space-y-1.5">
-              <div className="flex gap-2 text-[12px]">
+              <div className="flex gap-2 text-xs">
                 <span className="text-[var(--color-text-dim)] w-24 shrink-0">Pod:</span>
                 <span className="font-mono text-[var(--color-text-secondary)] truncate">{selectedPod}</span>
               </div>
               {selectedContainer && (
-                <div className="flex gap-2 text-[12px]">
+                <div className="flex gap-2 text-xs">
                   <span className="text-[var(--color-text-dim)] w-24 shrink-0">Container:</span>
                   <span className="font-mono text-[var(--color-text-secondary)]">{selectedContainer}</span>
                 </div>
               )}
-              <div className="flex gap-2 text-[12px]">
+              <div className="flex gap-2 text-xs">
                 <span className="text-[var(--color-text-dim)] w-24 shrink-0">Lines shown:</span>
                 <span className="font-mono text-[var(--color-text-secondary)]">{logLines.length} / {tailLines}</span>
               </div>
             </div>
           ) : (
-            <p className="text-[12px] text-[var(--color-text-dim)] font-mono">Select a pod above to view logs.</p>
+            <p className="text-xs text-[var(--color-text-dim)] font-mono">Select a pod above to view logs.</p>
           )}
         </div>
       </Panel>

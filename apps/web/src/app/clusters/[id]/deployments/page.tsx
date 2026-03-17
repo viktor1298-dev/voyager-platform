@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react'
 import { DataTable } from '@/components/DataTable'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface DeploymentRow {
   id: string
@@ -39,7 +40,7 @@ const columns: ColumnDef<DeploymentRow, unknown>[] = [
     accessorKey: 'namespace',
     header: 'Namespace',
     cell: ({ getValue }) => (
-      <span className="font-mono text-[12px] text-[var(--color-text-muted)]">
+      <span className="font-mono text-xs text-[var(--color-text-muted)]">
         {getValue<string>()}
       </span>
     ),
@@ -53,7 +54,7 @@ const columns: ColumnDef<DeploymentRow, unknown>[] = [
       const ok = a === b && Number(a) > 0
       return (
         <span
-          className="font-mono text-[12px] px-1.5 py-0.5 rounded"
+          className="font-mono text-xs px-1.5 py-0.5 rounded"
           style={{
             color: ok ? 'var(--color-status-active)' : 'var(--color-status-warning)',
             background: `color-mix(in srgb, ${ok ? 'var(--color-status-active)' : 'var(--color-status-warning)'} 12%, transparent)`,
@@ -68,7 +69,7 @@ const columns: ColumnDef<DeploymentRow, unknown>[] = [
     accessorKey: 'image',
     header: 'Image',
     cell: ({ getValue }) => (
-      <span className="font-mono text-[11px] text-[var(--color-text-muted)] max-w-[200px] truncate block" title={getValue<string>()}>
+      <span className="font-mono text-xs text-[var(--color-text-muted)] max-w-[200px] truncate block" title={getValue<string>()}>
         {getValue<string>()}
       </span>
     ),
@@ -80,7 +81,7 @@ const columns: ColumnDef<DeploymentRow, unknown>[] = [
       const val = getValue<string>()
       return (
         <span
-          className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+          className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
           style={{
             color: statusColor(val),
             background: `color-mix(in srgb, ${statusColor(val)} 15%, transparent)`,
@@ -95,7 +96,7 @@ const columns: ColumnDef<DeploymentRow, unknown>[] = [
     accessorKey: 'age',
     header: 'Age',
     cell: ({ getValue }) => (
-      <span className="font-mono text-[11px] text-[var(--color-text-dim)]">
+      <span className="font-mono text-xs text-[var(--color-text-dim)]">
         {getValue<string>()}
       </span>
     ),
@@ -103,6 +104,8 @@ const columns: ColumnDef<DeploymentRow, unknown>[] = [
 ]
 
 export default function DeploymentsPage() {
+  usePageTitle('Cluster Deployments')
+
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
 
@@ -164,14 +167,14 @@ export default function DeploymentsPage() {
       {/* Namespace filter */}
       {allNamespaces.length > 0 && (
         <div className="flex items-center gap-2">
-          <label className="text-[12px] text-[var(--color-text-muted)]" htmlFor="ns-filter">
+          <label className="text-xs text-[var(--color-text-muted)]" htmlFor="ns-filter">
             Namespace:
           </label>
           <select
             id="ns-filter"
             value={nsFilter}
             onChange={(e) => setNsFilter(e.target.value)}
-            className="text-[12px] font-mono rounded-lg px-2 py-1 bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
+            className="text-xs font-mono rounded-lg px-2 py-1 bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
           >
             <option value="all">All namespaces</option>
             {allNamespaces.map((ns) => (
@@ -195,7 +198,7 @@ export default function DeploymentsPage() {
             <div className="flex items-center justify-between gap-2 mb-1">
               <span className="font-mono text-[13px] font-medium text-[var(--color-text-primary)] truncate">{d.name}</span>
               <span
-                className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
+                className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
                 style={{
                   color: statusColor(d.status),
                   background: `color-mix(in srgb, ${statusColor(d.status)} 15%, transparent)`,
@@ -204,12 +207,12 @@ export default function DeploymentsPage() {
                 {d.status}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-[11px] text-[var(--color-text-muted)]">
+            <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
               <span className="font-mono">{d.namespace}</span>
               <span>Ready: {d.ready}</span>
               <span>{d.age}</span>
             </div>
-            <p className="font-mono text-[10px] text-[var(--color-text-dim)] mt-1 truncate">{d.image}</p>
+            <p className="font-mono text-xs text-[var(--color-text-dim)] mt-1 truncate">{d.image}</p>
           </div>
         )}
       />

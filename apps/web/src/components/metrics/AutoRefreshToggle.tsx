@@ -49,7 +49,7 @@ export function AutoRefreshToggle({
               type="button"
               onClick={() => onIntervalChange(item.value)}
               className={cn(
-                'px-2 py-1 text-[11px] font-mono transition-all',
+                'px-2 py-1 text-xs font-mono transition-all',
                 interval === item.value
                   ? 'bg-[var(--color-accent)] text-white'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-white/5',

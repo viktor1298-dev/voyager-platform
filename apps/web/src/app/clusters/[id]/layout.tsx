@@ -154,11 +154,11 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
                   {clusterName ?? 'Unknown Cluster'}
                 </h1>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="text-[11px] font-mono text-[var(--color-text-muted)]">
+                  <span className="text-xs font-mono text-[var(--color-text-muted)]">
                     {(dbCluster.data as Record<string, unknown> | undefined)?.provider as string ?? '—'}
                   </span>
                   {(dbCluster.data?.status as string | undefined) && (
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
                       {dbCluster.data?.status as string}
                     </span>
                   )}

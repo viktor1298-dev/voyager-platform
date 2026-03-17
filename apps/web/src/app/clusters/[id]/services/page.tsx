@@ -8,6 +8,7 @@ import { DataTable } from '@/components/DataTable'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface ServiceRow {
   id: string
@@ -40,7 +41,7 @@ const columns: ColumnDef<ServiceRow, unknown>[] = [
     accessorKey: 'namespace',
     header: 'Namespace',
     cell: ({ getValue }) => (
-      <span className="font-mono text-[12px] text-[var(--color-text-muted)]">
+      <span className="font-mono text-xs text-[var(--color-text-muted)]">
         {getValue<string>()}
       </span>
     ),
@@ -52,7 +53,7 @@ const columns: ColumnDef<ServiceRow, unknown>[] = [
       const val = getValue<string>()
       return (
         <span
-          className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+          className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
           style={{
             color: typeColor(val),
             background: `color-mix(in srgb, ${typeColor(val)} 15%, transparent)`,
@@ -67,7 +68,7 @@ const columns: ColumnDef<ServiceRow, unknown>[] = [
     accessorKey: 'clusterIP',
     header: 'ClusterIP',
     cell: ({ getValue }) => (
-      <span className="font-mono text-[12px] text-[var(--color-text-muted)]">
+      <span className="font-mono text-xs text-[var(--color-text-muted)]">
         {getValue<string>()}
       </span>
     ),
@@ -76,7 +77,7 @@ const columns: ColumnDef<ServiceRow, unknown>[] = [
     accessorKey: 'ports',
     header: 'Ports',
     cell: ({ getValue }) => (
-      <span className="font-mono text-[11px] text-[var(--color-text-secondary)]">
+      <span className="font-mono text-xs text-[var(--color-text-secondary)]">
         {getValue<string>()}
       </span>
     ),
@@ -85,7 +86,7 @@ const columns: ColumnDef<ServiceRow, unknown>[] = [
     accessorKey: 'age',
     header: 'Age',
     cell: ({ getValue }) => (
-      <span className="font-mono text-[11px] text-[var(--color-text-dim)]">
+      <span className="font-mono text-xs text-[var(--color-text-dim)]">
         {getValue<string>()}
       </span>
     ),
@@ -104,6 +105,8 @@ function formatPorts(ports: Array<{ port: number; protocol?: string | null; node
 }
 
 export default function ServicesPage() {
+  usePageTitle('Cluster Services')
+
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
 
@@ -169,7 +172,7 @@ export default function ServicesPage() {
           <div className="flex items-center justify-between gap-2 mb-1">
             <span className="font-mono text-[13px] font-medium text-[var(--color-text-primary)] truncate">{svc.name}</span>
             <span
-              className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
+              className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
               style={{
                 color: typeColor(svc.type),
                 background: `color-mix(in srgb, ${typeColor(svc.type)} 15%, transparent)`,
@@ -178,7 +181,7 @@ export default function ServicesPage() {
               {svc.type}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-[var(--color-text-muted)]">
+          <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
             <span className="font-mono">{svc.namespace}</span>
             <span className="font-mono">{svc.clusterIP}</span>
             <span>{svc.ports}</span>

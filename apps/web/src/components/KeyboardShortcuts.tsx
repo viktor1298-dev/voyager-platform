@@ -65,7 +65,7 @@ export function KeyboardShortcuts() {
       <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-1">
         {Object.entries(groups).map(([group, items]) => (
           <div key={group}>
-            <h4 className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-text-dim)] mb-2">
+            <h4 className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-dim)] mb-2">
               {group}
             </h4>
             <div className="space-y-1">
@@ -76,7 +76,7 @@ export function KeyboardShortcuts() {
                     {s.keys.map((key) => (
                       <kbd
                         key={key}
-                        className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-mono text-[var(--color-text-muted)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
+                        className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono text-[var(--color-text-muted)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
                       >
                         {key}
                       </kbd>

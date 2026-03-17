@@ -30,7 +30,7 @@ export function ResourceChartsWidget() {
         <div>
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-[var(--color-text-secondary)]">CPU Utilization</span>
-            <span className="text-xs font-mono text-[var(--color-accent)]">{cpuPct}%</span>
+            <span className="text-xs font-mono tabular-nums text-[var(--color-accent)]">{cpuPct}%</span>
           </div>
           <div className="h-16 rounded-lg overflow-hidden bg-white/[0.02] border border-[var(--color-border)]/40">
             <SparklineChart data={cpuTrend} color="var(--color-chart-cpu)" height={64} />
@@ -39,7 +39,7 @@ export function ResourceChartsWidget() {
         <div>
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-[var(--color-text-secondary)]">Memory Utilization</span>
-            <span className="text-xs font-mono text-[var(--color-status-healthy)]">{memPct}%</span>
+            <span className="text-xs font-mono tabular-nums text-[var(--color-status-healthy)]">{memPct}%</span>
           </div>
           <div className="h-16 rounded-lg overflow-hidden bg-white/[0.02] border border-[var(--color-border)]/40">
             <SparklineChart data={memTrend} color="var(--color-chart-mem)" height={64} />

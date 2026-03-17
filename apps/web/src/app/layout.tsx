@@ -20,7 +20,10 @@ const geistMono = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'Voyager Platform',
+  title: {
+    default: 'Voyager Platform',
+    template: '%s — Voyager Platform',
+  },
   description: 'Kubernetes Operations Dashboard',
   icons: {
     icon: '/favicon.png',

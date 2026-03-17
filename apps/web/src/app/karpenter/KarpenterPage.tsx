@@ -338,7 +338,7 @@ export default function KarpenterPage() {
             <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
               Karpenter
             </h1>
-            <p className="mt-1 text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">
+            <p className="mt-1 text-xs font-mono uppercase tracking-wider text-[var(--color-text-dim)]">
               Autoscaling dashboard{selectedClusterId ? ` · cluster ${selectedClusterId}` : ''}
             </p>
           </div>

@@ -9,6 +9,7 @@ import { Activity, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 type StatusFilter = 'all' | 'on' | 'off'
 
@@ -37,6 +38,8 @@ function getStringList(targeting: Record<string, unknown>, key: string) {
 export const dynamic = 'force-dynamic'
 
 export default function SettingsFeaturesPage() {
+  usePageTitle('Settings — Feature Flags')
+
   const isAdmin = useIsAdmin()
   const router = useRouter()
   const [flags, setFlags] = useState<FeatureFlag[]>([])
@@ -124,7 +127,7 @@ export default function SettingsFeaturesPage() {
       <div className="mb-6 space-y-4">
         <div>
           <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Feature Flags</h2>
-          <p className="mt-1 text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">{filteredFlags.length} of {flags.length} flags</p>
+          <p className="mt-1 text-xs font-mono uppercase tracking-wider text-[var(--color-text-dim)]">{filteredFlags.length} of {flags.length} flags</p>
         </div>
 
         <div className="grid gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -187,7 +190,7 @@ export default function SettingsFeaturesPage() {
                       <p className="text-sm text-[var(--color-text-secondary)]">{flag.description}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-wide ${flag.enabled ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)]'}`}>
+                      <span className={`rounded-full px-2 py-1 text-xs font-semibold uppercase tracking-wide ${flag.enabled ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-bg-surface)] text-[var(--color-text-muted)]'}`}>
                         {flag.enabled ? 'On' : 'Off'}
                       </span>
                       <FeatureFlagToggle name={flag.name} enabled={flag.enabled} critical={flag.critical} onToggle={async (nextEnabled) => { await handleToggle(flag.id, nextEnabled) }} />
@@ -195,7 +198,7 @@ export default function SettingsFeaturesPage() {
                   </header>
 
                   <section className="mb-4 grid gap-3 rounded-lg border border-[var(--color-border)]/70 bg-[var(--color-bg-surface)]/40 p-3 text-xs">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-dim)]">Targeting rules</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-dim)]">Targeting rules</p>
                     <div className="flex flex-wrap gap-2">
                       {rollout !== null && <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-[var(--color-text-primary)]">Rollout: {rollout}%</span>}
                       {environmentsForFlag.map((env) => <span key={env} className="rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-[var(--color-text-primary)]">Env: {env}</span>)}
@@ -211,7 +214,7 @@ export default function SettingsFeaturesPage() {
                       <span className="font-medium text-[var(--color-text-primary)]">{formatDate(flag.updatedAt)}</span>
                     </div>
                     <div className="space-y-2">
-                      <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-dim)]">
+                      <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-dim)]">
                         <Activity className="h-3.5 w-3.5" />Activity log
                       </p>
                       <ul className="space-y-1.5">

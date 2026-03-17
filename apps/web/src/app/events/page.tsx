@@ -11,6 +11,7 @@ import { QueryError } from '@/components/ErrorBoundary'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
 import { timeAgo } from '@/lib/time-utils'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface KubeEvent {
   type: string
@@ -40,12 +41,12 @@ type EventFilter = 'all' | 'Normal' | 'Warning'
 function TypeBadge({ type }: { type: string }) {
   const isWarning = type === 'Warning'
   return isWarning ? (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)] border border-[var(--color-status-warning)]/20">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)] border border-[var(--color-status-warning)]/20">
       <AlertTriangle className="h-2.5 w-2.5" />
       Warn
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--color-status-active)]/10 text-[var(--color-status-active)] border border-[var(--color-status-active)]/20">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-[var(--color-status-active)]/10 text-[var(--color-status-active)] border border-[var(--color-status-active)]/20">
       <Shield className="h-2.5 w-2.5" />
       OK
     </span>
@@ -53,6 +54,8 @@ function TypeBadge({ type }: { type: string }) {
 }
 
 export default function EventsPage() {
+  usePageTitle('Events')
+
   const [filter, setFilter] = useState<EventFilter>('all')
   const [isClient, setIsClient] = useState(false)
 
@@ -139,7 +142,7 @@ export default function EventsPage() {
         header: 'Object',
         cell: ({ row }) => (
           <span
-            className="text-[var(--color-text-muted)] font-mono text-[11px] truncate max-w-[140px] block"
+            className="text-[var(--color-text-muted)] font-mono text-xs truncate max-w-[140px] block"
             title={row.original.object}
           >
             {row.original.object}
@@ -150,7 +153,7 @@ export default function EventsPage() {
         accessorKey: 'namespace',
         header: 'Namespace',
         cell: ({ row }) => (
-          <span className="text-[var(--color-accent)] font-mono text-[11px]">
+          <span className="text-[var(--color-accent)] font-mono text-xs">
             {row.original.namespace}
           </span>
         ),
@@ -189,7 +192,7 @@ export default function EventsPage() {
             key={f}
             type="button"
             onClick={() => setFilter(f)}
-            className={`flex min-h-11 items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+            className={`flex min-h-11 items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-medium tracking-wide transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
               isActive
                 ? 'bg-white/[0.08] text-[var(--color-text-primary)] shadow-sm'
                 : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]'
@@ -225,7 +228,7 @@ export default function EventsPage() {
             Events
           </h1>
           <p
-            className="text-[11px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1 flex items-center gap-1.5"
+            className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1 flex items-center gap-1.5"
             suppressHydrationWarning
           >
             {events.length} events ·{' '}
@@ -266,7 +269,7 @@ export default function EventsPage() {
                     </span>
                   </div>
                   <span
-                    className="text-[var(--color-text-dim)] font-mono text-[10px] tabular-nums shrink-0"
+                    className="text-[var(--color-text-dim)] font-mono text-xs tabular-nums shrink-0"
                     suppressHydrationWarning
                   >
                     {isClient ? timeAgo(event.lastSeen) : formatTimestamp(event.lastSeen)}
@@ -275,7 +278,7 @@ export default function EventsPage() {
                 <p className="text-[var(--color-text-muted)] text-xs leading-relaxed line-clamp-2 break-words min-w-0">
                   {event.message}
                 </p>
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 mt-1.5 text-[10px] min-w-0">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 mt-1.5 text-xs min-w-0">
                   <span className="text-[var(--color-text-muted)] font-mono truncate min-w-0">
                     {event.object}
                   </span>

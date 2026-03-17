@@ -109,7 +109,7 @@ function FileDrop({
         <UploadCloud className="h-4 w-4 text-[var(--color-text-muted)]" />
         <div className="min-w-0">
           <p className="text-xs text-[var(--color-text-primary)] truncate">{file?.name ?? 'Drag & drop file or click to upload'}</p>
-          <p className="text-[11px] text-[var(--color-text-dim)]">{file ? 'Click to replace' : 'Supports secure local upload'}</p>
+          <p className="text-xs text-[var(--color-text-dim)]">{file ? 'Click to replace' : 'Supports secure local upload'}</p>
         </div>
         <input
           type="file"
@@ -405,7 +405,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                       className={inputClass}
                     />
                     {(submitAttempted) && !kubeFile && !kubeText.trim() && (
-                      <p className="text-[11px] text-red-400 mt-1">Upload a kubeconfig file or paste the YAML content</p>
+                      <p className="text-xs text-red-400 mt-1">Upload a kubeconfig file or paste the YAML content</p>
                     )}
                   </div>
                 </>
@@ -417,21 +417,21 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                     <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Access Key ID <span className="text-red-400">*</span></label>
                     <input value={awsAccessKey} onChange={(e) => setAwsAccessKey(e.target.value)} onBlur={() => setTouched(t => ({ ...t, awsAccessKey: true }))} placeholder="AKIAIOSFODNN7EXAMPLE" className={inputClass} />
                     {(touched.awsAccessKey || submitAttempted) && !awsAccessKey.trim() && (
-                      <p className="text-[11px] text-red-400 mt-1">Access Key ID is required</p>
+                      <p className="text-xs text-red-400 mt-1">Access Key ID is required</p>
                     )}
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Secret Access Key <span className="text-red-400">*</span></label>
                     <input type="password" value={awsSecretKey} onChange={(e) => setAwsSecretKey(e.target.value)} onBlur={() => setTouched(t => ({ ...t, awsSecretKey: true }))} placeholder="Secret Access Key" className={inputClass} />
                     {(touched.awsSecretKey || submitAttempted) && !awsSecretKey.trim() && (
-                      <p className="text-[11px] text-red-400 mt-1">Secret Access Key is required</p>
+                      <p className="text-xs text-red-400 mt-1">Secret Access Key is required</p>
                     )}
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Region <span className="text-red-400">*</span></label>
                     <input value={awsRegion} onChange={(e) => setAwsRegion(e.target.value)} onBlur={() => setTouched(t => ({ ...t, awsRegion: true }))} placeholder="us-east-1" className={inputClass} />
                     {(touched.awsRegion || submitAttempted) && !awsRegion.trim() && (
-                      <p className="text-[11px] text-red-400 mt-1">Region is required</p>
+                      <p className="text-xs text-red-400 mt-1">Region is required</p>
                     )}
                   </div>
                   <div>
@@ -447,21 +447,21 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                     <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Subscription ID <span className="text-red-400">*</span></label>
                     <input value={azureSubscriptionId} onChange={(e) => setAzureSubscriptionId(e.target.value)} onBlur={() => setTouched(t => ({ ...t, azureSubscriptionId: true }))} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className={inputClass} />
                     {(touched.azureSubscriptionId || submitAttempted) && !azureSubscriptionId.trim() && (
-                      <p className="text-[11px] text-red-400 mt-1">Subscription ID is required</p>
+                      <p className="text-xs text-red-400 mt-1">Subscription ID is required</p>
                     )}
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Resource Group <span className="text-red-400">*</span></label>
                     <input value={azureResourceGroup} onChange={(e) => setAzureResourceGroup(e.target.value)} onBlur={() => setTouched(t => ({ ...t, azureResourceGroup: true }))} placeholder="my-resource-group" className={inputClass} />
                     {(touched.azureResourceGroup || submitAttempted) && !azureResourceGroup.trim() && (
-                      <p className="text-[11px] text-red-400 mt-1">Resource Group is required</p>
+                      <p className="text-xs text-red-400 mt-1">Resource Group is required</p>
                     )}
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Cluster Name <span className="text-red-400">*</span></label>
                     <input value={azureClusterName} onChange={(e) => setAzureClusterName(e.target.value)} onBlur={() => setTouched(t => ({ ...t, azureClusterName: true }))} placeholder="https://myaks.eastus.azmk8s.io" className={inputClass} />
                     {(touched.azureClusterName || submitAttempted) && !azureClusterName.trim() && (
-                      <p className="text-[11px] text-red-400 mt-1">Cluster Name is required</p>
+                      <p className="text-xs text-red-400 mt-1">Cluster Name is required</p>
                     )}
                   </div>
                 </div>
@@ -480,7 +480,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                       className={inputClass}
                     />
                     {(touched.gkeServiceAccountJson || submitAttempted) && !gkeServiceAccountJson.trim() && (
-                      <p className="text-[11px] text-red-400 mt-1">Service Account JSON is required</p>
+                      <p className="text-xs text-red-400 mt-1">Service Account JSON is required</p>
                     )}
                   </div>
                   <div>
@@ -499,7 +499,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                     <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Endpoint <span className="text-red-400">*</span></label>
                     <input value={minikubeEndpoint} onChange={(e) => setMinikubeEndpoint(e.target.value)} onBlur={() => setTouched(t => ({ ...t, minikubeEndpoint: true }))} placeholder="https://192.168.49.2:8443" className={inputClass} />
                     {(touched.minikubeEndpoint || submitAttempted) && !minikubeEndpoint.trim() && (
-                      <p className="text-[11px] text-red-400 mt-1">Endpoint URL is required</p>
+                      <p className="text-xs text-red-400 mt-1">Endpoint URL is required</p>
                     )}
                   </div>
                 </div>
@@ -543,7 +543,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                 <div>
                   <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">Cluster Name</label>
                   <input value={nameOverride} onChange={(e) => setNameOverride(e.target.value)} onBlur={() => setTouched(t => ({ ...t, clusterName: true }))} placeholder={`Default: ${suggestedName}`} className={inputClass} />
-                  <p className="text-[10px] text-[var(--color-text-dim)] mt-1">Leave blank to use: {suggestedName}</p>
+                  <p className="text-xs text-[var(--color-text-dim)] mt-1">Leave blank to use: {suggestedName}</p>
                 </div>
               </div>
               {!endpointValid && (

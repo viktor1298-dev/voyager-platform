@@ -124,7 +124,7 @@ export function ClusterHealthIndicator({
       {/* IA-005: optional latency badge */}
       {showLatency && entry.responseTimeMs != null && (
         <motion.span
-          className="text-[9px] font-mono"
+          className="text-xs font-mono"
           style={{ color: latencyColor }}
           animate={{ color: latencyColor }}
           transition={{ duration: 0.3 }}
@@ -137,7 +137,7 @@ export function ClusterHealthIndicator({
       {onCheck !== undefined && (
         <button
           type="button"
-          className="ml-0.5 inline-flex shrink-0 items-center gap-1 rounded-md border border-transparent px-1 py-0.5 text-[9px] font-medium text-[var(--color-accent)] opacity-50 transition-all hover:border-[var(--color-accent)]/25 hover:bg-[var(--color-accent)]/10 hover:opacity-100 disabled:opacity-30"
+          className="ml-0.5 inline-flex shrink-0 items-center gap-1 rounded-md border border-transparent px-1 py-0.5 text-xs font-medium text-[var(--color-accent)] opacity-50 transition-all hover:border-[var(--color-accent)]/25 hover:bg-[var(--color-accent)]/10 hover:opacity-100 disabled:opacity-30"
           title="Check now"
           aria-label={`Run health check for cluster ${clusterId}`}
           onClick={handleCheck}

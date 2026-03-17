@@ -171,7 +171,7 @@ export function TopBar() {
 
       <div className="flex items-center gap-3">
         {user && (
-          <span className="hidden sm:inline text-[11px] text-[var(--color-text-muted)] font-mono truncate max-w-[150px]">
+          <span className="hidden sm:inline text-xs text-[var(--color-text-muted)] font-mono truncate max-w-[150px]">
             {user.name ?? user.email}
           </span>
         )}
@@ -183,7 +183,7 @@ export function TopBar() {
           aria-label="Open command palette"
         >
           <Search className="h-3 w-3" />
-          <kbd className="text-[10px] font-mono">⌘K</kbd>
+          <kbd className="text-xs font-mono">⌘K</kbd>
         </button>
         <ThemeToggle />
         <NotificationsPanel />
@@ -196,7 +196,7 @@ export function TopBar() {
           className="flex items-center gap-1.5 px-2.5 min-h-[44px] min-w-[44px] justify-center rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-status-error)] hover:bg-[var(--color-status-error)]/10 transition-colors disabled:opacity-60"
         >
           <LogOut className="h-4 w-4" />
-          <span className="hidden sm:inline text-[11px] font-medium">Logout</span>
+          <span className="hidden sm:inline text-xs font-medium">Logout</span>
         </button>
         <ConnectionStatus
           dataUpdatedAt={liveQuery.dataUpdatedAt}
@@ -249,7 +249,7 @@ function ConnectionStatus({ dataUpdatedAt, isDisconnected, isReconnecting }: {
         className={`h-2 w-2 rounded-full ${isDisconnected ? '' : 'animate-pulse-slow'}`}
         style={{ backgroundColor: dotColor }}
       />
-      <span className="hidden sm:inline text-[11px] font-mono font-medium" style={{ color: dotColor }}>
+      <span className="hidden sm:inline text-xs font-mono font-medium" style={{ color: dotColor }}>
         {isDisconnected ? 'Disconnected' : isReconnecting ? 'Reconnecting…' : 'Live'}
       </span>
     </div>
@@ -260,7 +260,7 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
   return (
     <div className="text-center">
       <div className="text-sm font-extrabold leading-none" style={{ color }}>{value}</div>
-      <div className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider mt-0.5 font-mono">{label}</div>
+      <div className="text-xs text-[var(--color-text-dim)] uppercase tracking-wider mt-0.5 font-mono">{label}</div>
     </div>
   )
 }

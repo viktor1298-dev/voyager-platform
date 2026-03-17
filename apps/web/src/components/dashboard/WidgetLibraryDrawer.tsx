@@ -101,7 +101,7 @@ export function WidgetLibraryDrawer({ open, onClose, onAdd }: WidgetLibraryDrawe
                 <span className="text-xs text-[var(--color-text-dim)] leading-relaxed">
                   {meta.description}
                 </span>
-                <span className="text-[10px] font-mono text-[var(--color-text-dim)] mt-1 block">
+                <span className="text-xs font-mono text-[var(--color-text-dim)] mt-1 block">
                   {meta.defaultSize.w}×{meta.defaultSize.h} grid units
                 </span>
               </div>

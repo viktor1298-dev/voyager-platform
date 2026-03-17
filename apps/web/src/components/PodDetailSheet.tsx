@@ -48,7 +48,7 @@ const TABS: { id: TabId; label: string }[] = [
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]/50 last:border-b-0">
-      <span className="text-[11px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider">{label}</span>
+      <span className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider">{label}</span>
       <span className="text-[13px] text-[var(--color-text-primary)] font-medium">{value}</span>
     </div>
   )
@@ -76,8 +76,8 @@ function OverviewTab({ pod }: { pod: PodInfo }) {
     <div className="space-y-4">
       <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--surface,#14141f)]">
         <InfoRow label="Status" value={<StatusBadge status={pod.status} />} />
-        <InfoRow label="Namespace" value={<span className="font-mono text-[12px]">{pod.namespace}</span>} />
-        <InfoRow label="Node" value={<span className="font-mono text-[12px]">{pod.nodeName ?? '—'}</span>} />
+        <InfoRow label="Namespace" value={<span className="font-mono text-xs">{pod.namespace}</span>} />
+        <InfoRow label="Node" value={<span className="font-mono text-xs">{pod.nodeName ?? '—'}</span>} />
         <InfoRow label="Age" value={pod.createdAt ? timeAgo(pod.createdAt) : '—'} />
         {pod.restartCount != null && (
           <InfoRow
@@ -93,12 +93,12 @@ function OverviewTab({ pod }: { pod: PodInfo }) {
 
       {(pod.cpuMillis != null || pod.memoryMi != null) && (
         <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--surface,#14141f)]">
-          <h4 className="text-[11px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider mb-3">
+          <h4 className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider mb-3">
             Resource Usage
           </h4>
           {pod.cpuMillis != null && (
             <div className="mb-3">
-              <div className="flex justify-between text-[12px] mb-1">
+              <div className="flex justify-between text-xs mb-1">
                 <span className="text-[var(--color-text-muted)]">CPU</span>
                 <span className="text-[var(--color-text-primary)] font-mono">
                   {pod.cpuMillis}m{pod.cpuPercent != null ? ` (${pod.cpuPercent.toFixed(0)}%)` : ''}
@@ -109,7 +109,7 @@ function OverviewTab({ pod }: { pod: PodInfo }) {
           )}
           {pod.memoryMi != null && (
             <div>
-              <div className="flex justify-between text-[12px] mb-1">
+              <div className="flex justify-between text-xs mb-1">
                 <span className="text-[var(--color-text-muted)]">Memory</span>
                 <span className="text-[var(--color-text-primary)] font-mono">
                   {pod.memoryMi}Mi{pod.memoryPercent != null ? ` (${pod.memoryPercent.toFixed(0)}%)` : ''}
@@ -123,12 +123,12 @@ function OverviewTab({ pod }: { pod: PodInfo }) {
 
       {pod.labels && Object.keys(pod.labels).length > 0 && (
         <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--surface,#14141f)]">
-          <h4 className="text-[11px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider mb-3">Labels</h4>
+          <h4 className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider mb-3">Labels</h4>
           <div className="flex flex-wrap gap-1.5">
             {Object.entries(pod.labels).map(([k, v]) => (
               <span
                 key={k}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[11px] font-mono"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-xs font-mono"
               >
                 <span className="text-indigo-400">{k}</span>
                 <span className="text-[var(--color-text-muted)]">=</span>
@@ -141,14 +141,14 @@ function OverviewTab({ pod }: { pod: PodInfo }) {
 
       {pod.annotations && Object.keys(pod.annotations).length > 0 && (
         <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--surface,#14141f)]">
-          <h4 className="text-[11px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider mb-3">
+          <h4 className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider mb-3">
             Annotations
           </h4>
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {Object.entries(pod.annotations)
               .slice(0, 10)
               .map(([k, v]) => (
-                <div key={k} className="flex gap-2 text-[11px] font-mono">
+                <div key={k} className="flex gap-2 text-xs font-mono">
                   <span className="text-[var(--color-text-muted)] shrink-0 truncate max-w-[40%]">{k}</span>
                   <span className="text-[var(--color-text-secondary)] truncate">{v}</span>
                 </div>
@@ -183,7 +183,7 @@ function ContainersTab({ pod }: { pod: PodInfo }) {
           <div className="flex items-center justify-between mb-3">
             <span className="font-mono text-sm text-[var(--color-text-primary)] font-semibold">{c.name}</span>
             <span
-              className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${
+              className={`text-xs font-semibold px-2 py-0.5 rounded-lg ${
                 c.ready
                   ? 'text-[var(--color-status-active)] bg-[var(--color-status-active)]/10'
                   : 'text-[var(--color-status-error)] bg-[var(--color-status-error)]/10'
@@ -192,7 +192,7 @@ function ContainersTab({ pod }: { pod: PodInfo }) {
               {c.ready ? 'Ready' : 'Not Ready'}
             </span>
           </div>
-          <div className="space-y-1.5 text-[12px]">
+          <div className="space-y-1.5 text-xs">
             <div className="flex gap-2">
               <span className="text-[var(--color-text-muted)] w-20 shrink-0">Image</span>
               <span className="font-mono text-[var(--color-text-secondary)] truncate">{c.image}</span>
@@ -210,7 +210,7 @@ function ContainersTab({ pod }: { pod: PodInfo }) {
                   {c.ports.map((p) => (
                     <span
                       key={p.containerPort}
-                      className="px-1.5 py-0.5 rounded-md bg-[var(--color-bg-secondary)] font-mono text-[11px]"
+                      className="px-1.5 py-0.5 rounded-md bg-[var(--color-bg-secondary)] font-mono text-xs"
                     >
                       {p.containerPort}/{p.protocol ?? 'TCP'}
                     </span>
@@ -254,7 +254,7 @@ function EventsTab({
       {events.map((evt, i) => (
         <div
           key={i}
-          className="rounded-xl border border-[var(--color-border)]/50 p-3 bg-[var(--surface,#14141f)] text-[12px]"
+          className="rounded-xl border border-[var(--color-border)]/50 p-3 bg-[var(--surface,#14141f)] text-xs"
         >
           <div className="flex items-center justify-between mb-1">
             <span
@@ -267,7 +267,7 @@ function EventsTab({
               {evt.reason ?? 'Event'}
             </span>
             {evt.timestamp && (
-              <span className="text-[10px] text-[var(--color-text-dim)] font-mono">
+              <span className="text-xs text-[var(--color-text-dim)] font-mono">
                 {timeAgo(evt.timestamp)}
               </span>
             )}
@@ -336,7 +336,7 @@ function YamlTab({ pod }: { pod: PodInfo }) {
       <button
         type="button"
         onClick={handleCopy}
-        className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+        className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
       >
         {copied ? (
           <Check className="h-3 w-3 text-[var(--color-status-active)]" />
@@ -414,7 +414,7 @@ export function PodDetailSheet({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-2 text-[12px] font-medium border-b-2 -mb-px transition-colors ${
+              className={`px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors ${
                 activeTab === tab.id
                   ? 'border-indigo-500 text-[var(--color-text-primary)]'
                   : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
@@ -422,7 +422,7 @@ export function PodDetailSheet({
             >
               {tab.label}
               {tab.id === 'events' && events && events.length > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-indigo-500/20 text-[10px] text-indigo-400">
+                <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-indigo-500/20 text-xs text-indigo-400">
                   {events.length}
                 </span>
               )}

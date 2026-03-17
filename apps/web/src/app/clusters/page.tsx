@@ -26,6 +26,7 @@ import { AlertTriangle, CheckCircle2, Database, Eye, HelpCircle, Plus, Trash2, X
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 function formatLastSeen(date: Date | string | null | undefined, isClient: boolean) {
   if (!date) return '—'
@@ -135,6 +136,8 @@ function HealthIcon({ status }: { status: string }) {
 }
 
 export default function ClustersPage() {
+  usePageTitle('Clusters')
+
   const router = useRouter()
   const isAdmin = useIsAdmin()
   const clusters = trpc.clusters.list.useQuery()
@@ -379,7 +382,7 @@ export default function ClustersPage() {
           <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
             Clusters
           </h1>
-          <p className="text-[11px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider mt-1">
+          <p className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider mt-1">
             {filteredClusters.length}/{clusterList.length} visible
           </p>
         </div>
@@ -428,7 +431,7 @@ export default function ClustersPage() {
                     { label: 'Provider', value: (row.provider ?? '—').toUpperCase() },
                   ].map((m) => (
                     <div key={m.label} className="text-center rounded-lg bg-white/[0.03] py-1.5 px-1">
-                      <div className="text-[9px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{m.label}</div>
+                      <div className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{m.label}</div>
                       <div className={`text-xs font-bold ${m.value === '—' || m.value === '0' ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-text-primary)]'}`}>{m.value}</div>
                     </div>
                   ))}
@@ -438,9 +441,9 @@ export default function ClustersPage() {
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {relation && <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>}
                   {tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-white/[0.05] text-[var(--color-text-dim)] border border-[var(--color-border)]">{tag}</span>
+                    <span key={tag} className="text-xs font-mono px-1.5 py-0.5 rounded-full bg-white/[0.05] text-[var(--color-text-dim)] border border-[var(--color-border)]">{tag}</span>
                   ))}
-                  <span className="ml-auto text-[10px] text-[var(--color-text-dim)]" suppressHydrationWarning>
+                  <span className="ml-auto text-xs text-[var(--color-text-dim)]" suppressHydrationWarning>
                     {formatLastSeen(row.updatedAt, isClient)}
                   </span>
                 </div>
@@ -483,7 +486,7 @@ export default function ClustersPage() {
                   { label: 'Status', value: healthBadgeLabel(liveStatus) },
                 ].map((m) => (
                   <div key={m.label} className="text-center rounded-lg bg-white/[0.03] py-1.5 px-1">
-                    <div className="text-[9px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{m.label}</div>
+                    <div className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{m.label}</div>
                     <div className={`text-xs font-bold ${m.value === '—' || m.value === '0' ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-text-primary)]'}`}>{m.value}</div>
                   </div>
                 ))}
@@ -493,9 +496,9 @@ export default function ClustersPage() {
               <div className="flex items-center gap-1.5 flex-wrap">
                 {relation && <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>}
                 {tags.slice(0, 3).map((tag) => (
-                  <span key={tag} className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-white/[0.05] text-[var(--color-text-dim)] border border-[var(--color-border)]">{tag}</span>
+                  <span key={tag} className="text-xs font-mono px-1.5 py-0.5 rounded-full bg-white/[0.05] text-[var(--color-text-dim)] border border-[var(--color-border)]">{tag}</span>
                 ))}
-                <span className="ml-auto text-[10px] text-[var(--color-text-dim)]" suppressHydrationWarning>
+                <span className="ml-auto text-xs text-[var(--color-text-dim)]" suppressHydrationWarning>
                   {formatLastSeen(row.updatedAt, isClient)}
                 </span>
               </div>

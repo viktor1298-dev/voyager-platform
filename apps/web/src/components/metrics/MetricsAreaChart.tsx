@@ -176,7 +176,7 @@ function CustomTooltip({
 
   return (
     <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-2.5 text-xs shadow-xl">
-      <p className="mb-1 font-mono text-[10px] uppercase tracking-wide text-[var(--color-text-dim)]">Bucket window</p>
+      <p className="mb-1 font-mono text-xs uppercase tracking-wide text-[var(--color-text-dim)]">Bucket window</p>
       <p className="mb-1.5 font-mono text-[var(--color-text-muted)]">{bucketLabel}</p>
       {payload.map((entry) => {
         const metricKey = (Object.entries(METRIC_CONFIG).find(([, cfg]) => cfg.label === entry.name)?.[0] ?? 'cpu') as MetricKey
@@ -214,7 +214,7 @@ function CurrentValueBadge({
 
   return (
     <div className="mt-1 space-y-1.5">
-      <p className="text-[10px] font-mono text-[var(--color-text-dim)]">Current bucket: {bucketLabel}</p>
+      <p className="text-xs font-mono text-[var(--color-text-dim)]">Current bucket: {bucketLabel}</p>
       <div className="flex flex-wrap items-center gap-1.5">
         {activeMetrics.map((key) => {
           const cfg = METRIC_CONFIG[key]
@@ -222,7 +222,7 @@ function CurrentValueBadge({
           return (
             <span
               key={key}
-              className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-mono"
+              className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-mono"
               style={{
                 color: cfg.color,
                 borderColor: `color-mix(in srgb, ${cfg.color} 40%, transparent)`,

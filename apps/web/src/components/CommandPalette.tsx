@@ -174,7 +174,7 @@ export function CommandPalette() {
   const itemClass =
     'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors'
   const headingClass =
-    '[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[var(--color-text-dim)] [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5'
+    '[&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[var(--color-text-dim)] [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5'
 
   return (
     <div className="fixed inset-0 z-[100]" role="presentation">
@@ -199,13 +199,13 @@ export function CommandPalette() {
               className="w-full py-3 text-sm bg-transparent text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none"
             />
             <div className="hidden sm:inline-flex items-center gap-1.5">
-              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
                 ↑↓
               </kbd>
-              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
                 ↵
               </kbd>
-              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
                 ESC
               </kbd>
             </div>
@@ -227,7 +227,7 @@ export function CommandPalette() {
                   >
                     <Clock className="h-4 w-4 shrink-0 text-[var(--color-text-dim)]" />
                     <span>{item.label}</span>
-                    <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
+                    <span className="ml-auto text-xs text-[var(--color-text-dim)] font-mono">
                       {item.type}
                     </span>
                   </Command.Item>
@@ -247,7 +247,7 @@ export function CommandPalette() {
                   >
                     <Server className="h-4 w-4 shrink-0 text-[var(--color-accent)]" />
                     <span>{tab.label}</span>
-                    <kbd className="ml-auto text-[9px] font-mono px-1 py-0.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-dim)]">
+                    <kbd className="ml-auto text-xs font-mono px-1 py-0.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-dim)]">
                       {i + 1 <= 9 ? i + 1 : '—'}
                     </kbd>
                   </Command.Item>
@@ -268,7 +268,7 @@ export function CommandPalette() {
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     <span>{item.label}</span>
-                    <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
+                    <span className="ml-auto text-xs text-[var(--color-text-dim)] font-mono">
                       {item.id}
                     </span>
                   </Command.Item>
@@ -281,7 +281,7 @@ export function CommandPalette() {
               >
                 <Key className="h-4 w-4 shrink-0" />
                 <span>API Tokens</span>
-                <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
+                <span className="ml-auto text-xs text-[var(--color-text-dim)] font-mono">
                   /api-tokens
                 </span>
               </Command.Item>
@@ -303,7 +303,7 @@ export function CommandPalette() {
                       >
                         <RIcon className="h-4 w-4 shrink-0" />
                         <span>{item.label}</span>
-                        <span className="ml-auto text-[10px] text-[var(--color-text-dim)] font-mono">
+                        <span className="ml-auto text-xs text-[var(--color-text-dim)] font-mono">
                           cluster
                         </span>
                       </Command.Item>
@@ -329,10 +329,10 @@ export function CommandPalette() {
                       >
                         <RIcon className="h-4 w-4 shrink-0" />
                         <span className="flex-1 truncate">{item.label}</span>
-                        <span className="ml-2 text-[10px] text-[var(--color-text-dim)] font-mono shrink-0">
+                        <span className="ml-2 text-xs text-[var(--color-text-dim)] font-mono shrink-0">
                           {item.type.toLowerCase()}
                         </span>
-                        <kbd className="ml-2 hidden sm:inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shrink-0">
+                        <kbd className="ml-2 hidden sm:inline-flex items-center px-1 py-0.5 rounded text-xs font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shrink-0">
                           ↵ Open
                         </kbd>
                       </Command.Item>

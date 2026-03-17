@@ -505,7 +505,7 @@ export function AiChat({
             onClick={() => {
               void syncHistory()
             }}
-            className="rounded-lg border border-[var(--color-status-warning)]/40 px-2 py-1 text-[11px] hover:bg-[var(--color-status-warning)]/10"
+            className="rounded-lg border border-[var(--color-status-warning)]/40 px-2 py-1 text-xs hover:bg-[var(--color-status-warning)]/10"
           >
             Retry
           </button>
@@ -628,7 +628,7 @@ export function AiChat({
               }
             }}
             disabled={locked || !lastPrompt || isStreaming || chatMutation.isPending}
-            className="rounded-lg border border-[var(--color-status-error)]/40 px-2 py-1 text-[11px] hover:bg-[var(--color-status-error)]/10 disabled:opacity-60"
+            className="rounded-lg border border-[var(--color-status-error)]/40 px-2 py-1 text-xs hover:bg-[var(--color-status-error)]/10 disabled:opacity-60"
           >
             Retry last prompt
           </button>

@@ -13,6 +13,7 @@ import { QueryError } from '@/components/ErrorBoundary'
 import { Badge } from '@/components/ui/badge'
 import { Dialog } from '@/components/ui/dialog'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import {
   getTeamMemberUserOptions,
   mockAccessControlApi,
@@ -36,6 +37,8 @@ function formatDate(date: string) {
 export const dynamic = 'force-dynamic'
 
 export default function SettingsTeamsPage() {
+  usePageTitle('Settings — Teams')
+
   const isAdmin = useIsAdmin()
   const router = useRouter()
   const [teams, setTeams] = useState<Team[]>([])
@@ -165,7 +168,7 @@ export default function SettingsTeamsPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Teams</h2>
-          <p className="mt-1 text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">{teams.length} teams</p>
+          <p className="mt-1 text-xs font-mono uppercase tracking-wider text-[var(--color-text-dim)]">{teams.length} teams</p>
         </div>
         <button type="button" onClick={() => setShowCreate(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 min-h-[44px]">
           <Plus className="h-4 w-4" />Create Team
@@ -191,7 +194,7 @@ export default function SettingsTeamsPage() {
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">{team.name}</p>
                 <div className="mt-2 flex -space-x-2">
                   {team.members.slice(0, 4).map((member) => (
-                    <span key={member.userId} className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[10px] font-semibold text-[var(--color-text-secondary)]">{member.avatar}</span>
+                    <span key={member.userId} className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] text-xs font-semibold text-[var(--color-text-secondary)]">{member.avatar}</span>
                   ))}
                 </div>
               </motion.button>

@@ -22,10 +22,10 @@ export function AnomalyWidget({ compact }: { compact?: boolean }) {
           }}
         >
           <div className="flex flex-col gap-0.5 min-w-0">
-            <span className="text-[10px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
+            <span className="text-xs text-[var(--color-text-dim)] uppercase tracking-wider font-mono">
               Anomalies
             </span>
-            <div className="flex items-center gap-2 text-[11px] font-semibold tabular-nums">
+            <div className="flex items-center gap-2 text-xs font-semibold tabular-nums">
               <span className="text-red-400/90 inline-flex items-center gap-1">
                 <span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
                 {critical}
