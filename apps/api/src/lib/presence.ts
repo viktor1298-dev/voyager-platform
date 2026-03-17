@@ -2,6 +2,8 @@ import { EventEmitter } from 'node:events'
 
 const PRESENCE_TTL_MS = 60_000
 const PRESENCE_SWEEP_INTERVAL_MS = 15_000
+/** Send a keepalive every 25s to prevent proxy/LB idle-connection timeouts (typically 60s) */
+const PRESENCE_KEEPALIVE_INTERVAL_MS = 25_000
 
 export interface OnlinePresenceUser {
   id: string
@@ -11,7 +13,7 @@ export interface OnlinePresenceUser {
   lastSeen: string
 }
 
-export type PresenceUpdateReason = 'connected' | 'disconnected' | 'page-changed' | 'snapshot'
+export type PresenceUpdateReason = 'connected' | 'disconnected' | 'page-changed' | 'snapshot' | 'keepalive'
 
 export interface PresenceUpdateEvent {
   reason: PresenceUpdateReason
@@ -118,27 +120,47 @@ export function subscribeToPresence(signal?: AbortSignal): AsyncIterableIterator
   let resolve: (() => void) | null = null
   let done = false
   let destroyed = false
+  let keepaliveTimer: ReturnType<typeof setInterval> | null = null
+
+  const enqueue = (event: PresenceUpdateEvent) => {
+    if (destroyed || done) return
+    queue.push(event)
+    if (resolve) {
+      resolve()
+      resolve = null
+    }
+  }
 
   const cleanup = () => {
     if (destroyed) return
     destroyed = true
     presenceEmitter.off('presence:update', handler)
+    if (keepaliveTimer) {
+      clearInterval(keepaliveTimer)
+      keepaliveTimer = null
+    }
   }
 
   const handler = (event: PresenceUpdateEvent) => {
-    if (destroyed || done) return
     try {
-      queue.push(event)
-      if (resolve) {
-        resolve()
-        resolve = null
-      }
+      enqueue(event)
     } catch {
       // Guard against writes after cleanup — silently ignore
     }
   }
 
   presenceEmitter.on('presence:update', handler)
+
+  // Keepalive: send periodic snapshot events to prevent proxy idle-connection timeouts
+  keepaliveTimer = setInterval(() => {
+    if (destroyed || done) return
+    enqueue({
+      reason: 'keepalive',
+      userId: 'keepalive',
+      users: getSortedOnlineUsers(),
+    })
+  }, PRESENCE_KEEPALIVE_INTERVAL_MS)
+  keepaliveTimer.unref()
 
   if (signal) {
     signal.addEventListener(
@@ -155,7 +177,7 @@ export function subscribeToPresence(signal?: AbortSignal): AsyncIterableIterator
     )
   }
 
-  queue.push({
+  enqueue({
     reason: 'snapshot',
     userId: 'snapshot',
     users: getOnlineUsers(),
