@@ -277,6 +277,9 @@ html.light aside[data-testid="sidebar"] {
   box-shadow: 1px 0 0 0 hsl(220, 13%, 91%);
 }
 
+html.light {
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
 html.light ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.12);
 }
@@ -325,7 +328,7 @@ html.light .login-gradient {
 /* DA2-B3-001: Themed thin scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  scrollbar-color: color-mix(in srgb, var(--color-text-dim) 30%, transparent) transparent;
 }
 ::-webkit-scrollbar {
   width: 6px;
@@ -335,11 +338,11 @@ html.light .login-gradient {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
+  background: color-mix(in srgb, var(--color-text-dim) 30%, transparent);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+  background: color-mix(in srgb, var(--color-text-dim) 50%, transparent);
 }
 
 /* Shimmer skeleton loading */

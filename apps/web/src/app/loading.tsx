@@ -11,10 +11,10 @@ export default function RootLoading() {
         <div className="h-8 w-32 rounded-md skeleton-shimmer" />
         {/* Nav items */}
         <div className="mt-4 flex flex-col gap-2">
-          {Array.from({ length: 7 }).map((_, i) => (
+          {[75, 85, 65, 90, 70, 80, 60].map((width, i) => (
             <div key={i} className="flex items-center gap-3">
               <div className="h-4 w-4 rounded skeleton-shimmer" />
-              <div className="h-4 rounded skeleton-shimmer" style={{ width: `${60 + Math.random() * 40}%` }} />
+              <div className="h-4 rounded skeleton-shimmer" style={{ width: `${width}%` }} />
             </div>
           ))}
         </div>
