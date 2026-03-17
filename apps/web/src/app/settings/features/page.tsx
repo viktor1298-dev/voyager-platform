@@ -13,6 +13,13 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 
 type StatusFilter = 'all' | 'on' | 'off'
 
+/** DA2-B3-005: Format raw flag names (e.g. "audit_log_enabled" → "Audit Log Enabled") */
+function formatFlagName(name: string): string {
+  return name
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 const MAX_VISIBLE_ACTIVITIES = 3
 
 function formatDate(date: string) {
@@ -186,7 +193,8 @@ export default function SettingsFeaturesPage() {
                 <article className="flex h-full flex-col rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-sm transition-colors hover:border-[var(--color-accent)]/30 md:p-5">
                   <header className="mb-4 flex items-start justify-between gap-3">
                     <div className="space-y-1">
-                      <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{flag.name}</h3>
+                      <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{formatFlagName(flag.name)}</h3>
+                      <p className="text-xs font-mono text-[var(--color-text-dim)]" title={flag.name}>{flag.name}</p>
                       <p className="text-sm text-[var(--color-text-secondary)]">{flag.description}</p>
                     </div>
                     <div className="flex items-center gap-2">

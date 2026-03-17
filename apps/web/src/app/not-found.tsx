@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { AppLayout } from '@/components/AppLayout'
+import { useAuthStore } from '@/stores/auth'
 
 const POPULAR_PAGES = [
   { href: '/', label: 'Dashboard', icon: BarChart3 },
@@ -15,24 +17,18 @@ const POPULAR_PAGES = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
-export default function NotFoundPage() {
-  usePageTitle('404 — Not Found')
-
+function NotFoundContent() {
   const router = useRouter()
   const [query, setQuery] = useState('')
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (!query.trim()) return
-    // Navigate to dashboard with the search term — user can find their way from there
     router.push(`/?q=${encodeURIComponent(query.trim())}`)
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: 'var(--color-bg-primary)' }}
-    >
+    <div className="flex items-center justify-center px-4 py-20">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
@@ -48,7 +44,7 @@ export default function NotFoundPage() {
         <h1 className="text-6xl font-extrabold text-[var(--color-text-primary)] mb-2">404</h1>
         <h2 className="text-xl font-semibold text-[var(--color-text-secondary)] mb-3">Page Not Found</h2>
         <p className="text-sm text-[var(--color-text-muted)] mb-6">
-          The page you're looking for doesn't exist or has been moved.
+          The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
 
         {/* Search input */}
@@ -93,6 +89,44 @@ export default function NotFoundPage() {
           Back to Dashboard
         </Link>
       </motion.div>
+    </div>
+  )
+}
+
+export default function NotFoundPage() {
+  usePageTitle('404 — Not Found')
+
+  const user = useAuthStore((s) => s.user)
+  const isLoading = useAuthStore((s) => s.isLoading)
+
+  // While checking auth, show a minimal loading state
+  if (isLoading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: 'var(--color-bg-primary)' }}
+      >
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-accent)]" />
+      </div>
+    )
+  }
+
+  // Authenticated → render inside AppLayout (with sidebar)
+  if (user) {
+    return (
+      <AppLayout>
+        <NotFoundContent />
+      </AppLayout>
+    )
+  }
+
+  // Not authenticated → standalone full-screen 404
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: 'var(--color-bg-primary)' }}
+    >
+      <NotFoundContent />
     </div>
   )
 }

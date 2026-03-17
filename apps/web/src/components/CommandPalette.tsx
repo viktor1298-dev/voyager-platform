@@ -267,10 +267,13 @@ export function CommandPalette() {
                     className={itemClass}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    <span>{item.label}</span>
-                    <span className="ml-auto text-xs text-[var(--color-text-dim)] font-mono">
+                    <span className="flex-1">{item.label}</span>
+                    <span className="text-xs text-[var(--color-text-dim)] font-mono">
                       {item.id}
                     </span>
+                    <kbd className="ml-2 hidden sm:inline-flex items-center px-1 py-0.5 rounded text-xs font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shrink-0">
+                      ↵
+                    </kbd>
                   </Command.Item>
                 )
               })}
@@ -280,10 +283,13 @@ export function CommandPalette() {
                 className={itemClass}
               >
                 <Key className="h-4 w-4 shrink-0" />
-                <span>API Tokens</span>
-                <span className="ml-auto text-xs text-[var(--color-text-dim)] font-mono">
+                <span className="flex-1">API Tokens</span>
+                <span className="text-xs text-[var(--color-text-dim)] font-mono">
                   /api-tokens
                 </span>
+                <kbd className="ml-2 hidden sm:inline-flex items-center px-1 py-0.5 rounded text-xs font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shrink-0">
+                  ↵
+                </kbd>
               </Command.Item>
             </Command.Group>
 
@@ -352,6 +358,9 @@ export function CommandPalette() {
                 className={itemClass}
               >
                 🎨 Toggle Theme
+                <kbd className="ml-auto hidden sm:inline-flex items-center px-1 py-0.5 rounded text-xs font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                  ⌘T
+                </kbd>
               </Command.Item>
               <Command.Item
                 value="Show keyboard shortcuts"
@@ -362,6 +371,9 @@ export function CommandPalette() {
                 className={itemClass}
               >
                 ⌨️ Keyboard Shortcuts
+                <kbd className="ml-auto hidden sm:inline-flex items-center px-1 py-0.5 rounded text-xs font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                  ?
+                </kbd>
               </Command.Item>
               <Command.Item
                 value="Open AI Assistant"
@@ -370,9 +382,33 @@ export function CommandPalette() {
               >
                 <Bot className="h-4 w-4 shrink-0" />
                 <span>AI Assistant</span>
+                <kbd className="ml-auto hidden sm:inline-flex items-center px-1 py-0.5 rounded text-xs font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                  ⌘/
+                </kbd>
               </Command.Item>
             </Command.Group>
           </Command.List>
+          {/* DA2-B3-003: Footer shortcut hints */}
+          <div className="hidden sm:flex items-center justify-between border-t border-[var(--color-border)] px-4 py-2 text-xs text-[var(--color-text-dim)]">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1">
+                <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">↑↓</kbd>
+                navigate
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">↵</kbd>
+                select
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">esc</kbd>
+                close
+              </span>
+            </div>
+            <span className="inline-flex items-center gap-1">
+              <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">⌘K</kbd>
+              toggle
+            </span>
+          </div>
           {/* M-P3-003: AI natural language query detection */}
           <AiCommandPaletteProvider
             search={search}
