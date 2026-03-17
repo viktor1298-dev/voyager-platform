@@ -1,28 +1,44 @@
 import { test, expect } from '@playwright/test';
 import { login } from './helpers';
 
-test.describe('Theme — Dark/Light/System Toggle', () => {
+const BASE_URL = process.env.BASE_URL ?? 'http://voyager-platform.voyagerlabs.co';
+
+test.describe('Theme — Dark/Light/System Toggle (Dropdown)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
   });
 
-  test('should toggle theme via theme button', async ({ page }) => {
+  test('should switch theme via dropdown option', async ({ page }) => {
     const html = page.locator('html');
     const btn = page.locator('[data-testid="theme-toggle"]').first();
 
     await expect(btn).toBeVisible({ timeout: 5000 });
 
-    const labelBefore = (await btn.getAttribute('aria-label')) ?? '';
-    const classBefore = (await html.getAttribute('class')) ?? '';
-
+    // Open dropdown
     await btn.click();
 
-    const labelAfter = (await btn.getAttribute('aria-label')) ?? '';
-    const classAfter = (await html.getAttribute('class')) ?? '';
+    // Dropdown should appear with listbox role
+    const listbox = page.locator('[role="listbox"]');
+    await expect(listbox).toBeVisible({ timeout: 3000 });
 
-    expect(labelAfter).not.toEqual(labelBefore);
-    // class may not always change when cycling through system, but one of label/class should
-    expect(labelAfter !== labelBefore || classAfter !== classBefore).toBeTruthy();
+    // Get current theme class
+    const classBefore = (await html.getAttribute('class')) ?? '';
+    const isDarkBefore = classBefore.includes('dark');
+
+    // Click the opposite theme: if dark, pick Light; if light, pick Dark
+    const targetLabel = isDarkBefore ? 'Light' : 'Dark';
+    const option = listbox.locator('button', { hasText: targetLabel });
+    await option.click();
+
+    // Dropdown should close
+    await expect(listbox).not.toBeVisible({ timeout: 2000 });
+
+    // Verify the <html> class changed
+    if (isDarkBefore) {
+      await expect(html).not.toHaveClass(/dark/, { timeout: 3000 });
+    } else {
+      await expect(html).toHaveClass(/dark/, { timeout: 3000 });
+    }
   });
 
   test('System theme option follows prefers-color-scheme', async ({ page }) => {
@@ -30,23 +46,32 @@ test.describe('Theme — Dark/Light/System Toggle', () => {
     const btn = page.locator('[data-testid="theme-toggle"]').first();
     await expect(btn).toBeVisible({ timeout: 5000 });
 
-    const isSystemActive = async () => {
-      const label = (await btn.getAttribute('aria-label')) ?? '';
-      const title = (await btn.getAttribute('title')) ?? '';
-      return /active:\s*system/i.test(title) || /current theme:\s*system/i.test(label);
-    };
+    // Open dropdown and select "System"
+    await btn.click();
+    const listbox = page.locator('[role="listbox"]');
+    await expect(listbox).toBeVisible({ timeout: 3000 });
 
-    for (let i = 0; i < 4; i++) {
-      if (await isSystemActive()) break;
-      await btn.click();
-    }
+    const systemOption = listbox.locator('button', { hasText: 'System' });
+    await systemOption.click();
+    await expect(listbox).not.toBeVisible({ timeout: 2000 });
 
-    expect(await isSystemActive()).toBeTruthy();
+    // Verify system theme is now active (button title should mention system)
+    await expect(btn).toHaveAttribute('title', /System/, { timeout: 3000 });
 
+    // Emulate dark color scheme → html should have "dark" class
     await page.emulateMedia({ colorScheme: 'dark' });
-    await expect.poll(async () => ((await html.getAttribute('class')) ?? '').includes('dark')).toBeTruthy();
+    await expect
+      .poll(async () => ((await html.getAttribute('class')) ?? '').includes('dark'), {
+        timeout: 5000,
+      })
+      .toBeTruthy();
 
+    // Emulate light color scheme → html should NOT have "dark" class
     await page.emulateMedia({ colorScheme: 'light' });
-    await expect.poll(async () => ((await html.getAttribute('class')) ?? '').includes('dark')).toBeFalsy();
+    await expect
+      .poll(async () => !((await html.getAttribute('class')) ?? '').includes('dark'), {
+        timeout: 5000,
+      })
+      .toBeTruthy();
   });
 });
