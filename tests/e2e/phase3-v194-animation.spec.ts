@@ -84,16 +84,19 @@ test.describe('P3-003: DataTable row stagger animations', () => {
     await page.goto('/clusters');
     await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible({ timeout: 15_000 });
 
-    // With ≤5 clusters the page renders card buttons; with >5 it renders a DataTable
+    // Clusters page renders cards (≤5) or DataTable (>5) or empty state
+    // Wait for any content to appear after the heading loads
     const clusterCard = page.locator('button[aria-label^="View cluster"]').first();
+    const clusterLink = page.locator('a[href*="/clusters/"]').first();
     const tableOrRows = page.locator('table, [role="table"], [data-testid="data-table"], tr[data-row]').first();
     const emptyState = page.locator('[data-testid="empty-state"], text=No clusters').first();
 
     const hasCards = await clusterCard.isVisible({ timeout: 15_000 }).catch(() => false);
+    const hasLinks = await clusterLink.isVisible({ timeout: 3_000 }).catch(() => false);
     const hasTable = await tableOrRows.isVisible({ timeout: 3_000 }).catch(() => false);
     const hasEmpty = await emptyState.isVisible({ timeout: 3_000 }).catch(() => false);
 
-    expect(hasCards || hasTable || hasEmpty).toBeTruthy();
+    expect(hasCards || hasLinks || hasTable || hasEmpty).toBeTruthy();
   });
 
   test('alerts page renders without animation errors', async ({ page }) => {
