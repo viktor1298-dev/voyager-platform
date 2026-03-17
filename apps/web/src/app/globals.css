@@ -565,10 +565,7 @@ html.light .relation-badge--viewer {
   border-radius: 4px;
 }
 
-/* DA2-001: Enforce minimum font size — 12px global, 14px sidebar */
-* {
-  min-font-size: 12px; /* property hint only */
-}
+/* DA2-001: Enforce minimum font size via text-size-adjust (no invalid min-font-size) */
 /* Override sub-12px text at root level so nothing falls below 12px */
 body {
   -webkit-text-size-adjust: 100%;
@@ -592,7 +589,9 @@ button[aria-disabled="true"],
   cursor: not-allowed;
 }
 
-/* DA2-005: Unified uppercase tracking utility */
+/* DA2-005: Uppercase tracking utility — consolidates repeated uppercase+tracking pattern.
+   Many components use inline `uppercase tracking-wider`; this class provides a standard alternative.
+   Usage: <span class="tracking-uppercase">LABEL TEXT</span> */
 .tracking-uppercase {
   text-transform: uppercase;
   letter-spacing: 0.05em;

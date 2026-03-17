@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { TRPCClientError, getUntypedClient } from '@trpc/client'
 import type { TRPCConnectionState } from '@trpc/client/unstable-internals'
 import { usePathname } from 'next/navigation'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { getTRPCClient, trpc } from '@/lib/trpc'
 import { AWAY_AFTER_MS, type PresenceUser, usePresenceStore } from '@/stores/presence'
 
@@ -31,6 +31,11 @@ const PERSISTENT_DISCONNECT_ERROR_THRESHOLD = 6
 const BACKOFF_BASE_MS = 2_000
 const BACKOFF_MAX_MS = 60_000
 const BACKOFF_JITTER_MS = 1_000
+
+/** SSE fallback: after this many consecutive failures, switch to polling-only mode */
+const SSE_FALLBACK_THRESHOLD = 3
+/** Periodic recovery interval: try SSE again every 5 minutes while in fallback */
+const SSE_RECOVERY_INTERVAL_MS = 5 * 60 * 1_000
 
 function getBackoffDelay(attempt: number): number {
   const delay = Math.min(BACKOFF_BASE_MS * 2 ** (attempt - 1), BACKOFF_MAX_MS)
@@ -135,6 +140,8 @@ export function usePresence() {
   const pathname = usePathname()
   const lastHeartbeatRef = useRef(Date.now())
   const consecutiveDisconnectsRef = useRef(0)
+  const failureCountRef = useRef(0)
+  const [useFallbackPolling, setUseFallbackPolling] = useState(false)
   const setOnlineUsers = usePresenceStore((s) => s.setOnlineUsers)
   const upsertUser = usePresenceStore((s) => s.upsertUser)
   const removeUser = usePresenceStore((s) => s.removeUser)
@@ -155,9 +162,13 @@ export function usePresence() {
   }, [initialPresenceQuery.data, setOnlineUsers])
 
   useEffect(() => {
+    // Skip SSE subscription while in fallback polling mode
+    if (useFallbackPolling) return
+
     const subscription = clientRef.current.subscription('presence.subscribe', undefined, {
       onData(payload) {
         consecutiveDisconnectsRef.current = 0
+        failureCountRef.current = 0
         applyPresencePayload(payload as PresenceEventPayload, {
           setOnlineUsers,
           upsertUser,
@@ -200,6 +211,15 @@ export function usePresence() {
           return
         }
 
+        // Non-transient failure → increment failure count and possibly switch to fallback
+        failureCountRef.current += 1
+        if (failureCountRef.current >= SSE_FALLBACK_THRESHOLD) {
+          console.warn('[presence] SSE failed repeatedly, switching to polling fallback', {
+            failures: failureCountRef.current,
+          })
+          setUseFallbackPolling(true)
+        }
+
         console.warn('[presence] subscription unavailable', { message: state.error.message })
       },
       onError(error) {
@@ -213,7 +233,24 @@ export function usePresence() {
               message: error.message,
             })
           }
+
+          // Also track for fallback threshold
+          failureCountRef.current += 1
+          if (failureCountRef.current >= SSE_FALLBACK_THRESHOLD) {
+            console.warn('[presence] SSE failed repeatedly, switching to polling fallback', {
+              failures: failureCountRef.current,
+            })
+            setUseFallbackPolling(true)
+          }
           return
+        }
+
+        failureCountRef.current += 1
+        if (failureCountRef.current >= SSE_FALLBACK_THRESHOLD) {
+          console.warn('[presence] SSE failed repeatedly, switching to polling fallback', {
+            failures: failureCountRef.current,
+          })
+          setUseFallbackPolling(true)
         }
 
         console.warn('[presence] subscription unavailable', { message: error.message })
@@ -221,7 +258,37 @@ export function usePresence() {
     })
 
     return () => subscription.unsubscribe()
-  }, [removeUser, setOnlineUsers, upsertUser])
+  }, [removeUser, setOnlineUsers, upsertUser, useFallbackPolling])
+
+  // SSE recovery: when in fallback polling mode, attempt to recover SSE on
+  // network restore, tab visibility change, or periodically every 5 minutes.
+  useEffect(() => {
+    if (!useFallbackPolling) return
+
+    const tryRecovery = () => {
+      console.info('[presence] Attempting SSE recovery...')
+      failureCountRef.current = 0
+      consecutiveDisconnectsRef.current = 0
+      setUseFallbackPolling(false)
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') tryRecovery()
+    }
+
+    // Recovery on network restore
+    window.addEventListener('online', tryRecovery)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // Periodic recovery every 5 minutes
+    const timer = setInterval(tryRecovery, SSE_RECOVERY_INTERVAL_MS)
+
+    return () => {
+      window.removeEventListener('online', tryRecovery)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      clearInterval(timer)
+    }
+  }, [useFallbackPolling])
 
   useEffect(() => {
     const sendHeartbeat = async () => {
