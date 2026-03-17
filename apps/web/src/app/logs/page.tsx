@@ -8,7 +8,7 @@ import { QueryError } from '@/components/ErrorBoundary'
 import { Shimmer } from '@/components/Skeleton'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
-import { Download, FileText, Pause, Play, RefreshCw, Search } from 'lucide-react'
+import { Download, FileText, Info, Pause, Play, RefreshCw, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -470,8 +470,21 @@ export default function LogsPage() {
             </div>
           </div>
 
-          {podsQuery.isLoading && <Shimmer className="h-64 w-full rounded-lg" />}
-          {podsQuery.isError && <QueryError message={podsQuery.error.message} onRetry={() => podsQuery.refetch()} />}
+          {/* DA2: Show friendly info prompt when no cluster is selected instead of alarming error */}
+          {!activeClusterId && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="rounded-full bg-[var(--color-accent)]/10 p-3 mb-4">
+                <Info className="h-8 w-8 text-[var(--color-accent)]" />
+              </div>
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">Select a cluster</h3>
+              <p className="text-xs text-[var(--color-text-muted)] max-w-sm">
+                Choose a cluster from the top bar to start viewing logs.
+              </p>
+            </div>
+          )}
+
+          {activeClusterId && podsQuery.isLoading && <Shimmer className="h-64 w-full rounded-lg" />}
+          {activeClusterId && podsQuery.isError && <QueryError message={podsQuery.error.message} onRetry={() => podsQuery.refetch()} />}
           {logsQuery.isError && <QueryError message={logsQuery.error.message} onRetry={() => logsQuery.refetch()} />}
 
           {targetsWithErrors.length > 0 && (

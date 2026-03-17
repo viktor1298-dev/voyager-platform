@@ -157,11 +157,30 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
                   <span className="text-xs font-mono text-[var(--color-text-muted)]">
                     {(dbCluster.data as Record<string, unknown> | undefined)?.provider as string ?? '—'}
                   </span>
-                  {(dbCluster.data?.status as string | undefined) && (
-                    <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
-                      {dbCluster.data?.status as string}
-                    </span>
-                  )}
+                  {(dbCluster.data?.status as string | undefined) && (() => {
+                    const status = dbCluster.data?.status as string
+                    const isDisconnected = /disconnected|unreachable|error/i.test(status)
+                    return (
+                      <>
+                        <span className={`text-xs font-mono px-2 py-0.5 rounded-md border ${
+                          isDisconnected
+                            ? 'bg-[var(--color-status-error)]/10 text-[var(--color-status-error)] border-[var(--color-status-error)]/30'
+                            : 'bg-white/[0.05] text-[var(--color-text-secondary)] border-[var(--color-border)]'
+                        }`}>
+                          {status}
+                        </span>
+                        {isDisconnected && (
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/clusters/${clusterRouteSegment}/settings`)}
+                            className="text-xs font-medium px-2 py-0.5 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/20 transition-colors"
+                          >
+                            Reconnect
+                          </button>
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
               </>
             )}

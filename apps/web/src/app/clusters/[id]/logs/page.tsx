@@ -219,14 +219,15 @@ export default function LogsPage() {
         ) : logLines.length === 0 ? (
           <p className="text-xs text-[var(--color-text-dim)] font-mono">No log output.</p>
         ) : (
-          <pre className="text-xs font-mono text-green-400/90 whitespace-pre-wrap break-all leading-5">
+          <pre className="text-xs font-mono text-[var(--color-log-text)] whitespace-pre-wrap break-all leading-5">
             {logLines.map((line, i) => {
               const isError = /error|fatal|panic/i.test(line)
               const isWarn = /warn/i.test(line)
+              const isDebug = /debug/i.test(line)
               return (
                 <span
                   key={i}
-                  className={`block ${isError ? 'text-red-400' : isWarn ? 'text-yellow-400' : ''}`}
+                  className={`block ${isError ? 'text-red-400' : isWarn ? 'text-yellow-400' : isDebug ? 'text-gray-400' : ''}`}
                 >
                   {line}
                 </span>

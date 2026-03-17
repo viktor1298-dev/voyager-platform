@@ -589,6 +589,12 @@ button[aria-disabled="true"],
   cursor: not-allowed;
 }
 
+/* DA2-003: Custom selection color using accent */
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  color: inherit;
+}
+
 /* DA2-005: Uppercase tracking utility — consolidates repeated uppercase+tracking pattern.
    Many components use inline `uppercase tracking-wider`; this class provides a standard alternative.
    Usage: <span class="tracking-uppercase">LABEL TEXT</span> */
