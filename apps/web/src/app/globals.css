@@ -322,19 +322,24 @@ html.light .login-gradient {
   background: linear-gradient(135deg, #f8fafc 0%, #f0f0ff 25%, #faf5ff 50%, #f8fafc 100%);
 }
 
-/* Scrollbar styling */
+/* DA2-B3-001: Themed thin scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+}
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: hsl(var(--muted-foreground) / 0.3);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: hsl(var(--muted-foreground) / 0.5);
 }
 
 /* Shimmer skeleton loading */
