@@ -59,7 +59,10 @@ Plans:
   1. `pnpm build` exits with code 0 (TypeScript compilation succeeds for all packages)
   2. `pnpm typecheck` exits with code 0 (strict TypeScript checking passes)
   3. `pnpm test` exits with code 0 (all Vitest unit tests pass)
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 03-01-PLAN.md -- Full validation gate with Docker (build + typecheck + 128 tests including integration)
 
 ### Phase 4: Push & Branch Cleanup
 **Goal**: Origin reflects the merged main and all stale branches are removed with no work lost
@@ -91,6 +94,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Safety Net | 0/1 | Planning complete | - |
 | 2. The Big Merge | 0/3 | Planning complete | - |
-| 3. Validation Gate | 0/0 | Not started | - |
+| 3. Validation Gate | 0/1 | Planning complete | - |
 | 4. Push & Branch Cleanup | 0/0 | Not started | - |
 | 5. GitHub Protection | 0/0 | Not started | - |
