@@ -7,9 +7,9 @@
 
 ### Pre-Merge Safety
 
-- [ ] **SAFE-01**: Create recovery tags on main and feat/init-monorepo branch tips before any mutations
-- [ ] **SAFE-02**: Enable `git rerere` to record conflict resolutions for replay if merge needs retry
-- [ ] **SAFE-03**: Record all branch HEADs to `.planning/branch-tips.txt` for full recovery capability
+- [x] **SAFE-01**: Create recovery tags on main and feat/init-monorepo branch tips before any mutations
+- [x] **SAFE-02**: Enable `git rerere` to record conflict resolutions for replay if merge needs retry
+- [x] **SAFE-03**: Record all branch HEADs to `.planning/branch-tips.txt` for full recovery capability
 
 ### Merge & Conflict Resolution
 
@@ -68,9 +68,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SAFE-01 | Phase 1 | Pending |
-| SAFE-02 | Phase 1 | Pending |
-| SAFE-03 | Phase 1 | Pending |
+| SAFE-01 | Phase 1 | Complete |
+| SAFE-02 | Phase 1 | Complete |
+| SAFE-03 | Phase 1 | Complete |
 | MERGE-01 | Phase 2 | Pending |
 | MERGE-02 | Phase 2 | Pending |
 | MERGE-03 | Phase 2 | Pending |

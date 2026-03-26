@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 1 plan
 
 Plans:
-- [ ] 01-01-PLAN.md -- Recovery tags, rerere config, and branch-tips recording
+- [x] 01-01-PLAN.md -- Recovery tags, rerere config, and branch-tips recording
 
 ### Phase 2: The Big Merge
 **Goal**: All 54 commits from feat/init-monorepo are integrated into main with conflicts resolved, imports normalized, and schema integrity preserved
