@@ -44,7 +44,12 @@ Plans:
   3. All Motion imports use the `motion` convention consistently (no mixed `m` / `motion` imports across component files)
   4. `init.sql` contains 33 CREATE TABLE statements (nodeMetricsHistory preserved from main)
   5. Auto-resolved files (server.ts, ClusterHealthWidget.tsx, page.tsx) have been manually reviewed for evil-merge logic errors
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md -- Execute merge and resolve all 9 conflicting files (Tier 1-4)
+- [ ] 02-02-PLAN.md -- Evil-merge review, Motion import normalization, schema integrity
+- [ ] 02-03-PLAN.md -- Validation gate (typecheck + lint + build + test) and merge commit
 
 ### Phase 3: Validation Gate
 **Goal**: The merged codebase provably compiles and passes all automated checks
@@ -85,7 +90,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Safety Net | 0/1 | Planning complete | - |
-| 2. The Big Merge | 0/0 | Not started | - |
+| 2. The Big Merge | 0/3 | Planning complete | - |
 | 3. Validation Gate | 0/0 | Not started | - |
 | 4. Push & Branch Cleanup | 0/0 | Not started | - |
 | 5. GitHub Protection | 0/0 | Not started | - |
