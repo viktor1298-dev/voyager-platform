@@ -74,7 +74,11 @@ Plans:
   3. worktree/ron and worktree/dima commits are verified as contained in feat/init-monorepo (via `git merge-base --is-ancestor`) before their branches are deleted
   4. fix/v117-phase-d-r2's unique commit (eaa87c6) is evaluated, documented (cherry-picked or discarded with rationale), before branch deletion
   5. Local stale branches (claude/objective-shockley and others) are cleaned up
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md -- Push main to origin and delete 22 fully-merged remote branches (Batch 1)
+- [ ] 04-02-PLAN.md -- Verify and delete Batch 2 (feat/init-monorepo, worktree/ron, worktree/dima), document and delete Batch 3 (fix/v117-phase-d-r2), local cleanup
 
 ### Phase 5: GitHub Protection
 **Goal**: Branch protection rules prevent future divergence and stale branch accumulation
@@ -95,5 +99,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Safety Net | 0/1 | Planning complete | - |
 | 2. The Big Merge | 0/3 | Planning complete | - |
 | 3. Validation Gate | 0/1 | Planning complete | - |
-| 4. Push & Branch Cleanup | 0/0 | Not started | - |
+| 4. Push & Branch Cleanup | 0/2 | Planning complete | - |
 | 5. GitHub Protection | 0/0 | Not started | - |
