@@ -1,0 +1,48 @@
+# Branch Audit -- Phase 4 Cleanup
+# Recorded: 2026-03-26
+
+## Batch 1: Fully-Merged Branches (22 branches, deleted in Plan 04-01)
+
+All 22 branches had 0 unmerged commits to main and were safe to delete at any time.
+
+### Worktree agent branches (6):
+- worktree/shiri, worktree/beni, worktree/noam, worktree/uri, worktree/yuval, worktree/lior
+
+### Approval branches (5):
+- worktree/ron-approved-v98, worktree/ron-approved-v99, worktree/ron-approved-v99-fix
+- worktree/ron-approved-v100, worktree/ron-approved-d3215cc
+
+### Old feature branches (9):
+- feat/api-improvements, feat/helm-infra, feat/k8s-live-dashboard
+- feat/phase6-ia-redesign, feat/ui-cluster-detail, feat/ui-cluster-groups
+- feat/ui-clusters-page, feat/ui-events-page, feat/ui-settings-page
+
+### Fix/develop branches (2):
+- fix/v117-phase-d-bugs, develop
+
+## Batch 2: Post-Merge Redundant Branches (3 branches, deleted in Plan 04-02)
+
+Verified as ancestors of main via `git merge-base --is-ancestor` before deletion.
+All commits from these branches are reachable from main via the Phase 2 merge of feat/init-monorepo.
+
+- feat/init-monorepo (tip: 801b067ebe6b4daf4fd5d8ce422cf7b1f2cac087) -- 54 commits, primary integration branch
+- worktree/ron (tip: b67ee6c472c2593932b95b1580b5b2e0e98ffd11) -- 50 commits, pure subset of feat/init-monorepo
+- worktree/dima (tip: d0033ac71803a6cce21d5b4342d79b85212e7485) -- 45 commits, pure subset of feat/init-monorepo
+
+Recovery: git push origin <tip-sha>:refs/heads/<branch-name>
+
+## Batch 3: Superseded Branch (1 branch, deleted in Plan 04-02)
+
+### fix/v117-phase-d-r2
+- Branch tip: eaa87c69de31009340520dda23dc032aebcee14c
+- Unique commit: eaa87c6 -- "fix: apply encryption key to k8s, fix connection-config schemas, show lastConnectedAt in detail [v117-r2]"
+- Content: Encryption key handling for K8s cluster credentials, connection-config schema fixes, lastConnectedAt display in cluster detail
+- Superseded by: fb5bb3c -- "fix: QA findings (v117-r3)" which is confirmed present in main
+- Decision: DISCARD -- v117-r3 is a later revision that includes and supersedes the v117-r2 changes
+- Recovery: git push origin eaa87c69de31009340520dda23dc032aebcee14c:refs/heads/fix/v117-phase-d-r2
+
+## Recovery Insurance
+
+All branch tip SHAs are preserved in .planning/branch-tips.txt (recorded before any deletions).
+Any branch can be restored with: git push origin <sha>:refs/heads/<branch-name>
+GitHub also retains deleted refs for ~90 days.
