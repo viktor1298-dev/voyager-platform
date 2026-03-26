@@ -18,7 +18,7 @@
 - [x] **MERGE-03**: Manually review auto-resolved files (server.ts, ClusterHealthWidget.tsx) for evil merge logic errors
 - [x] **MERGE-04**: Normalize Motion imports (m vs motion convention) across 10+ diverged component files
 - [x] **MERGE-05**: Verify init.sql contains all tables from both branches (nodeMetricsHistory schema risk)
-- [ ] **MERGE-06**: Commit the merge with a descriptive message referencing the 54-commit integration
+- [x] **MERGE-06**: Commit the merge with a descriptive message referencing the 54-commit integration
 
 ### Validation Gate
 
@@ -76,7 +76,7 @@
 | MERGE-03 | Phase 2 | Complete |
 | MERGE-04 | Phase 2 | Complete |
 | MERGE-05 | Phase 2 | Complete |
-| MERGE-06 | Phase 2 | Pending |
+| MERGE-06 | Phase 2 | Complete |
 | VALID-01 | Phase 3 | Pending |
 | VALID-02 | Phase 3 | Pending |
 | VALID-03 | Phase 3 | Pending |
