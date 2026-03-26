@@ -36,8 +36,8 @@
 
 ### GitHub Protection
 
-- [ ] **PROT-01**: Set up branch protection rules on main (require PR, prevent force push)
-- [ ] **PROT-02**: Enable auto-delete of merged branches on GitHub
+- [x] **PROT-01**: Set up branch protection rules on main (require PR, prevent force push)
+- [x] **PROT-02**: Enable auto-delete of merged branches on GitHub
 
 ## v2 Requirements
 
@@ -85,8 +85,8 @@
 | CLEAN-03 | Phase 4 | Complete |
 | CLEAN-04 | Phase 4 | Complete |
 | CLEAN-05 | Phase 4 | Complete |
-| PROT-01 | Phase 5 | Pending |
-| PROT-02 | Phase 5 | Pending |
+| PROT-01 | Phase 5 | Complete |
+| PROT-02 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 19 total

@@ -90,7 +90,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 05-01-PLAN.md -- Branch protection rules and auto-delete of merged branches
+- [x] 05-01-PLAN.md -- Branch protection rules and auto-delete of merged branches
 
 ## Progress
 
