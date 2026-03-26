@@ -12,7 +12,7 @@ Voyager Platform is a Kubernetes operations dashboard (multi-cloud cluster manag
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] SAFE-01, SAFE-02, SAFE-03 — Recovery tags, rerere, branch-tips snapshot (Validated in Phase 1: Safety Net)
 
 ### Active
 
@@ -77,4 +77,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-26 after initialization*
+*Last updated: 2026-03-26 after Phase 1 completion*
