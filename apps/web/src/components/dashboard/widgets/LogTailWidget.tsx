@@ -16,10 +16,10 @@ export function LogTailWidget({ widget }: { widget: Widget }) {
         <p className="text-xs text-[var(--color-text-dim)]">No cluster selected</p>
       ) : (
         <div className="flex-1 overflow-auto rounded-lg bg-black/30 border border-[var(--color-border)]/40 p-2">
-          <p className="text-[10px] font-mono text-[var(--color-text-dim)]">
+          <p className="text-xs font-mono text-[var(--color-text-dim)]">
             Cluster: {activeClusterId} · Max lines: {maxLines}
           </p>
-          <p className="text-[10px] font-mono text-[var(--color-status-healthy)]/60 mt-1">
+          <p className="text-xs font-mono text-[var(--color-status-healthy)]/60 mt-1">
             [Live log tail — connect to cluster to stream logs]
           </p>
         </div>

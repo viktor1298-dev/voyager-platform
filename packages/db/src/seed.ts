@@ -9,7 +9,10 @@ async function seed() {
 
   console.log('🌱 Seeding database...')
 
-  // Clean existing data
+  // Clean existing domain data only.
+  // Do NOT delete Better-Auth users here: removing/recreating user rows without
+  // matching account credentials breaks email/password login (401 INVALID_EMAIL_OR_PASSWORD)
+  // after seed runs.
   await db.delete(events)
   await db.delete(nodes)
   await db.delete(featureFlags)
@@ -82,6 +85,8 @@ async function seed() {
     .returning()
 
   console.log('✅ Inserted 5 clusters')
+
+  console.log('ℹ️ Skipped raw auth user upserts in seed — bootstrap users are ensured via Better-Auth at API startup')
 
   // Insert nodes
   const nodeData = [

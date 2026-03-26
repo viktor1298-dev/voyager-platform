@@ -8,8 +8,9 @@ import { QueryError } from '@/components/ErrorBoundary'
 import { Shimmer } from '@/components/Skeleton'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
-import { Download, FileText, Pause, Play, RefreshCw, Search } from 'lucide-react'
+import { Download, FileText, Info, Pause, Play, RefreshCw, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 /** Try to pretty-print JSON log messages */
 function tryFormatJson(message: string): string {
@@ -59,11 +60,11 @@ function formatTimestamp(ts: string, format: TimestampFormat): string {
   }
 }
 
-/** Build a safe regex from the search term. Returns null if invalid. */
+/** Build a safe regex from the search termotion. Returns null if invalid. */
 function buildSearchRegex(term: string, isRegex: boolean): RegExp | null {
   if (!term) return null
   try {
-    return isRegex ? new RegExp(term, 'gi') : new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+    return isRegex ? new RegExp(term, 'gi') : new RegExp(termotion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
   } catch {
     return null
   }
@@ -121,6 +122,8 @@ function SelectField({
 }
 
 export default function LogsPage() {
+  usePageTitle('Logs')
+
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const [selectedNamespace, setSelectedNamespace] = useState<string>('')
   const [selectedPods, setSelectedPods] = useState<string[]>([]) // keys: namespace/pod
@@ -467,8 +470,21 @@ export default function LogsPage() {
             </div>
           </div>
 
-          {podsQuery.isLoading && <Shimmer className="h-64 w-full rounded-lg" />}
-          {podsQuery.isError && <QueryError message={podsQuery.error.message} onRetry={() => podsQuery.refetch()} />}
+          {/* DA2: Show friendly info prompt when no cluster is selected instead of alarming error */}
+          {!activeClusterId && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="rounded-full bg-[var(--color-accent)]/10 p-3 mb-4">
+                <Info className="h-8 w-8 text-[var(--color-accent)]" />
+              </div>
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">Select a cluster</h3>
+              <p className="text-xs text-[var(--color-text-muted)] max-w-sm">
+                Choose a cluster from the top bar to start viewing logs.
+              </p>
+            </div>
+          )}
+
+          {activeClusterId && podsQuery.isLoading && <Shimmer className="h-64 w-full rounded-lg" />}
+          {activeClusterId && podsQuery.isError && <QueryError message={podsQuery.error.message} onRetry={() => podsQuery.refetch()} />}
           {logsQuery.isError && <QueryError message={logsQuery.error.message} onRetry={() => logsQuery.refetch()} />}
 
           {targetsWithErrors.length > 0 && (
@@ -501,7 +517,7 @@ export default function LogsPage() {
                     <span className="text-xs text-[var(--color-log-dim)] font-mono">
                       {selectedTargets.length} pod(s) • {selectedLevels.join(', ')}
                       {isRegexMode && searchTerm && !regexError && (
-                        <span className="ml-2 rounded bg-[var(--color-accent)]/20 px-1.5 py-0.5 text-[10px] text-[var(--color-accent)]">
+                        <span className="ml-2 rounded bg-[var(--color-accent)]/20 px-1.5 py-0.5 text-xs text-[var(--color-accent)]">
                           regex
                         </span>
                       )}

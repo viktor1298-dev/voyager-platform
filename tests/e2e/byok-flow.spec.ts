@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { login } from './helpers'
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:9000'
+const BASE_URL = process.env.BASE_URL ?? ''
 
 /** Get the session cookie value after login */
 async function getSessionCookie(page: import('@playwright/test').Page) {

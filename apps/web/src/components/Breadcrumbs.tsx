@@ -64,7 +64,7 @@ export function Breadcrumbs({ segmentLabels }: { segmentLabels?: Record<string, 
   }
 
   return (
-    <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-[12px] font-mono">
+    <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-xs font-mono">
       {crumbs.map((crumb, i) => {
         const isLast = i === crumbs.length - 1
         return (

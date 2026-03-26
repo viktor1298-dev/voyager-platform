@@ -12,6 +12,7 @@ import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Layers } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface ServiceRow {
   name: string
@@ -22,6 +23,8 @@ interface ServiceRow {
 }
 
 export default function ServicesPage() {
+  usePageTitle('Services')
+
   const clustersQuery = trpc.clusters.list.useQuery()
   const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null)
 

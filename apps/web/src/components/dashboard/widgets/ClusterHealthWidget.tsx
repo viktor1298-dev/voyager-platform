@@ -19,7 +19,7 @@ function ResourceBar({ value, max, color }: { value: number; max: number; color:
       <div className="flex-1 h-1.5 rounded-full bg-[var(--color-track)] overflow-hidden">
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      <span className="text-[10px] font-mono tabular-nums text-[var(--color-text-dim)] min-w-[28px] text-right">{pct}%</span>
+      <span className="text-xs font-mono tabular-nums text-[var(--color-text-dim)] min-w-[28px] text-right">{pct}%</span>
     </div>
   )
 }
@@ -58,7 +58,7 @@ export function ClusterHealthWidget() {
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold text-[var(--color-text-primary)] border-l-2 border-[var(--color-accent)] pl-2">Cluster Health Matrix</h3>
-          <Link href="/clusters" className="text-[10px] text-[var(--color-accent)] hover:underline">View all →</Link>
+          <Link href="/clusters" className="text-xs text-[var(--color-accent)] hover:underline">View all →</Link>
         </div>
         {/* IA-008: Use ClusterHealthIndicator for consistency */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -72,7 +72,7 @@ export function ClusterHealthWidget() {
                 )}
                 <div className="min-w-0">
                   <span className="text-xs font-medium text-[var(--color-text-primary)] truncate block">{c.name}</span>
-                  <span className="text-[10px] text-[var(--color-text-dim)] font-mono">{c.nodeCount} nodes · {c.provider}</span>
+                  <span className="text-xs text-[var(--color-text-dim)] font-mono">{c.nodeCount} nodes · {c.provider}</span>
                 </div>
               </Link>
             )
@@ -97,7 +97,7 @@ export function ClusterHealthWidget() {
                     strokeDasharray={`${(pct / 100) * GAUGE_CIRCUMFERENCE} ${GAUGE_CIRCUMFERENCE}`} className="transition-all duration-700" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-base font-bold font-mono text-[var(--color-text-primary)]">{pct}%</span>
+                  <span className="text-base font-bold font-mono tabular-nums text-[var(--color-text-primary)]">{pct}%</span>
                 </div>
               </div>
               <span className="text-xs font-medium text-[var(--color-text-secondary)] text-center">{label}</span>
@@ -116,8 +116,8 @@ export function ClusterHealthWidget() {
               return (
                 <div key={c.id}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-medium text-[var(--color-text-primary)] truncate max-w-[120px]">{c.name}</span>
-                    <span className="text-[9px] font-mono text-[var(--color-text-dim)]">CPU {Math.round(cpu)}% · MEM {Math.round(mem)}%</span>
+                    <span className="text-xs font-medium text-[var(--color-text-primary)] truncate max-w-[120px]">{c.name}</span>
+                    <span className="text-xs font-mono text-[var(--color-text-dim)]">CPU {Math.round(cpu)}% · MEM {Math.round(mem)}%</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <ResourceBar value={Math.round(cpu)} max={100} color={pcCpu} />

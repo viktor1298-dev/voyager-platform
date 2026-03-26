@@ -43,8 +43,8 @@ function NodeRow({ node }: { node: NodeStats }) {
         {/* CPU */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[11px] text-[var(--color-text-muted)]">CPU</span>
-            <span className="text-[11px] font-mono" style={{ color: cpuColor }}>
+            <span className="text-xs text-[var(--color-text-muted)]">CPU</span>
+            <span className="text-xs font-mono" style={{ color: cpuColor }}>
               {node.cpuPercent != null ? `${node.cpuPercent}%` : '—'}
             </span>
           </div>
@@ -56,7 +56,7 @@ function NodeRow({ node }: { node: NodeStats }) {
               />
             )}
           </div>
-          <p className="text-[10px] text-[var(--color-text-dim)] font-mono mt-0.5">
+          <p className="text-xs text-[var(--color-text-dim)] font-mono mt-0.5">
             {node.cpuCores.toFixed(2)}c
             {node.cpuAllocCores != null ? ` / ${node.cpuAllocCores.toFixed(1)}c` : ''}
           </p>
@@ -64,8 +64,8 @@ function NodeRow({ node }: { node: NodeStats }) {
         {/* Memory */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[11px] text-[var(--color-text-muted)]">Memory</span>
-            <span className="text-[11px] font-mono" style={{ color: memColor }}>
+            <span className="text-xs text-[var(--color-text-muted)]">Memory</span>
+            <span className="text-xs font-mono" style={{ color: memColor }}>
               {node.memPercent != null ? `${node.memPercent}%` : '—'}
             </span>
           </div>
@@ -77,7 +77,7 @@ function NodeRow({ node }: { node: NodeStats }) {
               />
             )}
           </div>
-          <p className="text-[10px] text-[var(--color-text-dim)] font-mono mt-0.5">
+          <p className="text-xs text-[var(--color-text-dim)] font-mono mt-0.5">
             {node.memGb.toFixed(2)} GB
             {node.memAllocGb != null ? ` / ${node.memAllocGb.toFixed(1)} GB` : ''}
           </p>

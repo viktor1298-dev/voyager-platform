@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { usePresence } from '@/hooks/usePresence'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { useAuthStore } from '@/stores/auth'
@@ -25,25 +25,28 @@ export function PresenceBar() {
 
   return (
     <div className="h-10 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/85 backdrop-blur-lg flex items-center justify-between px-3 sm:px-6">
-      {/* Left: ONLINE indicator */}
-      <div className="flex items-center gap-2 min-w-0">
+      {/* Left: ONLINE indicator — dot + count (no redundant text) */}
+      <div className="flex items-center gap-1.5 min-w-0" title={`${count} user${count !== 1 ? 's' : ''} online`}>
         {/* Pulsing green dot */}
-        <span
-          className="h-2 w-2 rounded-full shrink-0 animate-pulse-slow"
-          style={{ backgroundColor: count > 0 ? 'var(--color-status-active, #22c55e)' : 'var(--color-text-dim)' }}
-          aria-hidden="true"
-        />
-        <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-dim)] uppercase select-none">
-          Online
+        <span className="relative flex h-2 w-2 shrink-0">
+          {count > 0 && (
+            <span
+              className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+              style={{ backgroundColor: 'var(--color-status-active, #22c55e)' }}
+            />
+          )}
+          <span
+            className="relative inline-flex rounded-full h-2 w-2"
+            style={{ backgroundColor: count > 0 ? 'var(--color-status-active, #22c55e)' : 'var(--color-text-dim)' }}
+          />
         </span>
         {/* Count badge */}
         <span
-          className="inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full text-[9px] font-bold font-mono leading-none"
+          className="inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full text-xs font-bold font-mono leading-none"
           style={{
             backgroundColor: count > 0 ? 'var(--color-status-active, #22c55e)' : 'rgba(255,255,255,0.06)',
             color: count > 0 ? '#fff' : 'var(--color-text-dim)',
           }}
-          title={`${count} user${count !== 1 ? 's' : ''} online`}
         >
           {count}
         </span>
@@ -62,7 +65,7 @@ export function PresenceBar() {
 
               const avatar = (
                 <div
-                  className="group relative h-8 w-8 rounded-full border-2 border-[var(--color-border)] bg-[var(--color-accent)]/20 text-[var(--color-accent)] text-[11px] font-bold flex items-center justify-center shrink-0 cursor-default hover:border-[var(--color-accent)]/60 hover:bg-[var(--color-accent)]/30 transition-all duration-150"
+                  className="group relative h-8 w-8 rounded-full border-2 border-[var(--color-border)] bg-[var(--color-accent)]/20 text-[var(--color-accent)] text-xs font-bold flex items-center justify-center shrink-0 cursor-default hover:border-[var(--color-accent)]/60 hover:bg-[var(--color-accent)]/30 transition-all duration-150"
                   title={tooltipText}
                   aria-label={`${user.name} is online`}
                   role="img"
@@ -75,7 +78,7 @@ export function PresenceBar() {
                     aria-hidden="true"
                   />
                   {/* Tooltip */}
-                  <span className="pointer-events-none absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-[10px] font-medium text-[var(--color-text-primary)] shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
+                  <span className="pointer-events-none absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs font-medium text-[var(--color-text-primary)] shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
                     {tooltipText}
                   </span>
                 </div>
@@ -86,7 +89,7 @@ export function PresenceBar() {
               }
 
               return (
-                <m.div
+                <motion.div
                   key={user.id}
                   layout
                   initial={{ opacity: 0, y: -6, scale: 0.92 }}
@@ -95,7 +98,7 @@ export function PresenceBar() {
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                 >
                   {avatar}
-                </m.div>
+                </motion.div>
               )
             })}
           </AnimatePresence>

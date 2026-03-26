@@ -4,7 +4,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { APP_VERSION } from '@/config/constants'
 import { navItems } from '@/config/navigation'
 import { EASING } from '@/lib/animation-constants'
@@ -140,7 +140,7 @@ export function Sidebar({
         {/* Main nav — flat items + clusters accordion */}
         {/* SB-003: TooltipProvider wraps nav so tooltips work in collapsed mode */}
         <TooltipProvider delayDuration={300}>
-          <nav className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+          <nav className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden" aria-label="Main navigation">
             {navItems.map((item) => {
               const active = isActive(item.id)
               const Icon = item.icon
@@ -184,15 +184,15 @@ export function Sidebar({
                 >
                   {/* P3-002 / SB-007: Active background with layoutId spring + left accent border */}
                   {isNavActive && (
-                    <m.div
+                    <motion.div
                       layoutId="sidebar-active-bg"
                       className="absolute inset-0 bg-[var(--color-accent)]/10 rounded-lg sidebar-active-bar"
                       transition={EASING.snappy}
                     />
                   )}
-                  {/* SB-008: Reduce active border bar from 3px → 2px */}
+                  {/* SB-008: Reduce active border bar from 3px -> 2px */}
                   {isNavActive && (
-                    <m.div
+                    <motion.div
                       layoutId="sidebar-active-border"
                       className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full bg-[var(--color-accent)]"
                       transition={EASING.snappy}
@@ -202,7 +202,7 @@ export function Sidebar({
                   <Icon className="sidebar-icon h-4 w-4 shrink-0 relative z-10" />
                   <AnimatePresence initial={false}>
                     {showLabels && (
-                      <m.span
+                      <motion.span
                         key="label"
                         initial={{ opacity: 0, width: 0 }}
                         animate={{ opacity: 1, width: 'auto' }}
@@ -211,16 +211,24 @@ export function Sidebar({
                         className="sidebar-label text-[13px] font-medium relative z-10 overflow-hidden whitespace-nowrap flex-1"
                       >
                         {item.label}
-                      </m.span>
+                      </motion.span>
                     )}
                   </AnimatePresence>
-                  {showAlertsBadge && (
+                  {showAlertsBadge && showLabels && (
                     <span
                       data-testid="alerts-badge"
                       className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 relative z-10"
                     >
                       {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
                     </span>
+                  )}
+                  {/* Show small indicator dot when collapsed with alerts */}
+                  {showAlertsBadge && !showLabels && (
+                    <span
+                      data-testid="alerts-badge"
+                      className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 z-10"
+                      aria-label={`${unacknowledgedCount} unacknowledged alerts`}
+                    />
                   )}
                   {/* DB-003: anomaly badge — shown when there are open anomalies and no unacknowledged alerts */}
                   {showAnomalyBadge && (
@@ -238,13 +246,13 @@ export function Sidebar({
                   )}
                   {/* SB-005: ChevronDown for clusters accordion — rotates when open */}
                   {isClustersItem && showLabels && (
-                    <m.div
+                    <motion.div
                       animate={{ rotate: clustersOpen ? 180 : 0 }}
                       transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
                       className="relative z-10 ml-auto"
                     >
                       <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-                    </m.div>
+                    </motion.div>
                   )}
                 </Link>
               )
@@ -270,7 +278,7 @@ export function Sidebar({
                   {isClustersItem && (
                     <AnimatePresence initial={false}>
                       {clustersOpen && showLabels && (
-                        <m.div
+                        <motion.div
                           key="clusters-subnav"
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
@@ -314,7 +322,7 @@ export function Sidebar({
                               </p>
                             )}
                           </div>
-                        </m.div>
+                        </motion.div>
                       )}
                     </AnimatePresence>
                   )}
@@ -343,7 +351,7 @@ export function Sidebar({
         {/* Version display */}
         <AnimatePresence initial={false}>
           {showLabels && (
-            <m.div
+            <motion.div
               key="version"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -351,10 +359,10 @@ export function Sidebar({
               transition={{ duration: 0.15 }}
               className="px-3 py-2 mt-0"
             >
-              <div className="text-[10px] text-[var(--color-text-muted)] font-mono text-left whitespace-nowrap">
+              <div className="text-xs text-[var(--color-text-secondary)] font-mono text-left whitespace-nowrap opacity-70">
                 Voyager {APP_VERSION}
               </div>
-            </m.div>
+            </motion.div>
           )}
         </AnimatePresence>
       </aside>

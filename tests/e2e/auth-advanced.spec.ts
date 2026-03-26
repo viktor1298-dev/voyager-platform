@@ -5,38 +5,39 @@ test.describe('Auth Advanced Flows', () => {
   test('should logout and redirect to login', async ({ page }) => {
     await login(page)
 
-    // Find and click logout button
     const logoutBtn = page.getByRole('button', { name: /logout|sign out|log out/i })
     await logoutBtn.click()
 
-    // Verify redirect to /login
     await expect(page).toHaveURL(/\/login/)
 
-    // Verify accessing /clusters redirects back to /login
     await page.goto('/clusters')
     await expect(page).toHaveURL(/\/login/)
   })
 
-  test('should redirect to login when accessing protected page without auth', async ({ page }) => {
+  test('should redirect to login when accessing protected page without auth', async ({ browser }) => {
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    const page = await context.newPage()
+
     await page.goto('/clusters')
     await expect(page).toHaveURL(/\/login/)
+
+    await context.close()
   })
 
   test('should stay logged in after page refresh', async ({ page }) => {
     await login(page)
     await page.goto('/')
     await page.reload()
-    // Verify still on dashboard, not redirected to login
     await expect(page).not.toHaveURL(/\/login/)
+    await expect(page.getByRole('button', { name: /logout/i })).toBeVisible({ timeout: 20_000 })
   })
 
   test('should show validation errors on empty cluster form', async ({ page }) => {
     await login(page)
     await page.goto('/clusters')
+    await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible({ timeout: 15_000 })
 
     await page.getByRole('button', { name: /add cluster/i }).first().click()
-
-    // New flow is a wizard: advance to kubeconfig step and verify empty state blocks progress
     await page.getByRole('button', { name: /next/i }).click()
 
     const nextButton = page.getByRole('button', { name: /next/i })

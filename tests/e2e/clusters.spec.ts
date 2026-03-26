@@ -24,49 +24,38 @@ test.describe('Clusters — CRUD Operations', () => {
   test('should view cluster detail', async ({ page }) => {
     await page.goto('/clusters');
 
-    // Wait for either the data table with rows OR a query error
-    const table = page.locator('table').first();
     const queryError = page.getByText(/failed to load data/i);
 
-    // Wait for one of: table visible OR error visible
-    await expect(table.or(queryError)).toBeVisible({ timeout: 15_000 });
+    // Wait for either cluster cards/table OR a query error
+    // With ≤5 clusters the page renders cards (buttons with aria-label "View cluster …")
+    // With >5 clusters it renders a DataTable with tr[data-row]
+    const clusterCard = page.locator('button[aria-label^="View cluster"]').first();
+    const dataRow = page.locator('tr[data-row]').first();
+    const emptyState = page.locator('[data-testid="empty-state"]').first();
 
-    // If the cluster list query itself failed, skip gracefully
+    await expect(clusterCard.or(dataRow).or(queryError).or(emptyState)).toBeVisible({ timeout: 15_000 });
+
     if (await queryError.isVisible()) {
       test.skip(true, 'Cluster list API returned an error — skipping detail navigation');
       return;
     }
-
-    const firstRow = table.locator('tbody tr').first();
-    // Wait for actual data rows (not skeleton/empty)
-    try {
-      await expect(firstRow).toBeVisible({ timeout: 10_000 });
-      await expect(firstRow).toContainText(/.+/, { timeout: 10_000 });
-    } catch {
-      // Table visible but no data rows — empty seed data
-      test.skip(true, 'No cluster rows found in table — seed data may be missing');
+    if (await emptyState.isVisible()) {
+      test.skip(true, 'No clusters found — seed data may be missing');
       return;
     }
 
-    // Check for empty state row (e.g. "No clusters found")
-    const firstRowText = await firstRow.innerText();
-    if (/no clusters found/i.test(firstRowText)) {
-      test.skip(true, 'Table shows "No clusters found" — no data to navigate to');
-      return;
+    // Determine which layout is active and get the cluster name
+    let clusterName = '';
+    if (await clusterCard.isVisible().catch(() => false)) {
+      const label = await clusterCard.getAttribute('aria-label') ?? '';
+      clusterName = label.replace(/^View cluster\s+/i, '').trim();
+      await clusterCard.click();
+    } else {
+      const firstCell = dataRow.locator('td').first();
+      clusterName = (await firstCell.innerText()).trim();
+      await dataRow.click();
     }
 
-    const cells = firstRow.locator('td');
-    const cellCount = await cells.count();
-    let nameCell = cells.first();
-    for (let i = 0; i < cellCount; i++) {
-      const text = await cells.nth(i).innerText({ timeout: 2_000 }).catch(() => '');
-      if (text.trim()) { nameCell = cells.nth(i); break; }
-    }
-    await expect(nameCell).not.toBeEmpty();
-
-    const clusterName = (await nameCell.innerText()).trim();
-
-    await firstRow.click();
     await expect(page).toHaveURL(/\/clusters\/.+/);
     await expect(page.getByText(/loading cluster details/i)).toBeHidden({ timeout: 20_000 });
 
@@ -74,8 +63,6 @@ test.describe('Clusters — CRUD Operations', () => {
     await expect(readyState).toBeVisible();
 
     if (await page.getByRole('heading', { name: /failed to load data/i }).isVisible()) {
-      // Cluster detail page can legitimately show "failed to load" when K8s API is unreachable
-      // for seed clusters — this is expected behavior, not a bug
       await expect(page.getByText(/failed to fetch from k8s api|unable to transform/i)).toBeVisible();
     } else {
       await expect(page.locator('h1').first()).toContainText(clusterName);
@@ -85,14 +72,17 @@ test.describe('Clusters — CRUD Operations', () => {
   test('should show delete action for existing cluster row', async ({ page }) => {
     await page.goto('/clusters');
 
-    // Wait for the table to render
-    const table = page.locator('table').first();
-    await expect(table).toBeVisible();
+    // Wait for cluster cards or table rows to render
+    const clusterCard = page.locator('button[aria-label^="View cluster"]').first();
+    const dataRow = page.locator('tr[data-row]').first();
+    const emptyState = page.locator('[data-testid="empty-state"]').first();
 
-    const firstRow = table.locator('tbody tr').first();
-    await expect(firstRow).toBeVisible();
-    // Wait for data to load (not skeleton)
-    await expect(firstRow).toContainText(/.+/, { timeout: 10_000 });
+    await expect(clusterCard.or(dataRow).or(emptyState)).toBeVisible({ timeout: 15_000 });
+
+    if (await emptyState.isVisible()) {
+      test.skip(true, 'No clusters found — seed data may be missing');
+      return;
+    }
 
     // Delete button is rendered only when user has admin permission on the cluster.
     // If not rendered, skip gracefully (RBAC-dependent).

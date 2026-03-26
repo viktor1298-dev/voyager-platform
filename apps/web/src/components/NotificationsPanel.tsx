@@ -145,7 +145,7 @@ export function NotificationsPanel() {
       >
         <Bell className="h-4 w-4 text-[var(--color-text-muted)]" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+          <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold leading-none">
             {unreadCount}
           </span>
         )}
@@ -169,7 +169,7 @@ export function NotificationsPanel() {
                 <button
                   type="button"
                   onClick={handleMarkAllRead}
-                  className="text-[10px] text-[var(--color-accent)] hover:underline font-medium"
+                  className="text-xs text-[var(--color-accent)] hover:underline font-medium"
                 >
                   Mark all read
                 </button>
@@ -187,7 +187,7 @@ export function NotificationsPanel() {
                 key={cat}
                 type="button"
                 onClick={() => setCategory(cat)}
-                className={`px-2 py-1 rounded text-[10px] font-medium capitalize transition-colors ${category === cat ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]' : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)]'}`}
+                className={`px-2 py-1 rounded text-xs font-medium capitalize transition-colors ${category === cat ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]' : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)]'}`}
               >
                 {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
               </button>
@@ -211,14 +211,14 @@ export function NotificationsPanel() {
                   <div className="flex items-start gap-3 px-4 py-2.5 flex-1 min-w-0">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[11px] font-semibold text-[var(--color-text-secondary)] truncate">
+                        <span className="text-xs font-semibold text-[var(--color-text-secondary)] truncate">
                           {notif.clusterName}
                         </span>
-                        <span className="text-[10px] text-[var(--color-text-dim)] font-mono whitespace-nowrap">
+                        <span className="text-xs text-[var(--color-text-dim)] font-mono whitespace-nowrap">
                           {relativeTime(notif.latestTimestamp)}
                         </span>
                       </div>
-                      <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-snug line-clamp-2">
+                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5 leading-snug line-clamp-2">
                         {notif.count > 1
                           ? `${notif.message || notif.reason} (×${notif.count})`
                           : (notif.message || notif.reason)}
@@ -233,7 +233,7 @@ export function NotificationsPanel() {
             <Link
               href="/alerts"
               onClick={() => setOpen(false)}
-              className="text-[11px] text-[var(--color-accent)] hover:underline font-medium"
+              className="text-xs text-[var(--color-accent)] hover:underline font-medium"
             >
               View all alerts →
             </Link>

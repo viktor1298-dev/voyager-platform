@@ -35,9 +35,38 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (isPublicPath(pathname)) return
     if (!isHydrated || !isSessionResolved || hasValidSession) return
 
-    const returnUrl = encodeURIComponent(requestedReturnUrl)
-    router.replace(`/login?returnUrl=${returnUrl}`)
-  }, [hasValidSession, isHydrated, isSessionResolved, pathname, requestedReturnUrl, router])
+    const loginUrl = new URL('/login', window.location.origin)
+    const currentParams = new URLSearchParams(queryString)
+    const loggedOutAt = currentParams.get('loggedOutAt')
+    const logoutInProgress = typeof window !== 'undefined' && window.sessionStorage.getItem('logoutInProgress')?.trim()
+
+    if (logoutInProgress) {
+      loginUrl.searchParams.set('loggedOut', '1')
+      loginUrl.searchParams.set('loggedOutAt', logoutInProgress)
+      if (requestedReturnUrl !== '/login') {
+        loginUrl.searchParams.set('returnUrl', requestedReturnUrl)
+      }
+      router.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
+      return
+    }
+
+    if (currentParams.get('loggedOut') === '1') {
+      loginUrl.searchParams.set('loggedOut', '1')
+      if (loggedOutAt && loggedOutAt.trim().length > 0) {
+        loginUrl.searchParams.set('loggedOutAt', loggedOutAt)
+      }
+      if (pathname !== '/login' && requestedReturnUrl !== '/login') {
+        loginUrl.searchParams.set('returnUrl', requestedReturnUrl)
+      }
+      router.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
+      return
+    }
+
+    if (pathname !== '/login') {
+      loginUrl.searchParams.set('returnUrl', requestedReturnUrl)
+    }
+    router.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
+  }, [hasValidSession, isHydrated, isSessionResolved, pathname, queryString, requestedReturnUrl, router])
 
   if (!pathname) return null
   if (isPublicPath(pathname)) return <>{children}</>
@@ -50,7 +79,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!hasValidSession) return null
+  // Keep the current protected page mounted while the redirect effect runs.
+  // Returning null here caused guest E2E/spec flows to lose shell affordances
+  // and made auth bounces much flakier during session resolution races.
+  if (!hasValidSession) {
+    return <>{children}</>
+  }
 
   return <>{children}</>
 }

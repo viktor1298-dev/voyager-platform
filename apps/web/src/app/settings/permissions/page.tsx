@@ -9,6 +9,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { DataTable } from '@/components/DataTable'
 import { Badge } from '@/components/ui/badge'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import {
   getAllPrincipals,
   getRelationBadgeClass,
@@ -24,6 +25,8 @@ const RELATIONS: Relation[] = ['owner', 'admin', 'editor', 'viewer']
 export const dynamic = 'force-dynamic'
 
 export default function SettingsPermissionsPage() {
+  usePageTitle('Settings — Permissions')
+
   const isAdmin = useIsAdmin()
   const router = useRouter()
   const [grants, setGrants] = useState<AccessGrant[]>([])
@@ -113,7 +116,7 @@ export default function SettingsPermissionsPage() {
     <div>
       <div className="mb-6">
         <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Permissions</h2>
-        <p className="mt-1 text-[11px] font-mono uppercase tracking-wider text-[var(--color-table-meta)]">Resource-based access control viewer</p>
+        <p className="mt-1 text-xs font-mono uppercase tracking-wider text-[var(--color-table-meta)]">Resource-based access control viewer</p>
       </div>
 
       <div className="mb-4 grid gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 lg:grid-cols-[1fr_1fr_1fr_auto]">
@@ -158,7 +161,10 @@ export default function SettingsPermissionsPage() {
 
       <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
         <h3 className="mb-3 text-sm font-semibold text-[var(--color-text-primary)]">Permission Matrix</h3>
-        <DataTable data={matrixRows} columns={matrixColumns} searchable searchPlaceholder="Search users/teams…" loading={isLoading} />
+        {/* Zebra striping for dense matrix readability */}
+        <div className="[&_tbody_tr:nth-child(even)]:bg-white/[0.02] dark:[&_tbody_tr:nth-child(even)]:bg-white/[0.03] [&_tbody_tr:nth-child(odd)]:bg-transparent">
+          <DataTable data={matrixRows} columns={matrixColumns} searchable searchPlaceholder="Search users/teams…" loading={isLoading} />
+        </div>
       </section>
 
       <ConfirmDialog

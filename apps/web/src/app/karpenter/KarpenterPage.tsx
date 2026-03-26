@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { CircleDollarSign, RefreshCw, Server, Timer } from 'lucide-react'
-import { m } from 'motion/react'
+import { motion } from 'motion/react'
 import { useSearchParams } from 'next/navigation'
 import { useMemo } from 'react'
 import { toast } from 'sonner'
@@ -338,7 +338,7 @@ export default function KarpenterPage() {
             <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
               Karpenter
             </h1>
-            <p className="mt-1 text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">
+            <p className="mt-1 text-xs font-mono uppercase tracking-wider text-[var(--color-text-dim)]">
               Autoscaling dashboard{selectedClusterId ? ` · cluster ${selectedClusterId}` : ''}
             </p>
           </div>
@@ -435,7 +435,7 @@ export default function KarpenterPage() {
 
           <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {topology.map((pool, index) => (
-              <m.div
+              <motion.div
                 key={pool.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -457,7 +457,7 @@ export default function KarpenterPage() {
                     </li>
                   ))}
                 </ul>
-              </m.div>
+              </motion.div>
             ))}
           </div>
         </section>

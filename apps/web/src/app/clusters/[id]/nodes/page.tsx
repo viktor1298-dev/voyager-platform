@@ -1,11 +1,13 @@
 'use client'
 
 import type { ColumnDef } from '@tanstack/react-table'
+import { RefreshCw, Server } from 'lucide-react'
 import { useParams } from 'next/navigation'
+import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DataTable } from '@/components/DataTable'
-import { Progress } from '@/components/ui/progress'
 import { nodeStatusColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface NodeRow {
   id: string
@@ -33,7 +35,7 @@ function asText(value: unknown, fallback = '—'): string {
 function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>[] {
   const metricsUnavailableCell = () => (
     <span
-      className="text-[var(--color-text-dim)] text-[11px] italic"
+      className="text-[var(--color-text-dim)] text-xs italic"
       title="Install metrics-server in your cluster to enable resource metrics"
     >
       {metricsAvailable ? '—' : 'metrics-server required'}
@@ -44,7 +46,7 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
       accessorKey: 'name',
       header: 'Name',
       cell: ({ getValue }) => (
-        <span className="font-medium text-[var(--color-text-primary)] text-[13px]">
+        <span className="font-medium font-mono text-[var(--color-text-primary)] text-[13px]">
           {getValue<string>()}
         </span>
       ),
@@ -73,7 +75,7 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
       accessorKey: 'kubeletVersion',
       header: 'Kubelet',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
           {getValue<string>()}
         </span>
       ),
@@ -82,14 +84,14 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
       accessorKey: 'os',
       header: 'OS',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-muted)] text-[12px]">{getValue<string>()}</span>
+        <span className="text-[var(--color-text-muted)] text-xs">{getValue<string>()}</span>
       ),
     },
     {
       accessorKey: 'cpu',
       header: 'CPU',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
           {getValue<string>()}
         </span>
       ),
@@ -101,11 +103,19 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
         const v = getValue<number | null>()
         if (v == null) return metricsUnavailableCell()
         return (
-          <div className="flex items-center gap-2 min-w-[80px]">
-            <Progress value={v} className="h-1.5 flex-1" />
-            <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">
-              {v}%
-            </span>
+          <div className="flex items-center gap-2 min-w-[100px]">
+            <div className="relative flex-1 h-4 rounded-full bg-[var(--color-track)] overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full transition-all"
+                style={{
+                  width: `${Math.max(v, 2)}%`,
+                  background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
+                }}
+              />
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
+                {v}%
+              </span>
+            </div>
           </div>
         )
       },
@@ -114,7 +124,7 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
       accessorKey: 'memory',
       header: 'Memory',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
           {getValue<string>()}
         </span>
       ),
@@ -126,11 +136,19 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
         const v = getValue<number | null>()
         if (v == null) return metricsUnavailableCell()
         return (
-          <div className="flex items-center gap-2 min-w-[80px]">
-            <Progress value={v} className="h-1.5 flex-1" />
-            <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">
-              {v}%
-            </span>
+          <div className="flex items-center gap-2 min-w-[100px]">
+            <div className="relative flex-1 h-4 rounded-full bg-[var(--color-track)] overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full transition-all"
+                style={{
+                  width: `${Math.max(v, 2)}%`,
+                  background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
+                }}
+              />
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
+                {v}%
+              </span>
+            </div>
           </div>
         )
       },
@@ -139,10 +157,13 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
 }
 
 export default function NodesPage() {
-  const { id } = useParams<{ id: string }>()
+  usePageTitle('Cluster Nodes')
 
-  const dbCluster = trpc.clusters.get.useQuery({ id })
-  const resolvedId = dbCluster.data?.id ?? id
+  const { id: routeSegment } = useParams<{ id: string }>()
+  const clusterId = getClusterIdFromRouteSegment(routeSegment)
+
+  const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
+  const resolvedId = dbCluster.data?.id ?? clusterId
   const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
   const isLive = hasCredentials
 
@@ -185,19 +206,37 @@ export default function NodesPage() {
       }))
 
   const metricsAvailable = effectiveIsLive && nodes.some((n) => n.cpuPercent != null)
+  const isOffline = isLive && liveFailed
+  const nodesQuery = effectiveIsLive ? liveQuery : dbNodes
 
   return (
     <DataTable
       data={nodes}
       columns={makeNodeColumns(metricsAvailable)}
       loading={effectiveIsLive ? liveQuery.isLoading : dbNodes.isLoading}
-      emptyTitle="No nodes found"
+      emptyIcon={<Server className="h-10 w-10" />}
+      emptyTitle={isOffline ? 'Cluster is currently offline' : 'No nodes found in this cluster'}
+      emptyDescription={
+        isOffline
+          ? 'Node data is unavailable while the cluster is offline. Check cluster connectivity and try again.'
+          : 'Nodes appear here when your cluster has worker nodes registered. Check cluster connectivity.'
+      }
+      emptyAction={
+        <button
+          type="button"
+          onClick={() => nodesQuery.refetch()}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
+        >
+          <RefreshCw className="h-3 w-3" />
+          Refresh
+        </button>
+      }
       paginated
       pageSize={25}
       mobileCard={(node) => (
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
           <div className="flex justify-between items-center">
-            <span className="font-medium text-[var(--color-text-primary)] text-sm">{node.name}</span>
+            <span className="font-medium font-mono text-[var(--color-text-primary)] text-sm">{node.name}</span>
             <span className="inline-flex items-center gap-1.5">
               <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
               <span className="text-[var(--color-text-secondary)] text-xs">{node.status}</span>

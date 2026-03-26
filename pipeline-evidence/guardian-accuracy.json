@@ -626,17 +626,21 @@
     "was_corrected": false
   },
   {
-    "timestamp": "2026-03-07T09:45:00Z",
-    "version": "v195",
-    "verdict": "ALL_GATES_PASS_PENDING_FOREMAN_UPDATE",
+    "timestamp": "2026-03-16T01:25:30Z",
+    "version": "v220",
+    "verdict": "COMPLETE",
     "gates_checked": 6,
-    "gates_passed": 6,
     "env_blocked_items": [
-      "ClusterIP unreachable from host - used ingress domain instead"
+      "Autoscaling tab \u2014 requires Karpenter (minikube env)"
     ],
-    "e2e_author_missing": true,
-    "foreman_alive": true,
-    "action": "health_report_sent_awaiting_foreman",
-    "was_corrected": false
+    "was_corrected": false,
+    "gate_results": {
+      "evidence_exists": true,
+      "author_valid": true,
+      "timestamp_after_deploy": true,
+      "e2e_gate": true,
+      "qa_gate": true,
+      "board_md_gate": true
+    }
   }
 ]

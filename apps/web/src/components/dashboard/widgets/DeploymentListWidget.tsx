@@ -18,7 +18,7 @@ export function DeploymentListWidget() {
     <div className="h-full p-4 flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-[var(--color-text-primary)] border-l-2 border-[var(--color-accent)] pl-2">Deployments</h3>
-        <Link href="/deployments" className="text-[10px] text-[var(--color-accent)] hover:underline">View all →</Link>
+        <Link href="/deployments" className="text-xs text-[var(--color-accent)] hover:underline">View all →</Link>
       </div>
       <div className="flex-1 overflow-auto space-y-1.5">
         {!activeClusterId && <p className="text-xs text-[var(--color-text-dim)]">No cluster selected</p>}
@@ -34,7 +34,7 @@ export function DeploymentListWidget() {
               <span className={`h-2 w-2 rounded-full shrink-0 ${isReady ? 'bg-[var(--color-status-active)]' : 'bg-[var(--color-status-warning)]'}`} />
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-[var(--color-text-primary)] truncate">{d.name}</p>
-                <p className="text-[10px] text-[var(--color-text-dim)] font-mono">{d.namespace} · {ready}/{desired}</p>
+                <p className="text-xs text-[var(--color-text-dim)] font-mono">{d.namespace} · {ready}/{desired}</p>
               </div>
             </div>
           )

@@ -47,8 +47,8 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Execute merge and resolve all 9 conflicting files (Tier 1-4)
-- [ ] 02-02-PLAN.md -- Evil-merge review, Motion import normalization, schema integrity
+- [x] 02-01-PLAN.md -- Execute merge and resolve all 9 conflicting files (Tier 1-4)
+- [x] 02-02-PLAN.md -- Evil-merge review, Motion import normalization, schema integrity
 - [ ] 02-03-PLAN.md -- Validation gate (typecheck + lint + build + test) and merge commit
 
 ### Phase 3: Validation Gate

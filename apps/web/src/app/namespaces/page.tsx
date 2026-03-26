@@ -9,6 +9,7 @@ import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
 import { FolderTree } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface NamespaceRow {
   name: string
@@ -35,7 +36,7 @@ const columns: ColumnDef<NamespaceRow>[] = [
       const status = getValue() as string | null
       return (
         <span
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold border ${
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold border ${
             status === 'Active'
               ? 'bg-[var(--color-status-active)]/20 border-[var(--color-status-active)]/35 text-[var(--color-badge-label)]'
               : 'bg-[var(--color-status-idle)]/20 border-[var(--color-status-idle)]/35 text-[var(--color-badge-label)]'
@@ -54,6 +55,8 @@ const columns: ColumnDef<NamespaceRow>[] = [
 ]
 
 export default function NamespacesPage() {
+  usePageTitle('Namespaces')
+
   const clustersQuery = trpc.clusters.list.useQuery()
   const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null)
 

@@ -1,8 +1,11 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { TRPCClientError, getUntypedClient } from '@trpc/client'
+import type { TRPCConnectionState } from '@trpc/client/unstable-internals'
 import { usePathname } from 'next/navigation'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { getTRPCClient, trpc } from '@/lib/trpc'
 import { AWAY_AFTER_MS, type PresenceUser, usePresenceStore } from '@/stores/presence'
 
 interface BackendPresenceUser {
@@ -21,8 +24,24 @@ interface PresenceEventPayload {
   users?: BackendPresenceUser[]
 }
 
-const RECONNECT_BASE_DELAY_MS = 1_000
-const RECONNECT_MAX_DELAY_MS = 15_000
+const TRANSIENT_DISCONNECT_WARNING_THRESHOLD = 3
+const PERSISTENT_DISCONNECT_ERROR_THRESHOLD = 6
+
+/** Fix #6: Exponential backoff config for SSE presence reconnect */
+const BACKOFF_BASE_MS = 2_000
+const BACKOFF_MAX_MS = 60_000
+const BACKOFF_JITTER_MS = 1_000
+
+/** SSE fallback: after this many consecutive failures, switch to polling-only mode */
+const SSE_FALLBACK_THRESHOLD = 3
+/** Periodic recovery interval: try SSE again every 5 minutes while in fallback */
+const SSE_RECOVERY_INTERVAL_MS = 5 * 60 * 1_000
+
+function getBackoffDelay(attempt: number): number {
+  const delay = Math.min(BACKOFF_BASE_MS * 2 ** (attempt - 1), BACKOFF_MAX_MS)
+  const jitter = Math.random() * BACKOFF_JITTER_MS
+  return delay + jitter
+}
 
 function mapIncomingUser(user: BackendPresenceUser): PresenceUser | null {
   const id = user.id ?? user.userId
@@ -63,9 +82,66 @@ async function fetchPresenceInitial(): Promise<PresenceUser[]> {
     .filter((user): user is PresenceUser => user !== null)
 }
 
+function applyPresencePayload(
+  payload: PresenceEventPayload,
+  options: {
+    setOnlineUsers: (users: PresenceUser[]) => void
+    upsertUser: (user: PresenceUser) => void
+    removeUser: (userId: string) => void
+  },
+) {
+  if (Array.isArray(payload.users)) {
+    const users = payload.users
+      .map((user) => mapIncomingUser(user))
+      .filter((user): user is PresenceUser => user !== null)
+
+    if (payload.reason === 'snapshot') {
+      options.setOnlineUsers(users)
+      return
+    }
+
+    options.setOnlineUsers(users)
+    return
+  }
+
+  if ((payload.reason === 'remove' || payload.reason === 'offline') && payload.userId) {
+    options.removeUser(payload.userId)
+  }
+}
+
+function isTransientPresenceError(error: unknown) {
+  if (!(error instanceof TRPCClientError)) {
+    return false
+  }
+
+  const code = error.data?.code
+  if (code && ['TIMEOUT', 'CLIENT_CLOSED_REQUEST', 'INTERNAL_SERVER_ERROR'].includes(code)) {
+    return true
+  }
+
+  const message = error.message.toLowerCase()
+  return [
+    'err_incomplete_chunked_encoding',
+    'fetch failed',
+    'networkerror',
+    'network error',
+    'failed to fetch',
+    'load failed',
+    'stream closed',
+    'stream interrupted',
+    'the operation was aborted',
+    'aborted',
+  ].some((fragment) => message.includes(fragment))
+}
+
 export function usePresence() {
+  const utils = trpc.useUtils()
+  const clientRef = useRef(getUntypedClient(getTRPCClient()))
   const pathname = usePathname()
   const lastHeartbeatRef = useRef(Date.now())
+  const consecutiveDisconnectsRef = useRef(0)
+  const failureCountRef = useRef(0)
+  const [useFallbackPolling, setUseFallbackPolling] = useState(false)
   const setOnlineUsers = usePresenceStore((s) => s.setOnlineUsers)
   const upsertUser = usePresenceStore((s) => s.upsertUser)
   const removeUser = usePresenceStore((s) => s.removeUser)
@@ -76,6 +152,8 @@ export function usePresence() {
     queryFn: fetchPresenceInitial,
     staleTime: 15_000,
     refetchInterval: 45_000,
+    retry: 3,
+    retryDelay: (attempt) => getBackoffDelay(attempt),
   })
 
   useEffect(() => {
@@ -84,89 +162,140 @@ export function usePresence() {
   }, [initialPresenceQuery.data, setOnlineUsers])
 
   useEffect(() => {
-    let eventSource: EventSource | null = null
-    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
-    let reconnectAttempts = 0
-    let isUnmounted = false
+    // Skip SSE subscription while in fallback polling mode
+    if (useFallbackPolling) return
 
-    const clearReconnectTimer = () => {
-      if (!reconnectTimeout) return
-      clearTimeout(reconnectTimeout)
-      reconnectTimeout = null
-    }
-
-    const scheduleReconnect = () => {
-      if (isUnmounted || reconnectTimeout) return
-
-      const delay = Math.min(RECONNECT_BASE_DELAY_MS * 2 ** reconnectAttempts, RECONNECT_MAX_DELAY_MS)
-      reconnectAttempts += 1
-
-      reconnectTimeout = setTimeout(() => {
-        reconnectTimeout = null
-        connect()
-      }, delay)
-    }
-
-    const connect = () => {
-      if (isUnmounted) return
-
-      eventSource?.close()
-      eventSource = new EventSource('/trpc/presence.subscribe', { withCredentials: true })
-
-      eventSource.onopen = () => {
-        reconnectAttempts = 0
-        clearReconnectTimer()
-      }
-
-      eventSource.onmessage = (event) => {
-        try {
-          const payload = JSON.parse(event.data) as PresenceEventPayload
-
-          if (Array.isArray(payload.users)) {
-            const users = payload.users
-              .map((user) => mapIncomingUser(user))
-              .filter((user): user is PresenceUser => user !== null)
-
-            if (payload.reason === 'snapshot') {
-              setOnlineUsers(users)
-              return
-            }
-
-            users.forEach((user) => upsertUser(user))
-            return
-          }
-
-          if (payload.reason === 'remove' || payload.reason === 'offline') {
-            if (payload.userId) removeUser(payload.userId)
-          }
-        } catch {
-          // no-op: ignore malformed event payloads
+    const subscription = clientRef.current.subscription('presence.subscribe', undefined, {
+      onData(payload) {
+        consecutiveDisconnectsRef.current = 0
+        failureCountRef.current = 0
+        applyPresencePayload(payload as PresenceEventPayload, {
+          setOnlineUsers,
+          upsertUser,
+          removeUser,
+        })
+      },
+      onConnectionStateChange(state: TRPCConnectionState<TRPCClientError<any>>) {
+        if (state.state === 'pending') {
+          consecutiveDisconnectsRef.current = 0
+          return
         }
-      }
 
-      eventSource.onerror = () => {
-        eventSource?.close()
-        scheduleReconnect()
-      }
+        if (state.state !== 'connecting' || !state.error) {
+          return
+        }
+
+        const attempt = consecutiveDisconnectsRef.current + 1
+        consecutiveDisconnectsRef.current = attempt
+
+        if (isTransientPresenceError(state.error)) {
+          const backoffMs = getBackoffDelay(attempt)
+          // Fix #6: Only log on meaningful thresholds to reduce console noise
+          if (attempt === TRANSIENT_DISCONNECT_WARNING_THRESHOLD) {
+            console.warn('[presence] subscription disconnected, retrying with backoff', {
+              attempt,
+              nextRetryMs: Math.round(backoffMs),
+              message: state.error.message,
+            })
+          }
+
+          if (attempt === PERSISTENT_DISCONNECT_ERROR_THRESHOLD) {
+            console.error('[presence] subscription still failing — backing off to max interval', {
+              attempt,
+              backoffMs: Math.round(backoffMs),
+              message: state.error.message,
+            })
+          }
+
+          // Suppress all other transient errors (attempt 1, 2, 4, 5, 7+)
+          return
+        }
+
+        // Non-transient failure → increment failure count and possibly switch to fallback
+        failureCountRef.current += 1
+        if (failureCountRef.current >= SSE_FALLBACK_THRESHOLD) {
+          console.warn('[presence] SSE failed repeatedly, switching to polling fallback', {
+            failures: failureCountRef.current,
+          })
+          setUseFallbackPolling(true)
+        }
+
+        console.warn('[presence] subscription unavailable', { message: state.error.message })
+      },
+      onError(error) {
+        if (isTransientPresenceError(error)) {
+          const attempt = consecutiveDisconnectsRef.current
+          // Fix #6: Only log at the persistent threshold, suppress all others
+          if (attempt >= PERSISTENT_DISCONNECT_ERROR_THRESHOLD && attempt % PERSISTENT_DISCONNECT_ERROR_THRESHOLD === 0) {
+            console.error('[presence] subscription failed after retry exhaustion', {
+              attempt,
+              backoffMs: Math.round(getBackoffDelay(attempt)),
+              message: error.message,
+            })
+          }
+
+          // Also track for fallback threshold
+          failureCountRef.current += 1
+          if (failureCountRef.current >= SSE_FALLBACK_THRESHOLD) {
+            console.warn('[presence] SSE failed repeatedly, switching to polling fallback', {
+              failures: failureCountRef.current,
+            })
+            setUseFallbackPolling(true)
+          }
+          return
+        }
+
+        failureCountRef.current += 1
+        if (failureCountRef.current >= SSE_FALLBACK_THRESHOLD) {
+          console.warn('[presence] SSE failed repeatedly, switching to polling fallback', {
+            failures: failureCountRef.current,
+          })
+          setUseFallbackPolling(true)
+        }
+
+        console.warn('[presence] subscription unavailable', { message: error.message })
+      },
+    })
+
+    return () => subscription.unsubscribe()
+  }, [removeUser, setOnlineUsers, upsertUser, useFallbackPolling])
+
+  // SSE recovery: when in fallback polling mode, attempt to recover SSE on
+  // network restore, tab visibility change, or periodically every 5 minutes.
+  useEffect(() => {
+    if (!useFallbackPolling) return
+
+    const tryRecovery = () => {
+      console.info('[presence] Attempting SSE recovery...')
+      failureCountRef.current = 0
+      consecutiveDisconnectsRef.current = 0
+      setUseFallbackPolling(false)
     }
 
-    connect()
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') tryRecovery()
+    }
+
+    // Recovery on network restore
+    window.addEventListener('online', tryRecovery)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // Periodic recovery every 5 minutes
+    const timer = setInterval(tryRecovery, SSE_RECOVERY_INTERVAL_MS)
 
     return () => {
-      isUnmounted = true
-      clearReconnectTimer()
-      eventSource?.close()
+      window.removeEventListener('online', tryRecovery)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      clearInterval(timer)
     }
-  }, [removeUser, setOnlineUsers, upsertUser])
+  }, [useFallbackPolling])
 
   useEffect(() => {
     const sendHeartbeat = async () => {
-      await fetch('/trpc/presence.heartbeat', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPage: pathname }),
-      }).catch(() => undefined)
+      await utils.client.mutation('presence.heartbeat', { currentPage: pathname, avatar: null }).catch(() => {
+        // Fix #6: Silently swallow heartbeat failures — transient SSE/chunked encoding errors
+        // are expected every ~60s and should not flood the console
+      })
 
       lastHeartbeatRef.current = Date.now()
       setMyStatus('online')
@@ -178,7 +307,7 @@ export function usePresence() {
     }, 30_000)
 
     return () => clearInterval(interval)
-  }, [pathname, setMyStatus])
+  }, [pathname, setMyStatus, utils.client])
 
   useEffect(() => {
     const interval = setInterval(() => {

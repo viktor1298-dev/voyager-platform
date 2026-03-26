@@ -7,7 +7,7 @@ web:
   replicaCount: 1
   image:
     repository: voyager-web
-    tag: dev
+    tag: v215
     pullPolicy: IfNotPresent
   port: 3000
 
@@ -15,12 +15,12 @@ api:
   replicaCount: 1
   image:
     repository: voyager-api
-    tag: dev
+    tag: v215
     pullPolicy: IfNotPresent
   port: 4000
 
 migrate:
-  enabled: false  # Migration is handled by the API on startup — no separate job needed
+  enabled: false  # Schema/init is handled by Helm sql/init.sql; API startup must not run migrate()
   image:
     repository: voyager-api-migrate
     tag: ""

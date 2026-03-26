@@ -15,6 +15,7 @@ import {
 } from '@/lib/ai-keys-client'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface ClusterRow {
   id: string
@@ -44,7 +45,7 @@ const clusterColumns: ColumnDef<ClusterRow, unknown>[] = [
     accessorKey: 'name',
     header: 'Name',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-primary)] font-medium text-[12px]">
+      <span className="text-[var(--color-text-primary)] font-medium text-xs">
         {getValue<string>()}
       </span>
     ),
@@ -53,14 +54,14 @@ const clusterColumns: ColumnDef<ClusterRow, unknown>[] = [
     accessorKey: 'provider',
     header: 'Provider',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-secondary)] text-[12px]">{getValue<string>()}</span>
+      <span className="text-[var(--color-text-secondary)] text-xs">{getValue<string>()}</span>
     ),
   },
   {
     accessorKey: 'endpoint',
     header: 'Endpoint',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-muted)] font-mono text-[11px]">
+      <span className="text-[var(--color-text-muted)] font-mono text-xs">
         {getValue<string>()}
       </span>
     ),
@@ -77,7 +78,7 @@ const clusterColumns: ColumnDef<ClusterRow, unknown>[] = [
             ? 'var(--color-status-warning)'
             : 'var(--color-status-error)'
       return (
-        <span className="text-[11px] font-semibold" style={{ color }}>
+        <span className="text-xs font-semibold" style={{ color }}>
           {status}
         </span>
       )
@@ -88,7 +89,7 @@ const clusterColumns: ColumnDef<ClusterRow, unknown>[] = [
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-[var(--color-border)]/50 last:border-b-0">
-      <span className="text-[12px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider">
+      <span className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider">
         {label}
       </span>
       <span className="text-[13px] text-[var(--color-text-primary)] font-medium">{value}</span>
@@ -152,6 +153,8 @@ function StatusDot({ connected }: { connected: boolean }) {
 export const dynamic = 'force-dynamic'
 
 export default function SettingsGeneralPage() {
+  usePageTitle('Settings')
+
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
 
   const liveQuery = trpc.clusters.live.useQuery({ clusterId: activeClusterId ?? '' }, {
@@ -274,7 +277,7 @@ export default function SettingsGeneralPage() {
         <InfoRow
           label="API Endpoint"
           value={
-            <span className="text-[12px] font-mono text-[var(--color-text-secondary)]">
+            <span className="text-xs font-mono text-[var(--color-text-secondary)]">
               {isConnected ? (live.endpoint ?? '/trpc') : '—'}
             </span>
           }
@@ -303,7 +306,7 @@ export default function SettingsGeneralPage() {
         <InfoRow
           label="Status"
           value={
-            <span className="text-[var(--color-status-active)] text-[12px] font-semibold">
+            <span className="text-[var(--color-status-active)] text-xs font-semibold">
               Operational
             </span>
           }
@@ -403,11 +406,11 @@ export default function SettingsGeneralPage() {
               placeholder={provider === 'anthropic' ? 'sk-ant-...' : 'sk-...'}
               className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
-            <p className="mt-1 text-[11px] text-[var(--color-text-dim)]">
+            <p className="mt-1 text-xs text-[var(--color-text-dim)]">
               We never show your full key in the UI.
             </p>
             {(storedMaskedKey || apiKeyInput) && (
-              <p className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
+              <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
                 Key preview:{' '}
                 <span className="font-mono">{storedMaskedKey ?? maskApiKey(apiKeyInput)}</span>
               </p>
@@ -546,7 +549,7 @@ export default function SettingsGeneralPage() {
             href="https://github.com/vkzone/voyager-platform"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-[12px] text-[var(--color-accent)] hover:text-[var(--color-text-primary)] transition-colors"
+            className="flex items-center gap-2 text-xs text-[var(--color-accent)] hover:text-[var(--color-text-primary)] transition-colors"
           >
             <Globe className="h-3.5 w-3.5" />
             GitHub Repository
@@ -595,7 +598,7 @@ function ClusterTable({
 
   if (rows.length === 0) {
     return (
-      <p className="text-[12px] text-[var(--color-text-muted)] py-4">No clusters registered.</p>
+      <p className="text-xs text-[var(--color-text-muted)] py-4">No clusters registered.</p>
     )
   }
 

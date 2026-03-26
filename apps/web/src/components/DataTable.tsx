@@ -23,7 +23,7 @@ import {
   ChevronsRight,
   Search,
 } from 'lucide-react'
-import { AnimatePresence, m, useInView } from 'motion/react'
+import { AnimatePresence, motion, useInView } from 'motion/react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { DURATION, EASING, STAGGER } from '@/lib/animation-constants'
 
@@ -67,7 +67,7 @@ function AnimatedTbody({
   tbodyRef: React.RefObject<HTMLTableSectionElement | null>
 }) {
   const inViewRef = useRef<HTMLTableSectionElement>(null)
-  const isInView = useInView(inViewRef, { once: true, margin: '-50px 0px 0px 0px' })
+  const isInView = useInView(inViewRef, { once: true })
 
   // Callback ref: merges inViewRef with external tbodyRef
   const callbackRef = (node: HTMLTableSectionElement | null) => {
@@ -76,7 +76,7 @@ function AnimatedTbody({
   }
 
   return (
-    <m.tbody
+    <motion.tbody
       ref={callbackRef}
       variants={{
         hidden: { opacity: 1 },
@@ -86,7 +86,7 @@ function AnimatedTbody({
       animate={isInView ? 'visible' : 'hidden'}
     >
       {children}
-    </m.tbody>
+    </motion.tbody>
   )
 }
 
@@ -217,7 +217,7 @@ export function DataTable<TData>({
                     type="button"
                     aria-label={plainHeader ? `Sort by ${plainHeader}` : undefined}
                     className="flex items-center gap-1 cursor-pointer hover:text-[var(--color-text-secondary)]"
-                    onClick={header.column.getToggleSortingHandler()}
+                    onClick={(event) => header.column.getToggleSortingHandler()?.(event)}
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
                     <span className="ml-0.5">
@@ -281,7 +281,7 @@ export function DataTable<TData>({
         {/* P3-009: AnimatePresence mode="wait" for skeleton → data transition */}
         <AnimatePresence mode="wait" initial={false}>
           {loading ? (
-            <m.div
+            <motion.div
               key="skeleton"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -327,9 +327,9 @@ export function DataTable<TData>({
                   )}
                 </tbody>
               </table>
-            </m.div>
+            </motion.div>
           ) : sortedRows.length === 0 ? (
-            <m.div
+            <motion.div
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -337,7 +337,7 @@ export function DataTable<TData>({
               transition={{ duration: DURATION.fast }}
             >
               {mobileCard && (
-                <div className="md:hidden flex flex-col items-center justify-center py-10 text-[var(--color-text-muted)]">
+                <div data-testid="empty-state" className="md:hidden flex flex-col items-center justify-center py-10 text-[var(--color-text-muted)]">
                   {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
                   <p className="text-sm font-medium">{emptyTitle}</p>
                   {emptyDescription && (
@@ -354,7 +354,7 @@ export function DataTable<TData>({
                       colSpan={Math.max(table.getAllLeafColumns().length, 1)}
                       className="py-16 text-center text-[var(--color-text-muted)]"
                     >
-                      <div className="flex flex-col items-center justify-center">
+                      <div data-testid="empty-state" className="flex flex-col items-center justify-center">
                         {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
                         <p className="text-sm font-medium">{emptyTitle}</p>
                         {emptyDescription && (
@@ -368,9 +368,9 @@ export function DataTable<TData>({
                   </tr>
                 </tbody>
               </table>
-            </m.div>
+            </motion.div>
           ) : (
-            <m.div
+            <motion.div
               key="data"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -388,19 +388,20 @@ export function DataTable<TData>({
                 </div>
               )}
 
-              {/* P3-005: Desktop Table with staggered rows via useInView */}
               <table className={`w-full text-sm ${mobileCard ? 'hidden md:table' : ''}`}>
                 {renderTableHeader()}
                 <AnimatedTbody tbodyRef={tableBodyRef}>
                   {sortedRows.map((row) => (
-                    <m.tr
+                    <tr
                       key={row.id}
                       data-row
-                      tabIndex={0}
-                      variants={rowVariants}
+                      tabIndex={onRowClick ? 0 : -1}
+                      role={onRowClick ? 'button' : undefined}
+                      aria-label={onRowClick ? 'Open row details' : undefined}
                       onClick={() => onRowClick?.(row.original)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' && onRowClick) {
+                        if (!onRowClick) return
+                        if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
                           onRowClick(row.original)
                         }
@@ -412,11 +413,11 @@ export function DataTable<TData>({
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       ))}
-                    </m.tr>
+                    </tr>
                   ))}
                 </AnimatedTbody>
               </table>
-            </m.div>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
@@ -485,7 +486,7 @@ function PaginationBtn({
 }) {
   return (
     // P3-007: Button micro-interactions
-    <m.button
+    <motion.button
       type="button"
       onClick={onClick}
       disabled={disabled}
@@ -495,6 +496,6 @@ function PaginationBtn({
       className="p-1.5 rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
     >
       {children}
-    </m.button>
+    </motion.button>
   )
 }

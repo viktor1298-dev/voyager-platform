@@ -2,7 +2,7 @@
 
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { cn } from '@/lib/utils'
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { Search, X } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef } from 'react'
@@ -112,13 +112,13 @@ export function FilterBar({
   ].filter(Boolean) as Array<{ key: string; label: string }>
 
   const chipClass =
-    'rounded-full px-3 py-1 min-h-[44px] text-xs font-medium border border-[var(--color-border)] transition-colors cursor-pointer'
+    'min-h-[44px] rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer'
 
   return (
     <div className={cn('space-y-3', className)}>
-      <div className="flex flex-col lg:flex-row gap-2 lg:items-center">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-dim)]" />
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-text-secondary)]" />
           <input
             ref={searchRef}
             value={parsed.q}
@@ -130,7 +130,7 @@ export function FilterBar({
               })
             }}
             placeholder="Search clusters… (press /)"
-            className="w-full rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] pl-9 pr-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)]"
+            className="w-full rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] pl-9 pr-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus:border-[var(--color-accent)]/40 focus:outline-none"
           />
         </div>
 
@@ -140,21 +140,23 @@ export function FilterBar({
             ['status', options.statuses],
             ['provider', options.providers],
             ['health', options.health],
-          ] as const).filter(([, values]) => values.length > 0).map(([key, values]) => (
-            <select
-              key={key}
-              value={parsed[key]}
-              onChange={(e) => setSingle(key, e.target.value)}
-              className="rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-2 text-xs text-[var(--color-text-secondary)]"
-            >
-              <option value="all">{key}</option>
-              {values.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          ))}
+          ] as const)
+            .filter(([, values]) => values.length > 0)
+            .map(([key, values]) => (
+              <select
+                key={key}
+                value={parsed[key]}
+                onChange={(e) => setSingle(key, e.target.value)}
+                className="rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-2 text-xs font-medium text-[var(--color-text-secondary)] focus:border-[var(--color-accent)]/40 focus:outline-none"
+              >
+                <option value="all">{key}</option>
+                {values.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            ))}
         </div>
       </div>
 
@@ -168,12 +170,12 @@ export function FilterBar({
                 type="button"
                 onClick={() => toggleTag(tag)}
                 className={cn(
-                  'min-h-[44px]',
                   chipClass,
                   active
-                    ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)] text-[var(--color-text-primary)]'
-                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
+                    ? 'border-[var(--color-accent)] bg-[var(--color-accent)] text-white shadow-[0_10px_24px_rgba(91,135,255,0.3)]'
+                    : 'border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] hover:bg-white/[0.04] hover:text-[var(--color-text-primary)]',
                 )}
+                aria-pressed={active}
               >
                 #{tag}
               </button>
@@ -184,7 +186,7 @@ export function FilterBar({
 
       <AnimatePresence>
         {activeChips.length > 0 && (
-          <m.div
+          <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: -4 }}
             animate={reduceMotion ? {} : { opacity: 1, y: 0 }}
             exit={reduceMotion ? {} : { opacity: 0, y: -4 }}
@@ -192,23 +194,23 @@ export function FilterBar({
             className="flex flex-wrap items-center gap-2"
           >
             {activeChips.map((chip) => (
-              <m.span
+              <motion.span
                 key={chip.key}
                 layout
-                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-1 text-xs text-[var(--color-text-secondary)]"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)]/80 bg-[var(--color-bg-secondary)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)]"
               >
                 {chip.label}
-              </m.span>
+              </motion.span>
             ))}
             <button
               type="button"
               onClick={clearAll}
-              className="inline-flex items-center gap-1 rounded-full px-3 py-1 min-h-[44px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+              className="inline-flex min-h-[44px] items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
             >
               <X className="h-3 w-3" />
               Clear
             </button>
-          </m.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

@@ -3,14 +3,14 @@
 import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Box, Cpu, Globe, Server } from 'lucide-react'
-import { m } from 'motion/react'
+import { motion } from 'motion/react'
 import { useParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatedStatCount } from '@/components/AnimatedStatCount'
+import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { LoadingState } from '@/components/LoadingState'
-import { Progress } from '@/components/ui/progress'
 import { AiContextCard } from '@/components/AiContextCard'
 import { AiInsightBanner } from '@/components/ai/AiInsightBanner'
 import { MetricsTimeSeriesPanel } from '@/components/metrics/MetricsTimeSeriesPanel'
@@ -18,6 +18,7 @@ import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-statu
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 function asText(value: unknown, fallback = '—'): string {
   if (typeof value === 'string') {
@@ -54,7 +55,7 @@ interface EventRow {
 function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>[] {
   const metricsUnavailableCell = () => (
     <span
-      className="text-[var(--color-text-dim)] text-[11px] italic"
+      className="text-[var(--color-text-dim)] text-xs italic"
       title="Install metrics-server in your cluster to enable resource metrics"
     >
       {metricsAvailable ? '—' : 'metrics-server required'}
@@ -94,7 +95,7 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
       accessorKey: 'kubeletVersion',
       header: 'Kubelet',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
           {getValue<string>()}
         </span>
       ),
@@ -103,14 +104,14 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
       accessorKey: 'os',
       header: 'OS',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-muted)] text-[12px]">{getValue<string>()}</span>
+        <span className="text-[var(--color-text-muted)] text-xs">{getValue<string>()}</span>
       ),
     },
     {
       accessorKey: 'cpu',
       header: 'CPU',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
           {getValue<string>()}
         </span>
       ),
@@ -122,11 +123,19 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
         const v = getValue<number | null>()
         if (v == null) return metricsUnavailableCell()
         return (
-          <div className="flex items-center gap-2 min-w-[80px]">
-            <Progress value={v} className="h-1.5 flex-1" />
-            <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">
-              {v}%
-            </span>
+          <div className="flex items-center gap-2 min-w-[100px]">
+            <div className="relative flex-1 h-4 rounded-full bg-[var(--color-track)] overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full transition-all"
+                style={{
+                  width: `${Math.max(v, 2)}%`,
+                  background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
+                }}
+              />
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
+                {v}%
+              </span>
+            </div>
           </div>
         )
       },
@@ -135,7 +144,7 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
       accessorKey: 'memory',
       header: 'Memory',
       cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-[12px]">
+        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
           {getValue<string>()}
         </span>
       ),
@@ -147,11 +156,19 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
         const v = getValue<number | null>()
         if (v == null) return metricsUnavailableCell()
         return (
-          <div className="flex items-center gap-2 min-w-[80px]">
-            <Progress value={v} className="h-1.5 flex-1" />
-            <span className="text-[var(--color-text-secondary)] font-mono text-[11px] tabular-nums w-10 text-right">
-              {v}%
-            </span>
+          <div className="flex items-center gap-2 min-w-[100px]">
+            <div className="relative flex-1 h-4 rounded-full bg-[var(--color-track)] overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full transition-all"
+                style={{
+                  width: `${Math.max(v, 2)}%`,
+                  background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
+                }}
+              />
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
+                {v}%
+              </span>
+            </div>
           </div>
         )
       },
@@ -166,7 +183,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
     cell: ({ getValue }) => {
       const ts = getValue<string | null>()
       return (
-        <span className="text-[var(--color-text-dim)] font-mono text-[11px] whitespace-nowrap">
+        <span className="text-[var(--color-text-dim)] font-mono text-xs whitespace-nowrap">
           {ts ? timeAgo(ts) : '—'}
         </span>
       )
@@ -179,7 +196,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
       const type = getValue<string>()
       return (
         <span
-          className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+          className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
           style={{
             color: severityColor(type),
             background: `color-mix(in srgb, ${severityColor(type)} 15%, transparent)`,
@@ -203,7 +220,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
     accessorKey: 'message',
     header: 'Message',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-muted)] text-[12px] max-w-[400px] truncate block">
+      <span className="text-[var(--color-text-muted)] text-xs max-w-[400px] truncate block">
         {getValue<string>()}
       </span>
     ),
@@ -211,10 +228,13 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
 ]
 
 export default function ClusterOverviewPage() {
-  const { id } = useParams<{ id: string }>()
+  usePageTitle('Cluster Overview')
 
-  const dbCluster = trpc.clusters.get.useQuery({ id })
-  const resolvedId = dbCluster.data?.id ?? id
+  const { id: routeSegment } = useParams<{ id: string }>()
+  const clusterId = getClusterIdFromRouteSegment(routeSegment)
+
+  const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
+  const resolvedId = dbCluster.data?.id ?? clusterId
   const hasCredentials = Boolean(
     (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
   )
@@ -379,8 +399,38 @@ export default function ClusterOverviewPage() {
       ? normalizeLiveHealthStatus(cluster.healthStatus ?? cluster.status)
       : 'unknown'
 
+  const isUnreachable = normalizedStatus === 'error' || normalizedStatus === 'unknown' || liveFailed
+  const lastContactAgo = cluster.lastConnectedAt ? timeAgo(cluster.lastConnectedAt) : null
+
   return (
     <>
+      {/* Unreachable cluster warning banner */}
+      {isUnreachable && (
+        <div className="mb-4 flex items-start gap-3 px-4 py-3 rounded-xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/[0.06]">
+          <span className="text-lg mt-0.5">⚠️</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-[var(--color-status-warning)]">
+              This cluster is currently unreachable
+            </p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+              {lastContactAgo
+                ? `Last contact: ${lastContactAgo}. Displaying last known data.`
+                : 'No contact history available. Check cluster connectivity and credentials.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              dbCluster.refetch()
+              if (effectiveIsLive) liveQuery.refetch()
+            }}
+            className="shrink-0 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-status-warning)]/30 text-[var(--color-status-warning)] hover:bg-[var(--color-status-warning)]/10 transition-colors cursor-pointer"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
+
       {/* AI Context Card for unhealthy clusters */}
       {(normalizedStatus === 'error' || normalizedStatus === 'degraded') && (
         <AiContextCard
@@ -412,7 +462,7 @@ export default function ClusterOverviewPage() {
       })()}
 
       {/* Overview Stats — single set, no duplicates (BUG-RD-005 fixed) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         {[
           { icon: Server, label: 'Nodes', value: String(cluster.nodeCount) },
           {
@@ -426,7 +476,7 @@ export default function ClusterOverviewPage() {
           { icon: Cpu, label: 'Version', value: cluster.version },
         ].map((stat) => (
           // P3-008: Card hover lift
-          <m.div
+          <motion.div
             key={stat.label}
             whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
@@ -434,26 +484,41 @@ export default function ClusterOverviewPage() {
           >
             <div className="flex items-center gap-2 mb-1">
               <stat.icon className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
-              <span className="text-[10px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
+              <span className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
                 {stat.label}
               </span>
+              {isUnreachable && (
+                <span className="text-xs font-mono px-1 py-0.5 rounded bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)] ml-auto">
+                  STALE
+                </span>
+              )}
             </div>
             {/* P3-006: Animated stat count-up */}
             <AnimatedStatCount
               value={stat.value}
-              className={`text-lg font-bold ${
+              className={`text-lg font-bold font-mono tabular-nums ${
                 stat.value === '—' || stat.value === '0' || stat.value === '0 / 0'
                   ? 'text-[var(--color-text-dim)] opacity-60'
                   : 'text-[var(--color-text-primary)]'
               }`}
             />
-          </m.div>
+          </motion.div>
         ))}
       </div>
 
       {/* Real-time time-series charts */}
-      <div className="mb-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
-        <MetricsTimeSeriesPanel clusterId={resolvedId} isLive={effectiveIsLive} compact />
+      <div className="mb-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+        {isUnreachable && !effectiveIsLive ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="rounded-full bg-white/[0.04] p-3 mb-3">
+              <Cpu className="h-5 w-5 text-[var(--color-text-dim)]" />
+            </div>
+            <p className="text-sm font-medium text-[var(--color-text-muted)]">No data available</p>
+            <p className="text-xs text-[var(--color-text-dim)] mt-1">Cluster is offline — metrics unavailable</p>
+          </div>
+        ) : (
+          <MetricsTimeSeriesPanel clusterId={resolvedId} isLive={effectiveIsLive} compact />
+        )}
       </div>
 
       {/* Recent Events Preview */}
@@ -465,7 +530,7 @@ export default function ClusterOverviewPage() {
             className="flex items-center gap-3 py-2 border-b border-[var(--color-border)]/30 last:border-0"
           >
             <span
-              className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+              className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
               style={{
                 color: severityColor(event.type),
                 background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)`,
@@ -479,13 +544,13 @@ export default function ClusterOverviewPage() {
             <span className="flex-1 text-xs text-[var(--color-text-muted)] truncate">
               {event.message}
             </span>
-            <span className="text-[10px] text-[var(--color-text-dim)] font-mono shrink-0">
+            <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
               {event.timestamp ? timeAgo(event.timestamp) : '—'}
             </span>
           </div>
         ))}
         {events.length === 0 && (
-          <p className="text-[12px] text-[var(--color-text-muted)] py-2">No recent events.</p>
+          <p className="text-xs text-[var(--color-text-muted)] py-2">No recent events.</p>
         )}
       </div>
 

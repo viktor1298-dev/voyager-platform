@@ -41,12 +41,22 @@ export const presenceRouter = router({
     const stream = subscribeToPresence(signal)
     const oneShot = shouldUseOneShotPresenceStream()
 
-    for await (const update of stream) {
-      yield update
+    try {
+      for await (const update of stream) {
+        yield update
 
-      if (oneShot) {
-        return
+        if (oneShot) {
+          return
+        }
       }
+    } catch (err: unknown) {
+      // Suppress AbortError — normal SSE disconnect (tab close, navigation)
+      if (err instanceof Error && err.name === 'AbortError') return
+      // Log unexpected errors but don't crash the server
+      console.error('[presence] subscription error:', err)
+    } finally {
+      // Ensure iterator cleanup on any exit path
+      await stream.return?.()
     }
   }),
 })

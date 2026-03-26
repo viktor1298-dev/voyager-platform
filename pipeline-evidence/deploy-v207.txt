@@ -1,0 +1,40 @@
+Deploy Evidence — v207
+======================
+Date: 2026-03-14T23:01 IST
+Commit: 84494de9caffd8fafb7c8b36cef4a7c7d76a4192
+Branch: feat/init-monorepo
+Tag: v207
+
+Images Built (inside minikube docker-env, --no-cache):
+  - voyager-api:v207  (git-sha label: 84494de9caffd8fafb7c8b36cef4a7c7d76a4192)
+  - voyager-web:v207  (git-sha label: 84494de9caffd8fafb7c8b36cef4a7c7d76a4192)
+
+Build Duration: ~48 minutes (API slow pnpm deploy --prod step)
+
+Helm:
+  - helm uninstall voyager (clean)
+  - kubectl delete pvc --all (clean PVCs)
+  - helm install voyager ./charts/voyager -f charts/voyager/values-dev.yaml
+    --set api.image.tag=v207 --set web.image.tag=v207
+
+Issue During Deploy:
+  - minikube storage-provisioner pod was missing (despite addon enabled)
+  - Fixed by: minikube addons disable/enable storage-provisioner
+  - PVCs bound after provisioner restart
+
+Pod Status (all Running, 0 restarts):
+  - voyager-api-68fcc9f477-nhcvn   voyager-api:v207   Running
+  - voyager-web-786478477d-g8vv9   voyager-web:v207   Running
+  - postgres-6cd9c6bd89-qngqt      postgres:17-alpine Running
+  - redis-56589ff74b-j84vq         redis:7-alpine     Running
+  - jaeger-75f7b4cfd4-8jlr6        jaegertracing/all-in-one:1.62.0 Running
+
+Verification:
+  - Health: {"status":"ok"} ✅
+  - Admin seed: seeded successfully ✅
+  - Login smoke test: LOGIN_OK ✅
+  - Web: HTTP 307 → /login (correct auth redirect) ✅
+  - Image tag drift check: state=v207 k8s=v207 ✅ SYNCED
+  - Schema: via sql/init.sql (NO migrate() in server.ts) ✅
+
+Result: DEPLOY SUCCESS ✅

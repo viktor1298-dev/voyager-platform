@@ -1,13 +1,16 @@
 'use client'
 
+import { ExternalLink, HelpCircle } from 'lucide-react'
 import { useParams } from 'next/navigation'
+import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 function MetricCard({ label, value, unit }: { label: string; value: number | string; unit?: string }) {
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 flex flex-col gap-1">
-      <span className="text-[11px] text-[var(--color-text-muted)]">{label}</span>
+      <span className="text-xs text-[var(--color-text-muted)]">{label}</span>
       <span className="text-2xl font-extrabold text-[var(--color-text-primary)] tabular-nums">
         {value}
         {unit && <span className="text-sm font-normal text-[var(--color-text-muted)] ml-1">{unit}</span>}
@@ -23,10 +26,13 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 }
 
 export default function AutoscalingPage() {
-  const { id } = useParams<{ id: string }>()
+  usePageTitle('Cluster Autoscaling')
 
-  const dbCluster = trpc.clusters.get.useQuery({ id })
-  const resolvedId = dbCluster.data?.id ?? id
+  const { id: routeSegment } = useParams<{ id: string }>()
+  const clusterId = getClusterIdFromRouteSegment(routeSegment)
+
+  const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
+  const resolvedId = dbCluster.data?.id ?? clusterId
   const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
 
   const nodePoolsQuery = trpc.karpenter.listNodePools.useQuery(
@@ -73,10 +79,34 @@ export default function AutoscalingPage() {
   if (noKarpenter) {
     return (
       <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+        <div className="rounded-full bg-white/[0.04] p-3 mb-3">
+          <HelpCircle className="h-8 w-8 text-[var(--color-text-dim)]" />
+        </div>
         <p className="text-sm font-medium">No autoscaling configured</p>
-        <p className="text-xs text-[var(--color-text-dim)] mt-1">
+        <p className="text-xs text-[var(--color-text-dim)] mt-1 max-w-md text-center">
           Karpenter is not installed or has no NodePools configured for this cluster.
+          Set up autoscaling to automatically provision and manage nodes based on workload demands.
         </p>
+        <div className="flex items-center gap-3 mt-4">
+          <a
+            href="https://karpenter.sh/docs/getting-started/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Karpenter Setup Guide
+          </a>
+          <a
+            href="https://karpenter.sh/docs/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Documentation
+          </a>
+        </div>
       </div>
     )
   }
@@ -85,6 +115,20 @@ export default function AutoscalingPage() {
 
   return (
     <div className="space-y-6">
+      {/* Docs link header */}
+      <div className="flex items-center justify-end">
+        <a
+          href="https://karpenter.sh/docs/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+          Karpenter Docs
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      </div>
+
       {/* Metrics Summary */}
       {metrics && (
         <section>
@@ -105,7 +149,7 @@ export default function AutoscalingPage() {
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
           </div>
         ) : (nodePoolsQuery.data?.length ?? 0) === 0 ? (
-          <p className="text-[12px] text-[var(--color-text-muted)]">No NodePools found.</p>
+          <p className="text-xs text-[var(--color-text-muted)]">No NodePools found.</p>
         ) : (
           <div className="space-y-2">
             {(nodePoolsQuery.data ?? []).map((pool) => {
@@ -126,7 +170,7 @@ export default function AutoscalingPage() {
                         {pool.name}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-[11px] font-mono text-[var(--color-text-muted)]">
+                    <div className="flex items-center gap-3 text-xs font-mono text-[var(--color-text-muted)]">
                       <span>{pool.status.nodes} nodes</span>
                       {pool.nodeClassRef?.name && (
                         <span className="text-[var(--color-text-dim)]">→ {pool.nodeClassRef.name}</span>
@@ -140,7 +184,7 @@ export default function AutoscalingPage() {
                       {Object.entries(pool.limits).map(([k, v]) => (
                         <span
                           key={k}
-                          className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.04] text-[var(--color-text-secondary)] border border-[var(--color-border)]"
+                          className="text-xs font-mono px-1.5 py-0.5 rounded bg-white/[0.04] text-[var(--color-text-secondary)] border border-[var(--color-border)]"
                         >
                           {k}: {v}
                         </span>
@@ -150,7 +194,7 @@ export default function AutoscalingPage() {
 
                   {/* Disruption policy */}
                   {pool.disruption?.consolidationPolicy && (
-                    <p className="text-[11px] text-[var(--color-text-dim)] mt-2 font-mono">
+                    <p className="text-xs text-[var(--color-text-dim)] mt-2 font-mono">
                       Consolidation: {pool.disruption.consolidationPolicy}
                       {pool.disruption.consolidateAfter ? ` after ${pool.disruption.consolidateAfter}` : ''}
                     </p>
@@ -170,7 +214,7 @@ export default function AutoscalingPage() {
             {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
           </div>
         ) : (ec2ClassesQuery.data?.length ?? 0) === 0 ? (
-          <p className="text-[12px] text-[var(--color-text-muted)]">No EC2 Node Classes found.</p>
+          <p className="text-xs text-[var(--color-text-muted)]">No EC2 Node Classes found.</p>
         ) : (
           <div className="space-y-2">
             {(ec2ClassesQuery.data ?? []).map((cls) => (
@@ -182,12 +226,12 @@ export default function AutoscalingPage() {
                   <span className="font-mono text-[13px] font-bold text-[var(--color-text-primary)]">
                     {cls.name}
                   </span>
-                  <div className="flex items-center gap-3 text-[11px] font-mono text-[var(--color-text-muted)]">
+                  <div className="flex items-center gap-3 text-xs font-mono text-[var(--color-text-muted)]">
                     {cls.amiFamily && <span>{cls.amiFamily}</span>}
                     {cls.role && <span className="text-[var(--color-text-dim)]">role: {cls.role}</span>}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 text-[10px] font-mono text-[var(--color-text-dim)]">
+                <div className="flex flex-wrap gap-2 text-xs font-mono text-[var(--color-text-dim)]">
                   {cls.status.amis.length > 0 && <span>{cls.status.amis.length} AMI(s)</span>}
                   {cls.status.subnets.length > 0 && <span>{cls.status.subnets.length} subnet(s)</span>}
                   {cls.status.securityGroups.length > 0 && (

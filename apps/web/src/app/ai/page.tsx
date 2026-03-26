@@ -11,6 +11,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { getAiKeySettings } from '@/lib/ai-keys-client'
 import { trpc } from '@/lib/trpc'
 import { useAiAssistantStore } from '@/stores/ai-assistant'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const quickActions = [
   { key: 'analyze', label: 'Analyze Health', prompt: 'Analyze health and top risk factors' },
@@ -27,6 +28,8 @@ const quickActions = [
 ] as const
 
 export default function AiAssistantPage() {
+  usePageTitle('AI Assistant')
+
   const selectedClusterId = useAiAssistantStore((state) => state.selectedClusterId)
   const setSelectedClusterId = useAiAssistantStore((state) => state.setSelectedClusterId)
   const queueQuickPrompt = useAiAssistantStore((state) => state.queueQuickPrompt)

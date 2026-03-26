@@ -20,7 +20,7 @@ test.describe('RBAC — Viewer Restrictions', () => {
     await page.goto('/clusters')
     await expect(page).not.toHaveURL(/\/login/, { timeout: 10_000 })
 
-    const deleteButtons = page.locator('button[title="Delete cluster"]')
+    const deleteButtons = page.getByRole('button', { name: /delete cluster/i })
     await expect(deleteButtons).toHaveCount(0)
   })
 
@@ -36,6 +36,7 @@ test.describe('RBAC — Viewer Restrictions', () => {
   test('admin CAN see Add Cluster button on /clusters', async ({ page }) => {
     await login(page)
     await page.goto('/clusters')
+    await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible({ timeout: 15_000 })
     await expect(page.getByRole('button', { name: /add cluster/i })).toBeVisible({ timeout: 10_000 })
   })
 })

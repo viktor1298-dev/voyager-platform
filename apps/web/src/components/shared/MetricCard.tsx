@@ -93,7 +93,7 @@ export function MetricCard({
             {label}
           </p>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-[var(--color-text-primary)] leading-none">
+            <span className="text-2xl font-bold font-mono tabular-nums text-[var(--color-text-primary)] leading-none">
               {value}
             </span>
             {trendCfg && (

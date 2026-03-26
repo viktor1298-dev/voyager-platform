@@ -3,7 +3,7 @@
 import { Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { m } from 'motion/react'
+import { motion } from 'motion/react'
 import { AuthGuard } from './AuthGuard'
 import { PresenceBar } from './PresenceBar'
 import { Sidebar } from './Sidebar'
@@ -99,7 +99,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         isDesktop={isDesktop}
       />
       {/* P3-001: spring animated main content offset */}
-      <m.main
+      <motion.main
         id="main"
         animate={{ marginLeft: isDesktop ? (collapsed ? 56 : 224) : 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
@@ -108,11 +108,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <PresenceBar />
         <div
           key={pathname}
-          className="p-3 sm:p-6 max-w-[1400px] w-full max-w-[100vw] overflow-x-hidden bg-dot-grid min-h-full"
+          className="p-3 sm:p-5 max-w-[1400px] w-full max-w-[100vw] overflow-x-hidden bg-dot-grid min-h-full"
         >
           {children}
         </div>
-      </m.main>
+      </motion.main>
     </AuthGuard>
   )
 }

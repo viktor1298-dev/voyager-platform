@@ -1,17 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { login } from './helpers';
 
-const BASE_URL = process.env.BASE_URL ?? 'http://voyager-platform.voyagerlabs.co';
-
 /**
  * Phase 3 v194 Animation E2E Tests
- * Tests P3-001 to P3-014 animation features:
- * - Sidebar nav animations
- * - Tab transition animations
- * - Table row stagger animations
- * - AnimatedStatCount
- * - LazyMotion strict mode
- * - Page transition wrapper
  */
 
 test.describe('P3-001: Sidebar nav item animations', () => {
@@ -20,47 +11,33 @@ test.describe('P3-001: Sidebar nav item animations', () => {
   });
 
   test('sidebar renders and contains nav items', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-
-    // Use body as the container check — avoids <main> which may not exist
-    const pageBody = page.locator('body').first();
-    await expect(pageBody).toBeVisible();
-
-    // Sidebar should be present
-    const sidebar = page.locator('[data-testid="app-shell"], aside, nav').first();
-    await expect(sidebar).toBeVisible({ timeout: 15_000 });
+    await page.goto('/');
+    await expect(page.locator('body').first()).toBeVisible();
+    await expect(page.locator('[data-testid="sidebar"]').first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('sidebar contains Events and Logs nav items', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto('/');
 
-    const sidebar = page.locator('[data-testid="app-shell"], aside, nav').first();
+    const sidebar = page.locator('[data-testid="sidebar"]').first();
     await expect(sidebar).toBeVisible({ timeout: 15_000 });
 
-    // Events and Logs should be in navigation (v194 fix)
-    const eventsLink = page.locator('a[href="/events"], [data-navid="/events"], nav a:has-text("Events")').first();
-    const logsLink = page.locator('a[href="/logs"], [data-navid="/logs"], nav a:has-text("Logs")').first();
+    const eventsLink = sidebar.getByRole('link', { name: /events/i }).first();
+    const logsLink = sidebar.getByRole('link', { name: /^logs$/i }).first();
 
     const hasEvents = await eventsLink.isVisible({ timeout: 5_000 }).catch(() => false);
     const hasLogs = await logsLink.isVisible({ timeout: 5_000 }).catch(() => false);
-
-    // At least verify the page loaded correctly
     expect(hasEvents || hasLogs || true).toBeTruthy();
   });
 
   test('clicking a nav item navigates correctly', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto('/');
 
-    // v196: sidebar Clusters is accordion (href="#"), use data-testid or navigate directly
-    const clustersBtn = page.getByTestId('nav-item-clusters');
-    const isVisible = await clustersBtn.isVisible({ timeout: 10_000 }).catch(() => false);
+    const clustersLink = page.getByRole('link', { name: /^clusters$/i }).first();
+    const isVisible = await clustersLink.isVisible({ timeout: 10_000 }).catch(() => false);
 
     if (isVisible) {
-      // Navigate directly — clicking accordion just opens sub-nav, doesn't navigate
-      await page.goto(`${BASE_URL}/clusters`);
+      await clustersLink.click();
       await page.waitForURL(/\/clusters/, { timeout: 10_000 });
       await expect(page).toHaveURL(/\/clusters/);
     }
@@ -73,10 +50,6 @@ test.describe('P3-002: Page transition wrapper', () => {
   });
 
   test('page renders without crashing (LazyMotion strict mode)', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-
-    // Verify no JS errors about LazyMotion strict violations
     const errors: string[] = [];
     page.on('console', (msg) => {
       if (msg.type() === 'error' && msg.text().includes('motion')) {
@@ -84,27 +57,19 @@ test.describe('P3-002: Page transition wrapper', () => {
       }
     });
 
-    await page.waitForTimeout(1000);
-
-    // No motion-related errors should appear
+    await page.goto('/');
+    await expect(page.locator('body').first()).toBeVisible();
     expect(errors).toHaveLength(0);
   });
 
   test('page body is visible after animations', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500); // Allow animations to settle
-
-    // Use body (safe universal selector)
+    await page.goto('/');
     const body = page.locator('body').first();
     await expect(body).toBeVisible();
   });
 
   test('clusters page animates in correctly', async ({ page }) => {
-    await page.goto(`${BASE_URL}/clusters`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
-
+    await page.goto('/clusters');
     const body = page.locator('body').first();
     await expect(body).toBeVisible();
   });
@@ -116,33 +81,27 @@ test.describe('P3-003: DataTable row stagger animations', () => {
   });
 
   test('clusters table renders rows', async ({ page }) => {
-    await page.goto(`${BASE_URL}/clusters`);
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto('/clusters');
+    await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible({ timeout: 15_000 });
 
-    // Wait for React hydration + tRPC data fetch
-    // The clusters page may show "Loading..." for several seconds while tRPC resolves
-    await page.waitForFunction(
-      () => !document.body.textContent?.includes('Loading…') && !document.body.textContent?.includes('Loading...'),
-      { timeout: 30_000 }
-    ).catch(() => {/* proceed to check table/empty anyway */});
-
-    // Table should render (animated or not)
+    // Clusters page renders cards (≤5) or DataTable (>5) or empty state
+    // Wait for any content to appear after the heading loads
+    const clusterCard = page.locator('button[aria-label^="View cluster"]').first();
+    const clusterLink = page.locator('a[href*="/clusters/"]').first();
     const tableOrRows = page.locator('table, [role="table"], [data-testid="data-table"], tr[data-row]').first();
-    const isVisible = await tableOrRows.isVisible({ timeout: 15_000 }).catch(() => false);
-
-    // Either table exists (with data) or empty state
     const emptyState = page.locator('[data-testid="empty-state"], text=No clusters').first();
+
+    const hasCards = await clusterCard.isVisible({ timeout: 15_000 }).catch(() => false);
+    const hasLinks = await clusterLink.isVisible({ timeout: 3_000 }).catch(() => false);
+    const hasTable = await tableOrRows.isVisible({ timeout: 3_000 }).catch(() => false);
     const hasEmpty = await emptyState.isVisible({ timeout: 3_000 }).catch(() => false);
 
-    expect(isVisible || hasEmpty).toBeTruthy();
+    expect(hasCards || hasLinks || hasTable || hasEmpty).toBeTruthy();
   });
 
   test('alerts page renders without animation errors', async ({ page }) => {
-    await page.goto(`${BASE_URL}/alerts`);
-    await page.waitForLoadState('domcontentloaded');
-
-    const body = page.locator('body').first();
-    await expect(body).toBeVisible();
+    await page.goto('/alerts');
+    await expect(page.getByRole('heading', { name: /alert rules/i })).toBeVisible({ timeout: 15_000 });
   });
 });
 
@@ -152,18 +111,13 @@ test.describe('P3-004: AnimatedStatCount', () => {
   });
 
   test('dashboard renders stat cards', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1000); // Allow stat count animations to complete
-
+    await page.goto('/');
     const body = page.locator('body').first();
     await expect(body).toBeVisible();
 
-    // Stat cards should be present on dashboard
     const statCards = page.locator('[data-testid*="stat"], [data-testid*="widget"], .stat-card').first();
     const hasStats = await statCards.isVisible({ timeout: 5_000 }).catch(() => false);
 
-    // Just verify page rendered — stats may not exist in all envs
     test.info().annotations.push({
       type: 'note',
       description: hasStats ? 'Stat cards found on dashboard' : 'No stat cards in test env',
@@ -171,13 +125,8 @@ test.describe('P3-004: AnimatedStatCount', () => {
   });
 
   test('stat animations complete without errors (prefers-reduced-motion respected)', async ({ page }) => {
-    // Emulate prefers-reduced-motion
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
-
-    // Page should load fine even with reduced motion
+    await page.goto('/');
     const body = page.locator('body').first();
     await expect(body).toBeVisible();
   });
@@ -189,26 +138,21 @@ test.describe('P3-005: Tab transition animations', () => {
   });
 
   test('cluster detail tab navigation works', async ({ page }) => {
-    await page.goto(`${BASE_URL}/clusters`);
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto('/clusters');
 
-    // Navigate to first cluster detail if available
-    const viewBtn = page.locator('button[aria-label^="View cluster"]').first();
+    // With ≤5 clusters the page renders card buttons; with >5 it renders DataTable rows
+    const clusterCard = page.locator('button[aria-label^="View cluster"]').first();
     const dataRow = page.locator('tr[data-row]').first();
 
-    const hasViewBtn = await viewBtn.isVisible({ timeout: 10_000 }).catch(() => false);
+    const hasCard = await clusterCard.isVisible({ timeout: 10_000 }).catch(() => false);
     const hasRow = await dataRow.isVisible({ timeout: 3_000 }).catch(() => false);
 
-    if (hasViewBtn) {
-      await viewBtn.click();
+    if (hasCard) {
+      await clusterCard.click();
       await page.waitForURL(/\/clusters\/[^/]+/, { timeout: 10_000 });
-      await page.waitForLoadState('domcontentloaded');
+      await expect(page.locator('body').first()).toBeVisible();
 
-      const body = page.locator('body').first();
-      await expect(body).toBeVisible();
-
-      // Tabs should be visible on cluster detail
-      const tabs = page.locator('[role="tab"]').first();
+      const tabs = page.locator('[role="tab"], nav[aria-label="Cluster tabs"] a').first();
       const hasTabs = await tabs.isVisible({ timeout: 5_000 }).catch(() => false);
       test.info().annotations.push({
         type: 'note',
@@ -217,8 +161,7 @@ test.describe('P3-005: Tab transition animations', () => {
     } else if (hasRow) {
       await dataRow.click();
       await page.waitForURL(/\/clusters\/[^/]+/, { timeout: 10_000 });
-      const body = page.locator('body').first();
-      await expect(body).toBeVisible();
+      await expect(page.locator('body').first()).toBeVisible();
     } else {
       test.skip(true, 'No clusters in test env');
     }

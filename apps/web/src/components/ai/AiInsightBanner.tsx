@@ -73,12 +73,12 @@ export function AiInsightBanner({
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-semibold text-purple-400">AI Insight</span>
             {isCritical && (
-              <span className="text-[10px] uppercase tracking-wide font-semibold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded-full">
+              <span className="text-xs uppercase tracking-wide font-semibold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded-full">
                 Critical
               </span>
             )}
             {isWarning && (
-              <span className="text-[10px] uppercase tracking-wide font-semibold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+              <span className="text-xs uppercase tracking-wide font-semibold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
                 Warning
               </span>
             )}
@@ -88,7 +88,7 @@ export function AiInsightBanner({
           </p>
           <ul className="space-y-1">
             {insights.insights.map((insight, i) => (
-              <li key={i} className="text-[11px] text-[var(--color-text-secondary)]">
+              <li key={i} className="text-xs text-[var(--color-text-secondary)]">
                 • {insight.message}
                 {insight.action && (
                   <span className="text-[var(--color-text-muted)]"> — {insight.action}</span>

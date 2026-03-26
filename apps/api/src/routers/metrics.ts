@@ -11,32 +11,89 @@ import {
 } from '@voyager/db'
 import { protectedProcedure, router } from '../trpc.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
-import { eq, gte, and, sql, avg, sum } from 'drizzle-orm'
+import { eq, gte, and, sql } from 'drizzle-orm'
 
 /** Shared constant for health-check polling interval (minutes) */
 const HEALTH_CHECK_INTERVAL_MINUTES = 5
 
-const timeRangeSchema = z.enum(['1h', '6h', '24h', '7d', '30d']).default('24h')
+const timeRangeSchema = z.enum(['30s', '1m', '5m', '1h', '6h', '24h', '7d']).default('24h')
 
 type TimeRange = z.infer<typeof timeRangeSchema>
 
-/** Interval configuration per time range */
-const TIME_RANGE_CONFIG: Record<TimeRange, { intervalMs: number; points: number }> = {
-  '1h': { intervalMs: 60 * 1000, points: 60 },
-  '6h': { intervalMs: 5 * 60 * 1000, points: 72 },
-  '24h': { intervalMs: 60 * 60 * 1000, points: 24 },
-  '7d': { intervalMs: 6 * 60 * 60 * 1000, points: 28 },
-  '30d': { intervalMs: 24 * 60 * 60 * 1000, points: 30 },
-} as const
-
-function getTimeRangeStart(range: TimeRange): Date {
-  const { intervalMs, points } = TIME_RANGE_CONFIG[range]
-  return new Date(Date.now() - intervalMs * points)
+type BucketPoint<T> = {
+  timestamp: string
+  bucketStart: string
+  bucketEnd: string
+  value: T
 }
 
-function bucketTimestamp(ts: Date, intervalMs: number, start: number): string {
-  const bucket = Math.floor((ts.getTime() - start) / intervalMs)
-  return new Date(start + (bucket + 1) * intervalMs).toISOString()
+type RangeConfig = {
+  rangeMs: number
+  intervalMs: number
+}
+
+/**
+ * Grafana-style bucket configuration:
+ * - response always includes all expected timestamps in range
+ * - bucket timestamp is the bucket END time (stable x-axis tick / hover anchor)
+ * - bucketStart/bucketEnd preserve exact boundaries for tooltip precision
+ */
+const TIME_RANGE_CONFIG: Record<TimeRange, RangeConfig> = {
+  '30s': { rangeMs: 30 * 1000, intervalMs: 5 * 1000 },
+  '1m': { rangeMs: 60 * 1000, intervalMs: 10 * 1000 },
+  '5m': { rangeMs: 5 * 60 * 1000, intervalMs: 30 * 1000 },
+  '1h': { rangeMs: 60 * 60 * 1000, intervalMs: 60 * 1000 },
+  '6h': { rangeMs: 6 * 60 * 60 * 1000, intervalMs: 5 * 60 * 1000 },
+  '24h': { rangeMs: 24 * 60 * 60 * 1000, intervalMs: 60 * 60 * 1000 },
+  '7d': { rangeMs: 7 * 24 * 60 * 60 * 1000, intervalMs: 6 * 60 * 60 * 1000 },
+} as const
+
+function alignFloor(timestampMs: number, intervalMs: number): number {
+  return Math.floor(timestampMs / intervalMs) * intervalMs
+}
+
+function getBucketTimeline(range: TimeRange, now = new Date()): { start: Date; end: Date; buckets: Array<{ bucketStartMs: number; bucketEndMs: number; timestamp: string; bucketStart: string; bucketEnd: string }> } {
+  const { rangeMs, intervalMs } = TIME_RANGE_CONFIG[range]
+  const endMs = alignFloor(now.getTime(), intervalMs)
+  const startMs = endMs - rangeMs
+  const bucketCount = Math.ceil(rangeMs / intervalMs)
+
+  const buckets = Array.from({ length: bucketCount }, (_, index) => {
+    const bucketStartMs = startMs + index * intervalMs
+    const bucketEndMs = bucketStartMs + intervalMs
+    return {
+      bucketStartMs,
+      bucketEndMs,
+      timestamp: new Date(bucketEndMs).toISOString(),
+      bucketStart: new Date(bucketStartMs).toISOString(),
+      bucketEnd: new Date(bucketEndMs).toISOString(),
+    }
+  })
+
+  return {
+    start: new Date(startMs),
+    end: new Date(endMs),
+    buckets,
+  }
+}
+
+function getBucketIndex(timestamp: Date | string, startMs: number, intervalMs: number, bucketCount: number): number {
+  const timestampMs = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
+  const index = Math.floor((timestampMs - startMs) / intervalMs)
+  if (index < 0 || index >= bucketCount) return -1
+  return index
+}
+
+function buildSeries<T>(
+  timeline: ReturnType<typeof getBucketTimeline>,
+  values: Array<T | null>,
+): Array<BucketPoint<T | null>> {
+  return timeline.buckets.map((bucket, index) => ({
+    timestamp: bucket.timestamp,
+    bucketStart: bucket.bucketStart,
+    bucketEnd: bucket.bucketEnd,
+    value: values[index] ?? null,
+  }))
 }
 
 export const metricsRouter = router({
@@ -45,50 +102,46 @@ export const metricsRouter = router({
   clusterHealth: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
     .query(async ({ input }) => {
-      const { intervalMs, points } = TIME_RANGE_CONFIG[input.range]
-      const start = getTimeRangeStart(input.range)
-      const startMs = start.getTime()
+      const timeline = getBucketTimeline(input.range)
+      const { intervalMs } = TIME_RANGE_CONFIG[input.range]
+      const startMs = timeline.start.getTime()
+      const bucketCount = timeline.buckets.length
 
       const rows = await db
         .select()
         .from(healthHistory)
-        .where(gte(healthHistory.checkedAt, start))
+        .where(gte(healthHistory.checkedAt, timeline.start))
         .orderBy(healthHistory.checkedAt)
 
-      const buckets = new Map<string, { healthy: number; degraded: number; offline: number; total: number }>()
+      const bucketStats = Array.from({ length: bucketCount }, () => ({
+        healthy: 0,
+        degraded: 0,
+        offline: 0,
+        total: 0,
+      }))
 
       for (const row of rows) {
-        const ts = bucketTimestamp(new Date(row.checkedAt), intervalMs, startMs)
-        if (!buckets.has(ts)) buckets.set(ts, { healthy: 0, degraded: 0, offline: 0, total: 0 })
-        const b = buckets.get(ts)!
-        b.total++
-        if (row.status === 'healthy') b.healthy++
-        else if (row.status === 'degraded') b.degraded++
-        else b.offline++
+        const bucketIndex = getBucketIndex(new Date(row.checkedAt), startMs, intervalMs, bucketCount)
+        if (bucketIndex === -1) continue
+
+        const bucket = bucketStats[bucketIndex]!
+        bucket.total++
+        if (row.status === 'healthy') bucket.healthy++
+        else if (row.status === 'degraded') bucket.degraded++
+        else bucket.offline++
       }
 
-      // Generate FULL time range — fill missing buckets with null
-      const result = []
-      for (let i = 0; i < points; i++) {
-        const bucketTime = new Date(startMs + (i + 1) * intervalMs).toISOString()
-        const existing = buckets.get(bucketTime)
-        if (existing) {
-          result.push({
-            timestamp: bucketTime,
-            healthy: existing.total > 0 ? Math.round((existing.healthy / existing.total) * 100) : 0,
-            degraded: existing.total > 0 ? Math.round((existing.degraded / existing.total) * 100) : 0,
-            offline: existing.total > 0 ? Math.round((existing.offline / existing.total) * 100) : 0,
-          })
-        } else {
-          result.push({
-            timestamp: bucketTime,
-            healthy: null,
-            degraded: null,
-            offline: null,
-          })
+      return timeline.buckets.map((bucket, index) => {
+        const stats = bucketStats[index]!
+        return {
+          timestamp: bucket.timestamp,
+          bucketStart: bucket.bucketStart,
+          bucketEnd: bucket.bucketEnd,
+          healthy: stats.total > 0 ? Math.round((stats.healthy / stats.total) * 100) : null,
+          degraded: stats.total > 0 ? Math.round((stats.degraded / stats.total) * 100) : null,
+          offline: stats.total > 0 ? Math.round((stats.offline / stats.total) * 100) : null,
         }
-      }
-      return result
+      })
     }),
 
   /** IP2-004: Resource usage timeline from metricsHistory table.
@@ -96,54 +149,50 @@ export const metricsRouter = router({
   resourceUsage: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
     .query(async ({ input }) => {
-      const { intervalMs, points } = TIME_RANGE_CONFIG[input.range]
-      const start = getTimeRangeStart(input.range)
-      const startMs = start.getTime()
+      const timeline = getBucketTimeline(input.range)
+      const { intervalMs } = TIME_RANGE_CONFIG[input.range]
+      const startMs = timeline.start.getTime()
+      const bucketCount = timeline.buckets.length
 
       const rows = await db
         .select()
         .from(metricsHistory)
-        .where(gte(metricsHistory.timestamp, start))
+        .where(gte(metricsHistory.timestamp, timeline.start))
         .orderBy(metricsHistory.timestamp)
 
-      const buckets = new Map<string, { cpuSum: number; memSum: number; count: number }>()
+      const bucketStats = Array.from({ length: bucketCount }, () => ({
+        cpuSum: 0,
+        memSum: 0,
+        count: 0,
+      }))
 
       for (const row of rows) {
-        const ts = bucketTimestamp(new Date(row.timestamp), intervalMs, startMs)
-        if (!buckets.has(ts)) buckets.set(ts, { cpuSum: 0, memSum: 0, count: 0 })
-        const b = buckets.get(ts)!
-        b.cpuSum += row.cpuPercent
-        b.memSum += row.memPercent
-        b.count++
+        const bucketIndex = getBucketIndex(new Date(row.timestamp), startMs, intervalMs, bucketCount)
+        if (bucketIndex === -1) continue
+
+        const bucket = bucketStats[bucketIndex]!
+        bucket.cpuSum += row.cpuPercent
+        bucket.memSum += row.memPercent
+        bucket.count++
       }
 
-      // Generate FULL time range — fill missing buckets with null
-      const result = []
-      for (let i = 0; i < points; i++) {
-        const bucketTime = new Date(startMs + (i + 1) * intervalMs).toISOString()
-        const existing = buckets.get(bucketTime)
-        if (existing) {
-          result.push({
-            timestamp: bucketTime,
-            cpu: Math.round(existing.cpuSum / existing.count),
-            memory: Math.round(existing.memSum / existing.count),
-          })
-        } else {
-          result.push({
-            timestamp: bucketTime,
-            cpu: null,
-            memory: null,
-          })
+      return timeline.buckets.map((bucket, index) => {
+        const stats = bucketStats[index]!
+        return {
+          timestamp: bucket.timestamp,
+          bucketStart: bucket.bucketStart,
+          bucketEnd: bucket.bucketEnd,
+          cpu: stats.count > 0 ? Math.round((stats.cpuSum / stats.count) * 10) / 10 : null,
+          memory: stats.count > 0 ? Math.round((stats.memSum / stats.count) * 10) / 10 : null,
         }
-      }
-      return result
+      })
     }),
 
   /** IP2-005: Uptime history from healthHistory records */
   uptimeHistory: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
     .query(async ({ input }) => {
-      const start = getTimeRangeStart(input.range)
+      const timeline = getBucketTimeline(input.range)
 
       const rows = await db
         .select({
@@ -151,7 +200,7 @@ export const metricsRouter = router({
           status: healthHistory.status,
         })
         .from(healthHistory)
-        .where(gte(healthHistory.checkedAt, start))
+        .where(gte(healthHistory.checkedAt, timeline.start))
 
       if (rows.length === 0) return []
 
@@ -159,21 +208,19 @@ export const metricsRouter = router({
       const clusterStats = new Map<string, { total: number; healthy: number }>()
       for (const row of rows) {
         if (!clusterStats.has(row.clusterId)) clusterStats.set(row.clusterId, { total: 0, healthy: 0 })
-        const s = clusterStats.get(row.clusterId)!
-        s.total++
-        if (row.status === 'healthy') s.healthy++
+        const stats = clusterStats.get(row.clusterId)!
+        stats.total++
+        if (row.status === 'healthy') stats.healthy++
       }
 
-      // Get cluster names
       const clusterList = await db
         .select({ id: clustersTable.id, name: clustersTable.name })
         .from(clustersTable)
 
-      const nameMap = new Map(clusterList.map((c) => [c.id, c.name]))
+      const nameMap = new Map(clusterList.map((cluster) => [cluster.id, cluster.name]))
 
       return Array.from(clusterStats.entries()).map(([clusterId, stats]) => {
-        const uptime = +(stats.healthy / stats.total * 100).toFixed(2)
-        const totalMinutes = stats.total * HEALTH_CHECK_INTERVAL_MINUTES
+        const uptime = +((stats.healthy / stats.total) * 100).toFixed(2)
         const downMinutes = Math.round((stats.total - stats.healthy) * HEALTH_CHECK_INTERVAL_MINUTES)
         return {
           cluster: nameMap.get(clusterId) ?? clusterId,
@@ -187,22 +234,21 @@ export const metricsRouter = router({
   alertsTimeline: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
     .query(async ({ input }) => {
-      const start = getTimeRangeStart(input.range)
+      const timeline = getBucketTimeline(input.range)
 
       const rows = await db
         .select()
         .from(events)
-        .where(and(eq(events.kind, 'Warning'), gte(events.timestamp, start)))
+        .where(and(eq(events.kind, 'Warning'), gte(events.timestamp, timeline.start)))
         .orderBy(events.timestamp)
 
       if (rows.length === 0) return []
 
-      // Map reason → severity heuristic
       const getSeverity = (reason: string | null): string => {
         if (!reason) return 'warning'
-        const r = reason.toLowerCase()
-        if (r.includes('oom') || r.includes('crashloop') || r.includes('failed')) return 'critical'
-        if (r.includes('backoff') || r.includes('unhealthy') || r.includes('evict')) return 'warning'
+        const normalized = reason.toLowerCase()
+        if (normalized.includes('oom') || normalized.includes('crashloop') || normalized.includes('failed')) return 'critical'
+        if (normalized.includes('backoff') || normalized.includes('unhealthy') || normalized.includes('evict')) return 'warning'
         return 'info'
       }
 
@@ -222,9 +268,10 @@ export const metricsRouter = router({
   currentStats: protectedProcedure
     .query(async () => {
       const TIMEOUT_MS = 20_000
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Metrics collection timed out')), TIMEOUT_MS),
-      )
+      let timeoutHandle: NodeJS.Timeout | null = null
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(() => reject(new Error('Metrics collection timed out')), TIMEOUT_MS)
+      })
 
       try {
         const result = await Promise.race([
@@ -264,36 +311,41 @@ export const metricsRouter = router({
                 for (const node of nodeMetrics.items) {
                   totalCpuNano += parseCpuToNano(node.usage?.cpu ?? '0')
                   totalMemBytes += parseMemToBytes(node.usage?.memory ?? '0')
-                  const cap = capacityMap.get(node.metadata?.name ?? '')
-                  if (cap) {
-                    totalCpuAllocatable += cap.cpuNano
-                    totalMemAllocatable += cap.memBytes
+                  const capacity = capacityMap.get(node.metadata?.name ?? '')
+                  if (capacity) {
+                    totalCpuAllocatable += capacity.cpuNano
+                    totalMemAllocatable += capacity.memBytes
                   }
                 }
 
                 try {
                   const pods = await coreApi.listPodForAllNamespaces()
                   totalPodCount += pods.items?.length ?? 0
-                } catch { /* ignore */ }
+                } catch {
+                  // ignore pod count failures
+                }
 
                 hasData = true
               } catch (err) {
-                const msg = err instanceof Error ? err.message : String(err)
-                if (msg.includes('403')) {
+                const message = err instanceof Error ? err.message : String(err)
+                if (message.includes('403')) {
                   errors.push(`Cluster ${cluster.id}: metrics-server access denied (RBAC)`)
-                } else if (msg.includes('Zod')) {
+                } else if (message.includes('Zod')) {
                   errors.push(`Cluster ${cluster.id}: invalid credentials`)
                 } else {
-                  errors.push(`Cluster ${cluster.id}: ${msg.slice(0, 100)}`)
+                  errors.push(`Cluster ${cluster.id}: ${message.slice(0, 100)}`)
                 }
               }
             }
 
             if (!hasData) {
               return {
-                cpuPercent: null, memoryPercent: null,
-                cpuCores: null, memoryBytes: null,
-                podCount: 0, timestamp: new Date().toISOString(),
+                cpuPercent: null,
+                memoryPercent: null,
+                cpuCores: null,
+                memoryBytes: null,
+                podCount: 0,
+                timestamp: new Date().toISOString(),
                 status: 'unavailable' as const,
                 message: errors.length > 0
                   ? `Metrics unavailable: ${errors.join('; ')}`
@@ -321,16 +373,21 @@ export const metricsRouter = router({
 
         return result
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Unknown error'
+        const message = err instanceof Error ? err.message : 'Unknown error'
         return {
-          cpuPercent: null, memoryPercent: null,
-          cpuCores: null, memoryBytes: null,
-          podCount: 0, timestamp: new Date().toISOString(),
+          cpuPercent: null,
+          memoryPercent: null,
+          cpuCores: null,
+          memoryBytes: null,
+          podCount: 0,
+          timestamp: new Date().toISOString(),
           status: 'error' as const,
-          message: msg.includes('timed out')
+          message: message.includes('timed out')
             ? 'Metrics collection timed out. Metrics server may not be responding.'
-            : `Metrics error: ${msg}`,
+            : `Metrics error: ${message}`,
         }
+      } finally {
+        if (timeoutHandle) clearTimeout(timeoutHandle)
       }
     }),
 
@@ -339,63 +396,56 @@ export const metricsRouter = router({
   history: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid(), range: timeRangeSchema }))
     .query(async ({ input }) => {
-      const { intervalMs, points } = TIME_RANGE_CONFIG[input.range]
-      const start = getTimeRangeStart(input.range)
-      const startMs = start.getTime()
+      const timeline = getBucketTimeline(input.range)
+      const { intervalMs } = TIME_RANGE_CONFIG[input.range]
+      const startMs = timeline.start.getTime()
+      const bucketCount = timeline.buckets.length
 
       const rows = await db
         .select()
         .from(metricsHistory)
         .where(and(
           eq(metricsHistory.clusterId, input.clusterId),
-          gte(metricsHistory.timestamp, start),
+          gte(metricsHistory.timestamp, timeline.start),
         ))
         .orderBy(metricsHistory.timestamp)
 
-      // Build bucket map from DB rows
-      const buckets = new Map<string, {
-        cpuSum: number; memSum: number; podSum: number
-        netInSum: number; netOutSum: number; count: number
-      }>()
+      const bucketStats = Array.from({ length: bucketCount }, () => ({
+        cpuSum: 0,
+        memSum: 0,
+        podSum: 0,
+        netInSum: 0,
+        netOutSum: 0,
+        count: 0,
+      }))
 
       for (const row of rows) {
-        const ts = bucketTimestamp(new Date(row.timestamp), intervalMs, startMs)
-        if (!buckets.has(ts)) buckets.set(ts, { cpuSum: 0, memSum: 0, podSum: 0, netInSum: 0, netOutSum: 0, count: 0 })
-        const b = buckets.get(ts)!
-        b.cpuSum += row.cpuPercent
-        b.memSum += row.memPercent
-        b.podSum += row.podCount
-        b.netInSum += row.networkBytesIn ?? 0
-        b.netOutSum += row.networkBytesOut ?? 0
-        b.count++
+        const bucketIndex = getBucketIndex(new Date(row.timestamp), startMs, intervalMs, bucketCount)
+        if (bucketIndex === -1) continue
+
+        const bucket = bucketStats[bucketIndex]!
+        bucket.cpuSum += row.cpuPercent
+        bucket.memSum += row.memPercent
+        bucket.podSum += row.podCount
+        bucket.netInSum += row.networkBytesIn ?? 0
+        bucket.netOutSum += row.networkBytesOut ?? 0
+        bucket.count++
       }
 
-      // Generate FULL time range — fill missing buckets with null
-      const result = []
-      for (let i = 0; i < points; i++) {
-        const bucketTime = new Date(startMs + (i + 1) * intervalMs).toISOString()
-        const existing = buckets.get(bucketTime)
-        if (existing) {
-          result.push({
-            timestamp: bucketTime,
-            cpu: Math.round((existing.cpuSum / existing.count) * 10) / 10,
-            memory: Math.round((existing.memSum / existing.count) * 10) / 10,
-            pods: Math.round(existing.podSum / existing.count),
-            networkBytesIn: Math.round(existing.netInSum / existing.count),
-            networkBytesOut: Math.round(existing.netOutSum / existing.count),
-          })
-        } else {
-          result.push({
-            timestamp: bucketTime,
-            cpu: null,
-            memory: null,
-            pods: null,
-            networkBytesIn: null,
-            networkBytesOut: null,
-          })
+      return timeline.buckets.map((bucket, index) => {
+        const stats = bucketStats[index]!
+        const hasData = stats.count > 0
+        return {
+          timestamp: bucket.timestamp,
+          bucketStart: bucket.bucketStart,
+          bucketEnd: bucket.bucketEnd,
+          cpu: hasData ? Math.round((stats.cpuSum / stats.count) * 10) / 10 : null,
+          memory: hasData ? Math.round((stats.memSum / stats.count) * 10) / 10 : null,
+          pods: hasData ? Math.round(stats.podSum / stats.count) : null,
+          networkBytesIn: hasData ? Math.round(stats.netInSum / stats.count) : null,
+          networkBytesOut: hasData ? Math.round(stats.netOutSum / stats.count) : null,
         }
-      }
-      return result
+      })
     }),
 
   /** M-P3-002: Live per-node resource snapshot from K8s metrics-server */
@@ -403,6 +453,7 @@ export const metricsRouter = router({
     .input(z.object({ clusterId: z.string().uuid() }))
     .query(async ({ input }) => {
       const TIMEOUT_MS = 15_000
+      let timeoutHandle: NodeJS.Timeout | null = null
       try {
         const result = await Promise.race([
           (async () => {
@@ -432,13 +483,13 @@ export const metricsRouter = router({
               const name = node.metadata?.name ?? 'unknown'
               const usedCpuNano = parseCpuToNano(node.usage?.cpu ?? '0')
               const usedMemBytes = parseMemToBytes(node.usage?.memory ?? '0')
-              const cap = capacityMap.get(name)
+              const capacity = capacityMap.get(name)
 
-              const cpuPercent = cap && cap.cpuAllocNano > 0
-                ? Math.round((usedCpuNano / cap.cpuAllocNano) * 1000) / 10
+              const cpuPercent = capacity && capacity.cpuAllocNano > 0
+                ? Math.round((usedCpuNano / capacity.cpuAllocNano) * 1000) / 10
                 : null
-              const memPercent = cap && cap.memAllocBytes > 0
-                ? Math.round((usedMemBytes / cap.memAllocBytes) * 1000) / 10
+              const memPercent = capacity && capacity.memAllocBytes > 0
+                ? Math.round((usedMemBytes / capacity.memAllocBytes) * 1000) / 10
                 : null
 
               return {
@@ -447,19 +498,21 @@ export const metricsRouter = router({
                 memPercent,
                 cpuCores: +(usedCpuNano / 1e9).toFixed(2),
                 memGb: +(usedMemBytes / (1024 ** 3)).toFixed(2),
-                cpuAllocCores: cap ? +(cap.cpuAllocNano / 1e9).toFixed(2) : null,
-                memAllocGb: cap ? +(cap.memAllocBytes / (1024 ** 3)).toFixed(2) : null,
+                cpuAllocCores: capacity ? +(capacity.cpuAllocNano / 1e9).toFixed(2) : null,
+                memAllocGb: capacity ? +(capacity.memAllocBytes / (1024 ** 3)).toFixed(2) : null,
               }
             })
           })(),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Node breakdown timed out')), TIMEOUT_MS),
-          ),
+          new Promise<never>((_, reject) => {
+            timeoutHandle = setTimeout(() => reject(new Error('Node breakdown timed out')), TIMEOUT_MS)
+          }),
         ])
         return result
       } catch (err) {
         console.warn(`[metrics] nodeBreakdown failed for ${input.clusterId}:`, err instanceof Error ? err.message : err)
         return []
+      } finally {
+        if (timeoutHandle) clearTimeout(timeoutHandle)
       }
     }),
 
@@ -467,7 +520,7 @@ export const metricsRouter = router({
   aggregatedMetrics: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
     .query(async ({ input }) => {
-      const start = getTimeRangeStart(input.range)
+      const timeline = getBucketTimeline(input.range)
 
       const rows = await db
         .select({
@@ -478,14 +531,13 @@ export const metricsRouter = router({
           totalNodes: sql<number>`max(${metricsHistory.nodeCount})`.as('total_nodes'),
         })
         .from(metricsHistory)
-        .where(gte(metricsHistory.timestamp, start))
+        .where(gte(metricsHistory.timestamp, timeline.start))
         .groupBy(metricsHistory.clusterId)
 
-      // Get cluster names
       const clusterList = await db
         .select({ id: clustersTable.id, name: clustersTable.name })
         .from(clustersTable)
-      const nameMap = new Map(clusterList.map((c) => [c.id, c.name]))
+      const nameMap = new Map(clusterList.map((cluster) => [cluster.id, cluster.name]))
 
       const perCluster = rows.map((row) => ({
         clusterId: row.clusterId,
@@ -498,13 +550,13 @@ export const metricsRouter = router({
 
       const totalClusters = perCluster.length
       const totalCpuAvg = totalClusters > 0
-        ? Math.round(perCluster.reduce((s, c) => s + c.avgCpu, 0) / totalClusters * 10) / 10
+        ? Math.round((perCluster.reduce((sum, cluster) => sum + cluster.avgCpu, 0) / totalClusters) * 10) / 10
         : 0
       const totalMemAvg = totalClusters > 0
-        ? Math.round(perCluster.reduce((s, c) => s + c.avgMem, 0) / totalClusters * 10) / 10
+        ? Math.round((perCluster.reduce((sum, cluster) => sum + cluster.avgMem, 0) / totalClusters) * 10) / 10
         : 0
-      const totalPods = perCluster.reduce((s, c) => s + c.totalPods, 0)
-      const totalNodes = perCluster.reduce((s, c) => s + c.totalNodes, 0)
+      const totalPods = perCluster.reduce((sum, cluster) => sum + cluster.totalPods, 0)
+      const totalNodes = perCluster.reduce((sum, cluster) => sum + cluster.totalNodes, 0)
 
       return {
         summary: { totalCpuAvg, totalMemAvg, totalPods, totalNodes, clusterCount: totalClusters },
@@ -516,7 +568,8 @@ export const metricsRouter = router({
   nodeTimeSeries: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid(), range: timeRangeSchema }))
     .query(async ({ input }) => {
-      const start = getTimeRangeStart(input.range)
+      const timeline = getBucketTimeline(input.range)
+      const start = timeline.start
 
       const rows = await db
         .select()

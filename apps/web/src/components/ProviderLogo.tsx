@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react'
-import { m } from 'motion/react'
+import { motion } from 'motion/react'
 
 const PROVIDER_ALIASES: Record<string, string> = {
   eks: 'aws',
@@ -36,14 +36,14 @@ export function ProviderLogo({ provider, size = 16, layoutId }: ProviderLogoProp
 
   if (layoutId) {
     return (
-      <m.div
+      <motion.div
         layoutId={layoutId}
         className="pointer-events-none select-none shrink-0 rounded-md flex items-center justify-center"
         style={{ width: size + 8, height: size + 8, backgroundColor: bg, zIndex: 2 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       >
         <Icon icon={icon} width={size} height={size} color={color} />
-      </m.div>
+      </motion.div>
     )
   }
 

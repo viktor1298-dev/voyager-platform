@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertTriangle, Bell, Container, LayoutGrid, Server } from 'lucide-react'
-import { animate, m, useMotionValue } from 'motion/react'
+import { animate, motion, useMotionValue } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 import { SkeletonText } from '@/components/Skeleton'
 import { SparklineChart, generateStableTimeSeries } from '@/components/charts/SparklineChart'
@@ -58,7 +58,7 @@ function StatCard({
 }) {
   return (
     // P3-008: Card hover lift
-    <m.div
+    <motion.div
       whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
       className={cn(
@@ -74,14 +74,14 @@ function StatCard({
       }}
     >
       <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="text-[10px] text-[var(--color-text-dim)] uppercase tracking-wider font-mono truncate">
+        <span className="text-xs text-[var(--color-text-dim)] uppercase tracking-wider font-mono truncate">
           {label}
         </span>
         {isLoading ? (
           <SkeletonText width="2.5rem" height="1.5rem" />
         ) : (
           <div
-            className={cn('text-2xl font-semibold tabular-nums tracking-tight', gradient !== 'none' && 'gradient-text')}
+            className={cn('text-2xl font-semibold font-mono tabular-nums tracking-tight', gradient !== 'none' && 'gradient-text')}
             style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
           >
             <AnimatedNumber value={value} />
@@ -94,7 +94,7 @@ function StatCard({
           <SparklineChart data={sparklineData} color={sparklineColor ?? color} height={50} />
         </div>
       )}
-    </m.div>
+    </motion.div>
   )
 }
 

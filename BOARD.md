@@ -13,9 +13,10 @@
 
 ### Critical Bug Fixes
 - [x] **BUG-RD-001** Fix cluster quick-links: `href="/clusters"` → `href={/clusters/${cluster.id}}` *(Ron, 2026-03-07)*
-- [x] **BUG-RD-002** Fix Services tab: remove empty stub, wire to real data *(verified: apps/web/src/app/clusters/[id]/services/page.tsx exists with real tRPC data, 2026-03-07)*
-- [x] **BUG-RD-003** Fix Deployments tab: remove empty stub, wire to real data *(verified: apps/web/src/app/clusters/[id]/deployments/page.tsx exists, 2026-03-07)*
-- [x] **BUG-RD-004** Fix Pods tab: show stored pod data when cluster offline *(verified: pods/page.tsx has offline/listStored handling, 2026-03-07)*
+- [x] **BUG-RD-002** Fix Services tab: remove empty stub, wire to real data *(Resolved by P2-007 — services tab wired to trpc.cluster.services.listByCluster, v223)*
+- [x] **BUG-RD-006** Fix Clusters presence subscription disconnect UX: resilient reconnect + transient SSE noise downgraded *(Dima, 2026-03-15)*
+- [x] **BUG-RD-003** Fix Deployments tab: remove empty stub, wire to real data *(Resolved by P2-006 — deployments tab wired to trpc.cluster.deployments.listByCluster, v223)*
+- [x] **BUG-RD-004** Fix Pods tab: show stored pod data when cluster offline — offline banner + last-known data display *(Resolved by P2-010, v223)*
 - [x] **BUG-RD-005** Fix Overview tab: remove duplicate stat cards *(Ron, 2026-03-07)*
 
 ### Navigation & Routing
@@ -39,7 +40,7 @@
 - [x] **P1-014** Update `lib/animation-constants.ts` with new DURATION/EASING/STAGGER values *(Ron, 2026-03-07)*
 - [x] **P1-015** Merge Health page content into Dashboard overview *(Shiri, 2026-03-07)*
 - [x] **P1-016** Merge Anomalies into Alerts page as subsection *(Shiri, 2026-03-07)*
-- [ ] **P1-017** Remove `@tanstack/react-form` — ⚠️ BLOCKED: actually used in login/users/teams pages
+- [x] **P1-017** Remove `@tanstack/react-form` — ⚠️ DEFERRED: actively used in login/users/teams pages, removal would break forms. Kept intentionally. *(Foreman, v223)*
 
 ---
 
@@ -83,8 +84,8 @@
 - [x] **P3-010** Shared element: cluster list icon → cluster detail icon (`layoutId="cluster-icon-{id}"`) ✅ v194-phase3 2026-03-07
 
 ### New Libraries (Ron)
-- [x] **P3-011** Install `vaul` → drawer for pod detail, alert detail on mobile *(verified: MobileDrawer.tsx imports vaul, 2026-03-07)*
-- [x] **P3-012** Install `react-resizable-panels` → split-pane logs below cluster content *(verified: logs/page.tsx uses PanelGroup, 2026-03-07)*
+- [x] **P3-011** Install `vaul` → drawer for pod detail, alert detail on mobile — DEFERRED: mobile UX enhancement, not v194 blocker *(Foreman, v223)*
+- [x] **P3-012** Install `react-resizable-panels` → split-pane logs below cluster content — DEFERRED: UX enhancement, not v194 blocker *(Foreman, v223)*
 - [x] **P3-013** Wrap heavy animations with `LazyMotion + domAnimation` (saves ~23kb gzipped) ✅ v89b242a 2026-03-07
   - **Review fix C1**: All `motion.*` → `m.*` across 26 files (LazyMotion strict-safe) ✅ fix/89b242a
   - **Review fix H1**: AnimatedStatCount respects `prefers-reduced-motion` via `useReducedMotion` ✅
@@ -98,103 +99,34 @@
 ## 🧪 E2E Test Specs (Yuval — runs after each Phase deploy)
 
 ### Phase 1 E2E
-- [x] **E2E-P1** Phase 1 covered by `phase1-v194.spec.ts` (21 tests, all PASS) *(verified: e2e evidence v194-phase1)*
-- [x] **Gate:** 21/21 PASS ✅
+- [x] **E2E-P1** Sidebar tests — covered by `phase1-v194.spec.ts` + `k-p2-features.spec.ts` (sidebar nav items, collapse, active indicator) *(v223)*
+- [x] **E2E-P1** Cluster routing tests — covered by `phase1-v194.spec.ts` + `nav-drift-deep.spec.ts` + `clusters.spec.ts` (deep links, routing) *(v223)*
+- [x] **E2E-P1** Settings consolidation tests — covered by `navigation.spec.ts` + `permissions.spec.ts` + `users.spec.ts` + `teams.spec.ts` *(v223)*
+- [x] **E2E-P1** Critical bug fix tests — covered by `phase1-v194.spec.ts` (BUG-RD-001 quick-links, RD-005 duplicate stats) *(v223)*
+- [x] **Gate:** E2E v223: 113 passed / 0 failed / 39 skipped ✅ *(evidence: pipeline-evidence/e2e-v223.json)*
 
 ### Phase 2 E2E
-- [x] **E2E-P2** `cluster-tabs-data.spec.ts` *(verified: file exists in tests/e2e/)*
-- [x] **E2E-P2** `command-palette-enhanced.spec.ts` *(verified: file exists in tests/e2e/)*
-- [x] **Gate:** 16/16 PASS ✅ *(verified: e2e evidence v194-phase2)*
+- [x] **E2E-P2** Cluster tabs data tests — covered by `k-p2-features.spec.ts` + `pod-actions.spec.ts` + `clusters.spec.ts` (all tabs with real data) *(v223)*
+- [x] **E2E-P2** Command palette tests — covered by `cmdk.spec.ts` (search, cluster shortcuts) *(v223)*
+- [x] **Gate:** E2E v223: 113 passed / 0 failed / 39 skipped ✅ *(evidence: pipeline-evidence/e2e-v223.json)*
 
 ### Phase 3 E2E
-- [x] **E2E-P3** Phase 3 covered by `phase3-v194-animation.spec.ts` + `m-p3-features.spec.ts` *(verified: files exist)*
-- [x] **Gate:** 139/139 PASS, 0 failures ✅ *(verified: e2e evidence v194-phase3-final)*
+- [x] **E2E-P3** Product fix for clusters table/empty-state smoke path + logout returnUrl regression addressed *(Dima, v210 2026-03-15)*
+- [x] **E2E-P3** Responsive tests — covered by `responsive.spec.ts` (mobile/tablet/desktop breakpoints) *(v223)*
+- [x] **Gate:** E2E v223: 113 passed / 0 failed / 39 skipped ✅ *(evidence: pipeline-evidence/e2e-v223.json)*
 
 ---
 
 ## 📋 Pipeline Checklist (per Phase)
 
 Each phase follows this flow:
-- [x] Dev complete (Ron/Shiri/Dima) ✅
-- [x] Code review (Lior) → 10/10 APPROVED ✅
-- [x] Merge + tag (Gil) → v194-phase1/2/3 + v194-phase3-fix1 ✅
-- [x] Deploy (Uri) → helm uninstall + install → image tag verified ✅
-- [x] E2E (Yuval) → 139/139 pass, 0 failures ✅
-- [x] QA (Mai) → 9.5 / 8.7 / 9.0 / 10 ✅
-- [x] Guardian: deployed-awaiting-review ✅
-
----
-
----
-
-## 🆕 Phase 6 — Dashboard IA Redesign (Single Source of Truth)
-> **Goal:** Eliminate duplication — SystemHealth + Clusters = one unified view
-> **Spec:** `DASHBOARD-REDESIGN-2026.md` | **Runs:** Ron (frontend)
-> **Reference:** Datadog/Rancher/Lens pattern — health is attribute of entity, not a section
-
-### P0 — Critical (Remove Duplication)
-- [x] **IA-001** Remove `SystemHealthSection` from `page.tsx` (~80 lines, ~380–440). Remove unused imports: `HeartPulse`, `RefreshCw`, `Clock`, `Zap`. Remove `STATUS_COLORS_HEALTH`, `STATUS_LABELS_HEALTH`, `timeAgoHealth` constants. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
-- [x] **IA-002** Add health aggregate counts to `CompactStatsBar`: `🟢 N · 🟡 N · 🔴 N` (Healthy/Degraded/Critical). Compute from cluster list via `getHealthGroup()`. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
-- [x] **IA-003** Remove leftover `mb-6` spacing after SystemHealthSection removal — clusters appear higher on page. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
-
-### P1 — Important (Progressive Disclosure)
-- [x] **IA-004** Enhance `HealthDot` → rich hover tooltip: status label, last check time-ago, responseTimeMs. Use existing `@/components/ui/tooltip`. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
-- [x] **IA-005** Add inline `HealthLatency` badge to `ClusterCard` — subtle `Nms` text next to health dot (was only in SystemHealthSection). *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
-- [x] **IA-006** Add "Check Now" hover button to `ClusterCard` — `RefreshCw` icon, `opacity-0 group-hover:opacity-100`. Recovers on-demand re-check functionality. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
-- [x] **IA-007** Create reusable `ClusterHealthIndicator` component (dot + tooltip + latency + optional onCheck). Used by cards + widget-mode. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
-
-### P2 — Polish (Animations)
-- [x] **IA-008** Update widget-mode `ClusterHealthWidget` to use `ClusterHealthIndicator` for cross-mode consistency. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
-- [x] **IA-009** Upgrade cluster cards: Motion `whileHover={{y:-2}}`, `layout` prop for filter reflow, `AnimatePresence mode="popLayout"` on filter. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
-- [x] **IA-010** Add `healthDotVariants` + `checkButtonVariants` to `animation-constants.ts` — healthy=still, degraded=pulse, critical=bigger pulse. *(Ron, feat/phase6-ia-redesign, 2026-03-07)*
-
----
-
-## 🆕 Phase 5 — Dashboard UX + Per-Node Metrics
-> **Goal:** Compact stat cards + per-node resource metrics (Vik: "I need to see which machine is loaded")
-> **Runs:** Ron (frontend) + Dima (backend) in parallel → v197
-
-### Stat Cards — Compact Redesign (Ron)
-- [x] **DB-001** Replace 4 big stat cards with compact stats bar — one thin row: `N Nodes · N/N Pods · N Clusters · N Warnings` *(v197 2026-03-07)*
-- [x] **DB-002** Cluster cards — reduce height ~50%, horizontal layout, 50 clusters = reasonable scroll *(v197 2026-03-07)*
-- [x] **DB-003** Anomalies → inline badge on Alerts nav item in sidebar (remove AnomalyWidget from dashboard) *(v197 2026-03-07)*
-
-### Per-Node Metrics — Backend (Dima)
-- [x] **MX-001** Enable metrics-server in minikube *(Foreman pre-enabled 2026-03-07)*
-- [x] **MX-002** New DB table `node_metrics_history` (clusterId, nodeName, timestamp, cpuPercent, memPercent, cpuMillis, memMi) *(v197 2026-03-07)*
-- [x] **MX-003** Collector: per-node insert each cycle + `getCollectorStatus()` export *(v197 2026-03-07)*
-- [x] **MX-004** tRPC route `metrics.nodeTimeSeries(clusterId, range)` → [{nodeName, timestamps, cpuValues, memValues, cpuMillis, memMi}] *(v197 2026-03-07)*
-- [x] **MX-005** `/health/metrics-collector` status endpoint *(v197 2026-03-07)*
-
-### Per-Node Metrics — Frontend (Ron)
-- [x] **MX-006** NodeMetricsTable component: node name + CPU/Mem progress bars + % + millicores/Mi values *(v197 2026-03-07)*
-- [x] **MX-007** MetricsEmptyState fallback: "⚠️ Metrics-server not detected on this cluster" *(v197 2026-03-07)*
-
----
-
-## 🆕 Phase 4 — Sidebar Polish (2026 Standards)
-> **Goal:** Fix sidebar UX issues found by Vik + apply 2026 best practices from SIDEBAR-RESEARCH-2026.md
-> **Runs:** Ron (frontend) — after v195 pipeline completes
-> **Reference:** `SIDEBAR-RESEARCH-2026.md`
-
-### Icon Alignment (Collapsed Mode)
-- [x] **SB-001** Fix icon centering in collapsed mode — apply `group-data-[collapsible=icon]:justify-center`, `group-data-[collapsible=icon]:px-0`, `group-data-[collapsible=icon]:size-10` to `SidebarMenuButton` *(done in v195: fcd11a1 — justify-center px-0 when collapsed, QA verified 9.2/10)*
-- [x] **SB-002** Add `data-collapsible` attribute propagation from `<aside>` to child nav items so Tailwind group selectors work correctly *(Ron, feat/sidebar-phase4 df28049)*
-- [x] **SB-003** Add tooltip (`title` or shadcn `Tooltip`) on every nav item when collapsed — critical UX gap per research *(Ron, feat/sidebar-phase4 df28049)*
-
-### Section Header Typography
-- [x] **SB-004** Replace `font-mono font-bold tracking-widest` on section labels (like "CLUSTERS") with `text-[11px] font-medium tracking-wide text-muted-foreground` — 2022 Material pattern → 2026 subtle style *(done in v195: fcd11a1 — text-[10px] font-medium tracking-wider text-muted, QA verified)*
-- [x] **SB-005** Convert "CLUSTERS" active section from header label → inline accordion: parent item has `ChevronDown` that rotates, sub-items indent `pl-9` — no more awkward section header below nav items *(Ron, feat/sidebar-phase4 df28049)*
-
-### Animation Refinements
-- [x] **SB-006** Switch sidebar `width` animation from Motion spring → CSS `transition-[width] duration-200 ease-out` (hardware-accelerated, prevents jank) *(Ron, feat/sidebar-phase4 df28049)*
-- [x] **SB-007** Keep Motion `layoutId="sidebar-active-bg"` for active indicator sliding — already implemented ✅ *(verified: Sidebar.tsx uses layoutId)*
-- [x] **SB-008** Reduce active border bar from 3px → 2px (2026 standard per research) *(Ron, feat/sidebar-phase4 df28049)*
-- [x] **SB-009** `Cmd+B` toggle: near-instant `duration-50` (not the full spring animation — keyboard users expect instant response) *(Ron, feat/sidebar-phase4 df28049)*
-
-### Active State when Deep in Section
-- [x] **SB-010** Parent nav item (e.g., "Clusters") shows as active with background pill when user is on any `/clusters/*` route *(Ron, feat/sidebar-phase4 df28049)*
-- [x] **SB-011** When inside cluster, show inline sub-nav (cluster name + tabs) as collapsible under parent — not as floating header *(Ron, feat/sidebar-phase4 df28049)*
+- [x] Dev complete (Ron/Shiri/Dima) → report to Discord [v207 2026-03-14 auth/logout follow-up: middleware cookie expiry + protected-route returnUrl fix]
+- [x] Code review (Lior) → 10/10 APPROVED → evidence: pipeline-evidence/review-v223.json *(v223, 2026-03-16)*
+- [x] Merge + tag (Gil) → committed e611e53, pushed to origin/feat/init-monorepo. v223 tag at 8db0ac6 (deployed images match) *(v223, 2026-03-16)*
+- [x] Deploy (Uri) → helm uninstall + helm install → image tag verified [v205 2026-03-14]
+- [x] E2E (Yuval) → 113/0/39 PASS → evidence: pipeline-evidence/e2e-v223.json *(v223, 2026-03-16)*
+- [x] QA (Mai) → 9.3/10 PASS → evidence: pipeline-evidence/qa-v223.json *(v223, 2026-03-16)*
+- [ ] Guardian: all 5 gates → write `status: deployed-awaiting-review`
 
 ---
 
@@ -231,6 +163,14 @@ Each phase follows this flow:
 
 ## 🔧 v202 — Dashboard CompactStatsBar Restore + Animation Fix (2026-03-14)
 
+### Mai Dashboard UX pass
+- [x] Main dashboard hierarchy rebalanced so CompactStatsBar/KPIs lead visually and Dashboard title is de-emphasized [v204-mai-ux 2026-03-14]
+- [x] Large desktop dashboard layout expanded to a true wide-screen board: environment summary rail + health-group columns with 3–4 card rows at 1920px [v210-review-blockers 2026-03-15]
+- [x] Status accessibility improved with explicit ✓ Healthy / ⚠ Warning / ✕ Critical labels and icons (not color-only) [v204-mai-ux 2026-03-14]
+- [x] Filter chips active state strengthened with filled accent styling and clearer contrast [v204-mai-ux 2026-03-14]
+- [x] Secondary labels/metadata contrast improved for dark mode in dashboard surfaces [v204-mai-ux 2026-03-14]
+- [x] Cluster cards keep higher visual weight/density with truthful status summary, source/version/node metadata, and capability badges (removed synthetic CPU/Memory/Pods + fake 24h trend) [v209-mai-ux-fix 2026-03-14]
+
 ### Completed
 - [x] Restored CompactStatsBar component — feat/init-monorepo had divergent page.tsx missing Phase 5/6 component [v202 2026-03-14]
 - [x] Added ClusterHealthIndicator component required by CompactStatsBar [v202 2026-03-14]
@@ -240,4 +180,5 @@ Each phase follows this flow:
 - [x] Deployed v202 — all 5 pods Running 0 restarts [v202 2026-03-14]
 - [x] Health endpoint OK: {"status":"ok"} [v202 2026-03-14]
 - [x] Updated release-ledger.json with v202 entry [v202 2026-03-14]
+- [x] Refactored Metrics page into dedicated CPU/Memory/Network/Pods panels with backend-native 30s/1m/5m/1h/6h/24h/7d ranges + bucket-window tooltips from `bucketStart`/`bucketEnd` [v203 2026-03-14]
 - [x] Main branch already up to date with feat/init-monorepo (previous merge included these commits)

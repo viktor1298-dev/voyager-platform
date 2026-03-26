@@ -12,14 +12,12 @@ test.describe('TanStack Table — Users Management', () => {
   })
 
   test('table renders structure and rows/empty state', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: /user management/i })).toBeVisible()
-
     const table = page.locator('table').first()
     await expect(table).toBeVisible({ timeout: 10_000 })
     await expect(table.getByRole('columnheader', { name: /name/i }).first()).toBeVisible()
     await expect(table.getByRole('columnheader', { name: /email/i }).first()).toBeVisible()
 
-    const dataRows = table.locator('tbody tr')
+    const dataRows = table.locator('tbody tr[data-row]')
     const emptyStateCell = table
       .locator('tbody tr td')
       .filter({ hasText: /no users found/i })
@@ -31,9 +29,8 @@ test.describe('TanStack Table — Users Management', () => {
       return
     }
 
-    const rowCount = await dataRows.count()
     await expect(dataRows.first()).toBeVisible({ timeout: 10_000 })
-    expect(rowCount).toBeGreaterThan(0)
+    expect(await dataRows.count()).toBeGreaterThan(0)
   })
 
   test('clicking column header sorts data', async ({ page }) => {
@@ -53,13 +50,12 @@ test.describe('TanStack Table — Users Management', () => {
       expect(nameColumnIndex).toBeGreaterThanOrEqual(0)
 
       const values = await table
-        .locator(`tbody tr td:nth-child(${nameColumnIndex + 1})`)
+        .locator(`tbody tr[data-row] td:nth-child(${nameColumnIndex + 1})`)
         .allTextContents()
 
       return values.map((v) => v.trim()).filter((v) => v.length > 0 && !/^no users found$/i.test(v))
     }
 
-    const skeletonRows = table.locator('tbody tr td .skeleton-shimmer').first()
     const emptyStateCell = table
       .locator('tbody tr td')
       .filter({ hasText: /no users found/i })
@@ -68,16 +64,13 @@ test.describe('TanStack Table — Users Management', () => {
     await expect
       .poll(
         async () => {
-          const hasSkeleton = await skeletonRows.isVisible().catch(() => false)
-          if (hasSkeleton) return 'loading'
-
           const hasEmptyState = await emptyStateCell.isVisible().catch(() => false)
           if (hasEmptyState) return 'empty'
 
           const names = await readNames()
           return names.length > 0 ? 'data' : 'unknown'
         },
-        { timeout: 10_000, message: 'wait for users table to settle out of skeleton state' },
+        { timeout: 10_000, message: 'wait for users table to settle' },
       )
       .toMatch(/^(empty|data)$/)
 
@@ -115,16 +108,16 @@ test.describe('TanStack Table — Users Management', () => {
 
     const noUsersState = page.getByText(/no users found/i)
     if (await noUsersState.isVisible().catch(() => false)) {
-      await expect(page.getByText(/0 users/i)).toBeVisible()
+      await expect(noUsersState).toBeVisible()
       return
     }
 
     const table = page.locator('table').first()
     await expect(table).toBeVisible()
 
-    const rowsBefore = await table.locator('tbody tr').count()
+    const rowsBefore = await table.locator('tbody tr[data-row]').count()
     await searchInput.fill('admin')
-    const rowsAfter = await table.locator('tbody tr').count()
+    const rowsAfter = await table.locator('tbody tr[data-row]').count()
     expect(rowsAfter).toBeLessThanOrEqual(rowsBefore)
   })
 

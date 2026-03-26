@@ -109,16 +109,16 @@ export function PodLogStream({ podName, namespace }: PodLogStreamProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
         <div className="flex items-center gap-2">
-          <h4 className="text-[11px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider">
+          <h4 className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider">
             Logs
           </h4>
-          <span className="text-[10px] text-[var(--color-text-dim)] font-mono">
+          <span className="text-xs text-[var(--color-text-dim)] font-mono">
             {podName}
           </span>
           {streaming && (
             <span className="flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] text-emerald-400 font-mono">LIVE</span>
+              <span className="text-xs text-emerald-400 font-mono">LIVE</span>
             </span>
           )}
         </div>
@@ -131,11 +131,11 @@ export function PodLogStream({ podName, namespace }: PodLogStreamProps) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Filter logs…"
-                className="w-32 bg-transparent text-[11px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)] focus:outline-none border-b border-[var(--color-border)] py-0.5"
+                className="w-32 bg-transparent text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)] focus:outline-none border-b border-[var(--color-border)] py-0.5"
                 autoFocus
               />
               {searchQuery && (
-                <span className="text-[10px] text-[var(--color-text-dim)] font-mono">
+                <span className="text-xs text-[var(--color-text-dim)] font-mono">
                   {filteredLogs.length}
                 </span>
               )}
@@ -177,7 +177,7 @@ export function PodLogStream({ podName, namespace }: PodLogStreamProps) {
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-64 overflow-y-auto overflow-x-hidden font-mono text-[11px] leading-5 p-3 scrollbar-thin"
+        className="h-64 overflow-y-auto overflow-x-hidden font-mono text-xs leading-5 p-3 scrollbar-thin"
       >
         {filteredLogs.map((line) => (
           <div key={line.id} className="flex gap-2 hover:bg-white/[0.02] px-1 rounded">

@@ -13,11 +13,11 @@
 
 ### Merge & Conflict Resolution
 
-- [ ] **MERGE-01**: Execute `git merge --no-ff --no-commit origin/feat/init-monorepo` on main to stage all 54 commits
-- [ ] **MERGE-02**: Resolve 9 conflicting files using tiered strategy (trivial → accept-theirs → manual → heavy)
-- [ ] **MERGE-03**: Manually review auto-resolved files (server.ts, ClusterHealthWidget.tsx) for evil merge logic errors
-- [ ] **MERGE-04**: Normalize Motion imports (m vs motion convention) across 10+ diverged component files
-- [ ] **MERGE-05**: Verify init.sql contains all tables from both branches (nodeMetricsHistory schema risk)
+- [x] **MERGE-01**: Execute `git merge --no-ff --no-commit origin/feat/init-monorepo` on main to stage all 54 commits
+- [x] **MERGE-02**: Resolve 9 conflicting files using tiered strategy (trivial → accept-theirs → manual → heavy)
+- [x] **MERGE-03**: Manually review auto-resolved files (server.ts, ClusterHealthWidget.tsx) for evil merge logic errors
+- [x] **MERGE-04**: Normalize Motion imports (m vs motion convention) across 10+ diverged component files
+- [x] **MERGE-05**: Verify init.sql contains all tables from both branches (nodeMetricsHistory schema risk)
 - [ ] **MERGE-06**: Commit the merge with a descriptive message referencing the 54-commit integration
 
 ### Validation Gate
@@ -71,11 +71,11 @@
 | SAFE-01 | Phase 1 | Complete |
 | SAFE-02 | Phase 1 | Complete |
 | SAFE-03 | Phase 1 | Complete |
-| MERGE-01 | Phase 2 | Pending |
-| MERGE-02 | Phase 2 | Pending |
-| MERGE-03 | Phase 2 | Pending |
-| MERGE-04 | Phase 2 | Pending |
-| MERGE-05 | Phase 2 | Pending |
+| MERGE-01 | Phase 2 | Complete |
+| MERGE-02 | Phase 2 | Complete |
+| MERGE-03 | Phase 2 | Complete |
+| MERGE-04 | Phase 2 | Complete |
+| MERGE-05 | Phase 2 | Complete |
 | MERGE-06 | Phase 2 | Pending |
 | VALID-01 | Phase 3 | Pending |
 | VALID-02 | Phase 3 | Pending |

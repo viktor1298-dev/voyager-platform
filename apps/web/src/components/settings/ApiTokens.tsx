@@ -119,7 +119,7 @@ export function ApiTokensSection() {
       <div className="space-y-5">
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <h4 className="text-[12px] font-mono uppercase tracking-wider text-[var(--color-text-muted)]">
+            <h4 className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-muted)]">
               Existing Tokens ({allTokens.length})
             </h4>
             {testTokenCount > 0 && (
@@ -148,6 +148,7 @@ export function ApiTokensSection() {
                 setPage(0)
               }}
               aria-label="Search tokens"
+              autoComplete="off"
               className="w-full pl-9 pr-3 py-2 text-sm rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus-visible:ring-2 focus-visible:ring-ring transition-colors"
             />
           </div>
@@ -155,7 +156,7 @@ export function ApiTokensSection() {
           {listTokens.isLoading ? (
             <TableSkeleton rows={3} columns={3} />
           ) : pagedTokens.length === 0 ? (
-            <p className="text-[12px] text-[var(--color-text-dim)]">
+            <p className="text-xs text-[var(--color-text-dim)]">
               {searchQuery ? 'No tokens match your search.' : 'No API tokens yet.'}
             </p>
           ) : (
@@ -172,10 +173,10 @@ export function ApiTokensSection() {
                         <div className="text-sm font-semibold text-[var(--color-text-primary)]">
                           {token.name}
                         </div>
-                        <p className="text-[11px] text-[var(--color-text-dim)]">
+                        <p className="text-xs text-[var(--color-text-dim)]">
                           Created: {formatDate(token.createdAt)}
                         </p>
-                        <p className="text-[11px] text-[var(--color-text-dim)]">
+                        <p className="text-xs text-[var(--color-text-dim)]">
                           Last used: {formatDate(token.lastUsedAt)}
                         </p>
                       </div>
@@ -255,7 +256,7 @@ export function ApiTokensSection() {
         </div>
 
         <div className="space-y-3 border-t border-[var(--color-border)]/60 pt-4">
-          <h4 className="text-[12px] font-mono uppercase tracking-wider text-[var(--color-text-muted)]">
+          <h4 className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-muted)]">
             Create Token
           </h4>
 
@@ -271,6 +272,7 @@ export function ApiTokensSection() {
               value={tokenName}
               onChange={(event) => setTokenName(event.target.value)}
               placeholder="e.g. Claude Desktop"
+              autoComplete="off"
               className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
@@ -329,7 +331,7 @@ export function ApiTokensSection() {
         </div>
 
         <div className="space-y-3 border-t border-[var(--color-border)]/60 pt-4">
-          <h4 className="text-[12px] font-mono uppercase tracking-wider text-[var(--color-text-muted)]">
+          <h4 className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-muted)]">
             MCP Integration (Claude Desktop)
           </h4>
 

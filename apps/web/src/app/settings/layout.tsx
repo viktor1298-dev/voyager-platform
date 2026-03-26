@@ -28,7 +28,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
             Settings
           </h1>
-          <p className="text-[12px] text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
+          <p className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
             Platform configuration &amp; administration
           </p>
         </div>
@@ -38,6 +38,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
           <nav
             className="flex gap-1 overflow-x-auto scrollbar-none -mb-px"
             aria-label="Settings tabs"
+            data-testid="settings-tabs"
           >
             {TABS.map((tab) => {
               const isActive =

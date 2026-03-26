@@ -72,7 +72,7 @@ export function AiContextCard({ clusterName, clusterId, healthStatus }: AiContex
               />
             </button>
           </p>
-          <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
             AI can analyze events, logs, and resource usage to suggest fixes.
           </p>
         </div>
@@ -90,7 +90,7 @@ export function AiContextCard({ clusterName, clusterId, healthStatus }: AiContex
       {expanded && (
         <div className="mt-3 ml-11 border-t border-[var(--color-border)]/30 pt-3">
           {analyzing ? (
-            <div className="flex items-center gap-2 text-[12px] text-[var(--color-text-muted)]">
+            <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
               <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--color-accent)]" />
               Analyzing cluster events and metrics…
             </div>
@@ -99,7 +99,7 @@ export function AiContextCard({ clusterName, clusterId, healthStatus }: AiContex
               {analysis?.map((line, i) => (
                 <p
                   key={i}
-                  className="text-[12px] text-[var(--color-text-secondary)] leading-relaxed [&_strong]:text-[var(--color-text-primary)] [&_strong]:font-semibold [&_code]:text-[11px] [&_code]:font-mono [&_code]:bg-white/[0.06] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded"
+                  className="text-xs text-[var(--color-text-secondary)] leading-relaxed [&_strong]:text-[var(--color-text-primary)] [&_strong]:font-semibold [&_code]:text-xs [&_code]:font-mono [&_code]:bg-white/[0.06] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded"
                   dangerouslySetInnerHTML={{
                     __html: line
                       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -109,7 +109,7 @@ export function AiContextCard({ clusterName, clusterId, healthStatus }: AiContex
               ))}
               <Link
                 href={`/ai?context=cluster&clusterId=${clusterId}&clusterName=${encodeURIComponent(clusterName)}`}
-                className="inline-flex items-center gap-1.5 text-[11px] text-[var(--color-accent)] hover:underline mt-1"
+                className="inline-flex items-center gap-1.5 text-xs text-[var(--color-accent)] hover:underline mt-1"
               >
                 <Bot className="h-3 w-3" />
                 Continue in AI Chat →

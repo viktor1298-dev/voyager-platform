@@ -13,6 +13,7 @@ import { auth } from './lib/auth.js'
 import { resolveExternalRequestUrl } from './lib/auth-request.js'
 import { mapAuthRouteErrorToBody, mapAuthRouteErrorToStatus } from './lib/auth-error-mapping.js'
 import { ensureAdminUser } from './lib/ensure-admin-user.js'
+import { ensureViewerUser } from './lib/ensure-viewer-user.js'
 import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
 import { startHealthSync } from './jobs/health-sync.js'
@@ -164,9 +165,27 @@ const handleAuthRoute = async (request: FastifyRequest, reply: FastifyReply) => 
     })
     const response = await auth.handler(req)
     reply.status(response.status)
+
+    // Forward all response headers except Set-Cookie (handled separately below).
     for (const [key, value] of response.headers.entries()) {
+      if (key.toLowerCase() === 'set-cookie') continue
       reply.header(key, value)
     }
+
+    // Forward Set-Cookie headers individually via getSetCookie().
+    // Better Auth sign-out emits multiple Set-Cookie values (one per
+    // cookie variant: session_token, __Secure-*, __Host-*).
+    // Headers.entries() in some environments joins them into a single
+    // comma-separated string which browsers parse incorrectly.
+    // getSetCookie() guarantees each cookie is forwarded as a distinct
+    // Set-Cookie header so the browser clears all session cookies on logout.
+    const setCookies = response.headers.getSetCookie?.()
+    if (setCookies && setCookies.length > 0) {
+      for (const cookie of setCookies) {
+        reply.header('set-cookie', cookie)
+      }
+    }
+
     reply.send(response.body ? await response.text() : null)
   } catch (error) {
     app.log.error(error, 'Authentication Error')
@@ -229,6 +248,7 @@ const start = async () => {
     // Schema is initialized by Helm sql/init.sql on postgres startup (no migrate() needed)
 
     await ensureAdminUser({ allowLocalDevDefaults: false })
+    await ensureViewerUser()
 
     const PORT = Number.parseInt(process.env.PORT || '4000', 10)
     const HOST = process.env.HOST || '0.0.0.0'

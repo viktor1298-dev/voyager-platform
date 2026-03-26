@@ -1,11 +1,14 @@
 'use client'
 
 import type { ColumnDef } from '@tanstack/react-table'
+import { Activity } from 'lucide-react'
 import { useParams } from 'next/navigation'
+import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DataTable } from '@/components/DataTable'
 import { severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const REFETCH_INTERVAL = 10000
 
@@ -35,7 +38,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
     cell: ({ getValue }) => {
       const ts = getValue<string | null>()
       return (
-        <span className="text-[var(--color-text-dim)] font-mono text-[11px] whitespace-nowrap">
+        <span className="text-[var(--color-text-dim)] font-mono text-xs whitespace-nowrap">
           {ts ? timeAgo(ts) : '—'}
         </span>
       )
@@ -48,7 +51,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
       const type = getValue<string>()
       return (
         <span
-          className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+          className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
           style={{
             color: severityColor(type),
             background: `color-mix(in srgb, ${severityColor(type)} 15%, transparent)`,
@@ -72,7 +75,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
     accessorKey: 'namespace',
     header: 'Namespace',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-muted)] font-mono text-[12px]">
+      <span className="text-[var(--color-text-muted)] font-mono text-xs">
         {getValue<string>()}
       </span>
     ),
@@ -81,7 +84,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
     accessorKey: 'message',
     header: 'Message',
     cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-muted)] text-[12px] max-w-[400px] truncate block">
+      <span className="text-[var(--color-text-muted)] text-xs max-w-[400px] truncate block">
         {getValue<string>()}
       </span>
     ),
@@ -89,10 +92,13 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
 ]
 
 export default function EventsPage() {
-  const { id } = useParams<{ id: string }>()
+  usePageTitle('Cluster Events')
 
-  const dbCluster = trpc.clusters.get.useQuery({ id })
-  const resolvedId = dbCluster.data?.id ?? id
+  const { id: routeSegment } = useParams<{ id: string }>()
+  const clusterId = getClusterIdFromRouteSegment(routeSegment)
+
+  const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
+  const resolvedId = dbCluster.data?.id ?? clusterId
   const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
   const isLive = hasCredentials
 
@@ -143,18 +149,20 @@ export default function EventsPage() {
             className={`h-2 w-2 rounded-full ${isAutoRefreshing ? 'bg-[var(--color-status-active)] animate-pulse' : 'bg-[var(--color-text-dim)]'}`}
             aria-label={isAutoRefreshing ? 'Auto-refreshing' : 'Idle'}
           />
-          <span className="text-[11px] text-[var(--color-text-muted)]">
+          <span className="text-xs text-[var(--color-text-muted)]">
             {isAutoRefreshing ? 'Live — auto-refreshing every 10s' : 'Events'}
           </span>
         </div>
-        <span className="text-[11px] font-mono text-[var(--color-text-dim)]">{events.length} events</span>
+        <span className="text-xs font-mono text-[var(--color-text-dim)]">{events.length} events</span>
       </div>
 
       <DataTable
         data={events}
         columns={eventColumns}
         loading={effectiveIsLive ? liveQuery.isLoading : dbEvents.isLoading}
-        emptyTitle="No events found"
+        emptyIcon={<Activity className="h-10 w-10" />}
+        emptyTitle="No events recorded yet"
+        emptyDescription="Kubernetes events appear here when something notable happens in your cluster — like pod scheduling, container crashes, scaling operations, or configuration changes. Events are typically retained for 1 hour by default."
         searchable
         paginated
         pageSize={25}
@@ -166,14 +174,14 @@ export default function EventsPage() {
             <div className="flex items-center justify-between gap-2 mb-1">
               <div className="flex items-center gap-2">
                 <span
-                  className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+                  className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
                   style={{ color: severityColor(event.type), background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)` }}
                 >
                   {event.type}
                 </span>
                 <span className="text-[var(--color-text-primary)] text-xs font-medium">{event.reason}</span>
               </div>
-              <span className="text-[var(--color-text-dim)] font-mono text-[10px] shrink-0">{event.timestamp ? timeAgo(event.timestamp) : '—'}</span>
+              <span className="text-[var(--color-text-dim)] font-mono text-xs shrink-0">{event.timestamp ? timeAgo(event.timestamp) : '—'}</span>
             </div>
             <p className="text-[var(--color-text-muted)] text-xs line-clamp-2">{event.message}</p>
           </div>

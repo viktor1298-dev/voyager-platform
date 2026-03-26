@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertTriangle, Loader2, Lock, Send, Settings, User } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -505,7 +505,7 @@ export function AiChat({
             onClick={() => {
               void syncHistory()
             }}
-            className="rounded-lg border border-[var(--color-status-warning)]/40 px-2 py-1 text-[11px] hover:bg-[var(--color-status-warning)]/10"
+            className="rounded-lg border border-[var(--color-status-warning)]/40 px-2 py-1 text-xs hover:bg-[var(--color-status-warning)]/10"
           >
             Retry
           </button>
@@ -534,7 +534,7 @@ export function AiChat({
                 const isStreamingMessage = message.id === streamingMessageId
 
                 return (
-                  <m.div
+                  <motion.div
                     key={message.id}
                     initial={reduced ? false : { opacity: 0, y: 8 }}
                     animate={reduced ? {} : { opacity: 1, y: 0 }}
@@ -573,7 +573,7 @@ export function AiChat({
                         <User className="h-4 w-4" />
                       </div>
                     )}
-                  </m.div>
+                  </motion.div>
                 )
               })}
 
@@ -628,7 +628,7 @@ export function AiChat({
               }
             }}
             disabled={locked || !lastPrompt || isStreaming || chatMutation.isPending}
-            className="rounded-lg border border-[var(--color-status-error)]/40 px-2 py-1 text-[11px] hover:bg-[var(--color-status-error)]/10 disabled:opacity-60"
+            className="rounded-lg border border-[var(--color-status-error)]/40 px-2 py-1 text-xs hover:bg-[var(--color-status-error)]/10 disabled:opacity-60"
           >
             Retry last prompt
           </button>

@@ -34,16 +34,16 @@ export function PodStatusWidget() {
               { label: 'Total', value: totalPods, color: 'text-[var(--color-text-primary)]' },
             ].map(({ label, value, color }) => (
               <div key={label} className="flex flex-col items-center gap-1 p-2 rounded-lg border border-[var(--color-border)]/40 bg-white/[0.02]">
-                <span className={`text-xl font-bold font-mono ${color}`}>{value}</span>
-                <span className="text-[10px] text-[var(--color-text-dim)]">{label}</span>
+                <span className={`text-xl font-bold font-mono tabular-nums ${color}`}>{value}</span>
+                <span className="text-xs text-[var(--color-text-dim)]">{label}</span>
               </div>
             ))}
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-[var(--color-text-dim)]">Pod health</span>
-              <span className="text-[10px] font-mono text-[var(--color-status-healthy)]">{podPct}%</span>
+              <span className="text-xs text-[var(--color-text-dim)]">Pod health</span>
+              <span className="text-xs font-mono text-[var(--color-status-healthy)]">{podPct}%</span>
             </div>
             <div className="h-2 rounded-full bg-[var(--color-track)] overflow-hidden">
               <div

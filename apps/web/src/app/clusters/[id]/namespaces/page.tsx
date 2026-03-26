@@ -2,11 +2,13 @@
 
 import type { ColumnDef } from '@tanstack/react-table'
 import { useParams } from 'next/navigation'
+import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { useMemo } from 'react'
 import { DataTable } from '@/components/DataTable'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface NamespaceRow {
   id: string
@@ -39,7 +41,7 @@ const columns: ColumnDef<NamespaceRow, unknown>[] = [
       const val = getValue<string>()
       return (
         <span
-          className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+          className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
           style={{
             color: statusColor(val),
             background: `color-mix(in srgb, ${statusColor(val)} 15%, transparent)`,
@@ -54,7 +56,7 @@ const columns: ColumnDef<NamespaceRow, unknown>[] = [
     accessorKey: 'labelsCount',
     header: 'Labels',
     cell: ({ getValue }) => (
-      <span className="text-[12px] text-[var(--color-text-muted)]">
+      <span className="text-xs text-[var(--color-text-muted)]">
         {getValue<number>()}
       </span>
     ),
@@ -63,7 +65,7 @@ const columns: ColumnDef<NamespaceRow, unknown>[] = [
     accessorKey: 'created',
     header: 'Created',
     cell: ({ getValue }) => (
-      <span className="font-mono text-[11px] text-[var(--color-text-dim)]">
+      <span className="font-mono text-xs text-[var(--color-text-dim)]">
         {getValue<string>()}
       </span>
     ),
@@ -71,10 +73,13 @@ const columns: ColumnDef<NamespaceRow, unknown>[] = [
 ]
 
 export default function NamespacesPage() {
-  const { id } = useParams<{ id: string }>()
+  usePageTitle('Cluster Namespaces')
 
-  const dbCluster = trpc.clusters.get.useQuery({ id })
-  const resolvedId = dbCluster.data?.id ?? id
+  const { id: routeSegment } = useParams<{ id: string }>()
+  const clusterId = getClusterIdFromRouteSegment(routeSegment)
+
+  const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
+  const resolvedId = dbCluster.data?.id ?? clusterId
 
   const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
 
@@ -133,7 +138,7 @@ export default function NamespacesPage() {
           <div className="flex items-center justify-between gap-2 mb-1">
             <span className="font-mono text-[13px] font-medium text-[var(--color-text-primary)] truncate">{ns.name}</span>
             <span
-              className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
+              className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
               style={{
                 color: statusColor(ns.status),
                 background: `color-mix(in srgb, ${statusColor(ns.status)} 15%, transparent)`,
@@ -142,7 +147,7 @@ export default function NamespacesPage() {
               {ns.status}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-[var(--color-text-muted)]">
+          <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
             <span>{ns.labelsCount} labels</span>
             <span>{ns.created}</span>
           </div>

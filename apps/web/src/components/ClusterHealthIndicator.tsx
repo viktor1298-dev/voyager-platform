@@ -7,8 +7,8 @@
  */
 
 import { useCallback, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
-import { m } from 'motion/react'
+import { AlertTriangle, CheckCircle2, HelpCircle, RefreshCw, XCircle } from 'lucide-react'
+import { motion } from 'motion/react'
 import { trpc } from '@/lib/trpc'
 import { HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
@@ -60,6 +60,21 @@ export function ClusterHealthIndicator({
   const color = STATUS_COLORS[entry.status] ?? 'var(--color-text-dim)'
   const statusLabel = entry.status.charAt(0).toUpperCase() + entry.status.slice(1)
   const dotSize = size === 'md' ? 'h-2.5 w-2.5' : 'h-1.5 w-1.5'
+  const iconSize = size === 'md' ? 'h-4 w-4' : 'h-3 w-3'
+
+  /** Fix #4: Icon alongside color dot for accessibility — not color-only */
+  const HealthStatusIcon = () => {
+    switch (entry.status) {
+      case 'healthy':
+        return <CheckCircle2 className={`${iconSize} text-emerald-400`} aria-hidden="true" />
+      case 'degraded':
+        return <AlertTriangle className={`${iconSize} text-amber-400`} aria-hidden="true" />
+      case 'critical':
+        return <XCircle className={`${iconSize} text-red-400`} aria-hidden="true" />
+      default:
+        return <HelpCircle className={`${iconSize} text-[var(--color-text-dim)]`} aria-hidden="true" />
+    }
+  }
 
   // REVIEW-006: use healthDotVariants animation via animate prop (inline to avoid readonly TS issue)
   const dotScaleAnim = entry.status === 'degraded'
@@ -79,12 +94,13 @@ export function ClusterHealthIndicator({
 
   return (
     <span className="inline-flex items-center gap-1 shrink-0">
+      <HealthStatusIcon />
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             {/* REVIEW-005: keyboard-focusable, screen-reader accessible */}
             {/* REVIEW-006: healthDotVariants — scale pulse on degraded/critical */}
-            <m.span
+            <motion.span
               className={`${dotSize} rounded-full shrink-0 cursor-default`}
               animate={{ backgroundColor: color, scale: dotScaleAnim }}
               transition={statusChangeTransition}
@@ -96,7 +112,7 @@ export function ClusterHealthIndicator({
           <TooltipContent side="top" className="text-left">
             <div className="space-y-0.5 text-xs">
               <div className="font-semibold">{statusLabel}</div>
-              <div className="text-[var(--color-text-muted)]">Last check: {timeAgo(entry.checkedAt)}</div>
+              <div className="text-[var(--color-text-muted)]">Last check: {entry.checkedAt ? timeAgo(entry.checkedAt) : '—'}</div>
               {entry.responseTimeMs != null && (
                 <div className="text-[var(--color-text-muted)]">Response: {entry.responseTimeMs}ms</div>
               )}
@@ -107,26 +123,28 @@ export function ClusterHealthIndicator({
 
       {/* IA-005: optional latency badge */}
       {showLatency && entry.responseTimeMs != null && (
-        <m.span
-          className="text-[9px] font-mono"
+        <motion.span
+          className="text-xs font-mono"
           style={{ color: latencyColor }}
           animate={{ color: latencyColor }}
           transition={{ duration: 0.3 }}
         >
           {entry.responseTimeMs}ms
-        </m.span>
+        </motion.span>
       )}
 
-      {/* Optional check now button — REVIEW-003: plain button, CSS only (no Motion opacity conflict) */}
+      {/* Fix #4: "Check now" always visible at low opacity, full on hover — closer to health dot */}
       {onCheck !== undefined && (
         <button
           type="button"
-          className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-[var(--color-accent)] hover:text-[var(--color-text-primary)] cursor-pointer disabled:opacity-40"
+          className="ml-0.5 inline-flex shrink-0 items-center gap-1 rounded-md border border-transparent px-1 py-0.5 text-xs font-medium text-[var(--color-accent)] opacity-50 transition-all hover:border-[var(--color-accent)]/25 hover:bg-[var(--color-accent)]/10 hover:opacity-100 disabled:opacity-30"
           title="Check now"
+          aria-label={`Run health check for cluster ${clusterId}`}
           onClick={handleCheck}
           disabled={checking}
         >
           <RefreshCw className={`h-3 w-3 ${checking ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Check</span>
         </button>
       )}
     </span>

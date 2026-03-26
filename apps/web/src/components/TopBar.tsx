@@ -1,11 +1,10 @@
 'use client'
 
+import { authClient } from '@/lib/auth-client'
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
 import { useClusterContext } from '@/stores/cluster-context'
 import { LogOut, Search } from 'lucide-react'
-import { useTheme } from 'next-themes'
-import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { NotificationsPanel } from './NotificationsPanel'
 import { ThemeToggle } from './ThemeToggle'
@@ -28,25 +27,44 @@ function statusDot(status: ClusterStatus): string {
 }
 
 export function TopBar() {
-  const router = useRouter()
-  const { resolvedTheme } = useTheme()
   const logoSrc = '/logo-mark.svg'
   const user = useAuthStore((s) => s.user)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const setActiveCluster = useClusterContext((s) => s.setActiveCluster)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
-  const handleLogout = async () => {
+  const handleLogout = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
     if (isLoggingOut) return
 
     setIsLoggingOut(true)
+
+    const loggedOutAt = Date.now()
+
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('logoutInProgress', String(loggedOutAt))
+    }
+
     try {
-      await useAuthStore.getState().logout()
+      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
+      const returnUrl = currentPath.startsWith('/') && !currentPath.startsWith('//') ? currentPath : '/'
+
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {},
+        },
+      })
+
+      const loginUrl = new URL('/login', window.location.origin)
+      loginUrl.searchParams.set('loggedOut', '1')
+      loginUrl.searchParams.set('loggedOutAt', String(loggedOutAt))
+      if (returnUrl !== '/') {
+        loginUrl.searchParams.set('returnUrl', returnUrl)
+      }
+      window.location.replace(`${loginUrl.pathname}?${loginUrl.searchParams.toString()}`)
     } finally {
-      const loggedOutAt = Date.now()
-      router.replace(`/login?loggedOut=1&loggedOutAt=${loggedOutAt}`)
-      router.refresh()
-      setIsLoggingOut(false)
+      useAuthStore.getState().clearUser()
     }
   }
 
@@ -153,7 +171,7 @@ export function TopBar() {
 
       <div className="flex items-center gap-3">
         {user && (
-          <span className="hidden sm:inline text-[11px] text-[var(--color-text-muted)] font-mono truncate max-w-[150px]">
+          <span className="hidden sm:inline text-xs text-[var(--color-text-muted)] font-mono truncate max-w-[150px]">
             {user.name ?? user.email}
           </span>
         )}
@@ -165,7 +183,7 @@ export function TopBar() {
           aria-label="Open command palette"
         >
           <Search className="h-3 w-3" />
-          <kbd className="text-[10px] font-mono">⌘K</kbd>
+          <kbd className="text-xs font-mono">⌘K</kbd>
         </button>
         <ThemeToggle />
         <NotificationsPanel />
@@ -173,12 +191,12 @@ export function TopBar() {
           type="button"
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="flex items-center gap-1.5 px-2.5 min-h-[44px] min-w-[44px] justify-center rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-status-error)] hover:bg-[var(--color-status-error)]/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           aria-label={isLoggingOut ? 'Logging out' : 'Logout'}
           title={isLoggingOut ? 'Logging out…' : 'Logout'}
+          className="flex items-center gap-1.5 px-2.5 min-h-[44px] min-w-[44px] justify-center rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-status-error)] hover:bg-[var(--color-status-error)]/10 transition-colors disabled:opacity-60"
         >
           <LogOut className="h-4 w-4" />
-          <span className="hidden sm:inline text-[11px] font-medium">Logout</span>
+          <span className="hidden sm:inline text-xs font-medium">Logout</span>
         </button>
         <ConnectionStatus
           dataUpdatedAt={liveQuery.dataUpdatedAt}
@@ -231,7 +249,7 @@ function ConnectionStatus({ dataUpdatedAt, isDisconnected, isReconnecting }: {
         className={`h-2 w-2 rounded-full ${isDisconnected ? '' : 'animate-pulse-slow'}`}
         style={{ backgroundColor: dotColor }}
       />
-      <span className="hidden sm:inline text-[11px] font-mono font-medium" style={{ color: dotColor }}>
+      <span className="hidden sm:inline text-xs font-mono font-medium" style={{ color: dotColor }}>
         {isDisconnected ? 'Disconnected' : isReconnecting ? 'Reconnecting…' : 'Live'}
       </span>
     </div>
@@ -242,7 +260,7 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
   return (
     <div className="text-center">
       <div className="text-sm font-extrabold leading-none" style={{ color }}>{value}</div>
-      <div className="text-[9px] text-[var(--color-text-dim)] uppercase tracking-wider mt-0.5 font-mono">{label}</div>
+      <div className="text-xs text-[var(--color-text-dim)] uppercase tracking-wider mt-0.5 font-mono">{label}</div>
     </div>
   )
 }

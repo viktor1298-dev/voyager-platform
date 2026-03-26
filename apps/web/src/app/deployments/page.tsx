@@ -14,6 +14,7 @@ import { useClusterContext } from '@/stores/cluster-context'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Box, Loader2, RefreshCw, Scale } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface RolloutInfo {
   revision: string
@@ -54,7 +55,7 @@ function StatusBadge({ status }: { status: Deployment['status'] }) {
   }
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold text-[var(--color-badge-label)] border ${styles[status]}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold text-[var(--color-badge-label)] border ${styles[status]}`}>
       {status === 'Restarting...' ? <Loader2 className="h-3 w-3 animate-spin" /> : <span className={`h-1.5 w-1.5 rounded-full ${dotColor[status]}`} />}
       {status}
     </span>
@@ -89,8 +90,8 @@ function ScaleDialog({ deployment, onClose }: { deployment: Deployment; onClose:
         aria-label={`Scale ${deployment.name}`}
       >
         <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-1">Scale Deployment</h3>
-        <p className="text-[11px] text-[var(--color-text-muted)] mb-4 font-mono">{deployment.namespace}/{deployment.name}</p>
-        <label className="block text-[11px] text-[var(--color-text-muted)] mb-1" htmlFor="replica-input">Replicas</label>
+        <p className="text-xs text-[var(--color-text-muted)] mb-4 font-mono">{deployment.namespace}/{deployment.name}</p>
+        <label className="block text-xs text-[var(--color-text-muted)] mb-1" htmlFor="replica-input">Replicas</label>
         <input
           id="replica-input"
           type="number"
@@ -101,12 +102,12 @@ function ScaleDialog({ deployment, onClose }: { deployment: Deployment; onClose:
           className="w-full px-3 py-2 rounded-lg text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]/50 mb-4"
         />
         <div className="flex gap-2 justify-end">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] text-[var(--color-badge-label)] hover:bg-white/[0.04] transition-colors">Cancel</button>
+          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-xs text-[var(--color-badge-label)] hover:bg-white/[0.04] transition-colors">Cancel</button>
           <button
             type="button"
             onClick={() => scaleMutation.mutate({ name: deployment.name, namespace: deployment.namespace, replicas })}
             disabled={scaleMutation.isPending}
-            className="px-3 py-1.5 rounded-lg text-[12px] font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {scaleMutation.isPending ? 'Scaling...' : 'Apply'}
           </button>
@@ -117,6 +118,8 @@ function ScaleDialog({ deployment, onClose }: { deployment: Deployment; onClose:
 }
 
 export default function DeploymentsPage() {
+  usePageTitle('Deployments')
+
   const isAdmin = useIsAdmin()
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const [isClient, setIsClient] = useState(false)
@@ -207,7 +210,7 @@ export default function DeploymentsPage() {
       {
         accessorKey: 'namespace',
         header: 'Namespace',
-        cell: ({ row }) => <span className="text-[var(--color-accent)] font-mono text-[11px]">{row.original.namespace}</span>,
+        cell: ({ row }) => <span className="text-[var(--color-accent)] font-mono text-xs">{row.original.namespace}</span>,
       },
       {
         id: 'replicas',
@@ -218,7 +221,7 @@ export default function DeploymentsPage() {
       {
         accessorKey: 'imageVersion',
         header: 'Version',
-        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] font-mono text-[11px]">{row.original.imageVersion}</span>,
+        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] font-mono text-xs">{row.original.imageVersion}</span>,
       },
       {
         accessorKey: 'status',
@@ -232,12 +235,12 @@ export default function DeploymentsPage() {
         cell: ({ row }) => (
           <div className="flex flex-wrap gap-1 max-w-[260px]">
             {row.original.rolloutHistory.length === 0 ? (
-              <span className="text-[10px] text-[var(--color-text-secondary)]">No history</span>
+              <span className="text-xs text-[var(--color-text-secondary)]">No history</span>
             ) : (
               row.original.rolloutHistory.slice(0, 3).map((rollout) => (
                 <span
                   key={`${rollout.revision}-${rollout.updatedAt}`}
-                  className="px-1.5 py-0.5 rounded border border-[var(--color-border)] text-[10px] text-[var(--color-text-secondary)] font-mono"
+                  className="px-1.5 py-0.5 rounded border border-[var(--color-border)] text-xs text-[var(--color-text-secondary)] font-mono"
                   title={`${rollout.image} • ${formatTimestamp(rollout.updatedAt)}`}
                 >
                   r{rollout.revision}
@@ -250,7 +253,7 @@ export default function DeploymentsPage() {
       {
         accessorKey: 'lastUpdated',
         header: 'Updated',
-        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] text-[11px]">{formatTimestamp(row.original.lastUpdated)}</span>,
+        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] text-xs">{formatTimestamp(row.original.lastUpdated)}</span>,
       },
     ]
 
@@ -264,10 +267,10 @@ export default function DeploymentsPage() {
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex gap-1 justify-end">
-            <button type="button" onClick={() => setConfirmRestart(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/35 text-[10px] font-medium text-[var(--color-badge-label)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)] transition-colors" title="Restart">
+            <button type="button" onClick={() => setConfirmRestart(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/35 text-xs font-medium text-[var(--color-badge-label)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)] transition-colors" title="Restart">
               <RefreshCw className="h-3 w-3" />Restart
             </button>
-            <button type="button" onClick={() => setScaleTarget(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/35 text-[10px] font-medium text-[var(--color-badge-label)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)] transition-colors" title="Scale">
+            <button type="button" onClick={() => setScaleTarget(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/35 text-xs font-medium text-[var(--color-badge-label)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)] transition-colors" title="Scale">
               <Scale className="h-3 w-3" />Scale
             </button>
           </div>
@@ -311,7 +314,7 @@ export default function DeploymentsPage() {
             <section key={cluster.clusterId} className="space-y-2">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">{cluster.clusterName}</h2>
-                <span className="text-[11px] text-[var(--color-table-meta)] font-mono">{cluster.deployments.length} deployments</span>
+                <span className="text-xs text-[var(--color-table-meta)] font-mono">{cluster.deployments.length} deployments</span>
               </div>
 
               <DataTable
@@ -339,10 +342,10 @@ export default function DeploymentsPage() {
                     </div>
                     {isAdmin && (
                       <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
-                        <button type="button" onClick={() => setConfirmRestart(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[var(--color-border)] text-[11px] font-medium text-[var(--color-badge-label)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors">
+                        <button type="button" onClick={() => setConfirmRestart(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[var(--color-border)] text-xs font-medium text-[var(--color-badge-label)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors">
                           <RefreshCw className="h-3 w-3" />Restart
                         </button>
-                        <button type="button" onClick={() => setScaleTarget(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[var(--color-border)] text-[11px] font-medium text-[var(--color-badge-label)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors">
+                        <button type="button" onClick={() => setScaleTarget(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[var(--color-border)] text-xs font-medium text-[var(--color-badge-label)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors">
                           <Scale className="h-3 w-3" />Scale
                         </button>
                       </div>

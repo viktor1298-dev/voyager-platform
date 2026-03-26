@@ -11,6 +11,7 @@ import { ChevronDown, ChevronUp, Copy, Link2, Plus, Trash2, Webhook } from 'luci
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 // TODO: Fetch available event types from backend once webhooks API is connected.
 const WEBHOOK_EVENTS = [
@@ -104,12 +105,12 @@ function WebhooksContent() {
       {
         accessorKey: 'url',
         header: 'URL',
-        cell: ({ row }) => <span className="font-mono text-[12px] text-[var(--color-text-primary)]">{row.original.url}</span>,
+        cell: ({ row }) => <span className="font-mono text-xs text-[var(--color-text-primary)]">{row.original.url}</span>,
       },
       {
         id: 'events',
         header: 'Events',
-        cell: ({ row }) => <span className="text-[11px] text-[var(--color-text-secondary)]">{row.original.events.join(', ')}</span>,
+        cell: ({ row }) => <span className="text-xs text-[var(--color-text-secondary)]">{row.original.events.join(', ')}</span>,
       },
       {
         accessorKey: 'active',
@@ -123,12 +124,28 @@ function WebhooksContent() {
       {
         accessorKey: 'lastTriggeredAt',
         header: 'Last Triggered',
-        cell: ({ row }) => <span className="text-[11px] text-[var(--color-text-muted)]">{formatDate(row.original.lastTriggeredAt)}</span>,
+        cell: ({ row }) => <span className="text-xs text-[var(--color-text-muted)]">{formatDate(row.original.lastTriggeredAt)}</span>,
       },
       {
         accessorKey: 'successRate',
         header: 'Success Rate',
-        cell: ({ row }) => <span className="text-[11px] font-medium text-[var(--color-text-primary)]">{row.original.successRate}%</span>,
+        cell: ({ row }) => {
+          const rate = row.original.successRate
+          const color = rate > 90 ? 'var(--color-status-active, #22c55e)' : rate >= 70 ? 'var(--color-status-warning, #f59e0b)' : 'var(--color-status-error, #ef4444)'
+          return (
+            <div className="flex items-center gap-2 min-w-[80px]">
+              <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{ width: `${rate}%`, backgroundColor: color }}
+                />
+              </div>
+              <span className="text-xs font-medium tabular-nums" style={{ color }}>
+                {rate}%
+              </span>
+            </div>
+          )
+        },
       },
       {
         id: 'actions',
@@ -175,7 +192,7 @@ function WebhooksContent() {
       <div className="mb-6 flex items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Webhooks</h2>
-          <p className="mt-1 text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-dim)]">{webhooks.length} endpoints</p>
+          <p className="mt-1 text-xs font-mono uppercase tracking-wider text-[var(--color-text-dim)]">{webhooks.length} endpoints</p>
         </div>
         <button type="button" onClick={() => router.push('/settings/webhooks?new=1')} className={btnPrimary}>
           <Plus className="h-4 w-4" />Add Webhook
@@ -194,7 +211,7 @@ function WebhooksContent() {
           <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
             <div className="flex items-start justify-between gap-2">
               <span className="font-mono text-xs text-[var(--color-text-primary)] break-all">{hook.url}</span>
-              <span className={`rounded-full px-2 py-0.5 text-[10px] ${hook.active ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}>
+              <span className={`rounded-full px-2 py-0.5 text-xs ${hook.active ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}>
                 {hook.active ? 'Active' : 'Inactive'}
               </span>
             </div>
@@ -307,6 +324,8 @@ function WebhooksContent() {
 }
 
 export default function SettingsWebhooksPage() {
+  usePageTitle('Settings — Webhooks')
+
   return (
     <Suspense fallback={<div className="h-24 animate-pulse rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)]" />}>
       <WebhooksContent />

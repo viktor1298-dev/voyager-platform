@@ -10,7 +10,7 @@ test.describe('Confirmation Dialog', () => {
   });
 
   test('delete action shows confirmation dialog', async ({ page }) => {
-    const deleteBtn = page.locator('button').filter({ has: page.locator('svg.lucide-trash2') }).first();
+    const deleteBtn = page.locator('button').filter({ has: page.locator('svg.lucide-trash-2') }).first();
     const hasDelete = await deleteBtn.isVisible().catch(() => false);
     if (!hasDelete) {
       test.skip();
@@ -25,7 +25,7 @@ test.describe('Confirmation Dialog', () => {
   });
 
   test('cancel does not delete the item', async ({ page }) => {
-    const deleteBtn = page.locator('button').filter({ has: page.locator('svg.lucide-trash2') }).first();
+    const deleteBtn = page.locator('button').filter({ has: page.locator('svg.lucide-trash-2') }).first();
     const hasDelete = await deleteBtn.isVisible().catch(() => false);
     if (!hasDelete) {
       test.skip();
@@ -40,7 +40,7 @@ test.describe('Confirmation Dialog', () => {
   });
 
   test('confirm deletes the item', async ({ page }) => {
-    const deleteBtn = page.locator('button').filter({ has: page.locator('svg.lucide-trash2') }).first();
+    const deleteBtn = page.locator('button').filter({ has: page.locator('svg.lucide-trash-2') }).first();
     const hasDelete = await deleteBtn.isVisible().catch(() => false);
     if (!hasDelete) {
       test.skip();

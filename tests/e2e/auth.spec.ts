@@ -17,6 +17,7 @@ test.describe('Authentication', () => {
   });
 
   test('should show error with wrong password', async ({ page }) => {
+    test.skip(test.info().project.name !== 'chromium-guest', 'negative auth case must run unauthenticated');
     await page.goto('/login');
     await page.getByLabel(/email/i).fill(TEST_ADMIN.email);
     await page.getByLabel(/password/i).fill('wrongpassword');
@@ -27,6 +28,7 @@ test.describe('Authentication', () => {
   });
 
   test('should show validation on empty fields', async ({ page }) => {
+    test.skip(test.info().project.name !== 'chromium-guest', 'negative auth case must run unauthenticated');
     await page.goto('/login');
     await page.getByRole('button', { name: /sign in|log in|login/i }).click();
     // Either HTML5 validation or custom error messages

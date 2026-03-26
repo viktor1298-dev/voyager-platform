@@ -1,19 +1,42 @@
 'use client'
 
-import { Area, AreaChart, ResponsiveContainer } from 'recharts'
+import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface SparklineChartProps {
   data: number[]
   color: string
   height?: number
+  label?: string
+  unit?: string
 }
 
-export function SparklineChart({ data, color, height = 60 }: SparklineChartProps) {
+function SparklineTooltip({
+  active,
+  payload,
+  label,
+  unit,
+}: {
+  active?: boolean
+  payload?: Array<{ value: number }>
+  label?: string
+  unit?: string
+}) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs shadow-lg">
+      <span className="font-mono font-medium text-[var(--color-text-primary)]">
+        {payload[0]?.value ?? 0}{unit ? ` ${unit}` : ''}
+      </span>
+    </div>
+  )
+}
+
+export function SparklineChart({ data, color, height = 60, label, unit }: SparklineChartProps) {
   const chartData = data.map((value, i) => ({ v: value, i }))
   const gradientId = `spark-${color.replace(/[^a-z0-9]/gi, '')}`
 
   return (
-    <div style={{ height, overflow: 'hidden', width: '100%' }}>
+    <div style={{ height, overflow: 'hidden', width: '100%' }} role="img" aria-label={label ?? 'Sparkline chart'}>
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart
           data={chartData}
@@ -25,6 +48,10 @@ export function SparklineChart({ data, color, height = 60 }: SparklineChartProps
               <stop offset="100%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
+          <Tooltip
+            content={<SparklineTooltip unit={unit} />}
+            cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: '3 3' }}
+          />
           <Area
             type="monotone"
             dataKey="v"
@@ -32,6 +59,7 @@ export function SparklineChart({ data, color, height = 60 }: SparklineChartProps
             strokeWidth={1.5}
             fill={`url(#${gradientId})`}
             dot={false}
+            activeDot={{ r: 3, fill: color, strokeWidth: 0 }}
             isAnimationActive={false}
           />
         </AreaChart>

@@ -68,7 +68,7 @@ export function AiCommandPaletteProvider({
               <span>Asking AI...</span>
             </div>
           ) : (
-            <p className="text-[11px] text-[var(--color-text-muted)] mb-2">
+            <p className="text-xs text-[var(--color-text-muted)] mb-2">
               Press Enter to ask AI: <em className="text-[var(--color-text-secondary)]">{aiQuery}</em>
             </p>
           )}
@@ -88,7 +88,7 @@ export function AiCommandPaletteProvider({
           </button>
         </>
       ) : (
-        <p className="text-[11px] text-[var(--color-text-muted)]">
+        <p className="text-xs text-[var(--color-text-muted)]">
           Type your question after "Ask AI:" to query the AI assistant
         </p>
       )}
