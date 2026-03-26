@@ -87,7 +87,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. GitHub branch protection on main requires pull requests (no direct push), prevents force push, and prevents branch deletion
   2. GitHub repository setting "Automatically delete head branches" is enabled -- merged PR branches are cleaned up automatically
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 05-01-PLAN.md -- Branch protection rules and auto-delete of merged branches
 
 ## Progress
 
@@ -100,4 +103,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. The Big Merge | 0/3 | Planning complete | - |
 | 3. Validation Gate | 0/1 | Planning complete | - |
 | 4. Push & Branch Cleanup | 0/2 | Planning complete | - |
-| 5. GitHub Protection | 0/0 | Not started | - |
+| 5. GitHub Protection | 0/1 | Planning complete | - |
