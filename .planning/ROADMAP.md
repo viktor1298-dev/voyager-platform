@@ -77,7 +77,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md -- Push main to origin and delete 22 fully-merged remote branches (Batch 1)
+- [x] 04-01-PLAN.md -- Push main to origin and delete 22 fully-merged remote branches (Batch 1)
 - [ ] 04-02-PLAN.md -- Verify and delete Batch 2 (feat/init-monorepo, worktree/ron, worktree/dima), document and delete Batch 3 (fix/v117-phase-d-r2), local cleanup
 
 ### Phase 5: GitHub Protection
