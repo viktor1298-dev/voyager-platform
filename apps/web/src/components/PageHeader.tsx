@@ -17,7 +17,7 @@ export function PageHeader({ title, breadcrumb, description, actions, icon }: Pa
       <div className="flex items-center gap-3">
         {icon && <div className="text-[var(--color-accent)]">{icon}</div>}
         <div>
-          <Breadcrumbs items={breadcrumb ?? [{ label: title }]} />
+          <Breadcrumbs />
           <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
             {title}
           </h1>

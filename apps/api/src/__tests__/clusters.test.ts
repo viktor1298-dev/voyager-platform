@@ -86,7 +86,7 @@ describe('clusters.list', () => {
   it('returns clusters with node counts', async () => {
     const caller = createCaller({ id: 'u1', email: 'a@b.com', name: 'Admin', role: 'admin' })
     const result = await caller.clusters.list()
-    expect(result).toEqual([{ id: '1', name: 'test', provider: 'minikube', environment: 'development', nodeCount: 2 }])
+    expect(result).toEqual([{ id: '1', name: 'test', provider: 'minikube', environment: 'development', nodeCount: 2, hasCredentials: false }])
   })
 })
 

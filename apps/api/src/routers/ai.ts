@@ -254,7 +254,10 @@ export const aiRouter = router({
             throw aiError
           }
 
-          throw aiError
+          throw new TRPCError({
+            code: 'SERVICE_UNAVAILABLE',
+            message: `AI chat failed: ${aiError instanceof Error ? aiError.message : 'upstream timeout'}`,
+          })
         }
 
         if (!threadId) {

@@ -64,7 +64,7 @@ function formatTimestamp(ts: string, format: TimestampFormat): string {
 function buildSearchRegex(term: string, isRegex: boolean): RegExp | null {
   if (!term) return null
   try {
-    return isRegex ? new RegExp(term, 'gi') : new RegExp(termotion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+    return isRegex ? new RegExp(term, 'gi') : new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
   } catch {
     return null
   }

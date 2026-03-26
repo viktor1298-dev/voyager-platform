@@ -101,12 +101,12 @@ export default function NamespacesPage() {
           />
 
           {namespacesQuery.error ? (
-            <QueryError error={namespacesQuery.error} />
+            <QueryError message={namespacesQuery.error.message} onRetry={() => namespacesQuery.refetch()} />
           ) : (
             <DataTable
               columns={columns}
               data={data}
-              isLoading={namespacesQuery.isLoading}
+              loading={namespacesQuery.isLoading}
               emptyIcon={<FolderTree className="h-10 w-10" />}
               emptyTitle="No namespaces found"
               emptyDescription="No namespaces found. Try switching to a different cluster."

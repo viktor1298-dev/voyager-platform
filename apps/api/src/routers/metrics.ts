@@ -16,7 +16,7 @@ import { eq, gte, and, sql } from 'drizzle-orm'
 /** Shared constant for health-check polling interval (minutes) */
 const HEALTH_CHECK_INTERVAL_MINUTES = 5
 
-const timeRangeSchema = z.enum(['30s', '1m', '5m', '1h', '6h', '24h', '7d']).default('24h')
+const timeRangeSchema = z.enum(['30s', '1m', '5m', '1h', '6h', '24h', '7d', '30d']).default('24h')
 
 type TimeRange = z.infer<typeof timeRangeSchema>
 
@@ -46,6 +46,7 @@ const TIME_RANGE_CONFIG: Record<TimeRange, RangeConfig> = {
   '6h': { rangeMs: 6 * 60 * 60 * 1000, intervalMs: 5 * 60 * 1000 },
   '24h': { rangeMs: 24 * 60 * 60 * 1000, intervalMs: 60 * 60 * 1000 },
   '7d': { rangeMs: 7 * 24 * 60 * 60 * 1000, intervalMs: 6 * 60 * 60 * 1000 },
+  '30d': { rangeMs: 30 * 24 * 60 * 60 * 1000, intervalMs: 24 * 60 * 60 * 1000 },
 } as const
 
 function alignFloor(timestampMs: number, intervalMs: number): number {
@@ -244,7 +245,7 @@ export const metricsRouter = router({
 
       if (rows.length === 0) return []
 
-      const getSeverity = (reason: string | null): string => {
+      const getSeverity = (reason: string | null): 'critical' | 'warning' | 'info' => {
         if (!reason) return 'warning'
         const normalized = reason.toLowerCase()
         if (normalized.includes('oom') || normalized.includes('crashloop') || normalized.includes('failed')) return 'critical'

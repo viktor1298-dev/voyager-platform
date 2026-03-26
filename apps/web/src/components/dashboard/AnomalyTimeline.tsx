@@ -138,6 +138,7 @@ function SeveritySummary({ anomalies }: { anomalies: Anomaly[] }) {
 
 export function AnomalyTimeline() {
   // TODO: Replace mock fallback once backend anomalies.listAll is deployed
+  // @ts-expect-error -- listAll not yet added to anomalies router; optional chaining handles gracefully
   const liveQuery = trpc.anomalies?.listAll?.useQuery?.(undefined, { refetchInterval: 60_000 })
   const USE_MOCK = !liveQuery?.data
   const source = USE_MOCK ? MOCK_ANOMALIES : (liveQuery?.data ?? [])

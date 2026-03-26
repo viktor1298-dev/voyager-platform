@@ -134,7 +134,7 @@ export class AiProviderClient {
     const decoder = new TextDecoder()
     let buffer = ''
 
-    for await (const chunk of response.body) {
+    for await (const chunk of response.body as unknown as AsyncIterable<Uint8Array>) {
       buffer += decoder.decode(chunk, { stream: true })
       const lines = buffer.split('\n')
       buffer = lines.pop() ?? ''
@@ -204,7 +204,7 @@ export class AiProviderClient {
     const decoder = new TextDecoder()
     let buffer = ''
 
-    for await (const chunk of response.body) {
+    for await (const chunk of response.body as unknown as AsyncIterable<Uint8Array>) {
       buffer += decoder.decode(chunk, { stream: true })
       const lines = buffer.split('\n')
       buffer = lines.pop() ?? ''
