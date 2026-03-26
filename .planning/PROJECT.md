@@ -15,18 +15,19 @@ Voyager Platform is a Kubernetes operations dashboard (multi-cloud cluster manag
 - [x] SAFE-01, SAFE-02, SAFE-03 — Recovery tags, rerere, branch-tips snapshot (Validated in Phase 1: Safety Net)
 - [x] MERGE-01 through MERGE-06 — 54-commit merge executed, 9 conflicts resolved, Motion normalized, init.sql 33 tables verified, evil-merge review clean (Validated in Phase 2: The Big Merge)
 - [x] VALID-01, VALID-02, VALID-03 — Build, typecheck, 144/144 tests pass with Docker (Validated in Phase 3: Validation Gate)
+- [x] CLEAN-01 through CLEAN-05 — Main pushed to origin, 26 stale branches deleted, fix/v117-phase-d-r2 documented and discarded, local branches cleaned (Validated in Phase 4: Push & Branch Cleanup)
 
 ### Active
 
 - [x] Merge all 54 unmerged commits from `feat/init-monorepo` into `main` cleanly
-- [ ] Evaluate all 27 remote branches — delete fully-merged branches, flag branches with unmerged useful work
+- [x] Evaluate all 27 remote branches — delete fully-merged branches, flag branches with unmerged useful work
 - [ ] Clean up stale worktree branches (`worktree/ron`, `worktree/dima`, `worktree/shiri`, `worktree/uri`, `worktree/yuval`, `worktree/beni`, `worktree/noam`, `worktree/lior`, and approved variants)
 - [ ] Clean up old feature branches that are fully merged (`feat/api-improvements`, `feat/helm-infra`, `feat/k8s-live-dashboard`, `feat/phase6-ia-redesign`, `feat/ui-cluster-detail`, `feat/ui-cluster-groups`, `feat/ui-clusters-page`, `feat/ui-events-page`, `feat/ui-settings-page`, `fix/v117-phase-d-bugs`, `fix/v117-phase-d-r2`, `develop`)
 - [x] Verify `pnpm build` succeeds on the merged `main` branch
 - [x] Verify `pnpm test` (Vitest unit tests) passes
 - [ ] Verify E2E tests pass (Playwright) against a running instance
-- [ ] Push the clean, merged `main` to `origin`
-- [ ] Ensure no work is lost — any unmerged branch with unique, valuable commits is preserved or documented
+- [x] Push the clean, merged `main` to `origin`
+- [x] Ensure no work is lost — any unmerged branch with unique, valuable commits is preserved or documented
 
 ### Out of Scope
 
@@ -79,4 +80,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-26 after Phase 3 completion*
+*Last updated: 2026-03-27 after Phase 4 completion*
