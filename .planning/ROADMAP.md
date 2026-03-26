@@ -29,7 +29,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. `.planning/branch-tips.txt` contains the SHA hash for every remote branch (all 27+)
   3. `git rerere` is enabled so conflict resolutions are recorded for replay on retry
   4. Running `git tag -l pre-merge*` and `git tag -l pre-cleanup*` shows both recovery tags
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 01-01-PLAN.md -- Recovery tags, rerere config, and branch-tips recording
 
 ### Phase 2: The Big Merge
 **Goal**: All 54 commits from feat/init-monorepo are integrated into main with conflicts resolved, imports normalized, and schema integrity preserved
@@ -81,7 +84,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Safety Net | 0/0 | Not started | - |
+| 1. Safety Net | 0/1 | Planning complete | - |
 | 2. The Big Merge | 0/0 | Not started | - |
 | 3. Validation Gate | 0/0 | Not started | - |
 | 4. Push & Branch Cleanup | 0/0 | Not started | - |
