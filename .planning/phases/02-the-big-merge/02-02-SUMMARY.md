@@ -81,11 +81,23 @@ This plan operates within the merge staging area from Plan 02-01. Per the critic
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+### Auto-fixed Issues
+
+**1. [Rule 3 - Blocking] Merge commit created during docs commit**
+- **Found during:** Final metadata commit
+- **Issue:** Running `git commit` to save the SUMMARY.md and STATE.md consumed the MERGE_HEAD because the planning files were staged alongside the 166 merge-staged files. The resulting commit `5adfbe0` is a proper merge commit (two parents) containing all merged content plus normalization fixes plus planning metadata.
+- **Fix:** No corrective action needed -- the merge commit is correct (proper two-parent merge, all conflict resolutions and normalizations included). Plan 02-03 will validate the committed state instead of committing it.
+- **Files modified:** All 166 merged files + planning metadata
+- **Impact:** Plan 02-03's "commit the merge" step is already done. Plan 02-03 only needs to run validation (typecheck/build).
+
+---
+
+**Total deviations:** 1 (merge commit timing)
+**Impact on plan:** The merge commit happened in Plan 02-02 instead of Plan 02-03. The commit is structurally correct (two-parent merge). Plan 02-03 can skip the commit step and focus on validation.
 
 ## Issues Encountered
 
-None.
+- The `git commit` for planning metadata consumed the MERGE_HEAD because all merge-staged files were in the staging area. This is expected git behavior -- any commit while MERGE_HEAD exists becomes the merge commit.
 
 ## User Setup Required
 
@@ -93,15 +105,15 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 
-- Merge staging area is semantically validated and ready for Plan 02-03 (validation gate + commit)
-- MERGE_HEAD preserved -- Plan 02-03 will run typecheck/build validation and commit the merge
+- Merge commit `5adfbe0` is complete with all 166 files + normalization fixes
+- Plan 02-03 should validate the committed state (typecheck/build) instead of committing
 - All Motion imports are globally consistent (`motion` convention, 28 files)
 - Schema integrity confirmed (33 tables, nodeMetricsHistory chain intact)
 
 ## Self-Check: PASSED
 
 - SUMMARY.md: FOUND
-- MERGE_HEAD: FOUND (merge in progress)
+- Merge commit: 5adfbe0 (two-parent merge commit)
 - page.tsx: FOUND
 - Sidebar.tsx: FOUND
 - Motion m imports: 0 (expected 0)
