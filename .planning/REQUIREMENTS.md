@@ -30,9 +30,9 @@
 
 - [x] **CLEAN-01**: Push merged main to origin
 - [x] **CLEAN-02**: Delete 22+ fully-merged remote branches (worktree/*, old feature branches, develop)
-- [ ] **CLEAN-03**: Evaluate fix/v117-phase-d-r2 unique commit (encryption key + connection-config schemas) — cherry-pick if relevant, document if discarded
-- [ ] **CLEAN-04**: Delete local branches that are no longer needed (claude/objective-shockley)
-- [ ] **CLEAN-05**: Verify all worktree/ron, worktree/dima commits are contained in feat/init-monorepo before deletion
+- [x] **CLEAN-03**: Evaluate fix/v117-phase-d-r2 unique commit (encryption key + connection-config schemas) — cherry-pick if relevant, document if discarded
+- [x] **CLEAN-04**: Delete local branches that are no longer needed (claude/objective-shockley)
+- [x] **CLEAN-05**: Verify all worktree/ron, worktree/dima commits are contained in feat/init-monorepo before deletion
 
 ### GitHub Protection
 
@@ -82,9 +82,9 @@
 | VALID-03 | Phase 3 | Complete |
 | CLEAN-01 | Phase 4 | Complete |
 | CLEAN-02 | Phase 4 | Complete |
-| CLEAN-03 | Phase 4 | Pending |
-| CLEAN-04 | Phase 4 | Pending |
-| CLEAN-05 | Phase 4 | Pending |
+| CLEAN-03 | Phase 4 | Complete |
+| CLEAN-04 | Phase 4 | Complete |
+| CLEAN-05 | Phase 4 | Complete |
 | PROT-01 | Phase 5 | Pending |
 | PROT-02 | Phase 5 | Pending |
 
