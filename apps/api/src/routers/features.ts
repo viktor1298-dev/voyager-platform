@@ -64,7 +64,9 @@ export const featuresRouter = router({
     }),
 
   get: protectedProcedure
-    .meta({ openapi: { method: 'GET', path: '/api/features/{name}', protect: true, tags: ['features'] } })
+    .meta({
+      openapi: { method: 'GET', path: '/api/features/{name}', protect: true, tags: ['features'] },
+    })
     .input(featureGetSchema)
     .output(featureItemSchema)
     .query(async ({ ctx, input }) => {
@@ -88,7 +90,10 @@ export const featuresRouter = router({
       const configuredValue = configuredFlags[input.name]
 
       if (configuredValue === undefined) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: `Feature flag \"${input.name}\" not found` })
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Feature flag \"${input.name}\" not found`,
+        })
       }
 
       const resolvedValue = await getFeatureFlag(input.name, configuredValue)
@@ -104,13 +109,15 @@ export const featuresRouter = router({
     }),
 
   update: adminProcedure
-    .meta({ openapi: { method: 'PATCH', path: '/api/features/{name}', protect: true, tags: ['features'] } })
+    .meta({
+      openapi: { method: 'PATCH', path: '/api/features/{name}', protect: true, tags: ['features'] },
+    })
     .input(
       z.object({
         name: z.string().min(1).max(100),
         enabled: z.boolean(),
         description: z.string().max(500).optional(),
-        targeting: z.record(z.string(), z.unknown()).optional(),
+        targeting: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
       }),
     )
     .output(featureItemSchema)
@@ -129,7 +136,11 @@ export const featuresRouter = router({
       }
 
       const [saved] = existing
-        ? await ctx.db.update(featureFlags).set(payload).where(eq(featureFlags.name, input.name)).returning()
+        ? await ctx.db
+            .update(featureFlags)
+            .set(payload)
+            .where(eq(featureFlags.name, input.name))
+            .returning()
         : await ctx.db
             .insert(featureFlags)
             .values({

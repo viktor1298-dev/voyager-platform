@@ -53,7 +53,7 @@ export const eventsRouter = router({
         reason: z.string().max(255).optional(),
         message: z.string().optional(),
         source: z.string().max(255).optional(),
-        involvedObject: z.record(z.string(), z.unknown()).optional(),
+        involvedObject: z.record(z.string(), z.string()).optional(),
         timestamp: z.string().datetime().optional(),
       }),
     )
@@ -69,7 +69,12 @@ export const eventsRouter = router({
 
   stats: protectedProcedure
     .meta({
-      openapi: { method: 'GET', path: '/api/events/stats/{clusterId}', protect: true, tags: ['events'] },
+      openapi: {
+        method: 'GET',
+        path: '/api/events/stats/{clusterId}',
+        protect: true,
+        tags: ['events'],
+      },
     })
     .input(z.object({ clusterId: z.string().uuid() }))
     .output(z.object({ Normal: z.number().int(), Warning: z.number().int() }))
