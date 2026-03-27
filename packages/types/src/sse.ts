@@ -58,6 +58,21 @@ export interface MetricsEvent {
   timestamp: string
 }
 
+// ── Metrics Stream (live SSE) ──────────────────────────────
+export interface MetricsStreamEvent {
+  clusterId: string
+  timestamp: string // ISO 8601
+  cpu: number | null // percentage (0-100)
+  memory: number | null // percentage (0-100)
+  pods: number | null // count
+  networkBytesIn: number | null
+  networkBytesOut: number | null
+  error?: {
+    code: string
+    message: string
+  }
+}
+
 // ── Alert Stream ────────────────────────────────────────────
 export interface AlertEvent {
   id: string
@@ -80,9 +95,13 @@ export interface LogLineEvent {
 
 // ── Connection State (client-side) ──────────────────────────
 
-
 // ── Cluster Connection State ────────────────────────────────
-export type ClusterConnectionState = 'connected' | 'connecting' | 'disconnected' | 'error' | 'auth_expired'
+export type ClusterConnectionState =
+  | 'connected'
+  | 'connecting'
+  | 'disconnected'
+  | 'error'
+  | 'auth_expired'
 export type SSEConnectionState = 'connecting' | 'connected' | 'reconnecting' | 'disconnected'
 
 export interface ClusterStateChangeEvent {

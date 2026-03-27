@@ -8,4 +8,5 @@ export const JOB_INTERVALS = {
   HEALTH_SYNC_MS: 5 * 60 * 1000,
   NODE_SYNC_MS: 5 * 60 * 1000,
   DEPLOY_SMOKE_DELAY_MS: 30 * 1000, // Wait 30s after rollout before checking
+  METRICS_STREAM_POLL_MS: 15 * 1000, // Live metrics SSE polling interval
 } as const
