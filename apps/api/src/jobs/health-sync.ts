@@ -3,13 +3,16 @@ import { clusters, db } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import { ZodError } from 'zod'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { JOB_INTERVALS } from '../config/jobs.js'
 
 type SyncHealthStatus = 'healthy' | 'warning' | 'error' | 'unknown'
-
-const HEALTH_SYNC_INTERVAL_MS = 5 * 60 * 1000
 const HEALTH_SYNC_CONCURRENCY = 10
 
-function deriveHealthStatus(nodeCount: number, totalPods: number, runningPods: number): SyncHealthStatus {
+function deriveHealthStatus(
+  nodeCount: number,
+  totalPods: number,
+  runningPods: number,
+): SyncHealthStatus {
   if (nodeCount <= 0) return 'error'
   if (totalPods === 0) return 'healthy'
   // Consider healthy if ≥80% of pods are running (completed/evicted jobs are normal)
@@ -39,15 +42,21 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
     const healthStatus = deriveHealthStatus(totalNodes, totalPods, runningPods)
 
     // Only update status to 'active' if currently 'unreachable' or 'unknown' — don't overwrite 'maintenance' or 'paused'
-    const [currentCluster] = await db.select({ status: clusters.status }).from(clusters).where(eq(clusters.id, clusterId))
-    const shouldActivate = !currentCluster || currentCluster.status === 'unreachable' || currentCluster.status === 'unknown'
+    const [currentCluster] = await db
+      .select({ status: clusters.status })
+      .from(clusters)
+      .where(eq(clusters.id, clusterId))
+    const shouldActivate =
+      !currentCluster ||
+      currentCluster.status === 'unreachable' ||
+      currentCluster.status === 'unknown'
 
     const updatePayload: Record<string, unknown> = {
-      healthStatus: (healthStatus === 'warning' ? 'degraded' : healthStatus === 'error' ? 'unreachable' : healthStatus) as
-        | 'healthy'
-        | 'degraded'
-        | 'unreachable'
-        | 'unknown',
+      healthStatus: (healthStatus === 'warning'
+        ? 'degraded'
+        : healthStatus === 'error'
+          ? 'unreachable'
+          : healthStatus) as 'healthy' | 'degraded' | 'unreachable' | 'unknown',
       version: `v${versionRes.major}.${versionRes.minor}`,
       nodesCount: totalNodes,
       lastHealthCheck: now,
@@ -57,13 +66,13 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
       updatePayload.status = 'active'
     }
 
-    await db
-      .update(clusters)
-      .set(updatePayload)
-      .where(eq(clusters.id, clusterId))
+    await db.update(clusters).set(updatePayload).where(eq(clusters.id, clusterId))
   } catch (error) {
     if (error instanceof ZodError) {
-      console.warn(`[health-sync] cluster ${clusterId} skipped — invalid connectionConfig`, error.issues)
+      console.warn(
+        `[health-sync] cluster ${clusterId} skipped — invalid connectionConfig`,
+        error.issues,
+      )
     } else {
       console.error(`[health-sync] cluster ${clusterId} sync failed`, error)
     }
@@ -79,7 +88,11 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
   }
 }
 
-async function mapWithConcurrency<T>(items: T[], concurrency: number, worker: (item: T) => Promise<void>): Promise<void> {
+async function mapWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T) => Promise<void>,
+): Promise<void> {
   let index = 0
 
   const runWorker = async (): Promise<void> => {
@@ -121,5 +134,5 @@ export function startHealthSync(): void {
   void run()
   intervalHandle = setInterval(() => {
     void run()
-  }, HEALTH_SYNC_INTERVAL_MS)
+  }, JOB_INTERVALS.HEALTH_SYNC_MS)
 }

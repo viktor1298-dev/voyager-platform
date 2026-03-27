@@ -1,4 +1,5 @@
 import { TRPCError } from '@trpc/server'
+import { LIMITS } from '@voyager/config'
 import { z } from 'zod'
 import { webhooks, webhookDeliveries } from '@voyager/db'
 import { desc, eq } from 'drizzle-orm'
@@ -29,54 +30,69 @@ async function validateWebhookUrl(url: string): Promise<void> {
   }
   if (net.isIP(hostname)) {
     if (isPrivateIP(hostname)) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Webhook URL cannot target private/internal IPs' })
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Webhook URL cannot target private/internal IPs',
+      })
     }
     return
   }
   // Resolve DNS and check resolved IPs
   const { address } = await dns.lookup(hostname)
   if (isPrivateIP(address)) {
-    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Webhook URL resolves to a private/internal IP' })
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Webhook URL resolves to a private/internal IP',
+    })
   }
 }
 
 export const webhooksRouter = router({
   list: adminProcedure.query(async ({ ctx }) => {
     const rows = await ctx.db.select().from(webhooks).orderBy(desc(webhooks.createdAt))
-    const result = await Promise.all(rows.map(async (w) => {
-      const deliveries = await ctx.db.select().from(webhookDeliveries)
-        .where(eq(webhookDeliveries.webhookId, w.id))
-        .orderBy(desc(webhookDeliveries.deliveredAt))
-        .limit(10)
-      const total = deliveries.length
-      const successes = deliveries.filter(d => d.success).length
-      const { secret: _secret, ...safeWebhook } = w
-      return {
-        ...safeWebhook,
-        secret: w.secret ? 'wh_****' : null,
-        deliveries,
-        successRate: total > 0 ? Math.round((successes / total) * 100) : 100,
-      }
-    }))
+    const result = await Promise.all(
+      rows.map(async (w) => {
+        const deliveries = await ctx.db
+          .select()
+          .from(webhookDeliveries)
+          .where(eq(webhookDeliveries.webhookId, w.id))
+          .orderBy(desc(webhookDeliveries.deliveredAt))
+          .limit(10)
+        const total = deliveries.length
+        const successes = deliveries.filter((d) => d.success).length
+        const { secret: _secret, ...safeWebhook } = w
+        return {
+          ...safeWebhook,
+          secret: w.secret ? 'wh_****' : null,
+          deliveries,
+          successRate: total > 0 ? Math.round((successes / total) * 100) : 100,
+        }
+      }),
+    )
     return result
   }),
 
   create: adminProcedure
-    .input(z.object({
-      name: z.string().min(1).max(255).optional().default('Webhook'),
-      url: z.string().url().max(1000),
-      secret: z.string().max(255).nullable().optional(),
-      events: z.array(z.string()).min(1),
-      active: z.boolean().optional().default(true),
-    }))
+    .input(
+      z.object({
+        name: z.string().min(1).max(LIMITS.NAME_MAX).optional().default('Webhook'),
+        url: z.string().url().max(LIMITS.URL_MAX),
+        secret: z.string().max(LIMITS.NAME_MAX).nullable().optional(),
+        events: z.array(z.string()).min(1),
+        active: z.boolean().optional().default(true),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
-      const [created] = await ctx.db.insert(webhooks).values({
-        name: input.name,
-        url: input.url,
-        secret: input.secret ?? null,
-        events: input.events,
-        enabled: input.active,
-      }).returning()
+      const [created] = await ctx.db
+        .insert(webhooks)
+        .values({
+          name: input.name,
+          url: input.url,
+          secret: input.secret ?? null,
+          events: input.events,
+          enabled: input.active,
+        })
+        .returning()
       await logAudit(ctx, 'webhook.create', 'webhook', created.id, { url: input.url })
       return created
     }),
@@ -106,8 +122,10 @@ export const webhooksRouter = router({
       try {
         const headers: Record<string, string> = { 'Content-Type': 'application/json' }
         if (webhook.secret) {
-          const signature = crypto.createHmac('sha256', webhook.secret)
-            .update(JSON.stringify(testPayload)).digest('hex')
+          const signature = crypto
+            .createHmac('sha256', webhook.secret)
+            .update(JSON.stringify(testPayload))
+            .digest('hex')
           headers['X-Webhook-Signature'] = signature
         }
 

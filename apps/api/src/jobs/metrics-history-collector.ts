@@ -3,8 +3,7 @@ import { clusters, db, metricsHistory, nodeMetricsHistory } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
-
-const COLLECT_INTERVAL_MS = 60 * 1000
+import { JOB_INTERVALS } from '../config/jobs.js'
 
 let intervalHandle: NodeJS.Timeout | null = null
 let isRunning = false
@@ -49,8 +48,14 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`Timeout after ${ms}ms: ${label}`)), ms)
     promise.then(
-      (v) => { clearTimeout(timer); resolve(v) },
-      (e) => { clearTimeout(timer); reject(e) },
+      (v) => {
+        clearTimeout(timer)
+        resolve(v)
+      },
+      (e) => {
+        clearTimeout(timer)
+        reject(e)
+      },
     )
   })
 }
@@ -72,7 +77,10 @@ async function collectMetrics(): Promise<void> {
         )
       } catch (err) {
         // Skip clusters with invalid/missing credentials (e.g. demo seed clusters)
-        console.warn(`[metrics-collector] skipping cluster ${cluster.id} — cannot create client:`, err instanceof Error ? err.message : err)
+        console.warn(
+          `[metrics-collector] skipping cluster ${cluster.id} — cannot create client:`,
+          err instanceof Error ? err.message : err,
+        )
         continue
       }
       const coreApi = kc.makeApiClient(k8s.CoreV1Api)
@@ -114,12 +122,14 @@ async function collectMetrics(): Promise<void> {
         }
       }
 
-      const cpuPercent = totalCpuAllocatable > 0
-        ? Math.round((totalCpuUsageNano / totalCpuAllocatable) * 1000) / 10
-        : 0
-      const memPercent = totalMemAllocatable > 0
-        ? Math.round((totalMemUsageBytes / totalMemAllocatable) * 1000) / 10
-        : 0
+      const cpuPercent =
+        totalCpuAllocatable > 0
+          ? Math.round((totalCpuUsageNano / totalCpuAllocatable) * 1000) / 10
+          : 0
+      const memPercent =
+        totalMemAllocatable > 0
+          ? Math.round((totalMemUsageBytes / totalMemAllocatable) * 1000) / 10
+          : 0
 
       // M-P3-002: Collect network I/O (best-effort via pod metrics)
       let networkBytesIn = 0
@@ -152,12 +162,10 @@ async function collectMetrics(): Promise<void> {
         const usedMemBytes = parseMemToBytes(nm.usage?.memory ?? '0')
         const alloc = allocMap.get(nodeName)
 
-        const nodeCpuPercent = alloc && alloc.cpu > 0
-          ? Math.round((usedCpuNano / alloc.cpu) * 1000) / 10
-          : 0
-        const nodeMemPercent = alloc && alloc.mem > 0
-          ? Math.round((usedMemBytes / alloc.mem) * 1000) / 10
-          : 0
+        const nodeCpuPercent =
+          alloc && alloc.cpu > 0 ? Math.round((usedCpuNano / alloc.cpu) * 1000) / 10 : 0
+        const nodeMemPercent =
+          alloc && alloc.mem > 0 ? Math.round((usedMemBytes / alloc.mem) * 1000) / 10 : 0
 
         return {
           clusterId: cluster.id,
@@ -179,7 +187,9 @@ async function collectMetrics(): Promise<void> {
   }
 
   lastCollectTime = new Date()
-  console.log(`[metrics-collector] collected at ${lastCollectTime.toISOString()} for ${allClusters.length} clusters`)
+  console.log(
+    `[metrics-collector] collected at ${lastCollectTime.toISOString()} for ${allClusters.length} clusters`,
+  )
 }
 
 export function startMetricsHistoryCollector(): void {
@@ -198,7 +208,9 @@ export function startMetricsHistoryCollector(): void {
   }
 
   void run()
-  intervalHandle = setInterval(() => { void run() }, COLLECT_INTERVAL_MS)
+  intervalHandle = setInterval(() => {
+    void run()
+  }, JOB_INTERVALS.METRICS_COLLECT_MS)
 }
 
 export function stopMetricsHistoryCollector(): void {
@@ -213,6 +225,6 @@ export function getCollectorStatus() {
   return {
     running: intervalHandle !== null,
     lastCollectTime: lastCollectTime?.toISOString() ?? null,
-    intervalMs: COLLECT_INTERVAL_MS,
+    intervalMs: JOB_INTERVALS.METRICS_COLLECT_MS,
   }
 }

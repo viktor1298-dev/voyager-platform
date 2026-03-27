@@ -2,8 +2,7 @@ import * as k8s from '@kubernetes/client-node'
 import { clusters, db, events } from '@voyager/db'
 import { eq, and } from 'drizzle-orm'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
-
-const SYNC_INTERVAL_MS = 2 * 60 * 1000
+import { JOB_INTERVALS } from '../config/jobs.js'
 
 let intervalHandle: NodeJS.Timeout | null = null
 let isRunning = false
@@ -24,7 +23,8 @@ async function syncEvents(): Promise<void> {
         const uid = event.metadata?.uid
         if (!uid) continue
 
-        const eventTimestamp = event.lastTimestamp ?? event.eventTime ?? event.metadata?.creationTimestamp
+        const eventTimestamp =
+          event.lastTimestamp ?? event.eventTime ?? event.metadata?.creationTimestamp
         const ts = eventTimestamp ? new Date(eventTimestamp as unknown as string) : new Date()
 
         // Check if event already exists by uid (used as id) + timestamp
@@ -76,7 +76,9 @@ export function startEventSync(): void {
   }
 
   void run()
-  intervalHandle = setInterval(() => { void run() }, SYNC_INTERVAL_MS)
+  intervalHandle = setInterval(() => {
+    void run()
+  }, JOB_INTERVALS.EVENT_SYNC_MS)
 }
 
 export function stopEventSync(): void {

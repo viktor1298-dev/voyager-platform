@@ -1,20 +1,17 @@
 import * as k8s from '@kubernetes/client-node'
-import { TOKEN_REFRESH_THRESHOLD_RATIO } from '@voyager/config/sse'
+import { CACHE_TTL, TOKEN_REFRESH_THRESHOLD_RATIO } from '@voyager/config'
 import { clusters, db } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import { decryptCredential } from './credential-crypto.js'
 import { createKubeConfigForCluster } from './k8s-client-factory.js'
 import type { ClusterConnectionConfig } from './connection-config.js'
-
-const MAX_ENTRIES = 50
-const TTL_MS = 5 * 60 * 1000 // 5 minutes
-const ENCRYPTION_KEY = process.env.CLUSTER_CRED_ENCRYPTION_KEY ?? ''
+import { K8S_CONFIG } from '../config/k8s.js'
 
 // Default token TTL assumptions by provider (ms)
 const DEFAULT_TOKEN_TTL: Record<string, number> = {
-  eks: 15 * 60 * 1000,   // EKS tokens: 15 min
-  gke: 60 * 60 * 1000,   // GKE tokens: 1 hour
-  aks: 60 * 60 * 1000,   // AKS tokens: 1 hour
+  eks: 15 * 60 * 1000, // EKS tokens: 15 min
+  gke: 60 * 60 * 1000, // GKE tokens: 1 hour
+  aks: 60 * 60 * 1000, // AKS tokens: 1 hour
 }
 
 interface CacheEntry {
@@ -22,7 +19,7 @@ interface CacheEntry {
   expiresAt: number
   provider: string
   clusterId: string
-  tokenExpiresAt: number | null  // IP3-006: token expiry tracking
+  tokenExpiresAt: number | null // IP3-006: token expiry tracking
   connectionConfig: Record<string, unknown>
 }
 
@@ -36,8 +33,8 @@ export class ClusterClientPool {
     if (cached) {
       // IP3-006: Proactive token refresh at 80% of TTL
       if (cached.tokenExpiresAt) {
-        const ttl = cached.tokenExpiresAt - (cached.expiresAt - TTL_MS)
-        const refreshAt = cached.tokenExpiresAt - (ttl * (1 - TOKEN_REFRESH_THRESHOLD_RATIO))
+        const ttl = cached.tokenExpiresAt - (cached.expiresAt - CACHE_TTL.CLUSTER_CLIENT_MS)
+        const refreshAt = cached.tokenExpiresAt - ttl * (1 - TOKEN_REFRESH_THRESHOLD_RATIO)
         if (now >= refreshAt) {
           console.log(`[ClusterClientPool] Proactive token refresh for ${clusterId}`)
           this.cache.delete(clusterId)
@@ -56,13 +53,16 @@ export class ClusterClientPool {
     }
 
     let config = cluster.connectionConfig as Record<string, unknown>
-    if (typeof config.__encrypted === 'string' && /^[0-9a-fA-F]{64}$/.test(ENCRYPTION_KEY)) {
-      config = JSON.parse(decryptCredential(config.__encrypted, ENCRYPTION_KEY))
+    if (
+      typeof config.__encrypted === 'string' &&
+      /^[0-9a-fA-F]{64}$/.test(K8S_CONFIG.ENCRYPTION_KEY)
+    ) {
+      config = JSON.parse(decryptCredential(config.__encrypted, K8S_CONFIG.ENCRYPTION_KEY))
     }
 
     const kc = await createKubeConfigForCluster(cluster.provider, config as ClusterConnectionConfig)
 
-    if (this.cache.size >= MAX_ENTRIES) {
+    if (this.cache.size >= K8S_CONFIG.CLIENT_POOL_MAX) {
       let oldestKey: string | undefined
       let oldestTime = Number.POSITIVE_INFINITY
       for (const [key, entry] of this.cache) {
@@ -80,7 +80,7 @@ export class ClusterClientPool {
 
     this.cache.set(clusterId, {
       kc,
-      expiresAt: now + TTL_MS,
+      expiresAt: now + CACHE_TTL.CLUSTER_CLIENT_MS,
       provider: cluster.provider,
       clusterId,
       tokenExpiresAt,

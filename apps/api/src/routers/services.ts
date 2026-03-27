@@ -1,4 +1,5 @@
 import * as k8s from '@kubernetes/client-node'
+import { CACHE_TTL } from '@voyager/config'
 import { z } from 'zod'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
@@ -50,9 +51,9 @@ export const servicesRouter = router({
       try {
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const cacheKey = `k8s:${input.clusterId}:services:${input.namespace ?? 'all'}`
+        const cacheKey = CACHE_KEYS.k8sServices(input.clusterId, input.namespace)
 
-        const response = await cached(cacheKey, K8S_CACHE_TTL, () =>
+        const response = await cached(cacheKey, CACHE_TTL.K8S_RESOURCES_SEC, () =>
           input.namespace
             ? coreV1.listNamespacedService({ namespace: input.namespace })
             : coreV1.listServiceForAllNamespaces(),
@@ -79,9 +80,9 @@ export const servicesRouter = router({
       try {
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const cacheKey = `k8s:${input.clusterId}:services:${input.namespace ?? 'all'}`
+        const cacheKey = CACHE_KEYS.k8sServices(input.clusterId, input.namespace)
 
-        const response = await cached(cacheKey, K8S_CACHE_TTL, () =>
+        const response = await cached(cacheKey, CACHE_TTL.K8S_RESOURCES_SEC, () =>
           input.namespace
             ? coreV1.listNamespacedService({ namespace: input.namespace })
             : coreV1.listServiceForAllNamespaces(),

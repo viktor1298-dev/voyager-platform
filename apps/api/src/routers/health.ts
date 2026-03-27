@@ -29,7 +29,10 @@ export async function performK8sHealthCheck(clusterId: string): Promise<{
   try {
     const kc = await clusterClientPool.getClient(clusterId)
     const coreApi = kc.makeApiClient(k8s.CoreV1Api)
-    const [nodesRes, podsRes] = await Promise.all([coreApi.listNode(), coreApi.listPodForAllNamespaces()])
+    const [nodesRes, podsRes] = await Promise.all([
+      coreApi.listNode(),
+      coreApi.listPodForAllNamespaces(),
+    ])
 
     const responseTimeMs = Date.now() - start
 
@@ -74,7 +77,14 @@ export async function performK8sHealthCheck(clusterId: string): Promise<{
 
 export const healthRouter = router({
   check: protectedProcedure
-    .meta({ openapi: { method: 'GET', path: '/api/health/check/{clusterId}', protect: true, tags: ['health'] } })
+    .meta({
+      openapi: {
+        method: 'GET',
+        path: '/api/health/check/{clusterId}',
+        protect: true,
+        tags: ['health'],
+      },
+    })
     .input(z.object({ clusterId: z.string().uuid() }))
     .output(healthHistorySchema)
     .query(async ({ ctx, input }) => {
@@ -107,8 +117,20 @@ export const healthRouter = router({
     }),
 
   history: protectedProcedure
-    .meta({ openapi: { method: 'GET', path: '/api/health/history/{clusterId}', protect: true, tags: ['health'] } })
-    .input(z.object({ clusterId: z.string().uuid(), limit: z.number().int().min(1).max(200).optional() }))
+    .meta({
+      openapi: {
+        method: 'GET',
+        path: '/api/health/history/{clusterId}',
+        protect: true,
+        tags: ['health'],
+      },
+    })
+    .input(
+      z.object({
+        clusterId: z.string().uuid(),
+        limit: z.number().int().min(1).max(200).optional(),
+      }),
+    )
     .output(z.array(healthHistorySchema))
     .query(async ({ ctx, input }) => {
       const rows = await ctx.db
@@ -124,7 +146,9 @@ export const healthRouter = router({
     }),
 
   status: protectedProcedure
-    .meta({ openapi: { method: 'GET', path: '/api/health/status', protect: true, tags: ['health'] } })
+    .meta({
+      openapi: { method: 'GET', path: '/api/health/status', protect: true, tags: ['health'] },
+    })
     .input(z.object({}))
     .output(
       z.array(

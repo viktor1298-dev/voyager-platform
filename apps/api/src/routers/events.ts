@@ -1,4 +1,5 @@
 import { events } from '@voyager/db'
+import { LIMITS } from '@voyager/config'
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
@@ -48,11 +49,11 @@ export const eventsRouter = router({
     .input(
       z.object({
         clusterId: z.string().uuid(),
-        namespace: z.string().max(255).optional(),
+        namespace: z.string().max(LIMITS.NAME_MAX).optional(),
         kind: z.enum(['Warning', 'Normal']),
-        reason: z.string().max(255).optional(),
+        reason: z.string().max(LIMITS.NAME_MAX).optional(),
         message: z.string().optional(),
-        source: z.string().max(255).optional(),
+        source: z.string().max(LIMITS.NAME_MAX).optional(),
         involvedObject: z.record(z.string(), z.string()).optional(),
         timestamp: z.string().datetime().optional(),
       }),

@@ -1,5 +1,6 @@
 import { alertHistory, alerts } from '@voyager/db'
 import { TRPCError } from '@trpc/server'
+import { LIMITS } from '@voyager/config'
 import { desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
@@ -9,23 +10,23 @@ const METRIC_VALUES = ['cpu', 'memory', 'pods', 'restarts'] as const
 const OPERATOR_VALUES = ['gt', 'lt', 'eq'] as const
 
 const createAlertSchema = z.object({
-  name: z.string().min(1).max(255),
+  name: z.string().min(1).max(LIMITS.NAME_MAX),
   metric: z.enum(METRIC_VALUES),
   operator: z.enum(OPERATOR_VALUES),
   threshold: z.number(),
-  clusterFilter: z.string().max(255).optional(),
-  webhookUrl: z.string().url().max(1000).nullable().optional(),
+  clusterFilter: z.string().max(LIMITS.NAME_MAX).optional(),
+  webhookUrl: z.string().url().max(LIMITS.URL_MAX).nullable().optional(),
 })
 
 const updateAlertSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(1).max(255).optional(),
+  name: z.string().min(1).max(LIMITS.NAME_MAX).optional(),
   metric: z.enum(METRIC_VALUES).optional(),
   operator: z.enum(OPERATOR_VALUES).optional(),
   threshold: z.number().optional(),
-  clusterFilter: z.string().max(255).nullable().optional(),
+  clusterFilter: z.string().max(LIMITS.NAME_MAX).nullable().optional(),
   enabled: z.boolean().optional(),
-  webhookUrl: z.string().url().max(1000).nullable().optional(),
+  webhookUrl: z.string().url().max(LIMITS.URL_MAX).nullable().optional(),
 })
 
 export const alertsRouter = router({
@@ -83,7 +84,11 @@ export const alertsRouter = router({
   }),
 
   history: protectedProcedure
-    .input(z.object({ limit: z.number().min(1).max(100).default(50) }).optional())
+    .input(
+      z
+        .object({ limit: z.number().min(1).max(LIMITS.LIST_MAX).default(LIMITS.LIST_DEFAULT) })
+        .optional(),
+    )
     .query(async ({ ctx, input }) => {
       const limit = input?.limit ?? 50
       return ctx.db.select().from(alertHistory).orderBy(desc(alertHistory.triggeredAt)).limit(limit)
@@ -97,13 +102,17 @@ export const alertsRouter = router({
         .set({ acknowledged: true })
         .where(eq(alertHistory.id, input.id))
         .returning()
-      if (!updated) throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert history entry not found' })
+      if (!updated)
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert history entry not found' })
       await logAudit(ctx, 'alert.acknowledge', 'alertHistory', input.id)
       return updated
     }),
 
   unacknowledgedCount: protectedProcedure.query(async ({ ctx }) => {
-    const result = await ctx.db.select({ count: sql<number>`count(*)::int` }).from(alertHistory).where(eq(alertHistory.acknowledged, false))
+    const result = await ctx.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(alertHistory)
+      .where(eq(alertHistory.acknowledged, false))
     return result[0]?.count ?? 0
   }),
 })

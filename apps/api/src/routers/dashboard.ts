@@ -1,4 +1,5 @@
 import { TRPCError } from '@trpc/server'
+import { LIMITS } from '@voyager/config'
 import { type Database, dashboardCollaborators, sharedDashboards } from '@voyager/db'
 import { and, desc, eq, lt, or } from 'drizzle-orm'
 import { z } from 'zod'
@@ -30,8 +31,8 @@ const visibilitySchema = z.enum(['private', 'team', 'public'])
 const collaboratorRoleSchema = z.enum(['viewer', 'editor', 'owner'])
 
 const createDashboardSchema = z.object({
-  name: z.string().min(1).max(255),
-  description: z.string().max(2000).nullable().optional(),
+  name: z.string().min(1).max(LIMITS.NAME_MAX),
+  description: z.string().max(LIMITS.DESCRIPTION_MAX).nullable().optional(),
   config: dashboardConfigSchema,
   visibility: visibilitySchema.default('private'),
 })
@@ -47,8 +48,8 @@ const getDashboardSchema = z.object({
 
 const updateDashboardSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(1).max(255).optional(),
-  description: z.string().max(2000).nullable().optional(),
+  name: z.string().min(1).max(LIMITS.NAME_MAX).optional(),
+  description: z.string().max(LIMITS.DESCRIPTION_MAX).nullable().optional(),
   config: dashboardConfigSchema.optional(),
   visibility: visibilitySchema.optional(),
 })
@@ -67,7 +68,12 @@ async function getCollaboratorRole(db: Database, dashboardId: string, userId: st
   const [row] = await db
     .select({ role: dashboardCollaborators.role })
     .from(dashboardCollaborators)
-    .where(and(eq(dashboardCollaborators.dashboardId, dashboardId), eq(dashboardCollaborators.userId, userId)))
+    .where(
+      and(
+        eq(dashboardCollaborators.dashboardId, dashboardId),
+        eq(dashboardCollaborators.userId, userId),
+      ),
+    )
     .limit(1)
   return row?.role ?? null
 }
@@ -126,7 +132,10 @@ export const dashboardRouter = router({
 
       cursorCondition = or(
         lt(sharedDashboards.updatedAt, cursorDashboard.updatedAt),
-        and(eq(sharedDashboards.updatedAt, cursorDashboard.updatedAt), lt(sharedDashboards.id, cursorDashboard.id)),
+        and(
+          eq(sharedDashboards.updatedAt, cursorDashboard.updatedAt),
+          lt(sharedDashboards.id, cursorDashboard.id),
+        ),
       )
     }
 
@@ -149,7 +158,7 @@ export const dashboardRouter = router({
     const dashboards = rows.map((row) => row.shared_dashboards)
     const hasMore = dashboards.length > input.limit
     const items = hasMore ? dashboards.slice(0, input.limit) : dashboards
-    const nextCursor = hasMore ? items.at(-1)?.id ?? null : null
+    const nextCursor = hasMore ? (items.at(-1)?.id ?? null) : null
 
     return { items, nextCursor }
   }),
@@ -170,7 +179,11 @@ export const dashboardRouter = router({
     const role = await getCollaboratorRole(ctx.db, input.id, ctx.user.id)
     const isTeamVisibleToUser =
       dashboard.visibility === 'team' && dashboard.teamId === getUserTeamScope(ctx.user)
-    const isAllowed = dashboard.createdBy === ctx.user.id || role !== null || isTeamVisibleToUser || dashboard.visibility === 'public'
+    const isAllowed =
+      dashboard.createdBy === ctx.user.id ||
+      role !== null ||
+      isTeamVisibleToUser ||
+      dashboard.visibility === 'public'
 
     if (!isAllowed) {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'No access to this dashboard' })
@@ -195,10 +208,18 @@ export const dashboardRouter = router({
     const isEditor = role === 'editor'
 
     if (!isOwner && !isEditor) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Only owners and editors can update dashboard' })
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Only owners and editors can update dashboard',
+      })
     }
 
-    if ((input.visibility !== undefined || input.name !== undefined || input.description !== undefined) && !isOwner) {
+    if (
+      (input.visibility !== undefined ||
+        input.name !== undefined ||
+        input.description !== undefined) &&
+      !isOwner
+    ) {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'Only owner can update visibility, name, or description',

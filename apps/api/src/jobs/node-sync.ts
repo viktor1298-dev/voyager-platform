@@ -3,8 +3,7 @@ import { clusters, db, nodes } from '@voyager/db'
 import { eq, and } from 'drizzle-orm'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
-
-const SYNC_INTERVAL_MS = 5 * 60 * 1000
+import { JOB_INTERVALS } from '../config/jobs.js'
 
 let intervalHandle: NodeJS.Timeout | null = null
 let isRunning = false
@@ -31,7 +30,9 @@ async function syncNodes(): Promise<void> {
             podCountByNode.set(nodeName, (podCountByNode.get(nodeName) ?? 0) + 1)
           }
         }
-      } catch { /* ignore — pod counts will default to 0 */ }
+      } catch {
+        /* ignore — pod counts will default to 0 */
+      }
 
       for (const node of nodesRes.items) {
         const name = node.metadata?.name ?? 'unknown'
@@ -39,9 +40,8 @@ async function syncNodes(): Promise<void> {
         const readyCondition = conditions.find((c) => c.type === 'Ready')
         const status = readyCondition?.status === 'True' ? 'Ready' : 'NotReady'
         const labels = node.metadata?.labels ?? {}
-        const role = labels['node-role.kubernetes.io/control-plane'] !== undefined
-          ? 'control-plane'
-          : 'worker'
+        const role =
+          labels['node-role.kubernetes.io/control-plane'] !== undefined ? 'control-plane' : 'worker'
 
         const cpuCap = node.status?.capacity?.cpu
         const cpuAlloc = node.status?.allocatable?.cpu
@@ -116,7 +116,9 @@ export function startNodeSync(): void {
   }
 
   void run()
-  intervalHandle = setInterval(() => { void run() }, SYNC_INTERVAL_MS)
+  intervalHandle = setInterval(() => {
+    void run()
+  }, JOB_INTERVALS.NODE_SYNC_MS)
 }
 
 export function stopNodeSync(): void {

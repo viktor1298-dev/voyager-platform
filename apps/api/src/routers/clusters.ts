@@ -763,15 +763,15 @@ export const clustersRouter = router({
     .input(
       z.object({
         id: z.string().uuid(),
-        name: z.string().min(1).max(255).optional(),
+        name: z.string().min(1).max(LIMITS.NAME_MAX).optional(),
         provider: providerSchema.optional(),
         environment: environmentSchema.optional(),
-        endpoint: z.string().url().max(500).nullable().optional(),
+        endpoint: z.string().url().max(LIMITS.ENDPOINT_MAX).nullable().optional(),
         connectionConfig: connectionConfigSchema.optional(),
-        status: z.string().max(50).optional(),
+        status: z.string().max(LIMITS.STATUS_MAX).optional(),
         healthStatus: healthStatusSchema.optional(),
         lastHealthCheck: z.union([z.string().datetime(), z.date()]).nullable().optional(),
-        version: z.string().max(50).optional(),
+        version: z.string().max(LIMITS.VERSION_MAX).optional(),
         nodesCount: z.number().int().min(0).optional(),
       }),
     )

@@ -3,12 +3,12 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { cached, getRedisClient } from '../lib/cache.js'
+import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { clusters as clustersTable, db } from '@voyager/db'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_DEPLOYMENTS_CACHE_TTL = 30
-const DEPLOYMENTS_CACHE_KEY = 'k8s:deployments:list:v2'
 
 type RolloutInfo = {
   revision: string
@@ -84,7 +84,11 @@ function deriveStatus(params: {
 }): 'Running' | 'Pending' | 'Failed' | 'Scaling' {
   const { ready, replicas, available, unavailable, generation, observedGeneration } = params
 
-  if (generation !== undefined && observedGeneration !== undefined && generation > observedGeneration) {
+  if (
+    generation !== undefined &&
+    observedGeneration !== undefined &&
+    generation > observedGeneration
+  ) {
     return 'Scaling'
   }
 
@@ -97,7 +101,9 @@ function deriveStatus(params: {
 
 function findLastUpdated(deployment: {
   metadata?: { creationTimestamp?: Date | string }
-  status?: { conditions?: Array<{ lastUpdateTime?: Date | string; lastTransitionTime?: Date | string }> }
+  status?: {
+    conditions?: Array<{ lastUpdateTime?: Date | string; lastTransitionTime?: Date | string }>
+  }
 }): string {
   const conditionTimes = (deployment.status?.conditions ?? [])
     .flatMap((condition) => [condition.lastUpdateTime, condition.lastTransitionTime])
@@ -111,13 +117,20 @@ function findLastUpdated(deployment: {
     : new Date(0).toISOString()
 }
 
-async function getClusterContextFromPool(clusterId?: string): Promise<{ kc: import('@kubernetes/client-node').KubeConfig; clusterId: string; clusterName: string }> {
+async function getClusterContextFromPool(clusterId?: string): Promise<{
+  kc: import('@kubernetes/client-node').KubeConfig
+  clusterId: string
+  clusterName: string
+}> {
   if (clusterId) {
     const kc = await clusterClientPool.getClient(clusterId)
     return { kc, clusterId, clusterName: clusterId }
   }
   // Fallback: use first registered cluster
-  const [first] = await db.select({ id: clustersTable.id, name: clustersTable.name }).from(clustersTable).limit(1)
+  const [first] = await db
+    .select({ id: clustersTable.id, name: clustersTable.name })
+    .from(clustersTable)
+    .limit(1)
   if (!first) throw new Error('No clusters registered')
   const kc = await clusterClientPool.getClient(first.id)
   return { kc, clusterId: first.id, clusterName: first.name }
@@ -131,7 +144,7 @@ export const deploymentsRouter = router({
     .input(z.object({ clusterId: z.string().uuid().optional() }).optional())
     .output(z.array(deploymentInfoSchema))
     .query(async ({ input }): Promise<DeploymentInfo[]> => {
-      return cached(DEPLOYMENTS_CACHE_KEY, K8S_DEPLOYMENTS_CACHE_TTL, async () => {
+      return cached(CACHE_KEYS.k8sDeploymentsListGlobal(), K8S_DEPLOYMENTS_CACHE_TTL, async () => {
         const { kc, clusterId, clusterName } = await getClusterContextFromPool(input?.clusterId)
         const api = kc.makeApiClient(k8s.AppsV1Api)
         const [{ items: deployments }, { items: replicaSets }] = await Promise.all([
@@ -170,7 +183,8 @@ export const deploymentsRouter = router({
           const replicas = deployment.spec?.replicas ?? 0
           const ready = deployment.status?.readyReplicas ?? 0
           const available = deployment.status?.availableReplicas ?? 0
-          const unavailable = deployment.status?.unavailableReplicas ?? Math.max(replicas - ready, 0)
+          const unavailable =
+            deployment.status?.unavailableReplicas ?? Math.max(replicas - ready, 0)
           const image = deployment.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
           const key = `${namespace}/${name}`
 
@@ -201,12 +215,17 @@ export const deploymentsRouter = router({
 
   listByCluster: protectedProcedure
     .meta({
-      openapi: { method: 'GET', path: '/api/deployments/by-cluster', protect: true, tags: ['deployments'] },
+      openapi: {
+        method: 'GET',
+        path: '/api/deployments/by-cluster',
+        protect: true,
+        tags: ['deployments'],
+      },
     })
     .input(z.object({ clusterId: z.string().uuid() }))
     .output(z.array(deploymentInfoSchema))
     .query(async ({ input }): Promise<DeploymentInfo[]> => {
-      const cacheKey = `k8s:${input.clusterId}:deployments:list`
+      const cacheKey = CACHE_KEYS.k8sDeploymentsList(input.clusterId)
       return cached(cacheKey, K8S_DEPLOYMENTS_CACHE_TTL, async () => {
         const kc = await clusterClientPool.getClient(input.clusterId)
         const clusterName = input.clusterId
@@ -247,7 +266,8 @@ export const deploymentsRouter = router({
           const replicas = deployment.spec?.replicas ?? 0
           const ready = deployment.status?.readyReplicas ?? 0
           const available = deployment.status?.availableReplicas ?? 0
-          const unavailable = deployment.status?.unavailableReplicas ?? Math.max(replicas - ready, 0)
+          const unavailable =
+            deployment.status?.unavailableReplicas ?? Math.max(replicas - ready, 0)
           const image = deployment.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
           const key = `${namespace}/${name}`
 
@@ -278,9 +298,20 @@ export const deploymentsRouter = router({
 
   restart: adminProcedure
     .meta({
-      openapi: { method: 'POST', path: '/api/deployments/restart', protect: true, tags: ['deployments'] },
+      openapi: {
+        method: 'POST',
+        path: '/api/deployments/restart',
+        protect: true,
+        tags: ['deployments'],
+      },
     })
-    .input(z.object({ name: z.string(), namespace: z.string(), clusterId: z.string().uuid().optional() }))
+    .input(
+      z.object({
+        name: z.string(),
+        namespace: z.string(),
+        clusterId: z.string().uuid().optional(),
+      }),
+    )
     .output(z.object({ success: z.boolean(), restartedAt: z.string() }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -301,10 +332,16 @@ export const deploymentsRouter = router({
           },
         })
         const redis = await getRedisClient()
-        if (redis) await redis.del(DEPLOYMENTS_CACHE_KEY)
-        await logAudit(ctx, 'deployment.restart', 'deployment', `${input.namespace}/${input.name}`, {
-          namespace: input.namespace,
-        })
+        if (redis) await redis.del(CACHE_KEYS.k8sDeploymentsListGlobal())
+        await logAudit(
+          ctx,
+          'deployment.restart',
+          'deployment',
+          `${input.namespace}/${input.name}`,
+          {
+            namespace: input.namespace,
+          },
+        )
         return { success: true, restartedAt: now }
       } catch (err) {
         throw new TRPCError({
@@ -316,7 +353,12 @@ export const deploymentsRouter = router({
 
   scale: adminProcedure
     .meta({
-      openapi: { method: 'POST', path: '/api/deployments/scale', protect: true, tags: ['deployments'] },
+      openapi: {
+        method: 'POST',
+        path: '/api/deployments/scale',
+        protect: true,
+        tags: ['deployments'],
+      },
     })
     .input(
       z.object({
@@ -337,7 +379,7 @@ export const deploymentsRouter = router({
           body: { spec: { replicas: input.replicas } },
         })
         const redis = await getRedisClient()
-        if (redis) await redis.del(DEPLOYMENTS_CACHE_KEY)
+        if (redis) await redis.del(CACHE_KEYS.k8sDeploymentsListGlobal())
         await logAudit(ctx, 'deployment.scale', 'deployment', `${input.namespace}/${input.name}`, {
           replicas: input.replicas,
         })

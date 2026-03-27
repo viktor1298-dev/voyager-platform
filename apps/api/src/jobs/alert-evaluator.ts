@@ -2,9 +2,7 @@ import * as k8s from '@kubernetes/client-node'
 import { alerts, alertHistory, clusters, db } from '@voyager/db'
 import { eq, and, gte } from 'drizzle-orm'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
-
-const EVAL_INTERVAL_MS = 60 * 1000
-const DEDUP_WINDOW_MS = 5 * 60 * 1000
+import { JOB_INTERVALS } from '../config/jobs.js'
 
 type MetricType = 'cpu' | 'memory' | 'pods' | 'restarts'
 type Operator = 'gt' | 'lt' | 'eq'
@@ -69,14 +67,17 @@ function parseK8sResource(value: string, metric: 'cpu' | 'memory'): number {
 
 function compareValue(value: number, operator: Operator, threshold: number): boolean {
   switch (operator) {
-    case 'gt': return value > threshold
-    case 'lt': return value < threshold
-    case 'eq': return value === threshold
+    case 'gt':
+      return value > threshold
+    case 'lt':
+      return value < threshold
+    case 'eq':
+      return value === threshold
   }
 }
 
 async function isDuplicate(alertId: string): Promise<boolean> {
-  const cutoff = new Date(Date.now() - DEDUP_WINDOW_MS)
+  const cutoff = new Date(Date.now() - JOB_INTERVALS.ALERT_DEDUP_WINDOW_MS)
   const recent = await db
     .select({ id: alertHistory.id })
     .from(alertHistory)
@@ -96,7 +97,10 @@ async function evaluateAlerts(): Promise<void> {
       if (alert.clusterFilter) {
         clusterIds.push(alert.clusterFilter)
       } else {
-        const allClusters = await db.select({ id: clusters.id }).from(clusters).where(eq(clusters.isActive, true))
+        const allClusters = await db
+          .select({ id: clusters.id })
+          .from(clusters)
+          .where(eq(clusters.isActive, true))
         clusterIds.push(...allClusters.map((c) => c.id))
       }
 
@@ -108,15 +112,19 @@ async function evaluateAlerts(): Promise<void> {
           totalValue += value
           clusterCount++
         } catch (err) {
-          console.warn(`[alert-evaluator] failed to gather ${alert.metric} from cluster ${clusterId}`, err)
+          console.warn(
+            `[alert-evaluator] failed to gather ${alert.metric} from cluster ${clusterId}`,
+            err,
+          )
         }
       }
 
       if (clusterCount === 0) continue
 
-      const metricValue = (alert.metric === 'cpu' || alert.metric === 'memory')
-        ? Math.round(totalValue / clusterCount)
-        : totalValue
+      const metricValue =
+        alert.metric === 'cpu' || alert.metric === 'memory'
+          ? Math.round(totalValue / clusterCount)
+          : totalValue
 
       const threshold = Number(alert.threshold)
       if (compareValue(metricValue, alert.operator as Operator, threshold)) {
@@ -155,7 +163,7 @@ export function startAlertEvaluator(): void {
   void run()
   intervalHandle = setInterval(() => {
     void run()
-  }, EVAL_INTERVAL_MS)
+  }, JOB_INTERVALS.ALERT_EVAL_MS)
 }
 
 export function stopAlertEvaluator(): void {

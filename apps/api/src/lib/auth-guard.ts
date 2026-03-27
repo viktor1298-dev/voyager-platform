@@ -1,4 +1,5 @@
-const PUBLIC_PATH_PREFIXES = ['/api/auth/', '/health', '/docs', '/openapi.json'] as const
+import { AUTH_BYPASS_PATHS } from '@voyager/config'
+
 const PROTECTED_API_PREFIXES = ['/trpc/', '/api/'] as const
 const PUBLIC_TRPC_PROCEDURES = new Set(['sso.getProviders'])
 
@@ -24,11 +25,14 @@ const getTrpcProcedureNames = (pathname: string): string[] => {
 }
 
 const isPublicPath = (pathname: string): boolean => {
-  return PUBLIC_PATH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(prefix))
+  return AUTH_BYPASS_PATHS.some((prefix) => pathname === prefix || pathname.startsWith(prefix))
 }
 
 const isProtectedApiPath = (pathname: string): boolean => {
-  return PROTECTED_API_PREFIXES.some((prefix) => pathname.startsWith(prefix)) && !pathname.startsWith('/api/auth/')
+  return (
+    PROTECTED_API_PREFIXES.some((prefix) => pathname.startsWith(prefix)) &&
+    !pathname.startsWith('/api/auth/')
+  )
 }
 
 const isPublicTrpcRequest = (pathname: string): boolean => {

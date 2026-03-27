@@ -16,8 +16,7 @@ export const podsRouter = router({
       try {
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const cachePrefix = `k8s:${input.clusterId}`
-        const podsResponse = await cached(`${cachePrefix}:pods`, 15_000, () =>
+        const podsResponse = await cached(CACHE_KEYS.k8sPods(input.clusterId), 15_000, () =>
           coreV1.listPodForAllNamespaces(),
         )
 
@@ -25,7 +24,7 @@ export const podsRouter = router({
         let podMetricsMap = new Map<string, { cpuNano: number; memBytes: number }>()
         try {
           const metricsClient = new k8s.Metrics(kc)
-          const podMetrics = await cached(`${cachePrefix}:pod-metrics`, 15_000, () =>
+          const podMetrics = await cached(CACHE_KEYS.k8sPodMetrics(input.clusterId), 15_000, () =>
             metricsClient.getPodMetrics(''),
           )
           for (const pm of podMetrics.items) {
@@ -93,8 +92,7 @@ export const podsRouter = router({
         // Attempt live K8s fetch first
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const cachePrefix = `k8s:${input.clusterId}`
-        const podsResponse = await cached(`${cachePrefix}:pods:stored`, 15, () =>
+        const podsResponse = await cached(CACHE_KEYS.k8sPodsStored(input.clusterId), 15, () =>
           coreV1.listPodForAllNamespaces(),
         )
 

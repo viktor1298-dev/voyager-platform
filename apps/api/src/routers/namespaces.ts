@@ -1,5 +1,6 @@
 import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
+import { CACHE_TTL } from '@voyager/config'
 import { z } from 'zod'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
@@ -32,8 +33,10 @@ export const namespacesRouter = router({
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
 
         const [nsResponse, quotaResponse] = await Promise.all([
-          cached(`k8s:${input.clusterId}:namespaces`, K8S_CACHE_TTL, () => coreV1.listNamespace()),
-          cached(`k8s:${input.clusterId}:resource-quotas`, K8S_CACHE_TTL, () =>
+          cached(CACHE_KEYS.k8sNamespaces(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
+            coreV1.listNamespace(),
+          ),
+          cached(CACHE_KEYS.k8sResourceQuotas(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
             coreV1.listResourceQuotaForAllNamespaces(),
           ).catch(() => ({ items: [] as k8s.V1ResourceQuota[] })),
         ])

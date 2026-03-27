@@ -1,6 +1,5 @@
+import { CACHE_TTL } from '@voyager/config'
 import { EventEmitter } from 'node:events'
-
-const PRESENCE_TTL_MS = 60_000
 const PRESENCE_SWEEP_INTERVAL_MS = 15_000
 /** Send a keepalive every 25s to prevent proxy/LB idle-connection timeouts (typically 60s) */
 const PRESENCE_KEEPALIVE_INTERVAL_MS = 25_000
@@ -13,7 +12,12 @@ export interface OnlinePresenceUser {
   lastSeen: string
 }
 
-export type PresenceUpdateReason = 'connected' | 'disconnected' | 'page-changed' | 'snapshot' | 'keepalive'
+export type PresenceUpdateReason =
+  | 'connected'
+  | 'disconnected'
+  | 'page-changed'
+  | 'snapshot'
+  | 'keepalive'
 
 export interface PresenceUpdateEvent {
   reason: PresenceUpdateReason
@@ -48,9 +52,7 @@ function toOnlineUser(entry: PresenceEntry): OnlinePresenceUser {
 }
 
 function getSortedOnlineUsers(): OnlinePresenceUser[] {
-  return [...presenceStore.values()]
-    .sort((a, b) => b.lastSeenTs - a.lastSeenTs)
-    .map(toOnlineUser)
+  return [...presenceStore.values()].sort((a, b) => b.lastSeenTs - a.lastSeenTs).map(toOnlineUser)
 }
 
 function emitUpdate(reason: PresenceUpdateReason, userId: string) {
@@ -62,7 +64,7 @@ function emitUpdate(reason: PresenceUpdateReason, userId: string) {
 }
 
 function sweepExpiredUsers() {
-  const cutoff = nowTs() - PRESENCE_TTL_MS
+  const cutoff = nowTs() - CACHE_TTL.PRESENCE_MS
   let changed = false
 
   for (const [userId, entry] of presenceStore.entries()) {
@@ -115,7 +117,9 @@ export function getOnlineUsers(): OnlinePresenceUser[] {
   return getSortedOnlineUsers()
 }
 
-export function subscribeToPresence(signal?: AbortSignal): AsyncIterableIterator<PresenceUpdateEvent> {
+export function subscribeToPresence(
+  signal?: AbortSignal,
+): AsyncIterableIterator<PresenceUpdateEvent> {
   const queue: PresenceUpdateEvent[] = []
   let resolve: (() => void) | null = null
   let done = false

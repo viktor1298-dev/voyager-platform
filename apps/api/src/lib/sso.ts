@@ -1,11 +1,11 @@
+import { CACHE_TTL } from '@voyager/config'
 import { account, ssoProviders, teamMembers, type Database } from '@voyager/db'
 import { and, eq, inArray } from 'drizzle-orm'
 import { createDecipheriv, createCipheriv, createHash, randomBytes } from 'node:crypto'
 
 const MICROSOFT_PROVIDER_TYPE = 'microsoft-entra-id'
-const ENTRA_DISCOVERY_URL = 'https://login.microsoftonline.com/%TENANT_ID%/v2.0/.well-known/openid-configuration'
-const DEFAULT_SSO_PROVIDER_CACHE_TTL_MS = 60_000
-
+const ENTRA_DISCOVERY_URL =
+  'https://login.microsoftonline.com/%TENANT_ID%/v2.0/.well-known/openid-configuration'
 export interface EntraSsoConfigInput {
   tenantId: string
   clientId: string
@@ -20,12 +20,15 @@ function getSsoEncryptionKey(): Buffer {
     return Buffer.from(configured, 'base64')
   }
 
-  const fallbackSecret = process.env.BETTER_AUTH_SECRET ?? 'voyager-dev-better-auth-secret-change-in-prod'
+  const fallbackSecret =
+    process.env.BETTER_AUTH_SECRET ?? 'voyager-dev-better-auth-secret-change-in-prod'
   if (process.env.NODE_ENV === 'production') {
     throw new Error('SSO_ENCRYPTION_KEY is required in production')
   }
 
-  console.warn('[SSO] SSO_ENCRYPTION_KEY is not set. Falling back to BETTER_AUTH_SECRET-derived key (dev only).')
+  console.warn(
+    '[SSO] SSO_ENCRYPTION_KEY is not set. Falling back to BETTER_AUTH_SECRET-derived key (dev only).',
+  )
   return createHash('sha256').update(fallbackSecret).digest()
 }
 
@@ -47,7 +50,10 @@ export function decryptSsoSecret(value: string): string {
   const key = getSsoEncryptionKey()
   const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(ivBase64, 'base64'))
   decipher.setAuthTag(Buffer.from(authTagBase64, 'base64'))
-  const decrypted = Buffer.concat([decipher.update(Buffer.from(payloadBase64, 'base64')), decipher.final()])
+  const decrypted = Buffer.concat([
+    decipher.update(Buffer.from(payloadBase64, 'base64')),
+    decipher.final(),
+  ])
   return decrypted.toString('utf8')
 }
 
@@ -55,7 +61,9 @@ function getDiscoveryUrl(tenantId: string): string {
   return ENTRA_DISCOVERY_URL.replace('%TENANT_ID%', tenantId)
 }
 
-export async function testEntraDiscovery(tenantId: string): Promise<{ ok: boolean; issuer?: string; error?: string }> {
+export async function testEntraDiscovery(
+  tenantId: string,
+): Promise<{ ok: boolean; issuer?: string; error?: string }> {
   try {
     const response = await fetch(getDiscoveryUrl(tenantId))
     if (!response.ok) {
@@ -65,7 +73,10 @@ export async function testEntraDiscovery(tenantId: string): Promise<{ ok: boolea
     const payload = await response.json()
     return { ok: true, issuer: payload.issuer }
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : 'Failed to reach discovery endpoint' }
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Failed to reach discovery endpoint',
+    }
   }
 }
 
@@ -135,10 +146,16 @@ export async function getEntraAuthProvider(db: Database) {
   }
 }
 
-let cachedProvider: { value: Awaited<ReturnType<typeof getEntraAuthProvider>>; expiresAt: number } | null = null
+let cachedProvider: {
+  value: Awaited<ReturnType<typeof getEntraAuthProvider>>
+  expiresAt: number
+} | null = null
 
 export async function getCachedEntraAuthProvider(db: Database) {
-  const ttlMs = Number.parseInt(process.env.SSO_PROVIDER_CACHE_TTL_MS ?? `${DEFAULT_SSO_PROVIDER_CACHE_TTL_MS}`, 10)
+  const ttlMs = Number.parseInt(
+    process.env.SSO_PROVIDER_CACHE_TTL_MS ?? `${CACHE_TTL.SSO_PROVIDER_MS}`,
+    10,
+  )
   const now = Date.now()
 
   if (cachedProvider && cachedProvider.expiresAt > now) {
@@ -146,7 +163,10 @@ export async function getCachedEntraAuthProvider(db: Database) {
   }
 
   const value = await getEntraAuthProvider(db)
-  cachedProvider = { value, expiresAt: now + (Number.isFinite(ttlMs) && ttlMs > 0 ? ttlMs : DEFAULT_SSO_PROVIDER_CACHE_TTL_MS) }
+  cachedProvider = {
+    value,
+    expiresAt: now + (Number.isFinite(ttlMs) && ttlMs > 0 ? ttlMs : CACHE_TTL.SSO_PROVIDER_MS),
+  }
   return value
 }
 
@@ -188,7 +208,9 @@ export async function syncEntraGroupMembership(db: Database, userId: string) {
       groupMappings: ssoProviders.groupMappings,
     })
     .from(ssoProviders)
-    .where(and(eq(ssoProviders.providerType, MICROSOFT_PROVIDER_TYPE), eq(ssoProviders.enabled, true)))
+    .where(
+      and(eq(ssoProviders.providerType, MICROSOFT_PROVIDER_TYPE), eq(ssoProviders.enabled, true)),
+    )
 
   const mappings = provider?.groupMappings ?? {}
   const mappedTeamIds = Array.from(new Set(Object.values(mappings).filter(Boolean)))
@@ -210,7 +232,9 @@ export async function syncEntraGroupMembership(db: Database, userId: string) {
     return
   }
 
-  const desiredTeamIds = Array.from(new Set(groupIds.map((groupId) => mappings[groupId]).filter(Boolean)))
+  const desiredTeamIds = Array.from(
+    new Set(groupIds.map((groupId) => mappings[groupId]).filter(Boolean)),
+  )
 
   const existingMemberships = await db
     .select({ teamId: teamMembers.teamId })
@@ -221,7 +245,9 @@ export async function syncEntraGroupMembership(db: Database, userId: string) {
   const desiredSet = new Set(desiredTeamIds)
 
   const toInsert = desiredTeamIds.filter((teamId) => !existingSet.has(teamId))
-  const toDelete = mappedTeamIds.filter((teamId) => existingSet.has(teamId) && !desiredSet.has(teamId))
+  const toDelete = mappedTeamIds.filter(
+    (teamId) => existingSet.has(teamId) && !desiredSet.has(teamId),
+  )
 
   if (toInsert.length > 0) {
     await db
@@ -231,6 +257,8 @@ export async function syncEntraGroupMembership(db: Database, userId: string) {
   }
 
   if (toDelete.length > 0) {
-    await db.delete(teamMembers).where(and(eq(teamMembers.userId, userId), inArray(teamMembers.teamId, toDelete)))
+    await db
+      .delete(teamMembers)
+      .where(and(eq(teamMembers.userId, userId), inArray(teamMembers.teamId, toDelete)))
   }
 }

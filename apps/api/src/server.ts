@@ -1,4 +1,5 @@
 // migrate import removed — schema handled by Helm sql/init.sql on postgres startup
+import { RATE_LIMIT_BYPASS_PATHS } from '@voyager/config'
 import { db } from '@voyager/db'
 import compress from '@fastify/compress'
 import cors from '@fastify/cors'
@@ -48,13 +49,11 @@ app.register(compress, { global: true })
 
 const DEFAULT_RATE_LIMIT_MAX = Number.parseInt(process.env.RATE_LIMIT_MAX || '200', 10)
 const DEFAULT_RATE_LIMIT_WINDOW = process.env.RATE_LIMIT_TIME_WINDOW || '1 minute'
-const RATE_LIMIT_WHITELIST_PATHS = ['/api/auth/', '/health', '/trpc'] as const
-
 app.register(rateLimit, {
   max: DEFAULT_RATE_LIMIT_MAX,
   timeWindow: DEFAULT_RATE_LIMIT_WINDOW,
   keyGenerator: (req) => req.ip,
-  allowList: (request) => RATE_LIMIT_WHITELIST_PATHS.some((path) => request.url.startsWith(path)),
+  allowList: (request) => RATE_LIMIT_BYPASS_PATHS.some((path) => request.url.startsWith(path)),
 })
 
 // ALLOWED_ORIGINS: comma-separated list of allowed origins for CORS.

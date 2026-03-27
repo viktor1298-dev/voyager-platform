@@ -68,10 +68,7 @@ export const auditRouter = router({
             .orderBy(desc(auditLog.timestamp))
             .limit(limit)
             .offset(offset),
-          ctx.db
-            .select({ count: count() })
-            .from(auditLog)
-            .where(where),
+          ctx.db.select({ count: count() }).from(auditLog).where(where),
         ])
 
         const total = totalResult[0]?.count ?? 0

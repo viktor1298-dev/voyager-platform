@@ -1,11 +1,17 @@
 import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
 import { clusters, karpenterCache, type Database } from '@voyager/db'
-import type { KarpenterEC2NodeClass, KarpenterMetrics, KarpenterNodePool, KarpenterTopology } from '@voyager/types'
+import type {
+  KarpenterEC2NodeClass,
+  KarpenterMetrics,
+  KarpenterNodePool,
+  KarpenterTopology,
+} from '@voyager/types'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { connectionConfigSchema, type ClusterConnectionConfig } from './connection-config.js'
 import { createKubeConfigForCluster } from './k8s-client-factory.js'
+import { CACHE_TTL } from '@voyager/config'
 import { KARPENTER_COST, KARPENTER_CRD, KARPENTER_LABELS } from './karpenter-constants.js'
 
 const clusterSchema = z.object({
@@ -64,7 +70,9 @@ function asK8sList(value: unknown): { items: Record<string, unknown>[] } {
   }
 
   return {
-    items: items.filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null),
+    items: items.filter(
+      (item): item is Record<string, unknown> => typeof item === 'object' && item !== null,
+    ),
   }
 }
 
@@ -85,19 +93,27 @@ function mapConditions(conditions: unknown): KarpenterNodePool['status']['condit
     }))
 }
 
-const KARPENTER_CACHE_TTL_MS = Number.parseInt(process.env.KARPENTER_CACHE_TTL_MS ?? '60000', 10)
+const KARPENTER_CACHE_TTL_MS = Number.parseInt(
+  process.env.KARPENTER_CACHE_TTL_MS ?? String(CACHE_TTL.KARPENTER_MS),
+  10,
+)
 
 type KarpenterCacheDataType = 'node-pools' | 'ec2-node-classes' | 'metrics' | 'topology'
 
 export class KarpenterService {
   constructor(
     private readonly db: Database,
-    private readonly customObjectsClientFactory: (kc: k8s.KubeConfig) => CustomObjectsClient = (kc) =>
-      kc.makeApiClient(k8s.CustomObjectsApi),
-    private readonly coreV1ClientFactory: (kc: k8s.KubeConfig) => CoreV1Client = (kc) => kc.makeApiClient(k8s.CoreV1Api),
+    private readonly customObjectsClientFactory: (kc: k8s.KubeConfig) => CustomObjectsClient = (
+      kc,
+    ) => kc.makeApiClient(k8s.CustomObjectsApi),
+    private readonly coreV1ClientFactory: (kc: k8s.KubeConfig) => CoreV1Client = (kc) =>
+      kc.makeApiClient(k8s.CoreV1Api),
   ) {}
 
-  private async getCached<T>(clusterId: string, dataType: KarpenterCacheDataType): Promise<T | null> {
+  private async getCached<T>(
+    clusterId: string,
+    dataType: KarpenterCacheDataType,
+  ): Promise<T | null> {
     try {
       const [row] = await this.db
         .select({ payload: karpenterCache.payload, observedAt: karpenterCache.observedAt })
@@ -122,7 +138,9 @@ export class KarpenterService {
   private async setCached(clusterId: string, dataType: KarpenterCacheDataType, payload: unknown) {
     try {
       const normalizedPayload =
-        typeof payload === 'object' && payload !== null ? (payload as Record<string, unknown>) : { value: payload }
+        typeof payload === 'object' && payload !== null
+          ? (payload as Record<string, unknown>)
+          : { value: payload }
 
       await this.db
         .insert(karpenterCache)
@@ -152,9 +170,14 @@ export class KarpenterService {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
     }
 
-    const parsedConnectionConfig = connectionConfigSchema.safeParse(parsedCluster.data.connectionConfig)
+    const parsedConnectionConfig = connectionConfigSchema.safeParse(
+      parsedCluster.data.connectionConfig,
+    )
     if (!parsedConnectionConfig.success) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid cluster connection configuration' })
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Invalid cluster connection configuration',
+      })
     }
 
     return await createKubeConfigForCluster(
@@ -222,14 +245,20 @@ export class KarpenterService {
                     : undefined,
               }
             : null,
-        limits: Object.fromEntries(Object.entries(limits).map(([key, value]) => [key, String(value)])),
+        limits: Object.fromEntries(
+          Object.entries(limits).map(([key, value]) => [key, String(value)]),
+        ),
         disruption: {
           consolidationPolicy:
-            typeof disruption.consolidationPolicy === 'string' ? disruption.consolidationPolicy : null,
-          consolidateAfter: typeof disruption.consolidateAfter === 'string' ? disruption.consolidateAfter : null,
+            typeof disruption.consolidationPolicy === 'string'
+              ? disruption.consolidationPolicy
+              : null,
+          consolidateAfter:
+            typeof disruption.consolidateAfter === 'string' ? disruption.consolidateAfter : null,
           budgets: Array.isArray(disruption.budgets)
             ? disruption.budgets.filter(
-                (budget): budget is Record<string, unknown> => typeof budget === 'object' && budget !== null,
+                (budget): budget is Record<string, unknown> =>
+                  typeof budget === 'object' && budget !== null,
               )
             : [],
         },
@@ -237,7 +266,9 @@ export class KarpenterService {
         status: {
           nodes: typeof status.nodes === 'number' ? status.nodes : 0,
           conditions: mapConditions(status.conditions),
-          resources: Object.fromEntries(Object.entries(resources).map(([key, value]) => [key, String(value)])),
+          resources: Object.fromEntries(
+            Object.entries(resources).map(([key, value]) => [key, String(value)]),
+          ),
         },
       }
     })
@@ -265,15 +296,21 @@ export class KarpenterService {
       const status = (item.status as Record<string, unknown> | undefined) ?? {}
 
       const subnets = Array.isArray(status.subnets)
-        ? status.subnets.filter((s): s is Record<string, unknown> => typeof s === 'object' && s !== null)
+        ? status.subnets.filter(
+            (s): s is Record<string, unknown> => typeof s === 'object' && s !== null,
+          )
         : []
 
       const securityGroups = Array.isArray(status.securityGroups)
-        ? status.securityGroups.filter((s): s is Record<string, unknown> => typeof s === 'object' && s !== null)
+        ? status.securityGroups.filter(
+            (s): s is Record<string, unknown> => typeof s === 'object' && s !== null,
+          )
         : []
 
       const amis = Array.isArray(status.amis)
-        ? status.amis.filter((s): s is Record<string, unknown> => typeof s === 'object' && s !== null)
+        ? status.amis.filter(
+            (s): s is Record<string, unknown> => typeof s === 'object' && s !== null,
+          )
         : []
 
       return {
@@ -282,13 +319,19 @@ export class KarpenterService {
         role: typeof spec.role === 'string' ? spec.role : null,
         instanceProfile: typeof spec.instanceProfile === 'string' ? spec.instanceProfile : null,
         subnetSelectorTerms: Array.isArray(spec.subnetSelectorTerms)
-          ? spec.subnetSelectorTerms.filter((term): term is Record<string, unknown> => typeof term === 'object')
+          ? spec.subnetSelectorTerms.filter(
+              (term): term is Record<string, unknown> => typeof term === 'object',
+            )
           : [],
         securityGroupSelectorTerms: Array.isArray(spec.securityGroupSelectorTerms)
-          ? spec.securityGroupSelectorTerms.filter((term): term is Record<string, unknown> => typeof term === 'object')
+          ? spec.securityGroupSelectorTerms.filter(
+              (term): term is Record<string, unknown> => typeof term === 'object',
+            )
           : [],
         amiSelectorTerms: Array.isArray(spec.amiSelectorTerms)
-          ? spec.amiSelectorTerms.filter((term): term is Record<string, unknown> => typeof term === 'object')
+          ? spec.amiSelectorTerms.filter(
+              (term): term is Record<string, unknown> => typeof term === 'object',
+            )
           : [],
         status: {
           subnets: subnets.map((subnet) => ({
@@ -319,7 +362,10 @@ export class KarpenterService {
     const kc = await this.getClusterKubeConfig(clusterId)
     const coreV1 = this.coreV1ClientFactory(kc)
 
-    const [nodesRes, podsRes] = await Promise.all([coreV1.listNode(), coreV1.listPodForAllNamespaces()])
+    const [nodesRes, podsRes] = await Promise.all([
+      coreV1.listNode(),
+      coreV1.listPodForAllNamespaces(),
+    ])
 
     const karpenterNodes = nodesRes.items.filter((node) => {
       const labels = node.metadata?.labels ?? {}
@@ -347,7 +393,10 @@ export class KarpenterService {
     const kc = await this.getClusterKubeConfig(clusterId)
     const coreV1 = this.coreV1ClientFactory(kc)
 
-    const [nodesRes, podsRes] = await Promise.all([coreV1.listNode(), coreV1.listPodForAllNamespaces()])
+    const [nodesRes, podsRes] = await Promise.all([
+      coreV1.listNode(),
+      coreV1.listPodForAllNamespaces(),
+    ])
 
     const nodeNameToPool = new Map<string, string>()
     const poolToNodeCount = new Map<string, number>()
@@ -364,7 +413,10 @@ export class KarpenterService {
       poolToNodeCount.set(nodePool, (poolToNodeCount.get(nodePool) ?? 0) + 1)
     }
 
-    const poolToWorkloads = new Map<string, Map<string, { namespace: string; kind: string; name: string; replicas: number }>>()
+    const poolToWorkloads = new Map<
+      string,
+      Map<string, { namespace: string; kind: string; name: string; replicas: number }>
+    >()
 
     for (const pod of podsRes.items) {
       const nodeName = pod.spec?.nodeName

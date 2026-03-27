@@ -1,4 +1,5 @@
 import { TRPCError } from '@trpc/server'
+import { LIMITS } from '@voyager/config'
 import { nodes } from '@voyager/db'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
@@ -23,9 +24,9 @@ export const nodesRouter = router({
     .input(
       z.object({
         clusterId: z.string().uuid(),
-        name: z.string().min(1).max(255),
-        status: z.string().max(50).optional(),
-        role: z.string().max(50).optional(),
+        name: z.string().min(1).max(LIMITS.NAME_MAX),
+        status: z.string().max(LIMITS.STATUS_MAX).optional(),
+        role: z.string().max(LIMITS.STATUS_MAX).optional(),
         cpuCapacity: z.number().int().optional(),
         cpuAllocatable: z.number().int().optional(),
         memoryCapacity: z.number().optional(),
