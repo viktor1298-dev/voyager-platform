@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Old broken time ranges (30s, 1m) are rejected by input validation with a clear error
 **Plans:** 2 plans
 Plans:
-- [ ] 01-01-PLAN.md — Rewrite backend metrics pipeline with time_bucket() SQL, new Grafana ranges, response metadata
+- [x] 01-01-PLAN.md — Rewrite backend metrics pipeline with time_bucket() SQL, new Grafana ranges, response metadata
 - [ ] 01-02-PLAN.md — Update frontend types, store migration, and consumers for new API response shape
 
 ### Phase 2: SSE Streaming Endpoint
@@ -114,7 +114,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Backend Data Pipeline | 0/2 | Planning complete | - |
+| 1. Backend Data Pipeline | 1/2 | In progress | - |
 | 2. SSE Streaming Endpoint | 0/TBD | Not started | - |
 | 3. Time Range Controls & Data Source Wiring | 0/TBD | Not started | - |
 | 4. Synchronized Crosshair | 0/TBD | Not started | - |

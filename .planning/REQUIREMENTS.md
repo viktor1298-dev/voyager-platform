@@ -7,11 +7,11 @@
 
 ### Backend Data Pipeline
 
-- [ ] **PIPE-01**: Backend returns correct bucket-aligned data for all Grafana-standard time ranges (5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d)
-- [ ] **PIPE-02**: Server-side aggregation uses TimescaleDB `time_bucket()` SQL instead of in-memory JS bucketing
-- [ ] **PIPE-03**: Backend returns `serverTime` and `intervalMs` in response so client can align timeline correctly
+- [x] **PIPE-01**: Backend returns correct bucket-aligned data for all Grafana-standard time ranges (5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d)
+- [x] **PIPE-02**: Server-side aggregation uses TimescaleDB `time_bucket()` SQL instead of in-memory JS bucketing
+- [x] **PIPE-03**: Backend returns `serverTime` and `intervalMs` in response so client can align timeline correctly
 - [ ] **PIPE-04**: LTTB downsampling implemented for ranges producing 500+ data points (inlined ~50 LOC, no external dep)
-- [ ] **PIPE-05**: Backend validates time range input against new Grafana-standard set (removes old 30s/1m ranges)
+- [x] **PIPE-05**: Backend validates time range input against new Grafana-standard set (removes old 30s/1m ranges)
 
 ### SSE Real-Time Streaming
 
@@ -85,11 +85,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIPE-01 | Phase 1 | Pending |
-| PIPE-02 | Phase 1 | Pending |
-| PIPE-03 | Phase 1 | Pending |
+| PIPE-01 | Phase 1 | Complete |
+| PIPE-02 | Phase 1 | Complete |
+| PIPE-03 | Phase 1 | Complete |
 | PIPE-04 | Phase 7 | Pending |
-| PIPE-05 | Phase 1 | Pending |
+| PIPE-05 | Phase 1 | Complete |
 | SSE-01 | Phase 2 | Pending |
 | SSE-02 | Phase 2 | Pending |
 | SSE-03 | Phase 3 | Pending |
@@ -125,4 +125,4 @@
 
 ---
 *Requirements defined: 2026-03-28*
-*Last updated: 2026-03-28 after roadmap creation*
+*Last updated: 2026-03-28 after Plan 01-01 completion (PIPE-01, PIPE-02, PIPE-03, PIPE-05 complete)*
