@@ -33,7 +33,10 @@ function toBase64Url(value: string): string {
 
 function ensureEndpoint(endpoint: string | undefined, provider: string): string {
   if (!endpoint) {
-    throw new TRPCError({ code: 'BAD_REQUEST', message: `${provider} provider requires connectionConfig.endpoint` })
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `${provider} provider requires connectionConfig.endpoint`,
+    })
   }
 
   try {
@@ -44,11 +47,17 @@ function ensureEndpoint(endpoint: string | undefined, provider: string): string 
     return endpoint
   } catch (error) {
     if (error instanceof TRPCError) throw error
-    throw new TRPCError({ code: 'BAD_REQUEST', message: `${provider} endpoint must be a valid URL` })
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `${provider} endpoint must be a valid URL`,
+    })
   }
 }
 
-function withOptionalCa(cluster: Pick<k8s.Cluster, 'name' | 'server'>, caCert?: string): k8s.Cluster {
+function withOptionalCa(
+  cluster: Pick<k8s.Cluster, 'name' | 'server'>,
+  caCert?: string,
+): k8s.Cluster {
   return {
     ...cluster,
     skipTLSVerify: false,
@@ -89,7 +98,10 @@ async function generateEksToken(config: {
     },
   })
 
-  const presigned = await signer.presign(request, { expiresIn: 60, unsignableHeaders: new Set(['host']) })
+  const presigned = await signer.presign(request, {
+    expiresIn: 60,
+    unsignableHeaders: new Set(['host']),
+  })
   return `k8s-aws-v1.${toBase64Url(formatUrl(presigned))}`
 }
 
@@ -101,7 +113,10 @@ export async function createKubeConfigForCluster(
     case 'kubeconfig': {
       const config = kubeconfigConnectionConfigSchema.parse(connectionConfig)
       if (!config.kubeconfig || config.kubeconfig.trim().length === 0) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'kubeconfig is required for kubeconfig provider' })
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'kubeconfig is required for kubeconfig provider',
+        })
       }
 
       const kc = new k8s.KubeConfig()
@@ -116,6 +131,8 @@ export async function createKubeConfigForCluster(
 
       if (config.context) {
         kc.setCurrentContext(config.context)
+      } else if (!kc.getCurrentContext() && kc.contexts.length > 0) {
+        kc.setCurrentContext(kc.contexts[0].name)
       }
 
       return kc
@@ -181,7 +198,10 @@ export async function createKubeConfigForCluster(
 
         const kubeconfigBytes = credentials.kubeconfigs?.[0]?.value
         if (!kubeconfigBytes) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'AKS did not return kubeconfig credentials' })
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'AKS did not return kubeconfig credentials',
+          })
         }
 
         const kc = new k8s.KubeConfig()
@@ -207,7 +227,11 @@ export async function createKubeConfigForCluster(
           project_id?: string
         }
 
-        if (!serviceAccount.client_email || !serviceAccount.private_key || !serviceAccount.project_id) {
+        if (
+          !serviceAccount.client_email ||
+          !serviceAccount.private_key ||
+          !serviceAccount.project_id
+        ) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: 'serviceAccountJson must include client_email, private_key, and project_id',
@@ -224,7 +248,10 @@ export async function createKubeConfigForCluster(
 
         const token = await clusterManager.auth.getAccessToken()
         if (!token) {
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to acquire GKE access token' })
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to acquire GKE access token',
+          })
         }
 
         const kc = new k8s.KubeConfig()

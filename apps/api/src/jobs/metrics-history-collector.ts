@@ -86,14 +86,12 @@ async function collectMetrics(): Promise<void> {
       const coreApi = kc.makeApiClient(k8s.CoreV1Api)
       const metricsClient = new k8s.Metrics(kc)
 
-      const [nodeMetrics, nodesRes, podsRes] = await withTimeout(
-        Promise.all([
-          metricsClient.getNodeMetrics(),
-          coreApi.listNode(),
-          coreApi.listPodForAllNamespaces(),
-        ]),
+      // Fetch core API data (nodes, pods) and metrics separately so metrics failure
+      // doesn't prevent storing pod/node counts
+      const [nodesRes, podsRes] = await withTimeout(
+        Promise.all([coreApi.listNode(), coreApi.listPodForAllNamespaces()]),
         CLUSTER_TIMEOUT_MS,
-        `metrics-fetch(${cluster.id})`,
+        `core-fetch(${cluster.id})`,
       )
 
       let totalCpuUsageNano = 0
@@ -112,7 +110,22 @@ async function collectMetrics(): Promise<void> {
         }
       }
 
-      for (const nm of nodeMetrics.items) {
+      // Metrics API (metrics-server) may not be available — collect best-effort
+      let nodeMetricsItems: Awaited<ReturnType<typeof metricsClient.getNodeMetrics>>['items'] = []
+      try {
+        const nodeMetrics = await withTimeout(
+          metricsClient.getNodeMetrics(),
+          CLUSTER_TIMEOUT_MS,
+          `metrics-api(${cluster.id})`,
+        )
+        nodeMetricsItems = nodeMetrics.items
+      } catch {
+        console.warn(
+          `[metrics-collector] metrics-server unavailable for cluster ${cluster.id} — storing pod/node counts only`,
+        )
+      }
+
+      for (const nm of nodeMetricsItems) {
         totalCpuUsageNano += parseCpuToNano(nm.usage?.cpu ?? '0')
         totalMemUsageBytes += parseMemToBytes(nm.usage?.memory ?? '0')
         const alloc = allocMap.get(nm.metadata?.name ?? '')
@@ -156,7 +169,7 @@ async function collectMetrics(): Promise<void> {
       })
 
       // Per-node metrics (MX-002) — batch insert to avoid N+1
-      const nodeValues = nodeMetrics.items.map((nm) => {
+      const nodeValues = nodeMetricsItems.map((nm) => {
         const nodeName = nm.metadata?.name ?? 'unknown'
         const usedCpuNano = parseCpuToNano(nm.usage?.cpu ?? '0')
         const usedMemBytes = parseMemToBytes(nm.usage?.memory ?? '0')
