@@ -7,9 +7,12 @@ interface MetricsPreferencesState {
   range: MetricsRange
   autoRefresh: boolean
   refreshInterval: RefreshInterval
+  customRangeFrom: string | null
+  customRangeTo: string | null
   setRange: (range: MetricsRange) => void
   setAutoRefresh: (enabled: boolean) => void
   setRefreshInterval: (interval: RefreshInterval) => void
+  setCustomRange: (from: string, to: string) => void
 }
 
 export const useMetricsPreferences = create<MetricsPreferencesState>()(
@@ -18,9 +21,13 @@ export const useMetricsPreferences = create<MetricsPreferencesState>()(
       range: '24h',
       autoRefresh: true,
       refreshInterval: 60000,
+      customRangeFrom: null,
+      customRangeTo: null,
       setRange: (range) => set({ range }),
       setAutoRefresh: (autoRefresh) => set({ autoRefresh }),
       setRefreshInterval: (refreshInterval) => set({ refreshInterval }),
+      setCustomRange: (from, to) =>
+        set({ range: 'custom' as MetricsRange, customRangeFrom: from, customRangeTo: to }),
     }),
     {
       name: 'voyager-metrics-preferences',
