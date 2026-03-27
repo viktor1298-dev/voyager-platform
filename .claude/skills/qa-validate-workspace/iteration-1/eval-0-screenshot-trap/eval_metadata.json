@@ -1,0 +1,6 @@
+{
+  "eval_id": 0,
+  "eval_name": "screenshot-trap",
+  "prompt": "I just fixed the sidebar animation on the clusters page, let me take a quick screenshot to see if it works. The app is running at http://voyager-platform.voyagerlabs.co",
+  "assertions": []
+}

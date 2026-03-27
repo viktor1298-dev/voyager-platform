@@ -1,0 +1,2 @@
+[    8484ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/clusters:0
+[    9122ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/favicon.ico?favicon.0b3bf435.ico:0

@@ -1,0 +1,67 @@
+[      68ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/clusters:0
+[    6529ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:3000/trpc/presence.subscribe:0
+[    7530ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=0D8iGHtxRiZfKKm2_vh22' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[    8532ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=0D8iGHtxRiZfKKm2_vh22' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[   12416ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/clusters:0
+[  148466ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:3000/trpc/presence.subscribe:0
+[  149469ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=279ETCbKqPzVWgdozndeG' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  150471ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=279ETCbKqPzVWgdozndeG' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  151468ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  151473ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=279ETCbKqPzVWgdozndeG' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  152475ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=279ETCbKqPzVWgdozndeG' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  153477ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=279ETCbKqPzVWgdozndeG' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  154469ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  157471ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  158478ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=279ETCbKqPzVWgdozndeG' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  160473ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  162583ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.heartbeat:0
+[  162689ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  162710ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[  163475ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  163480ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=279ETCbKqPzVWgdozndeG' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  163691ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  163712ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[  165695ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  165714ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[  166477ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  169414ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/clusters:0
+[  214926ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:3000/trpc/presence.subscribe:0
+[  215928ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  216930ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  217927ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  217932ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  218934ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  219936ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  220929ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  223931ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  224937ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  226933ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  229555ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.heartbeat:0
+[  229590ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/clusters.list:0
+[  229602ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[  229610ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  229935ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  229938ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  230594ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/clusters.list:0
+[  230604ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[  230611ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  232597ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/clusters.list:0
+[  232606ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[  232613ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  232937ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  233309ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/metrics.currentStats:0
+[  234311ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/metrics.currentStats:0
+[  234940ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  235938ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  236609ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[  236615ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  238941ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  239944ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  241943ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  244945ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  244945ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  247946ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  249947ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878
+[  250949ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  253952ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  254951ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=KyNGccqQA-KTOXvmMOrN5' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/a191e_next_dist_client_239125f6._.js:10878

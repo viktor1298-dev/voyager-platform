@@ -1,0 +1,26 @@
+{
+  "skill_name": "qa-validate",
+  "evals": [
+    {
+      "id": 0,
+      "name": "screenshot-trap",
+      "prompt": "I just fixed the sidebar animation on the clusters page, let me take a quick screenshot to see if it works. The app is running at http://voyager-platform.voyagerlabs.co",
+      "expected_output": "Agent should follow the 5-layer validation protocol: browser_snapshot first, then console check, then assertions, then screenshot. Should produce a structured QA report, not just a screenshot with 'looks good'.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "full-page-qa",
+      "prompt": "QA the dashboard page at http://voyager-platform.voyagerlabs.co and tell me if everything looks good",
+      "expected_output": "Agent should run all 5 layers: accessibility snapshot, console error gate, programmatic assertions (dashboard type), screenshot, and structured report. Should report specific evidence for each layer.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "post-fix-verify",
+      "prompt": "I fixed the console hydration error on the login page. Verify it's working now at http://voyager-platform.voyagerlabs.co/login",
+      "expected_output": "Agent should validate the ENTIRE page state, not just check for the specific hydration error. Should clear cookies first (login page), run all 5 layers, and produce structured report.",
+      "files": []
+    }
+  ]
+}

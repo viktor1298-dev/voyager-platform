@@ -30,11 +30,11 @@
 
 ### Synchronized Visualization
 
-- [ ] **VIZ-01**: 4 panels (CPU, Memory, Network, Pods) display synchronized crosshair — hover one, all show same timestamp
-- [ ] **VIZ-02**: Custom crosshair cursor renders as vertical line across full chart height with timestamp label
-- [ ] **VIZ-03**: Brush zoom — user can drag-to-select a time region to zoom into that range
-- [ ] **VIZ-04**: Threshold reference lines on CPU/Memory panels (85% critical red, 65% warning yellow)
-- [ ] **VIZ-05**: Panel fullscreen expand — click to expand any panel to full-width detail view
+- [x] **VIZ-01**: 4 panels (CPU, Memory, Network, Pods) display synchronized crosshair — hover one, all show same timestamp
+- [x] **VIZ-02**: Custom crosshair cursor renders as vertical line across full chart height with timestamp label
+- [x] **VIZ-03**: Brush zoom — user can drag-to-select a time region to zoom into that range
+- [x] **VIZ-04**: Threshold reference lines on CPU/Memory panels (85% critical red, 65% warning yellow)
+- [x] **VIZ-05**: Panel fullscreen expand — click to expand any panel to full-width detail view
 
 ### Grafana-Style Visual Design
 
@@ -99,11 +99,11 @@
 | TIME-02 | Phase 3 | Complete |
 | TIME-03 | Phase 3 | Complete |
 | TIME-04 | Phase 3 | Complete |
-| VIZ-01 | Phase 4 | Pending |
-| VIZ-02 | Phase 4 | Pending |
-| VIZ-03 | Phase 4 | Pending |
-| VIZ-04 | Phase 4 | Pending |
-| VIZ-05 | Phase 4 | Pending |
+| VIZ-01 | Phase 4 | Complete |
+| VIZ-02 | Phase 4 | Complete |
+| VIZ-03 | Phase 4 | Complete |
+| VIZ-04 | Phase 4 | Complete |
+| VIZ-05 | Phase 4 | Complete |
 | STYLE-01 | Phase 5 | Pending |
 | STYLE-02 | Phase 5 | Pending |
 | STYLE-03 | Phase 5 | Pending |

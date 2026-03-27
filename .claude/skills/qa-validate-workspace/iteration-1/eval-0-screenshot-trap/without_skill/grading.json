@@ -1,0 +1,36 @@
+{
+  "expectations": [
+    {
+      "text": "A1: Used browser_snapshot before browser_take_screenshot",
+      "passed": false,
+      "evidence": "No browser_snapshot was mentioned or used anywhere in the report. The agent went directly to taking a screenshot ('Took a screenshot of the viewport') as step 4. The accessibility snapshot tool was never invoked."
+    },
+    {
+      "text": "A2: Checked console errors",
+      "passed": true,
+      "evidence": "Console check was performed: 'Total messages: 4 — Errors: 0, Warnings: 0. Only INFO/LOG messages (React DevTools prompt + HMR connected). No errors.'"
+    },
+    {
+      "text": "A3: Ran programmatic assertions",
+      "passed": false,
+      "evidence": "No browser_run_code or equivalent programmatic assertions were run. The validation was entirely visual (screenshot) plus console check. No JavaScript-based element counting, data presence checks, or DOM verification."
+    },
+    {
+      "text": "A4: Produced structured 5-layer report",
+      "passed": false,
+      "evidence": "Report is prose-based with sections: What I Did, Screenshot, Console Check, Visual Assessment, Conclusion. No layer-by-layer pass/fail structure. No evidence-based verdict table."
+    },
+    {
+      "text": "A5: Identified page type correctly",
+      "passed": false,
+      "evidence": "The report does not explicitly identify the page type (data table, dashboard, etc.). It mentions 'clusters page' and describes sidebar items, but does not classify the page type or apply type-specific checks."
+    },
+    {
+      "text": "A6: Would not false-approve empty page",
+      "passed": false,
+      "evidence": "The agent declared 'PASS (static)' based on visual inspection of the screenshot and console check only. There were no programmatic checks for data presence (row counts, table content). A page that renders the sidebar and heading but has zero data rows would likely still pass this agent's methodology."
+    }
+  ],
+  "pass_rate": 0.17,
+  "summary": "Only 1 of 6 assertions passed (console error check). The agent took a screenshot-first approach without accessibility snapshot, ran no programmatic assertions, produced an unstructured prose report, did not identify page type, and lacked data-presence checks that would catch empty pages. This is the exact confirmation bias the skill is designed to prevent."
+}

@@ -1,0 +1,943 @@
+[   48970ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:547:18)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:14876:22)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:965:74)
+    at commitHookEffectListMount (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7266:167)
+    at commitHookPassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7301:60)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8696:33)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8745:783)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8737:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8745:783)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8737:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+[   78961ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[   90530ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:547:18)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:14876:22)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:965:74)
+    at commitHookEffectListMount (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7266:167)
+    at commitHookPassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7301:60)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8696:33)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+[   94992ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:547:18)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:14876:22)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:965:74)
+    at commitHookEffectListMount (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7266:167)
+    at commitHookPassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7301:60)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8696:33)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+[   96627ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:547:18)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:14876:22)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:965:74)
+    at commitHookEffectListMount (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7266:167)
+    at commitHookPassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7301:60)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8696:33)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+[   97358ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:547:18)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:14876:22)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:965:74)
+    at commitHookEffectListMount (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7266:167)
+    at commitHookPassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7301:60)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8696:33)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8745:783)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8737:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8745:783)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8737:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+[  127337ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  157336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  187336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  217336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  247335ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  277335ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  307335ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  337335ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  367335ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  397336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  427336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  457336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  487337ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  517338ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  547336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  577337ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  607336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  637336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  667336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  697337ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  727337ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  757337ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  787338ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  817339ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  847336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  877336ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  907337ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  937338ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  967338ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[  997338ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1027337ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1057337ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1087337ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1117338ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1147344ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1177342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1207339ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1237339ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1267339ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1297340ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1327338ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1357339ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1387344ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1417341ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1447345ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1477341ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1507342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1537341ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1567340ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1597340ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1627344ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1657340ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1687342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1717342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1747343ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1777342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1807341ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1837342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1867341ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1897349ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1898230ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1898264ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 1898269ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 1898414ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1898420ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 1899245ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1899270ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 1899422ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1899432ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 1900999ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1901250ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1901274ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 1901426ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1901435ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 1902006ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1905262ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1905278ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 1905430ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1905439ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 1927342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1932045ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1933055ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1935437ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1935456ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 1936471ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1936485ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 1957343ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 1965269ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1965289ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 1966309ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1966313ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 1968319ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1968322ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 1968564ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1968576ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 1969569ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1969581ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 1987341ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2017341ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2031625ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2031636ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2032341ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2032345ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2032628ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2032641ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2033316ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 2033347ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2033354ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2047341ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2077349ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2094683ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2094689ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2107357ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2115218ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2116225ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2123399ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 2125714ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2125725ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2126718ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2126728ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2137372ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2146268ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2147281ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2155409ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2155415ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2156414ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2156420ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2158418ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2158425ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2158765ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2158775ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2160113ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2160138ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2162127ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2162145ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2162423ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2162431ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2166136ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2166150ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2167353ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2168414ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 2177305ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2178327ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2196172ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2196174ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2197180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2197182ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2197355ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2199224ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2199230ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2203251ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2203257ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2208345ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2209357ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2210539ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2210544ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/dashboardLayout.get:0
+[ 2211548ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2211554ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/dashboardLayout.get:0
+[ 2213423ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 2213554ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2213567ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/dashboardLayout.get:0
+[ 2217575ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2217591ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/dashboardLayout.get:0
+[ 2222436ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2223444ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2225449ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2227342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2229454ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2233256ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2233262ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2234259ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2234265ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2236269ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2236285ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2239390ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2240274ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2240289ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2240396ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2257345ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2277587ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2278592ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2287343ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2300346ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2300362ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2301172ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2301359ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2301374ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2317342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2347341ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2377342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2400635ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2401640ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2407342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2409487ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2410492ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2412496ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2416500ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2424567ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2425574ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2437343ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2453469ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2453475ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2454474ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2454481ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2455578ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2456481ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2456488ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2456582ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2460487ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2460498ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2467343ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2490491ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2490501ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2491495ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2491505ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2497343ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2527342ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2536531ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2537536ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/health.status?input=%7B%7D:0
+[ 2547847ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2548851ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2553536ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2553544ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2554545ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2554556ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2556575ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2556583ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2557346ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2573527ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 2587343ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2609512ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2610518ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2617343ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2640521ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2641526ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2647345ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2671535ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2672540ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2677347ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2680761ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2680768ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2681766ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2681773ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2683772ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2683779ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2707343ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2737344ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect.interval (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:550:26)
+[ 2757039ms] [WARNING] [presence] subscription unavailable {message: Unknown error} @ http://localhost:3000/_next/static/chunks/a191e_next_dist_0da38164._.js:2297
+[ 2757039ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:3000/trpc/presence.subscribe:0
+[ 2761218ms] [WARNING] [presence] subscription unavailable {message: } @ http://localhost:3000/_next/static/chunks/a191e_next_dist_0da38164._.js:2297
+[ 2761535ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[ 2761559ms] Error: You have rendered a `motion` component within a `LazyMotion` component. This will break tree shaking. Import and render a `m` component instead.. For more information and steps for solving, visit https://motion.dev/troubleshooting/lazy-strict-mode
+    at invariant (http://localhost:3000/_next/static/chunks/node_modules__pnpm_fad31d78._.js:1116:19)
+    at useStrictMode (http://localhost:3000/_next/static/chunks/9e593_framer-motion_dist_es_32e479f8._.js:2412:552)
+    at MotionDOMComponent (http://localhost:3000/_next/static/chunks/9e593_framer-motion_dist_es_32e479f8._.js:2372:13)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:14826:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:4651:24)
+    at updateForwardRef (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:5939:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:6783:24)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:965:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:9562:97)
+    at workLoopSync (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:9456:40)
+    at renderRootSync (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:9440:13)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:9105:47)
+    at performSyncWorkOnRoot (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:10238:9)
+    at flushSyncWorkAcrossRoots_impl (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:10154:316)
+    at processRootScheduleInMicrotask (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:10175:106)
+    at http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:10249:158
+[ 2761578ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/dashboardLayout.get:0
+[ 2761578ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2764474ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[ 2764520ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2764521ms] TypeError: client[procedureType] is not a function
+    at http://localhost:3000/_next/static/chunks/1b7a3_%40trpc_client_dist_c7bf6ca7._.js:1867:37
+    at Object.apply (http://localhost:3000/_next/static/chunks/956ce_%40trpc_server_dist_0f581464._.js:433:20)
+    at usePresence.useEffect.sendHeartbeat (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:534:40)
+    at usePresence.useEffect (http://localhost:3000/_next/static/chunks/apps_web_src_546af323._.js:547:18)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:14876:22)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:965:74)
+    at commitHookEffectListMount (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7266:167)
+    at commitHookPassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:7301:60)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8696:33)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8745:783)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8737:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8757:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8700:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8695:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8745:783)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8737:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/a191e_next_dist_compiled_react-dom_c262611f._.js:8683:316)
+[ 2764546ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/dashboardLayout.get:0
+[ 2764579ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 2764582ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2764584ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2764601ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2764608ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.subscribe:0
+[ 2764609ms] [WARNING] [presence] subscription unavailable {message: } @ http://localhost:3000/_next/static/chunks/a191e_next_dist_0da38164._.js:2297
+[ 2764934ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0

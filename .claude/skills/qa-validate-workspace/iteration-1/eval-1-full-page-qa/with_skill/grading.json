@@ -1,0 +1,36 @@
+{
+  "expectations": [
+    {
+      "text": "A1: Used browser_snapshot before browser_take_screenshot",
+      "passed": true,
+      "evidence": "Layer 1 (Accessibility Snapshot) was executed first with browser_snapshot, producing detailed findings: heading 'Dashboard' level=1, navigation with 6 items, 3 cluster cards with real data, ops pulse populated. Layer 4 (Screenshot) was executed last, explicitly after Layers 1-3."
+    },
+    {
+      "text": "A2: Checked console errors",
+      "passed": true,
+      "evidence": "Layer 2 explicitly ran browser_console_messages: 'Total console messages: 4, Errors: 0, Warnings: 0, Errors found: None'. Verdict: 'PASS — 0 console errors'."
+    },
+    {
+      "text": "A3: Ran programmatic assertions",
+      "passed": true,
+      "evidence": "Layer 3 ran browser_run_code with Dashboard template assertions. Results documented: widgetCards=14, numberElements=48, charts=0, errorBanners=0, loadingSpinners=0, clusterCards=3, hasOpsPulse=true. Verdict computed programmatically as PASS."
+    },
+    {
+      "text": "A4: Produced structured 5-layer report",
+      "passed": true,
+      "evidence": "Report contains Layer 1 through Layer 5 with explicit PASS/FAIL verdicts per layer. Layer 5 includes formatted summary: 'Layer 1 (Snapshot): PASS — h1=\"Dashboard\"...', 'Layer 2 (Console): PASS — 0 errors...', etc. Final VERDICT: PASS."
+    },
+    {
+      "text": "A5: Identified page type correctly",
+      "passed": true,
+      "evidence": "Report header states 'Page type: Dashboard'. Layer 3 references 'Dashboard template from references/page-assertions.md'. Assertions include dashboard-specific checks: widgetCards, charts, clusterCards, opsPulseText."
+    },
+    {
+      "text": "A6: Would not false-approve empty page",
+      "passed": true,
+      "evidence": "Multiple empty-page guards: Layer 1 checked for actual cluster data (3 cards with names, versions, node counts), Layer 3 assertions check hasWidgets (widgetCards>0), hasNumbers (48 number elements), hasClusters (3 cluster cards), hasOpsPulse. An empty page would fail on widgetCards=0, clusterCards=0, numberElements=0."
+    }
+  ],
+  "pass_rate": 1.0,
+  "summary": "Perfect execution of all 6 assertions. The app was reachable and the full 5-layer protocol executed live with real results. Every layer produced concrete evidence: accessibility snapshot found 3 cluster cards with specific data, console was clean, programmatic assertions returned 14 widgets and 48 number elements, screenshot confirmed visual layout. The strongest report in the set."
+}

@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Backend Data Pipeline** - Fix broken bucketing, TimescaleDB aggregation, server metadata in responses
 - [ ] **Phase 2: SSE Streaming Endpoint** - Backend SSE route and MetricsStreamJob for live K8s metrics
 - [ ] **Phase 3: Time Range Controls & Data Source Wiring** - Frontend time range selector, SSE client hooks, data source switching
-- [ ] **Phase 4: Synchronized Crosshair** - Cross-panel crosshair, custom cursor, brush zoom, threshold lines, panel expand
+- [x] **Phase 4: Synchronized Crosshair** - Cross-panel crosshair, custom cursor, brush zoom, threshold lines, panel expand
 - [ ] **Phase 5: Grafana Dark Panel Design** - Dark panel backgrounds, interactive legend, auto-scale axes, adaptive formatting, tooltip
 - [ ] **Phase 6: Data Freshness & UX Polish** - Freshness badge, pause-on-hover, skeleton loading, error states, key-prop bugfix
 - [ ] **Phase 7: Performance Optimization** - LTTB downsampling, crosshair throttling, resize debounce
@@ -76,7 +76,7 @@ Plans:
   5. User can click to expand any panel to a full-width detail view
 **Plans:** 1 plan
 Plans:
-- [ ] 04-01-PLAN.md — syncId crosshair, custom cursor, threshold lines, brush zoom, panel expand
+- [x] 04-01-PLAN.md — syncId crosshair, custom cursor, threshold lines, brush zoom, panel expand
 **UI hint**: yes
 
 ### Phase 5: Grafana Dark Panel Design
@@ -125,7 +125,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Backend Data Pipeline | 2/2 | Complete | - |
 | 2. SSE Streaming Endpoint | 1/1 | Complete | 2026-03-28 |
 | 3. Time Range Controls & Data Source Wiring | 2/2 | Complete |  |
-| 4. Synchronized Crosshair | 0/1 | Not started | - |
+| 4. Synchronized Crosshair | 1/1 | Complete | 2026-03-28 |
 | 5. Grafana Dark Panel Design | 0/TBD | Not started | - |
 | 6. Data Freshness & UX Polish | 0/TBD | Not started | - |
 | 7. Performance Optimization | 0/TBD | Not started | - |

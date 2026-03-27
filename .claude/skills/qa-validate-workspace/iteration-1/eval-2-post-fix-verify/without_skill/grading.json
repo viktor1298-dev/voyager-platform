@@ -1,0 +1,36 @@
+{
+  "expectations": [
+    {
+      "text": "A1: Used browser_snapshot before browser_take_screenshot",
+      "passed": false,
+      "evidence": "No browser_snapshot was used. The DOM Verification section shows form elements were checked, but this appears to be from manual inspection or screenshot analysis, not from an accessibility snapshot tool call before the screenshot. Screenshots were taken as primary validation."
+    },
+    {
+      "text": "A2: Checked console errors",
+      "passed": true,
+      "evidence": "Console was thoroughly checked: 'Total messages: 2, Errors: 0, Warnings: 0, Hydration-related: 0'. Agent specifically searched for hydration-related strings: 'hydration', 'did not match', 'text content does not match', 'minified react error'. Very targeted for the fix being verified."
+    },
+    {
+      "text": "A3: Ran programmatic assertions",
+      "passed": false,
+      "evidence": "No browser_run_code or JavaScript-based assertions were executed. DOM verification was done through manual inspection (likely via screenshot or snapshot observation), not programmatic element counting. The DOM Verification table lists elements found but does not show automated code execution."
+    },
+    {
+      "text": "A4: Produced structured 5-layer report",
+      "passed": false,
+      "evidence": "Report uses a custom structure: Test Environment, Results Summary, Console Output, DOM Verification, Screenshots, Process Notes, Verdict. While organized and clear, it does not follow a layer-by-layer protocol format with systematic pass/fail evidence per layer."
+    },
+    {
+      "text": "A5: Identified page type correctly",
+      "passed": true,
+      "evidence": "The agent correctly identified this as a login page and tested appropriate elements: form presence, email input, password input, submit button, heading. Also correctly tested unauthenticated state by clearing cookies first."
+    },
+    {
+      "text": "A6: Would not false-approve empty page",
+      "passed": true,
+      "evidence": "DOM Verification confirms specific elements: form/role=form, email input, password input, submit button (Sign In), heading (Voyager Platform). An empty page missing these elements would not pass. The agent also verified cookies were cleared to ensure the login page was actually tested in unauthenticated state, preventing false redirect-based approval."
+    }
+  ],
+  "pass_rate": 0.5,
+  "summary": "3 of 6 assertions passed. The without-skill agent was competent — cleared cookies properly, targeted hydration-specific console strings, verified DOM elements, and tested both themes. However, it lacked accessibility snapshot before screenshots, ran no programmatic assertions, and produced an unstructured report format. The hydration-specific console checking was notably good for a non-skill-guided agent."
+}

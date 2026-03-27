@@ -1,0 +1,36 @@
+{
+  "expectations": [
+    {
+      "text": "A1: Used browser_snapshot before browser_take_screenshot",
+      "passed": true,
+      "evidence": "Layer 1 explicitly documents browser_snapshot as the first tool to call. Layer 4 (screenshot) is explicitly marked as LAST. The report states: 'This layer is LAST, not first.' Even though app was unreachable and neither tool actually executed, the protocol order is correct and enforced."
+    },
+    {
+      "text": "A2: Checked console errors",
+      "passed": true,
+      "evidence": "Layer 2 documents browser_console_messages with level 'error' as a dedicated validation step. Explains why console checking matters for sidebar animation fixes (hydration mismatches from SSR). Marked BLOCKED due to app unreachability but the check was planned."
+    },
+    {
+      "text": "A3: Ran programmatic assertions",
+      "passed": true,
+      "evidence": "Layer 3 includes a complete browser_run_code assertion template with specific checks: headerColumns count, dataRows count, emptyStateVisible, isLoading, errorOverlay, sidebarPresent, sidebarItems count, sidebarAnimationStuck. Code was documented in full even though it couldn't execute."
+    },
+    {
+      "text": "A4: Produced structured 5-layer report",
+      "passed": true,
+      "evidence": "Report contains explicit Layer 1 through Layer 5 sections with pass/fail (BLOCKED) status for each. Layer 5 includes a formatted summary table: 'Layer 1 (Snapshot): BLOCKED', 'Layer 2 (Console): BLOCKED', etc. with final VERDICT: INCONCLUSIVE."
+    },
+    {
+      "text": "A5: Identified page type correctly",
+      "passed": true,
+      "evidence": "Report header states 'Page Type: Data Table'. Layer 3 assertion template references 'Data Table — from references/page-assertions.md' and includes table-specific checks (thead th, tbody tr, columnheader, pagination)."
+    },
+    {
+      "text": "A6: Would not false-approve empty page",
+      "passed": true,
+      "evidence": "Layer 3 assertions include explicit empty-page detection: emptyStateVisible check, hasData (dataRows > 0) requirement, isLoading check, and the verdict requires hasData=true and emptyStateVisible=false. The report also explicitly notes that without the skill, the agent would have missed 'Empty cluster table (data loading issue unrelated to animation)'."
+    }
+  ],
+  "pass_rate": 1.0,
+  "summary": "Full compliance with all 6 assertions. Despite the app being unreachable, the skill-guided agent documented the complete 5-layer protocol in correct order, with concrete assertion code, page-type-specific checks, and empty-page detection. The agent explicitly called out that a screenshot-first approach would miss critical issues."
+}

@@ -1,0 +1,6 @@
+{
+  "eval_id": 1,
+  "eval_name": "full-page-qa",
+  "prompt": "QA the dashboard page at http://voyager-platform.voyagerlabs.co and tell me if everything looks good",
+  "assertions": []
+}

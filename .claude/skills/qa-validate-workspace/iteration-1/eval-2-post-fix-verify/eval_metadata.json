@@ -1,0 +1,6 @@
+{
+  "eval_id": 2,
+  "eval_name": "post-fix-verify",
+  "prompt": "I fixed the console hydration error on the login page. Verify it's working now at http://voyager-platform.voyagerlabs.co/login",
+  "assertions": []
+}

@@ -1,17 +1,22 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { TimeRangeSelector } from './TimeRangeSelector'
 import { AutoRefreshToggle } from './AutoRefreshToggle'
-import { MetricsAreaChart, type MetricKey, getMetricConfig } from './MetricsAreaChart'
+import {
+  MetricsAreaChart,
+  type MetricKey,
+  type MetricsDataPoint,
+  getMetricConfig,
+} from './MetricsAreaChart'
 import { NodeResourceBreakdown } from './NodeResourceBreakdown'
 import { MetricsEmptyState } from './MetricsEmptyState'
 import { NodeMetricsTable } from './NodeMetricsTable'
 import { useMetricsPreferences } from '@/stores/metrics-preferences'
-import { useMetricsData } from '@/hooks/useMetricsData'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { Maximize2, Minimize2 } from 'lucide-react'
 
 const LOADING_TIMEOUT_MS = 30_000
 
@@ -55,21 +60,23 @@ const PANEL_METRICS: Array<{
 
 const DEFAULT_VISIBLE_SERIES: MetricKey[] = ['cpu', 'memory', 'networkIn', 'networkOut', 'pods']
 
+function normalizeHistory(data: MetricsDataPoint[] | undefined) {
+  return data ?? []
+}
+
 export function MetricsTimeSeriesPanel({
   clusterId,
-  isLive: isLiveProp = false,
+  isLive = false,
   compact = false,
 }: MetricsTimeSeriesPanelProps) {
   const {
     range,
-    customFrom,
-    customTo,
     autoRefresh,
     refreshInterval,
     setRange,
-    setCustomRange,
     setAutoRefresh,
     setRefreshInterval,
+    setCustomRange,
   } = useMetricsPreferences()
 
   const [visibleSeries, setVisibleSeries] = useState<Record<MetricKey, boolean>>({
@@ -80,22 +87,30 @@ export function MetricsTimeSeriesPanel({
     pods: true,
   })
 
-  // Unified data hook — handles SSE (5m/15m), tRPC (30m+), and custom
-  const metricsData = useMetricsData(clusterId, range)
-
   const refetchInterval = autoRefresh ? refreshInterval : false
+
+  const historyQuery = trpc.metrics.history.useQuery(
+    { clusterId, range },
+    {
+      refetchInterval,
+      staleTime: 30_000,
+      retry: 2,
+      retryDelay: 3000,
+    },
+  )
 
   const nodeQuery = trpc.metrics.nodeBreakdown.useQuery(
     { clusterId },
     {
       refetchInterval,
       staleTime: 30_000,
-      enabled: isLiveProp,
+      enabled: isLive,
       retry: 1,
     },
   )
 
-  const { isLoading, isError, isLive } = metricsData
+  const isLoading = historyQuery.isLoading
+  const isError = historyQuery.isError
   const nodes = nodeQuery.data ?? []
 
   const [loadingTimedOut, setLoadingTimedOut] = useState(false)
@@ -124,12 +139,15 @@ export function MetricsTimeSeriesPanel({
     })
   }, [])
 
-  const normalizedData = metricsData.data
+  const normalizedData = useMemo(
+    () => normalizeHistory(historyQuery.data as MetricsDataPoint[] | undefined),
+    [historyQuery.data],
+  )
 
   const handleRetry = () => {
     setLoadingTimedOut(false)
     loadingStartRef.current = null
-    metricsData.refetch()
+    historyQuery.refetch()
   }
 
   function toggleMetric(key: MetricKey) {
@@ -139,7 +157,16 @@ export function MetricsTimeSeriesPanel({
     }))
   }
 
-  const chartHeight = compact ? 200 : 240
+  const [expandedPanel, setExpandedPanel] = useState<string | null>(null)
+
+  const handleBrushZoom = useCallback(
+    (startTs: string, endTs: string) => {
+      setCustomRange(startTs, endTs)
+    },
+    [setCustomRange],
+  )
+
+  const chartHeight = expandedPanel ? 400 : compact ? 200 : 240
   const panelSkeletonHeight = compact ? 200 : 240
   const hasAnyVisibleSeries = Object.values(visibleSeries).some(Boolean)
   const noVisiblePanels = PANEL_METRICS.every((panel) =>
@@ -166,42 +193,27 @@ export function MetricsTimeSeriesPanel({
         </div>
         {!compact ? (
           <div className="flex flex-wrap items-center gap-4">
-            {/* Auto-refresh controls — hidden when SSE is active (live data pushes automatically) */}
-            {!isLive && (
-              <div className="flex flex-col items-end gap-1">
-                <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-dim)]">
-                  Refresh
-                </span>
-                <AutoRefreshToggle
-                  enabled={autoRefresh}
-                  interval={refreshInterval}
-                  onToggle={setAutoRefresh}
-                  onIntervalChange={setRefreshInterval}
-                />
-              </div>
-            )}
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-dim)]">
+                Refresh
+              </span>
+              <AutoRefreshToggle
+                enabled={autoRefresh}
+                interval={refreshInterval}
+                onToggle={setAutoRefresh}
+                onIntervalChange={setRefreshInterval}
+              />
+            </div>
             <div className="h-8 w-px bg-[var(--color-border)] hidden sm:block" aria-hidden="true" />
             <div className="flex flex-col items-end gap-1">
               <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-dim)]">
                 Time Range
               </span>
-              <TimeRangeSelector
-                value={range}
-                onChange={setRange}
-                customFrom={customFrom}
-                customTo={customTo}
-                onCustomRange={setCustomRange}
-              />
+              <TimeRangeSelector value={range} onChange={setRange} />
             </div>
           </div>
         ) : (
-          <TimeRangeSelector
-            value={range}
-            onChange={setRange}
-            customFrom={customFrom}
-            customTo={customTo}
-            onCustomRange={setCustomRange}
-          />
+          <TimeRangeSelector value={range} onChange={setRange} />
         )}
       </div>
 
@@ -239,7 +251,7 @@ export function MetricsTimeSeriesPanel({
             status="error"
             message="Failed to load metrics"
             detail={
-              metricsData.error?.message ??
+              historyQuery.error?.message ??
               'An unexpected error occurred while fetching metrics data.'
             }
             onRetry={handleRetry}
@@ -280,14 +292,17 @@ export function MetricsTimeSeriesPanel({
           />
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {PANEL_METRICS.map((panel) => {
+        <div className={cn('grid gap-4', expandedPanel ? 'md:grid-cols-1' : 'md:grid-cols-2')}>
+          {(expandedPanel
+            ? PANEL_METRICS.filter((p) => p.id === expandedPanel)
+            : PANEL_METRICS
+          ).map((panel) => {
             const activeMetrics = panel.metrics.filter((metric) => visibleSeries[metric])
             if (activeMetrics.length === 0) return null
 
             return (
               <section
-                key={`${panel.id}-${range}-${activeMetrics.join('-')}`}
+                key={panel.id}
                 className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4"
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
@@ -299,6 +314,18 @@ export function MetricsTimeSeriesPanel({
                       {panel.description}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedPanel(expandedPanel === panel.id ? null : panel.id)}
+                    className="rounded-md p-1 text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)] hover:bg-white/5"
+                    aria-label={expandedPanel === panel.id ? 'Collapse panel' : 'Expand panel'}
+                  >
+                    {expandedPanel === panel.id ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
 
                 <MetricsAreaChart
@@ -306,6 +333,9 @@ export function MetricsTimeSeriesPanel({
                   range={range}
                   activeMetrics={activeMetrics}
                   height={chartHeight}
+                  syncId="metrics-sync"
+                  showThresholds={panel.id === 'cpu' || panel.id === 'memory'}
+                  onBrushChange={handleBrushZoom}
                 />
               </section>
             )
@@ -316,35 +346,21 @@ export function MetricsTimeSeriesPanel({
       {/* MX-005: Per-node metrics table from nodeTimeSeries route (Dima's new route) */}
       {!compact && <NodeMetricsTable clusterId={clusterId} range={range} />}
 
-      {isLiveProp && nodes.length > 0 && !compact && <NodeResourceBreakdown nodes={nodes} />}
+      {isLive && nodes.length > 0 && !compact && <NodeResourceBreakdown nodes={nodes} />}
 
-      {/* Last updated / Live indicator */}
-      {metricsData.lastUpdated && !compact && (
+      {/* Last updated */}
+      {historyQuery.dataUpdatedAt > 0 && !compact && (
         <p className="text-right font-mono text-xs text-[var(--color-text-dim)]">
-          {isLive ? (
-            <>
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" />
-              Live · Last point:{' '}
-              {new Date(metricsData.lastUpdated).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-              })}
-            </>
-          ) : (
-            <>
-              Last updated:{' '}
-              {new Date(metricsData.lastUpdated).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-              })}
-              {autoRefresh && (
-                <span className="ml-2 text-[var(--color-accent)]">
-                  · Auto-refreshing every {refreshInterval / 1000}s
-                </span>
-              )}
-            </>
+          Last updated:{' '}
+          {new Date(historyQuery.dataUpdatedAt).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          })}
+          {autoRefresh && (
+            <span className="ml-2 text-[var(--color-accent)]">
+              · Auto-refreshing every {refreshInterval / 1000}s
+            </span>
           )}
         </p>
       )}

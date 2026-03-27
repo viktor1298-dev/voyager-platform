@@ -1,0 +1,36 @@
+{
+  "expectations": [
+    {
+      "text": "A1: Used browser_snapshot before browser_take_screenshot",
+      "passed": false,
+      "evidence": "No explicit browser_snapshot call documented. The agent mentions 'DOM snapshot showed a paragraph: Password is required' and 'DOM snapshot checked' in the checklist, suggesting some form of snapshot was taken, but it was not structured as a pre-screenshot accessibility validation step. Screenshots were the primary validation method."
+    },
+    {
+      "text": "A2: Checked console errors",
+      "passed": true,
+      "evidence": "Console errors were checked on every page transition. Console Summary table shows: Login dark=0, Login light=0, Dashboard light=0, Dashboard dark=0. 'Total errors: 0. Total warnings: 0.' This was thorough."
+    },
+    {
+      "text": "A3: Ran programmatic assertions",
+      "passed": false,
+      "evidence": "No browser_run_code or equivalent programmatic JavaScript assertions were executed. Validation relied on visual inspection of screenshots, network request monitoring, and manual observation of DOM elements. No automated element counting or data-presence checks."
+    },
+    {
+      "text": "A4: Produced structured 5-layer report",
+      "passed": false,
+      "evidence": "Report uses a custom structure: Test Execution steps, Findings table, Observations, Console Summary, QA Gate Assessment. While thorough and organized, it does not follow the 5-layer (snapshot, console, assertions, visual, report) protocol format. No layer-by-layer pass/fail with evidence."
+    },
+    {
+      "text": "A5: Identified page type correctly",
+      "passed": true,
+      "evidence": "The agent implicitly identified the Dashboard page type and tested appropriate elements: sidebar nav items, header components, operations pulse bar, fleet inventory, cluster cards, filter tabs. It also correctly identified the login page as a form page and tested form fields. While not explicitly labeled as page types, the checks were appropriate."
+    },
+    {
+      "text": "A6: Would not false-approve empty page",
+      "passed": true,
+      "evidence": "The agent verified specific data presence: '10 Nodes, 0/0 Pods, 3 Clusters, 0 Warnings', 'Fleet inventory section with All 3, Prod 1, Staging 0, Dev 2', 'Production lane: 1 cluster (prod-cluster-eks)', 'Dev/Minikube lane: 2 clusters'. Network requests were also verified (clusters.list returned 200). An empty page would likely be caught by the absence of these specific data points."
+    }
+  ],
+  "pass_rate": 0.5,
+  "summary": "3 of 6 assertions passed. The without-skill agent was notably thorough — tested both themes, checked console on every page, verified network requests, cleared cookies for login, and identified specific data elements. However, it lacked the structural discipline of the skill: no accessibility snapshot before screenshots, no programmatic assertions, and no structured layer report. The thoroughness was ad-hoc rather than systematic."
+}

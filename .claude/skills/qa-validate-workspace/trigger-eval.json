@@ -1,0 +1,82 @@
+[
+  {
+    "query": "I just pushed a CSS fix for the sidebar hover animation, take a quick screenshot of the clusters page to see if it looks right now",
+    "should_trigger": true
+  },
+  {
+    "query": "QA the dashboard — I want to make sure the cluster cards are showing real data and nothing is broken after the last deploy",
+    "should_trigger": true
+  },
+  {
+    "query": "can you verify the login page works? I changed the auth redirect logic and want to make sure the form still renders properly",
+    "should_trigger": true
+  },
+  {
+    "query": "check if the alerts page looks correct, there were some complaints about missing data in the table after we updated the tRPC router",
+    "should_trigger": true
+  },
+  {
+    "query": "I need to validate that the theme switch from dark to light doesn't break anything on the settings page — test both themes please",
+    "should_trigger": true
+  },
+  {
+    "query": "open the app in the browser and tell me if the events page is working — I see errors in the logs but the page might still render",
+    "should_trigger": true
+  },
+  {
+    "query": "before I merge this PR, take a look at the main pages and make sure nothing regressed — especially clusters and dashboard",
+    "should_trigger": true
+  },
+  {
+    "query": "does the karpenter page look right? I added a new autoscaling widget and want to confirm it shows up without console errors",
+    "should_trigger": true
+  },
+  {
+    "query": "I fixed the hydration error on PageTransition.tsx — can you navigate to the login page and check there are zero console errors now",
+    "should_trigger": true
+  },
+  {
+    "query": "write a new tRPC router for handling webhook events — it should have list, create, and delete mutations with Zod validation",
+    "should_trigger": false
+  },
+  {
+    "query": "the alert-evaluator background job is crashing with a TypeError when it tries to read undefined cluster health — debug this",
+    "should_trigger": false
+  },
+  {
+    "query": "add a new Playwright E2E test for the clusters page that verifies the table has at least one row after seeding",
+    "should_trigger": false
+  },
+  {
+    "query": "review the PR at https://github.com/viktor1298-dev/voyager-platform/pull/42 and give me feedback on the code quality",
+    "should_trigger": false
+  },
+  {
+    "query": "refactor the cluster-client-pool to use a Map instead of a plain object for the connection cache — the current approach doesn't handle WeakRef cleanup",
+    "should_trigger": false
+  },
+  {
+    "query": "deploy the app to minikube using the local deploy workflow and run the post-deploy health check",
+    "should_trigger": false
+  },
+  {
+    "query": "update the Helm chart values to increase the API replica count from 1 to 2 and add resource limits",
+    "should_trigger": false
+  },
+  {
+    "query": "I need help writing the visual regression test config — update playwright.visual.config.ts to add a tablet viewport project",
+    "should_trigger": false
+  },
+  {
+    "query": "read the DESIGN.md and tell me what the animation spring constants should be for card hover effects — I want to make sure I use the right values",
+    "should_trigger": false
+  },
+  {
+    "query": "run pnpm typecheck and pnpm build to make sure there are no compilation errors after my changes to the clusters router",
+    "should_trigger": false
+  },
+  {
+    "query": "check what the current database schema looks like — I need to see if the alerts table has a severity column or if we need to add one via migration",
+    "should_trigger": false
+  }
+]
