@@ -3,7 +3,7 @@
 import { trpc } from '@/lib/trpc'
 import { Server } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { MetricsRange } from './TimeRangeSelector'
+import type { MetricsRange, ApiMetricsRange } from './TimeRangeSelector'
 
 interface NodeMetricsTableProps {
   clusterId: string
@@ -40,13 +40,15 @@ function PercentBar({ value }: { value: number | null | undefined }) {
 export function NodeMetricsTable({ clusterId, range }: NodeMetricsTableProps) {
   const refetchInterval = 30_000
 
+  // Fall back to '24h' for custom range since backend doesn't support it yet
+  const apiRange: ApiMetricsRange = range === 'custom' ? '24h' : range
   const {
     data: rawData,
     isLoading,
     error,
   } = trpc.metrics.nodeTimeSeries.useQuery(
-    { clusterId, range },
-    { refetchInterval, staleTime: 30_000, enabled: Boolean(clusterId) },
+    { clusterId, range: apiRange },
+    { refetchInterval, staleTime: 30_000, enabled: Boolean(clusterId) && range !== 'custom' },
   )
 
   // Transform time-series arrays → latest value per node

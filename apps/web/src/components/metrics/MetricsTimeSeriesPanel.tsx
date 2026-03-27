@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { trpc } from '@/lib/trpc'
-import { TimeRangeSelector } from './TimeRangeSelector'
+import { TimeRangeSelector, type ApiMetricsRange } from './TimeRangeSelector'
 import { AutoRefreshToggle } from './AutoRefreshToggle'
 import {
   MetricsAreaChart,
@@ -81,13 +81,16 @@ export function MetricsTimeSeriesPanel({
 
   const refetchInterval = autoRefresh ? refreshInterval : false
 
+  // Fall back to '24h' for custom range since backend doesn't support 'custom' yet
+  const apiRange: ApiMetricsRange = range === 'custom' ? '24h' : range
   const historyQuery = trpc.metrics.history.useQuery(
-    { clusterId, range },
+    { clusterId, range: apiRange },
     {
       refetchInterval,
       staleTime: 30_000,
       retry: 2,
       retryDelay: 3000,
+      enabled: range !== 'custom',
     },
   )
 
