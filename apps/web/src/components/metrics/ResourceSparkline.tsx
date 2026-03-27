@@ -57,16 +57,17 @@ export function ResourceSparkline({
   )
 
   const sparkData: SparklinePoint[] = useMemo(() => {
-    if (!data?.length) return []
+    const rows = data?.data
+    if (!rows?.length) return []
     // Filter out null-filled gaps, then take the last N non-null points for sparkline
-    return data
+    return rows
       .filter((d) => typeof d.cpu === 'number' && typeof d.memory === 'number')
       .slice(-points)
       .map((d) => ({
         cpu: d.cpu as number,
         memory: d.memory as number,
       }))
-  }, [data, points])
+  }, [data?.data, points])
 
   if (isLoading) {
     return (

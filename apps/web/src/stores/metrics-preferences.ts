@@ -24,6 +24,17 @@ export const useMetricsPreferences = create<MetricsPreferencesState>()(
     }),
     {
       name: 'voyager-metrics-preferences',
+      version: 2,
+      migrate: (persisted: unknown, version: number) => {
+        const state = persisted as Record<string, unknown>
+        if (version < 2) {
+          const validRanges = ['5m', '15m', '30m', '1h', '3h', '6h', '12h', '24h', '2d', '7d']
+          if (!validRanges.includes(state.range as string)) {
+            state.range = '24h'
+          }
+        }
+        return state as unknown as MetricsPreferencesState
+      },
     },
   ),
 )
