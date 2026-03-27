@@ -1,8 +1,8 @@
-# Roadmap: Voyager Platform Reset & Stabilization
+# Roadmap: Metrics Graph Redesign
 
 ## Overview
 
-This roadmap takes the Voyager Platform monorepo from a diverged state (54 unmerged commits on feat/init-monorepo, 27 stale remote branches) to a clean single-branch repository where main is the sole source of truth, all meaningful work is merged, the project builds and passes tests, and GitHub protections prevent recurrence. The five phases are strictly sequential -- each phase gates on the previous completing fully.
+Transform the broken metrics visualization from empty charts and wrong time ranges into a Grafana-quality monitoring surface. The build follows a strict backend-first ordering: fix the data pipeline (root cause of empty graphs), add SSE streaming, wire frontend controls and data source switching, then layer synchronized crosshair, dark panel design, UX polish, and performance optimization. Each phase delivers a verifiable capability on top of the previous one.
 
 ## Phases
 
@@ -12,95 +12,109 @@ This roadmap takes the Voyager Platform monorepo from a diverged state (54 unmer
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Safety Net** - Create recovery tags, record branch tips, enable rerere before any mutations
-- [ ] **Phase 2: The Big Merge** - Merge 54 commits from feat/init-monorepo into main with conflict resolution and normalization
-- [ ] **Phase 3: Validation Gate** - Verify the merged codebase compiles, type-checks, and passes all unit tests
-- [ ] **Phase 4: Push & Branch Cleanup** - Push merged main to origin and delete all 27 stale remote branches
-- [ ] **Phase 5: GitHub Protection** - Set up branch protection and auto-delete to prevent future branch accumulation
+- [ ] **Phase 1: Backend Data Pipeline** - Fix broken bucketing, TimescaleDB aggregation, server metadata in responses
+- [ ] **Phase 2: SSE Streaming Endpoint** - Backend SSE route and MetricsStreamJob for live K8s metrics
+- [ ] **Phase 3: Time Range Controls & Data Source Wiring** - Frontend time range selector, SSE client hooks, data source switching
+- [ ] **Phase 4: Synchronized Crosshair** - Cross-panel crosshair, custom cursor, brush zoom, threshold lines, panel expand
+- [ ] **Phase 5: Grafana Dark Panel Design** - Dark panel backgrounds, interactive legend, auto-scale axes, adaptive formatting, tooltip
+- [ ] **Phase 6: Data Freshness & UX Polish** - Freshness badge, pause-on-hover, skeleton loading, error states, key-prop bugfix
+- [ ] **Phase 7: Performance Optimization** - LTTB downsampling, crosshair throttling, resize debounce
 
 ## Phase Details
 
-### Phase 1: Safety Net
-**Goal**: Full recovery capability exists before any repository mutation occurs
+### Phase 1: Backend Data Pipeline
+**Goal**: Every Grafana-standard time range returns correct, populated data from the backend
 **Depends on**: Nothing (first phase)
-**Requirements**: SAFE-01, SAFE-02, SAFE-03
+**Requirements**: PIPE-01, PIPE-02, PIPE-03, PIPE-05
 **Success Criteria** (what must be TRUE):
-  1. Tags `pre-merge-snapshot` (on main) and `pre-cleanup-feat` (on feat/init-monorepo) exist and point to correct SHAs
-  2. `.planning/branch-tips.txt` contains the SHA hash for every remote branch (all 27+)
-  3. `git rerere` is enabled so conflict resolutions are recorded for replay on retry
-  4. Running `git tag -l pre-merge*` and `git tag -l pre-cleanup*` shows both recovery tags
-**Plans:** 1 plan
+  1. Selecting any of the 10 Grafana-standard time ranges (5m through 7d) returns non-empty, correctly bucketed data when metrics exist in the DB
+  2. Backend uses TimescaleDB `time_bucket()` SQL for aggregation instead of in-memory JS bucketing
+  3. API response includes `serverTime` and `intervalMs` fields that the client can use for timeline alignment
+  4. Old broken time ranges (30s, 1m) are rejected by input validation with a clear error
+**Plans**: TBD
 
-Plans:
-- [x] 01-01-PLAN.md -- Recovery tags, rerere config, and branch-tips recording
-
-### Phase 2: The Big Merge
-**Goal**: All 54 commits from feat/init-monorepo are integrated into main with conflicts resolved, imports normalized, and schema integrity preserved
+### Phase 2: SSE Streaming Endpoint
+**Goal**: Backend streams live K8s metrics via SSE for clusters with active subscribers
 **Depends on**: Phase 1
-**Requirements**: MERGE-01, MERGE-02, MERGE-03, MERGE-04, MERGE-05, MERGE-06
+**Requirements**: SSE-01, SSE-02
 **Success Criteria** (what must be TRUE):
-  1. `git log main` shows a merge commit integrating feat/init-monorepo with a descriptive message documenting the resolution
-  2. Zero conflict markers remain in the working tree (`grep -rn "<<<<<<< " .` returns nothing)
-  3. All Motion imports use the `motion` convention consistently (no mixed `m` / `motion` imports across component files)
-  4. `init.sql` contains 33 CREATE TABLE statements (nodeMetricsHistory preserved from main)
-  5. Auto-resolved files (server.ts, ClusterHealthWidget.tsx, page.tsx) have been manually reviewed for evil-merge logic errors
-**Plans:** 3 plans
+  1. A dedicated SSE endpoint at `/api/metrics/stream` streams live K8s metrics at 10-15s resolution for a given cluster
+  2. MetricsStreamJob polls K8s metrics-server only when at least one SSE subscriber is connected (reference-counted start/stop)
+  3. SSE connection sends heartbeats and handles client disconnects without leaking server resources
 
-Plans:
-- [x] 02-01-PLAN.md -- Execute merge and resolve all 9 conflicting files (Tier 1-4)
-- [x] 02-02-PLAN.md -- Evil-merge review, Motion import normalization, schema integrity
-- [x] 02-03-PLAN.md -- Validation gate (typecheck + lint + build + test) and merge commit
-
-### Phase 3: Validation Gate
-**Goal**: The merged codebase provably compiles and passes all automated checks
+### Phase 3: Time Range Controls & Data Source Wiring
+**Goal**: Users select time ranges from a Grafana-standard set and see data from the correct source (SSE or DB) seamlessly
 **Depends on**: Phase 2
-**Requirements**: VALID-01, VALID-02, VALID-03
+**Requirements**: TIME-01, TIME-02, TIME-03, TIME-04, SSE-03, SSE-04, SSE-05
 **Success Criteria** (what must be TRUE):
-  1. `pnpm build` exits with code 0 (TypeScript compilation succeeds for all packages)
-  2. `pnpm typecheck` exits with code 0 (strict TypeScript checking passes)
-  3. `pnpm test` exits with code 0 (all Vitest unit tests pass)
-**Plans:** 1 plan
+  1. Time range selector shows Grafana-standard presets (5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d) plus a custom date/time picker
+  2. Selecting a short range (5m or 15m) automatically uses SSE live data; selecting 30m or longer uses DB historical data -- the switch is invisible to the user
+  3. SSE connection auto-reconnects on disconnect with exponential backoff and pauses when the browser tab is hidden
+  4. Selected time range persists across page navigations via Zustand/localStorage
+  5. Client-side circular buffer manages live SSE data with time-based eviction (no unbounded memory growth)
+**Plans**: TBD
+**UI hint**: yes
 
-Plans:
-- [x] 03-01-PLAN.md -- Full validation gate with Docker (build + typecheck + 128 tests including integration)
-
-### Phase 4: Push & Branch Cleanup
-**Goal**: Origin reflects the merged main and all stale branches are removed with no work lost
+### Phase 4: Synchronized Crosshair
+**Goal**: Users can hover any panel and see a synchronized crosshair with timestamp across all 4 metric panels
 **Depends on**: Phase 3
-**Requirements**: CLEAN-01, CLEAN-02, CLEAN-03, CLEAN-04, CLEAN-05
+**Requirements**: VIZ-01, VIZ-02, VIZ-03, VIZ-04, VIZ-05
 **Success Criteria** (what must be TRUE):
-  1. `git push origin main` has completed successfully -- origin/main matches local main
-  2. `git branch -r` shows only `origin/HEAD` and `origin/main` (all 27 stale branches deleted)
-  3. worktree/ron and worktree/dima commits are verified as contained in feat/init-monorepo (via `git merge-base --is-ancestor`) before their branches are deleted
-  4. fix/v117-phase-d-r2's unique commit (eaa87c6) is evaluated, documented (cherry-picked or discarded with rationale), before branch deletion
-  5. Local stale branches (claude/objective-shockley and others) are cleaned up
-**Plans:** 2 plans
+  1. Hovering any of the 4 panels (CPU, Memory, Network, Pods) shows a vertical crosshair line at the same timestamp on all panels simultaneously
+  2. Custom crosshair cursor renders as a dashed vertical line across the full chart height with a timestamp label
+  3. User can drag-to-select a time region on any panel to zoom into that range (brush zoom)
+  4. CPU and Memory panels show horizontal threshold reference lines at 65% (warning) and 85% (critical)
+  5. User can click to expand any panel to a full-width detail view
+**Plans**: TBD
+**UI hint**: yes
 
-Plans:
-- [x] 04-01-PLAN.md -- Push main to origin and delete 22 fully-merged remote branches (Batch 1)
-- [x] 04-02-PLAN.md -- Verify and delete Batch 2 (feat/init-monorepo, worktree/ron, worktree/dima), document and delete Batch 3 (fix/v117-phase-d-r2), local cleanup
-
-### Phase 5: GitHub Protection
-**Goal**: Branch protection rules prevent future divergence and stale branch accumulation
+### Phase 5: Grafana Dark Panel Design
+**Goal**: Metrics panels look and feel like Grafana -- dark backgrounds, crisp typography, professional information density
 **Depends on**: Phase 4
-**Requirements**: PROT-01, PROT-02
+**Requirements**: STYLE-01, STYLE-02, STYLE-03, STYLE-04, STYLE-05
 **Success Criteria** (what must be TRUE):
-  1. GitHub branch protection on main requires pull requests (no direct push), prevents force push, and prevents branch deletion
-  2. GitHub repository setting "Automatically delete head branches" is enabled -- merged PR branches are cleaned up automatically
-**Plans:** 1 plan
+  1. Each panel has a dark card background with subtle grid lines and mono-spaced axis labels at compact density
+  2. Clicking a series name in the legend isolates that series; hovering a series name highlights it on the chart
+  3. Y-axis auto-scales based on actual data range (not fixed 0-100% when cluster CPU is at 2-5%)
+  4. X-axis labels adapt to the selected range: HH:MM:SS for minutes, HH:MM for hours, Mon Day for multi-day
+  5. Tooltip shows bucket time window, precise values for each series, and color-coded series indicators
+**Plans**: TBD
+**UI hint**: yes
 
-Plans:
-- [x] 05-01-PLAN.md -- Branch protection rules and auto-delete of merged branches
+### Phase 6: Data Freshness & UX Polish
+**Goal**: Users always know how fresh their data is, and the UI handles loading/error/empty states gracefully
+**Depends on**: Phase 5
+**Requirements**: UX-01, UX-02, UX-03, UX-04, UX-05
+**Success Criteria** (what must be TRUE):
+  1. A data freshness badge shows "Live" (green), "2m ago" (amber), or "Stale" (red) based on last data timestamp
+  2. Auto-refresh freezes while the user hovers over a chart tooltip; resumes on mouse leave
+  3. Each panel shows a skeleton shimmer during loading (not a full-page spinner)
+  4. Empty and error states show an actionable message with a retry button per panel
+  5. Charts do not remount/flicker when new data arrives (key-prop bug fixed)
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 7: Performance Optimization
+**Goal**: Charts remain smooth and responsive even with large datasets and synchronized interactions
+**Depends on**: Phase 6
+**Requirements**: PERF-01, PERF-02, PERF-03, PIPE-04
+**Success Criteria** (what must be TRUE):
+  1. Ranges producing 500+ data points are downsampled via LTTB to ~200 visual points with no visible loss of shape
+  2. Crosshair synchronization across 4 panels does not cause jank or dropped frames at 60fps
+  3. Browser window resize does not cause layout thrashing (ResponsiveContainer resize is debounced)
+**Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Safety Net | 0/1 | Planning complete | - |
-| 2. The Big Merge | 0/3 | Planning complete | - |
-| 3. Validation Gate | 0/1 | Planning complete | - |
-| 4. Push & Branch Cleanup | 0/2 | Planning complete | - |
-| 5. GitHub Protection | 0/1 | Planning complete | - |
+| 1. Backend Data Pipeline | 0/TBD | Not started | - |
+| 2. SSE Streaming Endpoint | 0/TBD | Not started | - |
+| 3. Time Range Controls & Data Source Wiring | 0/TBD | Not started | - |
+| 4. Synchronized Crosshair | 0/TBD | Not started | - |
+| 5. Grafana Dark Panel Design | 0/TBD | Not started | - |
+| 6. Data Freshness & UX Polish | 0/TBD | Not started | - |
+| 7. Performance Optimization | 0/TBD | Not started | - |

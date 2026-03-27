@@ -15,10 +15,10 @@
 
 ### SSE Real-Time Streaming
 
-- [ ] **SSE-01**: Dedicated Fastify SSE endpoint streams live K8s metrics for short ranges (≤15m) at 10-15s resolution
+- [ ] **SSE-01**: Dedicated Fastify SSE endpoint streams live K8s metrics for short ranges (<=15m) at 10-15s resolution
 - [ ] **SSE-02**: MetricsStreamJob polls K8s metrics-server only for clusters with active SSE subscribers (reference-counted)
 - [ ] **SSE-03**: SSE connection auto-reconnects with exponential backoff on disconnect
-- [ ] **SSE-04**: Visibility-aware SSE lifecycle — pauses streaming when browser tab is hidden, resumes on focus
+- [ ] **SSE-04**: Visibility-aware SSE lifecycle -- pauses streaming when browser tab is hidden, resumes on focus
 - [ ] **SSE-05**: Client-side circular buffer (max 65 points) manages live data with time-based eviction
 
 ### Time Range Controls
@@ -26,20 +26,20 @@
 - [ ] **TIME-01**: Time range selector offers Grafana-standard presets: 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d
 - [ ] **TIME-02**: Custom absolute date/time range picker (from/to datetime) for arbitrary windows
 - [ ] **TIME-03**: Selected time range persisted in Zustand store (localStorage) across page navigations
-- [ ] **TIME-04**: Data source switches automatically — SSE for ≤15m, DB for ≥30m — seamless to user
+- [ ] **TIME-04**: Data source switches automatically -- SSE for <=15m, DB for >=30m -- seamless to user
 
 ### Synchronized Visualization
 
-- [ ] **VIZ-01**: 4 panels (CPU, Memory, Network, Pods) display synchronized crosshair — hover one, all show same timestamp
+- [ ] **VIZ-01**: 4 panels (CPU, Memory, Network, Pods) display synchronized crosshair -- hover one, all show same timestamp
 - [ ] **VIZ-02**: Custom crosshair cursor renders as vertical line across full chart height with timestamp label
-- [ ] **VIZ-03**: Brush zoom — user can drag-to-select a time region to zoom into that range
+- [ ] **VIZ-03**: Brush zoom -- user can drag-to-select a time region to zoom into that range
 - [ ] **VIZ-04**: Threshold reference lines on CPU/Memory panels (85% critical red, 65% warning yellow)
-- [ ] **VIZ-05**: Panel fullscreen expand — click to expand any panel to full-width detail view
+- [ ] **VIZ-05**: Panel fullscreen expand -- click to expand any panel to full-width detail view
 
 ### Grafana-Style Visual Design
 
 - [ ] **STYLE-01**: Dark panel backgrounds with subtle grid lines, crisp mono-spaced axis labels, compact density
-- [ ] **STYLE-02**: Interactive legend — click series name to isolate/toggle visibility, hover to highlight
+- [ ] **STYLE-02**: Interactive legend -- click series name to isolate/toggle visibility, hover to highlight
 - [ ] **STYLE-03**: Y-axis auto-scale based on actual data range (not fixed 0-100% for all panels)
 - [ ] **STYLE-04**: Range-adaptive X-axis formatting (HH:MM:SS for minutes, HH:MM for hours, Mon Day for days)
 - [ ] **STYLE-05**: Grafana-style tooltip with bucket window, precise values, color-coded series indicators
@@ -47,7 +47,7 @@
 ### Data Freshness & UX
 
 - [ ] **UX-01**: Data freshness badge shows 'Live' / '2m ago' / 'Stale' with color coding
-- [ ] **UX-02**: Pause-on-hover — auto-refresh freezes while user inspects tooltip, resumes on mouse leave
+- [ ] **UX-02**: Pause-on-hover -- auto-refresh freezes while user inspects tooltip, resumes on mouse leave
 - [ ] **UX-03**: Loading states use skeleton shimmer per panel (not full-page spinner)
 - [ ] **UX-04**: Empty/error states show actionable messages with retry button per panel
 - [ ] **UX-05**: Fix MetricsAreaChart key-prop remount bug (remove `data.length` from key)
@@ -88,13 +88,13 @@
 | PIPE-01 | Phase 1 | Pending |
 | PIPE-02 | Phase 1 | Pending |
 | PIPE-03 | Phase 1 | Pending |
-| PIPE-04 | Phase 1 | Pending |
+| PIPE-04 | Phase 7 | Pending |
 | PIPE-05 | Phase 1 | Pending |
 | SSE-01 | Phase 2 | Pending |
 | SSE-02 | Phase 2 | Pending |
-| SSE-03 | Phase 2 | Pending |
-| SSE-04 | Phase 2 | Pending |
-| SSE-05 | Phase 2 | Pending |
+| SSE-03 | Phase 3 | Pending |
+| SSE-04 | Phase 3 | Pending |
+| SSE-05 | Phase 3 | Pending |
 | TIME-01 | Phase 3 | Pending |
 | TIME-02 | Phase 3 | Pending |
 | TIME-03 | Phase 3 | Pending |
@@ -121,8 +121,8 @@
 **Coverage:**
 - v1 requirements: 33 total
 - Mapped to phases: 33
-- Unmapped: 0 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-28*
-*Last updated: 2026-03-28 after initial definition*
+*Last updated: 2026-03-28 after roadmap creation*
