@@ -46,7 +46,7 @@ Plans:
   3. SSE connection sends heartbeats and handles client disconnects without leaking server resources
 **Plans:** 1 plan
 Plans:
-- [ ] 02-01-PLAN.md — SSE endpoint, MetricsStreamJob with reference-counted polling, shared types and config
+- [x] 02-01-PLAN.md — SSE endpoint, MetricsStreamJob with reference-counted polling, shared types and config
 
 ### Phase 3: Time Range Controls & Data Source Wiring
 **Goal**: Users select time ranges from a Grafana-standard set and see data from the correct source (SSE or DB) seamlessly
@@ -118,7 +118,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Backend Data Pipeline | 2/2 | Complete | - |
-| 2. SSE Streaming Endpoint | 0/1 | Planning complete | - |
+| 2. SSE Streaming Endpoint | 1/1 | Complete | 2026-03-28 |
 | 3. Time Range Controls & Data Source Wiring | 0/TBD | Not started | - |
 | 4. Synchronized Crosshair | 0/TBD | Not started | - |
 | 5. Grafana Dark Panel Design | 0/TBD | Not started | - |

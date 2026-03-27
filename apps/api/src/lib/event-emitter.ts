@@ -5,6 +5,7 @@ import type {
   DeploymentProgressEvent,
   LogLineEvent,
   MetricsEvent,
+  MetricsStreamEvent,
   PodEvent,
 } from '@voyager/types'
 
@@ -35,6 +36,10 @@ class VoyagerEventEmitter extends EventEmitter {
 
   emitClusterStateChange(event: ClusterStateChangeEvent): void {
     this.emit('cluster-state-change', event)
+  }
+
+  emitMetricsStream(clusterId: string, event: MetricsStreamEvent): void {
+    this.emit(`metrics-stream:${clusterId}`, event)
   }
 }
 

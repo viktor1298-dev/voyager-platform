@@ -44,3 +44,6 @@ export const CLUSTER_METRICS_POLL_INTERVAL_MS = 30_000
 
 /** Maximum concurrent cluster watches */
 export const MAX_CONCURRENT_CLUSTER_WATCHES = 20
+
+/** How often MetricsStreamJob polls K8s metrics-server for SSE subscribers (ms) */
+export const SSE_METRICS_STREAM_POLL_MS = 15_000
