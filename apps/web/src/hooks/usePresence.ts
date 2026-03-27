@@ -1,11 +1,10 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { TRPCClientError, getUntypedClient } from '@trpc/client'
-import type { TRPCConnectionState } from '@trpc/client/unstable-internals'
+import { TRPCClientError } from '@trpc/client'
 import { usePathname } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { getTRPCClient, trpc } from '@/lib/trpc'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { trpc } from '@/lib/trpc'
 import { AWAY_AFTER_MS, type PresenceUser, usePresenceStore } from '@/stores/presence'
 
 interface BackendPresenceUser {
@@ -135,17 +134,20 @@ function isTransientPresenceError(error: unknown) {
 }
 
 export function usePresence() {
-  const utils = trpc.useUtils()
-  const clientRef = useRef(getUntypedClient(getTRPCClient()))
   const pathname = usePathname()
   const lastHeartbeatRef = useRef(Date.now())
   const consecutiveDisconnectsRef = useRef(0)
   const failureCountRef = useRef(0)
   const [useFallbackPolling, setUseFallbackPolling] = useState(false)
+  const [sseEnabled, setSseEnabled] = useState(true)
   const setOnlineUsers = usePresenceStore((s) => s.setOnlineUsers)
   const upsertUser = usePresenceStore((s) => s.upsertUser)
   const removeUser = usePresenceStore((s) => s.removeUser)
   const setMyStatus = usePresenceStore((s) => s.setMyStatus)
+
+  const heartbeatMutation = trpc.presence.heartbeat.useMutation()
+  const heartbeatRef = useRef(heartbeatMutation)
+  heartbeatRef.current = heartbeatMutation
 
   const initialPresenceQuery = useQuery({
     queryKey: ['presence', 'initial'],
@@ -161,104 +163,38 @@ export function usePresence() {
     setOnlineUsers(initialPresenceQuery.data)
   }, [initialPresenceQuery.data, setOnlineUsers])
 
-  useEffect(() => {
-    // Skip SSE subscription while in fallback polling mode
-    if (useFallbackPolling) return
+  const handleSubscriptionError = useCallback((error: unknown) => {
+    if (isTransientPresenceError(error)) {
+      failureCountRef.current += 1
+      if (failureCountRef.current >= SSE_FALLBACK_THRESHOLD) {
+        console.warn('[presence] SSE failed repeatedly, switching to polling fallback')
+        setSseEnabled(false)
+        setUseFallbackPolling(true)
+      }
+      return
+    }
+    failureCountRef.current += 1
+    if (failureCountRef.current >= SSE_FALLBACK_THRESHOLD) {
+      setSseEnabled(false)
+      setUseFallbackPolling(true)
+    }
+  }, [])
 
-    const subscription = clientRef.current.subscription('presence.subscribe', undefined, {
-      onData(payload) {
-        consecutiveDisconnectsRef.current = 0
-        failureCountRef.current = 0
-        applyPresencePayload(payload as PresenceEventPayload, {
-          setOnlineUsers,
-          upsertUser,
-          removeUser,
-        })
-      },
-      onConnectionStateChange(state: TRPCConnectionState<TRPCClientError<any>>) {
-        if (state.state === 'pending') {
-          consecutiveDisconnectsRef.current = 0
-          return
-        }
-
-        if (state.state !== 'connecting' || !state.error) {
-          return
-        }
-
-        const attempt = consecutiveDisconnectsRef.current + 1
-        consecutiveDisconnectsRef.current = attempt
-
-        if (isTransientPresenceError(state.error)) {
-          const backoffMs = getBackoffDelay(attempt)
-          // Fix #6: Only log on meaningful thresholds to reduce console noise
-          if (attempt === TRANSIENT_DISCONNECT_WARNING_THRESHOLD) {
-            console.warn('[presence] subscription disconnected, retrying with backoff', {
-              attempt,
-              nextRetryMs: Math.round(backoffMs),
-              message: state.error.message,
-            })
-          }
-
-          if (attempt === PERSISTENT_DISCONNECT_ERROR_THRESHOLD) {
-            console.error('[presence] subscription still failing — backing off to max interval', {
-              attempt,
-              backoffMs: Math.round(backoffMs),
-              message: state.error.message,
-            })
-          }
-
-          // Suppress all other transient errors (attempt 1, 2, 4, 5, 7+)
-          return
-        }
-
-        // Non-transient failure → increment failure count and possibly switch to fallback
-        failureCountRef.current += 1
-        if (failureCountRef.current >= SSE_FALLBACK_THRESHOLD) {
-          console.warn('[presence] SSE failed repeatedly, switching to polling fallback', {
-            failures: failureCountRef.current,
-          })
-          setUseFallbackPolling(true)
-        }
-
-        console.warn('[presence] subscription unavailable', { message: state.error.message })
-      },
-      onError(error) {
-        if (isTransientPresenceError(error)) {
-          const attempt = consecutiveDisconnectsRef.current
-          // Fix #6: Only log at the persistent threshold, suppress all others
-          if (attempt >= PERSISTENT_DISCONNECT_ERROR_THRESHOLD && attempt % PERSISTENT_DISCONNECT_ERROR_THRESHOLD === 0) {
-            console.error('[presence] subscription failed after retry exhaustion', {
-              attempt,
-              backoffMs: Math.round(getBackoffDelay(attempt)),
-              message: error.message,
-            })
-          }
-
-          // Also track for fallback threshold
-          failureCountRef.current += 1
-          if (failureCountRef.current >= SSE_FALLBACK_THRESHOLD) {
-            console.warn('[presence] SSE failed repeatedly, switching to polling fallback', {
-              failures: failureCountRef.current,
-            })
-            setUseFallbackPolling(true)
-          }
-          return
-        }
-
-        failureCountRef.current += 1
-        if (failureCountRef.current >= SSE_FALLBACK_THRESHOLD) {
-          console.warn('[presence] SSE failed repeatedly, switching to polling fallback', {
-            failures: failureCountRef.current,
-          })
-          setUseFallbackPolling(true)
-        }
-
-        console.warn('[presence] subscription unavailable', { message: error.message })
-      },
-    })
-
-    return () => subscription.unsubscribe()
-  }, [removeUser, setOnlineUsers, upsertUser, useFallbackPolling])
+  trpc.presence.subscribe.useSubscription(undefined, {
+    enabled: sseEnabled && !useFallbackPolling,
+    onData(payload) {
+      consecutiveDisconnectsRef.current = 0
+      failureCountRef.current = 0
+      applyPresencePayload(payload as PresenceEventPayload, {
+        setOnlineUsers,
+        upsertUser,
+        removeUser,
+      })
+    },
+    onError(error) {
+      handleSubscriptionError(error)
+    },
+  })
 
   // SSE recovery: when in fallback polling mode, attempt to recover SSE on
   // network restore, tab visibility change, or periodically every 5 minutes.
@@ -269,6 +205,7 @@ export function usePresence() {
       console.info('[presence] Attempting SSE recovery...')
       failureCountRef.current = 0
       consecutiveDisconnectsRef.current = 0
+      setSseEnabled(true)
       setUseFallbackPolling(false)
     }
 
@@ -291,23 +228,23 @@ export function usePresence() {
   }, [useFallbackPolling])
 
   useEffect(() => {
-    const sendHeartbeat = async () => {
-      await utils.client.mutation('presence.heartbeat', { currentPage: pathname, avatar: null }).catch(() => {
-        // Fix #6: Silently swallow heartbeat failures — transient SSE/chunked encoding errors
-        // are expected every ~60s and should not flood the console
-      })
-
-      lastHeartbeatRef.current = Date.now()
-      setMyStatus('online')
+    const sendHeartbeat = () => {
+      heartbeatRef.current.mutate(
+        { currentPage: pathname, avatar: null },
+        {
+          onSuccess() {
+            lastHeartbeatRef.current = Date.now()
+            setMyStatus('online')
+          },
+        },
+      )
     }
 
-    void sendHeartbeat()
-    const interval = setInterval(() => {
-      void sendHeartbeat()
-    }, 30_000)
+    sendHeartbeat()
+    const interval = setInterval(sendHeartbeat, 30_000)
 
     return () => clearInterval(interval)
-  }, [pathname, setMyStatus, utils.client])
+  }, [pathname, setMyStatus])
 
   useEffect(() => {
     const interval = setInterval(() => {
