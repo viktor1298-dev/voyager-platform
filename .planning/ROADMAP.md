@@ -31,7 +31,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Backend uses TimescaleDB `time_bucket()` SQL for aggregation instead of in-memory JS bucketing
   3. API response includes `serverTime` and `intervalMs` fields that the client can use for timeline alignment
   4. Old broken time ranges (30s, 1m) are rejected by input validation with a clear error
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Rewrite backend metrics pipeline with time_bucket() SQL, new Grafana ranges, response metadata
+- [ ] 01-02-PLAN.md — Update frontend types, store migration, and consumers for new API response shape
 
 ### Phase 2: SSE Streaming Endpoint
 **Goal**: Backend streams live K8s metrics via SSE for clusters with active subscribers
@@ -111,7 +114,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Backend Data Pipeline | 0/TBD | Not started | - |
+| 1. Backend Data Pipeline | 0/2 | Planning complete | - |
 | 2. SSE Streaming Endpoint | 0/TBD | Not started | - |
 | 3. Time Range Controls & Data Source Wiring | 0/TBD | Not started | - |
 | 4. Synchronized Crosshair | 0/TBD | Not started | - |
