@@ -74,7 +74,9 @@ Plans:
   3. User can drag-to-select a time region on any panel to zoom into that range (brush zoom)
   4. CPU and Memory panels show horizontal threshold reference lines at 65% (warning) and 85% (critical)
   5. User can click to expand any panel to a full-width detail view
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 04-01-PLAN.md — syncId crosshair, custom cursor, threshold lines, brush zoom, panel expand
 **UI hint**: yes
 
 ### Phase 5: Grafana Dark Panel Design
@@ -122,8 +124,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Backend Data Pipeline | 2/2 | Complete | - |
 | 2. SSE Streaming Endpoint | 1/1 | Complete | 2026-03-28 |
-| 3. Time Range Controls & Data Source Wiring | 1/2 | In Progress|  |
-| 4. Synchronized Crosshair | 0/TBD | Not started | - |
+| 3. Time Range Controls & Data Source Wiring | 2/2 | Complete |  |
+| 4. Synchronized Crosshair | 0/1 | Not started | - |
 | 5. Grafana Dark Panel Design | 0/TBD | Not started | - |
 | 6. Data Freshness & UX Polish | 0/TBD | Not started | - |
 | 7. Performance Optimization | 0/TBD | Not started | - |
