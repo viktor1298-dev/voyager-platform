@@ -17,16 +17,16 @@
 
 - [x] **SSE-01**: Dedicated Fastify SSE endpoint streams live K8s metrics for short ranges (≤15m) at 10-15s resolution
 - [x] **SSE-02**: MetricsStreamJob polls K8s metrics-server only for clusters with active SSE subscribers (reference-counted)
-- [ ] **SSE-03**: SSE connection auto-reconnects with exponential backoff on disconnect
-- [ ] **SSE-04**: Visibility-aware SSE lifecycle — pauses streaming when browser tab is hidden, resumes on focus
-- [ ] **SSE-05**: Client-side circular buffer (max 65 points) manages live data with time-based eviction
+- [x] **SSE-03**: SSE connection auto-reconnects with exponential backoff on disconnect
+- [x] **SSE-04**: Visibility-aware SSE lifecycle — pauses streaming when browser tab is hidden, resumes on focus
+- [x] **SSE-05**: Client-side circular buffer (max 65 points) manages live data with time-based eviction
 
 ### Time Range Controls
 
 - [ ] **TIME-01**: Time range selector offers Grafana-standard presets: 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d
 - [ ] **TIME-02**: Custom absolute date/time range picker (from/to datetime) for arbitrary windows
 - [ ] **TIME-03**: Selected time range persisted in Zustand store (localStorage) across page navigations
-- [ ] **TIME-04**: Data source switches automatically — SSE for ≤15m, DB for ≥30m — seamless to user
+- [x] **TIME-04**: Data source switches automatically — SSE for ≤15m, DB for ≥30m — seamless to user
 
 ### Synchronized Visualization
 
@@ -92,13 +92,13 @@
 | PIPE-05 | Phase 1 | Pending |
 | SSE-01 | Phase 2 | Complete |
 | SSE-02 | Phase 2 | Complete |
-| SSE-03 | Phase 2 | Pending |
-| SSE-04 | Phase 2 | Pending |
-| SSE-05 | Phase 2 | Pending |
+| SSE-03 | Phase 2 | Complete |
+| SSE-04 | Phase 2 | Complete |
+| SSE-05 | Phase 2 | Complete |
 | TIME-01 | Phase 3 | Pending |
 | TIME-02 | Phase 3 | Pending |
 | TIME-03 | Phase 3 | Pending |
-| TIME-04 | Phase 3 | Pending |
+| TIME-04 | Phase 3 | Complete |
 | VIZ-01 | Phase 4 | Pending |
 | VIZ-02 | Phase 4 | Pending |
 | VIZ-03 | Phase 4 | Pending |

@@ -58,9 +58,9 @@ Plans:
   3. SSE connection auto-reconnects on disconnect with exponential backoff and pauses when the browser tab is hidden
   4. Selected time range persists across page navigations via Zustand/localStorage
   5. Client-side circular buffer manages live SSE data with time-based eviction (no unbounded memory growth)
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
-- [ ] 03-01-PLAN.md — Data hooks layer: MetricsBuffer, useMetricsSSE (reconnect + visibility), useMetricsData (SSE/DB switching)
+- [x] 03-01-PLAN.md — Data hooks layer: MetricsBuffer, useMetricsSSE (reconnect + visibility), useMetricsData (SSE/DB switching)
 - [ ] 03-02-PLAN.md — UI components: Custom date picker in TimeRangeSelector, wire MetricsTimeSeriesPanel to useMetricsData hook
 **UI hint**: yes
 
@@ -122,7 +122,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Backend Data Pipeline | 2/2 | Complete | - |
 | 2. SSE Streaming Endpoint | 1/1 | Complete | 2026-03-28 |
-| 3. Time Range Controls & Data Source Wiring | 0/2 | Not started | - |
+| 3. Time Range Controls & Data Source Wiring | 1/2 | In Progress|  |
 | 4. Synchronized Crosshair | 0/TBD | Not started | - |
 | 5. Grafana Dark Panel Design | 0/TBD | Not started | - |
 | 6. Data Freshness & UX Polish | 0/TBD | Not started | - |
