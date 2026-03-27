@@ -4,7 +4,15 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 // Use a simple record type to avoid react-grid-layout generic complexity
-type LayoutItem = { i: string; x: number; y: number; w: number; h: number; minW?: number; minH?: number }
+type LayoutItem = {
+  i: string
+  x: number
+  y: number
+  w: number
+  h: number
+  minW?: number
+  minH?: number
+}
 type ResponsiveLayouts = Record<string, LayoutItem[]>
 
 export type WidgetType =
@@ -100,6 +108,11 @@ function makeDefaultWidgets(): Widget[] {
 
 function makeDefaultLayouts(): ResponsiveLayouts {
   return {
+    xl: [
+      { i: 'w-stat-cards', x: 0, y: 0, w: 12, h: 2, minW: 6, minH: 2 },
+      { i: 'w-cluster-health', x: 0, y: 2, w: 12, h: 5, minW: 6, minH: 3 },
+      { i: 'w-anomaly-timeline', x: 0, y: 7, w: 12, h: 3, minW: 6, minH: 2 },
+    ],
     lg: [
       { i: 'w-stat-cards', x: 0, y: 0, w: 12, h: 2, minW: 6, minH: 2 },
       { i: 'w-cluster-health', x: 0, y: 2, w: 12, h: 5, minW: 6, minH: 3 },
@@ -204,7 +217,11 @@ export const useDashboardLayout = create<DashboardLayoutState>()(
         const isWidget = (w: unknown): w is Widget => {
           if (typeof w !== 'object' || w === null) return false
           const obj = w as Record<string, unknown>
-          return typeof obj['id'] === 'string' && typeof obj['type'] === 'string' && obj['type'] in WIDGET_REGISTRY
+          return (
+            typeof obj['id'] === 'string' &&
+            typeof obj['type'] === 'string' &&
+            obj['type'] in WIDGET_REGISTRY
+          )
         }
         const widgets = data.widgets.filter(isWidget)
         const layouts: ResponsiveLayouts = {}

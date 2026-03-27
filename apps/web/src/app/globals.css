@@ -22,6 +22,8 @@
   --animate-count-up: count-up 0.6s ease-out;
   --color-surface: var(--surface);
   --color-elevated: var(--elevated);
+  --breakpoint-3xl: 112rem;
+  --breakpoint-4xl: 140rem;
 }
 
 @keyframes pulse-slow {

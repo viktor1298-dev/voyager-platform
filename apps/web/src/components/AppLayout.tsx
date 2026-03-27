@@ -106,10 +106,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         className="pt-14 min-h-screen overflow-x-clip"
       >
         <PresenceBar />
-        <div
-          key={pathname}
-          className="p-3 sm:p-5 w-full max-w-[min(1400px,100vw)] overflow-x-hidden bg-dot-grid min-h-full"
-        >
+        <div key={pathname} className="p-3 sm:p-5 w-full overflow-x-hidden bg-dot-grid min-h-full">
           {children}
         </div>
       </motion.main>

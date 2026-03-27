@@ -106,8 +106,8 @@ export function DashboardGrid({
           <GridComponent
             className="layout"
             layouts={layouts}
-            breakpoints={{ lg: 1280, md: 996, sm: 768, xs: 480 }}
-            cols={{ lg: 12, md: 12, sm: 6, xs: 1 }}
+            breakpoints={{ xl: 1920, lg: 1280, md: 996, sm: 768, xs: 480 }}
+            cols={{ xl: 12, lg: 12, md: 12, sm: 6, xs: 1 }}
             rowHeight={80}
             draggableHandle=".widget-drag-handle"
             isDraggable={editMode}
