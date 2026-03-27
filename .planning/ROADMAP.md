@@ -44,6 +44,9 @@ Plans:
   1. A dedicated SSE endpoint at `/api/metrics/stream` streams live K8s metrics at 10-15s resolution for a given cluster
   2. MetricsStreamJob polls K8s metrics-server only when at least one SSE subscriber is connected (reference-counted start/stop)
   3. SSE connection sends heartbeats and handles client disconnects without leaking server resources
+**Plans:** 1 plan
+Plans:
+- [ ] 02-01-PLAN.md — SSE endpoint, MetricsStreamJob with reference-counted polling, shared types and config
 
 ### Phase 3: Time Range Controls & Data Source Wiring
 **Goal**: Users select time ranges from a Grafana-standard set and see data from the correct source (SSE or DB) seamlessly
@@ -114,8 +117,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Backend Data Pipeline | 1/2 | In progress | - |
-| 2. SSE Streaming Endpoint | 0/TBD | Not started | - |
+| 1. Backend Data Pipeline | 2/2 | Complete | - |
+| 2. SSE Streaming Endpoint | 0/1 | Planning complete | - |
 | 3. Time Range Controls & Data Source Wiring | 0/TBD | Not started | - |
 | 4. Synchronized Crosshair | 0/TBD | Not started | - |
 | 5. Grafana Dark Panel Design | 0/TBD | Not started | - |
