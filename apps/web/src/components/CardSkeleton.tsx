@@ -25,6 +25,7 @@ export function CardSkeleton({ count = 1, className }: CardSkeletonProps) {
             'relative rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4',
             className,
           )}
+          role="status"
           aria-busy="true"
           aria-label="Loading card"
         >

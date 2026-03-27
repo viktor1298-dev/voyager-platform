@@ -14,22 +14,26 @@ interface StatusBadgeProps {
 const STATUS_CONFIG: Record<StatusType, { label: string; classes: string; dotColor: string }> = {
   healthy: {
     label: 'Healthy',
-    classes: 'bg-[var(--color-status-active)]/15 text-[var(--color-status-active)] border border-[var(--color-status-active)]/30',
+    classes:
+      'bg-[var(--color-status-active)]/15 text-[var(--color-status-active)] border border-[var(--color-status-active)]/30',
     dotColor: 'bg-[var(--color-status-active)]',
   },
   warning: {
     label: 'Warning',
-    classes: 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)] border border-[var(--color-status-warning)]/30',
+    classes:
+      'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)] border border-[var(--color-status-warning)]/30',
     dotColor: 'bg-[var(--color-status-warning)]',
   },
   error: {
     label: 'Error',
-    classes: 'bg-[var(--color-status-error)]/15 text-[var(--color-status-error)] border border-[var(--color-status-error)]/30',
+    classes:
+      'bg-[var(--color-status-error)]/15 text-[var(--color-status-error)] border border-[var(--color-status-error)]/30',
     dotColor: 'bg-[var(--color-status-error)]',
   },
   unknown: {
     label: 'Unknown',
-    classes: 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] border border-[var(--color-border)]',
+    classes:
+      'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] border border-[var(--color-border)]',
     dotColor: 'bg-[var(--color-text-muted)]',
   },
 }
@@ -39,12 +43,14 @@ export function normaliseStatus(raw: string | null | undefined): StatusType {
   const s = (raw ?? '').toLowerCase()
   if (s === 'healthy' || s === 'active' || s === 'ready' || s === 'running') return 'healthy'
   if (s === 'warning' || s === 'degraded' || s === 'pending') return 'warning'
-  if (s === 'error' || s === 'critical' || s === 'failed' || s === 'crashloopbackoff') return 'error'
+  if (s === 'error' || s === 'critical' || s === 'failed' || s === 'crashloopbackoff')
+    return 'error'
   return 'unknown'
 }
 
 export function StatusBadge({ status, label, className, dot = false }: StatusBadgeProps) {
   const cfg = STATUS_CONFIG[status]
+  const displayLabel = label ?? cfg.label
 
   return (
     <span
@@ -53,9 +59,11 @@ export function StatusBadge({ status, label, className, dot = false }: StatusBad
         cfg.classes,
         className,
       )}
+      role="status"
+      aria-label={`Status: ${displayLabel}`}
     >
-      {dot && <span className={cn('h-1.5 w-1.5 rounded-full', cfg.dotColor)} />}
-      {label ?? cfg.label}
+      {dot && <span className={cn('h-1.5 w-1.5 rounded-full', cfg.dotColor)} aria-hidden="true" />}
+      {displayLabel}
     </span>
   )
 }

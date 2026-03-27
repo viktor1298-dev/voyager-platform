@@ -466,8 +466,12 @@ export function AiChat({
     <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 sm:p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)]">AI Chat</h2>
-        <div className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium ${selectedClusterName ? 'border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 text-[var(--color-accent)]' : 'border-[var(--color-border)] text-[var(--color-text-dim)]'}`}>
-          <span className={`h-2 w-2 rounded-full ${selectedClusterName ? 'bg-[var(--color-accent)] animate-pulse' : 'bg-[var(--color-text-dim)]'}`} />
+        <div
+          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium ${selectedClusterName ? 'border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 text-[var(--color-accent)]' : 'border-[var(--color-border)] text-[var(--color-text-dim)]'}`}
+        >
+          <span
+            className={`h-2 w-2 rounded-full ${selectedClusterName ? 'bg-[var(--color-accent)] animate-pulse' : 'bg-[var(--color-text-dim)]'}`}
+          />
           {selectedClusterName ?? 'No cluster selected'}
         </div>
       </div>
@@ -518,9 +522,10 @@ export function AiChat({
           if (event.currentTarget.scrollTop < 40) loadOlder()
         }}
         className="h-[52vh] min-h-[320px] max-h-[520px] overflow-y-auto rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-bg-secondary)] p-3 sm:h-[440px] sm:p-4"
+        aria-label="AI conversation"
       >
         <AnimatePresence initial={false}>
-          <div className="space-y-3">
+          <div className="space-y-3" aria-live="polite" aria-atomic="false">
             {!locked && isHistoryLoading && (
               <div className="flex items-center gap-2 text-xs text-[var(--color-text-dim)]">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -581,10 +586,22 @@ export function AiChat({
             {!locked && visibleMessages.length <= 1 && !isStreaming && selectedClusterId && (
               <div className="flex flex-wrap gap-2 mt-4 justify-center">
                 {[
-                  { label: '🏥 Analyze cluster health', prompt: 'Analyze cluster health and top risks' },
-                  { label: '📊 Show recent anomalies', prompt: 'Show recent anomalies and their severity' },
-                  { label: '🔄 Explain pod restarts', prompt: 'Explain recent pod restarts and likely root causes' },
-                  { label: '💡 Resource optimization', prompt: 'Suggest resource optimization opportunities' },
+                  {
+                    label: '🏥 Analyze cluster health',
+                    prompt: 'Analyze cluster health and top risks',
+                  },
+                  {
+                    label: '📊 Show recent anomalies',
+                    prompt: 'Show recent anomalies and their severity',
+                  },
+                  {
+                    label: '🔄 Explain pod restarts',
+                    prompt: 'Explain recent pod restarts and likely root causes',
+                  },
+                  {
+                    label: '💡 Resource optimization',
+                    prompt: 'Suggest resource optimization opportunities',
+                  },
                 ].map((chip) => (
                   <button
                     key={chip.label}

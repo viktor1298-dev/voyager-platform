@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import {
   AreaChart,
   Area,
@@ -33,17 +34,20 @@ interface MetricsAreaChartProps {
   height?: number
 }
 
-const METRIC_CONFIG: Record<MetricKey, {
-  label: string
-  color: string
-  gradientId: string
-  yAxis: string
-  dataKey: keyof MetricsDataPoint
-  family: MetricFamily
-}> = {
+const METRIC_CONFIG: Record<
+  MetricKey,
+  {
+    label: string
+    color: string
+    gradientId: string
+    yAxis: string
+    dataKey: keyof MetricsDataPoint
+    family: MetricFamily
+  }
+> = {
   cpu: {
     label: 'CPU %',
-    color: 'hsl(262,83%,58%)',
+    color: 'var(--color-chart-cpu)',
     gradientId: 'cpuGradient',
     yAxis: 'percent',
     dataKey: 'cpu',
@@ -51,7 +55,7 @@ const METRIC_CONFIG: Record<MetricKey, {
   },
   memory: {
     label: 'Memory %',
-    color: 'hsl(199,89%,48%)',
+    color: 'var(--color-chart-mem)',
     gradientId: 'memGradient',
     yAxis: 'percent',
     dataKey: 'memory',
@@ -59,7 +63,7 @@ const METRIC_CONFIG: Record<MetricKey, {
   },
   pods: {
     label: 'Pods',
-    color: 'hsl(142,71%,45%)',
+    color: 'var(--color-chart-pods)',
     gradientId: 'podsGradient',
     yAxis: 'count',
     dataKey: 'pods',
@@ -67,7 +71,7 @@ const METRIC_CONFIG: Record<MetricKey, {
   },
   networkIn: {
     label: 'Net In',
-    color: 'hsl(38,92%,50%)',
+    color: 'var(--color-chart-warning)',
     gradientId: 'netInGradient',
     yAxis: 'bytes',
     dataKey: 'networkBytesIn',
@@ -75,7 +79,7 @@ const METRIC_CONFIG: Record<MetricKey, {
   },
   networkOut: {
     label: 'Net Out',
-    color: 'hsl(340,82%,52%)',
+    color: 'var(--color-chart-critical)',
     gradientId: 'netOutGradient',
     yAxis: 'bytes',
     dataKey: 'networkBytesOut',
@@ -121,7 +125,10 @@ function formatXAxis(iso: string, range: MetricsRange): string {
   }
 }
 
-function getTickInterval(data: MetricsDataPoint[], range: MetricsRange): number | 'preserveStartEnd' {
+function getTickInterval(
+  data: MetricsDataPoint[],
+  range: MetricsRange,
+): number | 'preserveStartEnd' {
   switch (range) {
     case '30s':
     case '1m':
@@ -144,11 +151,14 @@ function formatDateTime(iso?: string | null) {
   if (!iso) return null
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return null
-  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${d.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })}`
+  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${d.toLocaleTimeString(
+    [],
+    {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    },
+  )}`
 }
 
 function getBucketWindowLabel(point?: MetricsDataPoint | null, fallbackLabel?: string) {
@@ -158,7 +168,7 @@ function getBucketWindowLabel(point?: MetricsDataPoint | null, fallbackLabel?: s
   if (startLabel && endLabel) return `${startLabel} → ${endLabel}`
   if (startLabel) return startLabel
   if (endLabel) return endLabel
-  return fallbackLabel ? formatDateTime(fallbackLabel) ?? String(fallbackLabel) : ''
+  return fallbackLabel ? (formatDateTime(fallbackLabel) ?? String(fallbackLabel)) : ''
 }
 
 function CustomTooltip({
@@ -167,7 +177,13 @@ function CustomTooltip({
   label,
 }: {
   active?: boolean
-  payload?: Array<{ name: string; value: number | null; color: string; dataKey: string; payload?: MetricsDataPoint }>
+  payload?: Array<{
+    name: string
+    value: number | null
+    color: string
+    dataKey: string
+    payload?: MetricsDataPoint
+  }>
   label?: string
 }) {
   if (!active || !payload?.length) return null
@@ -177,10 +193,14 @@ function CustomTooltip({
 
   return (
     <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-2.5 text-xs shadow-xl">
-      <p className="mb-1 font-mono text-xs uppercase tracking-wide text-[var(--color-text-dim)]">Bucket window</p>
+      <p className="mb-1 font-mono text-xs uppercase tracking-wide text-[var(--color-text-dim)]">
+        Bucket window
+      </p>
       <p className="mb-1.5 font-mono text-[var(--color-text-muted)]">{bucketLabel}</p>
       {payload.map((entry) => {
-        const metricKey = (Object.entries(METRIC_CONFIG).find(([, cfg]) => cfg.label === entry.name)?.[0] ?? 'cpu') as MetricKey
+        const metricKey = (Object.entries(METRIC_CONFIG).find(
+          ([, cfg]) => cfg.label === entry.name,
+        )?.[0] ?? 'cpu') as MetricKey
         return (
           <div key={`${entry.name}-${entry.dataKey}`} className="mb-0.5 flex items-center gap-2">
             <span className="h-2 w-2 rounded-full" style={{ background: entry.color }} />
@@ -216,7 +236,9 @@ function CurrentValueBadge({
 
   return (
     <div className="mt-1 space-y-1.5">
-      <p className="text-xs font-mono text-[var(--color-text-dim)]">Current bucket: {bucketLabel}</p>
+      <p className="text-xs font-mono text-[var(--color-text-dim)]">
+        Current bucket: {bucketLabel}
+      </p>
       <div className="flex flex-wrap items-center gap-1.5">
         {activeMetrics.map((key) => {
           const cfg = METRIC_CONFIG[key]
@@ -233,7 +255,8 @@ function CurrentValueBadge({
               title={`Current ${cfg.label}`}
             >
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: cfg.color }} />
-              {cfg.label}: <strong>{formatMetricValue(key, typeof raw === 'number' ? raw : null)}</strong>
+              {cfg.label}:{' '}
+              <strong>{formatMetricValue(key, typeof raw === 'number' ? raw : null)}</strong>
             </span>
           )
         })}
@@ -261,9 +284,13 @@ export function MetricsAreaChart({
   const primaryConfig = primaryMetric ? METRIC_CONFIG[primaryMetric] : null
   const tickInterval = getTickInterval(data, range)
   const gridLines = primaryConfig?.yAxis === 'percent' ? [25, 50, 75] : []
+  const chartId = useId()
 
   return (
-    <div>
+    <div
+      role="img"
+      aria-label={`${activeMetrics.map((k) => METRIC_CONFIG[k].label).join(', ')} chart`}
+    >
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart
           key={`${range}-${activeMetrics.join('-')}-${data.length}`}
@@ -273,8 +300,9 @@ export function MetricsAreaChart({
           <defs>
             {activeMetrics.map((key) => {
               const cfg = METRIC_CONFIG[key]
+              const gradId = `${chartId}-${cfg.gradientId}`
               return (
-                <linearGradient key={cfg.gradientId} id={cfg.gradientId} x1="0" y1="0" x2="0" y2="1">
+                <linearGradient key={gradId} id={gradId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={cfg.color} stopOpacity={0.3} />
                   <stop offset="95%" stopColor={cfg.color} stopOpacity={0} />
                 </linearGradient>
@@ -352,7 +380,7 @@ export function MetricsAreaChart({
                 dataKey={cfg.dataKey}
                 name={cfg.label}
                 stroke={cfg.color}
-                fill={`url(#${cfg.gradientId})`}
+                fill={`url(#${chartId}-${cfg.gradientId})`}
                 strokeWidth={2}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}

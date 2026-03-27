@@ -44,7 +44,14 @@ function relativeTime(date: string | Date): string {
 function getSeverity(event: KubeEvent): 'critical' | 'warning' | 'info' {
   const reason = (event.reason ?? '').toLowerCase()
   const message = (event.message ?? '').toLowerCase()
-  if (reason.includes('error') || reason.includes('failed') || reason.includes('crash') || reason.includes('oom') || message.includes('crashloop')) return 'critical'
+  if (
+    reason.includes('error') ||
+    reason.includes('failed') ||
+    reason.includes('crash') ||
+    reason.includes('oom') ||
+    message.includes('crashloop')
+  )
+    return 'critical'
   if (event.kind === 'Warning') return 'warning'
   return 'info'
 }
@@ -89,7 +96,7 @@ function groupNotifications(events: KubeEvent[]): GroupedNotification[] {
     }
   }
   return Array.from(map.values()).sort(
-    (a, b) => new Date(b.latestTimestamp).getTime() - new Date(a.latestTimestamp).getTime()
+    (a, b) => new Date(b.latestTimestamp).getTime() - new Date(a.latestTimestamp).getTime(),
   )
 }
 
@@ -101,10 +108,7 @@ export function NotificationsPanel() {
   const { lastReadAt: lastReadTimestamp, setLastRead } = useNotificationsStore()
   const panelRef = useRef<HTMLDivElement>(null)
 
-  const eventsQuery = trpc.events.list.useQuery(
-    { limit: 50 },
-    { refetchInterval: 30000 },
-  )
+  const eventsQuery = trpc.events.list.useQuery({ limit: 50 }, { refetchInterval: 30000 })
 
   const allEvents = (eventsQuery.data ?? []) as KubeEvent[]
   const alerts = allEvents.filter((e) => e.kind === 'Warning')
@@ -113,12 +117,28 @@ export function NotificationsPanel() {
     : alerts.length
 
   // Category filtering
-  const filteredEvents = category === 'all' ? alerts
-    : category === 'alerts' ? allEvents.filter((e) => e.kind === 'Warning' && ((e.reason ?? '').toLowerCase().includes('error') || (e.reason ?? '').toLowerCase().includes('failed') || (e.reason ?? '').toLowerCase().includes('crash')))
-    : category === 'events' ? allEvents.filter((e) => e.kind !== 'Warning')
-    : allEvents.filter((e) => (e.source ?? '').toLowerCase().includes('system') || (e.reason ?? '').toLowerCase().includes('node'))
+  const filteredEvents =
+    category === 'all'
+      ? alerts
+      : category === 'alerts'
+        ? allEvents.filter(
+            (e) =>
+              e.kind === 'Warning' &&
+              ((e.reason ?? '').toLowerCase().includes('error') ||
+                (e.reason ?? '').toLowerCase().includes('failed') ||
+                (e.reason ?? '').toLowerCase().includes('crash')),
+          )
+        : category === 'events'
+          ? allEvents.filter((e) => e.kind !== 'Warning')
+          : allEvents.filter(
+              (e) =>
+                (e.source ?? '').toLowerCase().includes('system') ||
+                (e.reason ?? '').toLowerCase().includes('node'),
+            )
 
-  const grouped = groupNotifications(filteredEvents.length > 0 ? filteredEvents : category === 'all' ? alerts : filteredEvents)
+  const grouped = groupNotifications(
+    filteredEvents.length > 0 ? filteredEvents : category === 'all' ? alerts : filteredEvents,
+  )
 
   const handleMarkAllRead = () => {
     setLastRead()
@@ -153,14 +173,14 @@ export function NotificationsPanel() {
 
       {open && (
         <div
-          className="absolute right-0 top-11 w-80 max-h-[420px] overflow-y-auto rounded-xl border shadow-2xl z-50"
+          className="fixed inset-x-3 top-14 sm:absolute sm:inset-x-auto sm:right-0 sm:top-11 sm:w-80 max-h-[420px] overflow-y-auto rounded-xl border shadow-2xl z-50"
           style={{
             background: 'var(--elevated)',
             backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid var(--glass-border)',
           }}
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--glass-border)]">
             <span className="text-sm font-semibold text-[var(--color-text-primary)]">
               Notifications
             </span>
@@ -174,20 +194,24 @@ export function NotificationsPanel() {
                   Mark all read
                 </button>
               )}
-              <button type="button" onClick={() => setOpen(false)}>
-                <X className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center min-h-[44px] min-w-[44px] -mr-2"
+              >
+                <X className="h-4 w-4 text-[var(--color-text-dim)]" />
               </button>
             </div>
           </div>
 
           {/* Category filter tabs */}
-          <div className="flex items-center gap-1 px-3 py-2 border-b border-white/10">
+          <div className="flex items-center gap-1 px-3 py-2 border-b border-[var(--glass-border)]">
             {(['all', 'alerts', 'events', 'system'] as CategoryFilter[]).map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setCategory(cat)}
-                className={`px-2 py-1 rounded text-xs font-medium capitalize transition-colors ${category === cat ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]' : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)]'}`}
+                className={`px-3 py-2 min-h-[44px] rounded text-xs font-medium capitalize transition-colors ${category === cat ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]' : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)]'}`}
               >
                 {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
               </button>
@@ -221,7 +245,7 @@ export function NotificationsPanel() {
                       <p className="text-xs text-[var(--color-text-muted)] mt-0.5 leading-snug line-clamp-2">
                         {notif.count > 1
                           ? `${notif.message || notif.reason} (×${notif.count})`
-                          : (notif.message || notif.reason)}
+                          : notif.message || notif.reason}
                       </p>
                     </div>
                   </div>
@@ -229,7 +253,7 @@ export function NotificationsPanel() {
               ))}
             </div>
           )}
-          <div className="border-t border-white/10 px-4 py-2.5">
+          <div className="border-t border-[var(--glass-border)] px-4 py-2.5">
             <Link
               href="/alerts"
               onClick={() => setOpen(false)}

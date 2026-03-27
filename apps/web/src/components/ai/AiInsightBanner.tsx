@@ -54,10 +54,10 @@ export function AiInsightBanner({
       className="relative rounded-xl p-px mb-4"
       style={{
         background: isCritical
-          ? 'linear-gradient(135deg, rgb(168 85 247 / 0.6), rgb(239 68 68 / 0.6))'
+          ? 'var(--gradient-ai-critical, linear-gradient(135deg, rgb(168 85 247 / 0.6), rgb(239 68 68 / 0.6)))'
           : isWarning
-            ? 'linear-gradient(135deg, rgb(168 85 247 / 0.5), rgb(245 158 11 / 0.5))'
-            : 'linear-gradient(135deg, rgb(168 85 247 / 0.4), rgb(20 184 166 / 0.4))',
+            ? 'var(--gradient-ai-warning, linear-gradient(135deg, rgb(168 85 247 / 0.5), rgb(245 158 11 / 0.5)))'
+            : 'var(--gradient-ai-info, linear-gradient(135deg, rgb(168 85 247 / 0.4), rgb(20 184 166 / 0.4)))',
       }}
     >
       <div className="rounded-[11px] bg-[var(--color-bg-card)] px-4 py-3 flex items-start gap-3">

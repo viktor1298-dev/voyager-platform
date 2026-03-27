@@ -20,6 +20,7 @@ export function TableSkeleton({ rows = 5, columns = 4, className }: TableSkeleto
   return (
     <div
       className={cn('rounded-xl border border-[var(--color-border)] overflow-hidden', className)}
+      role="status"
       aria-busy="true"
       aria-label="Loading table data"
     >

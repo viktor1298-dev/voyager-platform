@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import {
   CartesianGrid,
   Legend,
@@ -62,12 +63,27 @@ function mapToScatterPoints(points: AlertEntry[]): ScatterPoint[] {
 }
 
 export function AlertsTimelineChart({ data, range }: AlertsTimelineChartProps) {
+  const chartId = useId()
+  const summaryId = `${chartId}-summary`
   const criticalData = data.filter((d) => d.severity === 'critical')
   const warningData = data.filter((d) => d.severity === 'warning')
   const infoData = data.filter((d) => d.severity === 'info')
 
+  if (data.length === 0) {
+    return (
+      <div
+        role="img"
+        aria-label="Alerts timeline by severity chart"
+        className="flex items-center justify-center"
+        style={{ height: CHART_HEIGHT }}
+      >
+        <p className="text-sm text-muted-foreground">No data available</p>
+      </div>
+    )
+  }
+
   return (
-    <div role="img" aria-label="Alerts timeline by severity chart">
+    <div role="img" aria-label="Alerts timeline by severity chart" aria-describedby={summaryId}>
       <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <ScatterChart margin={CHART_MARGIN}>
           <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
@@ -101,11 +117,23 @@ export function AlertsTimelineChart({ data, range }: AlertsTimelineChartProps) {
             }}
           />
           <Legend />
-          <Scatter name="Critical" data={mapToScatterPoints(criticalData)} fill={CHART_COLORS.critical} />
-          <Scatter name="Warning" data={mapToScatterPoints(warningData)} fill={CHART_COLORS.warning} />
+          <Scatter
+            name="Critical"
+            data={mapToScatterPoints(criticalData)}
+            fill={CHART_COLORS.critical}
+          />
+          <Scatter
+            name="Warning"
+            data={mapToScatterPoints(warningData)}
+            fill={CHART_COLORS.warning}
+          />
           <Scatter name="Info" data={mapToScatterPoints(infoData)} fill={CHART_COLORS.info} />
         </ScatterChart>
       </ResponsiveContainer>
+      <p id={summaryId} className="sr-only">
+        Alert counts: {criticalData.length} critical, {warningData.length} warning,{' '}
+        {infoData.length} info
+      </p>
     </div>
   )
 }

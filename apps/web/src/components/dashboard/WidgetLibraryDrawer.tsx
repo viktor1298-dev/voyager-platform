@@ -26,7 +26,8 @@ export function WidgetLibraryDrawer({ open, onClose, onAdd }: WidgetLibraryDrawe
     if (!open) return
     const drawer = drawerRef.current
     if (!drawer) return
-    const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    const focusableSelectors =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose()
@@ -38,9 +39,15 @@ export function WidgetLibraryDrawer({ open, onClose, onAdd }: WidgetLibraryDrawe
       const first = focusable[0]
       const last = focusable[focusable.length - 1]
       if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+        if (document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        }
       } else {
-        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+        if (document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
       }
     }
     document.addEventListener('keydown', handleKeyDown)
@@ -52,10 +59,7 @@ export function WidgetLibraryDrawer({ open, onClose, onAdd }: WidgetLibraryDrawe
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* Drawer */}
       <div
@@ -63,19 +67,17 @@ export function WidgetLibraryDrawer({ open, onClose, onAdd }: WidgetLibraryDrawe
         role="dialog"
         aria-modal="true"
         aria-label="Widget Library"
-        className="fixed right-0 top-0 bottom-0 z-50 w-80 flex flex-col border-l border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-2xl"
+        className="fixed right-0 top-0 bottom-0 z-50 w-full sm:w-80 flex flex-col border-l border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-2xl"
         data-testid="widget-library-drawer"
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
-          <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
-            Widget Library
-          </h2>
+          <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Widget Library</h2>
           <button
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
             aria-label="Close widget library"
-            className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-white/10 text-[var(--color-text-secondary)] transition-colors"
+            className="flex items-center justify-center w-11 h-11 rounded-md hover:bg-white/10 text-[var(--color-text-secondary)] transition-colors"
           >
             <X className="h-4 w-4" />
           </button>

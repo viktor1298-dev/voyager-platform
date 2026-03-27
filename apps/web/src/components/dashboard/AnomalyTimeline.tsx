@@ -4,7 +4,13 @@ import type React from 'react'
 import { AlertOctagon, AlertTriangle, Info } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo } from 'react'
-import { filterOpenAnomalies, MOCK_ANOMALIES, type Anomaly, type AnomalySeverity } from '@/lib/anomalies'
+import {
+  filterOpenAnomalies,
+  MOCK_ANOMALIES,
+  type Anomaly,
+  type AnomalySeverity,
+} from '@/lib/anomalies'
+import { timeAgo } from '@/lib/time-utils'
 import { trpc } from '@/lib/trpc'
 
 function severityIcon(severity: string) {
@@ -33,16 +39,6 @@ const SEVERITY_COLORS: Record<AnomalySeverity, string> = {
   critical: 'var(--color-chart-critical)',
   warning: 'var(--color-chart-warning)',
   info: 'var(--color-chart-info)',
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
 }
 
 /** Maximum anomalies shown in timeline */
@@ -76,13 +72,14 @@ function TimelineDistributionBar({ anomalies }: { anomalies: Anomaly[] }) {
           const total = b.critical + b.warning + b.info
           const height = total > 0 ? Math.max(4, (total / maxCount) * 32) : 2
           // Color by highest severity in bucket
-          const color = b.critical > 0
-            ? SEVERITY_COLORS.critical
-            : b.warning > 0
-              ? SEVERITY_COLORS.warning
-              : b.info > 0
-                ? SEVERITY_COLORS.info
-                : 'rgba(255,255,255,0.06)'
+          const color =
+            b.critical > 0
+              ? SEVERITY_COLORS.critical
+              : b.warning > 0
+                ? SEVERITY_COLORS.warning
+                : b.info > 0
+                  ? SEVERITY_COLORS.info
+                  : 'var(--color-track)'
           return (
             <div
               key={i}
@@ -200,9 +197,7 @@ export function AnomalyTimeline() {
                       {a.cluster}
                     </span>
                     <span className="text-xs text-[var(--color-text-dim)]">·</span>
-                    <span className="text-xs text-[var(--color-text-dim)] font-mono">
-                      {a.type}
-                    </span>
+                    <span className="text-xs text-[var(--color-text-dim)] font-mono">{a.type}</span>
                     <span className="text-xs text-[var(--color-text-dim)]">·</span>
                     <span className="text-xs text-[var(--color-text-dim)] font-mono">
                       {timeAgo(a.detectedAt)}

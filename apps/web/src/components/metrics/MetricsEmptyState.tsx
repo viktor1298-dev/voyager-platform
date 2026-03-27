@@ -24,9 +24,7 @@ export function MetricsEmptyState({
 }: MetricsEmptyStateProps) {
   const isError = status === 'error' || status === 'unavailable'
 
-  const defaultMessage = isError
-    ? 'Unable to collect metrics'
-    : 'Collecting metrics data...'
+  const defaultMessage = isError ? 'Unable to collect metrics' : 'Collecting metrics data...'
 
   const defaultDetail = isError
     ? 'Metrics server may not be available or the cluster is unreachable.'
@@ -41,23 +39,25 @@ export function MetricsEmptyState({
           </div>
         ) : (
           <>
-            <div className="absolute h-20 w-20 rounded-full bg-[hsl(262,83%,58%)]/10 animate-ping [animation-duration:2s]" />
-            <div className="relative flex items-center justify-center h-14 w-14 rounded-full bg-[hsl(262,83%,58%)]/15 border border-[hsl(262,83%,58%)]/30">
-              <Activity className="h-6 w-6 text-[hsl(262,83%,58%)]" />
+            <div className="absolute h-20 w-20 rounded-full bg-[var(--color-chart-cpu)]/10 animate-ping [animation-duration:2s]" />
+            <div className="relative flex items-center justify-center h-14 w-14 rounded-full bg-[var(--color-chart-cpu)]/15 border border-[var(--color-chart-cpu)]/30">
+              <Activity className="h-6 w-6 text-[var(--color-chart-cpu)]" />
             </div>
           </>
         )}
       </div>
       <div className="text-center max-w-sm">
-        <p className={cn(
-          'text-sm font-medium',
-          isError ? 'text-[var(--color-status-error,hsl(0,72%,51%))]' : 'text-[var(--color-text-primary)]',
-        )}>
+        <p
+          className={cn(
+            'text-sm font-medium',
+            isError
+              ? 'text-[var(--color-status-error,hsl(0,72%,51%))]'
+              : 'text-[var(--color-text-primary)]',
+          )}
+        >
           {message ?? defaultMessage}
         </p>
-        <p className="text-xs text-[var(--color-text-muted)] mt-1">
-          {detail ?? defaultDetail}
-        </p>
+        <p className="text-xs text-[var(--color-text-muted)] mt-1">{detail ?? defaultDetail}</p>
       </div>
       {onRetry && (
         <button

@@ -8,7 +8,12 @@ import { Toaster } from 'sonner'
 import { authClient } from '@/lib/auth-client'
 import { getTRPCClient, handleTRPCError, trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
-import { CommandPalette } from './CommandPalette'
+import dynamic from 'next/dynamic'
+
+const CommandPalette = dynamic(
+  () => import('./CommandPalette').then((m) => ({ default: m.CommandPalette })),
+  { ssr: false },
+)
 import { KeyboardShortcuts } from './KeyboardShortcuts'
 
 /**
@@ -53,6 +58,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
+            staleTime: 30 * 1000,
             retry: (failureCount, error) => {
               handleTRPCError(error)
               const MAX_RETRIES = 3
@@ -69,32 +75,32 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   // P3-013: LazyMotion saves ~23kb gzipped by loading only domAnimation features
   return (
-    <LazyMotion features={domAnimation} strict>
-    <MotionConfig reducedMotion="user">
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
-          <AuthSessionSync />
-          {children}
-          <Toaster
-            position="bottom-right"
-            richColors
-            closeButton
-            toastOptions={{
-              className: 'font-sans',
-              style: {
-                background: 'var(--color-bg-card)',
-                border: '1px solid var(--color-border)',
-                color: 'var(--color-text-primary)',
-              },
-            }}
-          />
-          <CommandPalette />
-          <KeyboardShortcuts />
-        </QueryClientProvider>
-      </trpc.Provider>
-    </ThemeProvider>
-    </MotionConfig>
+    <LazyMotion features={domAnimation}>
+      <MotionConfig reducedMotion="user">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <trpc.Provider client={trpcClient} queryClient={queryClient}>
+            <QueryClientProvider client={queryClient}>
+              <AuthSessionSync />
+              {children}
+              <Toaster
+                position="bottom-right"
+                richColors
+                closeButton
+                toastOptions={{
+                  className: 'font-sans',
+                  style: {
+                    background: 'var(--color-bg-card)',
+                    border: '1px solid var(--color-border)',
+                    color: 'var(--color-text-primary)',
+                  },
+                }}
+              />
+              <CommandPalette />
+              <KeyboardShortcuts />
+            </QueryClientProvider>
+          </trpc.Provider>
+        </ThemeProvider>
+      </MotionConfig>
     </LazyMotion>
   )
 }

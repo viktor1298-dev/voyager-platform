@@ -38,7 +38,9 @@ export default function PodsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
+  const hasCredentials = Boolean(
+    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
+  )
   const isLive = hasCredentials
 
   const liveQuery = trpc.clusters.live.useQuery(
@@ -62,12 +64,15 @@ export default function PodsPage() {
   const [selectedPod, setSelectedPod] = useState<PodRow | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const pods: PodRow[] = (podsQuery.data ?? []).map((p: Record<string, unknown>, i) => ({
-    id: `pod-${i}`,
-    ...p,
-    restartCount: typeof p.restartCount === 'number' ? p.restartCount : null,
-    ready: typeof p.ready === 'string' ? p.ready : null,
-  } as PodRow))
+  const pods: PodRow[] = (podsQuery.data ?? []).map(
+    (p: Record<string, unknown>, i) =>
+      ({
+        id: `pod-${i}`,
+        ...p,
+        restartCount: typeof p.restartCount === 'number' ? p.restartCount : null,
+        ready: typeof p.ready === 'string' ? p.ready : null,
+      }) as PodRow,
+  )
 
   const filteredPods = useMemo(() => {
     if (!searchQuery.trim()) return pods
@@ -87,13 +92,24 @@ export default function PodsPage() {
     return (
       <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
         <div className="rounded-full bg-white/[0.04] p-3 mb-3">
-          <svg className="h-8 w-8 text-[var(--color-text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          <svg
+            className="h-8 w-8 text-[var(--color-text-dim)]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+            />
           </svg>
         </div>
         <p className="text-sm font-medium text-[var(--color-text-muted)]">Live data unavailable</p>
         <p className="text-xs text-[var(--color-text-dim)] mt-1 max-w-xs">
-          Connect cluster credentials to view pods in real time. Pod data requires an active connection to the cluster API.
+          Connect cluster credentials to view pods in real time. Pod data requires an active
+          connection to the cluster API.
         </p>
       </div>
     )
@@ -101,6 +117,7 @@ export default function PodsPage() {
 
   return (
     <>
+      <h1 className="sr-only">Cluster Pods</h1>
       {/* Offline warning banner */}
       {isOffline && (
         <div className="mb-3 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/[0.06] text-[var(--color-status-warning)]">
@@ -152,16 +169,30 @@ export default function PodsPage() {
       )}
 
       <PodDetailSheet
-        pod={selectedPod ? { ...selectedPod, restartCount: selectedPod.restartCount ?? undefined } : null}
+        pod={
+          selectedPod
+            ? { ...selectedPod, restartCount: selectedPod.restartCount ?? undefined }
+            : null
+        }
         open={!!selectedPod}
-        onOpenChange={(open) => { if (!open) setSelectedPod(null) }}
+        onOpenChange={(open) => {
+          if (!open) setSelectedPod(null)
+        }}
         events={[]}
       />
     </>
   )
 }
 
-function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: string; onClose: () => void }) {
+function DeletePodDialog({
+  pod,
+  clusterId,
+  onClose,
+}: {
+  pod: PodRow
+  clusterId: string
+  onClose: () => void
+}) {
   const [confirmText, setConfirmText] = useState('')
   const utils = trpc.useUtils()
   const deleteMutation = trpc.pods.delete.useMutation({
@@ -177,20 +208,38 @@ function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: 
   const isConfirmed = confirmText === 'delete'
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center" onClick={onClose} role="presentation">
-      <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-5 w-[420px] max-w-[calc(100vw-2rem)] shadow-xl" onClick={(e) => e.stopPropagation()} role="alertdialog" aria-labelledby="delete-pod-title" aria-describedby="delete-pod-desc">
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-5 w-[420px] max-w-[calc(100vw-2rem)] shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+        role="alertdialog"
+        aria-labelledby="delete-pod-title"
+        aria-describedby="delete-pod-desc"
+      >
         <div className="flex items-start gap-3 mb-4">
           <div className="shrink-0 rounded-full bg-red-500/10 p-2">
             <AlertTriangle className="h-5 w-5 text-red-400" />
           </div>
           <div>
-            <h3 id="delete-pod-title" className="text-sm font-bold text-[var(--color-text-primary)]">Delete Pod</h3>
-            <p className="text-xs text-[var(--color-text-muted)] mt-0.5 font-mono break-all">{pod.namespace}/{pod.name}</p>
+            <h3
+              id="delete-pod-title"
+              className="text-sm font-bold text-[var(--color-text-primary)]"
+            >
+              Delete Pod
+            </h3>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5 font-mono break-all">
+              {pod.namespace}/{pod.name}
+            </p>
           </div>
         </div>
         <div id="delete-pod-desc" className="space-y-2 mb-4">
           <p className="text-xs text-[var(--color-text-secondary)]">
-            Are you sure you want to delete this pod? If it&apos;s managed by a Deployment or ReplicaSet, Kubernetes will automatically restart it.
+            Are you sure you want to delete this pod? If it&apos;s managed by a Deployment or
+            ReplicaSet, Kubernetes will automatically restart it.
           </p>
           <div className="rounded-lg border border-[var(--color-status-warning)]/30 bg-[var(--color-status-warning)]/[0.06] px-3 py-2">
             <p className="text-xs text-[var(--color-status-warning)]">
@@ -199,8 +248,13 @@ function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: 
           </div>
         </div>
         <div className="mb-4">
-          <label htmlFor="confirm-delete" className="text-xs text-[var(--color-text-muted)] mb-1 block">
-            Type <span className="font-mono font-bold text-[var(--color-text-primary)]">delete</span> to confirm
+          <label
+            htmlFor="confirm-delete"
+            className="text-xs text-[var(--color-text-muted)] mb-1 block"
+          >
+            Type{' '}
+            <span className="font-mono font-bold text-[var(--color-text-primary)]">delete</span> to
+            confirm
           </label>
           <input
             id="confirm-delete"
@@ -214,10 +268,18 @@ function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: 
           />
         </div>
         <div className="flex gap-2 justify-end">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-xs border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors">Cancel</button>
           <button
             type="button"
-            onClick={() => deleteMutation.mutate({ clusterId, namespace: pod.namespace, podName: pod.name })}
+            onClick={onClose}
+            className="px-3 py-1.5 rounded-lg text-xs border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              deleteMutation.mutate({ clusterId, namespace: pod.namespace, podName: pod.name })
+            }
             disabled={!isConfirmed || deleteMutation.isPending}
             className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-600 text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
@@ -229,7 +291,13 @@ function DeletePodDialog({ pod, clusterId, onClose }: { pod: PodRow; clusterId: 
   )
 }
 
-function PodsGroupedByNamespace({ pods, isLoading, isAdmin, onDeletePod, onSelectPod }: {
+function PodsGroupedByNamespace({
+  pods,
+  isLoading,
+  isAdmin,
+  onDeletePod,
+  onSelectPod,
+}: {
   pods: PodRow[]
   isLoading: boolean
   isAdmin: boolean
@@ -246,64 +314,138 @@ function PodsGroupedByNamespace({ pods, isLoading, isAdmin, onDeletePod, onSelec
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]))
   }, [pods])
 
-  if (isLoading) return (
-    <div className="space-y-2">
-      {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-    </div>
-  )
-
-  if (pods.length === 0) return (
-    <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-      <div className="rounded-full bg-white/[0.04] p-3 mb-3">
-        <svg className="h-8 w-8 text-[var(--color-text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-        </svg>
+  if (isLoading)
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
       </div>
-      <p className="text-sm font-medium text-[var(--color-text-muted)]">No pods found in this cluster</p>
-      <p className="text-xs text-[var(--color-text-dim)] mt-1 max-w-xs">
-        Pods appear here when workloads are running in your cluster. Check that your cluster is connected and has active deployments.
-      </p>
-    </div>
-  )
+    )
+
+  if (pods.length === 0)
+    return (
+      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
+        <div className="rounded-full bg-white/[0.04] p-3 mb-3">
+          <svg
+            className="h-8 w-8 text-[var(--color-text-dim)]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+            />
+          </svg>
+        </div>
+        <p className="text-sm font-medium text-[var(--color-text-muted)]">
+          No pods found in this cluster
+        </p>
+        <p className="text-xs text-[var(--color-text-dim)] mt-1 max-w-xs">
+          Pods appear here when workloads are running in your cluster. Check that your cluster is
+          connected and has active deployments.
+        </p>
+      </div>
+    )
 
   return (
     <div className="space-y-2">
       {grouped.map(([namespace, nsPods]) => (
-        <NamespacePodGroup key={namespace} namespace={namespace} pods={nsPods} isAdmin={isAdmin} onDeletePod={onDeletePod} onSelectPod={onSelectPod} />
+        <NamespacePodGroup
+          key={namespace}
+          namespace={namespace}
+          pods={nsPods}
+          isAdmin={isAdmin}
+          onDeletePod={onDeletePod}
+          onSelectPod={onSelectPod}
+        />
       ))}
     </div>
   )
 }
 
-function NamespacePodGroup({ namespace, pods, isAdmin, onDeletePod, onSelectPod }: {
-  namespace: string; pods: PodRow[]; isAdmin: boolean; onDeletePod: (pod: PodRow) => void; onSelectPod: (pod: PodRow) => void
+function NamespacePodGroup({
+  namespace,
+  pods,
+  isAdmin,
+  onDeletePod,
+  onSelectPod,
+}: {
+  namespace: string
+  pods: PodRow[]
+  isAdmin: boolean
+  onDeletePod: (pod: PodRow) => void
+  onSelectPod: (pod: PodRow) => void
 }) {
   const [open, setOpen] = useState(true)
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger className="flex w-full items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
-        <ChevronDown className={`h-3.5 w-3.5 text-[var(--color-text-dim)] transition-transform ${open ? '' : '-rotate-90'}`} />
-        <span className="text-xs font-bold font-mono text-[var(--color-text-secondary)]">{namespace}</span>
-        <span className="text-xs px-1.5 py-0.5 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-mono font-bold">{pods.length}</span>
+        <ChevronDown
+          className={`h-3.5 w-3.5 text-[var(--color-text-dim)] transition-transform ${open ? '' : '-rotate-90'}`}
+        />
+        <span className="text-xs font-bold font-mono text-[var(--color-text-secondary)]">
+          {namespace}
+        </span>
+        <span className="text-xs px-1.5 py-0.5 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-mono font-bold">
+          {pods.length}
+        </span>
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-1 space-y-0.5 pl-2">
           {pods.map((pod) => {
-            const statusColor = pod.status === 'Running' ? 'bg-[var(--color-status-active)]' : pod.status === 'Pending' ? 'bg-[var(--color-status-warning)]' : 'bg-[var(--color-status-error)]'
+            const statusColor =
+              pod.status === 'Running'
+                ? 'bg-[var(--color-status-active)]'
+                : pod.status === 'Pending'
+                  ? 'bg-[var(--color-status-warning)]'
+                  : 'bg-[var(--color-status-error)]'
             return (
-              <button key={pod.id} type="button" onClick={() => onSelectPod(pod)} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition-colors text-left">
+              <button
+                key={pod.id}
+                type="button"
+                onClick={() => onSelectPod(pod)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition-colors text-left"
+              >
                 <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusColor}`} />
-                <span className="flex-1 min-w-0 text-[13px] font-mono text-[var(--color-text-primary)] truncate">{pod.name}</span>
-                {pod.ready && <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${pod.ready.split('/')[0] === pod.ready.split('/')[1] ? 'bg-[var(--color-status-active)]/15 text-[var(--color-status-active)]' : 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)]'}`}>{pod.ready}</span>}
-                {pod.restartCount != null && pod.restartCount > 0 && <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${pod.restartCount >= 5 ? 'bg-red-500/15 text-red-400' : 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)]'}`}>↻{pod.restartCount}</span>}
+                <span className="flex-1 min-w-0 text-[13px] font-mono text-[var(--color-text-primary)] truncate">
+                  {pod.name}
+                </span>
+                {pod.ready && (
+                  <span
+                    className={`text-xs font-mono px-1.5 py-0.5 rounded ${pod.ready.split('/')[0] === pod.ready.split('/')[1] ? 'bg-[var(--color-status-active)]/15 text-[var(--color-status-active)]' : 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)]'}`}
+                  >
+                    {pod.ready}
+                  </span>
+                )}
+                {pod.restartCount != null && pod.restartCount > 0 && (
+                  <span
+                    className={`text-xs font-mono px-1.5 py-0.5 rounded ${pod.restartCount >= 5 ? 'bg-red-500/15 text-red-400' : 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)]'}`}
+                  >
+                    ↻{pod.restartCount}
+                  </span>
+                )}
                 <span className="text-xs text-[var(--color-text-secondary)]">{pod.status}</span>
-                <span className="text-xs text-[var(--color-text-dim)] font-mono">{pod.createdAt ? timeAgo(pod.createdAt) : '—'}</span>
+                <span className="text-xs text-[var(--color-text-dim)] font-mono">
+                  {pod.createdAt ? timeAgo(pod.createdAt) : '—'}
+                </span>
                 {isAdmin && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); onDeletePod(pod) }} className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hover:text-red-400 transition-colors" aria-label={`Delete pod ${pod.name}`}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDeletePod(pod)
+                          }}
+                          className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hover:text-red-400 transition-colors"
+                          aria-label={`Delete pod ${pod.name}`}
+                        >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </TooltipTrigger>

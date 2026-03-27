@@ -64,7 +64,9 @@ function formatTimestamp(ts: string, format: TimestampFormat): string {
 function buildSearchRegex(term: string, isRegex: boolean): RegExp | null {
   if (!term) return null
   try {
-    return isRegex ? new RegExp(term, 'gi') : new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+    return isRegex
+      ? new RegExp(term, 'gi')
+      : new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
   } catch {
     return null
   }
@@ -80,10 +82,7 @@ function highlightMatches(text: string, regex: RegExp | null): React.ReactNode {
   while ((match = regex.exec(text)) !== null) {
     if (match.index > last) parts.push(text.slice(last, match.index))
     parts.push(
-      <mark
-        key={match.index}
-        className="rounded bg-yellow-400/30 text-yellow-200 px-0.5"
-      >
+      <mark key={match.index} className="rounded bg-yellow-400/30 text-yellow-200 px-0.5">
         {match[0]}
       </mark>,
     )
@@ -269,6 +268,7 @@ export default function LogsPage() {
           <div className="flex items-center justify-between">
             <div>
               <Breadcrumbs />
+              <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Logs</h1>
               <p className="text-sm text-[var(--color-text-muted)] mt-1">
                 Live tail from multiple pods with filters and download
               </p>
@@ -385,7 +385,9 @@ export default function LogsPage() {
                       />
                       <span className="text-[var(--color-text-primary)] break-all">
                         {pod.name}
-                        <span className="ml-1 text-xs text-[var(--color-text-muted)]">({pod.status})</span>
+                        <span className="ml-1 text-xs text-[var(--color-text-muted)]">
+                          ({pod.status})
+                        </span>
                       </span>
                     </label>
                   )
@@ -476,7 +478,9 @@ export default function LogsPage() {
               <div className="rounded-full bg-[var(--color-accent)]/10 p-3 mb-4">
                 <Info className="h-8 w-8 text-[var(--color-accent)]" />
               </div>
-              <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">Select a cluster</h3>
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
+                Select a cluster
+              </h3>
               <p className="text-xs text-[var(--color-text-muted)] max-w-sm">
                 Choose a cluster from the top bar to start viewing logs.
               </p>
@@ -484,8 +488,12 @@ export default function LogsPage() {
           )}
 
           {activeClusterId && podsQuery.isLoading && <Shimmer className="h-64 w-full rounded-lg" />}
-          {activeClusterId && podsQuery.isError && <QueryError message={podsQuery.error.message} onRetry={() => podsQuery.refetch()} />}
-          {logsQuery.isError && <QueryError message={logsQuery.error.message} onRetry={() => logsQuery.refetch()} />}
+          {activeClusterId && podsQuery.isError && (
+            <QueryError message={podsQuery.error.message} onRetry={() => podsQuery.refetch()} />
+          )}
+          {logsQuery.isError && (
+            <QueryError message={logsQuery.error.message} onRetry={() => logsQuery.refetch()} />
+          )}
 
           {targetsWithErrors.length > 0 && (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
@@ -522,20 +530,36 @@ export default function LogsPage() {
                         </span>
                       )}
                     </span>
-                    <span className="text-xs text-[var(--color-log-dim)]">{logsQuery.data.lines.length} lines</span>
+                    <span className="text-xs text-[var(--color-log-dim)]">
+                      {logsQuery.data.lines.length} lines
+                    </span>
                   </div>
                 </div>
 
                 {viewMode === 'merged' ? (
                   <pre className="overflow-auto max-h-[600px] p-4 text-xs leading-5 text-[var(--color-log-text)] font-mono whitespace-pre-wrap bg-[var(--color-log-bg)]">
                     {logsQuery.data.lines.length === 0 ? (
-                      <span className="text-[var(--color-log-dim)] italic">No matching log lines</span>
+                      <span className="text-[var(--color-log-dim)] italic">
+                        No matching log lines
+                      </span>
                     ) : (
                       logsQuery.data.lines.map((line, index) => {
-                        const levelColor = line.level === 'ERROR' ? 'text-red-400' : line.level === 'WARN' ? 'text-yellow-400' : line.level === 'INFO' ? 'text-blue-400' : line.level === 'DEBUG' ? 'text-gray-400' : ''
+                        const levelColor =
+                          line.level === 'ERROR'
+                            ? 'text-red-400'
+                            : line.level === 'WARN'
+                              ? 'text-yellow-400'
+                              : line.level === 'INFO'
+                                ? 'text-blue-400'
+                                : line.level === 'DEBUG'
+                                  ? 'text-gray-400'
+                                  : ''
                         const formattedMessage = tryFormatJson(line.message)
                         return (
-                          <div key={`${line.timestamp}-${line.podName}-${index}`} className="hover:bg-white/5">
+                          <div
+                            key={`${line.timestamp}-${line.podName}-${index}`}
+                            className="hover:bg-white/5"
+                          >
                             <span className="inline-block w-8 text-right text-[var(--color-log-line-number)] select-none mr-3">
                               {index + 1}
                             </span>
@@ -558,23 +582,39 @@ export default function LogsPage() {
                 ) : (
                   <div className="max-h-[600px] overflow-auto bg-[var(--color-log-bg)] p-3 space-y-3">
                     {groupedLines.length === 0 ? (
-                      <div className="text-xs italic text-[var(--color-log-dim)]">No matching log lines</div>
+                      <div className="text-xs italic text-[var(--color-log-dim)]">
+                        No matching log lines
+                      </div>
                     ) : (
                       groupedLines.map(([groupKey, lines]) => (
-                        <div key={groupKey} className="rounded-xl border border-[var(--color-border)] overflow-hidden">
+                        <div
+                          key={groupKey}
+                          className="rounded-xl border border-[var(--color-border)] overflow-hidden"
+                        >
                           <div className="bg-[var(--color-log-header)] px-3 py-1 text-xs text-cyan-300 font-mono">
                             {groupKey} ({lines.length})
                           </div>
                           <pre className="p-3 text-xs leading-5 text-[var(--color-log-text)] font-mono whitespace-pre-wrap">
                             {lines.map((line, index) => {
-                              const lvlColor = line.level === 'ERROR' ? 'text-red-400' : line.level === 'WARN' ? 'text-yellow-400' : line.level === 'INFO' ? 'text-blue-400' : line.level === 'DEBUG' ? 'text-gray-400' : ''
+                              const lvlColor =
+                                line.level === 'ERROR'
+                                  ? 'text-red-400'
+                                  : line.level === 'WARN'
+                                    ? 'text-yellow-400'
+                                    : line.level === 'INFO'
+                                      ? 'text-blue-400'
+                                      : line.level === 'DEBUG'
+                                        ? 'text-gray-400'
+                                        : ''
                               const formattedMessage = tryFormatJson(line.message)
                               return (
                                 <div key={`${line.timestamp}-${index}`}>
                                   <span className="text-[var(--color-log-dim)] mr-2">
                                     {formatTimestamp(line.timestamp, timestampFormat)}
                                   </span>
-                                  <span className={`mr-2 font-bold ${lvlColor}`}>[{line.level}]</span>
+                                  <span className={`mr-2 font-bold ${lvlColor}`}>
+                                    [{line.level}]
+                                  </span>
                                   {searchRegex
                                     ? highlightMatches(formattedMessage, searchRegex)
                                     : formattedMessage}

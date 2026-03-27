@@ -8,20 +8,68 @@ const PROVIDER_ALIASES: Record<string, string> = {
 }
 
 const PROVIDER_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
-  minikube: { icon: 'simple-icons:kubernetes', color: '#326CE5', bg: 'rgba(50, 108, 229, 0.15)' },
-  kubeconfig: { icon: 'mdi:file-cog-outline', color: '#9CA3AF', bg: 'rgba(107, 114, 128, 0.15)' },
-  aws: { icon: 'simple-icons:amazonaws', color: '#FF9900', bg: 'rgba(255, 153, 0, 0.15)' },
-  gcp: { icon: 'simple-icons:googlecloud', color: '#4285F4', bg: 'rgba(66, 133, 244, 0.15)' },
-  azure: { icon: 'simple-icons:microsoftazure', color: '#0078D4', bg: 'rgba(0, 120, 212, 0.15)' },
-  k3s: { icon: 'simple-icons:k3s', color: '#FFC61C', bg: 'rgba(255, 198, 28, 0.15)' },
-  kind: { icon: 'simple-icons:kubernetes', color: '#326CE5', bg: 'rgba(50, 108, 229, 0.15)' },
-  docker: { icon: 'simple-icons:docker', color: '#2496ED', bg: 'rgba(36, 150, 237, 0.15)' },
-  do: { icon: 'simple-icons:digitalocean', color: '#0080FF', bg: 'rgba(0, 128, 255, 0.15)' },
-  rancher: { icon: 'simple-icons:rancher', color: '#0075A8', bg: 'rgba(0, 117, 168, 0.15)' },
-  onprem: { icon: 'simple-icons:kubernetes', color: '#326CE5', bg: 'rgba(50, 108, 229, 0.15)' },
+  minikube: {
+    icon: 'simple-icons:kubernetes',
+    color: '#326CE5',
+    bg: 'color-mix(in srgb, #326CE5 15%, transparent)',
+  },
+  kubeconfig: {
+    icon: 'mdi:file-cog-outline',
+    color: '#9CA3AF',
+    bg: 'color-mix(in srgb, #6B7280 15%, transparent)',
+  },
+  aws: {
+    icon: 'simple-icons:amazonaws',
+    color: '#FF9900',
+    bg: 'color-mix(in srgb, #FF9900 15%, transparent)',
+  },
+  gcp: {
+    icon: 'simple-icons:googlecloud',
+    color: '#4285F4',
+    bg: 'color-mix(in srgb, #4285F4 15%, transparent)',
+  },
+  azure: {
+    icon: 'simple-icons:microsoftazure',
+    color: '#0078D4',
+    bg: 'color-mix(in srgb, #0078D4 15%, transparent)',
+  },
+  k3s: {
+    icon: 'simple-icons:k3s',
+    color: '#FFC61C',
+    bg: 'color-mix(in srgb, #FFC61C 15%, transparent)',
+  },
+  kind: {
+    icon: 'simple-icons:kubernetes',
+    color: '#326CE5',
+    bg: 'color-mix(in srgb, #326CE5 15%, transparent)',
+  },
+  docker: {
+    icon: 'simple-icons:docker',
+    color: '#2496ED',
+    bg: 'color-mix(in srgb, #2496ED 15%, transparent)',
+  },
+  do: {
+    icon: 'simple-icons:digitalocean',
+    color: '#0080FF',
+    bg: 'color-mix(in srgb, #0080FF 15%, transparent)',
+  },
+  rancher: {
+    icon: 'simple-icons:rancher',
+    color: '#0075A8',
+    bg: 'color-mix(in srgb, #0075A8 15%, transparent)',
+  },
+  onprem: {
+    icon: 'simple-icons:kubernetes',
+    color: '#326CE5',
+    bg: 'color-mix(in srgb, #326CE5 15%, transparent)',
+  },
 }
 
-const DEFAULT_ICON = { icon: 'simple-icons:kubernetes', color: '#326CE5', bg: 'rgba(50, 108, 229, 0.12)' }
+const DEFAULT_ICON = {
+  icon: 'simple-icons:kubernetes',
+  color: '#326CE5',
+  bg: 'color-mix(in srgb, #326CE5 12%, transparent)',
+}
 
 interface ProviderLogoProps {
   provider: string

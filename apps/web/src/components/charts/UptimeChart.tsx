@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import {
   Bar,
   BarChart,
@@ -49,8 +50,24 @@ function getUptimeColor(uptime: number): string {
 }
 
 export function UptimeChart({ data }: UptimeChartProps) {
+  const chartId = useId()
+  const summaryId = `${chartId}-summary`
+
+  if (data.length === 0) {
+    return (
+      <div
+        role="img"
+        aria-label="Uptime percentage by cluster chart"
+        className="flex items-center justify-center"
+        style={{ height: CHART_HEIGHT }}
+      >
+        <p className="text-sm text-muted-foreground">No data available</p>
+      </div>
+    )
+  }
+
   return (
-    <div role="img" aria-label="Uptime percentage by cluster chart">
+    <div role="img" aria-label="Uptime percentage by cluster chart" aria-describedby={summaryId}>
       <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <BarChart data={data} margin={CHART_MARGIN} layout="vertical">
           <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
@@ -67,6 +84,11 @@ export function UptimeChart({ data }: UptimeChartProps) {
             stroke={CHART_TEXT_COLOR}
             fontSize={AXIS_FONT_SIZE}
             width={CLUSTER_LABEL_WIDTH}
+            tick={({ x, y, payload }: { x: string | number; y: string | number; payload: { value: string } }) => (
+              <text x={Number(x)} y={Number(y)} textAnchor="end" fill={CHART_TEXT_COLOR} fontSize={11} dy={4}>
+                {payload.value.length > 15 ? `${payload.value.slice(0, 15)}...` : payload.value}
+              </text>
+            )}
           />
           <Tooltip
             {...TOOLTIP_STYLE}
@@ -79,6 +101,31 @@ export function UptimeChart({ data }: UptimeChartProps) {
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+      <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <span className="h-2 w-2 rounded" style={{ background: CHART_COLORS.healthy }} />{' '}
+          &gt;99.9%
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-2 w-2 rounded" style={{ background: CHART_COLORS.degraded }} />{' '}
+          &gt;99.0%
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-2 w-2 rounded" style={{ background: CHART_COLORS.offline }} />{' '}
+          &lt;99.0%
+        </span>
+      </div>
+      <p id={summaryId} className="sr-only">
+        Uptime data for {data.length} clusters.{' '}
+        {data.filter((d) => d.uptime >= UPTIME_EXCELLENT_THRESHOLD).length} excellent,{' '}
+        {
+          data.filter(
+            (d) => d.uptime >= UPTIME_ACCEPTABLE_THRESHOLD && d.uptime < UPTIME_EXCELLENT_THRESHOLD,
+          ).length
+        }{' '}
+        acceptable, {data.filter((d) => d.uptime < UPTIME_ACCEPTABLE_THRESHOLD).length} below
+        threshold.
+      </p>
     </div>
   )
 }

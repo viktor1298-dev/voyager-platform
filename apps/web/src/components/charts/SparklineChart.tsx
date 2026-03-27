@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface SparklineChartProps {
@@ -25,23 +26,26 @@ function SparklineTooltip({
   return (
     <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs shadow-lg">
       <span className="font-mono font-medium text-[var(--color-text-primary)]">
-        {payload[0]?.value ?? 0}{unit ? ` ${unit}` : ''}
+        {payload[0]?.value ?? 0}
+        {unit ? ` ${unit}` : ''}
       </span>
     </div>
   )
 }
 
 export function SparklineChart({ data, color, height = 60, label, unit }: SparklineChartProps) {
+  const id = useId()
   const chartData = data.map((value, i) => ({ v: value, i }))
-  const gradientId = `spark-${color.replace(/[^a-z0-9]/gi, '')}`
+  const gradientId = `spark-${id}`
 
   return (
-    <div style={{ height, overflow: 'hidden', width: '100%' }} role="img" aria-label={label ?? 'Sparkline chart'}>
+    <div
+      style={{ height, overflow: 'hidden', width: '100%' }}
+      role="img"
+      aria-label={label ?? 'Sparkline chart'}
+    >
       <ResponsiveContainer width="100%" height={height}>
-        <AreaChart
-          data={chartData}
-          margin={{ top: 2, right: 0, bottom: 0, left: 0 }}
-        >
+        <AreaChart data={chartData} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.3} />
@@ -123,5 +127,3 @@ export function generateStableTimeSeries(
   points.push(currentValue)
   return points
 }
-
-

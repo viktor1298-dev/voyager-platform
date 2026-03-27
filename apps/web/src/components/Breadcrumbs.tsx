@@ -72,6 +72,7 @@ export function Breadcrumbs({ segmentLabels }: { segmentLabels?: Record<string, 
             {i > 0 && <ChevronRight className="h-3 w-3 text-[var(--color-text-dim)]" />}
             {isLast ? (
               <span
+                aria-current="page"
                 className="max-w-[min(48vw,20rem)] truncate text-[var(--color-text-secondary)]"
                 title={crumb.label}
               >

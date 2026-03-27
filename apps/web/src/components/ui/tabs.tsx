@@ -12,7 +12,7 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
   return (
     <TabsPrimitive.List
       className={cn(
-        'inline-flex h-10 items-center justify-center rounded-xl bg-[var(--color-bg-secondary)] p-1 text-[var(--color-text-muted)] border border-[var(--color-border)]',
+        'inline-flex h-11 items-center justify-center rounded-xl bg-[var(--color-bg-secondary)] p-1 text-[var(--color-text-muted)] border border-[var(--color-border)]',
         className,
       )}
       {...props}
@@ -24,7 +24,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-all disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-[var(--color-bg-card)] data-[state=active]:text-[var(--color-text-primary)] data-[state=active]:shadow-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
+        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 min-h-[44px] text-xs font-medium transition-all disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-[var(--color-bg-card)] data-[state=active]:text-[var(--color-text-primary)] data-[state=active]:shadow-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
         className,
       )}
       {...props}

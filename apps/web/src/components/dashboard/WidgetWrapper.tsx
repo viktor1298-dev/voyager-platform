@@ -67,7 +67,7 @@ export function WidgetWrapper({
         </>
       )}
 
-      <div className={cn('h-full', editMode && 'pt-1')}>{children}</div>
+      <div className={cn('@container h-full', editMode && 'pt-1')}>{children}</div>
 
       {configOpen && (
         <WidgetConfigModal

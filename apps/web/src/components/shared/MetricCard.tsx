@@ -83,7 +83,7 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        'relative rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition-colors hover:bg-[var(--color-surface-secondary)]',
+        'relative rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition-all duration-150 hover:bg-[var(--color-surface-secondary)] hover:-translate-y-0.5',
         className,
       )}
     >
@@ -97,9 +97,7 @@ export function MetricCard({
               {value}
             </span>
             {trendCfg && (
-              <span className={cn('text-sm font-medium', trendCfg.color)}>
-                {trendCfg.symbol}
-              </span>
+              <span className={cn('text-sm font-medium', trendCfg.color)}>{trendCfg.symbol}</span>
             )}
           </div>
           {description && (

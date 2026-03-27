@@ -167,12 +167,18 @@ export function CommandPalette() {
     }
 
     return items
-  }, [clustersQuery.data, deploymentsQuery.data, servicesQuery.data, podsQuery.data, namespacesQuery.data])
+  }, [
+    clustersQuery.data,
+    deploymentsQuery.data,
+    servicesQuery.data,
+    podsQuery.data,
+    namespacesQuery.data,
+  ])
 
   if (!open) return null
 
   const itemClass =
-    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors'
+    'flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-lg text-sm text-[var(--color-text-secondary)] cursor-pointer data-[selected=true]:bg-indigo-500/10 data-[selected=true]:text-[var(--color-text-primary)] transition-colors'
   const headingClass =
     '[&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[var(--color-text-dim)] [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5'
 
@@ -184,9 +190,9 @@ export function CommandPalette() {
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={() => setOpen(false)}
       />
-      <div className="relative flex items-start justify-center pt-[20vh]">
+      <div className="relative flex items-start justify-center pt-[10vh] sm:pt-[20vh]">
         <Command
-          className="w-full max-w-lg mx-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-2xl overflow-hidden animate-slide-up"
+          className="w-[calc(100vw-2rem)] sm:w-full max-w-lg mx-2 sm:mx-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-2xl overflow-hidden animate-slide-up"
           label="Command Palette"
           shouldFilter
         >
@@ -242,7 +248,9 @@ export function CommandPalette() {
                   <Command.Item
                     key={tab.id}
                     value={`Go to cluster tab ${tab.label}`}
-                    onSelect={() => navigate(`/clusters/${currentClusterId}${tab.path}`, tab.label, 'Cluster Tab')}
+                    onSelect={() =>
+                      navigate(`/clusters/${currentClusterId}${tab.path}`, tab.label, 'Cluster Tab')
+                    }
                     className={itemClass}
                   >
                     <Server className="h-4 w-4 shrink-0 text-[var(--color-accent)]" />
@@ -284,9 +292,7 @@ export function CommandPalette() {
               >
                 <Key className="h-4 w-4 shrink-0" />
                 <span className="flex-1">API Tokens</span>
-                <span className="text-xs text-[var(--color-text-dim)] font-mono">
-                  /api-tokens
-                </span>
+                <span className="text-xs text-[var(--color-text-dim)] font-mono">/api-tokens</span>
                 <kbd className="ml-2 hidden sm:inline-flex items-center px-1 py-0.5 rounded text-xs font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shrink-0">
                   ↵
                 </kbd>
@@ -392,20 +398,28 @@ export function CommandPalette() {
           <div className="hidden sm:flex items-center justify-between border-t border-[var(--color-border)] px-4 py-2 text-xs text-[var(--color-text-dim)]">
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center gap-1">
-                <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">↑↓</kbd>
+                <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                  ↑↓
+                </kbd>
                 navigate
               </span>
               <span className="inline-flex items-center gap-1">
-                <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">↵</kbd>
+                <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                  ↵
+                </kbd>
                 select
               </span>
               <span className="inline-flex items-center gap-1">
-                <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">esc</kbd>
+                <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                  esc
+                </kbd>
                 close
               </span>
             </div>
             <span className="inline-flex items-center gap-1">
-              <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">⌘K</kbd>
+              <kbd className="px-1 py-0.5 rounded font-mono border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                ⌘K
+              </kbd>
               toggle
             </span>
           </div>

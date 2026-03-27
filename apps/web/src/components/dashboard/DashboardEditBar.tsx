@@ -43,7 +43,8 @@ export function DashboardEditBar({
         <button
           type="button"
           onClick={onAddWidget}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30 transition-all"
+          aria-label="Add widget to dashboard"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30 transition-all min-h-[36px]"
           data-testid="add-widget-btn"
         >
           <PanelRightOpen className="h-3.5 w-3.5" />
@@ -52,7 +53,8 @@ export function DashboardEditBar({
         <button
           type="button"
           onClick={onReset}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-white/[0.05] hover:bg-white/[0.08] text-[var(--color-text-secondary)] border border-[var(--color-border)] transition-all"
+          aria-label="Reset dashboard to default layout"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium bg-white/[0.05] hover:bg-white/[0.08] text-[var(--color-text-secondary)] border border-[var(--color-border)] transition-all min-h-[36px]"
           data-testid="reset-layout-btn"
         >
           <RefreshCcw className="h-3.5 w-3.5" />
@@ -64,7 +66,8 @@ export function DashboardEditBar({
         <button
           type="button"
           onClick={onCancel}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors"
+          aria-label="Cancel editing dashboard"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors min-h-[36px]"
           data-testid="cancel-edit-btn"
         >
           <X className="h-3.5 w-3.5" />
@@ -74,7 +77,8 @@ export function DashboardEditBar({
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-semibold bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-60 text-white transition-all"
+          aria-label="Save dashboard layout"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-semibold bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-60 text-white transition-all min-h-[36px]"
           data-testid="save-layout-btn"
         >
           {saving ? (

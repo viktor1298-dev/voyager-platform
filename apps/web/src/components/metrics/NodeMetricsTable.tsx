@@ -12,9 +12,9 @@ interface NodeMetricsTableProps {
 
 function getColor(percent: number): string {
   if (percent < 1) return 'var(--color-text-dim)' // idle/no data
-  if (percent > 85) return 'hsl(0,84%,60%)' // red — high
-  if (percent > 65) return 'hsl(48,96%,53%)' // yellow — warning
-  return 'hsl(142,71%,45%)' // green — normal
+  if (percent > 85) return 'var(--color-threshold-critical)'
+  if (percent > 65) return 'var(--color-threshold-warn)'
+  return 'var(--color-threshold-normal)'
 }
 
 function PercentBar({ value }: { value: number | null | undefined }) {
@@ -40,7 +40,11 @@ function PercentBar({ value }: { value: number | null | undefined }) {
 export function NodeMetricsTable({ clusterId, range }: NodeMetricsTableProps) {
   const refetchInterval = 30_000
 
-  const { data: rawData, isLoading, error } = trpc.metrics.nodeTimeSeries.useQuery(
+  const {
+    data: rawData,
+    isLoading,
+    error,
+  } = trpc.metrics.nodeTimeSeries.useQuery(
     { clusterId, range },
     { refetchInterval, staleTime: 30_000, enabled: Boolean(clusterId) },
   )
@@ -57,7 +61,9 @@ export function NodeMetricsTable({ clusterId, range }: NodeMetricsTableProps) {
   if (isLoading) {
     return (
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 space-y-2">
-        <div className="text-xs font-semibold text-[var(--color-text-primary)] mb-3">Per-Node Metrics</div>
+        <div className="text-xs font-semibold text-[var(--color-text-primary)] mb-3">
+          Per-Node Metrics
+        </div>
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-8 w-full rounded-lg" />
         ))}
@@ -73,8 +79,12 @@ export function NodeMetricsTable({ clusterId, range }: NodeMetricsTableProps) {
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
       <div className="px-4 py-3 border-b border-[var(--color-border)]/50 flex items-center gap-2">
         <Server className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
-        <span className="text-xs font-semibold text-[var(--color-text-primary)]">Per-Node Metrics</span>
-        <span className="text-[10px] font-mono text-[var(--color-text-muted)]">({nodes.length} nodes)</span>
+        <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+          Per-Node Metrics
+        </span>
+        <span className="text-[10px] font-mono text-[var(--color-text-muted)]">
+          ({nodes.length} nodes)
+        </span>
       </div>
 
       <div className="overflow-x-auto">

@@ -7,12 +7,7 @@
  */
 
 import { useMemo } from 'react'
-import {
-  LineChart,
-  Line,
-  ResponsiveContainer,
-  Tooltip,
-} from 'recharts'
+import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts'
 import { trpc } from '@/lib/trpc'
 
 interface SparklinePoint {
@@ -28,14 +23,20 @@ interface ResourceSparklineProps {
   showTooltip?: boolean
 }
 
-function SparklineTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload?: SparklinePoint }> }) {
+function SparklineTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean
+  payload?: Array<{ payload?: SparklinePoint }>
+}) {
   if (!active || !payload?.length) return null
   const d = payload[0]?.payload
   if (!d) return null
   return (
     <div className="rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs font-mono shadow-lg">
-      <div style={{ color: 'hsl(262,83%,58%)' }}>CPU {d.cpu}%</div>
-      <div style={{ color: 'hsl(199,89%,48%)' }}>Mem {d.memory}%</div>
+      <div style={{ color: 'var(--color-chart-cpu)' }}>CPU {d.cpu}%</div>
+      <div style={{ color: 'var(--color-chart-mem)' }}>Mem {d.memory}%</div>
     </div>
   )
 }
@@ -90,19 +91,24 @@ export function ResourceSparkline({
   }
 
   const lastPoint = sparkData[sparkData.length - 1]
-  const cpuColor = (lastPoint?.cpu ?? 0) > 85
-    ? 'hsl(0,84%,60%)'
-    : (lastPoint?.cpu ?? 0) > 65
-    ? 'hsl(48,96%,53%)'
-    : 'hsl(262,83%,58%)'
-  const memColor = (lastPoint?.memory ?? 0) > 85
-    ? 'hsl(0,84%,60%)'
-    : (lastPoint?.memory ?? 0) > 65
-    ? 'hsl(48,96%,53%)'
-    : 'hsl(199,89%,48%)'
+  const cpuColor =
+    (lastPoint?.cpu ?? 0) > 85
+      ? 'var(--color-threshold-critical)'
+      : (lastPoint?.cpu ?? 0) > 65
+        ? 'var(--color-threshold-warn)'
+        : 'var(--color-chart-cpu)'
+  const memColor =
+    (lastPoint?.memory ?? 0) > 85
+      ? 'var(--color-threshold-critical)'
+      : (lastPoint?.memory ?? 0) > 65
+        ? 'var(--color-threshold-warn)'
+        : 'var(--color-chart-mem)'
 
   return (
-    <div className="flex items-center gap-1.5" title={`CPU: ${lastPoint?.cpu ?? 0}% | Mem: ${lastPoint?.memory ?? 0}%`}>
+    <div
+      className="flex items-center gap-1.5"
+      title={`CPU: ${lastPoint?.cpu ?? 0}% | Mem: ${lastPoint?.memory ?? 0}%`}
+    >
       <ResponsiveContainer width={width} height={height}>
         <LineChart data={sparkData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
           {showTooltip && <Tooltip content={<SparklineTooltip />} />}

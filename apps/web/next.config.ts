@@ -1,6 +1,8 @@
 import { withSentryConfig } from '@sentry/nextjs'
 import type { NextConfig } from 'next'
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://voyager-api:4000'
+
 const nextConfig: NextConfig = {
   reactStrictMode: false,
   typescript: {
@@ -11,15 +13,19 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  experimental: {
+    viewTransition: true,
+    optimizePackageImports: ['lucide-react', 'recharts', '@iconify/react'],
+  },
   async rewrites() {
     return [
       {
         source: '/trpc/:path*',
-        destination: 'http://voyager-api:4000/trpc/:path*',
+        destination: `${apiUrl}/trpc/:path*`,
       },
       {
         source: '/api/:path*',
-        destination: 'http://voyager-api:4000/api/:path*',
+        destination: `${apiUrl}/api/:path*`,
       },
     ]
   },

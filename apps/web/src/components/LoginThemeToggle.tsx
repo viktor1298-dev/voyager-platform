@@ -16,7 +16,7 @@ export function LoginThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="h-9 w-9 rounded-lg border border-[var(--color-border)] bg-[var(--glass-bg)]" />
+      <div className="h-11 w-11 rounded-lg border border-[var(--color-border)] bg-[var(--glass-bg)]" />
     )
   }
 
@@ -28,13 +28,9 @@ export function LoginThemeToggle() {
       data-testid="login-theme-toggle"
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
       title={`Switch to ${isDark ? 'light' : 'dark'} theme`}
-      className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--glass-bg)] text-[var(--color-text-secondary)] transition-all duration-200 hover:border-[var(--color-border-hover)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)]"
+      className="flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--glass-bg)] text-[var(--color-text-secondary)] transition-all duration-200 hover:border-[var(--color-border-hover)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)]"
     >
-      {isDark ? (
-        <Sun className="h-4 w-4" />
-      ) : (
-        <Moon className="h-4 w-4" />
-      )}
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
   )
 }

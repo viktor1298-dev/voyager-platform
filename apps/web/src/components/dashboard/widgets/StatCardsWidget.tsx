@@ -81,14 +81,19 @@ function StatCard({
           <SkeletonText width="2.5rem" height="1.5rem" />
         ) : (
           <div
-            className={cn('text-2xl font-semibold font-mono tabular-nums tracking-tight', gradient !== 'none' && 'gradient-text')}
+            className={cn(
+              'text-2xl font-semibold font-mono tabular-nums tracking-tight',
+              gradient !== 'none' && 'gradient-text',
+            )}
             style={gradient !== 'none' ? { backgroundImage: gradient } : { color }}
           >
             <AnimatedNumber value={value} />
           </div>
         )}
       </div>
-      <span className="shrink-0 opacity-60" style={{ color }}>{icon}</span>
+      <span className="shrink-0 opacity-60" style={{ color }}>
+        {icon}
+      </span>
       {sparklineData && sparklineData.length > 0 && (
         <div className="absolute bottom-0 left-0 right-0 h-[50px] opacity-50 pointer-events-none overflow-hidden">
           <SparklineChart data={sparklineData} color={sparklineColor ?? color} height={50} />
@@ -102,16 +107,24 @@ export function StatCardsWidget() {
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
   const intervalMs = useDashboardRefreshInterval()
 
-  const listQuery = trpc.clusters.list.useQuery(undefined, { refetchInterval: Math.min(DB_CLUSTER_REFETCH_MS, intervalMs) })
+  const listQuery = trpc.clusters.list.useQuery(undefined, {
+    refetchInterval: Math.min(DB_CLUSTER_REFETCH_MS, intervalMs),
+  })
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
-    { refetchInterval: Math.min(LIVE_CLUSTER_REFETCH_MS, intervalMs), enabled: Boolean(activeClusterId) },
+    {
+      refetchInterval: Math.min(LIVE_CLUSTER_REFETCH_MS, intervalMs),
+      enabled: Boolean(activeClusterId),
+    },
   )
-  const statsQuery = trpc.metrics.currentStats.useQuery(undefined, { refetchInterval: Math.min(30000, intervalMs), retry: 1 })
+  const statsQuery = trpc.metrics.currentStats.useQuery(undefined, {
+    refetchInterval: Math.min(30000, intervalMs),
+    retry: 1,
+  })
 
   const liveData = liveQuery.data
   const dbClusters = listQuery.data ?? []
-  const isLoading = liveQuery.isLoading && listQuery.isLoading
+  const isLoading = liveQuery.isLoading || listQuery.isLoading
 
   const totalNodes = (liveData?.nodes.length ?? 0) + dbClusters.reduce((s, c) => s + c.nodeCount, 0)
   const runningPods = liveData?.runningPods ?? 0
@@ -119,13 +132,16 @@ export function StatCardsWidget() {
   const clusterCount = dbClusters.length + (liveData ? 1 : 0)
 
   // BUG-193-002: Use stable seeded PRNG — same metric name → same shape every render
-  const sparklines = useMemo(() => ({
-    nodes: generateStableTimeSeries('stat-nodes', totalNodes || 3),
-    pods: generateStableTimeSeries('stat-pods', runningPods || 8),
-    clusters: generateStableTimeSeries('stat-clusters', clusterCount || 2),
-    warnings: generateStableTimeSeries('stat-warnings', warningEvents || 1, 0.3),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), []) // stable seed → shape never changes; live values update the last point via generateStableTimeSeries
+  const sparklines = useMemo(
+    () => ({
+      nodes: generateStableTimeSeries('stat-nodes', totalNodes || 3),
+      pods: generateStableTimeSeries('stat-pods', runningPods || 8),
+      clusters: generateStableTimeSeries('stat-clusters', clusterCount || 2),
+      warnings: generateStableTimeSeries('stat-warnings', warningEvents || 1, 0.3),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }),
+    [],
+  ) // stable seed → shape never changes; live values update the last point via generateStableTimeSeries
 
   return (
     <div className="h-full p-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 content-start">
@@ -160,7 +176,13 @@ export function StatCardsWidget() {
         sparklineColor="var(--color-chart-clusters)"
       />
       <StatCard
-        icon={warningEvents > 0 ? <AlertTriangle className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
+        icon={
+          warningEvents > 0 ? (
+            <AlertTriangle className="h-3.5 w-3.5" />
+          ) : (
+            <Bell className="h-3.5 w-3.5" />
+          )
+        }
         label="Warning Events"
         value={String(warningEvents)}
         color={warningEvents > 0 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'}

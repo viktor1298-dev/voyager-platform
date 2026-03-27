@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import {
   Bar,
   BarChart,
@@ -36,8 +37,28 @@ interface RequestRateChartProps {
 const BAR_RADIUS: [number, number, number, number] = [2, 2, 0, 0]
 
 export function RequestRateChart({ data, range }: RequestRateChartProps) {
+  const chartId = useId()
+  const summaryId = `${chartId}-summary`
+
+  if (data.length === 0) {
+    return (
+      <div
+        role="img"
+        aria-label="API request success and error rates over time chart"
+        className="flex items-center justify-center"
+        style={{ height: CHART_HEIGHT }}
+      >
+        <p className="text-sm text-muted-foreground">No data available</p>
+      </div>
+    )
+  }
+
   return (
-    <div role="img" aria-label="API request success and error rates over time chart">
+    <div
+      role="img"
+      aria-label="API request success and error rates over time chart"
+      aria-describedby={summaryId}
+    >
       <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <BarChart data={data} margin={CHART_MARGIN}>
           <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
@@ -48,15 +69,15 @@ export function RequestRateChart({ data, range }: RequestRateChartProps) {
             fontSize={AXIS_FONT_SIZE}
           />
           <YAxis stroke={CHART_TEXT_COLOR} fontSize={AXIS_FONT_SIZE} />
-          <Tooltip
-            {...TOOLTIP_STYLE}
-            labelFormatter={(v) => formatTimestamp(v as string, range)}
-          />
+          <Tooltip {...TOOLTIP_STYLE} labelFormatter={(v) => formatTimestamp(v as string, range)} />
           <Legend />
           <Bar dataKey="success" fill={CHART_COLORS.success} name="Success" radius={BAR_RADIUS} />
           <Bar dataKey="error" fill={CHART_COLORS.error} name="Errors" radius={BAR_RADIUS} />
         </BarChart>
       </ResponsiveContainer>
+      <p id={summaryId} className="sr-only">
+        Request rate data with {data.length} data points showing success and error rates
+      </p>
     </div>
   )
 }

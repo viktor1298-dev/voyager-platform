@@ -112,6 +112,13 @@ export function DataTable<TData>({
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState('')
+  const [localFilter, setLocalFilter] = useState('')
+
+  // Debounce search input — 150ms delay before applying filter
+  useEffect(() => {
+    const timer = setTimeout(() => setGlobalFilter(localFilter), 150)
+    return () => clearTimeout(timer)
+  }, [localFilter])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -137,9 +144,10 @@ export function DataTable<TData>({
       if (currentIdx === -1) {
         nextIdx = direction === 'down' ? 0 : rows.length - 1
       } else {
-        nextIdx = direction === 'down'
-          ? Math.min(currentIdx + 1, rows.length - 1)
-          : Math.max(currentIdx - 1, 0)
+        nextIdx =
+          direction === 'down'
+            ? Math.min(currentIdx + 1, rows.length - 1)
+            : Math.max(currentIdx - 1, 0)
       }
 
       rows[nextIdx]?.focus()
@@ -258,8 +266,8 @@ export function DataTable<TData>({
               <input
                 type="text"
                 placeholder={searchPlaceholder}
-                value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
+                value={localFilter}
+                onChange={(e) => setLocalFilter(e.target.value)}
                 aria-label={searchPlaceholder}
                 className="w-full pl-9 pr-3 py-2 text-sm rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
               />
@@ -337,7 +345,10 @@ export function DataTable<TData>({
               transition={{ duration: DURATION.fast }}
             >
               {mobileCard && (
-                <div data-testid="empty-state" className="md:hidden flex flex-col items-center justify-center py-10 text-[var(--color-text-muted)]">
+                <div
+                  data-testid="empty-state"
+                  className="md:hidden flex flex-col items-center justify-center py-10 text-[var(--color-text-muted)]"
+                >
                   {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
                   <p className="text-sm font-medium">{emptyTitle}</p>
                   {emptyDescription && (
@@ -354,7 +365,10 @@ export function DataTable<TData>({
                       colSpan={Math.max(table.getAllLeafColumns().length, 1)}
                       className="py-16 text-center text-[var(--color-text-muted)]"
                     >
-                      <div data-testid="empty-state" className="flex flex-col items-center justify-center">
+                      <div
+                        data-testid="empty-state"
+                        className="flex flex-col items-center justify-center"
+                      >
                         {emptyIcon && <div className="mb-3 opacity-30">{emptyIcon}</div>}
                         <p className="text-sm font-medium">{emptyTitle}</p>
                         {emptyDescription && (
@@ -381,9 +395,7 @@ export function DataTable<TData>({
               {mobileCard && (
                 <div className="md:hidden space-y-3 p-3">
                   {sortedRows.map((row, i) => (
-                    <div key={row.id}>
-                      {mobileCard(row.original, i)}
-                    </div>
+                    <div key={row.id}>{mobileCard(row.original, i)}</div>
                   ))}
                 </div>
               )}
@@ -493,7 +505,7 @@ function PaginationBtn({
       aria-label={ariaLabel}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.97 }}
-      className="p-1.5 rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+      className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-white/[0.06] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
     >
       {children}
     </motion.button>

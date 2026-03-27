@@ -205,6 +205,12 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 - Rate limiting: 200 req/min per IP via `@fastify/rate-limit`; whitelist: `/api/auth/`, `/health`, `/trpc`
 - OpenAPI: auto-generated via `trpc-to-openapi` + `@fastify/swagger`
 - Health: `/health` (always up), `/health/metrics-collector` (collector status)
+- View Transitions: enabled via `next.config.ts` experimental flag + CSS `@view-transition` in globals.css
+- Package optimization: `optimizePackageImports` for lucide-react, recharts, @iconify/react in next.config.ts
+- QueryClient: global `staleTime: 30s` to prevent unnecessary refetches
+- Chart colors: all charts use CSS custom properties (`--chart-1..5`, `--color-chart-*`, `--color-threshold-*`) from globals.css — never hardcode colors
+- Container queries: `WidgetWrapper.tsx` uses `@container` for responsive dashboard widgets
+- CommandPalette: dynamically imported via `next/dynamic` in providers.tsx (~20KB savings)
 
 ## Current State
 
@@ -213,6 +219,7 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | **Milestone** | v1.0 Reset & Stabilization — complete (tagged `v1.0`) |
 | **Main branch** | Single source of truth — PRs required, force push blocked |
 | **Build status** | `pnpm build` ✓, `pnpm typecheck` ✓, `pnpm test` ✓ (all passing) |
+| **UI/UX audit** | 219 findings across 6 dimensions — all fixed (2026-03-27). Reports in `docs/ui-audit/` |
 | **Next** | Feature development via PRs to main |
 
 ## Database
@@ -237,7 +244,8 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | `apps/web/src/app/clusters/[id]/layout.tsx` | Cluster detail layout with 10-tab bar |
 | `apps/web/src/components/Sidebar.tsx` | Main sidebar (6 items) |
 | `apps/web/src/components/AppLayout.tsx` | App shell with auto-collapse logic |
-| `apps/web/src/components/providers.tsx` | All providers (tRPC, theme, LazyMotion — no `strict` flag) |
+| `apps/web/src/components/providers.tsx` | All providers (tRPC, theme, LazyMotion — no `strict` flag, CommandPalette dynamically imported) |
+| `apps/web/src/components/charts/chart-theme.ts` | Shared chart colors, tooltip style, threshold helpers — references `--chart-*` CSS vars |
 | `apps/web/src/config/navigation.ts` | Sidebar navigation config |
 | `apps/web/src/lib/trpc.ts` | tRPC client setup + `handleTRPCError` |
 | `apps/web/src/lib/animation-constants.ts` | Motion v12 timing/easing constants |
@@ -315,6 +323,38 @@ tRPC's `useMutation()` returns a new object reference every render. Putting it i
 
 ### 12. Docker Compose Auto-Initializes DB Schema
 `docker compose up -d` auto-runs `charts/voyager/sql/init.sql` on first start (mounted into `/docker-entrypoint-initdb.d/`). No manual `db:push` needed for local dev. The init.sql is fully idempotent (CREATE IF NOT EXISTS, ON CONFLICT DO NOTHING).
+
+### 13. SSR Hydration — Never Branch on `typeof window/document` in Render
+Checking `typeof window !== 'undefined'` or `typeof document !== 'undefined'` inside a component's render path creates a server/client branch that causes React hydration errors. The server renders one path, the client renders another. **Always use `useState(false)` + `useEffect(() => set(true))` to detect client-only features post-mount.** This has broken the login page multiple times via `PageTransition.tsx`.
+
+## 🚨 QA Gate Rules — MANDATORY
+
+QA validation after code changes **MUST** follow these rules. Violations = QA FAIL regardless of visual appearance.
+
+### Hard Gates (any failure = BLOCK)
+1. **Console errors = FAIL** — After every page navigation, check browser console. Any `[ERROR]` entry (hydration, runtime, uncaught) is an automatic QA failure. Warnings are noted but don't block.
+2. **Login page MUST be tested unauthenticated** — Clear all cookies/storage BEFORE testing login. Use `browser_evaluate` to clear cookies, or open an incognito context. If the page auto-redirects, QA has NOT tested login.
+3. **Every page must render content** — A page that loads but shows a blank screen, error overlay, or only a spinner is a FAIL. Verify actual content elements exist in the DOM snapshot.
+4. **Both themes must be tested** — Test at minimum: login (dark + light), dashboard (dark + light), one data-heavy page (dark + light). Theme switching must not produce console errors.
+
+### QA Checklist (execute in order)
+```
+1. pnpm typecheck           → 0 errors
+2. pnpm build               → all pages compile
+3. Start dev servers         → API + Web healthy
+4. CLEAR ALL COOKIES         → ensure unauthenticated state
+5. Test login page           → renders form, 0 console errors, both themes
+6. Log in                    → redirects to dashboard
+7. Test each key page        → screenshot + console check + DOM snapshot
+8. Switch to light mode      → re-test key pages
+9. Check for regressions     → compare against known-good screenshots if available
+```
+
+### What "Tested" Means
+- **Screenshot taken** (visual proof)
+- **DOM snapshot checked** (expected elements present: h1, nav, data)
+- **Console checked** (0 errors after page load settles)
+- **Both themes verified** (at least login + dashboard + one data page)
 
 ## Agent Pipeline (GSD)
 

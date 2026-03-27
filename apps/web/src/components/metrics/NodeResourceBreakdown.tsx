@@ -22,22 +22,24 @@ interface NodeResourceBreakdownProps {
 function NodeRow({ node }: { node: NodeStats }) {
   const cpuColor =
     (node.cpuPercent ?? 0) > 85
-      ? 'hsl(0,84%,60%)'
+      ? 'var(--color-threshold-critical)'
       : (node.cpuPercent ?? 0) > 65
-      ? 'hsl(48,96%,53%)'
-      : 'hsl(262,83%,58%)'
+        ? 'var(--color-threshold-warn)'
+        : 'var(--color-chart-cpu)'
   const memColor =
     (node.memPercent ?? 0) > 85
-      ? 'hsl(0,84%,60%)'
+      ? 'var(--color-threshold-critical)'
       : (node.memPercent ?? 0) > 65
-      ? 'hsl(48,96%,53%)'
-      : 'hsl(199,89%,48%)'
+        ? 'var(--color-threshold-warn)'
+        : 'var(--color-chart-mem)'
 
   return (
     <div className="py-3 border-b border-[var(--color-border)]/30 last:border-0">
       <div className="flex items-center gap-2 mb-2">
         <Server className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
-        <span className="text-xs font-mono font-medium text-[var(--color-text-primary)]">{node.name}</span>
+        <span className="text-xs font-mono font-medium text-[var(--color-text-primary)]">
+          {node.name}
+        </span>
       </div>
       <div className="grid grid-cols-2 gap-x-6 gap-y-2">
         {/* CPU */}
@@ -93,7 +95,12 @@ export function NodeResourceBreakdown({ nodes, className }: NodeResourceBreakdow
   if (!nodes.length) return null
 
   return (
-    <div className={cn('rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden', className)}>
+    <div
+      className={cn(
+        'rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden',
+        className,
+      )}
+    >
       <button
         type="button"
         onClick={() => setOpen(!open)}

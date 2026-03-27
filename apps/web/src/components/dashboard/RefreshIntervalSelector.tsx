@@ -37,6 +37,16 @@ export function RefreshIntervalSelector({
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
+  // Close on Escape key
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [open])
+
   const current = REFRESH_INTERVALS.find((r) => r.value === intervalMs) ?? REFRESH_INTERVALS[2]
 
   return (
@@ -56,7 +66,9 @@ export function RefreshIntervalSelector({
             'h-1.5 w-1.5 rounded-full shrink-0',
             isLive ? 'animate-pulse' : 'opacity-40',
           )}
-          style={{ backgroundColor: isLive ? 'var(--color-status-healthy)' : 'var(--color-text-dim)' }}
+          style={{
+            backgroundColor: isLive ? 'var(--color-status-healthy)' : 'var(--color-text-dim)',
+          }}
         />
         LIVE
       </div>
@@ -80,7 +92,10 @@ export function RefreshIntervalSelector({
           <RefreshCw className="h-3 w-3 opacity-70" />
           <span>{current.label}</span>
           <ChevronDown
-            className={cn('h-3 w-3 opacity-60 transition-transform duration-150', open && 'rotate-180')}
+            className={cn(
+              'h-3 w-3 opacity-60 transition-transform duration-150',
+              open && 'rotate-180',
+            )}
           />
         </button>
 

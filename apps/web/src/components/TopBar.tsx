@@ -15,7 +15,8 @@ function normalizeClusterStatus(status: string | null | undefined): ClusterStatu
   const value = (status ?? 'unknown').toLowerCase()
   if (value === 'healthy' || value === 'active' || value === 'ready') return 'healthy'
   if (value === 'warning' || value === 'degraded') return 'warning'
-  if (value === 'error' || value === 'critical' || value === 'down' || value === 'offline') return 'error'
+  if (value === 'error' || value === 'critical' || value === 'down' || value === 'offline')
+    return 'error'
   return 'unknown'
 }
 
@@ -48,7 +49,8 @@ export function TopBar() {
 
     try {
       const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
-      const returnUrl = currentPath.startsWith('/') && !currentPath.startsWith('//') ? currentPath : '/'
+      const returnUrl =
+        currentPath.startsWith('/') && !currentPath.startsWith('//') ? currentPath : '/'
 
       await authClient.signOut({
         fetchOptions: {
@@ -94,7 +96,10 @@ export function TopBar() {
   const data = isConnected ? liveQuery.data : undefined
   const totalPods = data ? `${data.runningPods}/${data.totalPods}` : '—'
   const alerts = data
-    ? data.events.filter((e: { type?: string | null; kind?: string | null }) => e.type === 'Warning' || e.kind === 'Warning').length
+    ? data.events.filter(
+        (e: { type?: string | null; kind?: string | null }) =>
+          e.type === 'Warning' || e.kind === 'Warning',
+      ).length
     : null
 
   const cpuValue =
@@ -134,12 +139,7 @@ export function TopBar() {
   return (
     <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-3 sm:px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">
       <div className="flex items-center gap-2.5">
-        <img
-          src={logoSrc}
-          alt="Voyager"
-          className="h-8 w-8 object-contain"
-          aria-hidden="true"
-        />
+        <img src={logoSrc} alt="Voyager" className="h-8 w-8 object-contain" aria-hidden="true" />
         <span className="font-semibold text-sm tracking-wide text-foreground text-[var(--color-text-primary)]">
           VOYAGER
         </span>
@@ -166,7 +166,15 @@ export function TopBar() {
         {alerts !== null && alerts > 0 && (
           <Stat label="Alerts" value={String(alerts)} color="var(--color-status-warning)" />
         )}
-        <Stat label="CPU" value={cpuValue} color={statsQuery.data?.cpuPercent != null && statsQuery.data.cpuPercent > 80 ? 'var(--color-status-warning)' : 'var(--color-text-muted)'} />
+        <Stat
+          label="CPU"
+          value={cpuValue}
+          color={
+            statsQuery.data?.cpuPercent != null && statsQuery.data.cpuPercent > 80
+              ? 'var(--color-status-warning)'
+              : 'var(--color-text-muted)'
+          }
+        />
       </div>
 
       <div className="flex items-center gap-3">
@@ -177,7 +185,9 @@ export function TopBar() {
         )}
         <button
           type="button"
-          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+          onClick={() =>
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))
+          }
           className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] transition-colors"
           title="Command Palette (⌘K)"
           aria-label="Open command palette"
@@ -208,7 +218,11 @@ export function TopBar() {
   )
 }
 
-function ConnectionStatus({ dataUpdatedAt, isDisconnected, isReconnecting }: {
+function ConnectionStatus({
+  dataUpdatedAt,
+  isDisconnected,
+  isReconnecting,
+}: {
   dataUpdatedAt?: number
   isDisconnected: boolean
   isReconnecting: boolean
@@ -236,11 +250,16 @@ function ConnectionStatus({ dataUpdatedAt, isDisconnected, isReconnecting }: {
       ? 'Reconnecting…'
       : 'Connected'
 
-  const borderColor = isDisconnected ? 'rgba(239, 68, 68, 0.3)' : 'var(--color-border)'
-  const bgColor = isDisconnected ? 'rgba(239, 68, 68, 0.05)' : 'rgba(255, 255, 255, 0.02)'
+  const borderColor = isDisconnected
+    ? 'color-mix(in srgb, var(--color-status-error) 30%, transparent)'
+    : 'var(--color-border)'
+  const bgColor = isDisconnected
+    ? 'color-mix(in srgb, var(--color-status-error) 5%, transparent)'
+    : 'var(--color-bg-secondary)'
 
   return (
     <div
+      aria-live="polite"
       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border"
       style={{ borderColor, backgroundColor: bgColor }}
       title={`${statusText}${!isDisconnected ? ` · Synced ${syncLabel}` : ''}`}
@@ -259,8 +278,12 @@ function ConnectionStatus({ dataUpdatedAt, isDisconnected, isReconnecting }: {
 function Stat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div className="text-center">
-      <div className="text-sm font-extrabold leading-none" style={{ color }}>{value}</div>
-      <div className="text-xs text-[var(--color-text-dim)] uppercase tracking-wider mt-0.5 font-mono">{label}</div>
+      <div className="text-sm font-extrabold leading-none" style={{ color }}>
+        {value}
+      </div>
+      <div className="text-xs text-[var(--color-text-dim)] uppercase tracking-wider mt-0.5 font-mono">
+        {label}
+      </div>
     </div>
   )
 }

@@ -87,7 +87,7 @@ export function ThemeToggle() {
                   setOpen(false)
                 }}
                 className={cn(
-                  'flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors',
+                  'flex w-full items-center gap-3 px-3 py-3 text-sm transition-colors min-h-[44px]',
                   isActive
                     ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
                     : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)]',
@@ -95,9 +95,7 @@ export function ThemeToggle() {
               >
                 <ThemeIcon className="h-4 w-4" />
                 <span className="font-medium">{t.label}</span>
-                {isActive && (
-                  <span className="ml-auto text-xs text-[var(--color-accent)]">✓</span>
-                )}
+                {isActive && <span className="ml-auto text-xs text-[var(--color-accent)]">✓</span>}
               </button>
             )
           })}

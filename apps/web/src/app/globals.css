@@ -93,7 +93,7 @@
   --color-border-hover: rgba(255, 255, 255, 0.15);
   --color-text-primary: #e8ecf4;
   --color-text-secondary: #a0aec0;
-  --color-text-muted: #6b7994;
+  --color-text-muted: #8090ab;
   --color-text-dim: #718096;
   --color-text-secondary-strong: #b7c3d8;
   --color-table-header: #8f9bb0;
@@ -102,7 +102,7 @@
   --color-table-separator: rgba(255, 255, 255, 0.1);
   --color-badge-label: var(--color-text-secondary-strong);
   --color-status-active: #00e599;
-  --color-status-idle: #6b7994;
+  --color-status-idle: #8090ab;
   --color-status-error: #ff4d6a;
   --color-status-warning: #f6c042;
   --color-status-healthy: #10b981;
@@ -163,8 +163,8 @@
   --color-log-bg: #0d1117;
   --color-log-header: #161b22;
   --color-log-text: #d1d5db;
-  --color-log-line-number: #4b5563;
-  --color-log-dim: #6b7280;
+  --color-log-line-number: #8893a3;
+  --color-log-dim: #7f8a98;
 
   /* Sidebar micro-interactions */
   --sidebar-hover-shift: 2px;
@@ -177,6 +177,29 @@
   /* Chart grid lines */
   --color-grid-line: rgba(128,128,128,0.12);
   --color-grid-line-subtle: rgba(128,128,128,0.08);
+
+  /* Hover overlay — theme-aware replacement for bg-white/[0.0x] */
+  --color-hover-overlay: rgba(255, 255, 255, 0.04);
+
+  /* Threshold colors for metrics/gauges */
+  --color-threshold-critical: #ef4444;
+  --color-threshold-warn: #f59e0b;
+  --color-threshold-normal: #10b981;
+
+  /* AI gradient tokens */
+  --gradient-ai-critical: linear-gradient(135deg, rgb(168 85 247 / 0.6), rgb(239 68 68 / 0.6));
+  --gradient-ai-warning: linear-gradient(135deg, rgb(168 85 247 / 0.5), rgb(245 158 11 / 0.5));
+  --gradient-ai-info: linear-gradient(135deg, rgb(168 85 247 / 0.4), rgb(20 184 166 / 0.4));
+
+  /* Chart palette (referenced by chart-theme.ts) */
+  --chart-1: #6366f1;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #ec4899;
+  --chart-5: #06b6d4;
+
+  /* Error text token */
+  --color-error-text: #f87171;
 }
 
 /* Light theme overrides */
@@ -202,7 +225,7 @@ html.light {
   --color-separator: rgba(0, 0, 0, 0.26);
   --color-table-separator: rgba(0, 0, 0, 0.4);
   --color-badge-label: #0d1e37;
-  --color-status-healthy: #059669;
+  --color-status-healthy: #047857;
   --color-track: rgba(0, 0, 0, 0.08);
   --color-gauge-track: rgba(0, 0, 0, 0.10);
   --color-chart-cpu: #6366f1;
@@ -213,7 +236,7 @@ html.light {
   --color-chart-critical: #dc2626;
   --color-chart-warning: #d97706;
   --color-chart-info: #0284c7;
-  --color-accent: #6366f1;
+  --color-accent: #4f46e5;
 
   /* VoyagerLogo gradient stops (light mode) */
   --color-logo-gradient-start: #6366f1;
@@ -250,6 +273,20 @@ html.light {
   /* Chart grid lines */
   --color-grid-line: rgba(0,0,0,0.08);
   --color-grid-line-subtle: rgba(0,0,0,0.05);
+
+  --color-hover-overlay: rgba(0, 0, 0, 0.04);
+  --color-threshold-critical: #dc2626;
+  --color-threshold-warn: #d97706;
+  --color-threshold-normal: #047857;
+  --gradient-ai-critical: linear-gradient(135deg, rgb(147 51 234 / 0.5), rgb(220 38 38 / 0.5));
+  --gradient-ai-warning: linear-gradient(135deg, rgb(147 51 234 / 0.4), rgb(217 119 6 / 0.4));
+  --gradient-ai-info: linear-gradient(135deg, rgb(147 51 234 / 0.3), rgb(13 148 136 / 0.3));
+  --chart-1: #4f46e5;
+  --chart-2: #047857;
+  --chart-3: #d97706;
+  --chart-4: #db2777;
+  --chart-5: #0891b2;
+  --color-error-text: #dc2626;
 }
 
 @media (max-width: 768px) {
@@ -306,6 +343,11 @@ html, body {
   max-width: 100vw;
 }
 
+/* Smooth scroll for in-page navigation — NOT on html (conflicts with Next.js scroll restoration) */
+main, [data-scroll-smooth] {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
@@ -315,6 +357,10 @@ body {
 
 h1 { font-size: clamp(1.5rem, 4vw, 2.25rem); }
 h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
+
+/* Safe area for notched mobile devices */
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.safe-top { padding-top: env(safe-area-inset-top, 0px); }
 
 /* Login page gradient backgrounds (Item #6) */
 .login-gradient {
@@ -412,6 +458,9 @@ html.light .login-gradient {
   }
   .skeleton-shimmer {
     animation: none !important;
+  }
+  html, body {
+    scroll-behavior: auto !important;
   }
 }
 
@@ -609,4 +658,21 @@ button[aria-disabled="true"],
 .tracking-uppercase {
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* View Transitions API — native page transitions */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root) {
+  animation: fade-out 0.15s ease-out;
+}
+::view-transition-new(root) {
+  animation: fade-in 0.2s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
 }

@@ -48,7 +48,9 @@ const TABS: { id: TabId; label: string }[] = [
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]/50 last:border-b-0">
-      <span className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider">{label}</span>
+      <span className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider">
+        {label}
+      </span>
       <span className="text-[13px] text-[var(--color-text-primary)] font-medium">{value}</span>
     </div>
   )
@@ -76,14 +78,24 @@ function OverviewTab({ pod }: { pod: PodInfo }) {
     <div className="space-y-4">
       <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--surface,#14141f)]">
         <InfoRow label="Status" value={<StatusBadge status={pod.status} />} />
-        <InfoRow label="Namespace" value={<span className="font-mono text-xs">{pod.namespace}</span>} />
-        <InfoRow label="Node" value={<span className="font-mono text-xs">{pod.nodeName ?? '—'}</span>} />
+        <InfoRow
+          label="Namespace"
+          value={<span className="font-mono text-xs">{pod.namespace}</span>}
+        />
+        <InfoRow
+          label="Node"
+          value={<span className="font-mono text-xs">{pod.nodeName ?? '—'}</span>}
+        />
         <InfoRow label="Age" value={pod.createdAt ? timeAgo(pod.createdAt) : '—'} />
         {pod.restartCount != null && (
           <InfoRow
             label="Restarts"
             value={
-              <span className={pod.restartCount > 0 ? 'text-[var(--color-status-warning)] font-semibold' : ''}>
+              <span
+                className={
+                  pod.restartCount > 0 ? 'text-[var(--color-status-warning)] font-semibold' : ''
+                }
+              >
                 {pod.restartCount}
               </span>
             }
@@ -104,7 +116,9 @@ function OverviewTab({ pod }: { pod: PodInfo }) {
                   {pod.cpuMillis}m{pod.cpuPercent != null ? ` (${pod.cpuPercent.toFixed(0)}%)` : ''}
                 </span>
               </div>
-              {pod.cpuPercent != null && <Progress value={Math.min(pod.cpuPercent, 100)} className="h-1.5" />}
+              {pod.cpuPercent != null && (
+                <Progress value={Math.min(pod.cpuPercent, 100)} className="h-1.5" />
+              )}
             </div>
           )}
           {pod.memoryMi != null && (
@@ -112,10 +126,13 @@ function OverviewTab({ pod }: { pod: PodInfo }) {
               <div className="flex justify-between text-xs mb-1">
                 <span className="text-[var(--color-text-muted)]">Memory</span>
                 <span className="text-[var(--color-text-primary)] font-mono">
-                  {pod.memoryMi}Mi{pod.memoryPercent != null ? ` (${pod.memoryPercent.toFixed(0)}%)` : ''}
+                  {pod.memoryMi}Mi
+                  {pod.memoryPercent != null ? ` (${pod.memoryPercent.toFixed(0)}%)` : ''}
                 </span>
               </div>
-              {pod.memoryPercent != null && <Progress value={Math.min(pod.memoryPercent, 100)} className="h-1.5" />}
+              {pod.memoryPercent != null && (
+                <Progress value={Math.min(pod.memoryPercent, 100)} className="h-1.5" />
+              )}
             </div>
           )}
         </div>
@@ -123,7 +140,9 @@ function OverviewTab({ pod }: { pod: PodInfo }) {
 
       {pod.labels && Object.keys(pod.labels).length > 0 && (
         <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--surface,#14141f)]">
-          <h4 className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider mb-3">Labels</h4>
+          <h4 className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider mb-3">
+            Labels
+          </h4>
           <div className="flex flex-wrap gap-1.5">
             {Object.entries(pod.labels).map(([k, v]) => (
               <span
@@ -149,7 +168,9 @@ function OverviewTab({ pod }: { pod: PodInfo }) {
               .slice(0, 10)
               .map(([k, v]) => (
                 <div key={k} className="flex gap-2 text-xs font-mono">
-                  <span className="text-[var(--color-text-muted)] shrink-0 truncate max-w-[40%]">{k}</span>
+                  <span className="text-[var(--color-text-muted)] shrink-0 truncate max-w-[40%]">
+                    {k}
+                  </span>
                   <span className="text-[var(--color-text-secondary)] truncate">{v}</span>
                 </div>
               ))}
@@ -181,7 +202,9 @@ function ContainersTab({ pod }: { pod: PodInfo }) {
           className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--surface,#14141f)]"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="font-mono text-sm text-[var(--color-text-primary)] font-semibold">{c.name}</span>
+            <span className="font-mono text-sm text-[var(--color-text-primary)] font-semibold">
+              {c.name}
+            </span>
             <span
               className={`text-xs font-semibold px-2 py-0.5 rounded-lg ${
                 c.ready
@@ -195,11 +218,19 @@ function ContainersTab({ pod }: { pod: PodInfo }) {
           <div className="space-y-1.5 text-xs">
             <div className="flex gap-2">
               <span className="text-[var(--color-text-muted)] w-20 shrink-0">Image</span>
-              <span className="font-mono text-[var(--color-text-secondary)] truncate">{c.image}</span>
+              <span className="font-mono text-[var(--color-text-secondary)] truncate">
+                {c.image}
+              </span>
             </div>
             <div className="flex gap-2">
               <span className="text-[var(--color-text-muted)] w-20 shrink-0">Restarts</span>
-              <span className={c.restartCount > 0 ? 'text-[var(--color-status-warning)] font-semibold' : 'text-[var(--color-text-secondary)]'}>
+              <span
+                className={
+                  c.restartCount > 0
+                    ? 'text-[var(--color-status-warning)] font-semibold'
+                    : 'text-[var(--color-text-secondary)]'
+                }
+              >
                 {c.restartCount}
               </span>
             </div>
@@ -375,7 +406,11 @@ export function PodDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full max-w-lg flex flex-col" onClose={() => onOpenChange(false)}>
+      <SheetContent
+        side="right"
+        className="w-full max-w-lg flex flex-col"
+        onClose={() => onOpenChange(false)}
+      >
         <SheetHeader>
           <div className="flex items-center justify-between gap-2">
             <SheetTitle className="font-mono text-base">{pod.name}</SheetTitle>
@@ -408,13 +443,20 @@ export function PodDetailSheet({
         </SheetHeader>
 
         {/* Tabs */}
-        <div className="flex gap-1 mt-4 border-b border-[var(--color-border)] pb-0 shrink-0">
+        <div
+          className="flex gap-1 mt-4 border-b border-[var(--color-border)] pb-0 shrink-0"
+          role="tablist"
+          aria-label="Pod details"
+        >
           {TABS.map((tab) => (
             <button
               key={tab.id}
               type="button"
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`tabpanel-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors ${
+              className={`min-h-[44px] px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors ${
                 activeTab === tab.id
                   ? 'border-indigo-500 text-[var(--color-text-primary)]'
                   : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'

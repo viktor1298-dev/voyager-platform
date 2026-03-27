@@ -26,7 +26,11 @@ export function PresenceBar() {
   return (
     <div className="h-10 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/85 backdrop-blur-lg flex items-center justify-between px-3 sm:px-6">
       {/* Left: ONLINE indicator — dot + count (no redundant text) */}
-      <div className="flex items-center gap-1.5 min-w-0" title={`${count} user${count !== 1 ? 's' : ''} online`}>
+      <div
+        className="flex items-center gap-1.5 min-w-0"
+        title={`${count} user${count !== 1 ? 's' : ''} online`}
+        aria-label={`${count} user${count !== 1 ? 's' : ''} online`}
+      >
         {/* Pulsing green dot */}
         <span className="relative flex h-2 w-2 shrink-0">
           {count > 0 && (
@@ -37,14 +41,18 @@ export function PresenceBar() {
           )}
           <span
             className="relative inline-flex rounded-full h-2 w-2"
-            style={{ backgroundColor: count > 0 ? 'var(--color-status-active, #22c55e)' : 'var(--color-text-dim)' }}
+            style={{
+              backgroundColor:
+                count > 0 ? 'var(--color-status-active, #22c55e)' : 'var(--color-text-dim)',
+            }}
           />
         </span>
         {/* Count badge */}
         <span
           className="inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full text-xs font-bold font-mono leading-none"
           style={{
-            backgroundColor: count > 0 ? 'var(--color-status-active, #22c55e)' : 'rgba(255,255,255,0.06)',
+            backgroundColor:
+              count > 0 ? 'var(--color-status-active, #22c55e)' : 'rgba(255,255,255,0.06)',
             color: count > 0 ? '#fff' : 'var(--color-text-dim)',
           }}
         >
@@ -57,9 +65,10 @@ export function PresenceBar() {
         <div className="flex items-center gap-1.5 overflow-x-auto shrink-0">
           <AnimatePresence initial={false}>
             {onlineUsers.map((user) => {
-              const dotColor = user.status === 'online'
-                ? 'var(--color-status-active, #22c55e)'
-                : 'var(--color-text-dim)'
+              const dotColor =
+                user.status === 'online'
+                  ? 'var(--color-status-active, #22c55e)'
+                  : 'var(--color-text-dim)'
 
               const tooltipText = `${user.name}${user.currentPage && user.currentPage !== '/' ? ` · ${user.currentPage}` : ''}`
 

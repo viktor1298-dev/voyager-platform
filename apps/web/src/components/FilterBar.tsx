@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { AnimatePresence, motion } from 'motion/react'
 import { Search, X } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 export type FilterValue = {
   environment: string
@@ -51,11 +51,17 @@ export function FilterBar({
   const searchParams = useSearchParams()
   const router = useRouter()
   const searchRef = useRef<HTMLInputElement>(null)
+  const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const [localSearch, setLocalSearch] = useState('')
 
-  const parsed = useMemo(() => getFilterFromParams(new URLSearchParams(searchParams.toString())), [searchParams])
+  const parsed = useMemo(
+    () => getFilterFromParams(new URLSearchParams(searchParams.toString())),
+    [searchParams],
+  )
 
   useEffect(() => {
     onChange(parsed)
+    setLocalSearch(parsed.q)
   }, [parsed, onChange])
 
   useEffect(() => {
@@ -103,7 +109,9 @@ export function FilterBar({
   }
 
   const activeChips = [
-    parsed.environment !== 'all' ? { key: 'environment', label: `Env: ${parsed.environment}` } : null,
+    parsed.environment !== 'all'
+      ? { key: 'environment', label: `Env: ${parsed.environment}` }
+      : null,
     parsed.status !== 'all' ? { key: 'status', label: `Status: ${parsed.status}` } : null,
     parsed.provider !== 'all' ? { key: 'provider', label: `Provider: ${parsed.provider}` } : null,
     parsed.health !== 'all' ? { key: 'health', label: `Health: ${parsed.health}` } : null,
@@ -121,32 +129,40 @@ export function FilterBar({
           <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-text-secondary)]" />
           <input
             ref={searchRef}
-            value={parsed.q}
+            value={localSearch}
             onChange={(e) => {
               const value = e.target.value
-              updateParams((params) => {
-                if (!value.trim()) params.delete('q')
-                else params.set('q', value)
-              })
+              setLocalSearch(value)
+              clearTimeout(debounceRef.current)
+              debounceRef.current = setTimeout(() => {
+                updateParams((params) => {
+                  if (!value.trim()) params.delete('q')
+                  else params.set('q', value)
+                })
+              }, 300)
             }}
             placeholder="Search clusters… (press /)"
+            aria-label="Search clusters"
             className="w-full rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] pl-9 pr-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus:border-[var(--color-accent)]/40 focus:outline-none"
           />
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {([
-            ['environment', options.environments],
-            ['status', options.statuses],
-            ['provider', options.providers],
-            ['health', options.health],
-          ] as const)
+          {(
+            [
+              ['environment', options.environments],
+              ['status', options.statuses],
+              ['provider', options.providers],
+              ['health', options.health],
+            ] as const
+          )
             .filter(([, values]) => values.length > 0)
             .map(([key, values]) => (
               <select
                 key={key}
                 value={parsed[key]}
                 onChange={(e) => setSingle(key, e.target.value)}
+                aria-label={`Filter by ${key}`}
                 className="rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-2 text-xs font-medium text-[var(--color-text-secondary)] focus:border-[var(--color-accent)]/40 focus:outline-none"
               >
                 <option value="all">{key}</option>

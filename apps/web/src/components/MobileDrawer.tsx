@@ -30,6 +30,8 @@ export function MobileDrawer({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
         <Drawer.Content
+          role="dialog"
+          aria-modal="true"
           className="fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-2xl bg-[var(--color-bg-card)] border-t border-[var(--color-border)] max-h-[95vh]"
           aria-describedby={description ? 'drawer-description' : undefined}
         >
@@ -47,7 +49,10 @@ export function MobileDrawer({
                 </Drawer.Title>
               )}
               {description && (
-                <p id="drawer-description" className="text-sm text-[var(--color-text-muted)] mt-0.5">
+                <p
+                  id="drawer-description"
+                  className="text-sm text-[var(--color-text-muted)] mt-0.5"
+                >
                   {description}
                 </p>
               )}
@@ -55,9 +60,7 @@ export function MobileDrawer({
           )}
 
           {/* Scrollable content */}
-          <div className="overflow-y-auto flex-1 px-4 py-4">
-            {children}
-          </div>
+          <div className="overflow-y-auto flex-1 px-4 py-4">{children}</div>
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>

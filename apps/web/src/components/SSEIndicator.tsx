@@ -18,7 +18,12 @@ export function SSEIndicator({ state, className = '' }: SSEIndicatorProps) {
   const config = STATE_CONFIG[state]
 
   return (
-    <div className={`flex items-center gap-1.5 text-xs text-muted-foreground ${className}`}>
+    <div
+      className={`flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] ${className}`}
+      role="status"
+      aria-live="polite"
+      aria-label={`Server connection: ${config.label}`}
+    >
       <span
         className={`inline-block h-2 w-2 rounded-full ${config.color} ${state === 'connected' ? 'animate-pulse' : ''}`}
       />

@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import {
   CartesianGrid,
   Legend,
@@ -36,8 +37,26 @@ interface ClusterHealthChartProps {
 }
 
 export function ClusterHealthChart({ data, range }: ClusterHealthChartProps) {
+  const chartId = useId()
+  const summaryId = `${chartId}-summary`
+
+  if (data.length === 0) {
+    return (
+      <div
+        role="img"
+        aria-label="Cluster health over time chart"
+        className="flex items-center justify-center"
+        style={{ height: CHART_HEIGHT }}
+      >
+        <p className="text-sm text-muted-foreground">No data available</p>
+      </div>
+    )
+  }
+
+  const lastPoint = data[data.length - 1]
+
   return (
-    <div role="img" aria-label="Cluster health over time chart">
+    <div role="img" aria-label="Cluster health over time chart" aria-describedby={summaryId}>
       <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <LineChart data={data} margin={CHART_MARGIN}>
           <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
@@ -51,6 +70,7 @@ export function ClusterHealthChart({ data, range }: ClusterHealthChartProps) {
           <Tooltip
             {...TOOLTIP_STYLE}
             labelFormatter={(v) => formatTimestamp(v as string, range)}
+            formatter={(value) => `${value}%`}
           />
           <Legend />
           <Line
@@ -79,6 +99,10 @@ export function ClusterHealthChart({ data, range }: ClusterHealthChartProps) {
           />
         </LineChart>
       </ResponsiveContainer>
+      <p id={summaryId} className="sr-only">
+        Latest values: Healthy {lastPoint?.healthy ?? 0}%, Degraded {lastPoint?.degraded ?? 0}%,
+        Offline {lastPoint?.offline ?? 0}%
+      </p>
     </div>
   )
 }

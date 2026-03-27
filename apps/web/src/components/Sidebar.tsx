@@ -11,12 +11,7 @@ import { EASING } from '@/lib/animation-constants'
 import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
 import { trpc } from '@/lib/trpc'
 import { useAnomalyCount } from '@/hooks/useAnomalyCount'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 export function Sidebar({
   collapsed,
@@ -68,7 +63,9 @@ export function Sidebar({
           keyboardToggleRef.current = true
           setCollapsed(!collapsed)
           // Reset flag after the transition would fire
-          setTimeout(() => { keyboardToggleRef.current = false }, 100)
+          setTimeout(() => {
+            keyboardToggleRef.current = false
+          }, 100)
         }
       }
     }
@@ -79,7 +76,7 @@ export function Sidebar({
   const showLabels = !isDesktop || mobileOpen || !collapsed
 
   // SB-002 / SB-006: collapsed state as data attribute + CSS transition for width
-  const collapsibleState = (isDesktop && collapsed) ? 'icon' : 'expanded'
+  const collapsibleState = isDesktop && collapsed ? 'icon' : 'expanded'
 
   return (
     <>
@@ -108,15 +105,13 @@ export function Sidebar({
           // SB-006: hardware-accelerated CSS width transition
           'transition-[width] duration-200 ease-out',
           // Desktop width based on collapsed state
-          isDesktop
-            ? collapsed ? 'w-14' : 'w-56'
-            : 'w-56',
+          isDesktop ? (collapsed ? 'w-14' : 'w-56') : 'w-56',
           // SB-009: Mobile translation uses CSS transition too
-          !isDesktop
-            ? mobileOpen ? 'translate-x-0' : '-translate-x-full'
-            : '',
+          !isDesktop ? (mobileOpen ? 'translate-x-0' : '-translate-x-full') : '',
           !isDesktop ? 'transition-transform duration-200 ease-out' : '',
-        ].filter(Boolean).join(' ')}
+        ]
+          .filter(Boolean)
+          .join(' ')}
         style={
           !isDesktop
             ? { transform: mobileOpen ? 'translateX(0)' : 'translateX(-224px)' }
@@ -140,13 +135,17 @@ export function Sidebar({
         {/* Main nav — flat items + clusters accordion */}
         {/* SB-003: TooltipProvider wraps nav so tooltips work in collapsed mode */}
         <TooltipProvider delayDuration={300}>
-          <nav className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden" aria-label="Main navigation">
+          <nav
+            className="flex flex-col gap-0.5 px-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+            aria-label="Main navigation"
+          >
             {navItems.map((item) => {
               const active = isActive(item.id)
               const Icon = item.icon
               const showAlertsBadge = item.id === '/alerts' && unacknowledgedCount > 0
               // DB-003: anomaly badge on Alerts nav item
-              const showAnomalyBadge = item.id === '/alerts' && anomalyCount.total > 0 && unacknowledgedCount === 0
+              const showAnomalyBadge =
+                item.id === '/alerts' && anomalyCount.total > 0 && unacknowledgedCount === 0
               const isClustersItem = item.id === '/clusters'
 
               // SB-010: clusters parent is active when on any /clusters/* route
@@ -165,6 +164,7 @@ export function Sidebar({
                     }
                   }}
                   data-testid={`nav-item-${item.id.replace(/\//g, '') || 'dashboard'}`}
+                  aria-current={isNavActive ? 'page' : undefined}
                   aria-expanded={isClustersItem ? clustersOpen : undefined}
                   className={[
                     'relative flex items-center py-2.5 rounded-lg',
@@ -301,7 +301,7 @@ export function Sidebar({
                                     href={clusterPath}
                                     onClick={() => setMobileOpen(false)}
                                     className={[
-                                      'flex items-center gap-2 pl-9 pr-3 py-1.5 rounded-md text-[12px]',
+                                      'flex items-center gap-2 pl-9 pr-3 py-2.5 min-h-[44px] rounded-md text-[13px]',
                                       'transition-colors duration-150',
                                       isClusterActive
                                         ? 'text-[var(--color-text-primary)] bg-[var(--color-accent)]/5'
@@ -338,13 +338,9 @@ export function Sidebar({
             type="button"
             onClick={() => setCollapsed(!collapsed)}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="mt-auto mx-2 mb-2 flex items-center justify-center h-8 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors"
+            className="mt-auto mx-2 mb-2 flex items-center justify-center h-11 min-h-[44px] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors"
           >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
         )}
 

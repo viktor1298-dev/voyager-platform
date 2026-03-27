@@ -65,13 +65,21 @@ export function DashboardCharts() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <SlideIn delay={0}>
-          <ChartCard title="Cluster Health" loading={health.isLoading} error={health.error?.message}>
+          <ChartCard
+            title="Cluster Health"
+            loading={health.isLoading}
+            error={health.error?.message}
+          >
             {health.data && <ClusterHealthChart data={healthData} range={range} />}
           </ChartCard>
         </SlideIn>
 
         <SlideIn delay={0.05}>
-          <ChartCard title="Resource Usage" loading={resources.isLoading} error={resources.error?.message}>
+          <ChartCard
+            title="Resource Usage"
+            loading={resources.isLoading}
+            error={resources.error?.message}
+          >
             {resources.data && <ResourceUsageChart data={resourceData} range={range} />}
           </ChartCard>
         </SlideIn>
@@ -88,13 +96,21 @@ export function DashboardCharts() {
         </SlideIn>
 
         <SlideIn delay={0.15}>
-          <ChartCard title="Uptime by Cluster" loading={uptime.isLoading} error={uptime.error?.message}>
+          <ChartCard
+            title="Uptime by Cluster"
+            loading={uptime.isLoading}
+            error={uptime.error?.message}
+          >
             {uptime.data && <UptimeChart data={uptime.data} />}
           </ChartCard>
         </SlideIn>
 
         <SlideIn delay={0.2} className="lg:col-span-2">
-          <ChartCard title="Alerts Timeline" loading={alerts.isLoading} error={alerts.error?.message}>
+          <ChartCard
+            title="Alerts Timeline"
+            loading={alerts.isLoading}
+            error={alerts.error?.message}
+          >
             {alerts.data && <AlertsTimelineChart data={alerts.data} range={range} />}
           </ChartCard>
         </SlideIn>
@@ -116,12 +132,14 @@ function ChartCard({ title, loading, error, className, children }: ChartCardProp
     <article className="rounded-xl border bg-card p-4 shadow-sm" aria-label={title}>
       <h3 className="mb-3 text-sm font-semibold text-card-foreground">{title}</h3>
       {loading ? (
-        <div className={`flex items-center justify-center`} style={{ height: CHART_HEIGHT }}>
-          <div
-            className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary"
-            role="status"
-            aria-label="Loading chart data"
-          />
+        <div
+          className="space-y-2 p-2"
+          style={{ height: CHART_HEIGHT }}
+          role="status"
+          aria-label="Loading chart data"
+        >
+          <div className="skeleton-shimmer h-4 w-32 rounded" />
+          <div className="skeleton-shimmer h-full w-full rounded-lg" />
         </div>
       ) : error ? (
         <div

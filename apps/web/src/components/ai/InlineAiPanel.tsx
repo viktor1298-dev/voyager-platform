@@ -48,10 +48,18 @@ export function InlineAiPanel({
   // Keep mutation ref stable — useMutation returns a new object each render,
   // so we store it in a ref to avoid making askQuestion re-create on each render
   const mutationRef = useRef(contextChatMutation)
-  useEffect(() => { contextTypeRef.current = contextType }, [contextType])
-  useEffect(() => { contextDataRef.current = contextData }, [contextData])
-  useEffect(() => { clusterIdRef.current = clusterId }, [clusterId])
-  useEffect(() => { initialPromptRef.current = initialPrompt }, [initialPrompt])
+  useEffect(() => {
+    contextTypeRef.current = contextType
+  }, [contextType])
+  useEffect(() => {
+    contextDataRef.current = contextData
+  }, [contextData])
+  useEffect(() => {
+    clusterIdRef.current = clusterId
+  }, [clusterId])
+  useEffect(() => {
+    initialPromptRef.current = initialPrompt
+  }, [initialPrompt])
   // Always keep mutationRef current without causing re-renders of askQuestion
   mutationRef.current = contextChatMutation
 
@@ -119,12 +127,16 @@ export function InlineAiPanel({
           style={{ overflow: 'hidden' }}
         >
           <div
-            className="mt-2 rounded-lg border border-purple-500/20 bg-[var(--color-surface-elevated,var(--color-bg-card))] overflow-hidden"
-            style={{ borderLeft: '4px solid rgb(168 85 247 / 0.6)' }}
+            className="mt-2 rounded-lg border border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)] bg-[var(--color-surface-elevated,var(--color-bg-card))] overflow-hidden"
+            style={{
+              borderLeft: '4px solid color-mix(in srgb, var(--color-accent) 60%, transparent)',
+            }}
+            role="region"
+            aria-label="AI assistant panel"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-purple-500/10">
-              <span className="text-xs font-semibold text-purple-400 flex items-center gap-1">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]">
+              <span className="text-xs font-semibold text-[var(--color-accent)] flex items-center gap-1">
                 ✨ AI Assistant
               </span>
               <button
@@ -142,12 +154,10 @@ export function InlineAiPanel({
               ref={scrollRef}
               className="px-3 py-2 space-y-3 overflow-y-auto"
               style={{ maxHeight: '400px' }}
+              aria-live="polite"
             >
               {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={msg.role === 'user' ? 'text-right' : 'text-left'}
-                >
+                <div key={i} className={msg.role === 'user' ? 'text-right' : 'text-left'}>
                   {msg.role === 'user' ? (
                     <span className="inline-block text-xs text-[var(--color-text-muted)] italic">
                       {msg.content}
@@ -164,7 +174,7 @@ export function InlineAiPanel({
               ))}
 
               {contextChatMutation.isPending && (
-                <div className="flex items-center gap-1.5 text-xs text-purple-400">
+                <div className="flex items-center gap-1.5 text-xs text-[var(--color-accent)]">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   <span>Thinking...</span>
                 </div>
@@ -174,7 +184,7 @@ export function InlineAiPanel({
             {/* Follow-up input */}
             <form
               onSubmit={handleFollowUp}
-              className="flex items-center gap-2 px-3 py-2 border-t border-purple-500/10"
+              className="flex items-center gap-2 px-3 py-2 border-t border-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
             >
               <input
                 type="text"
@@ -187,7 +197,7 @@ export function InlineAiPanel({
               <button
                 type="submit"
                 disabled={!followUp.trim() || contextChatMutation.isPending}
-                className="text-purple-400 hover:text-purple-300 disabled:opacity-40 transition-colors"
+                className="text-[var(--color-accent)] hover:opacity-80 disabled:opacity-40 transition-colors"
                 aria-label="Send follow-up"
               >
                 <Send className="h-3.5 w-3.5" />

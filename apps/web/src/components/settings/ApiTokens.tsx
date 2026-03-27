@@ -125,7 +125,13 @@ export function ApiTokensSection() {
             {testTokenCount > 0 && (
               <button
                 type="button"
-                onClick={() => revokeTestTokens.mutate()}
+                onClick={() => {
+                  if (
+                    !confirm(`Revoke all ${testTokenCount} test token(s)? This cannot be undone.`)
+                  )
+                    return
+                  revokeTestTokens.mutate()
+                }}
                 disabled={revokeTestTokens.isPending}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/40 px-2.5 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
                 aria-label="Revoke all test tokens"

@@ -109,7 +109,12 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
                 className="absolute inset-y-0 left-0 rounded-full transition-all"
                 style={{
                   width: `${Math.max(v, 2)}%`,
-                  background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
+                  background:
+                    v > 80
+                      ? 'var(--color-status-error)'
+                      : v > 60
+                        ? 'var(--color-status-warning)'
+                        : 'var(--color-accent)',
                 }}
               />
               <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
@@ -142,7 +147,12 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
                 className="absolute inset-y-0 left-0 rounded-full transition-all"
                 style={{
                   width: `${Math.max(v, 2)}%`,
-                  background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
+                  background:
+                    v > 80
+                      ? 'var(--color-status-error)'
+                      : v > 60
+                        ? 'var(--color-status-warning)'
+                        : 'var(--color-accent)',
                 }}
               />
               <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
@@ -164,7 +174,9 @@ export default function NodesPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
+  const hasCredentials = Boolean(
+    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
+  )
   const isLive = hasCredentials
 
   const liveQuery = trpc.clusters.live.useQuery(
@@ -183,12 +195,22 @@ export default function NodesPage() {
         id: `node-${i}`,
         name: asText(n['name'], ''),
         status:
-          n['status'] === 'ready' ? 'Ready' : n['status'] === 'notready' ? 'NotReady' : asText(n['status'], 'Unknown'),
+          n['status'] === 'ready'
+            ? 'Ready'
+            : n['status'] === 'notready'
+              ? 'NotReady'
+              : asText(n['status'], 'Unknown'),
         role: asText(n['role'], 'worker'),
         kubeletVersion: asText(n['kubeletVersion']),
         os: asText(n['os'] ?? n['operatingSystem']),
-        cpu: n['cpuAllocatable'] != null ? `${n['cpuAllocatable']}m / ${n['cpuCapacity'] ?? '?'}m` : '—',
-        memory: n['memoryAllocatable'] != null ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi / ${Math.round(Number(n['memoryCapacity'] ?? 0) / 1024)}Mi` : '—',
+        cpu:
+          n['cpuAllocatable'] != null
+            ? `${n['cpuAllocatable']}m / ${n['cpuCapacity'] ?? '?'}m`
+            : '—',
+        memory:
+          n['memoryAllocatable'] != null
+            ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi / ${Math.round(Number(n['memoryCapacity'] ?? 0) / 1024)}Mi`
+            : '—',
         cpuPercent: typeof n['cpuPercent'] === 'number' ? n['cpuPercent'] : null,
         memoryPercent: typeof n['memoryPercent'] === 'number' ? n['memoryPercent'] : null,
       }))
@@ -200,7 +222,10 @@ export default function NodesPage() {
         kubeletVersion: asText(n['k8sVersion']),
         os: '—',
         cpu: n['cpuAllocatable'] != null ? `${n['cpuAllocatable']}m` : '—',
-        memory: n['memoryAllocatable'] != null ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi` : '—',
+        memory:
+          n['memoryAllocatable'] != null
+            ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi`
+            : '—',
         cpuPercent: null,
         memoryPercent: null,
       }))
@@ -210,48 +235,53 @@ export default function NodesPage() {
   const nodesQuery = effectiveIsLive ? liveQuery : dbNodes
 
   return (
-    <DataTable
-      data={nodes}
-      columns={makeNodeColumns(metricsAvailable)}
-      loading={effectiveIsLive ? liveQuery.isLoading : dbNodes.isLoading}
-      emptyIcon={<Server className="h-10 w-10" />}
-      emptyTitle={isOffline ? 'Cluster is currently offline' : 'No nodes found in this cluster'}
-      emptyDescription={
-        isOffline
-          ? 'Node data is unavailable while the cluster is offline. Check cluster connectivity and try again.'
-          : 'Nodes appear here when your cluster has worker nodes registered. Check cluster connectivity.'
-      }
-      emptyAction={
-        <button
-          type="button"
-          onClick={() => nodesQuery.refetch()}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
-        >
-          <RefreshCw className="h-3 w-3" />
-          Refresh
-        </button>
-      }
-      paginated
-      pageSize={25}
-      mobileCard={(node) => (
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="font-medium font-mono text-[var(--color-text-primary)] text-sm">{node.name}</span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
-              <span className="text-[var(--color-text-secondary)] text-xs">{node.status}</span>
-            </span>
+    <>
+      <h1 className="sr-only">Cluster Nodes</h1>
+      <DataTable
+        data={nodes}
+        columns={makeNodeColumns(metricsAvailable)}
+        loading={effectiveIsLive ? liveQuery.isLoading : dbNodes.isLoading}
+        emptyIcon={<Server className="h-10 w-10" />}
+        emptyTitle={isOffline ? 'Cluster is currently offline' : 'No nodes found in this cluster'}
+        emptyDescription={
+          isOffline
+            ? 'Node data is unavailable while the cluster is offline. Check cluster connectivity and try again.'
+            : 'Nodes appear here when your cluster has worker nodes registered. Check cluster connectivity.'
+        }
+        emptyAction={
+          <button
+            type="button"
+            onClick={() => nodesQuery.refetch()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
+          >
+            <RefreshCw className="h-3 w-3" />
+            Refresh
+          </button>
+        }
+        paginated
+        pageSize={25}
+        mobileCard={(node) => (
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="font-medium font-mono text-[var(--color-text-primary)] text-sm">
+                {node.name}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
+                <span className="text-[var(--color-text-secondary)] text-xs">{node.status}</span>
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+              <span className="text-[var(--color-text-muted)]">Role</span>
+              <span className="text-[var(--color-text-primary)]">{node.role}</span>
+              <span className="text-[var(--color-text-muted)]">CPU</span>
+              <span className="text-[var(--color-text-primary)] font-mono">{node.cpu}</span>
+              <span className="text-[var(--color-text-muted)]">Memory</span>
+              <span className="text-[var(--color-text-primary)] font-mono">{node.memory}</span>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-            <span className="text-[var(--color-text-muted)]">Role</span>
-            <span className="text-[var(--color-text-primary)]">{node.role}</span>
-            <span className="text-[var(--color-text-muted)]">CPU</span>
-            <span className="text-[var(--color-text-primary)] font-mono">{node.cpu}</span>
-            <span className="text-[var(--color-text-muted)]">Memory</span>
-            <span className="text-[var(--color-text-primary)] font-mono">{node.memory}</span>
-          </div>
-        </div>
-      )}
-    />
+        )}
+      />
+    </>
   )
 }

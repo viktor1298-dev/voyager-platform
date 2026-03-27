@@ -7,11 +7,16 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-transparent bg-zinc-50 text-zinc-900',
-        secondary: 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-badge-label)]',
-        destructive: 'border-red-200/80 bg-red-50 text-red-500 dark:border-red-800/30 dark:bg-red-950/40 dark:text-red-400/90',
-        success: 'border-emerald-600/40 bg-emerald-50 text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/60 dark:text-emerald-300',
-        warning: 'border-amber-600/40 bg-amber-50 text-amber-700 dark:border-amber-800/40 dark:bg-amber-950/60 dark:text-amber-300',
+        default:
+          'border-transparent bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]',
+        secondary:
+          'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-badge-label)]',
+        destructive:
+          'border-[var(--color-status-error)]/20 bg-[var(--color-status-error)]/10 text-[var(--color-status-error)]',
+        success:
+          'border-[var(--color-status-healthy)]/20 bg-[var(--color-status-healthy)]/10 text-[var(--color-status-healthy)]',
+        warning:
+          'border-[var(--color-status-warning)]/20 bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)]',
         outline: 'border-[var(--color-border)] text-[var(--color-badge-label)]',
       },
     },
