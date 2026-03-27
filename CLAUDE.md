@@ -17,7 +17,8 @@ voyager-platform/
 │   │       ├── routers/        # tRPC routers (28 routes: clusters, pods, nodes, alerts, ai, etc.)
 │   │       ├── routes/         # Non-tRPC routes (ai-stream, mcp)
 │   │       ├── jobs/           # Background jobs (health-sync, alert-evaluator, metrics, node-sync, event-sync)
-│   │       └── lib/            # Auth, K8s watchers, telemetry, sentry, cache, authorization
+│   │       ├── config/         # Backend-only config (job intervals, K8s settings)
+│   │       └── lib/            # Auth, K8s watchers, telemetry, sentry, cache, authorization, error-handler, cache-keys
 │   └── web/                    # Next.js 16 frontend (React 19, Tailwind 4)
 │       └── src/
 │           ├── app/            # App Router pages (clusters, alerts, settings, ai, etc.)
@@ -26,7 +27,7 @@ voyager-platform/
 │           └── config/         # navigation.ts (6 sidebar items)
 ├── packages/
 │   ├── db/                     # Drizzle ORM schema + migrations
-│   ├── config/                 # Shared config (SSE timeouts, AI settings)
+│   ├── config/                 # Shared config (SSE, AI, routes, cache TTLs, validation limits)
 │   ├── types/                  # Shared TypeScript types (SSE events, AI contracts)
 │   └── ui/                     # Shared UI components (shadcn/ui)
 ├── charts/voyager/             # Helm chart for K8s deployment
@@ -60,14 +61,16 @@ voyager-platform/
 ```bash
 # First time setup
 pnpm install
+cp .env.example .env            # Copy env vars (edit K8S_ENABLED, PORT as needed)
 
 # Local infra (Postgres + Redis) — required before dev
+# docker compose auto-initializes DB schema via init.sql on first start
 docker compose up -d
 
 # From monorepo root
-pnpm dev                    # Start all (turbo)
+pnpm dev                    # Start all (turbo) — API loads .env via --env-file
 pnpm build                  # Build all
-pnpm --filter api dev       # Backend only (tsx watch, port 4000)
+pnpm --filter api dev       # Backend only (tsx watch, port from .env)
 pnpm --filter web dev       # Frontend only (next dev, port 3000)
 
 # Testing
@@ -85,9 +88,22 @@ pnpm typecheck              # TypeScript check
 pnpm db:generate            # Generate Drizzle migrations
 pnpm db:push                # Push schema to DB
 pnpm db:migrate             # Run migrations
-pnpm db:seed                # Seed data
+pnpm db:seed                # Seed data (5 clusters, 37 nodes, 30 events)
 pnpm --filter api seed:admin  # Seed admin user only
 ```
+
+### Local Dev Without K8s
+
+The app runs locally without a K8s cluster. Set `K8S_ENABLED=false` in `.env` to skip watchers and background jobs:
+
+```bash
+docker compose up -d          # Postgres + Redis + auto-init schema
+pnpm dev                      # API (port from .env) + Web (port 3000)
+pnpm db:seed                  # Optional: seed mock clusters/nodes/events
+# Login: admin@voyager.local / admin123
+```
+
+**Note:** Port 4000 may conflict with NoMachine (nxd). Set `PORT=4001` in `.env` and `NEXT_PUBLIC_API_URL=http://localhost:4001` in `apps/web/.env.local`.
 
 ## Code Style (Biome)
 
@@ -133,6 +149,7 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 - **lib/** has no dependencies on routers or services
 - tRPC procedures use `publicProcedure`, `protectedProcedure`, `adminProcedure`, or `authorizedProcedure` middleware
 - Non-tRPC routes: `ai-stream` (SSE streaming) and `mcp` (MCP protocol)
+- tRPC client uses `httpLink` (NOT `httpBatchLink`) — see Gotcha #1
 - Background jobs: `health-sync`, `alert-evaluator`, `metrics-history-collector`, `node-sync`, `event-sync`
 
 ### Key Abstractions
@@ -153,14 +170,35 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 - **Session:** Better-Auth cookie session (secure, httpOnly, sameSite=strict) — no JWT
 - **Cache:** tRPC useQuery with `staleTime` and `refetchInterval` per endpoint
 
+### Centralized Config
+
+Configuration is split between shared (API + Web) and backend-only:
+
+| File | Exports | Used By |
+|------|---------|---------|
+| `packages/config/src/routes.ts` | `API_ROUTES`, `AUTH_BYPASS_PATHS`, `RATE_LIMIT_BYPASS_PATHS` | server.ts, auth-guard.ts |
+| `packages/config/src/cache.ts` | `CACHE_TTL` (K8S_RESOURCES_SEC, CLUSTER_CLIENT_MS, etc.) | cluster-client-pool, routers, karpenter, sso, presence |
+| `packages/config/src/validation.ts` | `LIMITS` (NAME_MAX, LIST_MAX, etc.) | All tRPC routers with Zod schemas |
+| `packages/config/src/sse.ts` | SSE heartbeat/reconnect constants | SSE subscriptions |
+| `packages/config/src/ai.ts` | `AI_CONFIG` | AI service |
+| `apps/api/src/config/jobs.ts` | `JOB_INTERVALS` | All background jobs |
+| `apps/api/src/config/k8s.ts` | `K8S_CONFIG` (CLIENT_POOL_MAX, ENCRYPTION_KEY getter) | cluster-client-pool, clusters router |
+
+**Rule:** Do NOT add new hardcoded values to routers or jobs. Add constants to the appropriate config file and import from there.
+
 ### Error Handling
 
+- **K8s router errors:** Use `handleK8sError(error, operation)` from `api/src/lib/error-handler.ts` — standardized pattern across all K8s routers
 - tRPC errors: `TRPCError { code, message }` — codes: `BAD_REQUEST`, `NOT_FOUND`, `UNAUTHORIZED`, `FORBIDDEN`, `CONFLICT`, `INTERNAL_SERVER_ERROR`
 - Client-caused errors (`UNAUTHORIZED`, `NOT_FOUND`, `BAD_REQUEST`) → no Sentry; server errors → Sentry
 - Frontend: `handleTRPCError()` in `web/src/lib/trpc.ts` redirects to `/login` on UNAUTHORIZED
 - Redis failures are non-fatal: catch and fall back to direct function call
 - Audit logging errors must never break the main operation: `try { logAudit(...) } catch { console.error(...) }`
 - K8s connection errors: logged, don't crash API; health check returns degraded
+
+### Cache Keys
+
+All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Never construct cache key strings inline** — use `CACHE_KEYS.k8sServices(clusterId, ns)` etc. This prevents key format drift and makes invalidation patterns reliable.
 
 ### Cross-Cutting
 
@@ -174,7 +212,7 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 |------|---------|
 | **Milestone** | v1.0 Reset & Stabilization — complete (tagged `v1.0`) |
 | **Main branch** | Single source of truth — PRs required, force push blocked |
-| **Build status** | `pnpm build` ✓, `pnpm typecheck` ✓, `pnpm test` ✓ (144/144 tests) |
+| **Build status** | `pnpm build` ✓, `pnpm typecheck` ✓, `pnpm test` ✓ (all passing) |
 | **Next** | Feature development via PRs to main |
 
 ## Database
@@ -199,37 +237,51 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 | `apps/web/src/app/clusters/[id]/layout.tsx` | Cluster detail layout with 10-tab bar |
 | `apps/web/src/components/Sidebar.tsx` | Main sidebar (6 items) |
 | `apps/web/src/components/AppLayout.tsx` | App shell with auto-collapse logic |
-| `apps/web/src/components/providers.tsx` | All providers (tRPC, theme, MotionConfig) |
+| `apps/web/src/components/providers.tsx` | All providers (tRPC, theme, LazyMotion — no `strict` flag) |
 | `apps/web/src/config/navigation.ts` | Sidebar navigation config |
 | `apps/web/src/lib/trpc.ts` | tRPC client setup + `handleTRPCError` |
 | `apps/web/src/lib/animation-constants.ts` | Motion v12 timing/easing constants |
 | `charts/voyager/sql/init.sql` | DB schema (source of truth) |
+| `apps/api/src/lib/error-handler.ts` | Shared `handleK8sError()` for all K8s routers |
+| `apps/api/src/lib/cache-keys.ts` | Centralized Redis cache key builders |
+| `apps/api/src/config/jobs.ts` | Background job interval constants |
+| `apps/api/src/config/k8s.ts` | K8s client pool config (getter for ENCRYPTION_KEY) |
 
 ## URL Structure
 
+**Sidebar navigation (6 items):** `/` Dashboard, `/clusters`, `/alerts`, `/events`, `/logs`, `/settings`
+
 ```
+# Sidebar routes
 /                               → Dashboard
 /clusters                       → Clusters list
-/clusters/[id]                  → Cluster Overview (default tab)
-/clusters/[id]/nodes            → Nodes tab
-/clusters/[id]/pods             → Pods tab (?ns=kube-system for filter)
-/clusters/[id]/deployments      → Deployments tab
-/clusters/[id]/services         → Services tab
-/clusters/[id]/namespaces       → Namespaces tab
-/clusters/[id]/events           → Events tab
-/clusters/[id]/logs             → Logs tab
-/clusters/[id]/metrics          → Metrics tab
-/clusters/[id]/autoscaling      → Autoscaling tab
-/alerts                         → Global alerts + anomalies
+/alerts                         → Global alerts
+/events                         → Global events
+/logs                           → Global logs
+/settings                       → Settings hub
+
+# Cluster detail (10 tabs)
+/clusters/[id]                  → Overview (default tab)
+/clusters/[id]/nodes|pods|deployments|services|namespaces|events|logs|metrics|autoscaling
+
+# Not in sidebar (accessible via direct URL or in-app links)
 /ai                             → AI Assistant
 /dashboards                     → Shared Dashboards
-/settings                       → Settings hub (General, Users, Teams, Permissions, Webhooks, Features, Audit)
+/anomalies                      → Anomaly detection
+/karpenter                      → Karpenter autoscaler
+/system-health                  → System health overview
+/health                         → Health checks
+/login                          → Login page
+
+# Settings sub-pages (also accessible as top-level routes)
+/users, /teams, /permissions, /webhooks, /features, /feature-flags, /audit
+/deployments, /namespaces, /services  → Global views (not cluster-scoped)
 ```
 
 ## Known Gotchas
 
-### 1. tRPC Batch URL Breaks Navigation
-Adding `useQuery` to frequently-rendered components can cause tRPC's `httpBatchLink` to create oversized URLs. Nginx returns 404, ALL queries in the batch fail, retry loops saturate React scheduler, and `startTransition` navigation never completes. **Always test navigation after adding queries to shared components.**
+### 1. tRPC Link — Do NOT Revert to httpBatchLink
+We switched from `httpBatchLink` to `httpLink` (`web/src/lib/trpc.ts`) because batched URLs exceeded nginx limits, causing 404s that broke ALL queries in the batch, saturated the React scheduler, and froze navigation. **Never revert to `httpBatchLink`.**
 
 ### 2. E2E: Check URL Before Fixing Selectors
 When E2E tests fail on "element not found" — first verify the test navigates to the correct URL. `goto('/')` may redirect away from the expected page. Fix the URL before touching selectors or timeouts.
@@ -252,40 +304,36 @@ The correct value is `http://voyager-platform.voyagerlabs.co`. Wrong BASE_URL is
 ### 8. Zod v4 `z.record` Requires Two Arguments
 `z.record(z.unknown())` fails — must be `z.record(z.string(), z.unknown())`. Always pass both key and value schemas.
 
-## Agent Team
+### 9. tRPC v11 — Never Use `getUntypedClient()` for Subscriptions or Mutations
+`getUntypedClient()` does not expose `.subscription()` or `.mutation()` methods in tRPC v11. Always use tRPC React hooks: `trpc.router.procedure.useSubscription()`, `trpc.router.procedure.useMutation()`. The `usePresence` hook was refactored to fix this (commit `19dcb21`).
 
-| Agent | Role | Model | Focus |
-|-------|------|-------|-------|
-| **Ron** 👷 | Frontend dev | Codex | React components, pages, animations |
-| **Shiri** 👷 | Frontend-2 | Codex | Settings, secondary frontend |
-| **Dima** 💻 | Backend dev | Opus | tRPC routers, DB, API |
-| **Lior** 🔍 | Code review | Opus | 10/10 gate, quality enforcement |
-| **Uri** 🔧 | DevOps | Sonnet | Docker, Helm, K8s deploy |
-| **Gil** 🔄 | Git manager | Sonnet | Merge, tag, push |
-| **Yuval** 🧬 | E2E testing | Sonnet | Playwright specs, 0-failure gate |
-| **Mai** 🧪 | QA | Sonnet | Desktop QA, 8.5/10 gate |
-| **Foreman** 🏗️ | Pipeline orchestrator | Opus | Spawns/coordinates all agents |
-| **Guardian** 🛡️ | Pipeline monitor | Sonnet | Gate verification, health checks |
+### 10. LazyMotion — Do NOT Add `strict` Flag
+`<LazyMotion strict>` crashes any component that uses `motion.div` instead of `m.div`. Since many components use `motion.*`, the `strict` flag was removed from `providers.tsx`. Do not re-add it without converting all `motion.*` imports to `m.*` first.
 
-## Pipeline Flow
+### 11. `useMutation` in useEffect Dependencies
+tRPC's `useMutation()` returns a new object reference every render. Putting it in a `useEffect` dependency array causes infinite re-renders. Use a ref pattern instead: `const mutRef = useRef(mutation); mutRef.current = mutation;` then call `mutRef.current.mutate()` inside the effect.
 
-```
-Dev (Ron/Dima) → Review (Lior 10/10) → Merge (Gil) → Deploy (Uri) → E2E (Yuval 0 fail) → QA (Mai 8.5+) → Loop until clean
-```
+### 12. Docker Compose Auto-Initializes DB Schema
+`docker compose up -d` auto-runs `charts/voyager/sql/init.sql` on first start (mounted into `/docker-entrypoint-initdb.d/`). No manual `db:push` needed for local dev. The init.sql is fully idempotent (CREATE IF NOT EXISTS, ON CONFLICT DO NOTHING).
 
-Pipeline never declares `complete` — only `deployed-awaiting-review`. Vik decides when done.
+## Agent Pipeline (GSD)
+
+Dev (Ron/Shiri/Dima) → Review (Lior 10/10) → Merge (Gil) → Deploy (Uri) → E2E (Yuval 0-fail) → QA (Mai 8.5+/10) → Loop until clean. Pipeline never declares `complete` — only `deployed-awaiting-review`. Vik decides when done. Agents are spawned via GSD workflow commands, not direct git commits.
 
 ## Environment Variables
 
-Key env vars for `apps/api/.env`:
+Key env vars for root `.env` (loaded by API via `--env-file`):
 - `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `CLUSTER_CRED_ENCRYPTION_KEY` (64-char hex, required)
+- `K8S_ENABLED` (default: `true`) — set to `false` for local dev without K8s cluster
+- `PORT` (default: `4000`) — API port (use `4001` if NoMachine occupies 4000)
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD` — required for runtime admin bootstrap
 - `SENTRY_DSN`, `OTEL_EXPORTER_OTLP_ENDPOINT` (optional observability)
 - `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET` (optional Entra ID SSO)
 - `FEATURE_FLAGS_FILE` (default: `feature-flags.json`) or `FEATURE_FLAG_*` env vars
 - `RATE_LIMIT_MAX` (default: 200), `RATE_LIMIT_TIME_WINDOW` (default: `1 minute`)
 
 Key env vars for `apps/web/.env.local`:
-- `NEXT_PUBLIC_API_URL` (default: `http://localhost:4000`)
+- `NEXT_PUBLIC_API_URL` (default: `http://voyager-api:4000`) — set to `http://localhost:4001` for local dev
 
 <!-- GSD:workflow-start source:GSD defaults -->
 ## GSD Workflow Enforcement
