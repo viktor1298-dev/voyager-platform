@@ -13,7 +13,8 @@
     "db:seed": "pnpm --filter @voyager/db db:seed",
     "test:e2e": "playwright test",
     "test:visual": "playwright test --config=playwright.visual.config.ts",
-    "test:visual:update": "playwright test --config=playwright.visual.config.ts --update-snapshots"
+    "test:visual:update": "playwright test --config=playwright.visual.config.ts --update-snapshots",
+    "health:check": "tsx scripts/health-check.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.15",
