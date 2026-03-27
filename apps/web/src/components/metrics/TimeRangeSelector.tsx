@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 
-export type MetricsRange = '30s' | '1m' | '5m' | '1h' | '6h' | '24h' | '7d'
+export type MetricsRange = '5m' | '15m' | '30m' | '1h' | '3h' | '6h' | '12h' | '24h' | '2d' | '7d'
 
 interface TimeRangeSelectorProps {
   value: MetricsRange
@@ -11,12 +11,15 @@ interface TimeRangeSelectorProps {
 }
 
 const RANGES: { value: MetricsRange; label: string }[] = [
-  { value: '30s', label: '30s' },
-  { value: '1m', label: '1m' },
   { value: '5m', label: '5m' },
+  { value: '15m', label: '15m' },
+  { value: '30m', label: '30m' },
   { value: '1h', label: '1h' },
+  { value: '3h', label: '3h' },
   { value: '6h', label: '6h' },
+  { value: '12h', label: '12h' },
   { value: '24h', label: '24h' },
+  { value: '2d', label: '2d' },
   { value: '7d', label: '7d' },
 ]
 

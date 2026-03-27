@@ -51,19 +51,23 @@ export const TOOLTIP_STYLE = {
   },
 } as const
 
-export type TimeRange = '1h' | '6h' | '24h' | '7d' | '30d'
+export type TimeRange = '5m' | '15m' | '30m' | '1h' | '3h' | '6h' | '12h' | '24h' | '2d' | '7d'
 
 export function formatTimestamp(iso: string, range: TimeRange): string {
   const d = new Date(iso)
   switch (range) {
+    case '5m':
+    case '15m':
+    case '30m':
     case '1h':
+    case '3h':
     case '6h':
+    case '12h':
     case '24h':
       return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    case '2d':
     case '7d':
       return d.toLocaleDateString([], { weekday: 'short', hour: '2-digit' })
-    case '30d':
-      return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
   }
 }
 

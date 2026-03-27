@@ -11,8 +11,8 @@ import { AlertsTimelineChart } from './AlertsTimelineChart'
 
 const TIME_RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
   { value: '24h', label: 'Last 24h' },
+  { value: '2d', label: 'Last 2 days' },
   { value: '7d', label: 'Last 7 days' },
-  { value: '30d', label: 'Last 30 days' },
 ]
 
 export function DashboardCharts() {
