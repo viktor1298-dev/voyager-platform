@@ -1,1 +1,0 @@
-{"score":10,"verdict":"APPROVED","test_coverage_checked":true,"files_reviewed":["charts/voyager/values.yaml","apps/api/src/server.ts","charts/voyager/sql/init.sql"],"lines_changed":1,"env_blocked_items":[],"findings":[]}
