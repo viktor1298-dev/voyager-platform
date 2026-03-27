@@ -16,9 +16,9 @@ voyager-platform/
 │   │       ├── server.ts       # Entry point — DO NOT add migrate() here
 │   │       ├── routers/        # tRPC routers (28 routes: clusters, pods, nodes, alerts, ai, etc.)
 │   │       ├── routes/         # Non-tRPC routes (ai-stream, mcp)
-│   │       ├── jobs/           # Background jobs (health-sync, alert-evaluator, metrics, node-sync, event-sync)
+│   │       ├── jobs/           # Background jobs (health-sync, alert-evaluator, metrics, node-sync, event-sync, deploy-smoke-test)
 │   │       ├── config/         # Backend-only config (job intervals, K8s settings)
-│   │       └── lib/            # Auth, K8s watchers, telemetry, sentry, cache, authorization, error-handler, cache-keys
+│   │       └── lib/            # Auth, K8s watchers, telemetry, sentry, cache, authorization, error-handler, cache-keys, health-checks
 │   └── web/                    # Next.js 16 frontend (React 19, Tailwind 4)
 │       └── src/
 │           ├── app/            # App Router pages (clusters, alerts, settings, ai, etc.)
@@ -37,7 +37,7 @@ voyager-platform/
 ├── tests/
 │   ├── e2e/                    # Playwright E2E tests
 │   └── visual/                 # Visual regression tests
-└── scripts/                    # Utility scripts
+└── scripts/                    # Utility scripts (health-check.ts)
 ```
 
 ## Tech Stack
@@ -72,6 +72,10 @@ pnpm dev                    # Start all (turbo) — API loads .env via --env-fil
 pnpm build                  # Build all
 pnpm --filter api dev       # Backend only (tsx watch, port from .env)
 pnpm --filter web dev       # Frontend only (next dev, port 3000)
+
+# Health verification
+pnpm health:check           # Post-start health check (local dev)
+pnpm health:check --no-docker  # Skip Docker checks
 
 # Testing
 pnpm test                   # Vitest unit tests (all packages)
@@ -152,7 +156,8 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 - tRPC procedures use `publicProcedure`, `protectedProcedure`, `adminProcedure`, or `authorizedProcedure` middleware
 - Non-tRPC routes: `ai-stream` (SSE streaming) and `mcp` (MCP protocol)
 - tRPC client uses `httpLink` (NOT `httpBatchLink`) — see Gotcha #1
-- Background jobs: `health-sync`, `alert-evaluator`, `metrics-history-collector`, `node-sync`, `event-sync`
+- Background jobs: `health-sync`, `alert-evaluator`, `metrics-history-collector`, `node-sync`, `event-sync`, `deploy-smoke-test`
+- **All sync jobs run regardless of `K8S_ENABLED`** — only K8s watchers and deploy-smoke-test are gated (see Gotcha #14)
 
 ### Key Abstractions
 
@@ -163,6 +168,7 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 | **Event Emitter** | `api/src/lib/event-emitter.ts` | Decouples K8s watchers from SSE subscriptions (one watch, many consumers) |
 | **Auth** | `api/src/lib/auth.ts` | Better-Auth handler for `/api/auth/*`; session in PostgreSQL, token in cookie |
 | **Authorization** | `api/src/lib/authorization.ts` | `createAuthorizationService(db).check(subject, relation, object)` — DB-backed RBAC |
+| **Health Checks** | `api/src/lib/health-checks.ts` | Pure-function log scanner, startup probe, page smoke, result assessment — shared by CLI and K8s job |
 
 ### State Management
 
@@ -225,6 +231,7 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | **Build status** | `pnpm build` ✓, `pnpm typecheck` ✓, `pnpm test` ✓ (all passing) |
 | **UI/UX audit** | 219 findings across 6 dimensions — all fixed (2026-03-27). Reports in `docs/ui-audit/` |
 | **Animation enhancement** | B-style (Confident & Expressive) — 35 files, 4 waves complete (2026-03-27). Spec in `docs/superpowers/specs/`, standards in `docs/DESIGN.md` |
+| **Post-start health verification** | Local CLI (`pnpm health:check`) + K8s deploy smoke test job (2026-03-27). Spec in `docs/superpowers/specs/`, plan in `docs/superpowers/plans/` |
 | **Next** | Feature development via PRs to main |
 
 ## Database
@@ -259,6 +266,10 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | `apps/api/src/lib/cache-keys.ts` | Centralized Redis cache key builders |
 | `apps/api/src/config/jobs.ts` | Background job interval constants |
 | `apps/api/src/config/k8s.ts` | K8s client pool config (getter for ENCRYPTION_KEY) |
+| `apps/api/src/lib/health-checks.ts` | Shared health check logic: log scanner, startup probe, page smoke, result assessment |
+| `apps/api/src/jobs/deploy-smoke-test.ts` | K8s deploy smoke test — listens for deployment rollouts, runs checks, creates alerts |
+| `apps/api/src/lib/k8s-client-factory.ts` | KubeConfig factory for all providers (kubeconfig, AWS, Azure, GKE, minikube) |
+| `scripts/health-check.ts` | `pnpm health:check` CLI — local dev post-start health verification |
 | `docs/DESIGN.md` | 🔴 Animation & interaction design source of truth — read before ANY UI change |
 
 ## URL Structure
@@ -330,6 +341,15 @@ tRPC's `useMutation()` returns a new object reference every render. Putting it i
 ### 12. Docker Compose Auto-Initializes DB Schema
 `docker compose up -d` auto-runs `charts/voyager/sql/init.sql` on first start (mounted into `/docker-entrypoint-initdb.d/`). No manual `db:push` needed for local dev. The init.sql is fully idempotent (CREATE IF NOT EXISTS, ON CONFLICT DO NOTHING).
 
+### 14. K8S_ENABLED=false Does NOT Disable Sync Jobs
+`K8S_ENABLED=false` only disables K8s watchers (informers) and deploy-smoke-test. All sync jobs (health-sync, node-sync, event-sync, metrics-collector, alert-evaluator) **always run** regardless of this flag. They handle per-cluster errors gracefully and are required for remotely-added clusters (kubeconfig, AWS, etc.) that have their own embedded credentials.
+
+### 15. Kubeconfig Provider — Context Fallback
+When loading a kubeconfig via `loadFromString()`, if no explicit `context` param is provided, the factory falls back to `current-context` from the YAML, then to the first context in the list. Without this fallback, the KubeConfig object may have no context selected, causing all API calls to fail silently.
+
+### 16. Cluster List Node Count Comes from `nodes` Table
+The cluster list page gets `nodeCount` by counting rows in the `nodes` table (populated by node-sync), NOT from `clusters.nodesCount`. If node-sync isn't running, cluster cards show 0 nodes even if health-sync updated `clusters.nodesCount` correctly.
+
 ### 13. SSR Hydration — Never Branch on `typeof window/document` in Render
 Checking `typeof window !== 'undefined'` or `typeof document !== 'undefined'` inside a component's render path creates a server/client branch that causes React hydration errors. The server renders one path, the client renders another. **Always use `useState(false)` + `useEffect(() => set(true))` to detect client-only features post-mount.** This has broken the login page multiple times via `PageTransition.tsx`.
 
@@ -370,7 +390,7 @@ Dev (Ron/Shiri/Dima) → Review (Lior 10/10) → Merge (Gil) → Deploy (Uri) �
 
 Key env vars for root `.env` (loaded by API via `--env-file`):
 - `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `CLUSTER_CRED_ENCRYPTION_KEY` (64-char hex, required)
-- `K8S_ENABLED` (default: `true`) — set to `false` for local dev without K8s cluster
+- `K8S_ENABLED` (default: `true`) — set to `false` for local dev without K8s cluster (disables watchers only, sync jobs still run — see Gotcha #14)
 - `PORT` (default: `4000`) — API port (use `4001` if NoMachine occupies 4000)
 - `ADMIN_EMAIL`, `ADMIN_PASSWORD` — required for runtime admin bootstrap
 - `SENTRY_DSN`, `OTEL_EXPORTER_OTLP_ENDPOINT` (optional observability)
