@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 2 plans
 Plans:
 - [x] 01-01-PLAN.md — Rewrite backend metrics pipeline with time_bucket() SQL, new Grafana ranges, response metadata
-- [ ] 01-02-PLAN.md — Update frontend types, store migration, and consumers for new API response shape
+- [x] 01-02-PLAN.md — Update frontend types, store migration, and consumers for new API response shape
 
 ### Phase 2: SSE Streaming Endpoint
 **Goal**: Backend streams live K8s metrics via SSE for clusters with active subscribers
