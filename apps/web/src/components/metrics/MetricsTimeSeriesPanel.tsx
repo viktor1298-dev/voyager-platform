@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
-import { TimeRangeSelector } from './TimeRangeSelector'
+import { TimeRangeSelector, type ApiMetricsRange } from './TimeRangeSelector'
 import { AutoRefreshToggle } from './AutoRefreshToggle'
 import {
   MetricsAreaChart,
@@ -89,8 +89,10 @@ export function MetricsTimeSeriesPanel({
 
   const refetchInterval = autoRefresh ? refreshInterval : false
 
+  const apiRange = range === 'custom' ? '24h' : (range as ApiMetricsRange)
+
   const historyQuery = trpc.metrics.history.useQuery(
-    { clusterId, range },
+    { clusterId, range: apiRange },
     {
       refetchInterval,
       staleTime: 30_000,
@@ -140,7 +142,7 @@ export function MetricsTimeSeriesPanel({
   }, [])
 
   const normalizedData = useMemo(
-    () => normalizeHistory(historyQuery.data as MetricsDataPoint[] | undefined),
+    () => normalizeHistory((historyQuery.data as { data?: MetricsDataPoint[] } | undefined)?.data),
     [historyQuery.data],
   )
 
