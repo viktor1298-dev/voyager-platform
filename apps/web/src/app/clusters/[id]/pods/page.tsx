@@ -405,11 +405,18 @@ function NamespacePodGroup({
                   ? 'bg-[var(--color-status-warning)]'
                   : 'bg-[var(--color-status-error)]'
             return (
-              <button
+              <div
                 key={pod.id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={() => onSelectPod(pod)}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition-colors text-left"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onSelectPod(pod)
+                  }
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition-colors text-left cursor-pointer"
               >
                 <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusColor}`} />
                 <span className="flex-1 min-w-0 text-[13px] font-mono text-[var(--color-text-primary)] truncate">
@@ -453,7 +460,7 @@ function NamespacePodGroup({
                     </Tooltip>
                   </TooltipProvider>
                 )}
-              </button>
+              </div>
             )
           })}
         </div>
