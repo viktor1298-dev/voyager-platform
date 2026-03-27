@@ -3,7 +3,9 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { handleK8sError } from '../lib/error-handler.js'
 import { cached } from '../lib/cache.js'
+import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
@@ -44,8 +46,14 @@ export const podsRouter = router({
           const podKey = `${p.metadata?.namespace ?? ''}/${p.metadata?.name ?? ''}`
           const metrics = podMetricsMap.get(podKey)
           // Calculate CPU/Mem percent based on requests
-          const cpuRequestNano = (p.spec?.containers ?? []).reduce((sum, c) => sum + parseCpuToNano(c.resources?.requests?.cpu ?? '0'), 0)
-          const memRequestBytes = (p.spec?.containers ?? []).reduce((sum, c) => sum + parseMemToBytes(c.resources?.requests?.memory ?? '0'), 0)
+          const cpuRequestNano = (p.spec?.containers ?? []).reduce(
+            (sum, c) => sum + parseCpuToNano(c.resources?.requests?.cpu ?? '0'),
+            0,
+          )
+          const memRequestBytes = (p.spec?.containers ?? []).reduce(
+            (sum, c) => sum + parseMemToBytes(c.resources?.requests?.memory ?? '0'),
+            0,
+          )
           return {
             name: p.metadata?.name ?? '',
             namespace: p.metadata?.namespace ?? '',
@@ -56,25 +64,30 @@ export const podsRouter = router({
             nodeName: p.spec?.nodeName ?? null,
             cpuMillis: metrics ? Math.round(metrics.cpuNano / 1_000_000) : null,
             memoryMi: metrics ? Math.round(metrics.memBytes / (1024 * 1024)) : null,
-            cpuPercent: metrics && cpuRequestNano > 0 ? Math.round((metrics.cpuNano / cpuRequestNano) * 1000) / 10 : null,
-            memoryPercent: metrics && memRequestBytes > 0 ? Math.round((metrics.memBytes / memRequestBytes) * 1000) / 10 : null,
+            cpuPercent:
+              metrics && cpuRequestNano > 0
+                ? Math.round((metrics.cpuNano / cpuRequestNano) * 1000) / 10
+                : null,
+            memoryPercent:
+              metrics && memRequestBytes > 0
+                ? Math.round((metrics.memBytes / memRequestBytes) * 1000) / 10
+                : null,
           }
         })
       } catch (err) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to list pods: ${err instanceof Error ? err.message : 'Unknown error'}`,
-        })
+        handleK8sError(err, 'list pods')
       }
     }),
 
   listStored: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid() }))
-    .output(z.object({
-      pods: z.array(z.any()),
-      offline: z.boolean(),
-      lastSeen: z.string().nullable(),
-    }))
+    .output(
+      z.object({
+        pods: z.array(z.any()),
+        offline: z.boolean(),
+        lastSeen: z.string().nullable(),
+      }),
+    )
     .query(async ({ input }) => {
       try {
         // Attempt live K8s fetch first
@@ -115,11 +128,13 @@ export const podsRouter = router({
     }),
 
   delete: adminProcedure
-    .input(z.object({
-      clusterId: z.string().uuid(),
-      namespace: z.string(),
-      podName: z.string(),
-    }))
+    .input(
+      z.object({
+        clusterId: z.string().uuid(),
+        namespace: z.string(),
+        podName: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         const kc = await clusterClientPool.getClient(input.clusterId)

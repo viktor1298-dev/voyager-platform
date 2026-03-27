@@ -4,6 +4,7 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { createAuthorizationService } from '../lib/authorization.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { handleK8sError } from '../lib/error-handler.js'
 import { protectedProcedure, router } from '../trpc.js'
 
 const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'] as const
@@ -22,7 +23,7 @@ async function getDefaultClusterId(): Promise<string> {
 }
 
 async function getCoreApiForCluster(clusterId?: string): Promise<k8s.CoreV1Api> {
-  const resolvedId = clusterId ?? await getDefaultClusterId()
+  const resolvedId = clusterId ?? (await getDefaultClusterId())
   const kc = await clusterClientPool.getClient(resolvedId)
   return kc.makeApiClient(k8s.CoreV1Api)
 }
@@ -31,7 +32,9 @@ async function listAccessibleClusterIds(params: {
   db: Parameters<typeof createAuthorizationService>[0]
   user: { id: string; role: string | null }
 }): Promise<string[]> {
-  const allClusterIds = (await params.db.select({ id: clusters.id }).from(clusters)).map((cluster) => cluster.id)
+  const allClusterIds = (await params.db.select({ id: clusters.id }).from(clusters)).map(
+    (cluster) => cluster.id,
+  )
   if (allClusterIds.length === 0) return []
 
   const authz = createAuthorizationService(params.db)
@@ -53,11 +56,10 @@ async function resolveClusterIdForNonAdmin(params: {
   const authz = createAuthorizationService(params.db)
 
   if (params.clusterId) {
-    const canViewCluster = await authz.check(
-      { type: 'user', id: params.user.id },
-      'viewer',
-      { type: 'cluster', id: params.clusterId },
-    )
+    const canViewCluster = await authz.check({ type: 'user', id: params.user.id }, 'viewer', {
+      type: 'cluster',
+      id: params.clusterId,
+    })
 
     if (!canViewCluster) {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'Permission denied' })
@@ -94,7 +96,11 @@ function normalizePodResponse(response: unknown): {
   spec?: { containers?: Array<{ name?: string }> }
 } {
   if (response && typeof response === 'object' && 'body' in response) {
-    return ((response as { body?: unknown }).body as { spec?: { containers?: Array<{ name?: string }> } }) ?? {}
+    return (
+      ((response as { body?: unknown }).body as {
+        spec?: { containers?: Array<{ name?: string }> }
+      }) ?? {}
+    )
   }
   return (response as { spec?: { containers?: Array<{ name?: string }> } }) ?? {}
 }
@@ -109,7 +115,11 @@ function detectLogLevel(line: string): (typeof LOG_LEVELS)[number] {
 
 export const logsRouter = router({
   pods: protectedProcedure
-    .input(z.object({ namespace: z.string().optional(), clusterId: z.string().uuid().optional() }).optional())
+    .input(
+      z
+        .object({ namespace: z.string().optional(), clusterId: z.string().uuid().optional() })
+        .optional(),
+    )
     .query(async ({ ctx, input }) => {
       if (ctx.user.role !== 'admin') {
         await resolveClusterIdForNonAdmin({
@@ -200,9 +210,14 @@ export const logsRouter = router({
 
             const containers = target.container
               ? [target.container]
-              : (normalizePodResponse(
-                  await targetCoreApi.readNamespacedPod({ name: target.podName, namespace: target.namespace }),
-                ).spec?.containers ?? [])
+              : (
+                  normalizePodResponse(
+                    await targetCoreApi.readNamespacedPod({
+                      name: target.podName,
+                      namespace: target.namespace,
+                    }),
+                  ).spec?.containers ?? []
+                )
                   .map((c) => c.name)
                   .filter((name): name is string => Boolean(name))
 
@@ -290,12 +305,14 @@ export const logsRouter = router({
         tailLines: z.number().int().positive().max(5000).default(500),
       }),
     )
-    .output(z.object({
-      lines: z.array(z.string()),
-      podName: z.string(),
-      container: z.string().nullable(),
-      timestamp: z.string(),
-    }))
+    .output(
+      z.object({
+        lines: z.array(z.string()),
+        podName: z.string(),
+        container: z.string().nullable(),
+        timestamp: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       if (ctx.user.role !== 'admin') {
         await resolveClusterIdForNonAdmin({
@@ -337,15 +354,7 @@ export const logsRouter = router({
           timestamp: new Date().toISOString(),
         }
       } catch (error) {
-        if (error instanceof TRPCError) throw error
-        const msg = error instanceof Error ? error.message : 'Unknown error'
-        if (msg.includes('404') || msg.includes('not found')) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: `Pod ${input.podName} not found` })
-        }
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to stream logs: ${msg}`,
-        })
+        handleK8sError(error, 'stream logs')
       }
     }),
 

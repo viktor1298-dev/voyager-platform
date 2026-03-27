@@ -2,10 +2,10 @@ import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { handleK8sError } from '../lib/error-handler.js'
 import { cached } from '../lib/cache.js'
+import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
-
-const K8S_CACHE_TTL = 30
 
 const resourceQuotaSchema = z.object({
   cpuLimit: z.string().nullable().optional(),
@@ -32,16 +32,22 @@ export const namespacesRouter = router({
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
 
         const [nsResponse, quotaResponse] = await Promise.all([
-          cached(`k8s:${input.clusterId}:namespaces`, K8S_CACHE_TTL, () =>
-            coreV1.listNamespace(),
-          ),
+          cached(`k8s:${input.clusterId}:namespaces`, K8S_CACHE_TTL, () => coreV1.listNamespace()),
           cached(`k8s:${input.clusterId}:resource-quotas`, K8S_CACHE_TTL, () =>
             coreV1.listResourceQuotaForAllNamespaces(),
           ).catch(() => ({ items: [] as k8s.V1ResourceQuota[] })),
         ])
 
         // Build a map of namespace → aggregated resource quota
-        const quotaMap = new Map<string, { cpuLimit: string | null; memLimit: string | null; cpuUsed: string | null; memUsed: string | null }>()
+        const quotaMap = new Map<
+          string,
+          {
+            cpuLimit: string | null
+            memLimit: string | null
+            cpuUsed: string | null
+            memUsed: string | null
+          }
+        >()
         for (const quota of quotaResponse.items ?? []) {
           const ns = quota.metadata?.namespace ?? ''
           if (!ns) continue
@@ -69,16 +75,21 @@ export const namespacesRouter = router({
           }
         })
       } catch (error) {
-        if (error instanceof TRPCError) throw error
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to list namespaces: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        })
+        handleK8sError(error, 'list namespaces')
       }
     }),
 
   create: adminProcedure
-    .input(z.object({ clusterId: z.string().uuid(), name: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/, 'Invalid namespace name') }))
+    .input(
+      z.object({
+        clusterId: z.string().uuid(),
+        name: z
+          .string()
+          .min(1)
+          .max(253)
+          .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/, 'Invalid namespace name'),
+      }),
+    )
     .output(namespaceSummarySchema)
     .mutation(async ({ input }) => {
       try {
@@ -98,23 +109,36 @@ export const namespacesRouter = router({
         if (error instanceof TRPCError) throw error
         const msg = error instanceof Error ? error.message : 'Unknown error'
         if (msg.includes('409') || msg.includes('already exists')) {
-          throw new TRPCError({ code: 'CONFLICT', message: `Namespace ${input.name} already exists` })
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: `Namespace ${input.name} already exists`,
+          })
         }
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `Failed to create namespace: ${msg}` })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to create namespace: ${msg}`,
+        })
       }
     }),
 
   delete: adminProcedure
-    .input(z.object({
-      clusterId: z.string().uuid(),
-      name: z.string().min(1),
-      confirm: z.string().refine((v) => v === 'DELETE', { message: 'Must confirm with "DELETE"' }),
-    }))
+    .input(
+      z.object({
+        clusterId: z.string().uuid(),
+        name: z.string().min(1),
+        confirm: z
+          .string()
+          .refine((v) => v === 'DELETE', { message: 'Must confirm with "DELETE"' }),
+      }),
+    )
     .output(z.object({ deleted: z.boolean(), name: z.string() }))
     .mutation(async ({ input }) => {
       const protectedNamespaces = ['default', 'kube-system', 'kube-public', 'kube-node-lease']
       if (protectedNamespaces.includes(input.name)) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: `Cannot delete protected namespace: ${input.name}` })
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Cannot delete protected namespace: ${input.name}`,
+        })
       }
 
       try {
@@ -128,7 +152,10 @@ export const namespacesRouter = router({
         if (msg.includes('404') || msg.includes('not found')) {
           throw new TRPCError({ code: 'NOT_FOUND', message: `Namespace ${input.name} not found` })
         }
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `Failed to delete namespace: ${msg}` })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to delete namespace: ${msg}`,
+        })
       }
     }),
 })

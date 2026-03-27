@@ -1,11 +1,10 @@
 import * as k8s from '@kubernetes/client-node'
-import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { handleK8sError } from '../lib/error-handler.js'
 import { cached } from '../lib/cache.js'
+import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { protectedProcedure, router } from '../trpc.js'
-
-const K8S_CACHE_TTL = 30
 
 const servicePortSchema = z.object({
   name: z.string().nullable().optional(),
@@ -68,11 +67,7 @@ export const servicesRouter = router({
           createdAt: svc.metadata?.creationTimestamp ?? null,
         }))
       } catch (error) {
-        if (error instanceof TRPCError) throw error
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to list services: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        })
+        handleK8sError(error, 'list services')
       }
     }),
 
@@ -101,11 +96,7 @@ export const servicesRouter = router({
           createdAt: svc.metadata?.creationTimestamp ?? null,
         }))
       } catch (error) {
-        if (error instanceof TRPCError) throw error
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to list services: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        })
+        handleK8sError(error, 'list services')
       }
     }),
 
@@ -116,7 +107,10 @@ export const servicesRouter = router({
       try {
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const svc = await coreV1.readNamespacedService({ name: input.name, namespace: input.namespace })
+        const svc = await coreV1.readNamespacedService({
+          name: input.name,
+          namespace: input.namespace,
+        })
 
         return {
           name: svc.metadata?.name ?? '',
@@ -127,12 +121,7 @@ export const servicesRouter = router({
           createdAt: svc.metadata?.creationTimestamp ?? null,
         }
       } catch (error) {
-        if (error instanceof TRPCError) throw error
-        const msg = error instanceof Error ? error.message : 'Unknown error'
-        if (msg.includes('404') || msg.includes('not found')) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: `Service ${input.name} not found` })
-        }
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `Failed to get service: ${msg}` })
+        handleK8sError(error, 'get service')
       }
     }),
 
@@ -143,7 +132,10 @@ export const servicesRouter = router({
       try {
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const svc = await coreV1.readNamespacedService({ name: input.name, namespace: input.namespace })
+        const svc = await coreV1.readNamespacedService({
+          name: input.name,
+          namespace: input.namespace,
+        })
 
         return {
           name: svc.metadata?.name ?? '',
@@ -160,12 +152,7 @@ export const servicesRouter = router({
           annotations: (svc.metadata?.annotations as Record<string, string>) ?? null,
         }
       } catch (error) {
-        if (error instanceof TRPCError) throw error
-        const msg = error instanceof Error ? error.message : 'Unknown error'
-        if (msg.includes('404') || msg.includes('not found')) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: `Service ${input.name} not found` })
-        }
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `Failed to describe service: ${msg}` })
+        handleK8sError(error, 'describe service')
       }
     }),
 })
