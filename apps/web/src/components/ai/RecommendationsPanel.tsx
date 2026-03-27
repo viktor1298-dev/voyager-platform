@@ -77,7 +77,7 @@ export function RecommendationsPanel({
         <button
           type="button"
           onClick={() => setDescending((current) => !current)}
-          className="inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] px-2.5 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-white/[0.04]"
+          className="inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] px-2.5 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors duration-150"
         >
           <ArrowDownUp className="h-3.5 w-3.5" />
           Sort: {descending ? 'High → Low' : 'Low → High'}
@@ -121,7 +121,7 @@ export function RecommendationsPanel({
                     dismissRecommendation(clusterId, item.id)
                     toast.success('Recommendation dismissed')
                   }}
-                  className="inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] px-2.5 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-white/[0.04]"
+                  className="inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] px-2.5 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors duration-150"
                 >
                   <X className="h-3.5 w-3.5" />
                   Dismiss

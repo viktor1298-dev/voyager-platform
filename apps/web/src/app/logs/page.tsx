@@ -330,7 +330,7 @@ export default function LogsPage() {
 
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/5"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/5 transition-colors duration-150"
               disabled={selectedTargets.length === 0}
               onClick={() => setIsPaused((v) => !v)}
             >
@@ -340,7 +340,7 @@ export default function LogsPage() {
 
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/5 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/5 disabled:opacity-50 transition-colors duration-150"
               disabled={!logsQuery.data?.lines.length}
               onClick={downloadLogs}
             >
@@ -558,7 +558,7 @@ export default function LogsPage() {
                         return (
                           <div
                             key={`${line.timestamp}-${line.podName}-${index}`}
-                            className="hover:bg-white/5"
+                            className="hover:bg-white/5 transition-colors duration-150"
                           >
                             <span className="inline-block w-8 text-right text-[var(--color-log-line-number)] select-none mr-3">
                               {index + 1}

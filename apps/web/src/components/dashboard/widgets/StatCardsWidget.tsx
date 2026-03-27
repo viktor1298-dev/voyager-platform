@@ -3,6 +3,8 @@
 import { AlertTriangle, Bell, Container, LayoutGrid, Server } from 'lucide-react'
 import { animate, motion, useMotionValue } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { DURATION, cardHover, cardTap } from '@/lib/animation-constants'
 import { SkeletonText } from '@/components/Skeleton'
 import { SparklineChart, generateStableTimeSeries } from '@/components/charts/SparklineChart'
 import { trpc } from '@/lib/trpc'
@@ -22,7 +24,7 @@ function AnimatedNumber({ value }: { value: string }) {
     if (!numericMatch) return
     const target = parseInt(numericMatch[1], 10)
     const controls = animate(motionVal, target, {
-      duration: 1.2,
+      duration: DURATION.counterLarge,
       ease: 'easeOut',
       onUpdate: (v) => setDisplay(Math.round(v)),
     })
@@ -56,11 +58,13 @@ function StatCard({
   sparklineColor?: string
   emphasized?: boolean
 }) {
+  const reduced = useReducedMotion()
+
   return (
     // P3-008: Card hover lift
     <motion.div
-      whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
-      transition={{ duration: 0.15, ease: 'easeOut' }}
+      whileHover={reduced ? undefined : cardHover}
+      whileTap={reduced ? undefined : cardTap}
       className={cn(
         'relative overflow-hidden rounded-xl px-3 py-2.5 border flex items-center justify-between gap-2',
         emphasized

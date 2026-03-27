@@ -14,6 +14,7 @@ import {
 } from 'recharts'
 import {
   AXIS_FONT_SIZE,
+  CHART_ANIMATION,
   CHART_COLORS,
   CHART_GRID_COLOR,
   CHART_HEIGHT,
@@ -121,13 +122,26 @@ export function AlertsTimelineChart({ data, range }: AlertsTimelineChartProps) {
             name="Critical"
             data={mapToScatterPoints(criticalData)}
             fill={CHART_COLORS.critical}
+            animationBegin={200}
+            animationDuration={CHART_ANIMATION.durationFast}
+            animationEasing={CHART_ANIMATION.easing}
           />
           <Scatter
             name="Warning"
             data={mapToScatterPoints(warningData)}
             fill={CHART_COLORS.warning}
+            animationBegin={200}
+            animationDuration={CHART_ANIMATION.durationFast}
+            animationEasing={CHART_ANIMATION.easing}
           />
-          <Scatter name="Info" data={mapToScatterPoints(infoData)} fill={CHART_COLORS.info} />
+          <Scatter
+            name="Info"
+            data={mapToScatterPoints(infoData)}
+            fill={CHART_COLORS.info}
+            animationBegin={200}
+            animationDuration={CHART_ANIMATION.durationFast}
+            animationEasing={CHART_ANIMATION.easing}
+          />
         </ScatterChart>
       </ResponsiveContainer>
       <p id={summaryId} className="sr-only">

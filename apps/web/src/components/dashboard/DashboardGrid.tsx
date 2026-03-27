@@ -1,6 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { motion } from 'motion/react'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { slideUpVariants, STAGGER } from '@/lib/animation-constants'
 import { useDashboardLayout, type Widget, type WidgetType } from '@/stores/dashboard-layout'
 import { DashboardRefreshProvider } from './DashboardRefreshContext'
 import type { RefreshIntervalMs } from '@/hooks/useRefreshInterval'
@@ -14,7 +17,15 @@ import { DeploymentListWidget } from './widgets/DeploymentListWidget'
 import { LogTailWidget } from './widgets/LogTailWidget'
 import { PodStatusWidget } from './widgets/PodStatusWidget'
 
-type LayoutItem = { i: string; x: number; y: number; w: number; h: number; minW?: number; minH?: number }
+type LayoutItem = {
+  i: string
+  x: number
+  y: number
+  w: number
+  h: number
+  minW?: number
+  minH?: number
+}
 type ResponsiveLayouts = Record<string, LayoutItem[]>
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,7 +58,12 @@ function renderWidget(widget: Widget) {
   }
 }
 
-export function DashboardGrid({ intervalMs = 300_000 as RefreshIntervalMs }: { intervalMs?: RefreshIntervalMs }) {
+export function DashboardGrid({
+  intervalMs = 300_000 as RefreshIntervalMs,
+}: {
+  intervalMs?: RefreshIntervalMs
+}) {
+  const reduced = useReducedMotion()
   const widgets = useDashboardLayout((s) => s.widgets)
   const layouts = useDashboardLayout((s) => s.layouts)
   const editMode = useDashboardLayout((s) => s.editMode)
@@ -85,56 +101,67 @@ export function DashboardGrid({ intervalMs = 300_000 as RefreshIntervalMs }: { i
 
   return (
     <DashboardRefreshProvider intervalMs={intervalMs}>
-    <div ref={containerRef} data-testid="dashboard-grid" className="w-full">
-      {GridComponent && containerWidth > 0 ? (
-        <GridComponent
-          className="layout"
-          layouts={layouts}
-          breakpoints={{ lg: 1280, md: 996, sm: 768, xs: 480 }}
-          cols={{ lg: 12, md: 12, sm: 6, xs: 1 }}
-          rowHeight={80}
-          draggableHandle=".widget-drag-handle"
-          isDraggable={editMode}
-          isResizable={editMode}
-          onLayoutChange={handleLayoutChange}
-          margin={[12, 12]}
-          containerPadding={[0, 0]}
-          useCSSTransforms
-          width={containerWidth}
-        >
-          {widgets.map((widget) => (
-            <div key={widget.id}>
-              <WidgetWrapper
-                widget={widget}
-                editMode={editMode}
-                onRemove={removeWidget}
-                onConfigSave={updateWidgetConfig}
+      <div ref={containerRef} data-testid="dashboard-grid" className="w-full">
+        {GridComponent && containerWidth > 0 ? (
+          <GridComponent
+            className="layout"
+            layouts={layouts}
+            breakpoints={{ lg: 1280, md: 996, sm: 768, xs: 480 }}
+            cols={{ lg: 12, md: 12, sm: 6, xs: 1 }}
+            rowHeight={80}
+            draggableHandle=".widget-drag-handle"
+            isDraggable={editMode}
+            isResizable={editMode}
+            onLayoutChange={handleLayoutChange}
+            margin={[12, 12]}
+            containerPadding={[0, 0]}
+            useCSSTransforms
+            width={containerWidth}
+          >
+            {widgets.map((widget, index) => (
+              <div key={widget.id}>
+                <motion.div
+                  initial={reduced ? undefined : 'hidden'}
+                  animate={reduced ? undefined : 'visible'}
+                  variants={slideUpVariants}
+                  transition={reduced ? undefined : { delay: index * STAGGER.normal }}
+                >
+                  <WidgetWrapper
+                    widget={widget}
+                    editMode={editMode}
+                    onRemove={removeWidget}
+                    onConfigSave={updateWidgetConfig}
+                  >
+                    {renderWidget(widget)}
+                  </WidgetWrapper>
+                </motion.div>
+              </div>
+            ))}
+          </GridComponent>
+        ) : (
+          <div className="space-y-3">
+            {widgets.map((widget, index) => (
+              <motion.div
+                key={widget.id}
+                initial={reduced ? undefined : 'hidden'}
+                animate={reduced ? undefined : 'visible'}
+                variants={slideUpVariants}
+                transition={reduced ? undefined : { delay: index * STAGGER.normal }}
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] min-h-[160px]"
               >
-                {renderWidget(widget)}
-              </WidgetWrapper>
-            </div>
-          ))}
-        </GridComponent>
-      ) : (
-        <div className="space-y-3">
-          {widgets.map((widget) => (
-            <div
-              key={widget.id}
-              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] min-h-[160px]"
-            >
-              <WidgetWrapper
-                widget={widget}
-                editMode={false}
-                onRemove={removeWidget}
-                onConfigSave={updateWidgetConfig}
-              >
-                {renderWidget(widget)}
-              </WidgetWrapper>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+                <WidgetWrapper
+                  widget={widget}
+                  editMode={false}
+                  onRemove={removeWidget}
+                  onConfigSave={updateWidgetConfig}
+                >
+                  {renderWidget(widget)}
+                </WidgetWrapper>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
     </DashboardRefreshProvider>
   )
 }

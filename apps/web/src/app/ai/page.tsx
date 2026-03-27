@@ -80,7 +80,8 @@ export default function AiAssistantPage() {
       : false
 
     if (!selectedExists) {
-      const healthyCluster = clustersQuery.data.find((c) => c.healthStatus === 'healthy') ?? clustersQuery.data[0]
+      const healthyCluster =
+        clustersQuery.data.find((c) => c.healthStatus === 'healthy') ?? clustersQuery.data[0]
       const fallbackClusterId = String(healthyCluster.id)
       if (fallbackClusterId !== selectedClusterId) {
         setSelectedClusterId(fallbackClusterId)
@@ -172,7 +173,7 @@ export default function AiAssistantPage() {
                       queueQuickPrompt({ id: `${action.key}-${Date.now()}`, text: action.prompt })
                       toast.success(`${action.label} queued`)
                     }}
-                    className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.04] disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-white/[0.04] disabled:opacity-60 transition-colors duration-150"
                   >
                     {icon}
                     {action.label}
@@ -201,7 +202,7 @@ export default function AiAssistantPage() {
                       : Promise.resolve(),
                   ])
                 }}
-                className="rounded-lg border border-[var(--color-status-error)]/40 px-2 py-1 text-xs hover:bg-[var(--color-status-error)]/10"
+                className="rounded-lg border border-[var(--color-status-error)]/40 px-2 py-1 text-xs hover:bg-[var(--color-status-error)]/10 transition-colors duration-150"
               >
                 Retry
               </button>
@@ -222,7 +223,9 @@ export default function AiAssistantPage() {
                         Analyzing: {selectedCluster.name}
                       </p>
                       <p className="text-xs text-[var(--color-text-secondary)]">
-                        {analysisQuery.data ? `Health score: ${analysisQuery.data.score}/100` : 'Health score, insights, and recommendations available'}
+                        {analysisQuery.data
+                          ? `Health score: ${analysisQuery.data.score}/100`
+                          : 'Health score, insights, and recommendations available'}
                       </p>
                     </div>
                   </div>

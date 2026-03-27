@@ -489,7 +489,7 @@ export function AiChat({
             </div>
             <Link
               href="/settings"
-              className="inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs text-[var(--color-text-primary)] hover:bg-white/[0.04]"
+              className="inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs text-[var(--color-text-primary)] hover:bg-white/[0.04] transition-colors duration-150"
             >
               <Settings className="h-3.5 w-3.5" />
               Open Settings
@@ -509,7 +509,7 @@ export function AiChat({
             onClick={() => {
               void syncHistory()
             }}
-            className="rounded-lg border border-[var(--color-status-warning)]/40 px-2 py-1 text-xs hover:bg-[var(--color-status-warning)]/10"
+            className="rounded-lg border border-[var(--color-status-warning)]/40 px-2 py-1 text-xs hover:bg-[var(--color-status-warning)]/10 transition-colors duration-150"
           >
             Retry
           </button>
@@ -645,7 +645,7 @@ export function AiChat({
               }
             }}
             disabled={locked || !lastPrompt || isStreaming || chatMutation.isPending}
-            className="rounded-lg border border-[var(--color-status-error)]/40 px-2 py-1 text-xs hover:bg-[var(--color-status-error)]/10 disabled:opacity-60"
+            className="rounded-lg border border-[var(--color-status-error)]/40 px-2 py-1 text-xs hover:bg-[var(--color-status-error)]/10 disabled:opacity-60 transition-colors duration-150"
           >
             Retry last prompt
           </button>

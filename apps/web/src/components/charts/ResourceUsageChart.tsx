@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 import {
   AXIS_FONT_SIZE,
+  CHART_ANIMATION,
   CHART_COLORS,
   CHART_GRID_COLOR,
   CHART_HEIGHT,
@@ -112,6 +113,9 @@ export function ResourceUsageChart({ data, range }: ResourceUsageChartProps) {
             fill={`url(#${cpuGradientId})`}
             strokeWidth={STROKE_WIDTH}
             name="CPU"
+            animationBegin={0}
+            animationDuration={CHART_ANIMATION.duration}
+            animationEasing={CHART_ANIMATION.easing}
           />
           <Area
             type="monotone"
@@ -121,6 +125,9 @@ export function ResourceUsageChart({ data, range }: ResourceUsageChartProps) {
             strokeWidth={STROKE_WIDTH}
             strokeDasharray="6 3"
             name="Memory"
+            animationBegin={CHART_ANIMATION.staggerDelay}
+            animationDuration={CHART_ANIMATION.duration}
+            animationEasing={CHART_ANIMATION.easing}
           />
         </AreaChart>
       </ResponsiveContainer>

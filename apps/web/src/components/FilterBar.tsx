@@ -221,7 +221,7 @@ export function FilterBar({
             <button
               type="button"
               onClick={clearAll}
-              className="inline-flex min-h-[44px] items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+              className="inline-flex min-h-[44px] items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-150"
             >
               <X className="h-3 w-3" />
               Clear

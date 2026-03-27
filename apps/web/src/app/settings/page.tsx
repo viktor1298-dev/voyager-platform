@@ -2,10 +2,13 @@
 
 import type { ColumnDef } from '@tanstack/react-table'
 import { ExternalLink, Globe, Info, Layers, Server, Wifi } from 'lucide-react'
+import { motion } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { DataTable } from '@/components/DataTable'
 import { APP_VERSION } from '@/config/constants'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { cardHover, cardTap } from '@/lib/animation-constants'
 import {
   type AiProvider,
   getAiKeySettings,
@@ -104,8 +107,12 @@ function SectionCard({
   title: string
   children: React.ReactNode
 }) {
+  const reduced = useReducedMotion()
+
   return (
-    <div
+    <motion.div
+      whileHover={reduced ? undefined : cardHover}
+      whileTap={reduced ? undefined : cardTap}
       className="rounded-2xl p-6 border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)] animate-slide-up"
       style={{
         background: 'var(--glass-bg)',
@@ -122,7 +129,7 @@ function SectionCard({
         </h3>
       </div>
       {children}
-    </div>
+    </motion.div>
   )
 }
 
@@ -462,7 +469,7 @@ export default function SettingsGeneralPage() {
                     })
                     .finally(() => setIsTesting(false))
                 }}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-white/[0.04] disabled:opacity-60"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-white/[0.04] disabled:opacity-60 transition-colors duration-150"
               >
                 {isTesting
                   ? hasRawKeyInput

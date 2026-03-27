@@ -1,5 +1,9 @@
 /** Shared chart theme utilities — reads CSS variables for dark/light support */
 
+import { CHART_ANIMATION } from '@/lib/animation-constants'
+
+export { CHART_ANIMATION }
+
 /** Default chart height in pixels */
 export const CHART_HEIGHT = 300
 

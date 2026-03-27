@@ -8,6 +8,7 @@
 
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
 import { useEffect, useRef } from 'react'
+import { DURATION, EASING } from '@/lib/animation-constants'
 
 interface AnimatedStatCountProps {
   value: string
@@ -41,20 +42,16 @@ function AnimatedNumber({ target, className }: { target: number; className?: str
     }
     const from = prevTarget.current
     prevTarget.current = target
-    const duration = target > 1000 ? 1.2 : 0.8
+    const duration = target > 1000 ? DURATION.counterLarge : DURATION.counter
     const controls = animate(count, target, {
       duration,
-      ease: [0, 0, 0.2, 1],
+      ease: EASING.decelerate,
       from,
     })
     return () => controls.stop()
   }, [target, count, prefersReduced])
 
-  return (
-    <motion.span className={className}>
-      {rounded}
-    </motion.span>
-  )
+  return <motion.span className={className}>{rounded}</motion.span>
 }
 
 export function AnimatedStatCount({ value, className }: AnimatedStatCountProps) {

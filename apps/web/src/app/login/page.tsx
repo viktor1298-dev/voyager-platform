@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
+import { motion } from 'motion/react'
 import { PageTransition } from '@/components/animations/PageTransition'
+import { errorShakeVariants } from '@/lib/animation-constants'
 import { VoyagerLogo } from '@/components/VoyagerLogo'
 import { LoginThemeToggle } from '@/components/LoginThemeToggle'
 import { authClient, getAuthBaseUrl } from '@/lib/auth-client'
@@ -29,7 +31,12 @@ const LEGACY_LOGGED_OUT_GRACE_MS = 1200
 function formatFieldError(error: unknown): string {
   if (typeof error === 'string') return error
   if (error instanceof Error) return error.message
-  if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof (error as { message?: unknown }).message === 'string'
+  ) {
     return (error as { message: string }).message
   }
 
@@ -53,7 +60,11 @@ function LoginPageContent() {
 
   const returnUrl = useMemo(() => {
     const requestedReturnUrl = searchParams.get('returnUrl')
-    if (requestedReturnUrl && requestedReturnUrl.startsWith('/') && !requestedReturnUrl.startsWith('//')) {
+    if (
+      requestedReturnUrl &&
+      requestedReturnUrl.startsWith('/') &&
+      !requestedReturnUrl.startsWith('//')
+    ) {
       return requestedReturnUrl
     }
     return '/'
@@ -65,28 +76,38 @@ function LoginPageContent() {
   const now = useMemo(() => Date.now(), [timeTick, searchParams])
 
   const loggedOutAgeMs = Number.isFinite(parsedLoggedOutAt) ? now - parsedLoggedOutAt : Number.NaN
-  const hasValidTimestampedLoggedOut = Number.isFinite(loggedOutAgeMs) && loggedOutAgeMs >= 0 && loggedOutAgeMs <= LOGGED_OUT_GRACE_MS
+  const hasValidTimestampedLoggedOut =
+    Number.isFinite(loggedOutAgeMs) && loggedOutAgeMs >= 0 && loggedOutAgeMs <= LOGGED_OUT_GRACE_MS
 
   const timestampedGraceRemainingMs = hasValidTimestampedLoggedOut
     ? Math.max(0, LOGGED_OUT_GRACE_MS - loggedOutAgeMs)
     : 0
-  const legacyGraceRemainingMs = loggedOutFlag && !loggedOutAtRaw
-    ? Math.max(0, LEGACY_LOGGED_OUT_GRACE_MS - (now - legacyLoggedOutStartedAt))
-    : 0
+  const legacyGraceRemainingMs =
+    loggedOutFlag && !loggedOutAtRaw
+      ? Math.max(0, LEGACY_LOGGED_OUT_GRACE_MS - (now - legacyLoggedOutStartedAt))
+      : 0
 
   const isTimestampedGraceActive = hasValidTimestampedLoggedOut && timestampedGraceRemainingMs > 0
   const isLegacyGraceActive = loggedOutFlag && !loggedOutAtRaw && legacyGraceRemainingMs > 0
-  const isLoggedOutRedirect = !shouldBypassLoggedOutRedirect && (isTimestampedGraceActive || isLegacyGraceActive)
+  const isLoggedOutRedirect =
+    !shouldBypassLoggedOutRedirect && (isTimestampedGraceActive || isLegacyGraceActive)
 
   useEffect(() => {
     if (!isLoggedOutRedirect) return
-    const remainingMs = isTimestampedGraceActive ? timestampedGraceRemainingMs : legacyGraceRemainingMs
+    const remainingMs = isTimestampedGraceActive
+      ? timestampedGraceRemainingMs
+      : legacyGraceRemainingMs
     if (remainingMs <= 0) return
     const timeout = window.setTimeout(() => {
       setTimeTick((prev) => prev + 1)
     }, remainingMs + 10)
     return () => window.clearTimeout(timeout)
-  }, [isLoggedOutRedirect, isTimestampedGraceActive, legacyGraceRemainingMs, timestampedGraceRemainingMs])
+  }, [
+    isLoggedOutRedirect,
+    isTimestampedGraceActive,
+    legacyGraceRemainingMs,
+    timestampedGraceRemainingMs,
+  ])
 
   useEffect(() => {
     if (!loggedOutFlag) return
@@ -125,7 +146,17 @@ function LoginPageContent() {
       router.replace(returnUrl)
       router.refresh()
     }
-  }, [isLegacyGraceActive, isLoggedOutRedirect, isPending, isRedirectingAfterLogin, isTimestampedGraceActive, loggedOutFlag, returnUrl, router, session])
+  }, [
+    isLegacyGraceActive,
+    isLoggedOutRedirect,
+    isPending,
+    isRedirectingAfterLogin,
+    isTimestampedGraceActive,
+    loggedOutFlag,
+    returnUrl,
+    router,
+    session,
+  ])
 
   async function redirectAfterSuccessfulLogin() {
     setShouldBypassLoggedOutRedirect(true)
@@ -139,7 +170,7 @@ function LoginPageContent() {
         useAuthStore.getState().setUser({
           id: user.id,
           email: user.email,
-          name: (user.name && !/^<[^>]+>$/.test(user.name.trim())) ? user.name : user.email,
+          name: user.name && !/^<[^>]+>$/.test(user.name.trim()) ? user.name : user.email,
           role: (user as { role?: string }).role === 'admin' ? 'admin' : 'viewer',
         })
         router.replace(returnUrl)
@@ -150,10 +181,14 @@ function LoginPageContent() {
     }
 
     setIsRedirectingAfterLogin(false)
-    setLoginError('Login succeeded but session is still loading. Please wait a moment and try again.')
+    setLoginError(
+      'Login succeeded but session is still loading. Please wait a moment and try again.',
+    )
   }
 
-  const microsoftProvider = providersQuery.data?.find((provider) => provider.id === 'microsoft-entra-id' && provider.enabled)
+  const microsoftProvider = providersQuery.data?.find(
+    (provider) => provider.id === 'microsoft-entra-id' && provider.enabled,
+  )
 
   async function signInWithMicrosoft() {
     setLoginError(null)
@@ -179,7 +214,9 @@ function LoginPageContent() {
 
       window.location.href = payload.url
     } catch (error) {
-      setLoginError(error instanceof Error ? error.message : 'Unable to start Microsoft sign-in flow')
+      setLoginError(
+        error instanceof Error ? error.message : 'Unable to start Microsoft sign-in flow',
+      )
     }
   }
 
@@ -207,7 +244,10 @@ function LoginPageContent() {
         useAuthStore.getState().setUser({
           id: data.user.id,
           email: data.user.email,
-          name: (data.user.name && !/^<[^>]+>$/.test(data.user.name.trim())) ? data.user.name : data.user.email,
+          name:
+            data.user.name && !/^<[^>]+>$/.test(data.user.name.trim())
+              ? data.user.name
+              : data.user.email,
           role: (data.user as { role?: string }).role === 'admin' ? 'admin' : 'viewer',
         })
       }
@@ -238,7 +278,8 @@ function LoginPageContent() {
               Voyager Platform
             </h1>
             <p className="max-w-sm text-lg text-[var(--color-text-secondary)]">
-              Navigate your Kubernetes fleet with confidence. Monitor, manage, and optimize — all in one place.
+              Navigate your Kubernetes fleet with confidence. Monitor, manage, and optimize — all in
+              one place.
             </p>
 
             {/* Decorative dots grid — deterministic opacity to avoid hydration mismatch */}
@@ -247,7 +288,7 @@ function LoginPageContent() {
                 <div
                   key={i}
                   className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]"
-                  style={{ opacity: ((i * 7 + 3) % 10) / 10 * 0.7 + 0.3 }}
+                  style={{ opacity: (((i * 7 + 3) % 10) / 10) * 0.7 + 0.3 }}
                 />
               ))}
             </div>
@@ -281,8 +322,17 @@ function LoginPageContent() {
                   className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2.5 text-sm text-red-400 dark:text-red-400"
                 >
                   <p className="flex items-start gap-2">
-                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+                    <svg
+                      className="mt-0.5 h-4 w-4 flex-shrink-0"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                     <span>{loginError}</span>
                   </p>
@@ -299,103 +349,115 @@ function LoginPageContent() {
                 </button>
               )}
 
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  form.handleSubmit()
-                }}
-                className="space-y-4"
-              >
-                <div>
-                  <label htmlFor="email" className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]">
-                    Email
-                  </label>
-                  <form.Field name="email">
-                    {(field) => (
-                      <>
-                        <input
-                          id="email"
-                          type="email"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
-                          className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
-                          placeholder="admin@voyager.local"
-                          autoComplete="email"
-                        />
-                        {field.state.meta.errors?.length > 0 && (
-                          <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map((e) => formatFieldError(e)).join(', ')}</p>
-                        )}
-                      </>
-                    )}
-                  </form.Field>
-                </div>
-
-                <div>
-                  <label htmlFor="password" className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]">
-                    Password
-                  </label>
-                  <form.Field name="password">
-                    {(field) => (
-                      <>
-                        <input
-                          id="password"
-                          type="password"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
-                          className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
-                          placeholder="••••••••"
-                          autoComplete="current-password"
-                        />
-                        {field.state.meta.errors?.length > 0 && (
-                          <p className="mt-1 text-xs text-red-400">{field.state.meta.errors.map((e) => formatFieldError(e)).join(', ')}</p>
-                        )}
-                      </>
-                    )}
-                  </form.Field>
-
-                  {/* Forgot password (Item #4) — uses <button> for a11y since it triggers an action, not navigation */}
-                  <div className="mt-1.5 text-right">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        toast.info('Contact your administrator to reset your password.', {
-                          description: 'Password reset is managed by your organization admin.',
-                          duration: 5000,
-                        })
-                      }}
-                      className="text-xs text-[var(--color-accent)] hover:underline focus:outline-none focus:underline bg-transparent border-none cursor-pointer p-0"
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
-                </div>
-
-                {/* Sign In button with loading state (Item #5) */}
-                <form.Subscribe selector={(s) => s.isSubmitting}>
-                  {(isSubmitting) => {
-                    const isLoading = isSubmitting || isRedirectingAfterLogin
-                    return (
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        data-testid="login-submit"
-                        className="relative w-full rounded-lg bg-[var(--color-accent)] py-2.5 font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
-                      >
-                        {isLoading ? (
-                          <span className="flex items-center justify-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                            <span>Signing in…</span>
-                          </span>
-                        ) : (
-                          'Sign In'
-                        )}
-                      </button>
-                    )
+              <motion.div variants={errorShakeVariants} animate={loginError ? 'shake' : 'idle'}>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    form.handleSubmit()
                   }}
-                </form.Subscribe>
-              </form>
+                  className="space-y-4"
+                >
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]"
+                    >
+                      Email
+                    </label>
+                    <form.Field name="email">
+                      {(field) => (
+                        <>
+                          <input
+                            id="email"
+                            type="email"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            onBlur={field.handleBlur}
+                            className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
+                            placeholder="admin@voyager.local"
+                            autoComplete="email"
+                          />
+                          {field.state.meta.errors?.length > 0 && (
+                            <p className="mt-1 text-xs text-red-400">
+                              {field.state.meta.errors.map((e) => formatFieldError(e)).join(', ')}
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </form.Field>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="mb-1 block text-sm font-medium text-[var(--color-text-muted)]"
+                    >
+                      Password
+                    </label>
+                    <form.Field name="password">
+                      {(field) => (
+                        <>
+                          <input
+                            id="password"
+                            type="password"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            onBlur={field.handleBlur}
+                            className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
+                            placeholder="••••••••"
+                            autoComplete="current-password"
+                          />
+                          {field.state.meta.errors?.length > 0 && (
+                            <p className="mt-1 text-xs text-red-400">
+                              {field.state.meta.errors.map((e) => formatFieldError(e)).join(', ')}
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </form.Field>
+
+                    {/* Forgot password (Item #4) — uses <button> for a11y since it triggers an action, not navigation */}
+                    <div className="mt-1.5 text-right">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          toast.info('Contact your administrator to reset your password.', {
+                            description: 'Password reset is managed by your organization admin.',
+                            duration: 5000,
+                          })
+                        }}
+                        className="text-xs text-[var(--color-accent)] hover:underline focus:outline-none focus:underline bg-transparent border-none cursor-pointer p-0"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sign In button with loading state (Item #5) */}
+                  <form.Subscribe selector={(s) => s.isSubmitting}>
+                    {(isSubmitting) => {
+                      const isLoading = isSubmitting || isRedirectingAfterLogin
+                      return (
+                        <button
+                          type="submit"
+                          disabled={isLoading}
+                          data-testid="login-submit"
+                          className="relative w-full rounded-lg bg-[var(--color-accent)] py-2.5 font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
+                        >
+                          {isLoading ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                              <span>Signing in…</span>
+                            </span>
+                          ) : (
+                            'Sign In'
+                          )}
+                        </button>
+                      )
+                    }}
+                  </form.Subscribe>
+                </form>
+              </motion.div>
             </div>
 
             {/* Footer */}

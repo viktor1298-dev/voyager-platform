@@ -20,19 +20,19 @@ export const EASING = {
   standard: [0.4, 0, 0.2, 1] as [number, number, number, number],
   decelerate: [0, 0, 0.2, 1] as [number, number, number, number],
   accelerate: [0.4, 0, 1, 1] as [number, number, number, number],
-  spring: { type: 'spring' as const, stiffness: 300, damping: 30 },
+  spring: { type: 'spring' as const, stiffness: 350, damping: 24 },
   snappy: { type: 'spring' as const, stiffness: 500, damping: 40 },
-  bouncy: { type: 'spring' as const, stiffness: 400, damping: 25, mass: 0.8 },
+  bouncy: { type: 'spring' as const, stiffness: 380, damping: 20, mass: 0.8 },
   exit: [0.4, 0, 1, 1] as [number, number, number, number],
   enter: [0, 0, 0.2, 1] as [number, number, number, number],
 } as const
 
 // Stagger delay between list items
 export const STAGGER = {
-  fast: 0.03,   // dense table rows
+  fast: 0.03, // dense table rows
   normal: 0.05, // card grid
-  slow: 0.08,   // hero cards
-  max: 0.3,     // cap total stagger (10 items max effect)
+  slow: 0.08, // hero cards
+  max: 0.3, // cap total stagger (10 items max effect)
 } as const
 
 // Common animation variants
@@ -50,7 +50,11 @@ export const slideUpVariants = {
 
 export const scaleVariants = {
   hidden: { opacity: 0, scale: 0.95 },
-  visible: { opacity: 1, scale: 1, transition: { duration: DURATION.normal, ease: EASING.default } },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: DURATION.normal, ease: EASING.default },
+  },
   exit: { opacity: 0, scale: 0.95, transition: { duration: DURATION.fast, ease: EASING.exit } },
 } as const
 
@@ -76,8 +80,18 @@ export const listItemVariants = {
 
 export const dialogVariants = {
   hidden: { opacity: 0, scale: 0.96, y: 4 },
-  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: DURATION.normal, ease: EASING.default } },
-  exit: { opacity: 0, scale: 0.96, y: 4, transition: { duration: DURATION.fast, ease: EASING.exit } },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: DURATION.normal, ease: EASING.default },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.96,
+    y: 4,
+    transition: { duration: DURATION.fast, ease: EASING.exit },
+  },
 } as const
 
 export const overlayVariants = {
@@ -88,12 +102,14 @@ export const overlayVariants = {
 
 // Card hover
 export const cardHover = {
-  scale: 1.01,
-  transition: { duration: DURATION.fast },
+  y: -4,
+  scale: 1.02,
+  boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
+  transition: { type: 'spring' as const, stiffness: 350, damping: 24 },
 } as const
 
 export const cardTap = {
-  scale: 0.995,
+  scale: 0.98,
 } as const
 
 // IA-010: Dashboard IA Redesign animation constants
@@ -103,7 +119,6 @@ export const healthDotVariants = {
   critical: { backgroundColor: 'var(--color-status-error)', scale: [1, 1.5, 1] as number[] },
 }
 
-
 export const statusChangeTransition = {
   duration: DURATION.slow,
   ease: EASING.default,
@@ -111,3 +126,82 @@ export const statusChangeTransition = {
 
 // checkButtonVariants removed — check button uses CSS opacity-0 group-hover:opacity-100 (no Motion conflict)
 
+// Button micro-interactions (B-style)
+export const buttonHover = {
+  scale: 1.02,
+  transition: { duration: DURATION.instant, ease: 'easeOut' as const },
+} as const
+
+export const buttonTap = {
+  scale: 0.97,
+  transition: { duration: DURATION.instant, ease: 'easeOut' as const },
+} as const
+
+// Status glow for alerts and critical indicators
+export const glowVariants = {
+  idle: { boxShadow: '0 0 0 rgba(0,0,0,0)' },
+  warning: {
+    boxShadow: [
+      '0 0 0 rgba(245,158,11,0)',
+      '0 0 12px rgba(245,158,11,0.4)',
+      '0 0 0 rgba(245,158,11,0)',
+    ],
+    transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' as const },
+  },
+  critical: {
+    boxShadow: [
+      '0 0 0 rgba(239,68,68,0)',
+      '0 0 16px rgba(239,68,68,0.5)',
+      '0 0 0 rgba(239,68,68,0)',
+    ],
+    transition: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const },
+  },
+}
+
+// Badge pop-in (bouncy spring)
+export const badgePopVariants = {
+  hidden: { scale: 0, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    transition: { type: 'spring' as const, stiffness: 380, damping: 20, mass: 0.8 },
+  },
+  exit: { scale: 0, opacity: 0, transition: { duration: DURATION.fast } },
+}
+
+// Sort indicator rotation
+export const sortRotateVariants = {
+  asc: { rotate: 0, transition: { duration: DURATION.fast, ease: EASING.default } },
+  desc: { rotate: 180, transition: { duration: DURATION.fast, ease: EASING.default } },
+}
+
+// Form error shake
+export const errorShakeVariants = {
+  idle: { x: 0 },
+  shake: { x: [0, -8, 8, -6, 6, -3, 3, 0], transition: { duration: 0.5 } },
+}
+
+// SVG checkmark draw
+export const successCheckVariants = {
+  hidden: { pathLength: 0, opacity: 0 },
+  visible: { pathLength: 1, opacity: 1, transition: { duration: 0.4, ease: EASING.decelerate } },
+}
+
+// Recharts animation config
+export const CHART_ANIMATION = {
+  duration: 800,
+  durationFast: 600,
+  easing: 'ease-out' as const,
+  staggerDelay: 150,
+} as const
+
+// Alert entrance
+export const alertEntranceVariants = {
+  hidden: { opacity: 0, x: -12 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { type: 'spring' as const, stiffness: 350, damping: 24 },
+  },
+  exit: { opacity: 0, x: 12, scale: 0.95, transition: { duration: DURATION.fast } },
+}

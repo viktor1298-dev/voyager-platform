@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { APP_VERSION } from '@/config/constants'
 import { navItems } from '@/config/navigation'
-import { EASING } from '@/lib/animation-constants'
+import { badgePopVariants, EASING } from '@/lib/animation-constants'
 import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
 import { trpc } from '@/lib/trpc'
 import { useAnomalyCount } from '@/hooks/useAnomalyCount'
@@ -214,36 +214,57 @@ export function Sidebar({
                       </motion.span>
                     )}
                   </AnimatePresence>
-                  {showAlertsBadge && showLabels && (
-                    <span
-                      data-testid="alerts-badge"
-                      className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 relative z-10"
-                    >
-                      {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
-                    </span>
-                  )}
+                  <AnimatePresence>
+                    {showAlertsBadge && showLabels && (
+                      <motion.span
+                        key="alerts-badge"
+                        variants={badgePopVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        data-testid="alerts-badge"
+                        className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 relative z-10"
+                      >
+                        {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                   {/* Show small indicator dot when collapsed with alerts */}
-                  {showAlertsBadge && !showLabels && (
-                    <span
-                      data-testid="alerts-badge"
-                      className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 z-10"
-                      aria-label={`${unacknowledgedCount} unacknowledged alerts`}
-                    />
-                  )}
+                  <AnimatePresence>
+                    {showAlertsBadge && !showLabels && (
+                      <motion.span
+                        key="alerts-badge-dot"
+                        variants={badgePopVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        data-testid="alerts-badge"
+                        className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 z-10"
+                        aria-label={`${unacknowledgedCount} unacknowledged alerts`}
+                      />
+                    )}
+                  </AnimatePresence>
                   {/* DB-003: anomaly badge — shown when there are open anomalies and no unacknowledged alerts */}
-                  {showAnomalyBadge && (
-                    <span
-                      data-testid="anomaly-badge"
-                      className={[
-                        'ml-auto min-w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold px-1 relative z-10',
-                        anomalyCount.critical > 0
-                          ? 'bg-red-500 text-white'
-                          : 'bg-amber-500 text-white',
-                      ].join(' ')}
-                    >
-                      {anomalyCount.total > 99 ? '99+' : anomalyCount.total}
-                    </span>
-                  )}
+                  <AnimatePresence>
+                    {showAnomalyBadge && (
+                      <motion.span
+                        key="anomaly-badge"
+                        variants={badgePopVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        data-testid="anomaly-badge"
+                        className={[
+                          'ml-auto min-w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold px-1 relative z-10',
+                          anomalyCount.critical > 0
+                            ? 'bg-red-500 text-white'
+                            : 'bg-amber-500 text-white',
+                        ].join(' ')}
+                      >
+                        {anomalyCount.total > 99 ? '99+' : anomalyCount.total}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                   {/* SB-005: ChevronDown for clusters accordion — rotates when open */}
                   {isClustersItem && showLabels && (
                     <motion.div

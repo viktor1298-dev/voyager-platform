@@ -33,7 +33,10 @@ type AuditEntry = {
   timestamp: string
 }
 
-const ACTION_COLORS: Record<string, { variant: 'success' | 'destructive' | 'secondary' | 'outline'; label?: string }> = {
+const ACTION_COLORS: Record<
+  string,
+  { variant: 'success' | 'destructive' | 'secondary' | 'outline'; label?: string }
+> = {
   create: { variant: 'success' },
   delete: { variant: 'destructive' },
   update: { variant: 'secondary' },
@@ -120,44 +123,77 @@ export default function SettingsAuditPage() {
   const columns = useMemo<ColumnDef<AuditEntry, unknown>[]>(
     () => [
       {
-        id: 'expand', header: '', size: 32,
+        id: 'expand',
+        header: '',
+        size: 32,
         cell: ({ row }) =>
           row.original.details ? (
-            <button type="button" onClick={() => row.toggleExpanded()} className="p-1 rounded hover:bg-white/[0.06] text-[var(--color-text-muted)] transition-colors cursor-pointer">
-              {row.getIsExpanded() ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+            <button
+              type="button"
+              onClick={() => row.toggleExpanded()}
+              className="p-1 rounded hover:bg-white/[0.06] text-[var(--color-text-muted)] transition-colors cursor-pointer"
+            >
+              {row.getIsExpanded() ? (
+                <ChevronDown className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5" />
+              )}
             </button>
           ) : null,
       },
       {
-        accessorKey: 'timestamp', header: 'Timestamp',
-        cell: ({ row }) => <span className="text-[var(--color-text-muted)] font-mono text-xs whitespace-nowrap">{new Date(row.original.timestamp).toLocaleString()}</span>,
+        accessorKey: 'timestamp',
+        header: 'Timestamp',
+        cell: ({ row }) => (
+          <span className="text-[var(--color-text-muted)] font-mono text-xs whitespace-nowrap">
+            {new Date(row.original.timestamp).toLocaleString()}
+          </span>
+        ),
       },
       {
-        accessorKey: 'userEmail', header: 'User',
-        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] font-mono text-xs">{row.original.userEmail}</span>,
+        accessorKey: 'userEmail',
+        header: 'User',
+        cell: ({ row }) => (
+          <span className="text-[var(--color-text-secondary)] font-mono text-xs">
+            {row.original.userEmail}
+          </span>
+        ),
       },
       {
-        accessorKey: 'action', header: 'Action',
+        accessorKey: 'action',
+        header: 'Action',
         cell: ({ row }) => <ActionBadge action={row.original.action} />,
       },
       {
-        accessorKey: 'resource', header: 'Resource',
-        cell: ({ row }) => <span className="text-[var(--color-text-primary)] text-sm font-medium">{row.original.resource}</span>,
+        accessorKey: 'resource',
+        header: 'Resource',
+        cell: ({ row }) => (
+          <span className="text-[var(--color-text-primary)] text-sm font-medium">
+            {row.original.resource}
+          </span>
+        ),
       },
       {
-        accessorKey: 'resourceId', header: 'Resource ID',
+        accessorKey: 'resourceId',
+        header: 'Resource ID',
         cell: ({ row }) => <TruncatedId value={row.original.resourceId} />,
       },
       {
-        accessorKey: 'ipAddress', header: 'IP Address',
-        cell: ({ row }) => <span className="text-[var(--color-text-dim)] font-mono text-xs">{row.original.ipAddress}</span>,
+        accessorKey: 'ipAddress',
+        header: 'IP Address',
+        cell: ({ row }) => (
+          <span className="text-[var(--color-text-dim)] font-mono text-xs">
+            {row.original.ipAddress}
+          </span>
+        ),
       },
     ],
     [],
   )
 
   const table = useReactTable({
-    data, columns,
+    data,
+    columns,
     state: { sorting, expanded },
     onSortingChange: setSorting,
     onExpandedChange: setExpanded,
@@ -174,39 +210,103 @@ export default function SettingsAuditPage() {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     )
-  if (isAdmin === false) { router.replace('/'); return null }
+  if (isAdmin === false) {
+    router.replace('/')
+    return null
+  }
 
-  const selectClass = 'px-3 py-1.5 text-xs rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
-  const inputClass = 'px-3 py-1.5 text-xs rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
+  const selectClass =
+    'px-3 py-1.5 text-xs rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
+  const inputClass =
+    'px-3 py-1.5 text-xs rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-accent)] transition-colors'
 
   return (
     <div>
       {query.error && <QueryError message={query.error.message} onRetry={() => query.refetch()} />}
 
       <div className="mb-6">
-        <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">Audit Log</h2>
-        <p className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">{total} entries</p>
+        <h2 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+          Audit Log
+        </h2>
+        <p className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider mt-1">
+          {total} entries
+        </p>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--color-text-dim)]" />
-          <input type="text" placeholder="Search by email…" value={emailSearch} onChange={(e) => { setEmailSearch(e.target.value); setPage(0) }} className={`${inputClass} pl-8 w-48`} />
+          <input
+            type="text"
+            placeholder="Search by email…"
+            value={emailSearch}
+            onChange={(e) => {
+              setEmailSearch(e.target.value)
+              setPage(0)
+            }}
+            className={`${inputClass} pl-8 w-48`}
+          />
           {emailSearch && (
-            <button type="button" onClick={() => { setEmailSearch(''); setPage(0) }} className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)] cursor-pointer">
+            <button
+              type="button"
+              onClick={() => {
+                setEmailSearch('')
+                setPage(0)
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)] cursor-pointer transition-colors duration-150"
+            >
               <X className="h-3 w-3" />
             </button>
           )}
         </div>
-        <select value={actionFilter} onChange={(e) => { setActionFilter(e.target.value); setPage(0) }} className={selectClass}>
+        <select
+          value={actionFilter}
+          onChange={(e) => {
+            setActionFilter(e.target.value)
+            setPage(0)
+          }}
+          className={selectClass}
+        >
           <option value="">All Actions</option>
-          {ACTION_OPTIONS.map((a) => <option key={a} value={a}>{a.charAt(0).toUpperCase() + a.slice(1)}</option>)}
+          {ACTION_OPTIONS.map((a) => (
+            <option key={a} value={a}>
+              {a.charAt(0).toUpperCase() + a.slice(1)}
+            </option>
+          ))}
         </select>
-        <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(0) }} className={selectClass} title="From date" />
-        <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(0) }} className={selectClass} title="To date" />
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => {
+            setDateFrom(e.target.value)
+            setPage(0)
+          }}
+          className={selectClass}
+          title="From date"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => {
+            setDateTo(e.target.value)
+            setPage(0)
+          }}
+          className={selectClass}
+          title="To date"
+        />
         {(actionFilter || emailSearch || dateFrom || dateTo) && (
-          <button type="button" onClick={() => { setActionFilter(''); setEmailSearch(''); setDateFrom(''); setDateTo(''); setPage(0) }} className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] underline cursor-pointer">
+          <button
+            type="button"
+            onClick={() => {
+              setActionFilter('')
+              setEmailSearch('')
+              setDateFrom('')
+              setDateTo('')
+              setPage(0)
+            }}
+            className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] underline cursor-pointer transition-colors duration-150"
+          >
             Clear all
           </button>
         )}
@@ -220,10 +320,25 @@ export default function SettingsAuditPage() {
               {table.getHeaderGroups().map((hg) => (
                 <tr key={hg.id} className="border-b border-[var(--color-border)]">
                   {hg.headers.map((header) => (
-                    <th key={header.id} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-dim)]" style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }} onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}>
-                      <span className={header.column.getCanSort() ? 'cursor-pointer select-none' : ''}>
+                    <th
+                      key={header.id}
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-dim)]"
+                      style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                      onClick={
+                        header.column.getCanSort()
+                          ? header.column.getToggleSortingHandler()
+                          : undefined
+                      }
+                    >
+                      <span
+                        className={header.column.getCanSort() ? 'cursor-pointer select-none' : ''}
+                      >
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getIsSorted() === 'asc' ? ' ↑' : header.column.getIsSorted() === 'desc' ? ' ↓' : ''}
+                        {header.column.getIsSorted() === 'asc'
+                          ? ' ↑'
+                          : header.column.getIsSorted() === 'desc'
+                            ? ' ↓'
+                            : ''}
                       </span>
                     </th>
                   ))}
@@ -235,7 +350,9 @@ export default function SettingsAuditPage() {
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={`skel-${i}`} className="border-b border-[var(--color-border)]/50">
                     {columns.map((_, ci) => (
-                      <td key={ci} className="px-4 py-3"><div className="h-4 rounded bg-white/[0.04] animate-pulse" /></td>
+                      <td key={ci} className="px-4 py-3">
+                        <div className="h-4 rounded bg-white/[0.04] animate-pulse" />
+                      </td>
                     ))}
                   </tr>
                 ))
@@ -251,14 +368,22 @@ export default function SettingsAuditPage() {
                   <Fragment key={row.id}>
                     <tr className="border-b border-[var(--color-border)]/50 hover:bg-white/[0.02] transition-colors">
                       {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id} className="px-4 py-3">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                        <td key={cell.id} className="px-4 py-3">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
                       ))}
                     </tr>
                     <AnimatePresence>
                       {row.getIsExpanded() && row.original.details && (
                         <tr key={`${row.id}-expanded`}>
                           <td colSpan={columns.length} className="px-4 py-0">
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
+                            >
                               <pre className="text-xs font-mono text-[var(--color-text-muted)] bg-[var(--color-bg-primary)] rounded-lg p-4 my-2 overflow-x-auto">
                                 {JSON.stringify(row.original.details, null, 2)}
                               </pre>
@@ -278,10 +403,26 @@ export default function SettingsAuditPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4 text-xs text-[var(--color-text-muted)]">
-          <span>Page {page + 1} of {totalPages} · {total} total</span>
+          <span>
+            Page {page + 1} of {totalPages} · {total} total
+          </span>
           <div className="flex gap-2">
-            <button type="button" disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] hover:bg-white/[0.06] disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-default">Previous</button>
-            <button type="button" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] hover:bg-white/[0.06] disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-default">Next</button>
+            <button
+              type="button"
+              disabled={page === 0}
+              onClick={() => setPage((p) => p - 1)}
+              className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] hover:bg-white/[0.06] disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-default"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] hover:bg-white/[0.06] disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-default"
+            >
+              Next
+            </button>
           </div>
         </div>
       )}

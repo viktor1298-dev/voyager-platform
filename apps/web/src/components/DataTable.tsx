@@ -25,7 +25,7 @@ import {
 } from 'lucide-react'
 import { AnimatePresence, motion, useInView } from 'motion/react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
-import { DURATION, EASING, STAGGER } from '@/lib/animation-constants'
+import { DURATION, EASING, sortRotateVariants, STAGGER } from '@/lib/animation-constants'
 
 export interface DataTableProps<TData> {
   data: TData[]
@@ -224,15 +224,19 @@ export function DataTable<TData>({
                   <button
                     type="button"
                     aria-label={plainHeader ? `Sort by ${plainHeader}` : undefined}
-                    className="flex items-center gap-1 cursor-pointer hover:text-[var(--color-text-secondary)]"
+                    className="flex items-center gap-1 cursor-pointer hover:text-[var(--color-text-secondary)] transition-colors duration-150"
                     onClick={(event) => header.column.getToggleSortingHandler()?.(event)}
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
                     <span className="ml-0.5">
-                      {sorted === 'asc' ? (
-                        <ArrowUp className="h-3 w-3" />
-                      ) : sorted === 'desc' ? (
-                        <ArrowDown className="h-3 w-3" />
+                      {sorted ? (
+                        <motion.div
+                          variants={sortRotateVariants}
+                          animate={sorted === 'asc' ? 'asc' : 'desc'}
+                          className="inline-flex"
+                        >
+                          <ArrowUp className="h-3 w-3" />
+                        </motion.div>
                       ) : (
                         <ArrowUpDown className="h-2.5 w-2.5 opacity-40" />
                       )}

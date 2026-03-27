@@ -1,7 +1,9 @@
 'use client'
 
 import { AlertTriangle, CheckCircle, Info } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import Link from 'next/link'
+import { alertEntranceVariants } from '@/lib/animation-constants'
 import { trpc } from '@/lib/trpc'
 import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
 
@@ -47,26 +49,32 @@ export function AlertFeedWidget() {
             <span className="text-xs">No active alerts</span>
           </div>
         )}
-        {alerts.map((alert) => {
-          const Icon = alert.enabled ? AlertTriangle : Info
-          const color = alert.enabled ? 'text-amber-400' : 'text-blue-400'
-          return (
-            <div
-              key={alert.id}
-              className="flex items-start gap-2 px-2.5 py-2 rounded-lg border border-[var(--color-border)]/40 hover:bg-white/[0.02] transition-colors"
-            >
-              <Icon className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${color}`} />
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-[var(--color-text-primary)] truncate">
-                  {alert.name}
-                </p>
-                <p className="text-xs text-[var(--color-text-dim)] truncate">
-                  {alert.metric} {alert.operator} {alert.threshold}
-                </p>
-              </div>
-            </div>
-          )
-        })}
+        <AnimatePresence>
+          {alerts.map((alert) => {
+            const Icon = alert.enabled ? AlertTriangle : Info
+            const color = alert.enabled ? 'text-amber-400' : 'text-blue-400'
+            return (
+              <motion.div
+                key={alert.id}
+                variants={alertEntranceVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="flex items-start gap-2 px-2.5 py-2 rounded-lg border border-[var(--color-border)]/40 hover:bg-white/[0.02] transition-colors"
+              >
+                <Icon className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${color}`} />
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-[var(--color-text-primary)] truncate">
+                    {alert.name}
+                  </p>
+                  <p className="text-xs text-[var(--color-text-dim)] truncate">
+                    {alert.metric} {alert.operator} {alert.threshold}
+                  </p>
+                </div>
+              </motion.div>
+            )
+          })}
+        </AnimatePresence>
       </div>
     </div>
   )

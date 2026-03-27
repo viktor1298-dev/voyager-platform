@@ -195,14 +195,14 @@ export function ApiTokensSection() {
                             type="button"
                             onClick={() => revokeToken.mutate({ id: token.id })}
                             disabled={revokeToken.isPending}
-                            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-red-600 px-3 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-ring"
+                            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-red-600 px-3 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-150"
                           >
                             Confirm
                           </button>
                           <button
                             type="button"
                             onClick={() => setConfirmRevokeId(null)}
-                            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--color-border)] px-3 text-sm text-[var(--color-text-primary)] hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-ring"
+                            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--color-border)] px-3 text-sm text-[var(--color-text-primary)] hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-150"
                           >
                             Cancel
                           </button>
@@ -213,7 +213,7 @@ export function ApiTokensSection() {
                             <button
                               type="button"
                               onClick={() => setConfirmRevokeId(token.id)}
-                              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-red-500/50 px-3 text-sm font-medium text-red-300 hover:bg-red-500/10 focus-visible:ring-2 focus-visible:ring-ring"
+                              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-red-500/50 px-3 text-sm font-medium text-red-300 hover:bg-red-500/10 focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-150"
                               aria-label={`Revoke token ${token.name}`}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -243,7 +243,7 @@ export function ApiTokensSection() {
                   type="button"
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                   disabled={currentPage === 0}
-                  className="px-2 py-1 rounded-xl border border-[var(--color-border)] disabled:opacity-30 hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-ring"
+                  className="px-2 py-1 rounded-xl border border-[var(--color-border)] disabled:opacity-30 hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-150"
                   aria-label="Previous page"
                 >
                   ←
@@ -255,7 +255,7 @@ export function ApiTokensSection() {
                   type="button"
                   onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                   disabled={currentPage >= totalPages - 1}
-                  className="px-2 py-1 rounded-xl border border-[var(--color-border)] disabled:opacity-30 hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-ring"
+                  className="px-2 py-1 rounded-xl border border-[var(--color-border)] disabled:opacity-30 hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-150"
                   aria-label="Next page"
                 >
                   →
@@ -308,7 +308,7 @@ export function ApiTokensSection() {
                     <button
                       type="button"
                       onClick={() => setCreatedToken(null)}
-                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-amber-200 hover:bg-amber-500/10 focus-visible:ring-2 focus-visible:ring-ring"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-amber-200 hover:bg-amber-500/10 focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-150"
                       aria-label="Dismiss token"
                     >
                       <X className="h-4 w-4" />
@@ -327,7 +327,7 @@ export function ApiTokensSection() {
                   <button
                     type="button"
                     onClick={() => copyText(createdToken, 'Token')}
-                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-amber-400/60 px-3 text-sm font-medium text-amber-100 hover:bg-amber-500/10 focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-amber-400/60 px-3 text-sm font-medium text-amber-100 hover:bg-amber-500/10 focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-150"
                     aria-label="Copy token to clipboard"
                   >
                     <Copy className="h-4 w-4" />
@@ -356,7 +356,7 @@ export function ApiTokensSection() {
               <button
                 type="button"
                 onClick={() => copyText(getMcpSnippet(), 'Snippet')}
-                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-[var(--color-border)] px-3 text-sm font-medium text-[var(--color-text-primary)] hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-[var(--color-border)] px-3 text-sm font-medium text-[var(--color-text-primary)] hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-150"
                 aria-label="Copy MCP snippet to clipboard"
               >
                 <Copy className="h-4 w-4" />

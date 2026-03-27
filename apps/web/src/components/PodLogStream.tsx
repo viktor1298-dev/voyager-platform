@@ -60,13 +60,16 @@ export function PodLogStream({ podName, namespace }: PodLogStreamProps) {
 
     if (!streaming) return
 
-    const interval = setInterval(() => {
-      setLogs((prev) => {
-        const newLine = generateMockLog(counterRef.current++)
-        const updated = [...prev, newLine]
-        return updated.length > 500 ? updated.slice(-500) : updated
-      })
-    }, 800 + Math.random() * 1200)
+    const interval = setInterval(
+      () => {
+        setLogs((prev) => {
+          const newLine = generateMockLog(counterRef.current++)
+          const updated = [...prev, newLine]
+          return updated.length > 500 ? updated.slice(-500) : updated
+        })
+      },
+      800 + Math.random() * 1200,
+    )
 
     return () => clearInterval(interval)
   }, [streaming])
@@ -112,9 +115,7 @@ export function PodLogStream({ podName, namespace }: PodLogStreamProps) {
           <h4 className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider">
             Logs
           </h4>
-          <span className="text-xs text-[var(--color-text-dim)] font-mono">
-            {podName}
-          </span>
+          <span className="text-xs text-[var(--color-text-dim)] font-mono">{podName}</span>
           {streaming && (
             <span className="flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -143,7 +144,10 @@ export function PodLogStream({ podName, namespace }: PodLogStreamProps) {
           )}
           <button
             type="button"
-            onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchQuery('') }}
+            onClick={() => {
+              setShowSearch(!showSearch)
+              if (showSearch) setSearchQuery('')
+            }}
             className="p-1.5 rounded hover:bg-white/[0.06] text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)] transition-colors"
             aria-label="Toggle search"
           >
@@ -162,7 +166,10 @@ export function PodLogStream({ podName, namespace }: PodLogStreamProps) {
               type="button"
               onClick={() => {
                 setAutoScroll(true)
-                containerRef.current?.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' })
+                containerRef.current?.scrollTo({
+                  top: containerRef.current.scrollHeight,
+                  behavior: 'smooth',
+                })
               }}
               className="p-1.5 rounded hover:bg-white/[0.06] text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)] transition-colors"
               aria-label="Scroll to bottom"
@@ -180,7 +187,10 @@ export function PodLogStream({ podName, namespace }: PodLogStreamProps) {
         className="h-64 overflow-y-auto overflow-x-hidden font-mono text-xs leading-5 p-3 scrollbar-thin"
       >
         {filteredLogs.map((line) => (
-          <div key={line.id} className="flex gap-2 hover:bg-white/[0.02] px-1 rounded">
+          <div
+            key={line.id}
+            className="flex gap-2 hover:bg-white/[0.02] px-1 rounded transition-colors duration-150"
+          >
             <span className="text-[var(--color-text-dim)] shrink-0 select-none">
               {formatTime(line.timestamp)}
             </span>

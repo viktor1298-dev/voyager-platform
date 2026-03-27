@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 import {
   AXIS_FONT_SIZE,
+  CHART_ANIMATION,
   CHART_COLORS,
   CHART_GRID_COLOR,
   CHART_HEIGHT,
@@ -80,6 +81,9 @@ export function ClusterHealthChart({ data, range }: ClusterHealthChartProps) {
             strokeWidth={STROKE_WIDTH}
             dot={false}
             name="Healthy"
+            animationBegin={0}
+            animationDuration={CHART_ANIMATION.duration}
+            animationEasing={CHART_ANIMATION.easing}
           />
           <Line
             type="monotone"
@@ -88,6 +92,9 @@ export function ClusterHealthChart({ data, range }: ClusterHealthChartProps) {
             strokeWidth={STROKE_WIDTH}
             dot={false}
             name="Degraded"
+            animationBegin={CHART_ANIMATION.staggerDelay}
+            animationDuration={CHART_ANIMATION.duration}
+            animationEasing={CHART_ANIMATION.easing}
           />
           <Line
             type="monotone"
@@ -96,6 +103,9 @@ export function ClusterHealthChart({ data, range }: ClusterHealthChartProps) {
             strokeWidth={STROKE_WIDTH}
             dot={false}
             name="Offline"
+            animationBegin={CHART_ANIMATION.staggerDelay * 2}
+            animationDuration={CHART_ANIMATION.duration}
+            animationEasing={CHART_ANIMATION.easing}
           />
         </LineChart>
       </ResponsiveContainer>

@@ -14,7 +14,11 @@
   --animate-pulse-slow: pulse-slow var(--duration-pulse) ease-in-out infinite;
   --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
   --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-fade-out: fade-out 0.3s ease-out;
   --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-glow-warning: glow-warning 2s ease-in-out infinite;
+  --animate-glow-critical: glow-critical 1.5s ease-in-out infinite;
+  --animate-success-flash: success-flash 0.6s ease-out;
   --animate-count-up: count-up 0.6s ease-out;
   --color-surface: var(--surface);
   --color-elevated: var(--elevated);
@@ -40,12 +44,53 @@
   }
 }
 
+@keyframes glow-warning {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(245, 158, 11, 0);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+  }
+}
+
+@keyframes glow-critical {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(239, 68, 68, 0);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.5);
+  }
+}
+
+@keyframes success-flash {
+  0% {
+    background-color: transparent;
+  }
+  30% {
+    background-color: rgba(34, 197, 94, 0.1);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 
@@ -658,6 +703,17 @@ button[aria-disabled="true"],
 .tracking-uppercase {
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* Focus glow for form inputs — B-style accent ring */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="combobox"]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 15%, transparent);
+  transition: outline-color 150ms ease, box-shadow 150ms ease;
 }
 
 /* View Transitions API — native page transitions */

@@ -232,7 +232,7 @@ export default function HealthPage() {
               return (
                 <div
                   key={entry.clusterId}
-                  className="grid grid-cols-6 gap-2 px-4 py-3 border-b border-[var(--color-border)]/50 last:border-0 hover:bg-white/[0.02] min-w-[600px]"
+                  className="grid grid-cols-6 gap-2 px-4 py-3 border-b border-[var(--color-border)]/50 last:border-0 hover:bg-white/[0.02] min-w-[600px] transition-colors duration-150"
                 >
                   <div className="col-span-2 flex items-center gap-2">
                     <span
@@ -425,7 +425,7 @@ export default function HealthPage() {
               return (
                 <div
                   key={String(event.id ?? idx)}
-                  className="flex gap-3 px-4 py-3 hover:bg-white/[0.02]"
+                  className="flex gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors duration-150"
                 >
                   {/* Timeline dot */}
                   <div className="relative flex flex-col items-center pt-0.5">

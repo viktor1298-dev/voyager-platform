@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 import {
   AXIS_FONT_SIZE,
+  CHART_ANIMATION,
   CHART_COLORS,
   CHART_GRID_COLOR,
   CHART_HEIGHT,
@@ -71,8 +72,24 @@ export function RequestRateChart({ data, range }: RequestRateChartProps) {
           <YAxis stroke={CHART_TEXT_COLOR} fontSize={AXIS_FONT_SIZE} />
           <Tooltip {...TOOLTIP_STYLE} labelFormatter={(v) => formatTimestamp(v as string, range)} />
           <Legend />
-          <Bar dataKey="success" fill={CHART_COLORS.success} name="Success" radius={BAR_RADIUS} />
-          <Bar dataKey="error" fill={CHART_COLORS.error} name="Errors" radius={BAR_RADIUS} />
+          <Bar
+            dataKey="success"
+            fill={CHART_COLORS.success}
+            name="Success"
+            radius={BAR_RADIUS}
+            animationBegin={0}
+            animationDuration={CHART_ANIMATION.durationFast}
+            animationEasing={CHART_ANIMATION.easing}
+          />
+          <Bar
+            dataKey="error"
+            fill={CHART_COLORS.error}
+            name="Errors"
+            radius={BAR_RADIUS}
+            animationBegin={CHART_ANIMATION.staggerDelay}
+            animationDuration={CHART_ANIMATION.durationFast}
+            animationEasing={CHART_ANIMATION.easing}
+          />
         </BarChart>
       </ResponsiveContainer>
       <p id={summaryId} className="sr-only">

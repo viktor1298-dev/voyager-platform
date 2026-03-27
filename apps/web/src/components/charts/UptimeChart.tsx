@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 import {
   AXIS_FONT_SIZE,
+  CHART_ANIMATION,
   CHART_COLORS,
   CHART_GRID_COLOR,
   CHART_HEIGHT,
@@ -84,8 +85,23 @@ export function UptimeChart({ data }: UptimeChartProps) {
             stroke={CHART_TEXT_COLOR}
             fontSize={AXIS_FONT_SIZE}
             width={CLUSTER_LABEL_WIDTH}
-            tick={({ x, y, payload }: { x: string | number; y: string | number; payload: { value: string } }) => (
-              <text x={Number(x)} y={Number(y)} textAnchor="end" fill={CHART_TEXT_COLOR} fontSize={11} dy={4}>
+            tick={({
+              x,
+              y,
+              payload,
+            }: {
+              x: string | number
+              y: string | number
+              payload: { value: string }
+            }) => (
+              <text
+                x={Number(x)}
+                y={Number(y)}
+                textAnchor="end"
+                fill={CHART_TEXT_COLOR}
+                fontSize={11}
+                dy={4}
+              >
                 {payload.value.length > 15 ? `${payload.value.slice(0, 15)}...` : payload.value}
               </text>
             )}
@@ -94,7 +110,14 @@ export function UptimeChart({ data }: UptimeChartProps) {
             {...TOOLTIP_STYLE}
             formatter={(value: number | undefined) => [`${value ?? 0}%`, 'Uptime']}
           />
-          <Bar dataKey="uptime" name="Uptime %" radius={BAR_RADIUS}>
+          <Bar
+            dataKey="uptime"
+            name="Uptime %"
+            radius={BAR_RADIUS}
+            animationBegin={0}
+            animationDuration={CHART_ANIMATION.duration}
+            animationEasing={CHART_ANIMATION.easing}
+          >
             {data.map((entry) => (
               <Cell key={entry.cluster} fill={getUptimeColor(entry.uptime)} />
             ))}

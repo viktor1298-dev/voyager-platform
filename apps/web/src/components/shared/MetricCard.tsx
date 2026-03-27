@@ -1,5 +1,8 @@
 'use client'
 
+import { motion } from 'motion/react'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { cardHover, cardTap } from '@/lib/animation-constants'
 import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
 
@@ -78,12 +81,15 @@ export function MetricCard({
   className,
   sparklineColor,
 }: MetricCardProps) {
+  const reduced = useReducedMotion()
   const trendCfg = trend ? TREND_CONFIG[trend] : null
 
   return (
-    <div
+    <motion.div
+      whileHover={reduced ? undefined : cardHover}
+      whileTap={reduced ? undefined : cardTap}
       className={cn(
-        'relative rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition-all duration-150 hover:bg-[var(--color-surface-secondary)] hover:-translate-y-0.5',
+        'relative rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4',
         className,
       )}
     >
@@ -116,6 +122,6 @@ export function MetricCard({
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
