@@ -136,6 +136,10 @@
   --color-bg-secondary: #14141f;
   --color-bg-card: #14141f;
   --color-bg-card-hover: #1e1e2e;
+  --color-panel-bg: #111827;
+  --color-panel-bg-inner: #0d1117;
+  --color-tooltip-bg: #1a1f2e;
+  --color-tooltip-border: rgba(255, 255, 255, 0.1);
   --color-border: rgba(255, 255, 255, 0.06);
   --color-border-hover: rgba(255, 255, 255, 0.15);
   --color-text-primary: #e8ecf4;
@@ -260,6 +264,10 @@ html.light {
   --color-bg-secondary: #f1f5f9;
   --color-bg-card: #ffffff;
   --color-bg-card-hover: #f8fafc;
+  --color-panel-bg: #f8fafc;
+  --color-panel-bg-inner: #ffffff;
+  --color-tooltip-bg: #ffffff;
+  --color-tooltip-border: rgba(0, 0, 0, 0.12);
   --color-border: hsl(220, 13%, 91%);
   --color-border-hover: rgba(0, 0, 0, 0.35);
   --color-text-primary: #1a202c;

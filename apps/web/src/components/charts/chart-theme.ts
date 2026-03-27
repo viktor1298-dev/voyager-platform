@@ -43,8 +43,8 @@ export const CHART_TEXT_COLOR = 'var(--color-text-dim)'
 
 export const TOOLTIP_STYLE = {
   contentStyle: {
-    background: 'var(--color-bg-card)',
-    border: '1px solid var(--color-border)',
+    background: 'var(--color-tooltip-bg)',
+    border: '1px solid var(--color-tooltip-border)',
     borderRadius: '0.5rem',
     color: 'var(--color-text-primary)',
     fontSize: '0.75rem',
