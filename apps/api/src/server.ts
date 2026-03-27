@@ -31,6 +31,8 @@ import { shutdownTelemetry } from './lib/telemetry.js'
 import { type AppRouter, appRouter } from './routers/index.js'
 import { registerAiStreamRoute } from './routes/ai-stream.js'
 import { registerMcpRoute } from './routes/mcp.js'
+import { registerMetricsStreamRoute } from './routes/metrics-stream.js'
+import { metricsStreamJob } from './jobs/metrics-stream-job.js'
 import { createContext } from './trpc.js'
 
 // Validate CLUSTER_CRED_ENCRYPTION_KEY (64-char hex = 32 bytes AES-256 key)
@@ -237,6 +239,7 @@ app.setErrorHandler((error, _request, reply) => {
 
 await registerAiStreamRoute(app)
 await registerMcpRoute(app)
+await registerMetricsStreamRoute(app)
 
 app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
 
@@ -289,6 +292,7 @@ const start = async () => {
         stopMetricsHistoryCollector()
         stopNodeSync()
         stopEventSync()
+        metricsStreamJob.stopAll()
         if (k8sEnabled) {
           stopAllWatchers()
           stopDeploySmokeTest()
