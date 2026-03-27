@@ -1,35 +1,9 @@
 import * as k8s from '@kubernetes/client-node'
-import {
-  SSE_DEPLOYMENT_PROGRESS_INTERVAL_MS,
-  SSE_LOG_TAIL_LINES,
-} from '@voyager/config/sse'
-import type {
-  DeploymentProgressEvent,
-  LogLineEvent,
-} from '@voyager/types'
+import { SSE_DEPLOYMENT_PROGRESS_INTERVAL_MS, SSE_LOG_TAIL_LINES } from '@voyager/config/sse'
+import type { DeploymentProgressEvent, LogLineEvent } from '@voyager/types'
 import { clusterClientPool } from './cluster-client-pool.js'
 import { clusterWatchManager } from './cluster-watch-manager.js'
 import { voyagerEmitter } from './event-emitter.js'
-
-// ── Pod Watcher (now delegates to ClusterWatchManager) ──────
-
-/**
- * @deprecated Use clusterWatchManager.startCluster(clusterId) instead.
- * Kept for backward compatibility during migration.
- */
-export async function startPodWatcher(): Promise<void> {
-  // No-op: ClusterWatchManager handles all informers per cluster
-  console.log('[k8s-watchers] startPodWatcher() is deprecated — use clusterWatchManager.startCluster()')
-}
-
-// ── Metrics Poller (now handled by ClusterWatchManager) ─────
-
-/**
- * @deprecated Use clusterWatchManager.startCluster(clusterId) instead.
- */
-export function startMetricsPoller(): void {
-  console.log('[k8s-watchers] startMetricsPoller() is deprecated — use clusterWatchManager.startCluster()')
-}
 
 // ── Deployment Progress (on-demand, per-cluster) ────────────
 

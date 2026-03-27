@@ -14,11 +14,14 @@ import { resolveExternalRequestUrl } from './lib/auth-request.js'
 import { mapAuthRouteErrorToBody, mapAuthRouteErrorToStatus } from './lib/auth-error-mapping.js'
 import { ensureAdminUser } from './lib/ensure-admin-user.js'
 import { ensureViewerUser } from './lib/ensure-viewer-user.js'
-import { startMetricsPoller, startPodWatcher, stopAllWatchers } from './lib/k8s-watchers.js'
+import { stopAllWatchers } from './lib/k8s-watchers.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
 import { startHealthSync } from './jobs/health-sync.js'
 import { startAlertEvaluator, stopAlertEvaluator } from './jobs/alert-evaluator.js'
-import { startMetricsHistoryCollector, stopMetricsHistoryCollector } from './jobs/metrics-history-collector.js'
+import {
+  startMetricsHistoryCollector,
+  stopMetricsHistoryCollector,
+} from './jobs/metrics-history-collector.js'
 import { startNodeSync, stopNodeSync } from './jobs/node-sync.js'
 import { startEventSync, stopEventSync } from './jobs/event-sync.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
@@ -255,36 +258,34 @@ const start = async () => {
     await app.listen({ port: PORT, host: HOST })
     console.log(`🚀 API server running on http://${HOST}:${PORT}`)
 
-    // Start K8s watchers for SSE subscriptions
-    try {
-      startPodWatcher()
-      startMetricsPoller()
-      app.log.info('K8s watchers started for SSE subscriptions')
-    } catch (err) {
-      app.log.warn('K8s watchers failed to start (K8s may not be configured): %s', err)
+    const k8sEnabled = process.env.K8S_ENABLED !== 'false'
+
+    if (k8sEnabled) {
+      startHealthSync()
+      startAlertEvaluator()
+      startMetricsHistoryCollector()
+      startNodeSync()
+      startEventSync()
+      app.log.info(
+        'Background jobs started (health-sync, alert-evaluator, metrics, node-sync, event-sync)',
+      )
+    } else {
+      app.log.info(
+        'K8s integration disabled (K8S_ENABLED=false) — skipping watchers and cluster sync jobs',
+      )
     }
-
-    startHealthSync()
-    startAlertEvaluator()
-    startMetricsHistoryCollector()
-    startNodeSync()
-    startEventSync()
-    app.log.info('Metrics history collector started (60s interval)')
-    app.log.info('Node sync started (5 min interval)')
-    app.log.info('Event sync started (2 min interval)')
-    app.log.info('Alert evaluator background job started (60s interval)')
-    app.log.info('Health sync background job started (5 minute interval)')
-
 
     const signals = ['SIGTERM', 'SIGINT'] as const
     for (const signal of signals) {
       process.on(signal, async () => {
         app.log.info(`${signal} received, shutting down gracefully`)
-        stopAllWatchers()
-        stopAlertEvaluator()
-        stopMetricsHistoryCollector()
-        stopNodeSync()
-        stopEventSync()
+        if (k8sEnabled) {
+          stopAllWatchers()
+          stopAlertEvaluator()
+          stopMetricsHistoryCollector()
+          stopNodeSync()
+          stopEventSync()
+        }
         await flushSentry()
         await shutdownTelemetry()
         await app.close()
