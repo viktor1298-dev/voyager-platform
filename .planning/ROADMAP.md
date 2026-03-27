@@ -61,7 +61,7 @@ Plans:
 **Plans:** 1/2 plans executed
 Plans:
 - [x] 03-01-PLAN.md — Data hooks layer: MetricsBuffer, useMetricsSSE (reconnect + visibility), useMetricsData (SSE/DB switching)
-- [ ] 03-02-PLAN.md — UI components: Custom date picker in TimeRangeSelector, wire MetricsTimeSeriesPanel to useMetricsData hook
+- [x] 03-02-PLAN.md — UI components: Custom date picker in TimeRangeSelector, wire MetricsTimeSeriesPanel to useMetricsData hook
 **UI hint**: yes
 
 ### Phase 4: Synchronized Crosshair

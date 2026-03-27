@@ -23,9 +23,9 @@
 
 ### Time Range Controls
 
-- [ ] **TIME-01**: Time range selector offers Grafana-standard presets: 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d
-- [ ] **TIME-02**: Custom absolute date/time range picker (from/to datetime) for arbitrary windows
-- [ ] **TIME-03**: Selected time range persisted in Zustand store (localStorage) across page navigations
+- [x] **TIME-01**: Time range selector offers Grafana-standard presets: 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d
+- [x] **TIME-02**: Custom absolute date/time range picker (from/to datetime) for arbitrary windows
+- [x] **TIME-03**: Selected time range persisted in Zustand store (localStorage) across page navigations
 - [x] **TIME-04**: Data source switches automatically — SSE for ≤15m, DB for ≥30m — seamless to user
 
 ### Synchronized Visualization
@@ -95,9 +95,9 @@
 | SSE-03 | Phase 2 | Complete |
 | SSE-04 | Phase 2 | Complete |
 | SSE-05 | Phase 2 | Complete |
-| TIME-01 | Phase 3 | Pending |
-| TIME-02 | Phase 3 | Pending |
-| TIME-03 | Phase 3 | Pending |
+| TIME-01 | Phase 3 | Complete |
+| TIME-02 | Phase 3 | Complete |
+| TIME-03 | Phase 3 | Complete |
 | TIME-04 | Phase 3 | Complete |
 | VIZ-01 | Phase 4 | Pending |
 | VIZ-02 | Phase 4 | Pending |
