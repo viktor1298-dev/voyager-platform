@@ -15,8 +15,8 @@
 
 ### SSE Real-Time Streaming
 
-- [ ] **SSE-01**: Dedicated Fastify SSE endpoint streams live K8s metrics for short ranges (≤15m) at 10-15s resolution
-- [ ] **SSE-02**: MetricsStreamJob polls K8s metrics-server only for clusters with active SSE subscribers (reference-counted)
+- [x] **SSE-01**: Dedicated Fastify SSE endpoint streams live K8s metrics for short ranges (≤15m) at 10-15s resolution
+- [x] **SSE-02**: MetricsStreamJob polls K8s metrics-server only for clusters with active SSE subscribers (reference-counted)
 - [ ] **SSE-03**: SSE connection auto-reconnects with exponential backoff on disconnect
 - [ ] **SSE-04**: Visibility-aware SSE lifecycle — pauses streaming when browser tab is hidden, resumes on focus
 - [ ] **SSE-05**: Client-side circular buffer (max 65 points) manages live data with time-based eviction
@@ -90,8 +90,8 @@
 | PIPE-03 | Phase 1 | Pending |
 | PIPE-04 | Phase 1 | Pending |
 | PIPE-05 | Phase 1 | Pending |
-| SSE-01 | Phase 2 | Pending |
-| SSE-02 | Phase 2 | Pending |
+| SSE-01 | Phase 2 | Complete |
+| SSE-02 | Phase 2 | Complete |
 | SSE-03 | Phase 2 | Pending |
 | SSE-04 | Phase 2 | Pending |
 | SSE-05 | Phase 2 | Pending |
