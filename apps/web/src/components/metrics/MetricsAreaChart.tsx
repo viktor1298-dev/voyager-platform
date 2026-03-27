@@ -1,6 +1,6 @@
 'use client'
 
-import { useId } from 'react'
+import { memo, useId } from 'react'
 import {
   AreaChart,
   Area,
@@ -10,6 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
+  Brush,
 } from 'recharts'
 import type { MetricsRange } from './TimeRangeSelector'
 
@@ -32,6 +33,9 @@ interface MetricsAreaChartProps {
   range: MetricsRange
   activeMetrics?: MetricKey[]
   height?: number
+  syncId?: string
+  showThresholds?: boolean
+  onBrushChange?: (startTimestamp: string, endTimestamp: string) => void
 }
 
 const METRIC_CONFIG: Record<
@@ -99,14 +103,14 @@ function formatBytes(bytes: number): string {
 }
 
 function formatMetricValue(metric: MetricKey, value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return '—'
+  if (value == null || Number.isNaN(value)) return '\u2014'
   if (metric === 'networkIn' || metric === 'networkOut') return formatBytes(value)
   if (metric === 'pods') return `${Math.round(value)}`
   return `${value.toFixed(1)}%`
 }
 
 /**
- * Format X-axis timestamps — Grafana-style clean labels per range.
+ * Format X-axis timestamps -- Grafana-style clean labels per range.
  */
 function formatXAxis(iso: string, range: MetricsRange): string {
   const d = new Date(iso)
@@ -165,11 +169,56 @@ function getBucketWindowLabel(point?: MetricsDataPoint | null, fallbackLabel?: s
   const startLabel = formatDateTime(point?.bucketStart)
   const endLabel = formatDateTime(point?.bucketEnd)
 
-  if (startLabel && endLabel) return `${startLabel} → ${endLabel}`
+  if (startLabel && endLabel) return `${startLabel} \u2192 ${endLabel}`
   if (startLabel) return startLabel
   if (endLabel) return endLabel
   return fallbackLabel ? (formatDateTime(fallbackLabel) ?? String(fallbackLabel)) : ''
 }
+
+/**
+ * Custom crosshair cursor -- renders a dashed vertical line with a timestamp label.
+ * Memoized to prevent unnecessary re-renders during crosshair sync (Pitfall 2).
+ */
+const CustomCursor = memo(function CustomCursor({
+  points,
+  height,
+  payload,
+}: {
+  points?: Array<{ x: number; y: number }>
+  width?: number
+  height?: number
+  payload?: Array<{ payload?: MetricsDataPoint }>
+}) {
+  if (!points?.[0] || !height) return null
+
+  const x = points[0].x
+  const timestamp = payload?.[0]?.payload?.timestamp
+  const label = timestamp
+    ? new Date(timestamp).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      })
+    : ''
+
+  return (
+    <g>
+      <line x1={x} y1={0} x2={x} y2={height} stroke="#666" strokeDasharray="3 3" strokeWidth={1} />
+      {label && (
+        <text
+          x={x}
+          y={height - 4}
+          fill="var(--color-text-dim)"
+          fontSize={10}
+          fontFamily="monospace"
+          textAnchor="middle"
+        >
+          {label}
+        </text>
+      )}
+    </g>
+  )
+})
 
 function CustomTooltip({
   active,
@@ -270,8 +319,11 @@ export function MetricsAreaChart({
   range,
   activeMetrics = ['cpu', 'memory'],
   height = 280,
+  syncId,
+  showThresholds,
+  onBrushChange,
 }: MetricsAreaChartProps) {
-  // Enrich data — preserve nulls for gap rendering (connectNulls=false)
+  // Enrich data -- preserve nulls for gap rendering (connectNulls=false)
   const chartData = data.map((d) => ({
     ...d,
     bucketStart: d.bucketStart ?? null,
@@ -285,17 +337,19 @@ export function MetricsAreaChart({
   const tickInterval = getTickInterval(data, range)
   const gridLines = primaryConfig?.yAxis === 'percent' ? [25, 50, 75] : []
   const chartId = useId()
+  const showBrush = chartData.length > 5 && !!onBrushChange
 
   return (
     <div
       role="img"
       aria-label={`${activeMetrics.map((k) => METRIC_CONFIG[k].label).join(', ')} chart`}
     >
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height={height} debounce={100}>
         <AreaChart
-          key={`${range}-${activeMetrics.join('-')}-${data.length}`}
+          key={`${range}-${activeMetrics.join('-')}`}
           data={chartData}
-          margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
+          syncId={syncId}
+          margin={{ top: 8, right: 12, bottom: showBrush ? 4 : 0, left: 0 }}
         >
           <defs>
             {activeMetrics.map((key) => {
@@ -321,6 +375,28 @@ export function MetricsAreaChart({
               strokeDasharray="4 4"
             />
           ))}
+
+          {/* Threshold reference lines -- 65% warning and 85% critical for percent-axis panels */}
+          {showThresholds && primaryConfig?.yAxis === 'percent' && (
+            <>
+              <ReferenceLine
+                yAxisId="percent"
+                y={85}
+                stroke="var(--color-threshold-critical)"
+                strokeDasharray="6 4"
+                strokeWidth={1}
+                label={false}
+              />
+              <ReferenceLine
+                yAxisId="percent"
+                y={65}
+                stroke="var(--color-threshold-warn)"
+                strokeDasharray="6 4"
+                strokeWidth={1}
+                label={false}
+              />
+            </>
+          )}
 
           <XAxis
             dataKey="timestamp"
@@ -368,7 +444,7 @@ export function MetricsAreaChart({
             />
           )}
 
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip cursor={<CustomCursor />} content={<CustomTooltip />} />
 
           {activeMetrics.map((key) => {
             const cfg = METRIC_CONFIG[key]
@@ -386,9 +462,34 @@ export function MetricsAreaChart({
                 activeDot={{ r: 4, strokeWidth: 0 }}
                 connectNulls={false}
                 isAnimationActive={false}
+                animationDuration={0}
               />
             )
           })}
+
+          {showBrush && (
+            <Brush
+              dataKey="timestamp"
+              height={24}
+              stroke="var(--color-accent)"
+              fill="var(--color-bg-card)"
+              travellerWidth={8}
+              tickFormatter={() => ''}
+              onChange={(range: { startIndex?: number; endIndex?: number }) => {
+                if (
+                  range.startIndex != null &&
+                  range.endIndex != null &&
+                  chartData[range.startIndex] &&
+                  chartData[range.endIndex]
+                ) {
+                  onBrushChange?.(
+                    chartData[range.startIndex].timestamp,
+                    chartData[range.endIndex].timestamp,
+                  )
+                }
+              }}
+            />
+          )}
         </AreaChart>
       </ResponsiveContainer>
 
