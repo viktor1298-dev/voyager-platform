@@ -262,13 +262,15 @@ const start = async () => {
 
     // Always start sync jobs — they handle per-cluster errors gracefully and are needed
     // for remotely-added clusters (kubeconfig, AWS, etc.) even without local K8s
+    // Always start sync jobs — they handle per-cluster errors gracefully and are needed
+    // for remotely-added clusters (kubeconfig, AWS, etc.) even without local K8s
     startHealthSync()
     startAlertEvaluator()
     startMetricsHistoryCollector()
+    startNodeSync()
+    startEventSync()
 
     if (k8sEnabled) {
-      startNodeSync()
-      startEventSync()
       startDeploySmokeTest()
       app.log.info(
         'Background jobs started (health-sync, alert-evaluator, metrics, node-sync, event-sync, deploy-smoke-test)',
@@ -285,10 +287,10 @@ const start = async () => {
         app.log.info(`${signal} received, shutting down gracefully`)
         stopAlertEvaluator()
         stopMetricsHistoryCollector()
+        stopNodeSync()
+        stopEventSync()
         if (k8sEnabled) {
           stopAllWatchers()
-          stopNodeSync()
-          stopEventSync()
           stopDeploySmokeTest()
         }
         await flushSentry()
