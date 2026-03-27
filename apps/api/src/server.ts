@@ -25,6 +25,7 @@ import {
 } from './jobs/metrics-history-collector.js'
 import { startNodeSync, stopNodeSync } from './jobs/node-sync.js'
 import { startEventSync, stopEventSync } from './jobs/event-sync.js'
+import { startDeploySmokeTest, stopDeploySmokeTest } from './jobs/deploy-smoke-test.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
 import { shutdownTelemetry } from './lib/telemetry.js'
 import { type AppRouter, appRouter } from './routers/index.js'
@@ -265,8 +266,9 @@ const start = async () => {
       startMetricsHistoryCollector()
       startNodeSync()
       startEventSync()
+      startDeploySmokeTest()
       app.log.info(
-        'Background jobs started (health-sync, alert-evaluator, metrics, node-sync, event-sync)',
+        'Background jobs started (health-sync, alert-evaluator, metrics, node-sync, event-sync, deploy-smoke-test)',
       )
     } else {
       app.log.info(
@@ -284,6 +286,7 @@ const start = async () => {
           stopMetricsHistoryCollector()
           stopNodeSync()
           stopEventSync()
+          stopDeploySmokeTest()
         }
         await flushSentry()
         await shutdownTelemetry()
