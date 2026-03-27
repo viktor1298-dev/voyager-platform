@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Voyager Platform is a **Kubernetes operations dashboard** — multi-cloud cluster management (AWS EKS, Azure AKS, GCP GKE), monitoring, alerting, and AI-assisted ops. Currently in a **major UI redesign** (v194): collapsing a 20-item sidebar to 6, building a 10-tab cluster command center, and activating Motion v12 animations. Stack: Next.js 16 + Fastify 5 + tRPC 11 + PostgreSQL + Redis on Kubernetes.
+Voyager Platform is a **Kubernetes operations dashboard** — multi-cloud cluster management (AWS EKS, Azure AKS, GCP GKE), monitoring, alerting, and AI-assisted ops. Recently stabilized (v1.0): 54-commit branch divergence resolved, main is the single source of truth, build/tests passing, branch protection enabled. Stack: Next.js 16 + Fastify 5 + tRPC 11 + PostgreSQL + Redis on Kubernetes.
 
 ---
 
@@ -110,17 +110,16 @@ pnpm --filter api seed:admin  # Seed admin user only
 
 7. **QA gate: 8.5+/10** — Desktop QA (1920×1080) must pass before declaring phase complete.
 
-## Current Work
+## Current State
 
 | Item | Details |
 |------|---------|
-| **Active spec** | `REDESIGN-PLAN.md` — UI redesign v194 |
-| **Active board** | `BOARD.md` — scan for `[ ]` items |
-| **Pipeline** | v194 — UI Redesign |
-| **Mission** | Sidebar 20→6 items, cluster detail 10 tabs, Motion v12 activation |
-| **Phase 1** | ✅ Mostly complete (navigation, routing, settings consolidation) |
-| **Phase 2** | 🔵 Next — backend tRPC routes + frontend wiring for all cluster tabs |
-| **Phase 3** | ⬜ Animation polish with Motion v12 |
+| **Milestone** | v1.0 Reset & Stabilization — complete (tagged `v1.0`) |
+| **Main branch** | Single source of truth — 54 commits from feat/init-monorepo merged |
+| **Build status** | `pnpm build` ✓, `pnpm typecheck` ✓, `pnpm test` ✓ (144/144 tests) |
+| **Branches** | Only `main` — 26 stale branches deleted, branch protection enabled |
+| **Repo visibility** | Public (changed from private to enable branch protection on GitHub Free) |
+| **Next** | Feature development via PRs to main |
 
 ## Database
 
@@ -231,18 +230,18 @@ Pipeline never declares `complete` — only `deployed-awaiting-review`. Vik deci
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**Voyager Platform — Project Reset & Stabilization**
+**Voyager Platform — Stabilized (v1.0)**
 
-Voyager Platform is a Kubernetes operations dashboard (multi-cloud cluster management, monitoring, alerting, AI-assisted ops) built as a monorepo: Next.js 16 frontend + Fastify 5 backend + tRPC 11 + PostgreSQL + Redis. The project has accumulated significant git branch divergence and needs a full reset — merging 54 unmerged commits from `feat/init-monorepo` into `main`, cleaning up 27 remote branches, and stabilizing the codebase so it builds, tests pass, and main is the single source of truth.
+Voyager Platform is a Kubernetes operations dashboard (multi-cloud cluster management, monitoring, alerting, AI-assisted ops) built as a monorepo: Next.js 16 frontend + Fastify 5 backend + tRPC 11 + PostgreSQL + Redis. The project was stabilized in v1.0: 54-commit divergence from `feat/init-monorepo` merged into `main`, 26 stale branches cleaned up, all tests passing, branch protection enabled.
 
-**Core Value:** **Main branch is the single source of truth** — all meaningful work is merged, stale branches are removed, the project builds and passes tests from a clean `main` checkout.
+**Core Value:** **Main branch is the single source of truth** — all work goes through PRs, force push is blocked, merged branches are auto-deleted.
 
 ### Constraints
 
-- **Git safety**: No force-pushing to main. Merge only — preserve full history.
-- **No work loss**: Every branch must be evaluated before deletion. Document any discarded work.
-- **Test baseline**: "Stable" = `pnpm build` + `pnpm test` + E2E tests all pass.
+- **Git safety**: No force-pushing to main. PRs required (branch protection enforced).
+- **Test baseline**: "Stable" = `pnpm build` + `pnpm typecheck` + `pnpm test` all pass (144 tests).
 - **Local dev infra**: `docker compose up -d` needed for Postgres + Redis before testing.
+- **Branch hygiene**: Merged branches auto-deleted by GitHub. No long-lived integration branches.
 <!-- GSD:project-end -->
 
 <!-- GSD:stack-start source:codebase/STACK.md -->
