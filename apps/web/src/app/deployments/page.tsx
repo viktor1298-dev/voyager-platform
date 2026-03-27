@@ -8,7 +8,7 @@ import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
-import { EmptyState } from '@/components/shared/EmptyState'
+import { EmptyState } from '@/components/EmptyState'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -55,8 +55,14 @@ function StatusBadge({ status }: { status: Deployment['status'] }) {
   }
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold text-[var(--color-badge-label)] border ${styles[status]}`}>
-      {status === 'Restarting...' ? <Loader2 className="h-3 w-3 animate-spin" /> : <span className={`h-1.5 w-1.5 rounded-full ${dotColor[status]}`} />}
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold text-[var(--color-badge-label)] border ${styles[status]}`}
+    >
+      {status === 'Restarting...' ? (
+        <Loader2 className="h-3 w-3 animate-spin" />
+      ) : (
+        <span className={`h-1.5 w-1.5 rounded-full ${dotColor[status]}`} />
+      )}
       {status}
     </span>
   )
@@ -82,16 +88,29 @@ function ScaleDialog({ deployment, onClose }: { deployment: Deployment; onClose:
   )
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={onClose} role="presentation">
+    <div
+      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center"
+      onClick={onClose}
+      role="presentation"
+    >
       <div
         className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-5 w-80 max-w-[calc(100vw-2rem)] shadow-xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label={`Scale ${deployment.name}`}
       >
-        <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-1">Scale Deployment</h3>
-        <p className="text-xs text-[var(--color-text-muted)] mb-4 font-mono">{deployment.namespace}/{deployment.name}</p>
-        <label className="block text-xs text-[var(--color-text-muted)] mb-1" htmlFor="replica-input">Replicas</label>
+        <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-1">
+          Scale Deployment
+        </h3>
+        <p className="text-xs text-[var(--color-text-muted)] mb-4 font-mono">
+          {deployment.namespace}/{deployment.name}
+        </p>
+        <label
+          className="block text-xs text-[var(--color-text-muted)] mb-1"
+          htmlFor="replica-input"
+        >
+          Replicas
+        </label>
         <input
           id="replica-input"
           type="number"
@@ -102,10 +121,22 @@ function ScaleDialog({ deployment, onClose }: { deployment: Deployment; onClose:
           className="w-full px-3 py-2 rounded-lg text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]/50 mb-4"
         />
         <div className="flex gap-2 justify-end">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-xs text-[var(--color-badge-label)] hover:bg-white/[0.04] transition-colors">Cancel</button>
           <button
             type="button"
-            onClick={() => scaleMutation.mutate({ name: deployment.name, namespace: deployment.namespace, replicas })}
+            onClick={onClose}
+            className="px-3 py-1.5 rounded-lg text-xs text-[var(--color-badge-label)] hover:bg-white/[0.04] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              scaleMutation.mutate({
+                name: deployment.name,
+                namespace: deployment.namespace,
+                replicas,
+              })
+            }
             disabled={scaleMutation.isPending}
             className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50"
           >
@@ -161,7 +192,8 @@ export default function DeploymentsPage() {
   const deployments: Deployment[] = (deploymentsQuery.data as Deployment[] | undefined) ?? []
 
   const namespaces = useMemo(
-    () => Array.from(new Set(deployments.map((d) => d.namespace))).sort((a, b) => a.localeCompare(b)),
+    () =>
+      Array.from(new Set(deployments.map((d) => d.namespace))).sort((a, b) => a.localeCompare(b)),
     [deployments],
   )
 
@@ -174,7 +206,10 @@ export default function DeploymentsPage() {
   )
 
   const groupedByCluster = useMemo(() => {
-    const groups = new Map<string, { clusterId: string; clusterName: string; deployments: Deployment[] }>()
+    const groups = new Map<
+      string,
+      { clusterId: string; clusterName: string; deployments: Deployment[] }
+    >()
 
     for (const deployment of filteredDeployments) {
       const key = deployment.clusterId
@@ -193,35 +228,52 @@ export default function DeploymentsPage() {
     return Array.from(groups.values()).sort((a, b) => a.clusterName.localeCompare(b.clusterName))
   }, [filteredDeployments])
 
-  const formatTimestamp = useCallback((timestamp: string) => {
-    const date = new Date(timestamp)
-    if (Number.isNaN(date.getTime())) return '—'
-    if (!isClient) return `${date.toISOString().replace('T', ' ').slice(0, 19)} UTC`
-    return date.toLocaleString()
-  }, [isClient])
+  const formatTimestamp = useCallback(
+    (timestamp: string) => {
+      const date = new Date(timestamp)
+      if (Number.isNaN(date.getTime())) return '—'
+      if (!isClient) return `${date.toISOString().replace('T', ' ').slice(0, 19)} UTC`
+      return date.toLocaleString()
+    },
+    [isClient],
+  )
 
   const columns = useMemo<ColumnDef<Deployment, unknown>[]>(() => {
     const base: ColumnDef<Deployment, unknown>[] = [
       {
         accessorKey: 'name',
         header: 'Deployment',
-        cell: ({ row }) => <span className="text-[var(--color-text-primary)] font-medium">{row.original.name}</span>,
+        cell: ({ row }) => (
+          <span className="text-[var(--color-text-primary)] font-medium">{row.original.name}</span>
+        ),
       },
       {
         accessorKey: 'namespace',
         header: 'Namespace',
-        cell: ({ row }) => <span className="text-[var(--color-accent)] font-mono text-xs">{row.original.namespace}</span>,
+        cell: ({ row }) => (
+          <span className="text-[var(--color-accent)] font-mono text-xs">
+            {row.original.namespace}
+          </span>
+        ),
       },
       {
         id: 'replicas',
         header: 'Replicas',
         accessorFn: (row) => `${row.ready}/${row.replicas}`,
-        cell: ({ row }) => <span className="text-[var(--color-text-primary)] font-mono tabular-nums">{row.original.ready}/{row.original.replicas}</span>,
+        cell: ({ row }) => (
+          <span className="text-[var(--color-text-primary)] font-mono tabular-nums">
+            {row.original.ready}/{row.original.replicas}
+          </span>
+        ),
       },
       {
         accessorKey: 'imageVersion',
         header: 'Version',
-        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] font-mono text-xs">{row.original.imageVersion}</span>,
+        cell: ({ row }) => (
+          <span className="text-[var(--color-text-secondary)] font-mono text-xs">
+            {row.original.imageVersion}
+          </span>
+        ),
       },
       {
         accessorKey: 'status',
@@ -253,7 +305,11 @@ export default function DeploymentsPage() {
       {
         accessorKey: 'lastUpdated',
         header: 'Updated',
-        cell: ({ row }) => <span className="text-[var(--color-text-secondary)] text-xs">{formatTimestamp(row.original.lastUpdated)}</span>,
+        cell: ({ row }) => (
+          <span className="text-[var(--color-text-secondary)] text-xs">
+            {formatTimestamp(row.original.lastUpdated)}
+          </span>
+        ),
       },
     ]
 
@@ -267,11 +323,23 @@ export default function DeploymentsPage() {
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex gap-1 justify-end">
-            <button type="button" onClick={() => setConfirmRestart(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/35 text-xs font-medium text-[var(--color-badge-label)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)] transition-colors" title="Restart">
-              <RefreshCw className="h-3 w-3" />Restart
+            <button
+              type="button"
+              onClick={() => setConfirmRestart(row.original)}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/35 text-xs font-medium text-[var(--color-badge-label)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)] transition-colors"
+              title="Restart"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Restart
             </button>
-            <button type="button" onClick={() => setScaleTarget(row.original)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/35 text-xs font-medium text-[var(--color-badge-label)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)] transition-colors" title="Scale">
-              <Scale className="h-3 w-3" />Scale
+            <button
+              type="button"
+              onClick={() => setScaleTarget(row.original)}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/35 text-xs font-medium text-[var(--color-badge-label)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)] transition-colors"
+              title="Scale"
+            >
+              <Scale className="h-3 w-3" />
+              Scale
             </button>
           </div>
         ),
@@ -283,7 +351,10 @@ export default function DeploymentsPage() {
     <AppLayout>
       <PageTransition>
         {deploymentsQuery.error && (
-          <QueryError message={deploymentsQuery.error.message} onRetry={() => deploymentsQuery.refetch()} />
+          <QueryError
+            message={deploymentsQuery.error.message}
+            onRetry={() => deploymentsQuery.refetch()}
+          />
         )}
 
         <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
@@ -294,7 +365,9 @@ export default function DeploymentsPage() {
           />
 
           <div className="flex items-center gap-2">
-            <label htmlFor="namespace-filter" className="text-xs text-[var(--color-table-meta)]">Namespace</label>
+            <label htmlFor="namespace-filter" className="text-xs text-[var(--color-table-meta)]">
+              Namespace
+            </label>
             <select
               id="namespace-filter"
               value={namespaceFilter}
@@ -303,7 +376,9 @@ export default function DeploymentsPage() {
             >
               <option value="all">All namespaces</option>
               {namespaces.map((namespace) => (
-                <option key={namespace} value={namespace}>{namespace}</option>
+                <option key={namespace} value={namespace}>
+                  {namespace}
+                </option>
               ))}
             </select>
           </div>
@@ -313,8 +388,12 @@ export default function DeploymentsPage() {
           {groupedByCluster.map((cluster) => (
             <section key={cluster.clusterId} className="space-y-2">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">{cluster.clusterName}</h2>
-                <span className="text-xs text-[var(--color-table-meta)] font-mono">{cluster.deployments.length} deployments</span>
+                <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  {cluster.clusterName}
+                </h2>
+                <span className="text-xs text-[var(--color-table-meta)] font-mono">
+                  {cluster.deployments.length} deployments
+                </span>
               </div>
 
               <DataTable
@@ -329,24 +408,42 @@ export default function DeploymentsPage() {
                 mobileCard={(deployment) => (
                   <div className="p-3 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] space-y-2">
                     <div className="flex justify-between items-center gap-2">
-                      <span className="text-[var(--color-text-primary)] font-medium text-sm truncate">{deployment.name}</span>
+                      <span className="text-[var(--color-text-primary)] font-medium text-sm truncate">
+                        {deployment.name}
+                      </span>
                       <StatusBadge status={deployment.status} />
                     </div>
                     <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                       <span className="text-[var(--color-table-meta)]">Namespace</span>
-                      <span className="text-[var(--color-accent)] font-mono truncate">{deployment.namespace}</span>
+                      <span className="text-[var(--color-accent)] font-mono truncate">
+                        {deployment.namespace}
+                      </span>
                       <span className="text-[var(--color-table-meta)]">Replicas</span>
-                      <span className="text-[var(--color-text-primary)] font-mono tabular-nums">{deployment.ready}/{deployment.replicas}</span>
+                      <span className="text-[var(--color-text-primary)] font-mono tabular-nums">
+                        {deployment.ready}/{deployment.replicas}
+                      </span>
                       <span className="text-[var(--color-table-meta)]">Version</span>
-                      <span className="text-[var(--color-text-primary)] font-mono">{deployment.imageVersion}</span>
+                      <span className="text-[var(--color-text-primary)] font-mono">
+                        {deployment.imageVersion}
+                      </span>
                     </div>
                     {isAdmin && (
                       <div className="pt-2 border-t border-[var(--color-border)]/50 flex gap-2">
-                        <button type="button" onClick={() => setConfirmRestart(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[var(--color-border)] text-xs font-medium text-[var(--color-badge-label)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors">
-                          <RefreshCw className="h-3 w-3" />Restart
+                        <button
+                          type="button"
+                          onClick={() => setConfirmRestart(deployment)}
+                          className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[var(--color-border)] text-xs font-medium text-[var(--color-badge-label)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          Restart
                         </button>
-                        <button type="button" onClick={() => setScaleTarget(deployment)} className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[var(--color-border)] text-xs font-medium text-[var(--color-badge-label)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors">
-                          <Scale className="h-3 w-3" />Scale
+                        <button
+                          type="button"
+                          onClick={() => setScaleTarget(deployment)}
+                          className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-[var(--color-border)] text-xs font-medium text-[var(--color-badge-label)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors"
+                        >
+                          <Scale className="h-3 w-3" />
+                          Scale
                         </button>
                       </div>
                     )}
@@ -369,17 +466,28 @@ export default function DeploymentsPage() {
           )}
         </div>
 
-        {scaleTarget && <ScaleDialog deployment={scaleTarget} onClose={() => setScaleTarget(null)} />}
+        {scaleTarget && (
+          <ScaleDialog deployment={scaleTarget} onClose={() => setScaleTarget(null)} />
+        )}
 
         <ConfirmDialog
           open={confirmRestart !== null}
           onClose={() => setConfirmRestart(null)}
-          onConfirm={() => confirmRestart && restartMutation.mutate({ name: confirmRestart.name, namespace: confirmRestart.namespace })}
+          onConfirm={() =>
+            confirmRestart &&
+            restartMutation.mutate({
+              name: confirmRestart.name,
+              namespace: confirmRestart.namespace,
+            })
+          }
           title="Restart Deployment?"
           description={
             <>
               This will perform a rolling restart of all pods in{' '}
-              <span className="font-mono text-[var(--color-text-primary)]">{confirmRestart?.namespace}/{confirmRestart?.name}</span>.
+              <span className="font-mono text-[var(--color-text-primary)]">
+                {confirmRestart?.namespace}/{confirmRestart?.name}
+              </span>
+              .
             </>
           }
           confirmLabel="Restart"

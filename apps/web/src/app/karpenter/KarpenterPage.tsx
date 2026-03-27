@@ -20,7 +20,7 @@ import {
   type NodePool,
 } from '@/lib/mock-karpenter'
 import { getTRPCClient, trpc } from '@/lib/trpc'
-import { CardSkeleton } from '@/components/shared/CardSkeleton'
+import { CardSkeleton } from '@/components/CardSkeleton'
 
 type TopologyItem = {
   id: string
@@ -150,7 +150,8 @@ export default function KarpenterPage() {
   const clustersQuery = trpc.clusters.list.useQuery()
   const selectedClusterId =
     searchParams.get('clusterId') ??
-    (clustersQuery.data?.find((c) => c.healthStatus === 'healthy') ?? clustersQuery.data?.[0])?.id ??
+    (clustersQuery.data?.find((c) => c.healthStatus === 'healthy') ?? clustersQuery.data?.[0])
+      ?.id ??
     null
 
   const nodePoolsFallback = useMemo(() => getMockNodePools(), [])
@@ -357,17 +358,21 @@ export default function KarpenterPage() {
             <CardSkeleton count={3} />
           ) : (
             <>
-          <MetricCard
-            title="Nodes provisioned"
-            value={metrics.nodesProvisioned.toString()}
-            icon={Server}
-          />
-          <MetricCard title="Pending pods" value={metrics.pendingPods.toString()} icon={Timer} />
-          <MetricCard
-            title="Estimated cost/hour"
-            value={`$${metrics.estimatedCostPerHour.toFixed(2)}`}
-            icon={CircleDollarSign}
-          />
+              <MetricCard
+                title="Nodes provisioned"
+                value={metrics.nodesProvisioned.toString()}
+                icon={Server}
+              />
+              <MetricCard
+                title="Pending pods"
+                value={metrics.pendingPods.toString()}
+                icon={Timer}
+              />
+              <MetricCard
+                title="Estimated cost/hour"
+                value={`$${metrics.estimatedCostPerHour.toFixed(2)}`}
+                icon={CircleDollarSign}
+              />
             </>
           )}
         </div>
@@ -483,7 +488,9 @@ function MetricCard({
         </p>
         <Icon className="h-4 w-4 text-[var(--color-accent)]" />
       </div>
-      <p className="mt-2 text-3xl font-semibold tabular-nums text-[var(--color-text-primary)]">{value}</p>
+      <p className="mt-2 text-3xl font-semibold tabular-nums text-[var(--color-text-primary)]">
+        {value}
+      </p>
     </div>
   )
 }

@@ -3,7 +3,7 @@
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { TableSkeleton } from '@/components/Skeleton'
+import { TableSkeleton } from '@/components/TableSkeleton'
 import { trpc } from '@/lib/trpc'
 import { normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { timeAgo } from '@/lib/time-utils'
@@ -56,8 +56,18 @@ function UptimeBars({ history }: { history: Array<{ status: string; checkedAt: s
       const norm = normalizeLiveHealthStatus(entry.status)
       // worst-wins per slot
       const mapped: 'healthy' | 'degraded' | 'error' | 'none' =
-        norm === 'healthy' ? 'healthy' : norm === 'degraded' ? 'degraded' : norm === 'error' ? 'error' : 'none'
-      if (slots[idx] === 'none' || mapped === 'error' || (mapped === 'degraded' && slots[idx] === 'healthy')) {
+        norm === 'healthy'
+          ? 'healthy'
+          : norm === 'degraded'
+            ? 'degraded'
+            : norm === 'error'
+              ? 'error'
+              : 'none'
+      if (
+        slots[idx] === 'none' ||
+        mapped === 'error' ||
+        (mapped === 'degraded' && slots[idx] === 'healthy')
+      ) {
         slots[idx] = mapped
       }
     }
@@ -87,17 +97,16 @@ export default function HealthPage() {
   usePageTitle('System Health')
 
   const healthQuery = trpc.health.status.useQuery({}, { refetchInterval: 30_000 })
-  const eventsQuery = trpc.events.list.useQuery(
-    { limit: 20 },
-    { refetchInterval: 60_000 },
-  )
+  const eventsQuery = trpc.events.list.useQuery({ limit: 20 }, { refetchInterval: 60_000 })
 
   const healthData = healthQuery.data ?? []
   const isLoading = healthQuery.isLoading
   const allHealthy = healthData.length > 0 && healthData.every((c) => c.status === 'healthy')
   const avgLatency =
     healthData.length > 0
-      ? Math.round(healthData.reduce((sum, c) => sum + (c.responseTimeMs ?? 0), 0) / healthData.length)
+      ? Math.round(
+          healthData.reduce((sum, c) => sum + (c.responseTimeMs ?? 0), 0) / healthData.length,
+        )
       : null
 
   // Build pseudo-history from current status for uptime bars
@@ -146,7 +155,8 @@ export default function HealthPage() {
                       : 'System Issues Detected'}
                 </h2>
                 <p className="text-xs text-[var(--color-text-muted)]">
-                  {healthData.length} cluster{healthData.length !== 1 ? 's' : ''} monitored · auto-refresh 30s
+                  {healthData.length} cluster{healthData.length !== 1 ? 's' : ''} monitored ·
+                  auto-refresh 30s
                 </p>
               </div>
             </div>
@@ -189,20 +199,27 @@ export default function HealthPage() {
         </h3>
 
         {isLoading ? (
-          <TableSkeleton rows={3} cols={5} />
+          <TableSkeleton rows={3} columns={5} />
         ) : healthData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)] mb-6">
             <WifiOff className="h-8 w-8 mb-2 opacity-40" />
             <p className="text-sm">No clusters registered</p>
-            <p className="text-xs text-[var(--color-text-dim)] mt-1">Add a cluster to start monitoring health.</p>
+            <p className="text-xs text-[var(--color-text-dim)] mt-1">
+              Add a cluster to start monitoring health.
+            </p>
           </div>
         ) : (
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-x-auto mb-6">
             {/* Header */}
             <div className="grid grid-cols-6 gap-2 px-4 py-3 border-b border-[var(--color-border)] bg-white/[0.02] min-w-[600px]">
-              <span className="text-xs font-bold text-[var(--color-text-dim)] uppercase col-span-2">Cluster</span>
+              <span className="text-xs font-bold text-[var(--color-text-dim)] uppercase col-span-2">
+                Cluster
+              </span>
               {COMPONENT_NAMES.map((name) => (
-                <span key={name} className="text-xs font-bold text-[var(--color-text-dim)] uppercase text-center">
+                <span
+                  key={name}
+                  className="text-xs font-bold text-[var(--color-text-dim)] uppercase text-center"
+                >
                   {name}
                 </span>
               ))}
@@ -279,10 +296,14 @@ export default function HealthPage() {
                       </span>
                     </div>
                     <div className="h-1.5 rounded-full bg-[var(--color-border)] overflow-hidden">
-                      <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+                      <div
+                        className={`h-full rounded-full ${barColor}`}
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
                     <p className="text-xs text-[var(--color-text-dim)] mt-1">
-                      {ms < LATENCY_GOOD ? 'Excellent' : ms < LATENCY_WARN ? 'Moderate' : 'Slow'} response
+                      {ms < LATENCY_GOOD ? 'Excellent' : ms < LATENCY_WARN ? 'Moderate' : 'Slow'}{' '}
+                      response
                     </p>
                   </div>
                 )
@@ -299,7 +320,8 @@ export default function HealthPage() {
               {healthData.map((entry) => {
                 const checkedRecently =
                   entry.checkedAt &&
-                  Date.now() - new Date(entry.checkedAt as string).getTime() < SYNC_FRESH_THRESHOLD_MS
+                  Date.now() - new Date(entry.checkedAt as string).getTime() <
+                    SYNC_FRESH_THRESHOLD_MS
                 return (
                   <div
                     key={entry.clusterId}
@@ -401,7 +423,10 @@ export default function HealthPage() {
             {recentEvents.slice(0, MAX_RECENT_EVENTS).map((event, idx) => {
               const isWarning = event.kind === 'Warning'
               return (
-                <div key={String(event.id ?? idx)} className="flex gap-3 px-4 py-3 hover:bg-white/[0.02]">
+                <div
+                  key={String(event.id ?? idx)}
+                  className="flex gap-3 px-4 py-3 hover:bg-white/[0.02]"
+                >
                   {/* Timeline dot */}
                   <div className="relative flex flex-col items-center pt-0.5">
                     {isWarning ? (

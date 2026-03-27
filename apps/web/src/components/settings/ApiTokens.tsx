@@ -4,7 +4,7 @@ import { Copy, KeyRound, Search, Trash2, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { trpc } from '@/lib/trpc'
-import { TableSkeleton } from '@/components/shared/TableSkeleton'
+import { TableSkeleton } from '@/components/TableSkeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 function getMcpSnippet(): string {

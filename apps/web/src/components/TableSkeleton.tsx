@@ -19,10 +19,7 @@ interface TableSkeletonProps {
 export function TableSkeleton({ rows = 5, columns = 4, className }: TableSkeletonProps) {
   return (
     <div
-      className={cn(
-        'rounded-xl border border-[var(--color-border)] overflow-hidden',
-        className,
-      )}
+      className={cn('rounded-xl border border-[var(--color-border)] overflow-hidden', className)}
       aria-busy="true"
       aria-label="Loading table data"
     >

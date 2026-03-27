@@ -3,7 +3,7 @@
 import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { DataTable } from '@/components/shared/DataTable'
-import { EmptyState } from '@/components/shared/EmptyState'
+import { EmptyState } from '@/components/EmptyState'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageTransition } from '@/components/animations'
