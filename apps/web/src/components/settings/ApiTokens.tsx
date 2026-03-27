@@ -8,7 +8,7 @@ import { TableSkeleton } from '@/components/shared/TableSkeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 function getMcpSnippet(): string {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://voyager-platform.voyagerlabs.co'
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? window.location.origin
   return JSON.stringify(
     {
       mcpServers: {
@@ -131,7 +131,9 @@ export function ApiTokensSection() {
                 aria-label="Revoke all test tokens"
               >
                 <Trash2 className="h-3 w-3" />
-                {revokeTestTokens.isPending ? 'Revoking...' : `Revoke ${testTokenCount} Test Tokens`}
+                {revokeTestTokens.isPending
+                  ? 'Revoking...'
+                  : `Revoke ${testTokenCount} Test Tokens`}
               </button>
             )}
           </div>
@@ -226,7 +228,9 @@ export function ApiTokensSection() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] pt-2">
               <span>
-                {currentPage * PAGE_SIZE + 1}–{Math.min((currentPage + 1) * PAGE_SIZE, filteredTokens.length)} of {filteredTokens.length}
+                {currentPage * PAGE_SIZE + 1}–
+                {Math.min((currentPage + 1) * PAGE_SIZE, filteredTokens.length)} of{' '}
+                {filteredTokens.length}
               </span>
               <div className="flex items-center gap-1">
                 <button
