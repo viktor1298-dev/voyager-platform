@@ -7,8 +7,8 @@ import {
   SSE_MAX_RECONNECT_DELAY_MS,
   SSE_RECONNECT_BACKOFF_MULTIPLIER,
 } from '@voyager/config/sse'
-import { MetricsBuffer, convertSSEEvent } from '../lib/metrics-buffer.js'
-import type { MetricsDataPoint } from '../components/metrics/MetricsAreaChart.js'
+import { MetricsBuffer, convertSSEEvent } from '@/lib/metrics-buffer'
+import type { MetricsDataPoint } from '@/components/metrics/MetricsAreaChart'
 
 interface UseMetricsSSEOptions {
   enabled: boolean

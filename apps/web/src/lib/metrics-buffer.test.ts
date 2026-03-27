@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { MetricsBuffer, convertSSEEvent } from './metrics-buffer.js'
-import type { MetricsDataPoint } from '../components/metrics/MetricsAreaChart.js'
+import { MetricsBuffer, convertSSEEvent } from './metrics-buffer'
+import type { MetricsDataPoint } from '@/components/metrics/MetricsAreaChart'
 import type { MetricsStreamEvent } from '@voyager/types'
 
 function makePoint(timestamp: string, cpu = 50): MetricsDataPoint {

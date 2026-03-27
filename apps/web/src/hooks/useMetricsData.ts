@@ -2,10 +2,10 @@
 
 import { useCallback } from 'react'
 import type { SSEConnectionState } from '@voyager/types'
-import { trpc } from '../lib/trpc.js'
-import type { MetricsRange, ApiMetricsRange } from '../components/metrics/TimeRangeSelector.js'
-import type { MetricsDataPoint } from '../components/metrics/MetricsAreaChart.js'
-import { useMetricsSSE } from './useMetricsSSE.js'
+import { trpc } from '@/lib/trpc'
+import type { MetricsRange, ApiMetricsRange } from '@/components/metrics/TimeRangeSelector'
+import type { MetricsDataPoint } from '@/components/metrics/MetricsAreaChart'
+import { useMetricsSSE } from '@/hooks/useMetricsSSE'
 
 type DataSourceMode = 'live' | 'historical' | 'custom'
 

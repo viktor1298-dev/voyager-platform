@@ -1,5 +1,5 @@
 import type { MetricsStreamEvent } from '@voyager/types'
-import type { MetricsDataPoint } from '../components/metrics/MetricsAreaChart.js'
+import type { MetricsDataPoint } from '@/components/metrics/MetricsAreaChart'
 
 /**
  * Fixed-capacity circular buffer for SSE metrics data points.
