@@ -213,6 +213,8 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 - Chart colors: all charts use CSS custom properties (`--chart-1..5`, `--color-chart-*`, `--color-threshold-*`) from globals.css — never hardcode colors
 - Container queries: `WidgetWrapper.tsx` uses `@container` for responsive dashboard widgets
 - CommandPalette: dynamically imported via `next/dynamic` in providers.tsx (~20KB savings)
+- Animation components: `FadeIn`, `SlideIn`, `AnimatedList`, `PageTransition`, `SuccessCheck` in `components/animations/` — reusable Motion wrappers with reduced-motion support
+- Animation style: "Confident & Expressive" (B-style) — springs stiffness 350/damping 24, card hover lift y:-4, badge bounce pop, chart entry stagger, alert severity glow. See `docs/DESIGN.md`
 
 ## Current State
 
@@ -222,6 +224,7 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | **Main branch** | Single source of truth — PRs required, force push blocked |
 | **Build status** | `pnpm build` ✓, `pnpm typecheck` ✓, `pnpm test` ✓ (all passing) |
 | **UI/UX audit** | 219 findings across 6 dimensions — all fixed (2026-03-27). Reports in `docs/ui-audit/` |
+| **Animation enhancement** | B-style (Confident & Expressive) — 35 files, 4 waves complete (2026-03-27). Spec in `docs/superpowers/specs/`, standards in `docs/DESIGN.md` |
 | **Next** | Feature development via PRs to main |
 
 ## Database
@@ -250,7 +253,7 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | `apps/web/src/components/charts/chart-theme.ts` | Shared chart colors, tooltip style, threshold helpers — references `--chart-*` CSS vars |
 | `apps/web/src/config/navigation.ts` | Sidebar navigation config |
 | `apps/web/src/lib/trpc.ts` | tRPC client setup + `handleTRPCError` |
-| `apps/web/src/lib/animation-constants.ts` | Motion v12 timing/easing constants |
+| `apps/web/src/lib/animation-constants.ts` | Motion v12 timing/easing/variant constants (B-style: springs, card hover, badge pop, error shake, chart anim, glow) |
 | `charts/voyager/sql/init.sql` | DB schema (source of truth) |
 | `apps/api/src/lib/error-handler.ts` | Shared `handleK8sError()` for all K8s routers |
 | `apps/api/src/lib/cache-keys.ts` | Centralized Redis cache key builders |
