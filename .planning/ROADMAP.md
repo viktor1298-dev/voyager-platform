@@ -89,7 +89,9 @@ Plans:
   3. Y-axis auto-scales based on actual data range (not fixed 0-100% when cluster CPU is at 2-5%)
   4. X-axis labels adapt to the selected range: HH:MM:SS for minutes, HH:MM for hours, Mon Day for multi-day
   5. Tooltip shows bucket time window, precise values for each series, and color-coded series indicators
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 05-01-PLAN.md — Dark panel styling, Grafana tooltip, Y-axis auto-scale, interactive legend, panel header redesign
 **UI hint**: yes
 
 ### Phase 6: Data Freshness & UX Polish
@@ -126,6 +128,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. SSE Streaming Endpoint | 1/1 | Complete | 2026-03-28 |
 | 3. Time Range Controls & Data Source Wiring | 2/2 | Complete |  |
 | 4. Synchronized Crosshair | 1/1 | Complete | 2026-03-28 |
-| 5. Grafana Dark Panel Design | 0/TBD | Not started | - |
+| 5. Grafana Dark Panel Design | 0/1 | Not started | - |
 | 6. Data Freshness & UX Polish | 0/TBD | Not started | - |
 | 7. Performance Optimization | 0/TBD | Not started | - |
