@@ -154,14 +154,12 @@ export function Sidebar({
               const navLink = (
                 <Link
                   key={item.id}
-                  href={isClustersItem ? '#' : item.id}
-                  onClick={(e) => {
+                  href={item.id}
+                  onClick={() => {
                     if (isClustersItem) {
-                      e.preventDefault()
-                      setClustersOpen((prev) => !prev)
-                    } else {
-                      setMobileOpen(false)
+                      setClustersOpen(true)
                     }
+                    setMobileOpen(false)
                   }}
                   data-testid={`nav-item-${item.id.replace(/\//g, '') || 'dashboard'}`}
                   aria-current={isNavActive ? 'page' : undefined}
@@ -265,15 +263,22 @@ export function Sidebar({
                       </motion.span>
                     )}
                   </AnimatePresence>
-                  {/* SB-005: ChevronDown for clusters accordion — rotates when open */}
+                  {/* SB-005: ChevronDown for clusters accordion — toggles independently from nav link */}
                   {isClustersItem && showLabels && (
-                    <motion.div
+                    <motion.button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setClustersOpen((prev) => !prev)
+                      }}
                       animate={{ rotate: clustersOpen ? 180 : 0 }}
                       transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-                      className="relative z-10 ml-auto"
+                      className="relative z-10 ml-auto p-0.5 -m-0.5 rounded hover:bg-white/[0.08] transition-colors"
+                      aria-label={clustersOpen ? 'Collapse clusters' : 'Expand clusters'}
                     >
                       <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-                    </motion.div>
+                    </motion.button>
                   )}
                 </Link>
               )
