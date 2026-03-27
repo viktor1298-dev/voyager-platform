@@ -1,98 +1,128 @@
-# Requirements: Voyager Platform Reset & Stabilization
+# Requirements: Metrics Graph Redesign
 
-**Defined:** 2026-03-26
-**Core Value:** Main branch is the single source of truth — all meaningful work merged, stale branches removed, project builds and passes tests.
+**Defined:** 2026-03-28
+**Core Value:** Every time range shows correct, populated data with Grafana-grade visualization quality
 
 ## v1 Requirements
 
-### Pre-Merge Safety
+### Backend Data Pipeline
 
-- [x] **SAFE-01**: Create recovery tags on main and feat/init-monorepo branch tips before any mutations
-- [x] **SAFE-02**: Enable `git rerere` to record conflict resolutions for replay if merge needs retry
-- [x] **SAFE-03**: Record all branch HEADs to `.planning/branch-tips.txt` for full recovery capability
+- [ ] **PIPE-01**: Backend returns correct bucket-aligned data for all Grafana-standard time ranges (5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d)
+- [ ] **PIPE-02**: Server-side aggregation uses TimescaleDB `time_bucket()` SQL instead of in-memory JS bucketing
+- [ ] **PIPE-03**: Backend returns `serverTime` and `intervalMs` in response so client can align timeline correctly
+- [ ] **PIPE-04**: LTTB downsampling implemented for ranges producing 500+ data points (inlined ~50 LOC, no external dep)
+- [ ] **PIPE-05**: Backend validates time range input against new Grafana-standard set (removes old 30s/1m ranges)
 
-### Merge & Conflict Resolution
+### SSE Real-Time Streaming
 
-- [x] **MERGE-01**: Execute `git merge --no-ff --no-commit origin/feat/init-monorepo` on main to stage all 54 commits
-- [x] **MERGE-02**: Resolve 9 conflicting files using tiered strategy (trivial → accept-theirs → manual → heavy)
-- [x] **MERGE-03**: Manually review auto-resolved files (server.ts, ClusterHealthWidget.tsx) for evil merge logic errors
-- [x] **MERGE-04**: Normalize Motion imports (m vs motion convention) across 10+ diverged component files
-- [x] **MERGE-05**: Verify init.sql contains all tables from both branches (nodeMetricsHistory schema risk)
-- [x] **MERGE-06**: Commit the merge with a descriptive message referencing the 54-commit integration
+- [ ] **SSE-01**: Dedicated Fastify SSE endpoint streams live K8s metrics for short ranges (≤15m) at 10-15s resolution
+- [ ] **SSE-02**: MetricsStreamJob polls K8s metrics-server only for clusters with active SSE subscribers (reference-counted)
+- [ ] **SSE-03**: SSE connection auto-reconnects with exponential backoff on disconnect
+- [ ] **SSE-04**: Visibility-aware SSE lifecycle — pauses streaming when browser tab is hidden, resumes on focus
+- [ ] **SSE-05**: Client-side circular buffer (max 65 points) manages live data with time-based eviction
 
-### Validation Gate
+### Time Range Controls
 
-- [x] **VALID-01**: `pnpm build` succeeds (TypeScript compilation for all packages)
-- [x] **VALID-02**: `pnpm typecheck` passes (strict TypeScript checking)
-- [x] **VALID-03**: `pnpm test` passes (Vitest unit tests across all packages)
+- [ ] **TIME-01**: Time range selector offers Grafana-standard presets: 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d
+- [ ] **TIME-02**: Custom absolute date/time range picker (from/to datetime) for arbitrary windows
+- [ ] **TIME-03**: Selected time range persisted in Zustand store (localStorage) across page navigations
+- [ ] **TIME-04**: Data source switches automatically — SSE for ≤15m, DB for ≥30m — seamless to user
 
-### Push & Branch Cleanup
+### Synchronized Visualization
 
-- [x] **CLEAN-01**: Push merged main to origin
-- [x] **CLEAN-02**: Delete 22+ fully-merged remote branches (worktree/*, old feature branches, develop)
-- [x] **CLEAN-03**: Evaluate fix/v117-phase-d-r2 unique commit (encryption key + connection-config schemas) — cherry-pick if relevant, document if discarded
-- [x] **CLEAN-04**: Delete local branches that are no longer needed (claude/objective-shockley)
-- [x] **CLEAN-05**: Verify all worktree/ron, worktree/dima commits are contained in feat/init-monorepo before deletion
+- [ ] **VIZ-01**: 4 panels (CPU, Memory, Network, Pods) display synchronized crosshair — hover one, all show same timestamp
+- [ ] **VIZ-02**: Custom crosshair cursor renders as vertical line across full chart height with timestamp label
+- [ ] **VIZ-03**: Brush zoom — user can drag-to-select a time region to zoom into that range
+- [ ] **VIZ-04**: Threshold reference lines on CPU/Memory panels (85% critical red, 65% warning yellow)
+- [ ] **VIZ-05**: Panel fullscreen expand — click to expand any panel to full-width detail view
 
-### GitHub Protection
+### Grafana-Style Visual Design
 
-- [x] **PROT-01**: Set up branch protection rules on main (require PR, prevent force push)
-- [x] **PROT-02**: Enable auto-delete of merged branches on GitHub
+- [ ] **STYLE-01**: Dark panel backgrounds with subtle grid lines, crisp mono-spaced axis labels, compact density
+- [ ] **STYLE-02**: Interactive legend — click series name to isolate/toggle visibility, hover to highlight
+- [ ] **STYLE-03**: Y-axis auto-scale based on actual data range (not fixed 0-100% for all panels)
+- [ ] **STYLE-04**: Range-adaptive X-axis formatting (HH:MM:SS for minutes, HH:MM for hours, Mon Day for days)
+- [ ] **STYLE-05**: Grafana-style tooltip with bucket window, precise values, color-coded series indicators
+
+### Data Freshness & UX
+
+- [ ] **UX-01**: Data freshness badge shows 'Live' / '2m ago' / 'Stale' with color coding
+- [ ] **UX-02**: Pause-on-hover — auto-refresh freezes while user inspects tooltip, resumes on mouse leave
+- [ ] **UX-03**: Loading states use skeleton shimmer per panel (not full-page spinner)
+- [ ] **UX-04**: Empty/error states show actionable messages with retry button per panel
+- [ ] **UX-05**: Fix MetricsAreaChart key-prop remount bug (remove `data.length` from key)
+
+### Performance
+
+- [ ] **PERF-01**: Charts handle 1000+ data points without jank (LTTB downsamples to ~200 visual points)
+- [ ] **PERF-02**: Crosshair synchronization throttled to prevent render cascades across 4 panels
+- [ ] **PERF-03**: ResponsiveContainer resize debounced to prevent layout thrashing
 
 ## v2 Requirements
 
-### Extended Validation
+### Advanced Interactions
 
-- **VALID-04**: E2E tests (Playwright) pass against running instance
-- **VALID-05**: Docker image builds succeed (Dockerfile.api, Dockerfile.web)
-- **VALID-06**: Helm chart `helm template` renders cleanly
-
-### Post-Stabilization
-
-- **POST-01**: Update CLAUDE.md to reflect post-cleanup project state
-- **POST-02**: Visual regression check on Sidebar and chart components
-- **POST-03**: Audit E2E test selectors for post-merge accuracy (1-2 fix rounds expected)
+- **ADV-01**: Relative text input for time ranges (e.g., 'now-2h' Grafana-style)
+- **ADV-02**: URL-synced time range for shareable dashboard links
+- **ADV-03**: Event annotations on chart timeline (from event-sync job data)
+- **ADV-04**: Per-panel time range override (independent of global range)
+- **ADV-05**: Chart data export (CSV/PNG)
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| New feature development | Stabilize first, then build |
-| Code refactoring beyond merge fixes | Risk scope creep; merge-only changes |
-| CI/CD pipeline setup | Separate initiative, not part of cleanup |
-| Helm chart deployment to K8s | Requires cluster access, deferred |
-| Rebase strategy | Ruled out — shared history, merge commits, PROJECT.md constraint |
-| Force-pushing to main | Destructive, violates git safety constraint |
+| Configurable/draggable panel layout | Fixed 2x2 grid sufficient; react-grid-layout complexity not justified |
+| Prometheus/Grafana data source integration | Own collector, not external TSDB |
+| Query editor (PromQL-like) | Not a general-purpose monitoring tool |
+| WebSocket transport | SSE sufficient and consistent with existing infra |
+| Per-pod metrics breakdown | Node-level granularity sufficient |
+| Multi-datasource support | Single K8s metrics-server source per cluster |
+| Stacked area charts | Misleading for independent metrics (CPU vs Memory) |
+| Dashboard framework | This is a single metrics tab, not a dashboard builder |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SAFE-01 | Phase 1 | Complete |
-| SAFE-02 | Phase 1 | Complete |
-| SAFE-03 | Phase 1 | Complete |
-| MERGE-01 | Phase 2 | Complete |
-| MERGE-02 | Phase 2 | Complete |
-| MERGE-03 | Phase 2 | Complete |
-| MERGE-04 | Phase 2 | Complete |
-| MERGE-05 | Phase 2 | Complete |
-| MERGE-06 | Phase 2 | Complete |
-| VALID-01 | Phase 3 | Complete |
-| VALID-02 | Phase 3 | Complete |
-| VALID-03 | Phase 3 | Complete |
-| CLEAN-01 | Phase 4 | Complete |
-| CLEAN-02 | Phase 4 | Complete |
-| CLEAN-03 | Phase 4 | Complete |
-| CLEAN-04 | Phase 4 | Complete |
-| CLEAN-05 | Phase 4 | Complete |
-| PROT-01 | Phase 5 | Complete |
-| PROT-02 | Phase 5 | Complete |
+| PIPE-01 | Phase 1 | Pending |
+| PIPE-02 | Phase 1 | Pending |
+| PIPE-03 | Phase 1 | Pending |
+| PIPE-04 | Phase 1 | Pending |
+| PIPE-05 | Phase 1 | Pending |
+| SSE-01 | Phase 2 | Pending |
+| SSE-02 | Phase 2 | Pending |
+| SSE-03 | Phase 2 | Pending |
+| SSE-04 | Phase 2 | Pending |
+| SSE-05 | Phase 2 | Pending |
+| TIME-01 | Phase 3 | Pending |
+| TIME-02 | Phase 3 | Pending |
+| TIME-03 | Phase 3 | Pending |
+| TIME-04 | Phase 3 | Pending |
+| VIZ-01 | Phase 4 | Pending |
+| VIZ-02 | Phase 4 | Pending |
+| VIZ-03 | Phase 4 | Pending |
+| VIZ-04 | Phase 4 | Pending |
+| VIZ-05 | Phase 4 | Pending |
+| STYLE-01 | Phase 5 | Pending |
+| STYLE-02 | Phase 5 | Pending |
+| STYLE-03 | Phase 5 | Pending |
+| STYLE-04 | Phase 5 | Pending |
+| STYLE-05 | Phase 5 | Pending |
+| UX-01 | Phase 6 | Pending |
+| UX-02 | Phase 6 | Pending |
+| UX-03 | Phase 6 | Pending |
+| UX-04 | Phase 6 | Pending |
+| UX-05 | Phase 6 | Pending |
+| PERF-01 | Phase 7 | Pending |
+| PERF-02 | Phase 7 | Pending |
+| PERF-03 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 19 total
-- Mapped to phases: 19
+- v1 requirements: 33 total
+- Mapped to phases: 33
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-03-26*
-*Last updated: 2026-03-26 after initial definition*
+*Requirements defined: 2026-03-28*
+*Last updated: 2026-03-28 after initial definition*
