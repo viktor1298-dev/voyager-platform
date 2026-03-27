@@ -39,18 +39,15 @@ export async function invalidateK8sCache(): Promise<number> {
   const redis = await getRedisClient()
   if (!redis) return 0
   try {
-    const knownKeys = [
-      'k8s:version',
-      'k8s:nodes',
-      'k8s:pods',
-      'k8s:namespaces',
-      'k8s:events',
-      'k8s:deployments',
-    ]
     let deleted = 0
-    for (const key of knownKeys) {
-      deleted += await redis.del(key)
-    }
+    let cursor = '0'
+    do {
+      const result = await redis.scan(cursor, { MATCH: 'k8s:*', COUNT: 100 })
+      cursor = result.cursor
+      if (result.keys.length > 0) {
+        deleted += await redis.del(result.keys)
+      }
+    } while (cursor !== '0')
     return deleted
   } catch {
     return 0

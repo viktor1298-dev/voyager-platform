@@ -3,12 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mockGet = vi.fn()
 const mockSetEx = vi.fn()
 const mockDel = vi.fn()
+const mockScan = vi.fn()
 
 vi.mock('redis', () => ({
   createClient: () => ({
     get: mockGet,
     setEx: mockSetEx,
     del: mockDel,
+    scan: mockScan,
     on: vi.fn(),
     connect: () => Promise.resolve(),
   }),
@@ -54,17 +56,20 @@ describe('invalidateK8sCache()', () => {
     vi.clearAllMocks()
   })
 
-  it('deletes all known k8s cache keys', async () => {
-    mockDel.mockResolvedValue(1)
+  it('deletes all k8s cache keys via SCAN', async () => {
+    mockScan.mockResolvedValue({
+      cursor: '0',
+      keys: ['k8s:abc:nodes', 'k8s:abc:pods', 'k8s:abc:events'],
+    })
+    mockDel.mockResolvedValue(3)
     const count = await invalidateK8sCache()
-    expect(count).toBe(6)
-    expect(mockDel).toHaveBeenCalledTimes(6)
-    expect(mockDel).toHaveBeenCalledWith('k8s:version')
-    expect(mockDel).toHaveBeenCalledWith('k8s:deployments')
+    expect(count).toBe(3)
+    expect(mockScan).toHaveBeenCalledWith('0', { MATCH: 'k8s:*', COUNT: 100 })
+    expect(mockDel).toHaveBeenCalledWith(['k8s:abc:nodes', 'k8s:abc:pods', 'k8s:abc:events'])
   })
 
-  it('returns 0 when del throws', async () => {
-    mockDel.mockRejectedValue(new Error('Redis down'))
+  it('returns 0 when scan throws', async () => {
+    mockScan.mockRejectedValue(new Error('Redis down'))
     const count = await invalidateK8sCache()
     expect(count).toBe(0)
   })
