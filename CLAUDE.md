@@ -128,6 +128,8 @@ pnpm db:seed                  # Optional: seed mock clusters/nodes/events
 
 7. **QA gate: 8.5+/10** — Desktop QA (1920×1080) must pass before declaring phase complete.
 
+8. **Before any UI/animation change, read `docs/DESIGN.md`** — It is the animation and interaction design source of truth. All hover states, card effects, button feedback, chart animations, and status indicators MUST follow the standards defined there. The design style is "Confident & Expressive" (Raycast/Arc Style B).
+
 ## Architecture
 
 ### Data Flow
@@ -254,6 +256,7 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | `apps/api/src/lib/cache-keys.ts` | Centralized Redis cache key builders |
 | `apps/api/src/config/jobs.ts` | Background job interval constants |
 | `apps/api/src/config/k8s.ts` | K8s client pool config (getter for ENCRYPTION_KEY) |
+| `docs/DESIGN.md` | 🔴 Animation & interaction design source of truth — read before ANY UI change |
 
 ## URL Structure
 

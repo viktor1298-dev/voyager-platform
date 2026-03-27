@@ -41,7 +41,7 @@ src/
 - **tRPC client:** Uses `httpLink` (not batch) — see root CLAUDE.md Gotcha #1
 - **State:** Zustand stores for UI state, TanStack Query for server state (via tRPC)
 - **Auth:** Better-Auth cookie session; `handleTRPCError()` redirects to `/login` on UNAUTHORIZED
-- **Animations:** Motion v12 — use constants from `animation-constants.ts`, not inline values
+- **Animations:** Motion v12 — use constants from `animation-constants.ts`, not inline values. **Read `docs/DESIGN.md` before any UI/animation change** — it defines the "Confident & Expressive" (Style B) design standard for all hover states, card effects, button feedback, chart animations, and status indicators
 - **Navigation:** `router.push()` for cluster links (not `<a>` tags) — E2E tests must use `page.click()` + `waitForURL()`
 - **Sidebar items:** Dashboard, Clusters, Alerts, Events, Logs, Settings (6 total in `navigation.ts`)
 - **Routes not in sidebar:** `/ai`, `/dashboards`, `/anomalies`, `/karpenter`, `/system-health` — accessible via in-app links or direct URL
