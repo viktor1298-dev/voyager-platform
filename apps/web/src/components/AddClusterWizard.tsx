@@ -157,6 +157,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
 
   const [kubeFile, setKubeFile] = useState<File | null>(null)
   const [kubeText, setKubeText] = useState('')
+  const [kubeFileContent, setKubeFileContent] = useState('')
 
   const [awsAccessKey, setAwsAccessKey] = useState('')
   const [awsSecretKey, setAwsSecretKey] = useState('')
@@ -185,7 +186,48 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
 
   const currentProvider = CLUSTER_PROVIDERS.find((p) => p.id === provider)!
 
-  const suggestedName = useMemo(() => `${provider}-${environment}-cluster`, [provider, environment])
+  // Effective kubeconfig text — prefer textarea input, fall back to file content
+  const effectiveKubeYaml = kubeText.trim() || kubeFileContent
+
+  // Parse cluster name from kubeconfig (current-context or first context name)
+  const kubeParsedName = useMemo(() => {
+    if (!effectiveKubeYaml) return ''
+    const ctxMatch = effectiveKubeYaml.match(/current-context:\s*(\S+)/)
+    if (ctxMatch?.[1]) return ctxMatch[1]
+    const nameMatch = effectiveKubeYaml.match(
+      /contexts:\s*\n-\s*context:[\s\S]*?\n\s+name:\s*(\S+)/,
+    )
+    if (nameMatch?.[1]) return nameMatch[1]
+    return ''
+  }, [effectiveKubeYaml])
+
+  // Detect cloud provider from kubeconfig server URL
+  const kubeDetectedProvider = useMemo(() => {
+    if (!effectiveKubeYaml) return null
+    const serverMatch = effectiveKubeYaml.match(/server:\s*(https?:\/\/\S+)/)
+    const server = serverMatch?.[1] ?? ''
+    if (server.includes('.eks.amazonaws.com')) return 'AWS EKS'
+    if (server.includes('.azmk8s.io') || server.includes('.azure.com')) return 'Azure AKS'
+    if (server.includes('.googleapis.com') || server.includes('container.cloud.google.com'))
+      return 'Google GKE'
+    return null
+  }, [effectiveKubeYaml])
+
+  const suggestedName = useMemo(
+    () => kubeParsedName || `${provider}-${environment}-cluster`,
+    [kubeParsedName, provider, environment],
+  )
+
+  // Read kubeconfig file content into state for parsing (endpoint, cluster name, provider detection)
+  useEffect(() => {
+    if (!kubeFile) {
+      setKubeFileContent('')
+      return
+    }
+    readFileAsText(kubeFile)
+      .then(setKubeFileContent)
+      .catch(() => setKubeFileContent(''))
+  }, [kubeFile])
 
   useEffect(() => {
     return () => {
@@ -328,17 +370,16 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
       )
     if (provider === 'azure') return 'https://management.azure.com'
     if (provider === 'gke') return gkeEndpoint.trim() || 'https://container.googleapis.com'
-    // Extract server URL from kubeconfig YAML
+    // Extract server URL from kubeconfig YAML (textarea or uploaded file)
     if (provider === 'kubeconfig') {
-      const text = kubeText.trim()
-      if (text) {
-        const match = text.match(/server:\s*(https?:\/\/\S+)/)
+      if (effectiveKubeYaml) {
+        const match = effectiveKubeYaml.match(/server:\s*(https?:\/\/\S+)/)
         if (match?.[1]) return match[1]
       }
       return 'https://kubernetes.default.svc'
     }
     return 'https://kubernetes.default.svc'
-  }, [provider, minikubeEndpoint, awsRegion, awsEndpoint, gkeEndpoint, kubeText])
+  }, [provider, minikubeEndpoint, awsRegion, awsEndpoint, gkeEndpoint, effectiveKubeYaml])
 
   const endpointValid = useMemo(() => {
     try {
@@ -722,7 +763,9 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
               <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 text-sm">
                 <p className="text-[var(--color-text-secondary)]">
                   Provider:{' '}
-                  <span className="text-[var(--color-text-primary)]">{currentProvider.label}</span>
+                  <span className="text-[var(--color-text-primary)]">
+                    {kubeDetectedProvider ?? currentProvider.label}
+                  </span>
                 </p>
                 <p className="text-[var(--color-text-secondary)]">
                   Endpoint:{' '}
