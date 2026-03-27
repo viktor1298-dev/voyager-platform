@@ -260,10 +260,13 @@ const start = async () => {
 
     const k8sEnabled = process.env.K8S_ENABLED !== 'false'
 
+    // Always start sync jobs — they handle per-cluster errors gracefully and are needed
+    // for remotely-added clusters (kubeconfig, AWS, etc.) even without local K8s
+    startHealthSync()
+    startAlertEvaluator()
+    startMetricsHistoryCollector()
+
     if (k8sEnabled) {
-      startHealthSync()
-      startAlertEvaluator()
-      startMetricsHistoryCollector()
       startNodeSync()
       startEventSync()
       startDeploySmokeTest()
@@ -272,7 +275,7 @@ const start = async () => {
       )
     } else {
       app.log.info(
-        'K8s integration disabled (K8S_ENABLED=false) — skipping watchers and cluster sync jobs',
+        'K8s watchers disabled (K8S_ENABLED=false) — sync jobs running for registered clusters',
       )
     }
 
@@ -280,10 +283,10 @@ const start = async () => {
     for (const signal of signals) {
       process.on(signal, async () => {
         app.log.info(`${signal} received, shutting down gracefully`)
+        stopAlertEvaluator()
+        stopMetricsHistoryCollector()
         if (k8sEnabled) {
           stopAllWatchers()
-          stopAlertEvaluator()
-          stopMetricsHistoryCollector()
           stopNodeSync()
           stopEventSync()
           stopDeploySmokeTest()
