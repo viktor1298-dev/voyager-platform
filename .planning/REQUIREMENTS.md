@@ -15,26 +15,26 @@
 
 ### SSE Real-Time Streaming
 
-- [ ] **SSE-01**: Dedicated Fastify SSE endpoint streams live K8s metrics for short ranges (≤15m) at 10-15s resolution
-- [ ] **SSE-02**: MetricsStreamJob polls K8s metrics-server only for clusters with active SSE subscribers (reference-counted)
-- [ ] **SSE-03**: SSE connection auto-reconnects with exponential backoff on disconnect
-- [ ] **SSE-04**: Visibility-aware SSE lifecycle — pauses streaming when browser tab is hidden, resumes on focus
-- [ ] **SSE-05**: Client-side circular buffer (max 65 points) manages live data with time-based eviction
+- [x] **SSE-01**: Dedicated Fastify SSE endpoint streams live K8s metrics for short ranges (≤15m) at 10-15s resolution
+- [x] **SSE-02**: MetricsStreamJob polls K8s metrics-server only for clusters with active SSE subscribers (reference-counted)
+- [x] **SSE-03**: SSE connection auto-reconnects with exponential backoff on disconnect
+- [x] **SSE-04**: Visibility-aware SSE lifecycle — pauses streaming when browser tab is hidden, resumes on focus
+- [x] **SSE-05**: Client-side circular buffer (max 65 points) manages live data with time-based eviction
 
 ### Time Range Controls
 
-- [ ] **TIME-01**: Time range selector offers Grafana-standard presets: 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d
-- [ ] **TIME-02**: Custom absolute date/time range picker (from/to datetime) for arbitrary windows
-- [ ] **TIME-03**: Selected time range persisted in Zustand store (localStorage) across page navigations
-- [ ] **TIME-04**: Data source switches automatically — SSE for ≤15m, DB for ≥30m — seamless to user
+- [x] **TIME-01**: Time range selector offers Grafana-standard presets: 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d
+- [x] **TIME-02**: Custom absolute date/time range picker (from/to datetime) for arbitrary windows
+- [x] **TIME-03**: Selected time range persisted in Zustand store (localStorage) across page navigations
+- [x] **TIME-04**: Data source switches automatically — SSE for ≤15m, DB for ≥30m — seamless to user
 
 ### Synchronized Visualization
 
-- [ ] **VIZ-01**: 4 panels (CPU, Memory, Network, Pods) display synchronized crosshair — hover one, all show same timestamp
-- [ ] **VIZ-02**: Custom crosshair cursor renders as vertical line across full chart height with timestamp label
-- [ ] **VIZ-03**: Brush zoom — user can drag-to-select a time region to zoom into that range
-- [ ] **VIZ-04**: Threshold reference lines on CPU/Memory panels (85% critical red, 65% warning yellow)
-- [ ] **VIZ-05**: Panel fullscreen expand — click to expand any panel to full-width detail view
+- [x] **VIZ-01**: 4 panels (CPU, Memory, Network, Pods) display synchronized crosshair — hover one, all show same timestamp
+- [x] **VIZ-02**: Custom crosshair cursor renders as vertical line across full chart height with timestamp label
+- [x] **VIZ-03**: Brush zoom — user can drag-to-select a time region to zoom into that range
+- [x] **VIZ-04**: Threshold reference lines on CPU/Memory panels (85% critical red, 65% warning yellow)
+- [x] **VIZ-05**: Panel fullscreen expand — click to expand any panel to full-width detail view
 
 ### Grafana-Style Visual Design
 
@@ -90,20 +90,20 @@
 | PIPE-03 | Phase 1 | Pending |
 | PIPE-04 | Phase 1 | Pending |
 | PIPE-05 | Phase 1 | Pending |
-| SSE-01 | Phase 2 | Pending |
-| SSE-02 | Phase 2 | Pending |
-| SSE-03 | Phase 2 | Pending |
-| SSE-04 | Phase 2 | Pending |
-| SSE-05 | Phase 2 | Pending |
-| TIME-01 | Phase 3 | Pending |
-| TIME-02 | Phase 3 | Pending |
-| TIME-03 | Phase 3 | Pending |
-| TIME-04 | Phase 3 | Pending |
-| VIZ-01 | Phase 4 | Pending |
-| VIZ-02 | Phase 4 | Pending |
-| VIZ-03 | Phase 4 | Pending |
-| VIZ-04 | Phase 4 | Pending |
-| VIZ-05 | Phase 4 | Pending |
+| SSE-01 | Phase 2 | Complete |
+| SSE-02 | Phase 2 | Complete |
+| SSE-03 | Phase 2 | Complete |
+| SSE-04 | Phase 2 | Complete |
+| SSE-05 | Phase 2 | Complete |
+| TIME-01 | Phase 3 | Complete |
+| TIME-02 | Phase 3 | Complete |
+| TIME-03 | Phase 3 | Complete |
+| TIME-04 | Phase 3 | Complete |
+| VIZ-01 | Phase 4 | Complete |
+| VIZ-02 | Phase 4 | Complete |
+| VIZ-03 | Phase 4 | Complete |
+| VIZ-04 | Phase 4 | Complete |
+| VIZ-05 | Phase 4 | Complete |
 | STYLE-01 | Phase 5 | Pending |
 | STYLE-02 | Phase 5 | Pending |
 | STYLE-03 | Phase 5 | Pending |
