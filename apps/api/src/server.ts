@@ -3,6 +3,7 @@
 import compress from '@fastify/compress'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
+import websocket from '@fastify/websocket'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
@@ -33,6 +34,7 @@ import { type AppRouter, appRouter } from './routers/index.js'
 import { registerAiStreamRoute } from './routes/ai-stream.js'
 import { registerMcpRoute } from './routes/mcp.js'
 import { registerMetricsStreamRoute } from './routes/metrics-stream.js'
+import { registerPodTerminalRoute } from './routes/pod-terminal.js'
 import { registerResourceStreamRoute } from './routes/resource-stream.js'
 import { resourceWatchManager } from './lib/resource-watch-manager.js'
 import { createContext } from './trpc.js'
@@ -68,6 +70,9 @@ app.register(cors, {
   origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
   credentials: true,
 })
+
+// WebSocket support — must be registered before WebSocket routes
+await app.register(websocket)
 
 app.addHook('onRequest', async (request, reply) => {
   if (!shouldRequireAuth(request.method, request.url)) {
@@ -242,6 +247,7 @@ app.setErrorHandler((error, _request, reply) => {
 await registerAiStreamRoute(app)
 await registerMcpRoute(app)
 await registerMetricsStreamRoute(app)
+await registerPodTerminalRoute(app)
 await registerResourceStreamRoute(app)
 
 app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
