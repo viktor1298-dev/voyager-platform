@@ -153,10 +153,19 @@ Plans:
   12. Resource quotas dashboard — namespace usage vs limits
   13. All existing tabs updated to Lens-inspired design with live data
   14. `pnpm build` and `pnpm typecheck` pass with 0 errors
-**Plans:** 0 plans
+**Plans:** 10 plans
 
 Plans:
-(none yet)
+- [ ] 09-01-PLAN.md -- Foundation: dependencies, CSS tokens, animation variants, YamlViewer, universal YAML router
+- [ ] 09-02-PLAN.md -- GroupedTabBar extension, ActionToolbar, confirmation dialogs, PortForwardCopy
+- [ ] 09-03-PLAN.md -- ResourceDiff component, YAML+Diff tabs on all 13 resource pages
+- [ ] 09-04-PLAN.md -- Workload mutations (restart/scale/delete) backend + ActionToolbar wiring
+- [ ] 09-05-PLAN.md -- Pod terminal: WebSocket backend + xterm.js TerminalDrawer frontend
+- [ ] 09-06-PLAN.md -- Live log streaming: SSE backend + LogViewer follow mode enhancement
+- [ ] 09-07-PLAN.md -- Helm releases + CRD browser: backend routers + frontend pages
+- [ ] 09-08-PLAN.md -- RBAC viewer + Network Policies + Resource Quotas: backend routers + frontend pages
+- [ ] 09-09-PLAN.md -- Topology map + Network Policy graph: React Flow visualizations
+- [ ] 09-10-PLAN.md -- Events timeline swim lanes + Pod Exec button wiring
 
 ## Progress
 
@@ -172,4 +181,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9
 | 5. GitHub Protection | 1/1 | Complete | 2026-03-26 |
 | 7. Performance Optimization | 1/1 | Complete | 2026-03-28 |
 | 8. Resource Explorer UX Overhaul | 0/8 | In Progress | - |
-| 9. Lens-Inspired Power Features | 0/? | Not Started | - |
+| 9. Lens-Inspired Power Features | 0/10 | Not Started | - |
