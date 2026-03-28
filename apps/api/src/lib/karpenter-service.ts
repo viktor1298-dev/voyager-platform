@@ -4,6 +4,7 @@ import { type Database, karpenterCache } from '@voyager/db'
 import type {
   KarpenterEC2NodeClass,
   KarpenterMetrics,
+  KarpenterNodeClaim,
   KarpenterNodePool,
   KarpenterTopology,
 } from '@voyager/types'
@@ -89,7 +90,12 @@ const KARPENTER_CACHE_TTL_MS = Number.parseInt(
   10,
 )
 
-type KarpenterCacheDataType = 'node-pools' | 'ec2-node-classes' | 'metrics' | 'topology'
+type KarpenterCacheDataType =
+  | 'node-pools'
+  | 'node-claims'
+  | 'ec2-node-classes'
+  | 'metrics'
+  | 'topology'
 
 export class KarpenterService {
   constructor(
@@ -245,6 +251,82 @@ export class KarpenterService {
     return result
   }
 
+  async listNodeClaims(clusterId: string): Promise<KarpenterNodeClaim[]> {
+    const cached = await this.getCached<KarpenterNodeClaim[]>(clusterId, 'node-claims')
+    if (cached) return cached
+
+    const kc = await this.kubeConfigGetter(clusterId)
+    const customObjects = this.customObjectsClientFactory(kc)
+
+    const res = await customObjects.listClusterCustomObject({
+      group: KARPENTER_CRD.nodeClaims.group,
+      version: KARPENTER_CRD.nodeClaims.version,
+      plural: KARPENTER_CRD.nodeClaims.plural,
+    })
+
+    const result = asK8sList(res).items.map((item) => {
+      const metadata = (item.metadata as Record<string, unknown> | undefined) ?? {}
+      const labels = (metadata.labels as Record<string, string> | undefined) ?? {}
+      const spec = (item.spec as Record<string, unknown> | undefined) ?? {}
+      const status = (item.status as Record<string, unknown> | undefined) ?? {}
+
+      const specResources = (spec.resources as Record<string, unknown> | undefined) ?? {}
+      const specRequests = (specResources.requests as Record<string, unknown> | undefined) ?? {}
+      const statusAllocatable = (status.allocatable as Record<string, unknown> | undefined) ?? {}
+      const statusCapacity = (status.capacity as Record<string, unknown> | undefined) ?? {}
+
+      const rawRequirements = Array.isArray(spec.requirements) ? spec.requirements : []
+
+      return {
+        name: typeof metadata.name === 'string' ? metadata.name : 'unknown',
+        nodePoolName:
+          typeof labels[KARPENTER_LABELS.nodePool] === 'string'
+            ? labels[KARPENTER_LABELS.nodePool]
+            : null,
+        instanceType:
+          typeof labels['node.kubernetes.io/instance-type'] === 'string'
+            ? labels['node.kubernetes.io/instance-type']
+            : null,
+        capacityType:
+          typeof labels['karpenter.sh/capacity-type'] === 'string'
+            ? labels['karpenter.sh/capacity-type']
+            : null,
+        zone:
+          typeof labels['topology.kubernetes.io/zone'] === 'string'
+            ? labels['topology.kubernetes.io/zone']
+            : null,
+        nodeName: typeof status.nodeName === 'string' ? status.nodeName : null,
+        providerID: typeof status.providerID === 'string' ? status.providerID : null,
+        imageID: typeof status.imageID === 'string' ? status.imageID : null,
+        expireAfter: typeof spec.expireAfter === 'string' ? spec.expireAfter : null,
+        resources: {
+          requests: Object.fromEntries(
+            Object.entries(specRequests).map(([key, value]) => [key, String(value)]),
+          ),
+          allocatable: Object.fromEntries(
+            Object.entries(statusAllocatable).map(([key, value]) => [key, String(value)]),
+          ),
+          capacity: Object.fromEntries(
+            Object.entries(statusCapacity).map(([key, value]) => [key, String(value)]),
+          ),
+        },
+        requirements: rawRequirements
+          .filter((req): req is Record<string, unknown> => typeof req === 'object' && req !== null)
+          .map((req) => ({
+            key: typeof req.key === 'string' ? req.key : 'unknown',
+            operator: typeof req.operator === 'string' ? req.operator : 'unknown',
+            values: Array.isArray(req.values)
+              ? req.values.filter((v): v is string => typeof v === 'string')
+              : [],
+          })),
+        conditions: mapConditions(status.conditions),
+      }
+    })
+
+    await this.setCached(clusterId, 'node-claims', result)
+    return result
+  }
+
   async listEC2NodeClasses(clusterId: string): Promise<KarpenterEC2NodeClass[]> {
     const cached = await this.getCached<KarpenterEC2NodeClass[]>(clusterId, 'ec2-node-classes')
     if (cached) return cached
@@ -301,6 +383,50 @@ export class KarpenterService {
               (term): term is Record<string, unknown> => typeof term === 'object',
             )
           : [],
+        blockDeviceMappings: Array.isArray(spec.blockDeviceMappings)
+          ? spec.blockDeviceMappings
+              .filter((m): m is Record<string, unknown> => typeof m === 'object' && m !== null)
+              .map((mapping) => {
+                const ebs =
+                  typeof mapping.ebs === 'object' && mapping.ebs !== null
+                    ? (mapping.ebs as Record<string, unknown>)
+                    : {}
+                return {
+                  deviceName:
+                    typeof mapping.deviceName === 'string' ? mapping.deviceName : 'unknown',
+                  ebs: {
+                    volumeSize: typeof ebs.volumeSize === 'string' ? ebs.volumeSize : null,
+                    volumeType: typeof ebs.volumeType === 'string' ? ebs.volumeType : null,
+                    deleteOnTermination:
+                      typeof ebs.deleteOnTermination === 'boolean' ? ebs.deleteOnTermination : null,
+                  },
+                }
+              })
+          : [],
+        metadataOptions:
+          typeof spec.metadataOptions === 'object' && spec.metadataOptions !== null
+            ? (() => {
+                const mo = spec.metadataOptions as Record<string, unknown>
+                return {
+                  httpEndpoint: typeof mo.httpEndpoint === 'string' ? mo.httpEndpoint : null,
+                  httpTokens: typeof mo.httpTokens === 'string' ? mo.httpTokens : null,
+                  httpPutResponseHopLimit:
+                    typeof mo.httpPutResponseHopLimit === 'number'
+                      ? mo.httpPutResponseHopLimit
+                      : null,
+                  httpProtocolIPv6:
+                    typeof mo.httpProtocolIPv6 === 'string' ? mo.httpProtocolIPv6 : null,
+                }
+              })()
+            : null,
+        tags:
+          typeof spec.tags === 'object' && spec.tags !== null
+            ? Object.fromEntries(
+                Object.entries(spec.tags as Record<string, unknown>).filter(
+                  (entry): entry is [string, string] => typeof entry[1] === 'string',
+                ),
+              )
+            : {},
         status: {
           subnets: subnets.map((subnet) => ({
             id: typeof subnet.id === 'string' ? subnet.id : 'unknown',

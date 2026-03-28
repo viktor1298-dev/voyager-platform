@@ -4,6 +4,11 @@ export const KARPENTER_CRD = {
     version: 'v1',
     plural: 'nodepools',
   },
+  nodeClaims: {
+    group: 'karpenter.sh',
+    version: 'v1',
+    plural: 'nodeclaims',
+  },
   ec2NodeClasses: {
     group: 'karpenter.k8s.aws',
     version: 'v1',

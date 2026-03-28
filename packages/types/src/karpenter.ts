@@ -37,6 +37,33 @@ export const karpenterNodePoolSchema = z.object({
   }),
 })
 
+export const karpenterNodeClaimSchema = z.object({
+  name: z.string(),
+  nodePoolName: z.string().nullable(),
+  instanceType: z.string().nullable(),
+  capacityType: z.string().nullable(),
+  zone: z.string().nullable(),
+  nodeName: z.string().nullable(),
+  providerID: z.string().nullable(),
+  imageID: z.string().nullable(),
+  expireAfter: z.string().nullable(),
+  resources: z.object({
+    requests: z.record(z.string(), z.string()).default({}),
+    allocatable: z.record(z.string(), z.string()).default({}),
+    capacity: z.record(z.string(), z.string()).default({}),
+  }),
+  requirements: z
+    .array(
+      z.object({
+        key: z.string(),
+        operator: z.string(),
+        values: z.array(z.string()).default([]),
+      }),
+    )
+    .default([]),
+  conditions: z.array(karpenterConditionSchema),
+})
+
 export const karpenterEC2NodeClassSchema = z.object({
   name: z.string(),
   amiFamily: z.string().nullable(),
@@ -45,6 +72,30 @@ export const karpenterEC2NodeClassSchema = z.object({
   subnetSelectorTerms: z.array(z.record(z.string(), z.unknown())).default([]),
   securityGroupSelectorTerms: z.array(z.record(z.string(), z.unknown())).default([]),
   amiSelectorTerms: z.array(z.record(z.string(), z.unknown())).default([]),
+  blockDeviceMappings: z
+    .array(
+      z.object({
+        deviceName: z.string(),
+        ebs: z
+          .object({
+            volumeSize: z.string().nullable(),
+            volumeType: z.string().nullable(),
+            deleteOnTermination: z.boolean().nullable(),
+          })
+          .default({ volumeSize: null, volumeType: null, deleteOnTermination: null }),
+      }),
+    )
+    .default([]),
+  metadataOptions: z
+    .object({
+      httpEndpoint: z.string().nullable(),
+      httpTokens: z.string().nullable(),
+      httpPutResponseHopLimit: z.number().nullable(),
+      httpProtocolIPv6: z.string().nullable(),
+    })
+    .nullable()
+    .default(null),
+  tags: z.record(z.string(), z.string()).default({}),
   status: z.object({
     subnets: z.array(z.object({ id: z.string(), zone: z.string().nullable() })).default([]),
     securityGroups: z.array(z.object({ id: z.string(), name: z.string().nullable() })).default([]),
@@ -77,6 +128,7 @@ export const karpenterTopologySchema = z.object({
 })
 
 export type KarpenterNodePool = z.infer<typeof karpenterNodePoolSchema>
+export type KarpenterNodeClaim = z.infer<typeof karpenterNodeClaimSchema>
 export type KarpenterEC2NodeClass = z.infer<typeof karpenterEC2NodeClassSchema>
 export type KarpenterMetrics = z.infer<typeof karpenterMetricsSchema>
 export type KarpenterTopology = z.infer<typeof karpenterTopologySchema>

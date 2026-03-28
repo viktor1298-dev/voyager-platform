@@ -1,6 +1,7 @@
 import {
   karpenterEC2NodeClassSchema,
   karpenterMetricsSchema,
+  karpenterNodeClaimSchema,
   karpenterNodePoolSchema,
   karpenterTopologySchema,
 } from '@voyager/types'
@@ -25,6 +26,22 @@ export const karpenterRouter = router({
     .query(async ({ ctx, input }) => {
       const service = createKarpenterService(ctx.db)
       return service.listNodePools(input.clusterId)
+    }),
+
+  listNodeClaims: authorizedProcedure('cluster', 'viewer')
+    .meta({
+      openapi: {
+        method: 'GET',
+        path: '/api/karpenter/{clusterId}/nodeclaims',
+        protect: true,
+        tags: ['karpenter'],
+      },
+    })
+    .input(clusterInputSchema)
+    .output(z.array(karpenterNodeClaimSchema))
+    .query(async ({ ctx, input }) => {
+      const service = createKarpenterService(ctx.db)
+      return service.listNodeClaims(input.clusterId)
     }),
 
   listEC2NodeClasses: authorizedProcedure('cluster', 'viewer')
