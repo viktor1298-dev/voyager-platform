@@ -104,7 +104,9 @@ Plans:
   3. Each panel shows a skeleton shimmer during loading (not a full-page spinner)
   4. Empty and error states show an actionable message with a retry button per panel
   5. Charts do not remount/flicker when new data arrives (key-prop bug fixed)
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 06-01-PLAN.md — Freshness badge, pause-on-hover, per-panel skeleton/error/empty states, key-prop verification
 **UI hint**: yes
 
 ### Phase 7: Performance Optimization
@@ -129,5 +131,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. Time Range Controls & Data Source Wiring | 2/2 | Complete |  |
 | 4. Synchronized Crosshair | 1/1 | Complete | 2026-03-28 |
 | 5. Grafana Dark Panel Design | 0/1 | Not started | - |
-| 6. Data Freshness & UX Polish | 0/TBD | Not started | - |
+| 6. Data Freshness & UX Polish | 0/1 | Not started | - |
 | 7. Performance Optimization | 0/TBD | Not started | - |
