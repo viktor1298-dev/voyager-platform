@@ -1,10 +1,10 @@
 'use client'
 
-import { CircleCheck, HardDrive, Settings } from 'lucide-react'
+import { CircleCheck, HardDrive, Settings, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { ConditionsList, DetailTabs, ExpandableTableRow, TagPills } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
+import { ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -37,41 +37,81 @@ function phaseColor(phase: string) {
   return 'var(--color-status-error)'
 }
 
+function PVCSummary({ pvc }: { pvc: PVCData }) {
+  const color = phaseColor(pvc.phase)
+
+  return (
+    <div className="flex items-center gap-3 w-full min-w-0">
+      <HardDrive className="h-4 w-4 text-[var(--color-accent)] shrink-0" />
+      <span className="flex-1 min-w-0 text-[13px] font-mono font-medium text-[var(--color-text-primary)] truncate">
+        {pvc.name}
+      </span>
+      <span
+        className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
+        style={{
+          color,
+          background: `color-mix(in srgb, ${color} 15%, transparent)`,
+        }}
+      >
+        {pvc.phase}
+      </span>
+      <span className="text-xs font-mono text-[var(--color-accent)] shrink-0">{pvc.capacity}</span>
+      <span className="text-xs font-mono text-[var(--color-text-secondary)] shrink-0">
+        {pvc.storageClass}
+      </span>
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0 hidden sm:inline">
+        {pvc.accessModes.join(', ')}
+      </span>
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">{pvc.age}</span>
+    </div>
+  )
+}
+
 function PVCExpandedDetail({ pvc }: { pvc: PVCData }) {
   const tabs = [
     {
-      id: 'status',
-      label: 'Status',
-      icon: <CircleCheck className="h-3.5 w-3.5" />,
+      id: 'volume',
+      label: 'Volume',
+      icon: <HardDrive className="h-3.5 w-3.5" />,
       content: (
         <div className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-1.5 text-[11px] font-mono">
-          <span className="text-[var(--color-text-muted)]">Phase</span>
-          <span style={{ color: phaseColor(pvc.phase) }} className="font-bold">
-            {pvc.phase}
-          </span>
-          <span className="text-[var(--color-text-muted)]">Access Modes</span>
-          <span className="text-[var(--color-text-primary)]">
-            {pvc.accessModes.join(', ') || '—'}
-          </span>
           <span className="text-[var(--color-text-muted)]">Volume Name</span>
           <span className="text-[var(--color-accent)]">{pvc.volumeName ?? '—'}</span>
+          <span className="text-[var(--color-text-muted)]">Capacity</span>
+          <span className="text-[var(--color-text-primary)]">{pvc.capacity}</span>
+          <span className="text-[var(--color-text-muted)]">Requested</span>
+          <span className="text-[var(--color-accent)] font-bold">{pvc.requestedStorage}</span>
+          <span className="text-[var(--color-text-muted)]">Storage Class</span>
+          <span className="text-[var(--color-text-primary)]">{pvc.storageClass}</span>
           <span className="text-[var(--color-text-muted)]">Volume Mode</span>
           <span className="text-[var(--color-text-primary)]">{pvc.volumeMode}</span>
         </div>
       ),
     },
     {
-      id: 'capacity',
-      label: 'Capacity',
-      icon: <HardDrive className="h-3.5 w-3.5" />,
+      id: 'status',
+      label: 'Status',
+      icon: <CircleCheck className="h-3.5 w-3.5" />,
       content: (
-        <div className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-1.5 text-[11px] font-mono">
-          <span className="text-[var(--color-text-muted)]">Requested</span>
-          <span className="text-[var(--color-accent)] font-bold">{pvc.requestedStorage}</span>
-          <span className="text-[var(--color-text-muted)]">Capacity</span>
-          <span className="text-[var(--color-text-primary)]">{pvc.capacity}</span>
-          <span className="text-[var(--color-text-muted)]">Storage Class</span>
-          <span className="text-[var(--color-text-primary)]">{pvc.storageClass}</span>
+        <div className="space-y-3">
+          <div className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-1.5 text-[11px] font-mono">
+            <span className="text-[var(--color-text-muted)]">Phase</span>
+            <span style={{ color: phaseColor(pvc.phase) }} className="font-bold">
+              {pvc.phase}
+            </span>
+            <span className="text-[var(--color-text-muted)]">Access Modes</span>
+            <span className="text-[var(--color-text-primary)]">
+              {pvc.accessModes.join(', ') || '—'}
+            </span>
+          </div>
+          {pvc.conditions.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+                Conditions
+              </p>
+              <ConditionsList conditions={pvc.conditions} />
+            </div>
+          )}
         </div>
       ),
     },
@@ -106,13 +146,8 @@ function PVCExpandedDetail({ pvc }: { pvc: PVCData }) {
               </div>
             </div>
           )}
-          {pvc.conditions.length > 0 && (
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
-                Conditions
-              </p>
-              <ConditionsList conditions={pvc.conditions} />
-            </div>
+          {Object.keys(pvc.labels).length === 0 && pvc.finalizers.length === 0 && (
+            <p className="text-[11px] text-[var(--color-text-muted)]">No additional config.</p>
           )}
         </div>
       ),
@@ -137,83 +172,33 @@ export default function PVCsPage() {
     { clusterId: resolvedId },
     { enabled: hasCredentials, refetchInterval: 30000 },
   )
-  const pvcs = (query.data ?? []) as PVCData[]
-
-  if (!hasCredentials)
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-        <p className="text-sm font-medium">Live data unavailable</p>
-      </div>
-    )
-  if (query.isLoading)
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    )
-  if (pvcs.length === 0)
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-        <p className="text-sm font-medium text-[var(--color-text-muted)]">No PVCs found</p>
-      </div>
-    )
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-      <table className="w-full text-[13px]">
-        <thead>
-          <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-            <th className="text-left px-4 py-2.5">Name</th>
-            <th className="text-left px-3 py-2.5">Namespace</th>
-            <th className="text-left px-3 py-2.5">Status</th>
-            <th className="text-left px-3 py-2.5">Capacity</th>
-            <th className="text-left px-3 py-2.5">Storage Class</th>
-            <th className="text-left px-3 py-2.5">Age</th>
-            <th className="w-8" />
-          </tr>
-        </thead>
-        <tbody>
-          {pvcs.map((pvc) => (
-            <ExpandableTableRow
-              key={`${pvc.namespace}/${pvc.name}`}
-              columnCount={6}
-              cells={
-                <>
-                  <td className="px-4 py-2.5 font-mono font-medium text-[var(--color-text-primary)]">
-                    {pvc.name}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                    {pvc.namespace}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <span
-                      className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
-                      style={{
-                        color: phaseColor(pvc.phase),
-                        background: `color-mix(in srgb, ${phaseColor(pvc.phase)} 15%, transparent)`,
-                      }}
-                    >
-                      {pvc.phase}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-accent)]">
-                    {pvc.capacity}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-secondary)]">
-                    {pvc.storageClass}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-dim)]">
-                    {pvc.age}
-                  </td>
-                </>
-              }
-              detail={<PVCExpandedDetail pvc={pvc} />}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ResourcePageScaffold<PVCData>
+      title="PVCs"
+      icon={<HardDrive className="h-10 w-10 text-[var(--color-text-dim)]" />}
+      queryResult={{
+        data: hasCredentials ? ((query.data ?? []) as PVCData[]) : undefined,
+        isLoading: hasCredentials ? query.isLoading : false,
+        error: query.error,
+      }}
+      getNamespace={(pvc) => pvc.namespace}
+      getKey={(pvc) => `${pvc.namespace}/${pvc.name}`}
+      filterFn={(pvc, q) =>
+        pvc.name.toLowerCase().includes(q) ||
+        pvc.namespace.toLowerCase().includes(q) ||
+        pvc.phase.toLowerCase().includes(q) ||
+        pvc.storageClass.toLowerCase().includes(q)
+      }
+      renderSummary={(pvc) => <PVCSummary pvc={pvc} />}
+      renderDetail={(pvc) => <PVCExpandedDetail pvc={pvc} />}
+      searchPlaceholder="Search PVCs..."
+      emptyMessage={hasCredentials ? 'No PVCs found' : 'Live data unavailable'}
+      emptyDescription={
+        hasCredentials
+          ? 'PVCs will appear here when available in the cluster.'
+          : 'Connect cluster credentials to view PVCs.'
+      }
+    />
   )
 }

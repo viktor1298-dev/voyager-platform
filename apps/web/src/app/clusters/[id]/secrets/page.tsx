@@ -1,9 +1,10 @@
 'use client'
 
+import { Key, Lock, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { ExpandableTableRow, TagPills } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { DetailTabs, TagPills } from '@/components/expandable'
+import { ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -25,48 +26,86 @@ function secretTypeColor(type: string) {
   return 'var(--color-text-dim)'
 }
 
-function SecretExpanded({ secret }: { secret: SecretData }) {
+function SecretSummary({ secret }: { secret: SecretData }) {
+  const typeLabel = secret.type.replace('kubernetes.io/', '')
+  const color = secretTypeColor(secret.type)
+
   return (
-    <div className="p-4 space-y-3">
-      <div className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[11px] font-mono">
-        <span className="text-[var(--color-text-muted)]">Type</span>
-        <span className="text-[var(--color-text-primary)]">{secret.type}</span>
-      </div>
-      {secret.dataKeyNames.length > 0 && (
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
-            Data Keys ({secret.dataKeysCount})
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {secret.dataKeyNames.map((key) => (
-              <span
-                key={key}
-                className="px-2 py-0.5 bg-white/[0.03] border border-[var(--color-border)]/40 rounded-md font-mono text-[10px] text-[var(--color-accent)]"
-              >
-                {key}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      {Object.keys(secret.labels).length > 0 && (
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
-            Labels
-          </p>
-          <TagPills tags={secret.labels} />
-        </div>
-      )}
-      {Object.keys(secret.annotations).length > 0 && (
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
-            Annotations
-          </p>
-          <TagPills tags={secret.annotations} />
-        </div>
-      )}
+    <div className="flex items-center gap-3 w-full min-w-0">
+      <Lock className="h-4 w-4 text-[var(--color-accent)] shrink-0" />
+      <span className="flex-1 min-w-0 text-[13px] font-mono font-medium text-[var(--color-text-primary)] truncate">
+        {secret.name}
+      </span>
+      <span
+        className="text-xs font-mono px-1.5 py-0.5 rounded shrink-0"
+        style={{
+          color,
+          background: `color-mix(in srgb, ${color} 12%, transparent)`,
+        }}
+      >
+        {typeLabel}
+      </span>
+      <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-[var(--color-accent)]/10 text-[var(--color-accent)] shrink-0">
+        {secret.dataKeysCount} key{secret.dataKeysCount !== 1 ? 's' : ''}
+      </span>
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">{secret.age}</span>
     </div>
   )
+}
+
+function SecretExpandedDetail({ secret }: { secret: SecretData }) {
+  const tabs = [
+    {
+      id: 'keys',
+      label: 'Data Keys',
+      icon: <Key className="h-3.5 w-3.5" />,
+      content: (
+        <div className="space-y-1.5">
+          {secret.dataKeyNames.length > 0 ? (
+            secret.dataKeyNames.map((key) => (
+              <div
+                key={key}
+                className="flex items-center justify-between rounded-md border border-[var(--color-border)]/40 px-3 py-1.5 text-[11px] font-mono"
+              >
+                <span className="text-[var(--color-accent)] font-bold">{key}</span>
+                <span className="text-[var(--color-text-dim)]">***</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-[11px] text-[var(--color-text-muted)]">No data keys.</p>
+          )}
+          <div className="mt-2 grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[11px] font-mono">
+            <span className="text-[var(--color-text-muted)]">Type</span>
+            <span className="text-[var(--color-text-primary)]">{secret.type}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'labels',
+      label: 'Labels',
+      icon: <Tag className="h-3.5 w-3.5" />,
+      content:
+        Object.keys(secret.labels).length > 0 ? (
+          <TagPills tags={secret.labels} />
+        ) : (
+          <p className="text-[11px] text-[var(--color-text-muted)]">No labels.</p>
+        ),
+    },
+    {
+      id: 'annotations',
+      label: 'Annotations',
+      icon: <Tag className="h-3.5 w-3.5" />,
+      content:
+        Object.keys(secret.annotations).length > 0 ? (
+          <TagPills tags={secret.annotations} />
+        ) : (
+          <p className="text-[11px] text-[var(--color-text-muted)]">No annotations.</p>
+        ),
+    },
+  ]
+
+  return <DetailTabs id={`secret-${secret.namespace}-${secret.name}`} tabs={tabs} />
 }
 
 export default function SecretsPage() {
@@ -84,79 +123,32 @@ export default function SecretsPage() {
     { clusterId: resolvedId },
     { enabled: hasCredentials, refetchInterval: 30000 },
   )
-  const secrets = (query.data ?? []) as SecretData[]
-
-  if (!hasCredentials)
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-        <p className="text-sm font-medium">Live data unavailable</p>
-      </div>
-    )
-  if (query.isLoading)
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    )
-  if (secrets.length === 0)
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-        <p className="text-sm font-medium text-[var(--color-text-muted)]">No secrets found</p>
-      </div>
-    )
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-      <table className="w-full text-[13px]">
-        <thead>
-          <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-            <th className="text-left px-4 py-2.5">Name</th>
-            <th className="text-left px-3 py-2.5">Namespace</th>
-            <th className="text-left px-3 py-2.5">Type</th>
-            <th className="text-left px-3 py-2.5">Data Keys</th>
-            <th className="text-left px-3 py-2.5">Age</th>
-            <th className="w-8" />
-          </tr>
-        </thead>
-        <tbody>
-          {secrets.map((s) => (
-            <ExpandableTableRow
-              key={`${s.namespace}/${s.name}`}
-              columnCount={5}
-              cells={
-                <>
-                  <td className="px-4 py-2.5 font-mono font-medium text-[var(--color-text-primary)]">
-                    {s.name}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                    {s.namespace}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <span
-                      className="text-xs font-mono px-1.5 py-0.5 rounded"
-                      style={{
-                        color: secretTypeColor(s.type),
-                        background: `color-mix(in srgb, ${secretTypeColor(s.type)} 12%, transparent)`,
-                      }}
-                    >
-                      {s.type.replace('kubernetes.io/', '')}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-secondary)]">
-                    {s.dataKeysCount}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-dim)]">
-                    {s.age}
-                  </td>
-                </>
-              }
-              detail={<SecretExpanded secret={s} />}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ResourcePageScaffold<SecretData>
+      title="Secrets"
+      icon={<Lock className="h-10 w-10 text-[var(--color-text-dim)]" />}
+      queryResult={{
+        data: hasCredentials ? ((query.data ?? []) as SecretData[]) : undefined,
+        isLoading: hasCredentials ? query.isLoading : false,
+        error: query.error,
+      }}
+      getNamespace={(s) => s.namespace}
+      getKey={(s) => `${s.namespace}/${s.name}`}
+      filterFn={(s, q) =>
+        s.name.toLowerCase().includes(q) ||
+        s.namespace.toLowerCase().includes(q) ||
+        s.type.toLowerCase().includes(q)
+      }
+      renderSummary={(s) => <SecretSummary secret={s} />}
+      renderDetail={(s) => <SecretExpandedDetail secret={s} />}
+      searchPlaceholder="Search secrets..."
+      emptyMessage={hasCredentials ? 'No secrets found' : 'Live data unavailable'}
+      emptyDescription={
+        hasCredentials
+          ? 'Secrets will appear here when available in the cluster.'
+          : 'Connect cluster credentials to view secrets.'
+      }
+    />
   )
 }
