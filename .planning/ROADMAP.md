@@ -106,7 +106,7 @@ Plans:
   5. Charts do not remount/flicker when new data arrives (key-prop bug fixed)
 **Plans:** 1 plan
 Plans:
-- [ ] 06-01-PLAN.md — Freshness badge, pause-on-hover, per-panel skeleton/error/empty states, key-prop verification
+- [x] 06-01-PLAN.md — Freshness badge, pause-on-hover, per-panel skeleton/error/empty states, key-prop verification
 **UI hint**: yes
 
 ### Phase 7: Performance Optimization

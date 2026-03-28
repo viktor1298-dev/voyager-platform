@@ -46,11 +46,11 @@
 
 ### Data Freshness & UX
 
-- [ ] **UX-01**: Data freshness badge shows 'Live' / '2m ago' / 'Stale' with color coding
-- [ ] **UX-02**: Pause-on-hover — auto-refresh freezes while user inspects tooltip, resumes on mouse leave
-- [ ] **UX-03**: Loading states use skeleton shimmer per panel (not full-page spinner)
-- [ ] **UX-04**: Empty/error states show actionable messages with retry button per panel
-- [ ] **UX-05**: Fix MetricsAreaChart key-prop remount bug (remove `data.length` from key)
+- [x] **UX-01**: Data freshness badge shows 'Live' / '2m ago' / 'Stale' with color coding
+- [x] **UX-02**: Pause-on-hover — auto-refresh freezes while user inspects tooltip, resumes on mouse leave
+- [x] **UX-03**: Loading states use skeleton shimmer per panel (not full-page spinner)
+- [x] **UX-04**: Empty/error states show actionable messages with retry button per panel
+- [x] **UX-05**: Fix MetricsAreaChart key-prop remount bug (remove `data.length` from key)
 
 ### Performance
 
@@ -109,11 +109,11 @@
 | STYLE-03 | Phase 5 | Complete |
 | STYLE-04 | Phase 5 | Complete |
 | STYLE-05 | Phase 5 | Complete |
-| UX-01 | Phase 6 | Pending |
-| UX-02 | Phase 6 | Pending |
-| UX-03 | Phase 6 | Pending |
-| UX-04 | Phase 6 | Pending |
-| UX-05 | Phase 6 | Pending |
+| UX-01 | Phase 6 | Complete |
+| UX-02 | Phase 6 | Complete |
+| UX-03 | Phase 6 | Complete |
+| UX-04 | Phase 6 | Complete |
+| UX-05 | Phase 6 | Complete |
 | PERF-01 | Phase 7 | Pending |
 | PERF-02 | Phase 7 | Pending |
 | PERF-03 | Phase 7 | Pending |
