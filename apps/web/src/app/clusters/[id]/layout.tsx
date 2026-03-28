@@ -20,7 +20,7 @@ const CLUSTER_TABS = [
   { id: 'events', label: 'Events', path: '/events' },
   { id: 'logs', label: 'Logs', path: '/logs' },
   { id: 'metrics', label: 'Metrics', path: '/metrics' },
-  { id: 'autoscaling', label: 'Autoscaling', path: '/autoscaling' },
+  { id: 'autoscaling', label: 'Karpenter', path: '/autoscaling' },
 ] as const
 
 // P3-014: providerIcon removed — replaced by ProviderLogo component with layoutId support
@@ -49,7 +49,8 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
         target.tagName === 'TEXTAREA' ||
         target.tagName === 'SELECT' ||
         target.isContentEditable
-      ) return
+      )
+        return
       // Skip if modifier keys are pressed
       if (e.metaKey || e.ctrlKey || e.altKey) return
 
@@ -104,11 +105,23 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
         <Breadcrumbs segmentLabels={{ [routeSegment]: 'Not Found' }} />
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="rounded-full bg-[var(--color-status-error)]/10 p-4 mb-4">
-            <svg className="h-8 w-8 text-[var(--color-status-error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="h-8 w-8 text-[var(--color-status-error)]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Cluster not found</h1>
+          <h1 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
+            Cluster not found
+          </h1>
           <p className="text-sm text-[var(--color-text-muted)] mb-6 max-w-md">
             The cluster you're looking for doesn't exist or you don't have permission to view it.
           </p>
@@ -126,9 +139,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
 
   return (
     <AppLayout>
-      <Breadcrumbs
-        segmentLabels={{ [routeSegment]: clusterName ?? 'Loading...' }}
-      />
+      <Breadcrumbs segmentLabels={{ [routeSegment]: clusterName ?? 'Loading...' }} />
 
       {/* Cluster Header */}
       <div
@@ -138,7 +149,10 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
         <div className="flex items-center gap-3 min-w-0">
           {/* P3-010: Shared element transition from cluster list icon */}
           <ProviderLogo
-            provider={((dbCluster.data as Record<string, unknown> | undefined)?.provider as string) ?? 'kubernetes'}
+            provider={
+              ((dbCluster.data as Record<string, unknown> | undefined)?.provider as string) ??
+              'kubernetes'
+            }
             size={20}
             layoutId={`cluster-icon-${clusterId}`}
           />
@@ -155,32 +169,38 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
                 </h1>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                   <span className="text-xs font-mono text-[var(--color-text-muted)]">
-                    {(dbCluster.data as Record<string, unknown> | undefined)?.provider as string ?? '—'}
+                    {((dbCluster.data as Record<string, unknown> | undefined)
+                      ?.provider as string) ?? '—'}
                   </span>
-                  {(dbCluster.data?.status as string | undefined) && (() => {
-                    const status = dbCluster.data?.status as string
-                    const isDisconnected = /disconnected|unreachable|error/i.test(status)
-                    return (
-                      <>
-                        <span className={`text-xs font-mono px-2 py-0.5 rounded-md border ${
-                          isDisconnected
-                            ? 'bg-[var(--color-status-error)]/10 text-[var(--color-status-error)] border-[var(--color-status-error)]/30'
-                            : 'bg-white/[0.05] text-[var(--color-text-secondary)] border-[var(--color-border)]'
-                        }`}>
-                          {status}
-                        </span>
-                        {isDisconnected && (
-                          <button
-                            type="button"
-                            onClick={() => router.push(`/clusters/${clusterRouteSegment}/settings`)}
-                            className="text-xs font-medium px-2 py-0.5 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/20 transition-colors"
+                  {(dbCluster.data?.status as string | undefined) &&
+                    (() => {
+                      const status = dbCluster.data?.status as string
+                      const isDisconnected = /disconnected|unreachable|error/i.test(status)
+                      return (
+                        <>
+                          <span
+                            className={`text-xs font-mono px-2 py-0.5 rounded-md border ${
+                              isDisconnected
+                                ? 'bg-[var(--color-status-error)]/10 text-[var(--color-status-error)] border-[var(--color-status-error)]/30'
+                                : 'bg-white/[0.05] text-[var(--color-text-secondary)] border-[var(--color-border)]'
+                            }`}
                           >
-                            Reconnect
-                          </button>
-                        )}
-                      </>
-                    )
-                  })()}
+                            {status}
+                          </span>
+                          {isDisconnected && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                router.push(`/clusters/${clusterRouteSegment}/settings`)
+                              }
+                              className="text-xs font-medium px-2 py-0.5 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/20 transition-colors"
+                            >
+                              Reconnect
+                            </button>
+                          )}
+                        </>
+                      )
+                    })()}
                 </div>
               </>
             )}
@@ -190,10 +210,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
 
       {/* 10-Tab Bar */}
       <div className="mb-3 border-b border-[var(--color-border)] overflow-x-auto">
-        <nav
-          className="flex items-end gap-0 min-w-max"
-          aria-label="Cluster tabs"
-        >
+        <nav className="flex items-end gap-0 min-w-max" aria-label="Cluster tabs">
           {CLUSTER_TABS.map((tab) => {
             const isActive = activeTab === tab.id
             const href = `/clusters/${clusterRouteSegment}${tab.path}`
