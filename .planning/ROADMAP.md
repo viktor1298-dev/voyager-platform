@@ -153,10 +153,19 @@ Plans:
   12. Resource quotas dashboard — namespace usage vs limits
   13. All existing tabs updated to Lens-inspired design with live data
   14. `pnpm build` and `pnpm typecheck` pass with 0 errors
-**Plans:** 0 plans
+**Plans:** 10 plans
 
 Plans:
-(none yet)
+- [x] 09-01-PLAN.md -- Foundation: Phase 9 dependencies, CSS tokens, animation variants, YamlViewer, universal YAML router
+- [ ] 09-02-PLAN.md
+- [ ] 09-03-PLAN.md
+- [ ] 09-04-PLAN.md
+- [ ] 09-05-PLAN.md
+- [ ] 09-06-PLAN.md
+- [ ] 09-07-PLAN.md
+- [ ] 09-08-PLAN.md
+- [ ] 09-09-PLAN.md
+- [ ] 09-10-PLAN.md
 
 ## Progress
 
@@ -171,5 +180,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9
 | 4. Push & Branch Cleanup | 2/2 | Complete | 2026-03-26 |
 | 5. GitHub Protection | 1/1 | Complete | 2026-03-26 |
 | 7. Performance Optimization | 1/1 | Complete | 2026-03-28 |
-| 8. Resource Explorer UX Overhaul | 0/8 | In Progress | - |
-| 9. Lens-Inspired Power Features | 0/? | Not Started | - |
+| 8. Resource Explorer UX Overhaul | 8/8 | Complete | 2026-03-28 |
+| 9. Lens-Inspired Power Features | 1/10 | In Progress | - |
