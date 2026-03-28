@@ -33,6 +33,7 @@ import { ssoRouter } from './sso.js'
 import { statefulSetsRouter } from './statefulsets.js'
 import { subscriptionsRouter } from './subscriptions.js'
 import { tokensRouter } from './tokens.js'
+import { topologyRouter } from './topology.js'
 import { usersRouter } from './users.js'
 import { webhooksRouter } from './webhooks.js'
 
@@ -69,6 +70,7 @@ export const appRouter = router({
   teams: teamsRouter,
   users: usersRouter,
   tokens: tokensRouter,
+  topology: topologyRouter,
   webhooks: webhooksRouter,
   services: servicesRouter,
   statefulSets: statefulSetsRouter,
