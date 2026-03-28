@@ -124,14 +124,10 @@ function getTickInterval(
   range: MetricsRange,
 ): number | 'preserveStartEnd' {
   switch (range) {
-    case '30s':
-    case '1m':
     case '5m':
       return Math.max(0, Math.floor(data.length / 4))
     case '1h':
-      return Math.max(1, Math.floor(data.length / 6))
     case '6h':
-      return Math.max(1, Math.floor(data.length / 6))
     case '24h':
       return Math.max(1, Math.floor(data.length / 6))
     case '7d':
