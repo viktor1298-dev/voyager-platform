@@ -1,16 +1,8 @@
 'use client'
 
 import { useId, useCallback, memo } from 'react'
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts'
+import { DebouncedResponsiveContainer } from './DebouncedResponsiveContainer'
 import type { MetricsRange } from './TimeRangeSelector'
 import { useCrosshairOptional } from './CrosshairProvider'
 import { CrosshairCursor } from './CrosshairCursor'
@@ -293,10 +285,14 @@ export function MetricsAreaChart({
   const crosshairSetPosition = crosshair?.setPosition
   const crosshairClear = crosshair?.clear
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleMouseMove = useCallback(
-    (state: { activeLabel?: string; chartX?: number }) => {
-      if (crosshairSetPosition && state.activeLabel) {
-        crosshairSetPosition(state.activeLabel, state.chartX ?? null)
+    (state: Record<string, any>) => {
+      if (crosshairSetPosition && state?.activeLabel != null) {
+        crosshairSetPosition(
+          String(state.activeLabel),
+          (state.activeCoordinate as { x?: number } | undefined)?.x ?? null,
+        )
       }
     },
     [crosshairSetPosition],
@@ -311,112 +307,116 @@ export function MetricsAreaChart({
       role="img"
       aria-label={`${activeMetrics.map((k) => METRIC_CONFIG[k].label).join(', ')} chart`}
     >
-      <ResponsiveContainer width="100%" height={height}>
-        <AreaChart
-          key={`${range}-${activeMetrics.join('-')}`}
-          data={chartData}
-          margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-        >
-          <defs>
+      <DebouncedResponsiveContainer width="100%" height={height}>
+        {({ width: containerWidth, height: containerHeight }) => (
+          <AreaChart
+            key={`${range}-${activeMetrics.join('-')}`}
+            width={containerWidth}
+            height={containerHeight}
+            data={chartData}
+            margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+          >
+            <defs>
+              {activeMetrics.map((key) => {
+                const cfg = METRIC_CONFIG[key]
+                const gradId = `${chartId}-${cfg.gradientId}`
+                return (
+                  <linearGradient key={gradId} id={gradId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={cfg.color} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={cfg.color} stopOpacity={0} />
+                  </linearGradient>
+                )
+              })}
+            </defs>
+
+            <CartesianGrid strokeDasharray="3 6" stroke="var(--color-grid-line)" vertical={false} />
+
+            {gridLines.map((val) => (
+              <ReferenceLine
+                key={val}
+                yAxisId={primaryConfig?.yAxis}
+                y={val}
+                stroke="var(--color-grid-line-subtle)"
+                strokeDasharray="4 4"
+              />
+            ))}
+
+            <XAxis
+              dataKey="timestamp"
+              tickFormatter={(v) => formatXAxis(v as string, range)}
+              tick={{ fontSize: 11, fill: 'var(--color-text-dim)' }}
+              tickLine={false}
+              axisLine={false}
+              interval={tickInterval}
+              minTickGap={24}
+              padding={{ left: 8, right: 8 }}
+            />
+
+            {primaryConfig?.yAxis === 'percent' && (
+              <YAxis
+                yAxisId="percent"
+                domain={[0, 100]}
+                tickFormatter={(v) => `${v}%`}
+                tick={{ fontSize: 11, fill: 'var(--color-text-dim)' }}
+                tickLine={false}
+                axisLine={false}
+                width={40}
+                ticks={[0, 25, 50, 75, 100]}
+              />
+            )}
+
+            {primaryConfig?.yAxis === 'count' && (
+              <YAxis
+                yAxisId="count"
+                allowDecimals={false}
+                tick={{ fontSize: 11, fill: 'var(--color-text-dim)' }}
+                tickLine={false}
+                axisLine={false}
+                width={36}
+              />
+            )}
+
+            {primaryConfig?.yAxis === 'bytes' && (
+              <YAxis
+                yAxisId="bytes"
+                tickFormatter={(v) => formatBytes(Number(v))}
+                tick={{ fontSize: 11, fill: 'var(--color-text-dim)' }}
+                tickLine={false}
+                axisLine={false}
+                width={64}
+              />
+            )}
+
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={crosshairSetPosition ? <CrosshairCursor height={height - 8} /> : undefined}
+            />
+
             {activeMetrics.map((key) => {
               const cfg = METRIC_CONFIG[key]
-              const gradId = `${chartId}-${cfg.gradientId}`
               return (
-                <linearGradient key={gradId} id={gradId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={cfg.color} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={cfg.color} stopOpacity={0} />
-                </linearGradient>
+                <Area
+                  key={key}
+                  yAxisId={cfg.yAxis}
+                  type="monotone"
+                  dataKey={cfg.dataKey}
+                  name={cfg.label}
+                  stroke={cfg.color}
+                  fill={`url(#${chartId}-${cfg.gradientId})`}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 0 }}
+                  connectNulls={false}
+                  isAnimationActive={false}
+                  animationDuration={0}
+                />
               )
             })}
-          </defs>
-
-          <CartesianGrid strokeDasharray="3 6" stroke="var(--color-grid-line)" vertical={false} />
-
-          {gridLines.map((val) => (
-            <ReferenceLine
-              key={val}
-              yAxisId={primaryConfig?.yAxis}
-              y={val}
-              stroke="var(--color-grid-line-subtle)"
-              strokeDasharray="4 4"
-            />
-          ))}
-
-          <XAxis
-            dataKey="timestamp"
-            tickFormatter={(v) => formatXAxis(v as string, range)}
-            tick={{ fontSize: 11, fill: 'var(--color-text-dim)' }}
-            tickLine={false}
-            axisLine={false}
-            interval={tickInterval}
-            minTickGap={24}
-            padding={{ left: 8, right: 8 }}
-          />
-
-          {primaryConfig?.yAxis === 'percent' && (
-            <YAxis
-              yAxisId="percent"
-              domain={[0, 100]}
-              tickFormatter={(v) => `${v}%`}
-              tick={{ fontSize: 11, fill: 'var(--color-text-dim)' }}
-              tickLine={false}
-              axisLine={false}
-              width={40}
-              ticks={[0, 25, 50, 75, 100]}
-            />
-          )}
-
-          {primaryConfig?.yAxis === 'count' && (
-            <YAxis
-              yAxisId="count"
-              allowDecimals={false}
-              tick={{ fontSize: 11, fill: 'var(--color-text-dim)' }}
-              tickLine={false}
-              axisLine={false}
-              width={36}
-            />
-          )}
-
-          {primaryConfig?.yAxis === 'bytes' && (
-            <YAxis
-              yAxisId="bytes"
-              tickFormatter={(v) => formatBytes(Number(v))}
-              tick={{ fontSize: 11, fill: 'var(--color-text-dim)' }}
-              tickLine={false}
-              axisLine={false}
-              width={64}
-            />
-          )}
-
-          <Tooltip
-            content={<CustomTooltip />}
-            cursor={crosshairSetPosition ? <CrosshairCursor height={height - 8} /> : undefined}
-          />
-
-          {activeMetrics.map((key) => {
-            const cfg = METRIC_CONFIG[key]
-            return (
-              <Area
-                key={key}
-                yAxisId={cfg.yAxis}
-                type="monotone"
-                dataKey={cfg.dataKey}
-                name={cfg.label}
-                stroke={cfg.color}
-                fill={`url(#${chartId}-${cfg.gradientId})`}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 0 }}
-                connectNulls={false}
-                isAnimationActive={false}
-                animationDuration={0}
-              />
-            )
-          })}
-        </AreaChart>
-      </ResponsiveContainer>
+          </AreaChart>
+        )}
+      </DebouncedResponsiveContainer>
 
       <CurrentValueBadge data={chartData} activeMetrics={activeMetrics} />
     </div>
