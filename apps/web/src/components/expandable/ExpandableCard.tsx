@@ -46,11 +46,18 @@ export function ExpandableCard({
           : 'border-[var(--color-border)] hover:border-[var(--color-accent)]/20',
       ].join(' ')}
     >
-      {/* Summary row */}
-      <button
-        type="button"
-        className="flex w-full items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors duration-150 text-left"
+      {/* Summary row — uses div+role instead of button to allow nested buttons (e.g. delete) */}
+      <div
+        role="button"
+        tabIndex={0}
+        className="flex w-full items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors duration-150 text-left cursor-pointer"
         onClick={handleToggle}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleToggle()
+          }
+        }}
         aria-expanded={isExpanded}
       >
         <div className="flex-1 min-w-0">{summary}</div>
@@ -62,7 +69,7 @@ export function ExpandableCard({
         >
           <ChevronDown className="h-4 w-4" />
         </motion.div>
-      </button>
+      </div>
 
       {/* Expanded detail area */}
       <AnimatePresence initial={false}>
