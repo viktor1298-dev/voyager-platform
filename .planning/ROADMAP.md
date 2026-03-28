@@ -129,8 +129,8 @@ Plans:
 - [x] 08-02-PLAN.md -- K8s Watch backend: ResourceWatchManager, SSE resource stream, client-side useResourceSSE hook in layout
 - [x] 08-03-PLAN.md -- Tab redesign Set A: Deployments, Services, Ingresses, StatefulSets
 - [x] 08-04-PLAN.md -- Tab redesign Set B: DaemonSets, Jobs, CronJobs, HPA
-- [ ] 08-05-PLAN.md -- Tab redesign Set C: ConfigMaps, Secrets, PVCs + Namespaces, Events, Pods expand-all
-- [ ] 08-06-PLAN.md -- Logs beautifier: LogViewer, LogLine, JsonRenderer, LogSearch, CSS log vars, page integration
+- [x] 08-05-PLAN.md -- Tab redesign Set C: ConfigMaps, Secrets, PVCs + Namespaces, Events, Pods expand-all
+- [x] 08-06-PLAN.md -- Logs beautifier: LogViewer, LogLine, JsonRenderer, LogSearch, CSS log vars, page integration
 - [x] 08-07-PLAN.md -- Nodes page light-mode fix: bar visibility, spacing, visual hierarchy
 - [ ] 08-08-PLAN.md -- Cross-resource navigation: RelatedPodsList, hyperlinks, pod->logs tab, mutation cache fix
 
