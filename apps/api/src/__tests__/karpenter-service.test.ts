@@ -1,26 +1,30 @@
 import { describe, expect, it, vi } from 'vitest'
 import { KarpenterService } from '../lib/karpenter-service.js'
 
-function createMockDb(connectionConfig: Record<string, unknown> = { context: 'minikube' }) {
-  return {
-    select: vi.fn().mockReturnValue({
-      from: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue([
-          {
-            id: '11111111-1111-1111-1111-111111111111',
-            provider: 'minikube',
-            connectionConfig,
-          },
-        ]),
+const mockKubeConfigGetter = vi.fn().mockResolvedValue({} as never)
+
+const mockCacheDb = {
+  select: vi.fn().mockReturnValue({
+    from: vi.fn().mockReturnValue({
+      where: vi.fn().mockReturnValue({
+        orderBy: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([]),
+        }),
       }),
     }),
-  }
+  }),
+  insert: vi.fn().mockReturnValue({
+    values: vi.fn().mockReturnValue({
+      onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
+    }),
+  }),
 }
 
 describe('KarpenterService', () => {
   it('maps NodePools correctly', async () => {
     const service = new KarpenterService(
-      createMockDb() as never,
+      mockKubeConfigGetter,
+      mockCacheDb as never,
       () => ({
         listClusterCustomObject: vi.fn().mockResolvedValue({
           items: [
@@ -85,7 +89,8 @@ describe('KarpenterService', () => {
 
   it('calculates metrics using Karpenter node labels', async () => {
     const service = new KarpenterService(
-      createMockDb() as never,
+      mockKubeConfigGetter,
+      mockCacheDb as never,
       () => ({ listClusterCustomObject: vi.fn() }),
       () => ({
         listNode: vi.fn().mockResolvedValue({
@@ -121,7 +126,8 @@ describe('KarpenterService', () => {
 
   it('builds topology per nodepool and workload owner', async () => {
     const service = new KarpenterService(
-      createMockDb() as never,
+      mockKubeConfigGetter,
+      mockCacheDb as never,
       () => ({ listClusterCustomObject: vi.fn() }),
       () => ({
         listNode: vi.fn().mockResolvedValue({

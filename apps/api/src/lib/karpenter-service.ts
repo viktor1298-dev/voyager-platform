@@ -1,7 +1,6 @@
 import * as k8s from '@kubernetes/client-node'
-import { TRPCError } from '@trpc/server'
 import { CACHE_TTL } from '@voyager/config'
-import { clusters, type Database, karpenterCache } from '@voyager/db'
+import { type Database, karpenterCache } from '@voyager/db'
 import type {
   KarpenterEC2NodeClass,
   KarpenterMetrics,
@@ -9,16 +8,8 @@ import type {
   KarpenterTopology,
 } from '@voyager/types'
 import { and, desc, eq, sql } from 'drizzle-orm'
-import { z } from 'zod'
-import { type ClusterConnectionConfig, connectionConfigSchema } from './connection-config.js'
-import { createKubeConfigForCluster } from './k8s-client-factory.js'
+import { clusterClientPool } from './cluster-client-pool.js'
 import { KARPENTER_COST, KARPENTER_CRD, KARPENTER_LABELS } from './karpenter-constants.js'
-
-const clusterSchema = z.object({
-  id: z.string(),
-  provider: z.string(),
-  connectionConfig: z.record(z.string(), z.unknown()),
-})
 
 type PodLike = {
   metadata?: {
@@ -102,6 +93,7 @@ type KarpenterCacheDataType = 'node-pools' | 'ec2-node-classes' | 'metrics' | 't
 
 export class KarpenterService {
   constructor(
+    private readonly kubeConfigGetter: (clusterId: string) => Promise<k8s.KubeConfig>,
     private readonly db: Database,
     private readonly customObjectsClientFactory: (kc: k8s.KubeConfig) => CustomObjectsClient = (
       kc,
@@ -162,32 +154,8 @@ export class KarpenterService {
     }
   }
 
-  private async getClusterKubeConfig(clusterId: string): Promise<k8s.KubeConfig> {
-    const [cluster] = await this.db.select().from(clusters).where(eq(clusters.id, clusterId))
-    const parsedCluster = clusterSchema.safeParse(cluster)
-
-    if (!parsedCluster.success) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Cluster not found' })
-    }
-
-    const parsedConnectionConfig = connectionConfigSchema.safeParse(
-      parsedCluster.data.connectionConfig,
-    )
-    if (!parsedConnectionConfig.success) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Invalid cluster connection configuration',
-      })
-    }
-
-    return await createKubeConfigForCluster(
-      parsedCluster.data.provider as Parameters<typeof createKubeConfigForCluster>[0],
-      parsedConnectionConfig.data as ClusterConnectionConfig,
-    )
-  }
-
   async hasKarpenter(clusterId: string): Promise<boolean> {
-    const kc = await this.getClusterKubeConfig(clusterId)
+    const kc = await this.kubeConfigGetter(clusterId)
     const customObjects = this.customObjectsClientFactory(kc)
 
     try {
@@ -206,7 +174,7 @@ export class KarpenterService {
     const cached = await this.getCached<KarpenterNodePool[]>(clusterId, 'node-pools')
     if (cached) return cached
 
-    const kc = await this.getClusterKubeConfig(clusterId)
+    const kc = await this.kubeConfigGetter(clusterId)
     const customObjects = this.customObjectsClientFactory(kc)
 
     const res = await customObjects.listClusterCustomObject({
@@ -281,7 +249,7 @@ export class KarpenterService {
     const cached = await this.getCached<KarpenterEC2NodeClass[]>(clusterId, 'ec2-node-classes')
     if (cached) return cached
 
-    const kc = await this.getClusterKubeConfig(clusterId)
+    const kc = await this.kubeConfigGetter(clusterId)
     const customObjects = this.customObjectsClientFactory(kc)
 
     const res = await customObjects.listClusterCustomObject({
@@ -359,7 +327,7 @@ export class KarpenterService {
     const cached = await this.getCached<KarpenterMetrics>(clusterId, 'metrics')
     if (cached) return cached
 
-    const kc = await this.getClusterKubeConfig(clusterId)
+    const kc = await this.kubeConfigGetter(clusterId)
     const coreV1 = this.coreV1ClientFactory(kc)
 
     const [nodesRes, podsRes] = await Promise.all([
@@ -390,7 +358,7 @@ export class KarpenterService {
     const cached = await this.getCached<KarpenterTopology>(clusterId, 'topology')
     if (cached) return cached
 
-    const kc = await this.getClusterKubeConfig(clusterId)
+    const kc = await this.kubeConfigGetter(clusterId)
     const coreV1 = this.coreV1ClientFactory(kc)
 
     const [nodesRes, podsRes] = await Promise.all([
@@ -466,5 +434,5 @@ export class KarpenterService {
 }
 
 export function createKarpenterService(db: Database): KarpenterService {
-  return new KarpenterService(db)
+  return new KarpenterService((clusterId) => clusterClientPool.getClient(clusterId), db)
 }
