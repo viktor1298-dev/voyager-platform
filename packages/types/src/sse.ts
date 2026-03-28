@@ -110,3 +110,32 @@ export interface ClusterStateChangeEvent {
   error?: string
   timestamp: string
 }
+
+// ── Resource Change Stream ─────────────────────────────────
+export type ResourceType =
+  | 'pods'
+  | 'deployments'
+  | 'statefulsets'
+  | 'daemonsets'
+  | 'services'
+  | 'ingresses'
+  | 'jobs'
+  | 'cronjobs'
+  | 'hpa'
+  | 'configmaps'
+  | 'secrets'
+  | 'pvcs'
+  | 'namespaces'
+  | 'events'
+  | 'nodes'
+
+export type ResourceChangeType = 'added' | 'modified' | 'deleted'
+
+export interface ResourceChangeEvent {
+  clusterId: string
+  resourceType: ResourceType
+  changeType: ResourceChangeType
+  name: string
+  namespace: string | null
+  timestamp: string
+}

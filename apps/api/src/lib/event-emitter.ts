@@ -7,6 +7,7 @@ import type {
   MetricsEvent,
   MetricsStreamEvent,
   PodEvent,
+  ResourceChangeEvent,
 } from '@voyager/types'
 
 /**
@@ -40,6 +41,10 @@ class VoyagerEventEmitter extends EventEmitter {
 
   emitMetricsStream(clusterId: string, event: MetricsStreamEvent): void {
     this.emit(`metrics-stream:${clusterId}`, event)
+  }
+
+  emitResourceChange(clusterId: string, event: ResourceChangeEvent): void {
+    this.emit(`resource-change:${clusterId}`, event)
   }
 }
 
