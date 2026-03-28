@@ -213,7 +213,15 @@ export default function LogsPage() {
               </p>
             </div>
           ) : (
-            <LogViewer lines={logLines} isLoading={logsQuery.isLoading} autoScroll={autoScroll} />
+            <LogViewer
+              lines={logLines}
+              isLoading={logsQuery.isLoading}
+              autoScroll={autoScroll}
+              clusterId={resolvedId}
+              podName={podName}
+              namespace={namespace}
+              container={selectedContainer || undefined}
+            />
           )}
         </div>
       </Panel>

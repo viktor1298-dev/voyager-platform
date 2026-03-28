@@ -33,6 +33,7 @@ import { shutdownTelemetry } from './lib/telemetry.js'
 import { type AppRouter, appRouter } from './routers/index.js'
 import { registerAiStreamRoute } from './routes/ai-stream.js'
 import { registerMcpRoute } from './routes/mcp.js'
+import { registerLogStreamRoute } from './routes/log-stream.js'
 import { registerMetricsStreamRoute } from './routes/metrics-stream.js'
 import { registerPodTerminalRoute } from './routes/pod-terminal.js'
 import { registerResourceStreamRoute } from './routes/resource-stream.js'
@@ -245,6 +246,7 @@ app.setErrorHandler((error, _request, reply) => {
 })
 
 await registerAiStreamRoute(app)
+await registerLogStreamRoute(app)
 await registerMcpRoute(app)
 await registerMetricsStreamRoute(app)
 await registerPodTerminalRoute(app)
