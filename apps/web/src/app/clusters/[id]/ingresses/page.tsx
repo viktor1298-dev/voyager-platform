@@ -4,7 +4,12 @@ import { Globe, Lock, Network, Route, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
-import { RelatedResourceLink, ResourcePageScaffold } from '@/components/resource'
+import {
+  RelatedResourceLink,
+  ResourceDiff,
+  ResourcePageScaffold,
+  YamlViewer,
+} from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -55,7 +60,7 @@ function IngressSummary({ ing }: { ing: IngressData }) {
   )
 }
 
-function IngressExpandedDetail({ ing }: { ing: IngressData }) {
+function IngressExpandedDetail({ ing, clusterId }: { ing: IngressData; clusterId: string }) {
   // Collect unique services referenced by this ingress
   const referencedServices = ing.rules.flatMap((rule) =>
     rule.paths.map((path) => ({
@@ -199,6 +204,30 @@ function IngressExpandedDetail({ ing }: { ing: IngressData }) {
         </div>
       ),
     },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="ingresses"
+          resourceName={ing.name}
+          namespace={ing.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="ingresses"
+          resourceName={ing.name}
+          namespace={ing.namespace}
+        />
+      ),
+    },
   ]
 
   return <DetailTabs id={`ing-${ing.namespace}-${ing.name}`} tabs={tabs} />
@@ -234,7 +263,7 @@ export default function IngressesPage() {
         ing.hosts.some((h) => h.toLowerCase().includes(q))
       }
       renderSummary={(ing) => <IngressSummary ing={ing} />}
-      renderDetail={(ing) => <IngressExpandedDetail ing={ing} />}
+      renderDetail={(ing) => <IngressExpandedDetail ing={ing} clusterId={resolvedId} />}
       searchPlaceholder="Search ingresses..."
       emptyMessage="No ingresses found"
     />

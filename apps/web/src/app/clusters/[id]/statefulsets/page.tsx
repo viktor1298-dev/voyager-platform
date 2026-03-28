@@ -4,7 +4,12 @@ import { BarChart3, Box, CircleCheck, Database, HardDrive } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs } from '@/components/expandable'
-import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
+import {
+  RelatedPodsList,
+  ResourceDiff,
+  ResourcePageScaffold,
+  YamlViewer,
+} from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -161,6 +166,30 @@ function StatefulSetExpandedDetail({ ss, clusterId }: { ss: StatefulSetData; clu
         ) : (
           <p className="text-[11px] text-[var(--color-text-muted)]">No conditions reported.</p>
         ),
+    },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="statefulsets"
+          resourceName={ss.name}
+          namespace={ss.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="statefulsets"
+          resourceName={ss.name}
+          namespace={ss.namespace}
+        />
+      ),
     },
   ]
 

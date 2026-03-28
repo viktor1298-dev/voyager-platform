@@ -4,7 +4,12 @@ import { Box, CircleCheck, Clock, Play, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs } from '@/components/expandable'
-import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
+import {
+  RelatedPodsList,
+  ResourceDiff,
+  ResourcePageScaffold,
+  YamlViewer,
+} from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -135,6 +140,30 @@ function JobExpandedDetail({ job, clusterId }: { job: JobData; clusterId: string
         ) : (
           <p className="text-[11px] text-[var(--color-text-muted)]">No conditions reported.</p>
         ),
+    },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="jobs"
+          resourceName={job.name}
+          namespace={job.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="jobs"
+          resourceName={job.name}
+          namespace={job.namespace}
+        />
+      ),
     },
   ]
 

@@ -16,7 +16,12 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, ExpandableCard, ResourceBar } from '@/components/expandable'
 import { LogViewer } from '@/components/logs'
-import { RelatedResourceLink, SearchFilterBar } from '@/components/resource'
+import {
+  RelatedResourceLink,
+  ResourceDiff,
+  SearchFilterBar,
+  YamlViewer,
+} from '@/components/resource'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -275,6 +280,30 @@ function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
       label: 'Logs',
       icon: <FileText className="h-3.5 w-3.5" />,
       content: <PodLogViewer clusterId={clusterId} podName={pod.name} namespace={pod.namespace} />,
+    },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="pods"
+          resourceName={pod.name}
+          namespace={pod.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="pods"
+          resourceName={pod.name}
+          namespace={pod.namespace}
+        />
+      ),
     },
     ...(pod.nodeName
       ? [

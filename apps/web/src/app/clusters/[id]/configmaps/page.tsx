@@ -4,7 +4,7 @@ import { FileText, Key, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -33,7 +33,7 @@ function ConfigMapSummary({ cm }: { cm: ConfigMapData }) {
   )
 }
 
-function ConfigMapExpandedDetail({ cm }: { cm: ConfigMapData }) {
+function ConfigMapExpandedDetail({ cm, clusterId }: { cm: ConfigMapData; clusterId: string }) {
   const tabs = [
     {
       id: 'keys',
@@ -75,6 +75,30 @@ function ConfigMapExpandedDetail({ cm }: { cm: ConfigMapData }) {
           <p className="text-[11px] text-[var(--color-text-muted)]">No labels.</p>
         ),
     },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="configmaps"
+          resourceName={cm.name}
+          namespace={cm.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="configmaps"
+          resourceName={cm.name}
+          namespace={cm.namespace}
+        />
+      ),
+    },
   ]
 
   return <DetailTabs id={`cm-${cm.namespace}-${cm.name}`} tabs={tabs} />
@@ -111,7 +135,7 @@ export default function ConfigMapsPage() {
         cm.name.toLowerCase().includes(q) || cm.namespace.toLowerCase().includes(q)
       }
       renderSummary={(cm) => <ConfigMapSummary cm={cm} />}
-      renderDetail={(cm) => <ConfigMapExpandedDetail cm={cm} />}
+      renderDetail={(cm) => <ConfigMapExpandedDetail cm={cm} clusterId={resolvedId} />}
       searchPlaceholder="Search configmaps..."
       emptyMessage={hasCredentials ? 'No ConfigMaps found' : 'Live data unavailable'}
       emptyDescription={

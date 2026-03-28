@@ -4,7 +4,7 @@ import { CircleCheck, HardDrive, Settings, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -67,7 +67,7 @@ function PVCSummary({ pvc }: { pvc: PVCData }) {
   )
 }
 
-function PVCExpandedDetail({ pvc }: { pvc: PVCData }) {
+function PVCExpandedDetail({ pvc, clusterId }: { pvc: PVCData; clusterId: string }) {
   const tabs = [
     {
       id: 'volume',
@@ -152,6 +152,30 @@ function PVCExpandedDetail({ pvc }: { pvc: PVCData }) {
         </div>
       ),
     },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="pvcs"
+          resourceName={pvc.name}
+          namespace={pvc.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="pvcs"
+          resourceName={pvc.name}
+          namespace={pvc.namespace}
+        />
+      ),
+    },
   ]
 
   return <DetailTabs id={`pvc-${pvc.namespace}-${pvc.name}`} tabs={tabs} />
@@ -191,7 +215,7 @@ export default function PVCsPage() {
         pvc.storageClass.toLowerCase().includes(q)
       }
       renderSummary={(pvc) => <PVCSummary pvc={pvc} />}
-      renderDetail={(pvc) => <PVCExpandedDetail pvc={pvc} />}
+      renderDetail={(pvc) => <PVCExpandedDetail pvc={pvc} clusterId={resolvedId} />}
       searchPlaceholder="Search PVCs..."
       emptyMessage={hasCredentials ? 'No PVCs found' : 'Live data unavailable'}
       emptyDescription={

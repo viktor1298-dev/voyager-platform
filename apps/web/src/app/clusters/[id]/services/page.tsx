@@ -4,7 +4,12 @@ import { Box, Globe, Settings, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
-import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
+import {
+  RelatedPodsList,
+  ResourceDiff,
+  ResourcePageScaffold,
+  YamlViewer,
+} from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -186,6 +191,30 @@ function ServiceExpandedDetail({ svc, clusterId }: { svc: ServiceDetail; cluster
           <span className="text-[var(--color-text-muted)]">Cluster IP</span>
           <span className="text-[var(--color-text-primary)]">{svc.clusterIP ?? 'None'}</span>
         </div>
+      ),
+    },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="services"
+          resourceName={svc.name}
+          namespace={svc.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="services"
+          resourceName={svc.name}
+          namespace={svc.namespace}
+        />
       ),
     },
   ]

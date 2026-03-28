@@ -4,7 +4,7 @@ import { FolderOpen, Info, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -54,7 +54,7 @@ function NamespaceSummary({ ns }: { ns: NamespaceData }) {
   )
 }
 
-function NamespaceExpandedDetail({ ns }: { ns: NamespaceData }) {
+function NamespaceExpandedDetail({ ns, clusterId }: { ns: NamespaceData; clusterId: string }) {
   const tabs = [
     {
       id: 'status',
@@ -136,6 +136,20 @@ function NamespaceExpandedDetail({ ns }: { ns: NamespaceData }) {
           <p className="text-[11px] text-[var(--color-text-muted)]">No annotations.</p>
         ),
     },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer clusterId={clusterId} resourceType="namespaces" resourceName={ns.name} />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff clusterId={clusterId} resourceType="namespaces" resourceName={ns.name} />
+      ),
+    },
   ]
 
   return <DetailTabs id={`ns-${ns.name}`} tabs={tabs} />
@@ -173,7 +187,7 @@ export default function NamespacesPage() {
         ns.name.toLowerCase().includes(q) || (ns.status?.toLowerCase().includes(q) ?? false)
       }
       renderSummary={(ns) => <NamespaceSummary ns={ns} />}
-      renderDetail={(ns) => <NamespaceExpandedDetail ns={ns} />}
+      renderDetail={(ns) => <NamespaceExpandedDetail ns={ns} clusterId={resolvedId} />}
       searchPlaceholder="Search namespaces..."
       emptyMessage={hasCredentials ? 'No namespaces found' : 'Live data unavailable'}
       emptyDescription={

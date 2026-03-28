@@ -4,7 +4,12 @@ import { BarChart3, Box, CircleCheck, Rocket, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
-import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
+import {
+  RelatedPodsList,
+  ResourceDiff,
+  ResourcePageScaffold,
+  YamlViewer,
+} from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -176,6 +181,30 @@ function DeploymentExpandedDetail({ d, clusterId }: { d: DeploymentDetail; clust
       label: 'Conditions',
       icon: <CircleCheck className="h-3.5 w-3.5" />,
       content: <ConditionsList conditions={d.conditions} />,
+    },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="deployments"
+          resourceName={d.name}
+          namespace={d.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="deployments"
+          resourceName={d.name}
+          namespace={d.namespace}
+        />
+      ),
     },
   ]
 

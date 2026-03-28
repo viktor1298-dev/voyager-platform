@@ -4,7 +4,12 @@ import { CircleCheck, ExternalLink, Target, TrendingUp } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, ResourceBar } from '@/components/expandable'
-import { RelatedResourceLink, ResourcePageScaffold } from '@/components/resource'
+import {
+  RelatedResourceLink,
+  ResourceDiff,
+  ResourcePageScaffold,
+  YamlViewer,
+} from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -87,7 +92,7 @@ function kindToTab(kind: string): string {
   return mapping[kind] ?? 'deployments'
 }
 
-function HPAExpandedDetail({ hpa }: { hpa: HPAData }) {
+function HPAExpandedDetail({ hpa, clusterId }: { hpa: HPAData; clusterId: string }) {
   const ref = parseReference(hpa.reference)
 
   const tabs = [
@@ -227,6 +232,30 @@ function HPAExpandedDetail({ hpa }: { hpa: HPAData }) {
           <p className="text-[11px] text-[var(--color-text-muted)]">No conditions reported.</p>
         ),
     },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="hpa"
+          resourceName={hpa.name}
+          namespace={hpa.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="hpa"
+          resourceName={hpa.name}
+          namespace={hpa.namespace}
+        />
+      ),
+    },
   ]
 
   return <DetailTabs id={`hpa-${hpa.namespace}-${hpa.name}`} tabs={tabs} />
@@ -269,7 +298,7 @@ export default function HPAPage() {
         hpa.reference.toLowerCase().includes(q)
       }
       renderSummary={(hpa) => <HPASummary hpa={hpa} />}
-      renderDetail={(hpa) => <HPAExpandedDetail hpa={hpa} />}
+      renderDetail={(hpa) => <HPAExpandedDetail hpa={hpa} clusterId={resolvedId} />}
       searchPlaceholder="Search HPAs..."
     />
   )

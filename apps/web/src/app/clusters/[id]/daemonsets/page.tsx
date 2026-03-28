@@ -4,7 +4,12 @@ import { BarChart3, Box, CircleCheck, Layers, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
-import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
+import {
+  RelatedPodsList,
+  ResourceDiff,
+  ResourcePageScaffold,
+  YamlViewer,
+} from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -157,6 +162,30 @@ function DaemonSetExpandedDetail({ ds, clusterId }: { ds: DaemonSetData; cluster
         ) : (
           <p className="text-[11px] text-[var(--color-text-muted)]">No conditions reported.</p>
         ),
+    },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="daemonsets"
+          resourceName={ds.name}
+          namespace={ds.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="daemonsets"
+          resourceName={ds.name}
+          namespace={ds.namespace}
+        />
+      ),
     },
   ]
 

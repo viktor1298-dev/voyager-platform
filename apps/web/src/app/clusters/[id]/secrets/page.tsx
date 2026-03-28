@@ -4,7 +4,7 @@ import { Key, Lock, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -53,7 +53,7 @@ function SecretSummary({ secret }: { secret: SecretData }) {
   )
 }
 
-function SecretExpandedDetail({ secret }: { secret: SecretData }) {
+function SecretExpandedDetail({ secret, clusterId }: { secret: SecretData; clusterId: string }) {
   const tabs = [
     {
       id: 'keys',
@@ -103,6 +103,30 @@ function SecretExpandedDetail({ secret }: { secret: SecretData }) {
           <p className="text-[11px] text-[var(--color-text-muted)]">No annotations.</p>
         ),
     },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="secrets"
+          resourceName={secret.name}
+          namespace={secret.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="secrets"
+          resourceName={secret.name}
+          namespace={secret.namespace}
+        />
+      ),
+    },
   ]
 
   return <DetailTabs id={`secret-${secret.namespace}-${secret.name}`} tabs={tabs} />
@@ -141,7 +165,7 @@ export default function SecretsPage() {
         s.type.toLowerCase().includes(q)
       }
       renderSummary={(s) => <SecretSummary secret={s} />}
-      renderDetail={(s) => <SecretExpandedDetail secret={s} />}
+      renderDetail={(s) => <SecretExpandedDetail secret={s} clusterId={resolvedId} />}
       searchPlaceholder="Search secrets..."
       emptyMessage={hasCredentials ? 'No secrets found' : 'Live data unavailable'}
       emptyDescription={

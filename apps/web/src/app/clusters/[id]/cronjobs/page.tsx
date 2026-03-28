@@ -4,7 +4,12 @@ import { Clock, List, Play, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs } from '@/components/expandable'
-import { RelatedResourceLink, ResourcePageScaffold } from '@/components/resource'
+import {
+  RelatedResourceLink,
+  ResourceDiff,
+  ResourcePageScaffold,
+  YamlViewer,
+} from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -54,7 +59,7 @@ function CronJobSummary({ cj }: { cj: CronJobData }) {
   )
 }
 
-function CronJobExpandedDetail({ cj }: { cj: CronJobData }) {
+function CronJobExpandedDetail({ cj, clusterId }: { cj: CronJobData; clusterId: string }) {
   const tabs = [
     {
       id: 'jobs',
@@ -121,6 +126,30 @@ function CronJobExpandedDetail({ cj }: { cj: CronJobData }) {
         </div>
       ),
     },
+    {
+      id: 'yaml',
+      label: 'YAML',
+      content: (
+        <YamlViewer
+          clusterId={clusterId}
+          resourceType="cronjobs"
+          resourceName={cj.name}
+          namespace={cj.namespace}
+        />
+      ),
+    },
+    {
+      id: 'diff',
+      label: 'Diff',
+      content: (
+        <ResourceDiff
+          clusterId={clusterId}
+          resourceType="cronjobs"
+          resourceName={cj.name}
+          namespace={cj.namespace}
+        />
+      ),
+    },
   ]
 
   return <DetailTabs id={`cj-${cj.namespace}-${cj.name}`} tabs={tabs} />
@@ -163,7 +192,7 @@ export default function CronJobsPage() {
         cj.schedule.toLowerCase().includes(q)
       }
       renderSummary={(cj) => <CronJobSummary cj={cj} />}
-      renderDetail={(cj) => <CronJobExpandedDetail cj={cj} />}
+      renderDetail={(cj) => <CronJobExpandedDetail cj={cj} clusterId={resolvedId} />}
       searchPlaceholder="Search cronjobs..."
     />
   )
