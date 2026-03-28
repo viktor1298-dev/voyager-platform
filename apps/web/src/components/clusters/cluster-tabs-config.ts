@@ -9,6 +9,7 @@ import {
   Network,
   Server,
   Settings,
+  Shield,
   TrendingUp,
 } from 'lucide-react'
 
@@ -58,6 +59,7 @@ export const CLUSTER_TAB_ENTRIES: ClusterTabEntry[] = [
     children: [
       { id: 'services', label: 'Services', path: '/services' },
       { id: 'ingresses', label: 'Ingresses', path: '/ingresses' },
+      { id: 'network-policies', label: 'Net Policies', path: '/network-policies' },
     ],
   },
   {
@@ -69,6 +71,7 @@ export const CLUSTER_TAB_ENTRIES: ClusterTabEntry[] = [
       { id: 'configmaps', label: 'ConfigMaps', path: '/configmaps' },
       { id: 'secrets', label: 'Secrets', path: '/secrets' },
       { id: 'namespaces', label: 'Namespaces', path: '/namespaces' },
+      { id: 'resource-quotas', label: 'Quotas', path: '/resource-quotas' },
     ],
   },
   {
@@ -87,6 +90,13 @@ export const CLUSTER_TAB_ENTRIES: ClusterTabEntry[] = [
       { id: 'hpa', label: 'HPA', path: '/hpa' },
       { id: 'autoscaling', label: 'Karpenter', path: '/autoscaling' },
     ],
+  },
+  {
+    type: 'group',
+    id: 'access',
+    label: 'Access',
+    icon: Shield,
+    children: [{ id: 'rbac', label: 'RBAC', path: '/rbac' }],
   },
 ]
 
