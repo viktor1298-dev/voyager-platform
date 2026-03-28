@@ -1,13 +1,18 @@
 'use client'
 
-import { BarChart3, Box, CircleCheck, Layers, Tag } from 'lucide-react'
+import { BarChart3, Box, CircleCheck, Layers, RotateCw, Tag, Trash2 } from 'lucide-react'
 import { useParams } from 'next/navigation'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
 import {
+  ActionToolbar,
+  DeleteConfirmDialog,
   RelatedPodsList,
   ResourceDiff,
   ResourcePageScaffold,
+  RestartConfirmDialog,
   YamlViewer,
 } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
@@ -70,6 +75,80 @@ function DaemonSetSummary({ ds }: { ds: DaemonSetData }) {
 }
 
 function DaemonSetExpandedDetail({ ds, clusterId }: { ds: DaemonSetData; clusterId: string }) {
+  const [restartDialogOpen, setRestartDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  const utils = trpc.useUtils()
+  const restartMutation = trpc.daemonSets.restart.useMutation({
+    onSuccess: () => {
+      toast.success(`DaemonSet ${ds.name} restarted`)
+      utils.daemonSets.list.invalidate({ clusterId })
+      setRestartDialogOpen(false)
+    },
+    onError: (err) => toast.error(`Restart failed: ${err.message}`),
+  })
+  const deleteMutation = trpc.daemonSets.delete.useMutation({
+    onSuccess: () => {
+      toast.success(`DaemonSet ${ds.name} deleted`)
+      utils.daemonSets.list.invalidate({ clusterId })
+      setDeleteDialogOpen(false)
+    },
+    onError: (err) => toast.error(`Delete failed: ${err.message}`),
+  })
+
+  const actions = (
+    <>
+      <ActionToolbar
+        actions={[
+          {
+            id: 'restart',
+            label: 'Restart',
+            icon: RotateCw,
+            variant: 'default',
+            onClick: () => setRestartDialogOpen(true),
+          },
+          {
+            id: 'delete',
+            label: 'Delete',
+            icon: Trash2,
+            variant: 'destructive',
+            onClick: () => setDeleteDialogOpen(true),
+          },
+        ]}
+      />
+      <RestartConfirmDialog
+        open={restartDialogOpen}
+        onOpenChange={setRestartDialogOpen}
+        resourceType="DaemonSet"
+        resourceName={ds.name}
+        podCount={ds.desired}
+        onConfirm={() =>
+          restartMutation.mutate({
+            name: ds.name,
+            namespace: ds.namespace,
+            clusterId,
+          })
+        }
+        isRestarting={restartMutation.isPending}
+      />
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        resourceType="DaemonSet"
+        resourceName={ds.name}
+        namespace={ds.namespace}
+        onConfirm={() =>
+          deleteMutation.mutate({
+            name: ds.name,
+            namespace: ds.namespace,
+            clusterId,
+          })
+        }
+        isDeleting={deleteMutation.isPending}
+      />
+    </>
+  )
+
   const tabs = [
     {
       id: 'pods',
@@ -189,7 +268,7 @@ function DaemonSetExpandedDetail({ ds, clusterId }: { ds: DaemonSetData; cluster
     },
   ]
 
-  return <DetailTabs id={`ds-${ds.namespace}-${ds.name}`} tabs={tabs} />
+  return <DetailTabs id={`ds-${ds.namespace}-${ds.name}`} tabs={tabs} actions={actions} />
 }
 
 export default function DaemonSetsPage() {
