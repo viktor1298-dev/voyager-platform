@@ -121,7 +121,7 @@ function NodeDetail({ node }: { node: LiveNode }) {
                 {node.taints.map((t, i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/[0.03] border border-[var(--color-border)]/40 rounded-md font-mono text-[10px]"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--color-track)] border border-[var(--color-border)]/40 rounded-md font-mono text-[10px]"
                   >
                     <span className="text-[var(--color-accent)]">{t.key}</span>
                     {t.value && (
@@ -130,7 +130,7 @@ function NodeDetail({ node }: { node: LiveNode }) {
                         <span className="text-[var(--color-text-secondary)]">{t.value}</span>
                       </>
                     )}
-                    <span className="ml-1 px-1 py-px rounded text-[9px] bg-amber-500/10 text-amber-400 font-semibold">
+                    <span className="ml-1 px-1 py-px rounded text-[9px] bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)] font-semibold">
                       {t.effect}
                     </span>
                   </span>
@@ -147,7 +147,7 @@ function NodeDetail({ node }: { node: LiveNode }) {
                 {node.addresses.map((addr, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 text-[11px] font-mono px-2 py-1 bg-white/[0.02] rounded"
+                    className="flex items-center gap-2 text-[11px] font-mono px-2 py-1 bg-[var(--color-track)] rounded"
                   >
                     <MapPin className="h-3 w-3 text-[var(--color-text-muted)]" />
                     <span className="text-[var(--color-text-muted)] min-w-[80px]">{addr.type}</span>
@@ -205,7 +205,7 @@ function InlineBar({ value, label }: { value: number | null; label: string }) {
                   : 'var(--color-accent)',
           }}
         />
-        <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
+        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-[var(--color-text-primary)] [text-shadow:0_0_3px_var(--color-bg-card),0_0_6px_var(--color-bg-card)]">
           {value}%
         </span>
       </div>
@@ -276,7 +276,7 @@ export default function NodesPage() {
 
       {!isLoading && isEmpty && (
         <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-          <div className="rounded-full bg-white/[0.04] p-3 mb-3">
+          <div className="rounded-full bg-[var(--color-track)] p-3 mb-3">
             <Server className="h-10 w-10 text-[var(--color-text-dim)]" />
           </div>
           <p className="text-sm font-medium text-[var(--color-text-muted)]">
@@ -290,7 +290,7 @@ export default function NodesPage() {
           <button
             type="button"
             onClick={() => activeQuery.refetch()}
-            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
+            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors cursor-pointer"
           >
             <RefreshCw className="h-3 w-3" />
             Refresh
@@ -302,15 +302,15 @@ export default function NodesPage() {
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-                <th className="text-left px-4 py-2.5">Name</th>
-                <th className="text-left px-3 py-2.5">Status</th>
-                <th className="text-left px-3 py-2.5">Role</th>
-                <th className="text-left px-3 py-2.5">Kubelet</th>
-                <th className="text-left px-3 py-2.5">CPU</th>
-                <th className="text-left px-3 py-2.5 min-w-[130px]">CPU %</th>
-                <th className="text-left px-3 py-2.5">Memory</th>
-                <th className="text-left px-3 py-2.5 min-w-[130px]">Mem %</th>
+              <tr className="border-b border-[var(--color-border)] text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                <th className="text-left px-4 py-3">Name</th>
+                <th className="text-left px-3 py-3">Status</th>
+                <th className="text-left px-3 py-3">Role</th>
+                <th className="text-left px-3 py-3">Kubelet</th>
+                <th className="text-left px-3 py-3">CPU</th>
+                <th className="text-left px-3 py-3 min-w-[130px]">CPU %</th>
+                <th className="text-left px-3 py-3">Memory</th>
+                <th className="text-left px-3 py-3 min-w-[130px]">Mem %</th>
                 {isLive && <th className="w-8" />}
               </tr>
             </thead>
@@ -322,12 +322,12 @@ export default function NodesPage() {
                       columnCount={8}
                       cells={
                         <>
-                          <td className="px-4 py-2.5">
+                          <td className="px-4 py-3">
                             <span className="font-medium font-mono text-[var(--color-text-primary)]">
                               {node.name}
                             </span>
                           </td>
-                          <td className="px-3 py-2.5">
+                          <td className="px-3 py-3">
                             <span className="inline-flex items-center gap-1.5">
                               <span
                                 className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`}
@@ -337,22 +337,20 @@ export default function NodesPage() {
                               </span>
                             </span>
                           </td>
-                          <td className="px-3 py-2.5 text-[var(--color-text-muted)]">
-                            {node.role}
-                          </td>
-                          <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                          <td className="px-3 py-3 text-[var(--color-text-muted)]">{node.role}</td>
+                          <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
                             {node.kubeletVersion}
                           </td>
-                          <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                          <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
                             {node.cpuAllocatableMillis}m / {node.cpuCapacityMillis}m
                           </td>
-                          <td className="px-3 py-2.5">
+                          <td className="px-3 py-3">
                             <InlineBar value={node.cpuPercent} label="CPU" />
                           </td>
-                          <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                          <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
                             {node.memAllocatableMi}Mi / {node.memCapacityMi}Mi
                           </td>
-                          <td className="px-3 py-2.5">
+                          <td className="px-3 py-3">
                             <InlineBar value={node.memPercent} label="Memory" />
                           </td>
                         </>
@@ -363,14 +361,14 @@ export default function NodesPage() {
                 : dbNodeRows.map((node, i) => (
                     <tr
                       key={i}
-                      className="border-b border-[var(--color-border)]/20 last:border-0 hover:bg-white/[0.02]"
+                      className="border-b border-[var(--color-border)]/40 last:border-0 hover:bg-[var(--color-bg-card-hover)] transition-colors"
                     >
-                      <td className="px-4 py-2.5">
+                      <td className="px-4 py-3">
                         <span className="font-medium font-mono text-[var(--color-text-primary)]">
                           {node.name}
                         </span>
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-3 py-3">
                         <span className="inline-flex items-center gap-1.5">
                           <span
                             className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`}
@@ -378,20 +376,20 @@ export default function NodesPage() {
                           <span className="text-[var(--color-text-secondary)]">{node.status}</span>
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 text-[var(--color-text-muted)]">{node.role}</td>
-                      <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                      <td className="px-3 py-3 text-[var(--color-text-muted)]">{node.role}</td>
+                      <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
                         {node.kubeletVersion}
                       </td>
-                      <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                      <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
                         {node.cpuAllocatableMillis}m
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-3 py-3">
                         <InlineBar value={node.cpuPercent} label="CPU" />
                       </td>
-                      <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                      <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
                         {node.memAllocatableMi}Mi
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-3 py-3">
                         <InlineBar value={node.memPercent} label="Memory" />
                       </td>
                     </tr>
