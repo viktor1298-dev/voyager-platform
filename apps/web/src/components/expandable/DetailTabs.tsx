@@ -16,9 +16,11 @@ interface DetailTabsProps {
   id: string
   tabs: DetailTab[]
   defaultTab?: string
+  /** Right-aligned actions rendered in the tab header row */
+  actions?: ReactNode
 }
 
-export function DetailTabs({ id, tabs, defaultTab }: DetailTabsProps) {
+export function DetailTabs({ id, tabs, defaultTab, actions }: DetailTabsProps) {
   const [activeTabId, setActiveTabId] = useState(defaultTab ?? tabs[0]?.id ?? '')
   const prevIndexRef = useRef<number>(tabs.findIndex((t) => t.id === activeTabId))
   const reducedMotion = useReducedMotion()
@@ -79,6 +81,7 @@ export function DetailTabs({ id, tabs, defaultTab }: DetailTabsProps) {
             </button>
           )
         })}
+        {actions && <div className="ml-auto flex items-center">{actions}</div>}
       </div>
 
       {/* Tab content */}
