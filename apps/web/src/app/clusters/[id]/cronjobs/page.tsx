@@ -3,8 +3,8 @@
 import { Clock, List, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { DetailTabs, ExpandableTableRow } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { DetailTabs } from '@/components/expandable'
+import { ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -25,6 +25,35 @@ interface CronJobData {
   activeJobs: number
 }
 
+function CronJobSummary({ cj }: { cj: CronJobData }) {
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <span className="font-mono font-semibold text-[13px] text-[var(--color-text-primary)] truncate">
+        {cj.name}
+      </span>
+      <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/[0.04] text-[var(--color-accent)] shrink-0">
+        {cj.schedule}
+      </span>
+      {cj.suspend && (
+        <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-red-500/15 text-red-400 shrink-0">
+          Suspended
+        </span>
+      )}
+      {cj.activeJobs > 0 && (
+        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 shrink-0">
+          {cj.activeJobs} active
+        </span>
+      )}
+      <span className="text-[11px] font-mono text-[var(--color-text-secondary)] shrink-0">
+        {cj.lastScheduleTime ? timeAgo(cj.lastScheduleTime) : '---'}
+      </span>
+      <span className="ml-auto text-[11px] font-mono text-[var(--color-text-dim)] shrink-0">
+        {cj.age}
+      </span>
+    </div>
+  )
+}
+
 function CronJobExpandedDetail({ cj }: { cj: CronJobData }) {
   const tabs = [
     {
@@ -41,7 +70,7 @@ function CronJobExpandedDetail({ cj }: { cj: CronJobData }) {
           <span className="text-[var(--color-text-primary)]">{cj.concurrencyPolicy}</span>
           <span className="text-[var(--color-text-muted)]">Starting Deadline</span>
           <span className="text-[var(--color-text-primary)]">
-            {cj.startingDeadlineSeconds ? `${cj.startingDeadlineSeconds}s` : '—'}
+            {cj.startingDeadlineSeconds ? `${cj.startingDeadlineSeconds}s` : '---'}
           </span>
         </div>
       ),
@@ -56,11 +85,11 @@ function CronJobExpandedDetail({ cj }: { cj: CronJobData }) {
           <span className="text-[var(--color-text-primary)]">{cj.activeJobs}</span>
           <span className="text-[var(--color-text-muted)]">Last Scheduled</span>
           <span className="text-[var(--color-text-primary)]">
-            {cj.lastScheduleTime ? timeAgo(cj.lastScheduleTime) : '—'}
+            {cj.lastScheduleTime ? timeAgo(cj.lastScheduleTime) : '---'}
           </span>
           <span className="text-[var(--color-text-muted)]">Last Successful</span>
           <span className="text-[var(--color-text-primary)]">
-            {cj.lastSuccessfulTime ? timeAgo(cj.lastSuccessfulTime) : '—'}
+            {cj.lastSuccessfulTime ? timeAgo(cj.lastSuccessfulTime) : '---'}
           </span>
         </div>
       ),
@@ -102,79 +131,30 @@ export default function CronJobsPage() {
     { clusterId: resolvedId },
     { enabled: hasCredentials, refetchInterval: 30000 },
   )
-  const cronJobs = (query.data ?? []) as CronJobData[]
 
-  if (!hasCredentials)
+  if (!hasCredentials) {
     return (
       <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
         <p className="text-sm font-medium">Live data unavailable</p>
       </div>
     )
-  if (query.isLoading)
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    )
-  if (cronJobs.length === 0)
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-        <p className="text-sm font-medium text-[var(--color-text-muted)]">No CronJobs found</p>
-      </div>
-    )
+  }
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-      <table className="w-full text-[13px]">
-        <thead>
-          <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-            <th className="text-left px-4 py-2.5">Name</th>
-            <th className="text-left px-3 py-2.5">Namespace</th>
-            <th className="text-left px-3 py-2.5">Schedule</th>
-            <th className="text-left px-3 py-2.5">Suspend</th>
-            <th className="text-left px-3 py-2.5">Last Schedule</th>
-            <th className="text-left px-3 py-2.5">Age</th>
-            <th className="w-8" />
-          </tr>
-        </thead>
-        <tbody>
-          {cronJobs.map((cj) => (
-            <ExpandableTableRow
-              key={`${cj.namespace}/${cj.name}`}
-              columnCount={6}
-              cells={
-                <>
-                  <td className="px-4 py-2.5 font-mono font-medium text-[var(--color-text-primary)]">
-                    {cj.name}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                    {cj.namespace}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-accent)]">
-                    {cj.schedule}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <span
-                      className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${cj.suspend ? 'bg-red-500/15 text-red-400' : 'bg-emerald-500/15 text-emerald-400'}`}
-                    >
-                      {cj.suspend ? 'Yes' : 'No'}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-secondary)]">
-                    {cj.lastScheduleTime ? timeAgo(cj.lastScheduleTime) : '—'}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-dim)]">
-                    {cj.age}
-                  </td>
-                </>
-              }
-              detail={<CronJobExpandedDetail cj={cj} />}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ResourcePageScaffold<CronJobData>
+      title="CronJobs"
+      icon={<Clock className="h-5 w-5 text-[var(--color-text-muted)]" />}
+      queryResult={query}
+      getNamespace={(cj) => cj.namespace}
+      getKey={(cj) => `${cj.namespace}/${cj.name}`}
+      filterFn={(cj, q) =>
+        cj.name.toLowerCase().includes(q) ||
+        cj.namespace.toLowerCase().includes(q) ||
+        cj.schedule.toLowerCase().includes(q)
+      }
+      renderSummary={(cj) => <CronJobSummary cj={cj} />}
+      renderDetail={(cj) => <CronJobExpandedDetail cj={cj} />}
+      searchPlaceholder="Search cronjobs..."
+    />
   )
 }

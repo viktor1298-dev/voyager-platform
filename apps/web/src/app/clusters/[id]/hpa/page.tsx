@@ -3,13 +3,8 @@
 import { CircleCheck, Target, TrendingUp } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import {
-  ConditionsList,
-  DetailTabs,
-  ExpandableTableRow,
-  ResourceBar,
-} from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ConditionsList, DetailTabs, ResourceBar } from '@/components/expandable'
+import { ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -42,6 +37,41 @@ interface HPAData {
   scaleDownPolicies: { type: string; value: number; periodSeconds: number }[]
 }
 
+function HPASummary({ hpa }: { hpa: HPAData }) {
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <span className="font-mono font-semibold text-[13px] text-[var(--color-text-primary)] truncate">
+        {hpa.name}
+      </span>
+      <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-white/[0.04] text-[var(--color-accent)] shrink-0">
+        {hpa.reference}
+      </span>
+      <span className="text-[11px] font-mono text-[var(--color-text-secondary)] shrink-0">
+        {hpa.minReplicas}/{hpa.maxReplicas}
+      </span>
+      <span className="text-[11px] font-mono font-bold text-[var(--color-text-primary)] shrink-0">
+        {hpa.currentReplicas} replicas
+      </span>
+      {hpa.metrics.length > 0 && (
+        <div className="flex items-center gap-1 shrink-0">
+          {hpa.metrics.slice(0, 2).map((m, i) => (
+            <span
+              key={i}
+              className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.04] text-[var(--color-text-muted)]"
+            >
+              {m.name}: {m.currentValue ?? '---'}/{String(m.targetValue)}
+              {m.targetType === 'Utilization' ? '%' : ''}
+            </span>
+          ))}
+        </div>
+      )}
+      <span className="ml-auto text-[11px] font-mono text-[var(--color-text-dim)] shrink-0">
+        {hpa.age}
+      </span>
+    </div>
+  )
+}
+
 function HPAExpandedDetail({ hpa }: { hpa: HPAData }) {
   const tabs = [
     {
@@ -70,7 +100,7 @@ function HPAExpandedDetail({ hpa }: { hpa: HPAData }) {
                   />
                 ) : (
                   <div className="text-[11px] font-mono text-[var(--color-text-muted)]">
-                    Target: {String(m.targetValue)} | Current: {m.currentValue ?? '—'}
+                    Target: {String(m.targetValue)} | Current: {m.currentValue ?? '---'}
                   </div>
                 )}
               </div>
@@ -176,75 +206,30 @@ export default function HPAPage() {
     { clusterId: resolvedId },
     { enabled: hasCredentials, refetchInterval: 30000 },
   )
-  const hpas = (query.data ?? []) as HPAData[]
 
-  if (!hasCredentials)
+  if (!hasCredentials) {
     return (
       <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
         <p className="text-sm font-medium">Live data unavailable</p>
       </div>
     )
-  if (query.isLoading)
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    )
-  if (hpas.length === 0)
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-        <p className="text-sm font-medium text-[var(--color-text-muted)]">No HPAs found</p>
-      </div>
-    )
+  }
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-      <table className="w-full text-[13px]">
-        <thead>
-          <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-            <th className="text-left px-4 py-2.5">Name</th>
-            <th className="text-left px-3 py-2.5">Namespace</th>
-            <th className="text-left px-3 py-2.5">Reference</th>
-            <th className="text-left px-3 py-2.5">Min/Max</th>
-            <th className="text-left px-3 py-2.5">Current</th>
-            <th className="text-left px-3 py-2.5">Age</th>
-            <th className="w-8" />
-          </tr>
-        </thead>
-        <tbody>
-          {hpas.map((hpa) => (
-            <ExpandableTableRow
-              key={`${hpa.namespace}/${hpa.name}`}
-              columnCount={6}
-              cells={
-                <>
-                  <td className="px-4 py-2.5 font-mono font-medium text-[var(--color-text-primary)]">
-                    {hpa.name}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                    {hpa.namespace}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-accent)]">
-                    {hpa.reference}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-secondary)]">
-                    {hpa.minReplicas}/{hpa.maxReplicas}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-primary)] font-bold">
-                    {hpa.currentReplicas}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-dim)]">
-                    {hpa.age}
-                  </td>
-                </>
-              }
-              detail={<HPAExpandedDetail hpa={hpa} />}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ResourcePageScaffold<HPAData>
+      title="HPAs"
+      icon={<TrendingUp className="h-5 w-5 text-[var(--color-text-muted)]" />}
+      queryResult={query}
+      getNamespace={(hpa) => hpa.namespace}
+      getKey={(hpa) => `${hpa.namespace}/${hpa.name}`}
+      filterFn={(hpa, q) =>
+        hpa.name.toLowerCase().includes(q) ||
+        hpa.namespace.toLowerCase().includes(q) ||
+        hpa.reference.toLowerCase().includes(q)
+      }
+      renderSummary={(hpa) => <HPASummary hpa={hpa} />}
+      renderDetail={(hpa) => <HPAExpandedDetail hpa={hpa} />}
+      searchPlaceholder="Search HPAs..."
+    />
   )
 }
