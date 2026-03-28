@@ -24,11 +24,14 @@ import { jobsRouter } from './jobs.js'
 import { karpenterRouter } from './karpenter.js'
 import { logsRouter } from './logs.js'
 import { metricsRouter } from './metrics.js'
+import { networkPoliciesRouter } from './network-policies.js'
 import { namespacesRouter } from './namespaces.js'
 import { nodesRouter } from './nodes.js'
 import { podsRouter } from './pods.js'
 import { presenceRouter } from './presence.js'
 import { pvcsRouter } from './pvcs.js'
+import { rbacRouter } from './rbac.js'
+import { resourceQuotasRouter } from './resource-quotas.js'
 import { secretsRouter } from './secrets.js'
 import { servicesRouter } from './services.js'
 import { ssoRouter } from './sso.js'
@@ -78,6 +81,9 @@ export const appRouter = router({
   services: servicesRouter,
   statefulSets: statefulSetsRouter,
   namespaces: namespacesRouter,
+  networkPolicies: networkPoliciesRouter,
+  rbac: rbacRouter,
+  resourceQuotas: resourceQuotasRouter,
   dashboardLayout: dashboardLayoutRouter,
   yaml: yamlRouter,
 })
