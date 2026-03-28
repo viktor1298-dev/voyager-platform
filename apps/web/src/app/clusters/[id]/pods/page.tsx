@@ -8,12 +8,12 @@ import {
   Cpu,
   HardDrive,
   Package,
-  Search,
   Trash2,
 } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, ExpandableCard, ResourceBar } from '@/components/expandable'
+import { SearchFilterBar } from '@/components/resource'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -319,11 +319,13 @@ function NamespacePodGroup({
   pods,
   isAdmin,
   onDeletePod,
+  expandAll,
 }: {
   namespace: string
   pods: PodData[]
   isAdmin: boolean
   onDeletePod: (pod: PodData) => void
+  expandAll: boolean
 }) {
   const [open, setOpen] = useState(true)
 
@@ -345,6 +347,7 @@ function NamespacePodGroup({
           {pods.map((pod) => (
             <ExpandableCard
               key={`${pod.namespace}/${pod.name}`}
+              expanded={expandAll}
               summary={<PodSummary pod={pod} isAdmin={isAdmin} onDeletePod={onDeletePod} />}
             >
               <PodDetail pod={pod} />
@@ -392,6 +395,7 @@ export default function PodsPage() {
 
   const [deletePodTarget, setDeletePodTarget] = useState<PodData | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [expandAll, setExpandAll] = useState(false)
 
   const pods = (podsQuery.data ?? []) as PodData[]
 
@@ -454,22 +458,15 @@ export default function PodsPage() {
       )}
 
       {/* Search / filter bar */}
-      <div className="mb-3 relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--color-text-dim)]" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Filter pods by name, namespace, or status…"
-          className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] pl-9 pr-3 py-2 text-[13px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] transition-colors"
-          aria-label="Filter pods"
-        />
-        {searchQuery && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-[var(--color-text-muted)]">
-            {filteredPods.length}/{pods.length}
-          </span>
-        )}
-      </div>
+      <SearchFilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        totalCount={pods.length}
+        filteredCount={filteredPods.length}
+        expandAll={expandAll}
+        onExpandAllToggle={() => setExpandAll((prev) => !prev)}
+        searchPlaceholder="Search pods..."
+      />
 
       {/* Pod list */}
       {podsQuery.isLoading ? (
@@ -499,6 +496,7 @@ export default function PodsPage() {
               pods={nsPods}
               isAdmin={isAdmin === true}
               onDeletePod={setDeletePodTarget}
+              expandAll={expandAll}
             />
           ))}
         </div>

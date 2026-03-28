@@ -1,10 +1,11 @@
 'use client'
 
-import { Activity } from 'lucide-react'
+import { Activity, Info, MessageSquare } from 'lucide-react'
+import { useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { ExpandableTableRow } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { DetailTabs } from '@/components/expandable'
+import { ResourcePageScaffold } from '@/components/resource'
 import { severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
@@ -32,30 +33,89 @@ function asText(value: unknown, fallback = '—'): string {
   return fallback
 }
 
-function EventExpanded({ event }: { event: EventData }) {
+function EventSummary({ event }: { event: EventData }) {
+  const color = severityColor(event.type)
+
   return (
-    <div className="p-4 space-y-2">
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-          Full Message
-        </p>
-        <p className="text-[11px] text-[var(--color-text-secondary)] whitespace-pre-wrap break-all">
+    <div className="flex items-center gap-3 w-full min-w-0">
+      <span
+        className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
+        style={{
+          color,
+          background: `color-mix(in srgb, ${color} 15%, transparent)`,
+        }}
+      >
+        {event.type}
+      </span>
+      <span className="text-[13px] font-medium text-[var(--color-text-primary)] shrink-0">
+        {event.reason}
+      </span>
+      <span className="flex-1 min-w-0 text-xs text-[var(--color-text-muted)] truncate">
+        {event.message}
+      </span>
+      <span className="text-xs font-mono text-[var(--color-accent)] shrink-0 hidden sm:inline">
+        {event.involvedObject}
+      </span>
+      {event.count != null && event.count > 1 && (
+        <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)] shrink-0">
+          x{event.count}
+        </span>
+      )}
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
+        {event.lastTimestamp ? timeAgo(event.lastTimestamp) : '—'}
+      </span>
+    </div>
+  )
+}
+
+function EventExpandedDetail({ event }: { event: EventData }) {
+  const tabs = [
+    {
+      id: 'message',
+      label: 'Message',
+      icon: <MessageSquare className="h-3.5 w-3.5" />,
+      content: (
+        <p className="text-[11px] text-[var(--color-text-secondary)] whitespace-pre-wrap break-all font-mono">
           {event.message}
         </p>
-      </div>
-      <div className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[11px] font-mono">
-        <span className="text-[var(--color-text-muted)]">Object</span>
-        <span className="text-[var(--color-accent)]">{event.involvedObject}</span>
-        {event.count != null && event.count > 1 && (
-          <>
-            <span className="text-[var(--color-text-muted)]">Count</span>
-            <span className="text-[var(--color-text-primary)]">{event.count}</span>
-          </>
-        )}
-        <span className="text-[var(--color-text-muted)]">Namespace</span>
-        <span className="text-[var(--color-text-secondary)]">{event.namespace}</span>
-      </div>
-    </div>
+      ),
+    },
+    {
+      id: 'details',
+      label: 'Details',
+      icon: <Info className="h-3.5 w-3.5" />,
+      content: (
+        <div className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1.5 text-[11px] font-mono">
+          <span className="text-[var(--color-text-muted)]">Type</span>
+          <span className="font-bold" style={{ color: severityColor(event.type) }}>
+            {event.type}
+          </span>
+          <span className="text-[var(--color-text-muted)]">Reason</span>
+          <span className="text-[var(--color-text-primary)]">{event.reason}</span>
+          <span className="text-[var(--color-text-muted)]">Object</span>
+          <span className="text-[var(--color-accent)]">{event.involvedObject}</span>
+          <span className="text-[var(--color-text-muted)]">Namespace</span>
+          <span className="text-[var(--color-text-secondary)]">{event.namespace}</span>
+          {event.count != null && (
+            <>
+              <span className="text-[var(--color-text-muted)]">Count</span>
+              <span className="text-[var(--color-text-primary)]">{event.count}</span>
+            </>
+          )}
+          <span className="text-[var(--color-text-muted)]">Last Seen</span>
+          <span className="text-[var(--color-text-primary)]">
+            {event.lastTimestamp ? timeAgo(event.lastTimestamp) : '—'}
+          </span>
+        </div>
+      ),
+    },
+  ]
+
+  return (
+    <DetailTabs
+      id={`event-${event.namespace}-${event.reason}-${event.lastTimestamp}`}
+      tabs={tabs}
+    />
   )
 }
 
@@ -84,8 +144,9 @@ export default function EventsPage() {
     { enabled: !effectiveIsLive, refetchInterval: REFETCH_INTERVAL },
   )
 
-  const events: EventData[] = effectiveIsLive
-    ? (liveQuery.data?.events ?? []).map((e) => ({
+  const events: EventData[] = useMemo(() => {
+    if (effectiveIsLive) {
+      return (liveQuery.data?.events ?? []).map((e) => ({
         type: asText(e.type, 'Normal'),
         reason: asText(e.reason),
         message: asText(e.message),
@@ -94,22 +155,24 @@ export default function EventsPage() {
         count: e.count ?? null,
         lastTimestamp: e.lastTimestamp ? String(e.lastTimestamp) : null,
       }))
-    : (dbEvents.data ?? []).map((e) => ({
-        type: asText(e.type, 'Normal'),
-        reason: asText(e.reason),
-        message: asText(e.message),
-        namespace: asText(e.namespace),
-        involvedObject: '—',
-        count: null,
-        lastTimestamp: e.createdAt
-          ? e.createdAt instanceof Date
-            ? e.createdAt.toISOString()
-            : String(e.createdAt)
-          : null,
-      }))
+    }
+    return (dbEvents.data ?? []).map((e) => ({
+      type: asText(e.type, 'Normal'),
+      reason: asText(e.reason),
+      message: asText(e.message),
+      namespace: asText(e.namespace),
+      involvedObject: '—',
+      count: null,
+      lastTimestamp: e.createdAt
+        ? e.createdAt instanceof Date
+          ? e.createdAt.toISOString()
+          : String(e.createdAt)
+        : null,
+    }))
+  }, [effectiveIsLive, liveQuery.data, dbEvents.data])
 
-  const isAutoRefreshing = effectiveIsLive ? liveQuery.isFetching : dbEvents.isFetching
   const isLoading = effectiveIsLive ? liveQuery.isLoading : dbEvents.isLoading
+  const isAutoRefreshing = effectiveIsLive ? liveQuery.isFetching : dbEvents.isFetching
 
   return (
     <div className="space-y-3">
@@ -128,76 +191,30 @@ export default function EventsPage() {
         </span>
       </div>
 
-      {isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : events.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-          <div className="rounded-full bg-white/[0.04] p-3 mb-3">
-            <Activity className="h-10 w-10 text-[var(--color-text-dim)]" />
-          </div>
-          <p className="text-sm font-medium text-[var(--color-text-muted)]">
-            No events recorded yet
-          </p>
-          <p className="text-xs text-[var(--color-text-dim)] mt-1 max-w-xs">
-            Kubernetes events appear here when something notable happens in your cluster.
-          </p>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-                <th className="text-left px-4 py-2.5">Time</th>
-                <th className="text-left px-3 py-2.5">Type</th>
-                <th className="text-left px-3 py-2.5">Reason</th>
-                <th className="text-left px-3 py-2.5">Namespace</th>
-                <th className="text-left px-3 py-2.5">Message</th>
-                <th className="w-8" />
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((event, i) => (
-                <ExpandableTableRow
-                  key={`event-${i}`}
-                  columnCount={5}
-                  cells={
-                    <>
-                      <td className="px-4 py-2.5 font-mono text-xs text-[var(--color-text-dim)] whitespace-nowrap">
-                        {event.lastTimestamp ? timeAgo(event.lastTimestamp) : '—'}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span
-                          className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
-                          style={{
-                            color: severityColor(event.type),
-                            background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)`,
-                          }}
-                        >
-                          {event.type}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-[var(--color-text-primary)] font-medium whitespace-nowrap">
-                        {event.reason}
-                      </td>
-                      <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                        {event.namespace}
-                      </td>
-                      <td className="px-3 py-2.5 text-[var(--color-text-muted)] text-xs max-w-[400px] truncate">
-                        {event.message}
-                      </td>
-                    </>
-                  }
-                  detail={<EventExpanded event={event} />}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <ResourcePageScaffold<EventData>
+        title="Events"
+        icon={<Activity className="h-10 w-10 text-[var(--color-text-dim)]" />}
+        queryResult={{
+          data: events,
+          isLoading,
+          error: null,
+        }}
+        getNamespace={(event) => event.namespace || 'cluster'}
+        getKey={(event) =>
+          `${event.namespace}-${event.reason}-${event.lastTimestamp}-${event.involvedObject}`
+        }
+        filterFn={(event, q) =>
+          event.reason.toLowerCase().includes(q) ||
+          event.message.toLowerCase().includes(q) ||
+          event.involvedObject.toLowerCase().includes(q) ||
+          event.type.toLowerCase().includes(q)
+        }
+        renderSummary={(event) => <EventSummary event={event} />}
+        renderDetail={(event) => <EventExpandedDetail event={event} />}
+        searchPlaceholder="Search events..."
+        emptyMessage="No events recorded yet"
+        emptyDescription="Kubernetes events appear here when something notable happens in your cluster."
+      />
     </div>
   )
 }
