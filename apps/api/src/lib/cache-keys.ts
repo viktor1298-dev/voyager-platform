@@ -25,6 +25,8 @@ export const CACHE_KEYS = {
 
   k8sPodMetrics: (clusterId: string) => `k8s:${clusterId}:pod-metrics`,
 
+  k8sNodeMetrics: (clusterId: string) => `k8s:${clusterId}:node-metrics`,
+
   /** Global deployments list cache (not cluster-scoped) */
   k8sDeploymentsListGlobal: () => 'k8s:deployments:list:v2',
 

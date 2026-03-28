@@ -9,6 +9,31 @@ import { handleK8sError } from '../lib/error-handler.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
+function mapContainer(c: k8s.V1Container) {
+  return {
+    name: c.name ?? '',
+    image: c.image ?? '',
+    ports: (c.ports ?? []).map((p) => ({
+      containerPort: p.containerPort,
+      protocol: p.protocol ?? 'TCP',
+      name: p.name ?? null,
+    })),
+    command: c.command ?? null,
+    volumeMounts: (c.volumeMounts ?? []).map((vm) => ({
+      name: vm.name,
+      mountPath: vm.mountPath,
+      readOnly: vm.readOnly ?? false,
+    })),
+    envCount: (c.env ?? []).length + (c.envFrom ?? []).length,
+    resources: {
+      cpuRequest: c.resources?.requests?.cpu ?? null,
+      cpuLimit: c.resources?.limits?.cpu ?? null,
+      memRequest: c.resources?.requests?.memory ?? null,
+      memLimit: c.resources?.limits?.memory ?? null,
+    },
+  }
+}
+
 export const podsRouter = router({
   list: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid() }))
@@ -53,6 +78,42 @@ export const podsRouter = router({
             (sum, c) => sum + parseMemToBytes(c.resources?.requests?.memory ?? '0'),
             0,
           )
+
+          // Container statuses for restart count and ready count
+          const containerStatuses = p.status?.containerStatuses ?? []
+          const totalContainers = containerStatuses.length || (p.spec?.containers ?? []).length
+          const readyContainers = containerStatuses.filter((cs) => cs.ready).length
+          const restartCount = containerStatuses.reduce(
+            (sum, cs) => sum + (cs.restartCount ?? 0),
+            0,
+          )
+
+          // Last restart reason
+          let lastRestartReason: string | null = null
+          if (restartCount > 0) {
+            for (const cs of containerStatuses) {
+              const terminated = cs.lastState?.terminated
+              if (terminated?.reason) {
+                lastRestartReason = terminated.reason
+                break
+              }
+            }
+          }
+
+          // Conditions
+          const conditions = (p.status?.conditions ?? []).map((c) => ({
+            type: c.type ?? '',
+            status: c.status ?? 'Unknown',
+            reason: c.reason ?? undefined,
+            message: c.message ?? undefined,
+            lastTransitionTime: c.lastTransitionTime
+              ? new Date(c.lastTransitionTime as unknown as string).toISOString()
+              : undefined,
+          }))
+
+          // Containers
+          const containers = (p.spec?.containers ?? []).map(mapContainer)
+
           return {
             name: p.metadata?.name ?? '',
             namespace: p.metadata?.namespace ?? '',
@@ -71,6 +132,12 @@ export const podsRouter = router({
               metrics && memRequestBytes > 0
                 ? Math.round((metrics.memBytes / memRequestBytes) * 1000) / 10
                 : null,
+            ready: `${readyContainers}/${totalContainers}`,
+            restartCount,
+            lastRestartReason,
+            containers,
+            conditions,
+            labels: (p.metadata?.labels as Record<string, string>) ?? {},
           }
         })
       } catch (err) {

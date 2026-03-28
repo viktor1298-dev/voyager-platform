@@ -1,170 +1,221 @@
 'use client'
 
-import type { ColumnDef } from '@tanstack/react-table'
-import { RefreshCw, Server } from 'lucide-react'
+import { Box, CircleCheck, Cpu, HardDrive, MapPin, RefreshCw, Server, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { DataTable } from '@/components/DataTable'
+import {
+  ConditionsList,
+  DetailTabs,
+  ExpandableTableRow,
+  ResourceBar,
+  TagPills,
+} from '@/components/expandable'
+import { Skeleton } from '@/components/ui/skeleton'
 import { nodeStatusColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
-interface NodeRow {
-  id: string
+interface LiveNode {
   name: string
   status: string
   role: string
   kubeletVersion: string
   os: string
-  cpu: string
-  memory: string
+  cpuCapacityMillis: number
+  cpuAllocatableMillis: number
+  memCapacityMi: number
+  memAllocatableMi: number
+  podsCapacity: number
+  podsAllocatable: number
+  ephStorageCapacityGi: number
+  ephStorageAllocatableGi: number
+  cpuUsageMillis: number | null
+  memUsageMi: number | null
   cpuPercent: number | null
-  memoryPercent: number | null
+  memPercent: number | null
+  labels: Record<string, string>
+  taints: { key: string; value: string; effect: string }[]
+  conditions: {
+    type: string
+    status: string
+    reason?: string
+    message?: string
+    lastTransitionTime?: string
+  }[]
+  addresses: { type: string; address: string }[]
 }
 
-function asText(value: unknown, fallback = '—'): string {
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    return trimmed.length > 0 ? trimmed : fallback
-  }
-  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint')
-    return String(value)
-  return fallback
-}
+// ---------------------------------------------------------------------------
+// Node detail expanded content
+// ---------------------------------------------------------------------------
 
-function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>[] {
-  const metricsUnavailableCell = () => (
-    <span
-      className="text-[var(--color-text-dim)] text-xs italic"
-      title="Install metrics-server in your cluster to enable resource metrics"
-    >
-      {metricsAvailable ? '—' : 'metrics-server required'}
-    </span>
-  )
-  return [
+function NodeDetail({ node }: { node: LiveNode }) {
+  const tabs = [
     {
-      accessorKey: 'name',
-      header: 'Name',
-      cell: ({ getValue }) => (
-        <span className="font-medium font-mono text-[var(--color-text-primary)] text-[13px]">
-          {getValue<string>()}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ getValue }) => {
-        const status = getValue<string>()
-        return (
-          <span className="inline-flex items-center gap-1.5">
-            <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(status)}`} />
-            <span className="text-[var(--color-text-secondary)] text-[13px]">{status}</span>
-          </span>
-        )
-      },
-    },
-    {
-      accessorKey: 'role',
-      header: 'Role',
-      cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-muted)] text-[13px]">{getValue<string>()}</span>
-      ),
-    },
-    {
-      accessorKey: 'kubeletVersion',
-      header: 'Kubelet',
-      cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
-          {getValue<string>()}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'os',
-      header: 'OS',
-      cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-muted)] text-xs">{getValue<string>()}</span>
-      ),
-    },
-    {
-      accessorKey: 'cpu',
-      header: 'CPU',
-      cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
-          {getValue<string>()}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'cpuPercent',
-      header: 'CPU %',
-      cell: ({ getValue }) => {
-        const v = getValue<number | null>()
-        if (v == null) return metricsUnavailableCell()
-        return (
-          <div className="flex items-center gap-2 min-w-[100px]">
-            <div className="relative flex-1 h-4 rounded-full bg-[var(--color-track)] overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 rounded-full transition-all"
-                style={{
-                  width: `${Math.max(v, 2)}%`,
-                  background:
-                    v > 80
-                      ? 'var(--color-status-error)'
-                      : v > 60
-                        ? 'var(--color-status-warning)'
-                        : 'var(--color-accent)',
-                }}
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
-                {v}%
-              </span>
+      id: 'resources',
+      label: 'Resources',
+      icon: <Box className="h-3.5 w-3.5" />,
+      content: (
+        <div className="space-y-3">
+          <ResourceBar
+            label="CPU"
+            icon={<Cpu className="h-3.5 w-3.5" />}
+            used={node.cpuUsageMillis ?? 0}
+            total={node.cpuAllocatableMillis}
+            unit="m"
+          />
+          <ResourceBar
+            label="Memory"
+            icon={<HardDrive className="h-3.5 w-3.5" />}
+            used={node.memUsageMi ?? 0}
+            total={node.memAllocatableMi}
+            unit="Mi"
+          />
+          <ResourceBar label="Pods" used={0} total={node.podsAllocatable} />
+          {node.ephStorageAllocatableGi > 0 && (
+            <ResourceBar
+              label="Ephemeral Storage"
+              used={0}
+              total={node.ephStorageAllocatableGi}
+              unit="Gi"
+            />
+          )}
+          <div className="pt-2 border-t border-[var(--color-border)]/30">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+              Capacity vs Allocatable
+            </p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px] font-mono">
+              <div className="text-[var(--color-text-muted)]">CPU Capacity</div>
+              <div className="text-[var(--color-text-primary)]">{node.cpuCapacityMillis}m</div>
+              <div className="text-[var(--color-text-muted)]">CPU Allocatable</div>
+              <div className="text-[var(--color-text-primary)]">{node.cpuAllocatableMillis}m</div>
+              <div className="text-[var(--color-text-muted)]">Mem Capacity</div>
+              <div className="text-[var(--color-text-primary)]">{node.memCapacityMi} Mi</div>
+              <div className="text-[var(--color-text-muted)]">Mem Allocatable</div>
+              <div className="text-[var(--color-text-primary)]">{node.memAllocatableMi} Mi</div>
             </div>
           </div>
-        )
-      },
-    },
-    {
-      accessorKey: 'memory',
-      header: 'Memory',
-      cell: ({ getValue }) => (
-        <span className="text-[var(--color-text-secondary)] font-mono text-xs">
-          {getValue<string>()}
-        </span>
+        </div>
       ),
     },
     {
-      accessorKey: 'memoryPercent',
-      header: 'Mem %',
-      cell: ({ getValue }) => {
-        const v = getValue<number | null>()
-        if (v == null) return metricsUnavailableCell()
-        return (
-          <div className="flex items-center gap-2 min-w-[100px]">
-            <div className="relative flex-1 h-4 rounded-full bg-[var(--color-track)] overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 rounded-full transition-all"
-                style={{
-                  width: `${Math.max(v, 2)}%`,
-                  background:
-                    v > 80
-                      ? 'var(--color-status-error)'
-                      : v > 60
-                        ? 'var(--color-status-warning)'
-                        : 'var(--color-accent)',
-                }}
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
-                {v}%
-              </span>
+      id: 'labels',
+      label: 'Labels & Taints',
+      icon: <Tag className="h-3.5 w-3.5" />,
+      content: (
+        <div className="space-y-4">
+          {Object.keys(node.labels).length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+                Labels ({Object.keys(node.labels).length})
+              </p>
+              <TagPills tags={node.labels} />
             </div>
-          </div>
-        )
-      },
+          )}
+          {node.taints.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+                Taints ({node.taints.length})
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {node.taints.map((t, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/[0.03] border border-[var(--color-border)]/40 rounded-md font-mono text-[10px]"
+                  >
+                    <span className="text-[var(--color-accent)]">{t.key}</span>
+                    {t.value && (
+                      <>
+                        <span className="text-[var(--color-text-muted)]/60">=</span>
+                        <span className="text-[var(--color-text-secondary)]">{t.value}</span>
+                      </>
+                    )}
+                    <span className="ml-1 px-1 py-px rounded text-[9px] bg-amber-500/10 text-amber-400 font-semibold">
+                      {t.effect}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {node.addresses.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+                Addresses
+              </p>
+              <div className="space-y-1">
+                {node.addresses.map((addr, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 text-[11px] font-mono px-2 py-1 bg-white/[0.02] rounded"
+                  >
+                    <MapPin className="h-3 w-3 text-[var(--color-text-muted)]" />
+                    <span className="text-[var(--color-text-muted)] min-w-[80px]">{addr.type}</span>
+                    <span className="text-[var(--color-accent)]">{addr.address}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {Object.keys(node.labels).length === 0 &&
+            node.taints.length === 0 &&
+            node.addresses.length === 0 && (
+              <p className="text-[11px] text-[var(--color-text-muted)]">
+                No labels, taints, or addresses.
+              </p>
+            )}
+        </div>
+      ),
+    },
+    {
+      id: 'conditions',
+      label: 'Conditions',
+      icon: <CircleCheck className="h-3.5 w-3.5" />,
+      content: <ConditionsList conditions={node.conditions} />,
     },
   ]
+
+  return <DetailTabs id={`node-${node.name}`} tabs={tabs} />
 }
+
+// ---------------------------------------------------------------------------
+// Inline resource bar for summary row (compact)
+// ---------------------------------------------------------------------------
+
+function InlineBar({ value, label }: { value: number | null; label: string }) {
+  if (value == null)
+    return (
+      <span className="text-[var(--color-text-dim)] text-xs italic" title="metrics-server required">
+        —
+      </span>
+    )
+
+  return (
+    <div className="flex items-center gap-2 min-w-[100px]" title={`${label}: ${value}%`}>
+      <div className="relative flex-1 h-4 rounded-full bg-[var(--color-track)] overflow-hidden">
+        <div
+          className="absolute inset-y-0 left-0 rounded-full transition-all"
+          style={{
+            width: `${Math.max(value, 2)}%`,
+            background:
+              value > 80
+                ? 'var(--color-status-error)'
+                : value > 60
+                  ? 'var(--color-status-warning)'
+                  : 'var(--color-accent)',
+          }}
+        />
+        <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
+          {value}%
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
 
 export default function NodesPage() {
   usePageTitle('Cluster Nodes')
@@ -177,111 +228,178 @@ export default function NodesPage() {
   const hasCredentials = Boolean(
     (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
   )
-  const isLive = hasCredentials
 
-  const liveQuery = trpc.clusters.live.useQuery(
+  // Live data via new listLive endpoint
+  const liveQuery = trpc.nodes.listLive.useQuery(
     { clusterId: resolvedId },
-    { enabled: isLive, refetchInterval: 30000, retry: false, staleTime: 30000 },
+    { enabled: hasCredentials, refetchInterval: 30000, retry: false, staleTime: 30000 },
   )
-  const liveFailed = isLive && liveQuery.isError
-  const effectiveIsLive = isLive && !liveFailed
+  const liveFailed = hasCredentials && liveQuery.isError
+  const isLive = hasCredentials && !liveFailed
 
-  const dbNodes = trpc.nodes.list.useQuery({ clusterId: resolvedId }, { enabled: !effectiveIsLive })
+  // Fallback to DB nodes if live unavailable
+  const dbNodes = trpc.nodes.list.useQuery({ clusterId: resolvedId }, { enabled: !isLive })
 
-  const liveData = liveQuery.data
+  const liveNodes = (liveQuery.data ?? []) as LiveNode[]
 
-  const nodes: NodeRow[] = effectiveIsLive
-    ? (liveData?.nodes ?? []).map((n: Record<string, unknown>, i: number) => ({
-        id: `node-${i}`,
-        name: asText(n['name'], ''),
-        status:
-          n['status'] === 'ready'
-            ? 'Ready'
-            : n['status'] === 'notready'
-              ? 'NotReady'
-              : asText(n['status'], 'Unknown'),
-        role: asText(n['role'], 'worker'),
-        kubeletVersion: asText(n['kubeletVersion']),
-        os: asText(n['os'] ?? n['operatingSystem']),
-        cpu:
-          n['cpuAllocatable'] != null
-            ? `${n['cpuAllocatable']}m / ${n['cpuCapacity'] ?? '?'}m`
-            : '—',
-        memory:
-          n['memoryAllocatable'] != null
-            ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi / ${Math.round(Number(n['memoryCapacity'] ?? 0) / 1024)}Mi`
-            : '—',
-        cpuPercent: typeof n['cpuPercent'] === 'number' ? n['cpuPercent'] : null,
-        memoryPercent: typeof n['memoryPercent'] === 'number' ? n['memoryPercent'] : null,
-      }))
-    : (dbNodes.data ?? []).map((n: Record<string, unknown>, i: number) => ({
-        id: `node-db-${i}`,
-        name: asText(n['name'], ''),
-        status: asText(n['status'], 'Unknown'),
-        role: asText(n['role'], 'worker'),
-        kubeletVersion: asText(n['k8sVersion']),
-        os: '—',
-        cpu: n['cpuAllocatable'] != null ? `${n['cpuAllocatable']}m` : '—',
-        memory:
-          n['memoryAllocatable'] != null
-            ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi`
-            : '—',
-        cpuPercent: null,
-        memoryPercent: null,
-      }))
+  // For DB fallback, map to a compatible shape (no expandable details)
+  const dbNodeRows = (dbNodes.data ?? []).map((n) => ({
+    name: n.name,
+    status: n.status ?? 'Unknown',
+    role: n.role ?? 'worker',
+    kubeletVersion: n.k8sVersion ?? '',
+    os: '',
+    cpuAllocatableMillis: n.cpuAllocatable ?? 0,
+    cpuCapacityMillis: n.cpuCapacity ?? 0,
+    memAllocatableMi: n.memoryAllocatable ? Math.round(Number(n.memoryAllocatable) / 1024) : 0,
+    memCapacityMi: n.memoryCapacity ? Math.round(Number(n.memoryCapacity) / 1024) : 0,
+    cpuPercent: null as number | null,
+    memPercent: null as number | null,
+  }))
 
-  const metricsAvailable = effectiveIsLive && nodes.some((n) => n.cpuPercent != null)
-  const isOffline = isLive && liveFailed
-  const nodesQuery = effectiveIsLive ? liveQuery : dbNodes
+  const isLoading = hasCredentials ? liveQuery.isLoading : dbNodes.isLoading
+  const isEmpty = isLive ? liveNodes.length === 0 : dbNodeRows.length === 0
+  const isOffline = hasCredentials && liveFailed
+  const activeQuery = isLive ? liveQuery : dbNodes
 
   return (
     <>
       <h1 className="sr-only">Cluster Nodes</h1>
-      <DataTable
-        data={nodes}
-        columns={makeNodeColumns(metricsAvailable)}
-        loading={effectiveIsLive ? liveQuery.isLoading : dbNodes.isLoading}
-        emptyIcon={<Server className="h-10 w-10" />}
-        emptyTitle={isOffline ? 'Cluster is currently offline' : 'No nodes found in this cluster'}
-        emptyDescription={
-          isOffline
-            ? 'Node data is unavailable while the cluster is offline. Check cluster connectivity and try again.'
-            : 'Nodes appear here when your cluster has worker nodes registered. Check cluster connectivity.'
-        }
-        emptyAction={
+
+      {isLoading && (
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-lg" />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && isEmpty && (
+        <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
+          <div className="rounded-full bg-white/[0.04] p-3 mb-3">
+            <Server className="h-10 w-10 text-[var(--color-text-dim)]" />
+          </div>
+          <p className="text-sm font-medium text-[var(--color-text-muted)]">
+            {isOffline ? 'Cluster is currently offline' : 'No nodes found in this cluster'}
+          </p>
+          <p className="text-xs text-[var(--color-text-dim)] mt-1 max-w-xs">
+            {isOffline
+              ? 'Node data is unavailable while the cluster is offline. Check cluster connectivity and try again.'
+              : 'Nodes appear here when your cluster has worker nodes registered.'}
+          </p>
           <button
             type="button"
-            onClick={() => nodesQuery.refetch()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
+            onClick={() => activeQuery.refetch()}
+            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
           >
             <RefreshCw className="h-3 w-3" />
             Refresh
           </button>
-        }
-        paginated
-        pageSize={25}
-        mobileCard={(node) => (
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="font-medium font-mono text-[var(--color-text-primary)] text-sm">
-                {node.name}
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`} />
-                <span className="text-[var(--color-text-secondary)] text-xs">{node.status}</span>
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-              <span className="text-[var(--color-text-muted)]">Role</span>
-              <span className="text-[var(--color-text-primary)]">{node.role}</span>
-              <span className="text-[var(--color-text-muted)]">CPU</span>
-              <span className="text-[var(--color-text-primary)] font-mono">{node.cpu}</span>
-              <span className="text-[var(--color-text-muted)]">Memory</span>
-              <span className="text-[var(--color-text-primary)] font-mono">{node.memory}</span>
-            </div>
-          </div>
-        )}
-      />
+        </div>
+      )}
+
+      {!isLoading && !isEmpty && (
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
+          <table className="w-full text-[13px]">
+            <thead>
+              <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                <th className="text-left px-4 py-2.5">Name</th>
+                <th className="text-left px-3 py-2.5">Status</th>
+                <th className="text-left px-3 py-2.5">Role</th>
+                <th className="text-left px-3 py-2.5">Kubelet</th>
+                <th className="text-left px-3 py-2.5">CPU</th>
+                <th className="text-left px-3 py-2.5 min-w-[130px]">CPU %</th>
+                <th className="text-left px-3 py-2.5">Memory</th>
+                <th className="text-left px-3 py-2.5 min-w-[130px]">Mem %</th>
+                {isLive && <th className="w-8" />}
+              </tr>
+            </thead>
+            <tbody>
+              {isLive
+                ? liveNodes.map((node) => (
+                    <ExpandableTableRow
+                      key={node.name}
+                      columnCount={8}
+                      cells={
+                        <>
+                          <td className="px-4 py-2.5">
+                            <span className="font-medium font-mono text-[var(--color-text-primary)]">
+                              {node.name}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <span className="inline-flex items-center gap-1.5">
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`}
+                              />
+                              <span className="text-[var(--color-text-secondary)]">
+                                {node.status}
+                              </span>
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-[var(--color-text-muted)]">
+                            {node.role}
+                          </td>
+                          <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                            {node.kubeletVersion}
+                          </td>
+                          <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                            {node.cpuAllocatableMillis}m / {node.cpuCapacityMillis}m
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <InlineBar value={node.cpuPercent} label="CPU" />
+                          </td>
+                          <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                            {node.memAllocatableMi}Mi / {node.memCapacityMi}Mi
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <InlineBar value={node.memPercent} label="Memory" />
+                          </td>
+                        </>
+                      }
+                      detail={<NodeDetail node={node} />}
+                    />
+                  ))
+                : dbNodeRows.map((node, i) => (
+                    <tr
+                      key={i}
+                      className="border-b border-[var(--color-border)]/20 last:border-0 hover:bg-white/[0.02]"
+                    >
+                      <td className="px-4 py-2.5">
+                        <span className="font-medium font-mono text-[var(--color-text-primary)]">
+                          {node.name}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <span className="inline-flex items-center gap-1.5">
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`}
+                          />
+                          <span className="text-[var(--color-text-secondary)]">{node.status}</span>
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-[var(--color-text-muted)]">{node.role}</td>
+                      <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                        {node.kubeletVersion}
+                      </td>
+                      <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                        {node.cpuAllocatableMillis}m
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <InlineBar value={node.cpuPercent} label="CPU" />
+                      </td>
+                      <td className="px-3 py-2.5 text-[var(--color-text-secondary)] font-mono text-xs">
+                        {node.memAllocatableMi}Mi
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <InlineBar value={node.memPercent} label="Memory" />
+                      </td>
+                    </tr>
+                  ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </>
   )
 }
