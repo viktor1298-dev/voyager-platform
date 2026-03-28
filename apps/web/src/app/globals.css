@@ -265,6 +265,52 @@
 
   /* Error text token */
   --color-error-text: #f87171;
+
+  /* Phase 9: Terminal colors */
+  --color-terminal-bg: #0d1117;
+  --color-terminal-text: #d1d5db;
+  --color-terminal-cursor: #7c8cf8;
+  --color-terminal-selection: rgba(124, 140, 248, 0.3);
+
+  /* Phase 9: Diff colors */
+  --color-diff-added-bg: rgba(16, 185, 129, 0.12);
+  --color-diff-removed-bg: rgba(239, 68, 68, 0.12);
+  --color-diff-modified-bg: rgba(245, 158, 11, 0.12);
+  --color-diff-added-text: #10b981;
+  --color-diff-removed-text: #f87171;
+
+  /* Phase 9: Graph/topology colors */
+  --color-graph-node-healthy: #10b981;
+  --color-graph-node-warning: #f59e0b;
+  --color-graph-node-error: #f87171;
+  --color-graph-edge: rgba(255, 255, 255, 0.2);
+  --color-graph-edge-active: var(--color-accent, #7c8cf8);
+
+  /* Phase 9: Network policy colors */
+  --color-netpol-allow: #10b981;
+  --color-netpol-deny: #f87171;
+
+  /* Phase 9: RBAC colors */
+  --color-rbac-allowed: #10b981;
+  --color-rbac-denied: rgba(255, 255, 255, 0.15);
+
+  /* Phase 9: Timeline colors */
+  --color-timeline-normal: #6366f1;
+  --color-timeline-warning: #f59e0b;
+  --color-timeline-error: #f87171;
+
+  /* Phase 9: Helm status colors */
+  --color-helm-deployed: #10b981;
+  --color-helm-failed: #f87171;
+  --color-helm-pending: #f59e0b;
+
+  /* Phase 9: YAML syntax (reuse log tokens) */
+  --color-yaml-key: var(--color-log-key);
+  --color-yaml-string: var(--color-log-string);
+  --color-yaml-number: var(--color-log-number);
+  --color-yaml-boolean: var(--color-log-boolean);
+  --color-yaml-null: var(--color-log-null);
+  --color-yaml-comment: var(--color-log-dim);
 }
 
 /* Light theme overrides */
@@ -370,6 +416,52 @@ html.light {
   --chart-4: #db2777;
   --chart-5: #0891b2;
   --color-error-text: #dc2626;
+
+  /* Phase 9: Terminal colors (light) */
+  --color-terminal-bg: #f8fafc;
+  --color-terminal-text: #334155;
+  --color-terminal-cursor: #4f46e5;
+  --color-terminal-selection: rgba(79, 70, 229, 0.3);
+
+  /* Phase 9: Diff colors (light) */
+  --color-diff-added-bg: rgba(5, 150, 105, 0.12);
+  --color-diff-removed-bg: rgba(220, 38, 38, 0.12);
+  --color-diff-modified-bg: rgba(217, 119, 6, 0.12);
+  --color-diff-added-text: #047857;
+  --color-diff-removed-text: #dc2626;
+
+  /* Phase 9: Graph/topology colors (light) */
+  --color-graph-node-healthy: #047857;
+  --color-graph-node-warning: #d97706;
+  --color-graph-node-error: #dc2626;
+  --color-graph-edge: rgba(0, 0, 0, 0.15);
+  --color-graph-edge-active: var(--color-accent, #4f46e5);
+
+  /* Phase 9: Network policy colors (light) */
+  --color-netpol-allow: #047857;
+  --color-netpol-deny: #dc2626;
+
+  /* Phase 9: RBAC colors (light) */
+  --color-rbac-allowed: #047857;
+  --color-rbac-denied: rgba(0, 0, 0, 0.08);
+
+  /* Phase 9: Timeline colors (light) */
+  --color-timeline-normal: #4f46e5;
+  --color-timeline-warning: #d97706;
+  --color-timeline-error: #dc2626;
+
+  /* Phase 9: Helm status colors (light) */
+  --color-helm-deployed: #047857;
+  --color-helm-failed: #dc2626;
+  --color-helm-pending: #d97706;
+
+  /* Phase 9: YAML syntax (reuse log tokens) */
+  --color-yaml-key: var(--color-log-key);
+  --color-yaml-string: var(--color-log-string);
+  --color-yaml-number: var(--color-log-number);
+  --color-yaml-boolean: var(--color-log-boolean);
+  --color-yaml-null: var(--color-log-null);
+  --color-yaml-comment: var(--color-log-dim);
 }
 
 @media (max-width: 768px) {
