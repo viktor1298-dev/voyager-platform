@@ -14,6 +14,7 @@ import { LoadingState } from '@/components/LoadingState'
 import { AiContextCard } from '@/components/AiContextCard'
 import { AiInsightBanner } from '@/components/ai/AiInsightBanner'
 import { MetricsTimeSeriesPanel } from '@/components/metrics/MetricsTimeSeriesPanel'
+import { TopologyMap } from '@/components/topology/TopologyMap'
 import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
@@ -129,7 +130,12 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
                 className="absolute inset-y-0 left-0 rounded-full transition-all"
                 style={{
                   width: `${Math.max(v, 2)}%`,
-                  background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
+                  background:
+                    v > 80
+                      ? 'var(--color-status-error)'
+                      : v > 60
+                        ? 'var(--color-status-warning)'
+                        : 'var(--color-accent)',
                 }}
               />
               <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
@@ -162,7 +168,12 @@ function makeNodeColumns(metricsAvailable: boolean): ColumnDef<NodeRow, unknown>
                 className="absolute inset-y-0 left-0 rounded-full transition-all"
                 style={{
                   width: `${Math.max(v, 2)}%`,
-                  background: v > 80 ? 'var(--color-status-error)' : v > 60 ? 'var(--color-status-warning)' : 'var(--color-accent)',
+                  background:
+                    v > 80
+                      ? 'var(--color-status-error)'
+                      : v > 60
+                        ? 'var(--color-status-warning)'
+                        : 'var(--color-accent)',
                 }}
               />
               <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-[var(--color-text-primary)] mix-blend-normal drop-shadow-[0_0_2px_rgba(0,0,0,0.5)]">
@@ -354,8 +365,14 @@ export default function ClusterOverviewPage() {
         role: asText(n['role'], 'worker'),
         kubeletVersion: asText(n['kubeletVersion']),
         os: asText(n['os'] ?? n['operatingSystem']),
-        cpu: n['cpuAllocatable'] != null ? `${n['cpuAllocatable']}m / ${n['cpuCapacity'] ?? '?'}m` : '—',
-        memory: n['memoryAllocatable'] != null ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi / ${Math.round(Number(n['memoryCapacity'] ?? 0) / 1024)}Mi` : '—',
+        cpu:
+          n['cpuAllocatable'] != null
+            ? `${n['cpuAllocatable']}m / ${n['cpuCapacity'] ?? '?'}m`
+            : '—',
+        memory:
+          n['memoryAllocatable'] != null
+            ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi / ${Math.round(Number(n['memoryCapacity'] ?? 0) / 1024)}Mi`
+            : '—',
         cpuPercent: typeof n['cpuPercent'] === 'number' ? n['cpuPercent'] : null,
         memoryPercent: typeof n['memoryPercent'] === 'number' ? n['memoryPercent'] : null,
       }))
@@ -367,7 +384,10 @@ export default function ClusterOverviewPage() {
         kubeletVersion: asText(n['k8sVersion']),
         os: '—',
         cpu: n['cpuAllocatable'] != null ? `${n['cpuAllocatable']}m` : '—',
-        memory: n['memoryAllocatable'] != null ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi` : '—',
+        memory:
+          n['memoryAllocatable'] != null
+            ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi`
+            : '—',
         cpuPercent: null,
         memoryPercent: null,
       }))
@@ -445,11 +465,11 @@ export default function ClusterOverviewPage() {
         const anomalyItems = anomaliesQuery.data?.items ?? []
         const criticalCount = anomalyItems.filter(
           (a: { severity: string; acknowledgedAt: unknown; resolvedAt: unknown }) =>
-            a.severity === 'critical' && !a.acknowledgedAt && !a.resolvedAt
+            a.severity === 'critical' && !a.acknowledgedAt && !a.resolvedAt,
         ).length
         const warningCount = anomalyItems.filter(
           (a: { severity: string; acknowledgedAt: unknown; resolvedAt: unknown }) =>
-            a.severity === 'warning' && !a.acknowledgedAt && !a.resolvedAt
+            a.severity === 'warning' && !a.acknowledgedAt && !a.resolvedAt,
         ).length
         if (criticalCount === 0 && warningCount === 0) return null
         return (
@@ -514,12 +534,21 @@ export default function ClusterOverviewPage() {
               <Cpu className="h-5 w-5 text-[var(--color-text-dim)]" />
             </div>
             <p className="text-sm font-medium text-[var(--color-text-muted)]">No data available</p>
-            <p className="text-xs text-[var(--color-text-dim)] mt-1">Cluster is offline — metrics unavailable</p>
+            <p className="text-xs text-[var(--color-text-dim)] mt-1">
+              Cluster is offline — metrics unavailable
+            </p>
           </div>
         ) : (
           <MetricsTimeSeriesPanel clusterId={resolvedId} isLive={effectiveIsLive} compact />
         )}
       </div>
+
+      {/* Resource Topology */}
+      {effectiveIsLive && (
+        <div className="mb-4">
+          <TopologyMap clusterId={resolvedId} />
+        </div>
+      )}
 
       {/* Recent Events Preview */}
       <div>
@@ -553,8 +582,6 @@ export default function ClusterOverviewPage() {
           <p className="text-xs text-[var(--color-text-muted)] py-2">No recent events.</p>
         )}
       </div>
-
     </>
   )
 }
-

@@ -8,14 +8,12 @@ import { authRouter } from './auth.js'
 import { authorizationRouter, teamsRouter } from './authorization.js'
 import { clustersRouter } from './clusters.js'
 import { configMapsRouter } from './configmaps.js'
-import { crdsRouter } from './crds.js'
 import { cronJobsRouter } from './cronjobs.js'
 import { daemonSetsRouter } from './daemonsets.js'
 import { dashboardRouter } from './dashboard.js'
 import { dashboardLayoutRouter } from './dashboard-layout.js'
 import { deploymentsRouter } from './deployments.js'
 import { eventsRouter } from './events.js'
-import { helmRouter } from './helm.js'
 import { ingressesRouter } from './ingresses.js'
 import { featuresRouter } from './features.js'
 import { healthRouter } from './health.js'
@@ -24,23 +22,21 @@ import { jobsRouter } from './jobs.js'
 import { karpenterRouter } from './karpenter.js'
 import { logsRouter } from './logs.js'
 import { metricsRouter } from './metrics.js'
-import { networkPoliciesRouter } from './network-policies.js'
 import { namespacesRouter } from './namespaces.js'
+import { networkPoliciesRouter } from './network-policies.js'
 import { nodesRouter } from './nodes.js'
 import { podsRouter } from './pods.js'
 import { presenceRouter } from './presence.js'
 import { pvcsRouter } from './pvcs.js'
-import { rbacRouter } from './rbac.js'
-import { resourceQuotasRouter } from './resource-quotas.js'
 import { secretsRouter } from './secrets.js'
 import { servicesRouter } from './services.js'
 import { ssoRouter } from './sso.js'
 import { statefulSetsRouter } from './statefulsets.js'
 import { subscriptionsRouter } from './subscriptions.js'
 import { tokensRouter } from './tokens.js'
+import { topologyRouter } from './topology.js'
 import { usersRouter } from './users.js'
 import { webhooksRouter } from './webhooks.js'
-import { yamlRouter } from './yaml.js'
 
 export const appRouter = router({
   ai: aiRouter,
@@ -52,12 +48,10 @@ export const appRouter = router({
   authorization: authorizationRouter,
   clusters: clustersRouter,
   configMaps: configMapsRouter,
-  crds: crdsRouter,
   cronJobs: cronJobsRouter,
   daemonSets: daemonSetsRouter,
   deployments: deploymentsRouter,
   dashboard: dashboardRouter,
-  helm: helmRouter,
   health: healthRouter,
   hpa: hpaRouter,
   jobs: jobsRouter,
@@ -77,15 +71,13 @@ export const appRouter = router({
   teams: teamsRouter,
   users: usersRouter,
   tokens: tokensRouter,
+  topology: topologyRouter,
   webhooks: webhooksRouter,
   services: servicesRouter,
   statefulSets: statefulSetsRouter,
   namespaces: namespacesRouter,
   networkPolicies: networkPoliciesRouter,
-  rbac: rbacRouter,
-  resourceQuotas: resourceQuotasRouter,
   dashboardLayout: dashboardLayoutRouter,
-  yaml: yamlRouter,
 })
 
 export type AppRouter = typeof appRouter

@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
     "@iconify-json/simple-icons": "^1.2.75",
     "@iconify/react": "^6.0.2",
     "@radix-ui/react-collapsible": "^1.1.12",
@@ -27,8 +28,12 @@
     "@voyager/api": "workspace:*",
     "@voyager/config": "workspace:*",
     "@voyager/types": "workspace:*",
+<<<<<<< HEAD
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
+=======
+    "@xyflow/react": "^12.10.2",
+>>>>>>> worktree-agent-ac39d609
     "better-auth": "^1.5.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -53,7 +58,11 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.2",
+<<<<<<< HEAD
     "@types/js-yaml": "^4.0.9",
+=======
+    "@types/dagre": "^0.7.54",
+>>>>>>> worktree-agent-ac39d609
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
