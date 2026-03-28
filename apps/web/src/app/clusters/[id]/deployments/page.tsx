@@ -1,11 +1,10 @@
 'use client'
 
-import { BarChart3, CircleCheck, Settings } from 'lucide-react'
+import { BarChart3, CircleCheck, Rocket, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { useMemo, useState } from 'react'
-import { ConditionsList, DetailTabs, ExpandableTableRow, TagPills } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
+import { ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -38,6 +37,42 @@ function statusColor(status: string): string {
   if (status === 'Scaling') return 'var(--color-status-warning)'
   if (status === 'Failed') return 'var(--color-status-error)'
   return 'var(--color-text-dim)'
+}
+
+function DeploymentSummary({ d }: { d: DeploymentDetail }) {
+  const allReady = d.readyReplicas === d.replicas && d.replicas > 0
+  return (
+    <div className="flex items-center gap-3 w-full min-w-0">
+      <span className="flex-1 min-w-0 text-[13px] font-mono font-medium text-[var(--color-text-primary)] truncate">
+        {d.name}
+      </span>
+      <span
+        className="text-xs font-mono px-1.5 py-0.5 rounded shrink-0"
+        style={{
+          color: allReady ? 'var(--color-status-active)' : 'var(--color-status-warning)',
+          background: `color-mix(in srgb, ${allReady ? 'var(--color-status-active)' : 'var(--color-status-warning)'} 12%, transparent)`,
+        }}
+      >
+        {d.readyReplicas}/{d.replicas}
+      </span>
+      <span
+        className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
+        style={{
+          color: statusColor(d.status),
+          background: `color-mix(in srgb, ${statusColor(d.status)} 15%, transparent)`,
+        }}
+      >
+        {d.status}
+      </span>
+      <span
+        className="text-xs font-mono text-[var(--color-text-muted)] max-w-[180px] truncate shrink-0"
+        title={d.image}
+      >
+        {d.image}
+      </span>
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">{d.age}</span>
+    </div>
+  )
 }
 
 function DeploymentExpandedDetail({ d }: { d: DeploymentDetail }) {
@@ -142,7 +177,7 @@ function DeploymentExpandedDetail({ d }: { d: DeploymentDetail }) {
 }
 
 export default function DeploymentsPage() {
-  usePageTitle('Cluster Deployments')
+  usePageTitle('Deployments')
 
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
@@ -153,159 +188,27 @@ export default function DeploymentsPage() {
     (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
   )
 
-  const deploymentsQuery = trpc.deployments.listDetail.useQuery(
+  const query = trpc.deployments.listDetail.useQuery(
     { clusterId: resolvedId },
     { enabled: hasCredentials && !!resolvedId, refetchInterval: 30000 },
   )
 
-  const allNamespaces = useMemo(() => {
-    const ns = new Set<string>()
-    for (const d of (deploymentsQuery.data ?? []) as DeploymentDetail[]) {
-      if (d.namespace) ns.add(d.namespace)
-    }
-    return Array.from(ns).sort()
-  }, [deploymentsQuery.data])
-
-  const [nsFilter, setNsFilter] = useState<string>('all')
-
-  const deployments = useMemo(() => {
-    return ((deploymentsQuery.data ?? []) as DeploymentDetail[]).filter(
-      (d) => nsFilter === 'all' || d.namespace === nsFilter,
-    )
-  }, [deploymentsQuery.data, nsFilter])
-
-  if (dbCluster.isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
-      </div>
-    )
-  }
-
-  if (!hasCredentials) {
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-        <p className="text-sm font-medium">Live data unavailable</p>
-        <p className="text-xs text-[var(--color-text-dim)] mt-1">
-          Connect cluster credentials to view deployments.
-        </p>
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-3">
-      {/* Namespace filter */}
-      {allNamespaces.length > 0 && (
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-[var(--color-text-muted)]" htmlFor="ns-filter">
-            Namespace:
-          </label>
-          <select
-            id="ns-filter"
-            value={nsFilter}
-            onChange={(e) => setNsFilter(e.target.value)}
-            className="text-xs font-mono rounded-lg px-2 py-1 bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
-          >
-            <option value="all">All namespaces</option>
-            {allNamespaces.map((ns) => (
-              <option key={ns} value={ns}>
-                {ns}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {deploymentsQuery.isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : deployments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-          <p className="text-sm font-medium text-[var(--color-text-muted)]">No deployments found</p>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-                <th className="text-left px-4 py-2.5">Name</th>
-                <th className="text-left px-3 py-2.5">Namespace</th>
-                <th className="text-left px-3 py-2.5">Ready</th>
-                <th className="text-left px-3 py-2.5">Image</th>
-                <th className="text-left px-3 py-2.5">Status</th>
-                <th className="text-left px-3 py-2.5">Age</th>
-                <th className="w-8" />
-              </tr>
-            </thead>
-            <tbody>
-              {deployments.map((d) => {
-                const readyStr = `${d.readyReplicas}/${d.replicas}`
-                const allReady = d.readyReplicas === d.replicas && d.replicas > 0
-                return (
-                  <ExpandableTableRow
-                    key={`${d.namespace}/${d.name}`}
-                    columnCount={6}
-                    cells={
-                      <>
-                        <td className="px-4 py-2.5">
-                          <span className="font-mono font-medium text-[var(--color-text-primary)]">
-                            {d.name}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                          {d.namespace}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <span
-                            className="font-mono text-xs px-1.5 py-0.5 rounded"
-                            style={{
-                              color: allReady
-                                ? 'var(--color-status-active)'
-                                : 'var(--color-status-warning)',
-                              background: `color-mix(in srgb, ${allReady ? 'var(--color-status-active)' : 'var(--color-status-warning)'} 12%, transparent)`,
-                            }}
-                          >
-                            {readyStr}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <span
-                            className="font-mono text-xs text-[var(--color-text-muted)] max-w-[200px] truncate block"
-                            title={d.image}
-                          >
-                            {d.image}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <span
-                            className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
-                            style={{
-                              color: statusColor(d.status),
-                              background: `color-mix(in srgb, ${statusColor(d.status)} 15%, transparent)`,
-                            }}
-                          >
-                            {d.status}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-dim)]">
-                          {d.age}
-                        </td>
-                      </>
-                    }
-                    detail={<DeploymentExpandedDetail d={d} />}
-                  />
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+    <ResourcePageScaffold<DeploymentDetail>
+      title="Deployments"
+      icon={<Rocket className="h-5 w-5" />}
+      queryResult={query}
+      getNamespace={(d) => d.namespace}
+      getKey={(d) => `${d.namespace}/${d.name}`}
+      filterFn={(d, q) =>
+        d.name.toLowerCase().includes(q) ||
+        d.namespace.toLowerCase().includes(q) ||
+        d.status.toLowerCase().includes(q)
+      }
+      renderSummary={(d) => <DeploymentSummary d={d} />}
+      renderDetail={(d) => <DeploymentExpandedDetail d={d} />}
+      searchPlaceholder="Search deployments..."
+      emptyMessage="No deployments found"
+    />
   )
 }

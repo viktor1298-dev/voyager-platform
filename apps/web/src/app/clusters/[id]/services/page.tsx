@@ -1,11 +1,10 @@
 'use client'
 
-import { CircleCheck, Globe, Settings, Tag } from 'lucide-react'
+import { Globe, Settings, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { useMemo } from 'react'
-import { DetailTabs, ExpandableTableRow, TagPills } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { DetailTabs, TagPills } from '@/components/expandable'
+import { ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -38,7 +37,7 @@ function typeColor(type: string): string {
 }
 
 function formatPorts(ports: ServiceDetail['ports']): string {
-  if (!ports || ports.length === 0) return '—'
+  if (!ports || ports.length === 0) return '--'
   return ports
     .map((p) => {
       const proto = p.protocol ?? 'TCP'
@@ -46,6 +45,34 @@ function formatPorts(ports: ServiceDetail['ports']): string {
       return `${p.port}/${proto}${nodePort}`
     })
     .join(', ')
+}
+
+function ServiceSummary({ s }: { s: ServiceDetail }) {
+  return (
+    <div className="flex items-center gap-3 w-full min-w-0">
+      <span className="flex-1 min-w-0 text-[13px] font-mono font-medium text-[var(--color-text-primary)] truncate">
+        {s.name}
+      </span>
+      <span
+        className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
+        style={{
+          color: typeColor(s.type),
+          background: `color-mix(in srgb, ${typeColor(s.type)} 15%, transparent)`,
+        }}
+      >
+        {s.type}
+      </span>
+      <span className="text-xs font-mono text-[var(--color-text-muted)] shrink-0">
+        {s.clusterIP ?? '--'}
+      </span>
+      <span className="text-xs font-mono text-[var(--color-text-secondary)] max-w-[200px] truncate shrink-0">
+        {formatPorts(s.ports)}
+      </span>
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
+        {s.createdAt ? timeAgo(s.createdAt) : '--'}
+      </span>
+    </div>
+  )
 }
 
 function ServiceExpandedDetail({ svc }: { svc: ServiceDetail }) {
@@ -93,17 +120,17 @@ function ServiceExpandedDetail({ svc }: { svc: ServiceDetail }) {
                   {svc.ports.map((p, i) => (
                     <tr key={i} className="border-b border-[var(--color-border)]/20 last:border-0">
                       <td className="px-3 py-1.5 text-[var(--color-text-secondary)]">
-                        {p.name ?? '—'}
+                        {p.name ?? '--'}
                       </td>
                       <td className="px-3 py-1.5 text-[var(--color-accent)]">{p.port}</td>
                       <td className="px-3 py-1.5 text-[var(--color-text-secondary)]">
-                        {p.targetPort ?? '—'}
+                        {p.targetPort ?? '--'}
                       </td>
                       <td className="px-3 py-1.5 text-[var(--color-text-muted)]">
                         {p.protocol ?? 'TCP'}
                       </td>
                       <td className="px-3 py-1.5 text-[var(--color-text-secondary)]">
-                        {p.nodePort ?? '—'}
+                        {p.nodePort ?? '--'}
                       </td>
                     </tr>
                   ))}
@@ -120,7 +147,7 @@ function ServiceExpandedDetail({ svc }: { svc: ServiceDetail }) {
               </p>
               {svc.loadBalancerIngress.map((ing, i) => (
                 <div key={i} className="text-[11px] font-mono text-[var(--color-accent)]">
-                  {ing.hostname ?? ing.ip ?? '—'}
+                  {ing.hostname ?? ing.ip ?? '--'}
                 </div>
               ))}
             </div>
@@ -159,7 +186,7 @@ function ServiceExpandedDetail({ svc }: { svc: ServiceDetail }) {
 }
 
 export default function ServicesPage() {
-  usePageTitle('Cluster Services')
+  usePageTitle('Services')
 
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
@@ -170,104 +197,27 @@ export default function ServicesPage() {
     (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
   )
 
-  const servicesQuery = trpc.services.listDetail.useQuery(
+  const query = trpc.services.listDetail.useQuery(
     { clusterId: resolvedId },
     { enabled: hasCredentials && !!resolvedId, refetchInterval: 30000 },
   )
 
-  const services = (servicesQuery.data ?? []) as ServiceDetail[]
-
-  if (dbCluster.isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
-      </div>
-    )
-  }
-
-  if (!hasCredentials) {
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-        <p className="text-sm font-medium">Live data unavailable</p>
-        <p className="text-xs text-[var(--color-text-dim)] mt-1">
-          Connect cluster credentials to view services.
-        </p>
-      </div>
-    )
-  }
-
   return (
-    <>
-      {servicesQuery.isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : services.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-          <p className="text-sm font-medium text-[var(--color-text-muted)]">No services found</p>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-                <th className="text-left px-4 py-2.5">Name</th>
-                <th className="text-left px-3 py-2.5">Namespace</th>
-                <th className="text-left px-3 py-2.5">Type</th>
-                <th className="text-left px-3 py-2.5">ClusterIP</th>
-                <th className="text-left px-3 py-2.5">Ports</th>
-                <th className="text-left px-3 py-2.5">Age</th>
-                <th className="w-8" />
-              </tr>
-            </thead>
-            <tbody>
-              {services.map((svc) => (
-                <ExpandableTableRow
-                  key={`${svc.namespace}/${svc.name}`}
-                  columnCount={6}
-                  cells={
-                    <>
-                      <td className="px-4 py-2.5">
-                        <span className="font-mono font-medium text-[var(--color-text-primary)]">
-                          {svc.name}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                        {svc.namespace}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span
-                          className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
-                          style={{
-                            color: typeColor(svc.type),
-                            background: `color-mix(in srgb, ${typeColor(svc.type)} 15%, transparent)`,
-                          }}
-                        >
-                          {svc.type}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                        {svc.clusterIP ?? '—'}
-                      </td>
-                      <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-secondary)]">
-                        {formatPorts(svc.ports)}
-                      </td>
-                      <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-dim)]">
-                        {svc.createdAt ? timeAgo(svc.createdAt) : '—'}
-                      </td>
-                    </>
-                  }
-                  detail={<ServiceExpandedDetail svc={svc} />}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </>
+    <ResourcePageScaffold<ServiceDetail>
+      title="Services"
+      icon={<Globe className="h-5 w-5" />}
+      queryResult={query}
+      getNamespace={(s) => s.namespace}
+      getKey={(s) => `${s.namespace}/${s.name}`}
+      filterFn={(s, q) =>
+        s.name.toLowerCase().includes(q) ||
+        s.namespace.toLowerCase().includes(q) ||
+        s.type.toLowerCase().includes(q)
+      }
+      renderSummary={(s) => <ServiceSummary s={s} />}
+      renderDetail={(s) => <ServiceExpandedDetail svc={s} />}
+      searchPlaceholder="Search services..."
+      emptyMessage="No services found"
+    />
   )
 }
