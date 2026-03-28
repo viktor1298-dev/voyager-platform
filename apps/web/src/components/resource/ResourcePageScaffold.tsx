@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { ExpandableCard } from '@/components/expandable'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SearchFilterBar } from './SearchFilterBar'
@@ -41,53 +41,39 @@ export function ResourcePageScaffold<T>({
   const [expandAll, setExpandAll] = useState(false)
   const [namespacesOpen, setNamespacesOpen] = useState(true)
   const searchParams = useSearchParams()
-  const router = useRouter()
   const highlightRef = useRef<HTMLDivElement>(null)
 
-  // Parse ?highlight={"name":"x","namespace":"y"} from URL (cross-resource navigation)
-  const highlightParam = searchParams.get('highlight')
-  const highlightTarget = useMemo(() => {
-    if (!highlightParam) return null
-    try {
-      return JSON.parse(highlightParam) as Record<string, string>
-    } catch {
-      return null
-    }
-  }, [highlightParam])
+  // Parse ?highlight= from URL (cross-resource navigation)
+  // Format is a plain resource key string like "namespace/name" (from CrossResourceNav)
+  const highlightKey = searchParams.get('highlight')
 
-  // Build a highlight key to match against getKey
   const isHighlighted = useCallback(
     (item: T) => {
-      if (!highlightTarget) return false
+      if (!highlightKey) return false
       const key = getKey(item)
-      // Match by name/namespace combo or just name
-      if (highlightTarget.name && highlightTarget.namespace) {
-        return key === `${highlightTarget.namespace}/${highlightTarget.name}`
-      }
-      if (highlightTarget.name) {
-        return key.endsWith(highlightTarget.name) || key === highlightTarget.name
-      }
-      return false
+      return (
+        key === highlightKey ||
+        key.endsWith(`/${highlightKey}`) ||
+        key === decodeURIComponent(highlightKey)
+      )
     },
-    [highlightTarget, getKey],
+    [highlightKey, getKey],
   )
 
-  // Scroll to highlighted item and clear the param
+  // Scroll to highlighted item once data loads
+  const hasScrolled = useRef(false)
   useEffect(() => {
-    if (!highlightTarget || !highlightRef.current) return
+    if (!highlightKey || hasScrolled.current) return
+    if (!queryResult.data || (queryResult.data as T[]).length === 0) return
+    // Data loaded — wait for DOM to render the card, then scroll
     const timer = setTimeout(() => {
-      highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      // Clear the highlight param after scrolling
-      const timeout = setTimeout(() => {
-        const params = new URLSearchParams(searchParams.toString())
-        params.delete('highlight')
-        const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname
-        router.replace(newUrl, { scroll: false })
-      }, 2000)
-      return () => clearTimeout(timeout)
+      if (highlightRef.current) {
+        highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        hasScrolled.current = true
+      }
     }, 300)
     return () => clearTimeout(timer)
-  }, [highlightTarget, searchParams, router])
+  }, [highlightKey, queryResult.data])
 
   const items = (queryResult.data ?? []) as T[]
 

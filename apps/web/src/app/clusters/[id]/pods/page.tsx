@@ -12,7 +12,7 @@ import {
   Server,
   Trash2,
 } from 'lucide-react'
-import { useParams, useSearchParams, useRouter } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, ExpandableCard, ResourceBar } from '@/components/expandable'
 import { LogViewer } from '@/components/logs'
@@ -384,6 +384,7 @@ function NamespacePodGroup({
   clusterId,
   highlightPodKey,
   highlightRef,
+  namespacesOpen,
 }: {
   namespace: string
   pods: PodData[]
@@ -393,8 +394,13 @@ function NamespacePodGroup({
   clusterId: string
   highlightPodKey: string | null
   highlightRef: React.RefObject<HTMLDivElement | null>
+  namespacesOpen: boolean
 }) {
-  const [open, setOpen] = useState(true)
+  const [internalOpen, setInternalOpen] = useState(true)
+  const open = namespacesOpen ? internalOpen : false
+  const setOpen = (v: boolean) => {
+    if (namespacesOpen) setInternalOpen(v)
+  }
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -476,38 +482,28 @@ export default function PodsPage() {
   const [deletePodTarget, setDeletePodTarget] = useState<PodData | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [expandAll, setExpandAll] = useState(false)
+  const [namespacesOpen, setNamespacesOpen] = useState(true)
   const searchParams = useSearchParams()
-  const router = useRouter()
   const highlightRef = useRef<HTMLDivElement>(null)
 
-  // Parse ?highlight={"name":"x","namespace":"y"} for cross-resource navigation
-  const highlightParam = searchParams.get('highlight')
-  const highlightPodKey = useMemo(() => {
-    if (!highlightParam) return null
-    try {
-      const target = JSON.parse(highlightParam) as Record<string, string>
-      if (target.name && target.namespace) return `${target.namespace}/${target.name}`
-      if (target.name) return target.name
-      return null
-    } catch {
-      return null
-    }
-  }, [highlightParam])
+  // Parse ?highlight=namespace/name for cross-resource navigation (from CrossResourceNav)
+  const highlightRaw = searchParams.get('highlight')
+  const highlightPodKey = highlightRaw ? decodeURIComponent(highlightRaw) : null
 
-  // Scroll to highlighted pod and clear param
+  // Scroll to highlighted pod once data loads
+  const hasScrolled = useRef(false)
   useEffect(() => {
-    if (!highlightPodKey) return
+    if (!highlightPodKey || hasScrolled.current) return
+    if (!podsQuery.data || (podsQuery.data as PodData[]).length === 0) return
+    // Data loaded — wait a tick for DOM to render the card, then scroll
     const timer = setTimeout(() => {
-      highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      setTimeout(() => {
-        const params = new URLSearchParams(searchParams.toString())
-        params.delete('highlight')
-        const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname
-        router.replace(newUrl, { scroll: false })
-      }, 2000)
-    }, 500)
+      if (highlightRef.current) {
+        highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        hasScrolled.current = true
+      }
+    }, 300)
     return () => clearTimeout(timer)
-  }, [highlightPodKey, searchParams, router])
+  }, [highlightPodKey, podsQuery.data])
 
   const pods = (podsQuery.data ?? []) as PodData[]
 
@@ -578,6 +574,8 @@ export default function PodsPage() {
         expandAll={expandAll}
         onExpandAllToggle={() => setExpandAll((prev) => !prev)}
         searchPlaceholder="Search pods..."
+        namespacesOpen={namespacesOpen}
+        onNamespacesToggle={() => setNamespacesOpen((prev) => !prev)}
       />
 
       {/* Pod list */}
@@ -612,6 +610,7 @@ export default function PodsPage() {
               clusterId={resolvedId}
               highlightPodKey={highlightPodKey}
               highlightRef={highlightRef}
+              namespacesOpen={namespacesOpen}
             />
           ))}
         </div>
