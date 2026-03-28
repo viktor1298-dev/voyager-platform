@@ -1,0 +1,343 @@
+[     623ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[     630ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.get?input=%7B%22id%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[     663ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[     688ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[     691ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[     692ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[     694ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[     710ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[     719ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.subscribe:0
+[     737ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0
+[    1699ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[    3715ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[   35265ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/sign-in/email:0
+[   66365ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/sign-in/email:0
+[   85950ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/sign-in/email:0
+[  909750ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[  909866ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  909884ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[  910871ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  910888ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[  910941ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/karpenter.listNodeClaims?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1398779ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1501998ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1503005ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1509453ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.live?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1643184ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[ 1643392ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1643406ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 1670108ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1671114ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1804980ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <Collapsible open={true} onOpenChange={function bound dispatchSetState}>
+      <Collapsible data-slot="collapsible" open={true} onOpenChange={function bound dispatchSetState}>
+        <CollapsibleProvider scope={undefined} disabled={undefined} contentId="radix-_r_ap_" open={true} ...>
+          <Primitive.div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+            <div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+              <CollapsibleTrigger>
+              <CollapsibleContent>
+                <CollapsibleContent data-slot="collapsibl...">
+                  <Presence present={true}>
+                    <Primitive.div data-state="open" data-disabled={undefined} id="radix-_r_ap_" hidden={false} ...>
+                      <div data-state="open" data-disabled={undefined} id="radix-_r_ap_" hidden={false} ...>
+                        <div className="mt-1 space...">
+                          <ExpandableCard summary={<PodSummary>}>
+                            <div className="overflow-h...">
+>                             <button
+>                               type="button"
+>                               className="flex w-full items-center justify-between px-4 py-3 hover:bg-white/[0.02] tr..."
+>                               onClick={function onClick}
+>                               aria-expanded={false}
+>                             >
+                                ...
+                                  <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                    <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                      <Primitive.button.SlotClone aria-describedby={undefined} data-state="closed" ...>
+>                                       <button
+>                                         type="button"
+>                                         onClick={function}
+>                                         className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hove..."
+>                                         aria-label="Delete pod karpenter-5d9775c944-7n87b"
+>                                         aria-describedby={undefined}
+>                                         data-state="closed"
+>                                         onPointerMove={function handleEvent}
+>                                         onPointerLeave={function handleEvent}
+>                                         onPointerDown={function handleEvent}
+>                                         onFocus={function handleEvent}
+>                                         onBlur={function handleEvent}
+>                                         ref={function}
+>                                       >
+                                ...
+                              ...
+                          ...
+ @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[ 1804980ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[ 1838742ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1839748ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2182318ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[ 2182445ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.history?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22range%22%3A%223h%22%7D:0
+[ 2305496ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.history?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22range%22%3A%223h%22%7D:0
+[ 2306217ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2307223ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2307320ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.nodeBreakdown?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 2332300ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[ 2452297ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[ 2536783ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.live?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 2536811ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/nodes.list?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 2536814ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22limit%22%3A20%7D:0
+[ 2537815ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/nodes.list?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 2537824ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22limit%22%3A20%7D:0
+[ 2538947ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2539829ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/nodes.list?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 2539846ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22limit%22%3A20%7D:0
+[ 2539952ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 2543860ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. a0e5232f-df94-4dba-97ad-d1d0314e05f3 @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[ 2543860ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 8c5eaeae-5806-4bf2-820b-8172071044c4 @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[ 2645348ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2645417ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2645420ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2646357ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 2646423ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 2646431ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 2907515ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <Collapsible open={true} onOpenChange={function bound dispatchSetState}>
+      <Collapsible data-slot="collapsible" open={true} onOpenChange={function bound dispatchSetState}>
+        <CollapsibleProvider scope={undefined} disabled={undefined} contentId="radix-_r_46_" open={true} ...>
+          <Primitive.div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+            <div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+              <CollapsibleTrigger>
+              <CollapsibleContent>
+                <CollapsibleContent data-slot="collapsibl...">
+                  <Presence present={true}>
+                    <Primitive.div data-state="open" data-disabled={undefined} id="radix-_r_46_" hidden={false} ...>
+                      <div data-state="open" data-disabled={undefined} id="radix-_r_46_" hidden={false} ...>
+                        <div className="mt-1 space...">
+                          <ExpandableCard summary={<PodSummary>}>
+                            <div className="overflow-h...">
+>                             <button
+>                               type="button"
+>                               className="flex w-full items-center justify-between px-4 py-3 hover:bg-white/[0.02] tr..."
+>                               onClick={function onClick}
+>                               aria-expanded={false}
+>                             >
+                                ...
+                                  <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                    <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                      <Primitive.button.SlotClone aria-describedby={undefined} data-state="closed" ...>
+>                                       <button
+>                                         type="button"
+>                                         onClick={function}
+>                                         className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hove..."
+>                                         aria-label="Delete pod karpenter-5d9775c944-7n87b"
+>                                         aria-describedby={undefined}
+>                                         data-state="closed"
+>                                         onPointerMove={function handleEvent}
+>                                         onPointerLeave={function handleEvent}
+>                                         onPointerDown={function handleEvent}
+>                                         onFocus={function handleEvent}
+>                                         onBlur={function handleEvent}
+>                                         ref={function}
+>                                       >
+                                ...
+                              ...
+                          ...
+ @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[ 2907516ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[ 4465953ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <Collapsible open={true} onOpenChange={function bound dispatchSetState}>
+      <Collapsible data-slot="collapsible" open={true} onOpenChange={function bound dispatchSetState}>
+        <CollapsibleProvider scope={undefined} disabled={undefined} contentId="radix-_r_d_" open={true} ...>
+          <Primitive.div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+            <div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+              <CollapsibleTrigger>
+              <CollapsibleContent>
+                <CollapsibleContent data-slot="collapsibl...">
+                  <Presence present={true}>
+                    <Primitive.div data-state="open" data-disabled={undefined} id="radix-_r_d_" hidden={false} ...>
+                      <div data-state="open" data-disabled={undefined} id="radix-_r_d_" hidden={false} ...>
+                        <div className="mt-1 space...">
+                          <ExpandableCard summary={<PodSummary>}>
+                            <div className="overflow-h...">
+>                             <button
+>                               type="button"
+>                               className="flex w-full items-center justify-between px-4 py-3 hover:bg-white/[0.02] tr..."
+>                               onClick={function onClick}
+>                               aria-expanded={false}
+>                             >
+                                ...
+                                  <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                    <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                      <Primitive.button.SlotClone aria-describedby={undefined} data-state="closed" ...>
+>                                       <button
+>                                         type="button"
+>                                         onClick={function}
+>                                         className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hove..."
+>                                         aria-label="Delete pod karpenter-5d9775c944-7n87b"
+>                                         aria-describedby={undefined}
+>                                         data-state="closed"
+>                                         onPointerMove={function handleEvent}
+>                                         onPointerLeave={function handleEvent}
+>                                         onPointerDown={function handleEvent}
+>                                         onFocus={function handleEvent}
+>                                         onBlur={function handleEvent}
+>                                         ref={function}
+>                                       >
+                                ...
+                              ...
+                          ...
+ @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[ 4465953ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[ 4518559ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <Collapsible open={true} onOpenChange={function bound dispatchSetState}>
+      <Collapsible data-slot="collapsible" open={true} onOpenChange={function bound dispatchSetState}>
+        <CollapsibleProvider scope={undefined} disabled={undefined} contentId="radix-_r_d_" open={true} ...>
+          <Primitive.div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+            <div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+              <CollapsibleTrigger>
+              <CollapsibleContent>
+                <CollapsibleContent data-slot="collapsibl...">
+                  <Presence present={true}>
+                    <Primitive.div data-state="open" data-disabled={undefined} id="radix-_r_d_" hidden={false} ...>
+                      <div data-state="open" data-disabled={undefined} id="radix-_r_d_" hidden={false} ...>
+                        <div className="mt-1 space...">
+                          <ExpandableCard summary={<PodSummary>}>
+                            <div className="overflow-h...">
+>                             <button
+>                               type="button"
+>                               className="flex w-full items-center justify-between px-4 py-3 hover:bg-white/[0.02] tr..."
+>                               onClick={function onClick}
+>                               aria-expanded={false}
+>                             >
+                                ...
+                                  <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                    <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                      <Primitive.button.SlotClone aria-describedby={undefined} data-state="closed" ...>
+>                                       <button
+>                                         type="button"
+>                                         onClick={function}
+>                                         className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hove..."
+>                                         aria-label="Delete pod karpenter-5d9775c944-7n87b"
+>                                         aria-describedby={undefined}
+>                                         data-state="closed"
+>                                         onPointerMove={function handleEvent}
+>                                         onPointerLeave={function handleEvent}
+>                                         onPointerDown={function handleEvent}
+>                                         onFocus={function handleEvent}
+>                                         onBlur={function handleEvent}
+>                                         ref={function}
+>                                       >
+                                ...
+                              ...
+                          ...
+ @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[ 4518559ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[ 6299140ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <Collapsible open={true} onOpenChange={function bound dispatchSetState}>
+      <Collapsible data-slot="collapsible" open={true} onOpenChange={function bound dispatchSetState}>
+        <CollapsibleProvider scope={undefined} disabled={undefined} contentId="radix-_r_1a_" open={true} ...>
+          <Primitive.div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+            <div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+              <CollapsibleTrigger>
+              <CollapsibleContent>
+                <CollapsibleContent data-slot="collapsibl...">
+                  <Presence present={true}>
+                    <Primitive.div data-state="open" data-disabled={undefined} id="radix-_r_1a_" hidden={false} ...>
+                      <div data-state="open" data-disabled={undefined} id="radix-_r_1a_" hidden={false} ...>
+                        <div className="mt-1 space...">
+                          <ExpandableCard summary={<PodSummary>}>
+                            <div className="overflow-h...">
+>                             <button
+>                               type="button"
+>                               className="flex w-full items-center justify-between px-4 py-3 hover:bg-white/[0.02] tr..."
+>                               onClick={function onClick}
+>                               aria-expanded={false}
+>                             >
+                                ...
+                                  <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                    <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                      <Primitive.button.SlotClone aria-describedby={undefined} data-state="closed" ...>
+>                                       <button
+>                                         type="button"
+>                                         onClick={function}
+>                                         className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hove..."
+>                                         aria-label="Delete pod karpenter-5d9775c944-7n87b"
+>                                         aria-describedby={undefined}
+>                                         data-state="closed"
+>                                         onPointerMove={function handleEvent}
+>                                         onPointerLeave={function handleEvent}
+>                                         onPointerDown={function handleEvent}
+>                                         onFocus={function handleEvent}
+>                                         onBlur={function handleEvent}
+>                                         ref={function}
+>                                       >
+                                ...
+                              ...
+                          ...
+ @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[ 6299140ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[10737537ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[10738225ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[10738252ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[10738447ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[10738542ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[10831145ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.get?input=%7B%22id%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[10832152ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.get?input=%7B%22id%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[10834161ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.get?input=%7B%22id%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[10852241ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[10853245ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[10932620ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[10933090ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/nodes.listLive?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[10933139ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/nodes.list?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[11020887ms] [WARNING] [useResourceSSE] Connection error, auto-reconnecting... @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[11023027ms] [ERROR] Access to resource at 'http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:3000/clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/nodes:0
+[11023028ms] [WARNING] [useResourceSSE] Connection error, auto-reconnecting... @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[11023028ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[12970407ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UjcIYnqhkawMXz0Ebwva9' failed:  @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[12971038ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.heartbeat:0
+[12971412ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UjcIYnqhkawMXz0Ebwva9' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[12972143ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[12972143ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[12972150ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/nodes.listLive?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[12972158ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/nodes.list?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[12972414ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UjcIYnqhkawMXz0Ebwva9' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[12973145ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[12973145ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[12973161ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/nodes.list?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[12974954ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[12975150ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[12975152ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[12975183ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/nodes.list?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[12975964ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[12976746ms] [WARNING] [useResourceSSE] Connection error, auto-reconnecting... @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[12976746ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[12976771ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[12976804ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.get?input=%7B%22id%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[12976815ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[12976823ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[12976825ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[12976829ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[12976845ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[12976850ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/nodes.list?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[12976852ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[12976859ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.subscribe:0
+[12977314ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0

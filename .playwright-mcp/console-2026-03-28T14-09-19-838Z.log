@@ -1,0 +1,25 @@
+[    1271ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://ksp.co.il/cart/api/v0/user/me:0
+[   31760ms] [ERROR] AbortError: signal is aborted without reason
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:40229
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:41757 @ https://ksp.co.il/web/assets/js/vendors.98ee863a281655e90285.js:1
+[   31952ms] [ERROR] AbortError: signal is aborted without reason
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:40229
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:41757 @ https://ksp.co.il/web/assets/js/vendors.98ee863a281655e90285.js:1
+[   32081ms] [ERROR] AbortError: signal is aborted without reason
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:40229
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:41757 @ https://ksp.co.il/web/assets/js/vendors.98ee863a281655e90285.js:1
+[   32235ms] [ERROR] AbortError: signal is aborted without reason
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:40229
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:41757 @ https://ksp.co.il/web/assets/js/vendors.98ee863a281655e90285.js:1
+[   32356ms] [ERROR] AbortError: signal is aborted without reason
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:40229
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:41757 @ https://ksp.co.il/web/assets/js/vendors.98ee863a281655e90285.js:1
+[   32544ms] [ERROR] AbortError: signal is aborted without reason
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:40229
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:41757 @ https://ksp.co.il/web/assets/js/vendors.98ee863a281655e90285.js:1
+[   32657ms] [ERROR] AbortError: signal is aborted without reason
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:40229
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:41757 @ https://ksp.co.il/web/assets/js/vendors.98ee863a281655e90285.js:1
+[   32822ms] [ERROR] AbortError: signal is aborted without reason
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:40229
+    at https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:167:41757 @ https://ksp.co.il/web/assets/js/vendors.98ee863a281655e90285.js:1

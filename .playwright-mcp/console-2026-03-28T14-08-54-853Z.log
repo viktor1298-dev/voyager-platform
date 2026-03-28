@@ -1,0 +1,7 @@
+[     405ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://ksp.co.il/m_action/sse/streams:0
+[    1114ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://ksp.co.il/cart/api/v0/user/me:0
+[  548579ms] [WARNING] [useBmsData] BMS entry not found for uin: 448713 @ https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:1
+[  566117ms] [WARNING] [useBmsData] BMS entry not found for uin: 448668 @ https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:1
+[  681356ms] [WARNING] [useBmsData] BMS entry not found for uin: 448713 @ https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:1
+[  684830ms] [WARNING] [useBmsData] BMS entry not found for uin: 448689 @ https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:1
+[  715586ms] [WARNING] [useBmsData] BMS entry not found for uin: 448713 @ https://ksp.co.il/web/assets/js/622.82fe048fe29e8fd471c7.js:1

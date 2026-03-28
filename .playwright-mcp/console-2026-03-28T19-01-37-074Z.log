@@ -1,0 +1,48 @@
+[     471ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <Collapsible open={true} onOpenChange={function bound dispatchSetState}>
+      <Collapsible data-slot="collapsible" open={true} onOpenChange={function bound dispatchSetState}>
+        <CollapsibleProvider scope={undefined} disabled={undefined} contentId="radix-_r_d_" open={true} ...>
+          <Primitive.div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+            <div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+              <CollapsibleTrigger>
+              <CollapsibleContent>
+                <CollapsibleContent data-slot="collapsibl...">
+                  <Presence present={true}>
+                    <Primitive.div data-state="open" data-disabled={undefined} id="radix-_r_d_" hidden={false} ...>
+                      <div data-state="open" data-disabled={undefined} id="radix-_r_d_" hidden={false} ...>
+                        <div className="mt-1 space...">
+                          <ExpandableCard expanded={undefined} summary={<PodSummary>}>
+                            <div className="overflow-h...">
+>                             <button
+>                               type="button"
+>                               className="flex w-full items-center justify-between px-4 py-3 hover:bg-white/[0.02] tr..."
+>                               onClick={function handleToggle}
+>                               aria-expanded={false}
+>                             >
+                                ...
+                                  <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                    <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                      <Primitive.button.SlotClone aria-describedby={undefined} data-state="closed" ...>
+>                                       <button
+>                                         type="button"
+>                                         onClick={function}
+>                                         className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hove..."
+>                                         aria-label="Delete pod karpenter-5d9775c944-7n87b"
+>                                         aria-describedby={undefined}
+>                                         data-state="closed"
+>                                         onPointerMove={function handleEvent}
+>                                         onPointerLeave={function handleEvent}
+>                                         onPointerDown={function handleEvent}
+>                                         onFocus={function handleEvent}
+>                                         onBlur={function handleEvent}
+>                                         ref={function}
+>                                       >
+                                ...
+                              ...
+                          ...
+ @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[     472ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272

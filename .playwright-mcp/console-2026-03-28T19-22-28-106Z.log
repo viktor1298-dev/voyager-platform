@@ -1,0 +1,68 @@
+[     109ms] [WARNING] [useResourceSSE] Connection error, auto-reconnecting... @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   14135ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <Collapsible data-slot="collapsible" open={true} onOpenChange={function bound dispatchSetState}>
+      <CollapsibleProvider scope={undefined} disabled={undefined} contentId="radix-_r_1o_" open={true} ...>
+        <Primitive.div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+          <div data-state="open" data-disabled={undefined} data-slot="collapsible" ref={null}>
+            <CollapsibleTrigger>
+            <CollapsibleContent>
+              <CollapsibleContent data-slot="collapsibl...">
+                <Presence present={true}>
+                  <Primitive.div data-state="open" data-disabled={undefined} id="radix-_r_1o_" hidden={false} ...>
+                    <div data-state="open" data-disabled={undefined} id="radix-_r_1o_" hidden={false} ...>
+                      <div className="mt-1 space...">
+                        <div ref={undefined} className="">
+                          <ExpandableCard expanded={undefined} summary={<PodSummary>}>
+                            <div className="overflow-h...">
+>                             <button
+>                               type="button"
+>                               className="flex w-full items-center justify-between px-4 py-3 hover:bg-white/[0.02] tr..."
+>                               onClick={function handleToggle}
+>                               aria-expanded={false}
+>                             >
+                                ...
+                                  <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                    <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                      <Primitive.button.SlotClone aria-describedby={undefined} data-state="closed" ...>
+>                                       <button
+>                                         type="button"
+>                                         onClick={function}
+>                                         className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hove..."
+>                                         aria-label="Delete pod karpenter-5d9775c944-7n87b"
+>                                         aria-describedby={undefined}
+>                                         data-state="closed"
+>                                         onPointerMove={function handleEvent}
+>                                         onPointerLeave={function handleEvent}
+>                                         onPointerDown={function handleEvent}
+>                                         onFocus={function handleEvent}
+>                                         onBlur={function handleEvent}
+>                                         ref={function}
+>                                       >
+                                ...
+                              ...
+                        ...
+ @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[   14135ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:3272
+[   37658ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=BcmthwWNXHdmuw2xpbNTh' failed:  @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[   37659ms] [WARNING] [useResourceSSE] Connection error, auto-reconnecting... @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   37661ms] [ERROR] WebSocket is already in CLOSING or CLOSED state. @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2790
+[   38667ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=BcmthwWNXHdmuw2xpbNTh' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[   39670ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=BcmthwWNXHdmuw2xpbNTh' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[   40672ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=BcmthwWNXHdmuw2xpbNTh' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[   44298ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[   44364ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[   44364ms] [WARNING] [useResourceSSE] Connection error, auto-reconnecting... @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   44372ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.get?input=%7B%22id%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[   44437ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[   44441ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[   44448ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[   44463ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[   44465ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[   44482ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[   44494ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.subscribe:0
+[   44534ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0
+[   45469ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0

@@ -1,0 +1,12 @@
+[  812829ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://localhost:3000/trpc/karpenter.getMetrics?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[  812831ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:3000/trpc/presence.subscribe:0
+[  813838ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=WrbxePGW4iGc401aqa-eg' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  814840ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=WrbxePGW4iGc401aqa-eg' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  815832ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  815842ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=WrbxePGW4iGc401aqa-eg' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  816846ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=WrbxePGW4iGc401aqa-eg' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  817848ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=WrbxePGW4iGc401aqa-eg' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  818832ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  821835ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0
+[  822855ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=WrbxePGW4iGc401aqa-eg' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  824837ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/presence.subscribe:0

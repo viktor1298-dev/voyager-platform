@@ -1,0 +1,28 @@
+[    1906ms] [ERROR] Refused to get unsafe header "App-GTag-Event" @ https://www.bug.co.il/scripts/script.js?v=20260325a:2883
+[    1976ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://static.cloudflareinsights.com/beacon.min.js/nl-files/gfx/sprite.png?v=2.3.1:0
+[    8368ms] [ERROR] Refused to get unsafe header "App-GTag-Event" @ https://www.bug.co.il/scripts/script.js?v=20260325a:2883
+[    8391ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://static.cloudflareinsights.com/beacon.min.js/nl-files/gfx/sprite.png?v=2.3.1:0
+[   10045ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.bug.co.il/brand/apple/macbook/pro/14/m5/pro/2026/24gb/1tb/black:0
+[  147301ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://static.cloudflareinsights.com/beacon.min.js/nl-files/gfx/sprite.png?v=2.3.1:0
+[  147405ms] [ERROR] Refused to get unsafe header "App-GTag-Event" @ https://www.bug.co.il/scripts/script.js?v=20260325a:2883
+[  148266ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.bug.co.il/brand/apple/macbook/pro/14/m5/pro/2026/24gb/1tb/black:0
+[  150795ms] [ERROR] Refused to get unsafe header "App-GTag-Event" @ https://www.bug.co.il/scripts/script.js?v=20260325a:2883
+[  150815ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://static.cloudflareinsights.com/beacon.min.js/nl-files/gfx/sprite.png?v=2.3.1:0
+[  151047ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.bug.co.il/brand/apple/macbook/pro/14/m5/pro/2026/24gb/1tb/black:0
+[  152517ms] [ERROR] Refused to get unsafe header "App-GTag-Event" @ https://www.bug.co.il/scripts/script.js?v=20260325a:2883
+[  152548ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://static.cloudflareinsights.com/beacon.min.js/nl-files/gfx/sprite.png?v=2.3.1:0
+[  152680ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.bug.co.il/brand/apple/macbook/pro/14/m5/pro/2026/24gb/1tb/black:0
+[  155240ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://static.cloudflareinsights.com/beacon.min.js/nl-files/gfx/sprite.png?v=2.3.1:0
+[  155434ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.bug.co.il/brand/apple/macbook/pro/14/m5/2026/32gb/1tb/black:0
+[  220615ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://static.cloudflareinsights.com/beacon.min.js/nl-files/gfx/sprite.png?v=2.3.1:0
+[  220616ms] [ERROR] Refused to get unsafe header "App-GTag-Event" @ https://www.bug.co.il/scripts/script.js?v=20260325a:2883
+[  220771ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.bug.co.il/brand/apple/macbook/pro/14/m5/pro/2026/24gb/1tb/black:0
+[  223964ms] [ERROR] Refused to get unsafe header "App-GTag-Event" @ https://www.bug.co.il/scripts/script.js?v=20260325a:2883
+[  223981ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://static.cloudflareinsights.com/beacon.min.js/nl-files/gfx/sprite.png?v=2.3.1:0
+[  224129ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.bug.co.il/brand/apple/macbook/pro/14/m5/2026/32gb/1tb/black:0
+[  242196ms] [ERROR] Refused to get unsafe header "App-GTag-Event" @ https://www.bug.co.il/scripts/script.js?v=20260325a:2883
+[  242214ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://static.cloudflareinsights.com/beacon.min.js/nl-files/gfx/sprite.png?v=2.3.1:0
+[  242367ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.bug.co.il/brand/apple/macbook/pro/14/m5/2026/32gb/1tb/black:0
+[  244941ms] [ERROR] Refused to get unsafe header "App-GTag-Event" @ https://www.bug.co.il/scripts/script.js?v=20260325a:2883
+[  244963ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://static.cloudflareinsights.com/beacon.min.js/nl-files/gfx/sprite.png?v=2.3.1:0
+[  245147ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.bug.co.il/brand/apple/macbook/pro/14/m5/2026/32gb/1tb/black:0
