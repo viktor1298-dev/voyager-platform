@@ -157,8 +157,8 @@ Plans:
 
 Plans:
 - [x] 09-01-PLAN.md -- Foundation: Phase 9 dependencies, CSS tokens, animation variants, YamlViewer, universal YAML router
-- [ ] 09-02-PLAN.md
-- [ ] 09-03-PLAN.md
+- [x] 09-02-PLAN.md
+- [x] 09-03-PLAN.md
 - [ ] 09-04-PLAN.md
 - [ ] 09-05-PLAN.md
 - [ ] 09-06-PLAN.md
