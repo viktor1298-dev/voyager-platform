@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 Phase: 07
 Plan: Not started
 Status: Phase 07 Plan 01 complete
-Last activity: 2026-03-28
+Last activity: 2026-03-28 - Completed quick task 260328-m02: Fix Karpenter: use ClusterClientPool, rename Autoscaling tab to Karpenter
 
 Progress: [#.........] 14%
 
@@ -102,6 +102,12 @@ None yet.
 - Phase 2 carries the highest risk: 3 Tier-4 conflict files (metrics.ts, Sidebar.tsx, MetricsAreaChart.tsx) require manual judgment
 - Evil-merge files (server.ts, ClusterHealthWidget.tsx, page.tsx) auto-resolve but need explicit review
 - nodeMetricsHistory schema must be preserved from main during merge (init.sql: 33 tables, not 32)
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260328-m02 | Fix Karpenter: use ClusterClientPool, rename Autoscaling tab to Karpenter | 2026-03-28 | 28353f5 | [260328-m02-fix-karpenter-use-clusterclientpool-rena](./quick/260328-m02-fix-karpenter-use-clusterclientpool-rena/) |
 
 ## Session Continuity
 
