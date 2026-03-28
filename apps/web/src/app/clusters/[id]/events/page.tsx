@@ -1,10 +1,10 @@
 'use client'
 
-import type { ColumnDef } from '@tanstack/react-table'
 import { Activity } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { DataTable } from '@/components/DataTable'
+import { ExpandableTableRow } from '@/components/expandable'
+import { Skeleton } from '@/components/ui/skeleton'
 import { severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
@@ -12,13 +12,14 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 
 const REFETCH_INTERVAL = 10000
 
-interface EventRow {
-  id: string
+interface EventData {
   type: string
   reason: string
   message: string
   namespace: string
-  timestamp: string | null
+  involvedObject: string
+  count: number | null
+  lastTimestamp: string | null
 }
 
 function asText(value: unknown, fallback = '—'): string {
@@ -31,65 +32,32 @@ function asText(value: unknown, fallback = '—'): string {
   return fallback
 }
 
-const eventColumns: ColumnDef<EventRow, unknown>[] = [
-  {
-    accessorKey: 'timestamp',
-    header: 'Time',
-    cell: ({ getValue }) => {
-      const ts = getValue<string | null>()
-      return (
-        <span className="text-[var(--color-text-dim)] font-mono text-xs whitespace-nowrap">
-          {ts ? timeAgo(ts) : '—'}
-        </span>
-      )
-    },
-  },
-  {
-    accessorKey: 'type',
-    header: 'Type',
-    cell: ({ getValue }) => {
-      const type = getValue<string>()
-      return (
-        <span
-          className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
-          style={{
-            color: severityColor(type),
-            background: `color-mix(in srgb, ${severityColor(type)} 15%, transparent)`,
-          }}
-        >
-          {type}
-        </span>
-      )
-    },
-  },
-  {
-    accessorKey: 'reason',
-    header: 'Reason',
-    cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-primary)] text-[13px] font-medium whitespace-nowrap">
-        {getValue<string>()}
-      </span>
-    ),
-  },
-  {
-    accessorKey: 'namespace',
-    header: 'Namespace',
-    cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-muted)] font-mono text-xs">
-        {getValue<string>()}
-      </span>
-    ),
-  },
-  {
-    accessorKey: 'message',
-    header: 'Message',
-    cell: ({ getValue }) => (
-      <span className="text-[var(--color-text-muted)] text-xs max-w-[400px] truncate block">
-        {getValue<string>()}
-      </span>
-    ),
-  },
-]
+function EventExpanded({ event }: { event: EventData }) {
+  return (
+    <div className="p-4 space-y-2">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+          Full Message
+        </p>
+        <p className="text-[11px] text-[var(--color-text-secondary)] whitespace-pre-wrap break-all">
+          {event.message}
+        </p>
+      </div>
+      <div className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[11px] font-mono">
+        <span className="text-[var(--color-text-muted)]">Object</span>
+        <span className="text-[var(--color-accent)]">{event.involvedObject}</span>
+        {event.count != null && event.count > 1 && (
+          <>
+            <span className="text-[var(--color-text-muted)]">Count</span>
+            <span className="text-[var(--color-text-primary)]">{event.count}</span>
+          </>
+        )}
+        <span className="text-[var(--color-text-muted)]">Namespace</span>
+        <span className="text-[var(--color-text-secondary)]">{event.namespace}</span>
+      </div>
+    </div>
+  )
+}
 
 export default function EventsPage() {
   usePageTitle('Cluster Events')
@@ -99,7 +67,9 @@ export default function EventsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
+  const hasCredentials = Boolean(
+    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
+  )
   const isLive = hasCredentials
 
   const liveQuery = trpc.clusters.live.useQuery(
@@ -114,24 +84,24 @@ export default function EventsPage() {
     { enabled: !effectiveIsLive, refetchInterval: REFETCH_INTERVAL },
   )
 
-  const liveData = liveQuery.data
-
-  const events: EventRow[] = effectiveIsLive
-    ? (liveData?.events ?? []).map((e, i: number) => ({
-        id: `event-live-${i}`,
+  const events: EventData[] = effectiveIsLive
+    ? (liveQuery.data?.events ?? []).map((e) => ({
         type: asText(e.type, 'Normal'),
         reason: asText(e.reason),
         message: asText(e.message),
         namespace: asText(e.namespace),
-        timestamp: e.lastTimestamp ? String(e.lastTimestamp) : null,
+        involvedObject: e.involvedObject,
+        count: e.count ?? null,
+        lastTimestamp: e.lastTimestamp ? String(e.lastTimestamp) : null,
       }))
     : (dbEvents.data ?? []).map((e) => ({
-        id: String(e.id),
         type: asText(e.type, 'Normal'),
         reason: asText(e.reason),
         message: asText(e.message),
         namespace: asText(e.namespace),
-        timestamp: e.createdAt
+        involvedObject: '—',
+        count: null,
+        lastTimestamp: e.createdAt
           ? e.createdAt instanceof Date
             ? e.createdAt.toISOString()
             : String(e.createdAt)
@@ -139,6 +109,7 @@ export default function EventsPage() {
       }))
 
   const isAutoRefreshing = effectiveIsLive ? liveQuery.isFetching : dbEvents.isFetching
+  const isLoading = effectiveIsLive ? liveQuery.isLoading : dbEvents.isLoading
 
   return (
     <div className="space-y-3">
@@ -147,47 +118,86 @@ export default function EventsPage() {
         <div className="flex items-center gap-2">
           <span
             className={`h-2 w-2 rounded-full ${isAutoRefreshing ? 'bg-[var(--color-status-active)] animate-pulse' : 'bg-[var(--color-text-dim)]'}`}
-            aria-label={isAutoRefreshing ? 'Auto-refreshing' : 'Idle'}
           />
           <span className="text-xs text-[var(--color-text-muted)]">
             {isAutoRefreshing ? 'Live — auto-refreshing every 10s' : 'Events'}
           </span>
         </div>
-        <span className="text-xs font-mono text-[var(--color-text-dim)]">{events.length} events</span>
+        <span className="text-xs font-mono text-[var(--color-text-dim)]">
+          {events.length} events
+        </span>
       </div>
 
-      <DataTable
-        data={events}
-        columns={eventColumns}
-        loading={effectiveIsLive ? liveQuery.isLoading : dbEvents.isLoading}
-        emptyIcon={<Activity className="h-10 w-10" />}
-        emptyTitle="No events recorded yet"
-        emptyDescription="Kubernetes events appear here when something notable happens in your cluster — like pod scheduling, container crashes, scaling operations, or configuration changes. Events are typically retained for 1 hour by default."
-        searchable
-        paginated
-        pageSize={25}
-        searchPlaceholder="Search events…"
-      mobileCard={(event) => {
-        const isWarning = event.type === 'Warning'
-        return (
-          <div className={`p-3 rounded-xl border border-[var(--color-border)] ${isWarning ? 'bg-[var(--color-status-warning)]/[0.04]' : 'bg-[var(--color-bg-card)]'}`}>
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <div className="flex items-center gap-2">
-                <span
-                  className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
-                  style={{ color: severityColor(event.type), background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)` }}
-                >
-                  {event.type}
-                </span>
-                <span className="text-[var(--color-text-primary)] text-xs font-medium">{event.reason}</span>
-              </div>
-              <span className="text-[var(--color-text-dim)] font-mono text-xs shrink-0">{event.timestamp ? timeAgo(event.timestamp) : '—'}</span>
-            </div>
-            <p className="text-[var(--color-text-muted)] text-xs line-clamp-2">{event.message}</p>
+      {isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full rounded-lg" />
+          ))}
+        </div>
+      ) : events.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
+          <div className="rounded-full bg-white/[0.04] p-3 mb-3">
+            <Activity className="h-10 w-10 text-[var(--color-text-dim)]" />
           </div>
-        )
-      }}
-      />
+          <p className="text-sm font-medium text-[var(--color-text-muted)]">
+            No events recorded yet
+          </p>
+          <p className="text-xs text-[var(--color-text-dim)] mt-1 max-w-xs">
+            Kubernetes events appear here when something notable happens in your cluster.
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
+          <table className="w-full text-[13px]">
+            <thead>
+              <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                <th className="text-left px-4 py-2.5">Time</th>
+                <th className="text-left px-3 py-2.5">Type</th>
+                <th className="text-left px-3 py-2.5">Reason</th>
+                <th className="text-left px-3 py-2.5">Namespace</th>
+                <th className="text-left px-3 py-2.5">Message</th>
+                <th className="w-8" />
+              </tr>
+            </thead>
+            <tbody>
+              {events.map((event, i) => (
+                <ExpandableTableRow
+                  key={`event-${i}`}
+                  columnCount={5}
+                  cells={
+                    <>
+                      <td className="px-4 py-2.5 font-mono text-xs text-[var(--color-text-dim)] whitespace-nowrap">
+                        {event.lastTimestamp ? timeAgo(event.lastTimestamp) : '—'}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <span
+                          className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
+                          style={{
+                            color: severityColor(event.type),
+                            background: `color-mix(in srgb, ${severityColor(event.type)} 15%, transparent)`,
+                          }}
+                        >
+                          {event.type}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-[var(--color-text-primary)] font-medium whitespace-nowrap">
+                        {event.reason}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
+                        {event.namespace}
+                      </td>
+                      <td className="px-3 py-2.5 text-[var(--color-text-muted)] text-xs max-w-[400px] truncate">
+                        {event.message}
+                      </td>
+                    </>
+                  }
+                  detail={<EventExpanded event={event} />}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

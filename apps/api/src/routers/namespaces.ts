@@ -82,6 +82,62 @@ export const namespacesRouter = router({
       }
     }),
 
+  listDetail: protectedProcedure
+    .input(z.object({ clusterId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      try {
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+
+        const [nsResponse, quotaResponse] = await Promise.all([
+          cached(CACHE_KEYS.k8sNamespaces(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
+            coreV1.listNamespace(),
+          ),
+          cached(CACHE_KEYS.k8sResourceQuotas(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
+            coreV1.listResourceQuotaForAllNamespaces(),
+          ).catch(() => ({ items: [] as k8s.V1ResourceQuota[] })),
+        ])
+
+        const quotaMap = new Map<
+          string,
+          {
+            cpuLimit: string | null
+            memLimit: string | null
+            cpuUsed: string | null
+            memUsed: string | null
+          }
+        >()
+        for (const quota of quotaResponse.items ?? []) {
+          const ns = quota.metadata?.namespace ?? ''
+          if (!ns || quotaMap.has(ns)) continue
+          const hard = quota.status?.hard ?? {}
+          const used = quota.status?.used ?? {}
+          quotaMap.set(ns, {
+            cpuLimit: hard['limits.cpu'] ?? hard.cpu ?? null,
+            memLimit: hard['limits.memory'] ?? hard.memory ?? null,
+            cpuUsed: used['limits.cpu'] ?? used.cpu ?? null,
+            memUsed: used['limits.memory'] ?? used.memory ?? null,
+          })
+        }
+
+        return nsResponse.items.map((ns) => {
+          const name = ns.metadata?.name ?? ''
+          return {
+            name,
+            status: ns.status?.phase ?? null,
+            labels: (ns.metadata?.labels as Record<string, string>) ?? {},
+            annotations: (ns.metadata?.annotations as Record<string, string>) ?? {},
+            createdAt: ns.metadata?.creationTimestamp
+              ? new Date(ns.metadata.creationTimestamp as unknown as string).toISOString()
+              : null,
+            resourceQuota: quotaMap.get(name) ?? null,
+          }
+        })
+      } catch (error) {
+        handleK8sError(error, 'list namespaces detail')
+      }
+    }),
+
   create: adminProcedure
     .input(
       z.object({
