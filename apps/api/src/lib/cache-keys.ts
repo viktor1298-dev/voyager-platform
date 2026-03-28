@@ -19,6 +19,10 @@ export const CACHE_KEYS = {
 
   k8sDeploymentsList: (clusterId: string) => `k8s:${clusterId}:deployments:list`,
 
+  k8sRbac: (clusterId: string) => `k8s:${clusterId}:rbac`,
+
+  k8sNetworkPolicies: (clusterId: string) => `k8s:${clusterId}:network-policies`,
+
   k8sResourceQuotas: (clusterId: string) => `k8s:${clusterId}:resource-quotas`,
 
   k8sPodsStored: (clusterId: string) => `k8s:${clusterId}:pods:stored`,
