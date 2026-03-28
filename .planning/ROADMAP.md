@@ -160,10 +160,10 @@ Plans:
 - [x] 09-02-PLAN.md
 - [x] 09-03-PLAN.md
 - [ ] 09-04-PLAN.md
-- [ ] 09-05-PLAN.md
-- [ ] 09-06-PLAN.md
+- [x] 09-05-PLAN.md
+- [x] 09-06-PLAN.md
 - [ ] 09-07-PLAN.md
-- [ ] 09-08-PLAN.md
+- [x] 09-08-PLAN.md
 - [ ] 09-09-PLAN.md
 - [ ] 09-10-PLAN.md
 
