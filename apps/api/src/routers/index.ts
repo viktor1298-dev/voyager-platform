@@ -7,6 +7,7 @@ import { auditRouter } from './audit.js'
 import { authRouter } from './auth.js'
 import { authorizationRouter, teamsRouter } from './authorization.js'
 import { clustersRouter } from './clusters.js'
+import { configMapsRouter } from './configmaps.js'
 import { cronJobsRouter } from './cronjobs.js'
 import { daemonSetsRouter } from './daemonsets.js'
 import { dashboardRouter } from './dashboard.js'
@@ -25,6 +26,8 @@ import { namespacesRouter } from './namespaces.js'
 import { nodesRouter } from './nodes.js'
 import { podsRouter } from './pods.js'
 import { presenceRouter } from './presence.js'
+import { pvcsRouter } from './pvcs.js'
+import { secretsRouter } from './secrets.js'
 import { servicesRouter } from './services.js'
 import { ssoRouter } from './sso.js'
 import { statefulSetsRouter } from './statefulsets.js'
@@ -42,6 +45,7 @@ export const appRouter = router({
   auth: authRouter,
   authorization: authorizationRouter,
   clusters: clustersRouter,
+  configMaps: configMapsRouter,
   cronJobs: cronJobsRouter,
   daemonSets: daemonSetsRouter,
   deployments: deploymentsRouter,
@@ -58,6 +62,8 @@ export const appRouter = router({
   metrics: metricsRouter,
   karpenter: karpenterRouter,
   presence: presenceRouter,
+  pvcs: pvcsRouter,
+  secrets: secretsRouter,
   subscriptions: subscriptionsRouter,
   sso: ssoRouter,
   teams: teamsRouter,
