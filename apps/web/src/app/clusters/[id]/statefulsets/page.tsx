@@ -1,10 +1,10 @@
 'use client'
 
-import { BarChart3, CircleCheck, HardDrive } from 'lucide-react'
+import { BarChart3, CircleCheck, Database, HardDrive } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { ConditionsList, DetailTabs, ExpandableTableRow } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ConditionsList, DetailTabs } from '@/components/expandable'
+import { ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -30,6 +30,49 @@ interface StatefulSetData {
     message?: string
     lastTransitionTime?: string
   }[]
+}
+
+function StatefulSetSummary({ ss }: { ss: StatefulSetData }) {
+  const allReady = ss.readyReplicas === ss.replicas && ss.replicas > 0
+  const statusLabel = allReady ? 'Running' : ss.readyReplicas === 0 ? 'Pending' : 'Scaling'
+  const statusClr = allReady
+    ? 'var(--color-status-active)'
+    : ss.readyReplicas === 0
+      ? 'var(--color-status-error)'
+      : 'var(--color-status-warning)'
+
+  return (
+    <div className="flex items-center gap-3 w-full min-w-0">
+      <span className="flex-1 min-w-0 text-[13px] font-mono font-medium text-[var(--color-text-primary)] truncate">
+        {ss.name}
+      </span>
+      <span
+        className="text-xs font-mono px-1.5 py-0.5 rounded shrink-0"
+        style={{
+          color: allReady ? 'var(--color-status-active)' : 'var(--color-status-warning)',
+          background: `color-mix(in srgb, ${allReady ? 'var(--color-status-active)' : 'var(--color-status-warning)'} 12%, transparent)`,
+        }}
+      >
+        {ss.readyReplicas}/{ss.replicas}
+      </span>
+      <span
+        className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
+        style={{
+          color: statusClr,
+          background: `color-mix(in srgb, ${statusClr} 15%, transparent)`,
+        }}
+      >
+        {statusLabel}
+      </span>
+      <span
+        className="text-xs font-mono text-[var(--color-text-muted)] max-w-[180px] truncate shrink-0"
+        title={ss.image}
+      >
+        {ss.image}
+      </span>
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">{ss.age}</span>
+    </div>
+  )
 }
 
 function StatefulSetExpandedDetail({ ss }: { ss: StatefulSetData }) {
@@ -88,7 +131,7 @@ function StatefulSetExpandedDetail({ ss }: { ss: StatefulSetData }) {
                   <span className="text-[var(--color-accent)]">{vct.size}</span>
                   <span className="text-[var(--color-text-muted)]">Access Modes</span>
                   <span className="text-[var(--color-text-secondary)]">
-                    {vct.accessModes.join(', ') || '—'}
+                    {vct.accessModes.join(', ') || '--'}
                   </span>
                 </div>
               </div>
@@ -134,98 +177,20 @@ export default function StatefulSetsPage() {
     { enabled: hasCredentials, refetchInterval: 30000 },
   )
 
-  const statefulSets = (query.data ?? []) as StatefulSetData[]
-
-  if (!hasCredentials) {
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-        <p className="text-sm font-medium">Live data unavailable</p>
-        <p className="text-xs text-[var(--color-text-dim)] mt-1">
-          Connect cluster credentials to view StatefulSets.
-        </p>
-      </div>
-    )
-  }
-
-  if (query.isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    )
-  }
-
-  if (statefulSets.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-        <p className="text-sm font-medium text-[var(--color-text-muted)]">No StatefulSets found</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-      <table className="w-full text-[13px]">
-        <thead>
-          <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-            <th className="text-left px-4 py-2.5">Name</th>
-            <th className="text-left px-3 py-2.5">Namespace</th>
-            <th className="text-left px-3 py-2.5">Ready</th>
-            <th className="text-left px-3 py-2.5">Image</th>
-            <th className="text-left px-3 py-2.5">Age</th>
-            <th className="w-8" />
-          </tr>
-        </thead>
-        <tbody>
-          {statefulSets.map((ss) => {
-            const readyStr = `${ss.readyReplicas}/${ss.replicas}`
-            const allReady = ss.readyReplicas === ss.replicas && ss.replicas > 0
-            return (
-              <ExpandableTableRow
-                key={`${ss.namespace}/${ss.name}`}
-                columnCount={5}
-                cells={
-                  <>
-                    <td className="px-4 py-2.5 font-mono font-medium text-[var(--color-text-primary)]">
-                      {ss.name}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                      {ss.namespace}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <span
-                        className="font-mono text-xs px-1.5 py-0.5 rounded"
-                        style={{
-                          color: allReady
-                            ? 'var(--color-status-active)'
-                            : 'var(--color-status-warning)',
-                          background: `color-mix(in srgb, ${allReady ? 'var(--color-status-active)' : 'var(--color-status-warning)'} 12%, transparent)`,
-                        }}
-                      >
-                        {readyStr}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <span
-                        className="font-mono text-xs text-[var(--color-text-muted)] max-w-[200px] truncate block"
-                        title={ss.image}
-                      >
-                        {ss.image}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-dim)]">
-                      {ss.age}
-                    </td>
-                  </>
-                }
-                detail={<StatefulSetExpandedDetail ss={ss} />}
-              />
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
+    <ResourcePageScaffold<StatefulSetData>
+      title="StatefulSets"
+      icon={<Database className="h-5 w-5" />}
+      queryResult={query}
+      getNamespace={(ss) => ss.namespace}
+      getKey={(ss) => `${ss.namespace}/${ss.name}`}
+      filterFn={(ss, q) =>
+        ss.name.toLowerCase().includes(q) || ss.namespace.toLowerCase().includes(q)
+      }
+      renderSummary={(ss) => <StatefulSetSummary ss={ss} />}
+      renderDetail={(ss) => <StatefulSetExpandedDetail ss={ss} />}
+      searchPlaceholder="Search statefulsets..."
+      emptyMessage="No StatefulSets found"
+    />
   )
 }

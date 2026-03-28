@@ -1,10 +1,10 @@
 'use client'
 
-import { Lock, Route, Settings } from 'lucide-react'
+import { Lock, Network, Route, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { DetailTabs, ExpandableTableRow, TagPills } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { DetailTabs, TagPills } from '@/components/expandable'
+import { ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -23,6 +23,36 @@ interface IngressData {
   tls: { hosts: string[]; secretName: string }[]
   annotations: Record<string, string>
   defaultBackend: { serviceName: string; servicePort: string | number } | null
+}
+
+function IngressSummary({ ing }: { ing: IngressData }) {
+  const pathCount = ing.rules.reduce((sum, r) => sum + r.paths.length, 0)
+  return (
+    <div className="flex items-center gap-3 w-full min-w-0">
+      <span className="flex-1 min-w-0 text-[13px] font-mono font-medium text-[var(--color-text-primary)] truncate">
+        {ing.name}
+      </span>
+      <span className="text-xs font-mono text-[var(--color-accent)] max-w-[200px] truncate shrink-0">
+        {ing.hosts.join(', ') || '*'}
+      </span>
+      <span className="text-xs font-mono text-[var(--color-text-muted)] shrink-0">
+        {pathCount} path{pathCount !== 1 ? 's' : ''}
+      </span>
+      {ing.tls.length > 0 && (
+        <span className="text-xs font-mono px-1.5 py-0.5 rounded shrink-0 bg-emerald-500/15 text-emerald-400">
+          TLS
+        </span>
+      )}
+      {ing.ingressClassName && (
+        <span className="text-xs font-mono text-[var(--color-text-secondary)] shrink-0">
+          {ing.ingressClassName}
+        </span>
+      )}
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
+        {ing.createdAt ? timeAgo(ing.createdAt) : '--'}
+      </span>
+    </div>
+  )
 }
 
 function IngressExpandedDetail({ ing }: { ing: IngressData }) {
@@ -109,7 +139,7 @@ function IngressExpandedDetail({ ing }: { ing: IngressData }) {
         <div className="space-y-3">
           <div className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-1 text-[11px] font-mono">
             <span className="text-[var(--color-text-muted)]">Ingress Class</span>
-            <span className="text-[var(--color-text-primary)]">{ing.ingressClassName ?? '—'}</span>
+            <span className="text-[var(--color-text-primary)]">{ing.ingressClassName ?? '--'}</span>
             {ing.defaultBackend && (
               <>
                 <span className="text-[var(--color-text-muted)]">Default Backend</span>
@@ -152,83 +182,22 @@ export default function IngressesPage() {
     { enabled: hasCredentials, refetchInterval: 30000 },
   )
 
-  const ingresses = (query.data ?? []) as IngressData[]
-
-  if (!hasCredentials) {
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-        <p className="text-sm font-medium">Live data unavailable</p>
-        <p className="text-xs text-[var(--color-text-dim)] mt-1">
-          Connect cluster credentials to view ingresses.
-        </p>
-      </div>
-    )
-  }
-
-  if (query.isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    )
-  }
-
-  if (ingresses.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-        <p className="text-sm font-medium text-[var(--color-text-muted)]">No ingresses found</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-      <table className="w-full text-[13px]">
-        <thead>
-          <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-            <th className="text-left px-4 py-2.5">Name</th>
-            <th className="text-left px-3 py-2.5">Namespace</th>
-            <th className="text-left px-3 py-2.5">Class</th>
-            <th className="text-left px-3 py-2.5">Hosts</th>
-            <th className="text-left px-3 py-2.5">Ports</th>
-            <th className="text-left px-3 py-2.5">Age</th>
-            <th className="w-8" />
-          </tr>
-        </thead>
-        <tbody>
-          {ingresses.map((ing) => (
-            <ExpandableTableRow
-              key={`${ing.namespace}/${ing.name}`}
-              columnCount={6}
-              cells={
-                <>
-                  <td className="px-4 py-2.5 font-mono font-medium text-[var(--color-text-primary)]">
-                    {ing.name}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                    {ing.namespace}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-secondary)]">
-                    {ing.ingressClassName ?? '—'}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-accent)]">
-                    {ing.hosts.join(', ') || '*'}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                    {ing.ports}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-dim)]">
-                    {ing.createdAt ? timeAgo(ing.createdAt) : '—'}
-                  </td>
-                </>
-              }
-              detail={<IngressExpandedDetail ing={ing} />}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ResourcePageScaffold<IngressData>
+      title="Ingresses"
+      icon={<Network className="h-5 w-5" />}
+      queryResult={query}
+      getNamespace={(ing) => ing.namespace}
+      getKey={(ing) => `${ing.namespace}/${ing.name}`}
+      filterFn={(ing, q) =>
+        ing.name.toLowerCase().includes(q) ||
+        ing.namespace.toLowerCase().includes(q) ||
+        ing.hosts.some((h) => h.toLowerCase().includes(q))
+      }
+      renderSummary={(ing) => <IngressSummary ing={ing} />}
+      renderDetail={(ing) => <IngressExpandedDetail ing={ing} />}
+      searchPlaceholder="Search ingresses..."
+      emptyMessage="No ingresses found"
+    />
   )
 }
