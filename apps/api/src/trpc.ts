@@ -93,6 +93,7 @@ export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
 const authorizationObjectIdInputSchema = z.object({
   id: z.string().optional(),
   objectId: z.string().optional(),
+  clusterId: z.string().optional(),
 })
 
 export const authorizedProcedure = (objectType: ObjectType, relation: Relation) =>
@@ -115,13 +116,13 @@ export const authorizedProcedure = (objectType: ObjectType, relation: Relation) 
 
     const objectIdInput = authorizationObjectIdInputSchema.safeParse(inputPayload)
     const objectId = objectIdInput.success
-      ? (objectIdInput.data.objectId ?? objectIdInput.data.id)
+      ? (objectIdInput.data.objectId ?? objectIdInput.data.id ?? objectIdInput.data.clusterId)
       : undefined
 
     if (!objectId) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
-        message: 'authorizedProcedure requires input with `id` or `objectId`',
+        message: 'authorizedProcedure requires input with `id`, `objectId`, or `clusterId`',
       })
     }
 
