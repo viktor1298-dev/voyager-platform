@@ -87,7 +87,6 @@ export function DashboardGrid({
   useEffect(() => {
     import('react-grid-layout').then((m) => {
       setGridComponent(() => m.Responsive)
-      // @ts-expect-error -- CSS module import has no type declaration
       import('react-grid-layout/css/styles.css').catch(() => null)
     })
   }, [])
