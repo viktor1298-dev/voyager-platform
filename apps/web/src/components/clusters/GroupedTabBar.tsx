@@ -60,7 +60,9 @@ export function GroupedTabBar({ clusterRouteSegment, activeTab }: GroupedTabBarP
   const getActiveChild = (group: TabGroup) => group.children.find((c) => c.id === activeTab) ?? null
 
   return (
-    <div className="mb-3 border-b border-[var(--color-border)] overflow-x-auto">
+    <div
+      className={`mb-3 border-b border-[var(--color-border)] ${openGroupId ? 'overflow-visible' : 'overflow-x-auto'}`}
+    >
       <nav className="flex items-end gap-0 min-w-max" aria-label="Cluster tabs">
         {CLUSTER_TAB_ENTRIES.map((entry) =>
           entry.type === 'standalone' ? (
