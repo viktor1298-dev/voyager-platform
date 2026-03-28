@@ -33,6 +33,19 @@ export const CACHE_KEYS = {
   /** Prefix for all cache keys scoped to a cluster */
   k8sPrefix: (clusterId: string) => `k8s:${clusterId}`,
 
+  k8sHelmReleases: (clusterId: string) => `k8s:helm:releases:${clusterId}`,
+
+  k8sHelmRelease: (clusterId: string, name: string, ns: string) =>
+    `k8s:helm:release:${clusterId}:${ns}:${name}`,
+
+  k8sHelmRevisions: (clusterId: string, name: string, ns: string) =>
+    `k8s:helm:revisions:${clusterId}:${ns}:${name}`,
+
+  k8sCrds: (clusterId: string) => `k8s:crds:${clusterId}`,
+
+  k8sCrdInstances: (clusterId: string, group: string, plural: string) =>
+    `k8s:crds:instances:${clusterId}:${group}:${plural}`,
+
   /** Global prefix for all k8s cache keys (used by SCAN invalidation) */
   K8S_GLOBAL_PREFIX: 'k8s:',
 } as const
