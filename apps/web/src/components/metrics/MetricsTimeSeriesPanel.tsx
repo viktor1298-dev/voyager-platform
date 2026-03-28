@@ -14,6 +14,7 @@ import {
 } from './MetricsAreaChart'
 import { NodeResourceBreakdown } from './NodeResourceBreakdown'
 import { MetricsEmptyState } from './MetricsEmptyState'
+import { DataFreshnessBadge } from './DataFreshnessBadge'
 import { NodeMetricsTable } from './NodeMetricsTable'
 import { useMetricsPreferences } from '@/stores/metrics-preferences'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -96,6 +97,45 @@ export function MetricsTimeSeriesPanel({
   // STYLE-02: Click-to-isolate legend state (per panel — null means show all)
   const [isolatedSeries, setIsolatedSeries] = useState<MetricKey | null>(null)
   const [hoveredSeries, setHoveredSeries] = useState<MetricKey | null>(null)
+
+  // UX-02: Pause-on-hover refs
+  const hoverPauseRef = useRef(false)
+  const wasAutoRefreshRef = useRef(false)
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleChartMouseEnter = useCallback(() => {
+    if (autoRefresh) {
+      wasAutoRefreshRef.current = true
+      setAutoRefresh(false)
+      hoverPauseRef.current = true
+    }
+    if (resumeTimerRef.current) {
+      clearTimeout(resumeTimerRef.current)
+      resumeTimerRef.current = null
+    }
+  }, [autoRefresh, setAutoRefresh])
+
+  const handleChartMouseLeave = useCallback(() => {
+    if (hoverPauseRef.current) {
+      resumeTimerRef.current = setTimeout(() => {
+        if (wasAutoRefreshRef.current) {
+          setAutoRefresh(true)
+        }
+        hoverPauseRef.current = false
+        wasAutoRefreshRef.current = false
+        resumeTimerRef.current = null
+      }, 1_000)
+    }
+  }, [setAutoRefresh])
+
+  // Clean up resume timer on unmount
+  useEffect(() => {
+    return () => {
+      if (resumeTimerRef.current) {
+        clearTimeout(resumeTimerRef.current)
+      }
+    }
+  }, [])
 
   const refetchInterval = autoRefresh ? refreshInterval : false
 
@@ -182,6 +222,7 @@ export function MetricsTimeSeriesPanel({
             </p>
           )}
         </div>
+        <DataFreshnessBadge dataUpdatedAt={historyQuery.dataUpdatedAt} autoRefresh={autoRefresh} />
         {!compact ? (
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex flex-col items-end gap-1">
@@ -247,7 +288,11 @@ export function MetricsTimeSeriesPanel({
           <MetricsEmptyState status="empty" onRetry={handleRetry} />
         </div>
       ) : (
-        <div className={cn('grid gap-4', expandedPanel ? 'md:grid-cols-1' : 'md:grid-cols-2')}>
+        <div
+          className={cn('grid gap-4', expandedPanel ? 'md:grid-cols-1' : 'md:grid-cols-2')}
+          onMouseEnter={handleChartMouseEnter}
+          onMouseLeave={handleChartMouseLeave}
+        >
           {(expandedPanel
             ? PANEL_METRICS.filter((p) => p.id === expandedPanel)
             : PANEL_METRICS

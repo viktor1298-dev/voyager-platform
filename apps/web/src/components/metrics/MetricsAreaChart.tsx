@@ -357,6 +357,7 @@ export function MetricsAreaChart({
         aria-label={`${activeMetrics.map((k) => METRIC_CONFIG[k].label).join(', ')} chart`}
       >
         <ResponsiveContainer width="100%" height={height} debounce={100}>
+          {/* UX-05: key must NOT include data.length — causes remount/flicker on new data */}
           <AreaChart
             key={`${range}-${activeMetrics.join('-')}`}
             data={chartData}
