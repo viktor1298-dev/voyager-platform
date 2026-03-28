@@ -1,10 +1,10 @@
 'use client'
 
-import { BarChart3, CircleCheck, Tag } from 'lucide-react'
+import { BarChart3, CircleCheck, Layers, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { ConditionsList, DetailTabs, ExpandableTableRow, TagPills } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
+import { ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -27,6 +27,40 @@ interface DaemonSetData {
     message?: string
     lastTransitionTime?: string
   }[]
+}
+
+function DaemonSetSummary({ ds }: { ds: DaemonSetData }) {
+  const isReady = ds.desired === ds.ready
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <span className="font-mono font-semibold text-[13px] text-[var(--color-text-primary)] truncate">
+        {ds.name}
+      </span>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span
+          className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded"
+          style={{
+            color: isReady ? 'var(--color-status-active)' : 'var(--color-status-warning)',
+            background: `color-mix(in srgb, ${isReady ? 'var(--color-status-active)' : 'var(--color-status-warning)'} 12%, transparent)`,
+          }}
+        >
+          {ds.ready}/{ds.desired}
+        </span>
+        <span
+          className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded"
+          style={{
+            color: isReady ? 'var(--color-status-active)' : 'var(--color-status-warning)',
+            background: `color-mix(in srgb, ${isReady ? 'var(--color-status-active)' : 'var(--color-status-warning)'} 10%, transparent)`,
+          }}
+        >
+          {isReady ? 'Ready' : 'Updating'}
+        </span>
+      </div>
+      <span className="ml-auto text-[11px] font-mono text-[var(--color-text-dim)] shrink-0">
+        {ds.age}
+      </span>
+    </div>
+  )
 }
 
 function DaemonSetExpandedDetail({ ds }: { ds: DaemonSetData }) {
@@ -139,8 +173,6 @@ export default function DaemonSetsPage() {
     { enabled: hasCredentials, refetchInterval: 30000 },
   )
 
-  const daemonSets = (query.data ?? []) as DaemonSetData[]
-
   if (!hasCredentials) {
     return (
       <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
@@ -152,81 +184,21 @@ export default function DaemonSetsPage() {
     )
   }
 
-  if (query.isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    )
-  }
-
-  if (daemonSets.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-        <p className="text-sm font-medium text-[var(--color-text-muted)]">No DaemonSets found</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-      <table className="w-full text-[13px]">
-        <thead>
-          <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-            <th className="text-left px-4 py-2.5">Name</th>
-            <th className="text-left px-3 py-2.5">Namespace</th>
-            <th className="text-left px-3 py-2.5">Desired</th>
-            <th className="text-left px-3 py-2.5">Current</th>
-            <th className="text-left px-3 py-2.5">Ready</th>
-            <th className="text-left px-3 py-2.5">Age</th>
-            <th className="w-8" />
-          </tr>
-        </thead>
-        <tbody>
-          {daemonSets.map((ds) => (
-            <ExpandableTableRow
-              key={`${ds.namespace}/${ds.name}`}
-              columnCount={6}
-              cells={
-                <>
-                  <td className="px-4 py-2.5 font-mono font-medium text-[var(--color-text-primary)]">
-                    {ds.name}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                    {ds.namespace}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-primary)]">
-                    {ds.desired}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-secondary)]">
-                    {ds.current}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <span
-                      className="font-mono text-xs px-1.5 py-0.5 rounded"
-                      style={{
-                        color:
-                          ds.ready === ds.desired
-                            ? 'var(--color-status-active)'
-                            : 'var(--color-status-warning)',
-                        background: `color-mix(in srgb, ${ds.ready === ds.desired ? 'var(--color-status-active)' : 'var(--color-status-warning)'} 12%, transparent)`,
-                      }}
-                    >
-                      {ds.ready}/{ds.desired}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-dim)]">
-                    {ds.age}
-                  </td>
-                </>
-              }
-              detail={<DaemonSetExpandedDetail ds={ds} />}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ResourcePageScaffold<DaemonSetData>
+      title="DaemonSets"
+      icon={<Layers className="h-5 w-5 text-[var(--color-text-muted)]" />}
+      queryResult={query}
+      getNamespace={(ds) => ds.namespace}
+      getKey={(ds) => `${ds.namespace}/${ds.name}`}
+      filterFn={(ds, q) =>
+        ds.name.toLowerCase().includes(q) ||
+        ds.namespace.toLowerCase().includes(q) ||
+        (ds.desired === ds.ready ? 'ready' : 'updating').includes(q)
+      }
+      renderSummary={(ds) => <DaemonSetSummary ds={ds} />}
+      renderDetail={(ds) => <DaemonSetExpandedDetail ds={ds} />}
+      searchPlaceholder="Search daemonsets..."
+    />
   )
 }

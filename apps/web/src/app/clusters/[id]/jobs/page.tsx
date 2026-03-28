@@ -1,10 +1,10 @@
 'use client'
 
-import { CircleCheck, Clock, Settings } from 'lucide-react'
+import { CircleCheck, Clock, Play, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { ConditionsList, DetailTabs, ExpandableTableRow } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ConditionsList, DetailTabs } from '@/components/expandable'
+import { ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -41,6 +41,38 @@ function statusColor(s: string) {
   return 'var(--color-text-dim)'
 }
 
+function JobSummary({ job }: { job: JobData }) {
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <span className="font-mono font-semibold text-[13px] text-[var(--color-text-primary)] truncate">
+        {job.name}
+      </span>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/[0.04] text-[var(--color-text-secondary)]">
+          {job.completions}
+        </span>
+        <span
+          className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded"
+          style={{
+            color: statusColor(job.status),
+            background: `color-mix(in srgb, ${statusColor(job.status)} 15%, transparent)`,
+          }}
+        >
+          {job.status}
+        </span>
+      </div>
+      {job.duration && (
+        <span className="text-[11px] font-mono text-[var(--color-text-secondary)] shrink-0">
+          {job.duration}
+        </span>
+      )}
+      <span className="ml-auto text-[11px] font-mono text-[var(--color-text-dim)] shrink-0">
+        {job.age}
+      </span>
+    </div>
+  )
+}
+
 function JobExpandedDetail({ job }: { job: JobData }) {
   const tabs = [
     {
@@ -50,11 +82,11 @@ function JobExpandedDetail({ job }: { job: JobData }) {
       content: (
         <div className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-1.5 text-[11px] font-mono">
           <span className="text-[var(--color-text-muted)]">Start Time</span>
-          <span className="text-[var(--color-text-primary)]">{job.startTime ?? '—'}</span>
+          <span className="text-[var(--color-text-primary)]">{job.startTime ?? '---'}</span>
           <span className="text-[var(--color-text-muted)]">Completion</span>
-          <span className="text-[var(--color-text-primary)]">{job.completionTime ?? '—'}</span>
+          <span className="text-[var(--color-text-primary)]">{job.completionTime ?? '---'}</span>
           <span className="text-[var(--color-text-muted)]">Duration</span>
-          <span className="text-[var(--color-text-primary)]">{job.duration ?? '—'}</span>
+          <span className="text-[var(--color-text-primary)]">{job.duration ?? '---'}</span>
           <span className="text-[var(--color-text-muted)]">Succeeded</span>
           <span className="text-emerald-400">{job.succeeded}</span>
           <span className="text-[var(--color-text-muted)]">Failed</span>
@@ -78,11 +110,11 @@ function JobExpandedDetail({ job }: { job: JobData }) {
           <span className="text-[var(--color-text-primary)]">{job.backoffLimit}</span>
           <span className="text-[var(--color-text-muted)]">Active Deadline</span>
           <span className="text-[var(--color-text-primary)]">
-            {job.activeDeadlineSeconds ? `${job.activeDeadlineSeconds}s` : '—'}
+            {job.activeDeadlineSeconds ? `${job.activeDeadlineSeconds}s` : '---'}
           </span>
           <span className="text-[var(--color-text-muted)]">TTL After Finished</span>
           <span className="text-[var(--color-text-primary)]">
-            {job.ttlSecondsAfterFinished ? `${job.ttlSecondsAfterFinished}s` : '—'}
+            {job.ttlSecondsAfterFinished ? `${job.ttlSecondsAfterFinished}s` : '---'}
           </span>
         </div>
       ),
@@ -118,83 +150,30 @@ export default function JobsPage() {
     { clusterId: resolvedId },
     { enabled: hasCredentials, refetchInterval: 30000 },
   )
-  const jobs = (query.data ?? []) as JobData[]
 
-  if (!hasCredentials)
+  if (!hasCredentials) {
     return (
       <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
         <p className="text-sm font-medium">Live data unavailable</p>
       </div>
     )
-  if (query.isLoading)
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    )
-  if (jobs.length === 0)
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-        <p className="text-sm font-medium text-[var(--color-text-muted)]">No jobs found</p>
-      </div>
-    )
+  }
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-      <table className="w-full text-[13px]">
-        <thead>
-          <tr className="border-b border-[var(--color-border)]/60 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-            <th className="text-left px-4 py-2.5">Name</th>
-            <th className="text-left px-3 py-2.5">Namespace</th>
-            <th className="text-left px-3 py-2.5">Status</th>
-            <th className="text-left px-3 py-2.5">Completions</th>
-            <th className="text-left px-3 py-2.5">Duration</th>
-            <th className="text-left px-3 py-2.5">Age</th>
-            <th className="w-8" />
-          </tr>
-        </thead>
-        <tbody>
-          {jobs.map((job) => (
-            <ExpandableTableRow
-              key={`${job.namespace}/${job.name}`}
-              columnCount={6}
-              cells={
-                <>
-                  <td className="px-4 py-2.5 font-mono font-medium text-[var(--color-text-primary)]">
-                    {job.name}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-muted)]">
-                    {job.namespace}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <span
-                      className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
-                      style={{
-                        color: statusColor(job.status),
-                        background: `color-mix(in srgb, ${statusColor(job.status)} 15%, transparent)`,
-                      }}
-                    >
-                      {job.status}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-secondary)]">
-                    {job.completions}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-secondary)]">
-                    {job.duration ?? '—'}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-text-dim)]">
-                    {job.age}
-                  </td>
-                </>
-              }
-              detail={<JobExpandedDetail job={job} />}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ResourcePageScaffold<JobData>
+      title="Jobs"
+      icon={<Play className="h-5 w-5 text-[var(--color-text-muted)]" />}
+      queryResult={query}
+      getNamespace={(job) => job.namespace}
+      getKey={(job) => `${job.namespace}/${job.name}`}
+      filterFn={(job, q) =>
+        job.name.toLowerCase().includes(q) ||
+        job.namespace.toLowerCase().includes(q) ||
+        job.status.toLowerCase().includes(q)
+      }
+      renderSummary={(job) => <JobSummary job={job} />}
+      renderDetail={(job) => <JobExpandedDetail job={job} />}
+      searchPlaceholder="Search jobs..."
+    />
   )
 }
