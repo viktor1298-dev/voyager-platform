@@ -8,12 +8,14 @@ import { authRouter } from './auth.js'
 import { authorizationRouter, teamsRouter } from './authorization.js'
 import { clustersRouter } from './clusters.js'
 import { configMapsRouter } from './configmaps.js'
+import { crdsRouter } from './crds.js'
 import { cronJobsRouter } from './cronjobs.js'
 import { daemonSetsRouter } from './daemonsets.js'
 import { dashboardRouter } from './dashboard.js'
 import { dashboardLayoutRouter } from './dashboard-layout.js'
 import { deploymentsRouter } from './deployments.js'
 import { eventsRouter } from './events.js'
+import { helmRouter } from './helm.js'
 import { ingressesRouter } from './ingresses.js'
 import { featuresRouter } from './features.js'
 import { healthRouter } from './health.js'
@@ -47,10 +49,12 @@ export const appRouter = router({
   authorization: authorizationRouter,
   clusters: clustersRouter,
   configMaps: configMapsRouter,
+  crds: crdsRouter,
   cronJobs: cronJobsRouter,
   daemonSets: daemonSetsRouter,
   deployments: deploymentsRouter,
   dashboard: dashboardRouter,
+  helm: helmRouter,
   health: healthRouter,
   hpa: hpaRouter,
   jobs: jobsRouter,

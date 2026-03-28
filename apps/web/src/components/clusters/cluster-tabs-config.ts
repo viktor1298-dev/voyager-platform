@@ -7,10 +7,10 @@ import {
   HardDrive,
   LayoutDashboard,
   Network,
+  Puzzle,
   Server,
   Settings,
   TrendingUp,
-  Wrench,
 } from 'lucide-react'
 
 export interface StandaloneTab {
@@ -59,7 +59,6 @@ export const CLUSTER_TAB_ENTRIES: ClusterTabEntry[] = [
     children: [
       { id: 'services', label: 'Services', path: '/services' },
       { id: 'ingresses', label: 'Ingresses', path: '/ingresses' },
-      { id: 'network-policies', label: 'Network Policies', path: '/network-policies' },
     ],
   },
   {
@@ -71,7 +70,6 @@ export const CLUSTER_TAB_ENTRIES: ClusterTabEntry[] = [
       { id: 'configmaps', label: 'ConfigMaps', path: '/configmaps' },
       { id: 'secrets', label: 'Secrets', path: '/secrets' },
       { id: 'namespaces', label: 'Namespaces', path: '/namespaces' },
-      { id: 'resource-quotas', label: 'Resource Quotas', path: '/resource-quotas' },
     ],
   },
   {
@@ -95,11 +93,10 @@ export const CLUSTER_TAB_ENTRIES: ClusterTabEntry[] = [
     type: 'group',
     id: 'cluster-ops',
     label: 'Cluster Ops',
-    icon: Wrench,
+    icon: Puzzle,
     children: [
       { id: 'helm', label: 'Helm', path: '/helm' },
       { id: 'crds', label: 'CRDs', path: '/crds' },
-      { id: 'rbac', label: 'RBAC', path: '/rbac' },
     ],
   },
 ]
