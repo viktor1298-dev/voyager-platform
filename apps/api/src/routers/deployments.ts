@@ -451,4 +451,34 @@ export const deploymentsRouter = router({
         })
       }
     }),
+
+  delete: adminProcedure
+    .input(
+      z.object({
+        clusterId: z.string().uuid(),
+        name: z.string(),
+        namespace: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { kc } = await getClusterContextFromPool(input.clusterId)
+        const api = kc.makeApiClient(k8s.AppsV1Api)
+        await api.deleteNamespacedDeployment({
+          name: input.name,
+          namespace: input.namespace,
+        })
+        const redis = await getRedisClient()
+        if (redis) await redis.del(CACHE_KEYS.k8sDeploymentsListGlobal())
+        await logAudit(ctx, 'deployment.delete', 'deployment', `${input.namespace}/${input.name}`, {
+          namespace: input.namespace,
+        })
+        return { success: true }
+      } catch (err) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to delete deployment ${input.name}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        })
+      }
+    }),
 })

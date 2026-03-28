@@ -1,9 +1,11 @@
 import * as k8s from '@kubernetes/client-node'
+import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { cached } from '../lib/cache.js'
+import { logAudit } from '../lib/audit.js'
+import { cached, getRedisClient } from '../lib/cache.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
-import { authorizedProcedure, router } from '../trpc.js'
+import { adminProcedure, authorizedProcedure, router } from '../trpc.js'
 
 function computeAge(ts: Date | string | undefined): string {
   if (!ts) return '—'
@@ -76,6 +78,78 @@ export const daemonSetsRouter = router({
         })
       } catch (err) {
         handleK8sError(err, 'list daemonsets')
+      }
+    }),
+
+  restart: adminProcedure
+    .input(
+      z.object({
+        clusterId: z.string().uuid(),
+        name: z.string(),
+        namespace: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const api = kc.makeApiClient(k8s.AppsV1Api)
+        const now = new Date().toISOString()
+        await api.patchNamespacedDaemonSet({
+          name: input.name,
+          namespace: input.namespace,
+          body: {
+            spec: {
+              template: {
+                metadata: {
+                  annotations: { 'kubectl.kubernetes.io/restartedAt': now },
+                },
+              },
+            },
+          },
+        })
+        const redis = await getRedisClient()
+        if (redis) await redis.del(`k8s:${input.clusterId}:daemonsets`)
+        await logAudit(ctx, 'daemonset.restart', 'daemonset', `${input.namespace}/${input.name}`, {
+          clusterId: input.clusterId,
+          namespace: input.namespace,
+        })
+        return { success: true, restartedAt: now }
+      } catch (err) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to restart daemonset ${input.name}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        })
+      }
+    }),
+
+  delete: adminProcedure
+    .input(
+      z.object({
+        clusterId: z.string().uuid(),
+        name: z.string(),
+        namespace: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const api = kc.makeApiClient(k8s.AppsV1Api)
+        await api.deleteNamespacedDaemonSet({
+          name: input.name,
+          namespace: input.namespace,
+        })
+        const redis = await getRedisClient()
+        if (redis) await redis.del(`k8s:${input.clusterId}:daemonsets`)
+        await logAudit(ctx, 'daemonset.delete', 'daemonset', `${input.namespace}/${input.name}`, {
+          clusterId: input.clusterId,
+          namespace: input.namespace,
+        })
+        return { success: true }
+      } catch (err) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to delete daemonset ${input.name}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        })
       }
     }),
 })
