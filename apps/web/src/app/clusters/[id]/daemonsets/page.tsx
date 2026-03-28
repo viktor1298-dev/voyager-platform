@@ -1,10 +1,10 @@
 'use client'
 
-import { BarChart3, CircleCheck, Layers, Tag } from 'lucide-react'
+import { BarChart3, Box, CircleCheck, Layers, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -20,6 +20,7 @@ interface DaemonSetData {
   age: string
   nodeSelector: Record<string, string>
   tolerations: { key: string; operator: string; value: string; effect: string }[]
+  selector: Record<string, string>
   conditions: {
     type: string
     status: string
@@ -63,8 +64,14 @@ function DaemonSetSummary({ ds }: { ds: DaemonSetData }) {
   )
 }
 
-function DaemonSetExpandedDetail({ ds }: { ds: DaemonSetData }) {
+function DaemonSetExpandedDetail({ ds, clusterId }: { ds: DaemonSetData; clusterId: string }) {
   const tabs = [
+    {
+      id: 'pods',
+      label: 'Pods',
+      icon: <Box className="h-3.5 w-3.5" />,
+      content: <RelatedPodsList clusterId={clusterId} matchLabels={ds.selector} />,
+    },
     {
       id: 'status',
       label: 'Status',
@@ -197,7 +204,7 @@ export default function DaemonSetsPage() {
         (ds.desired === ds.ready ? 'ready' : 'updating').includes(q)
       }
       renderSummary={(ds) => <DaemonSetSummary ds={ds} />}
-      renderDetail={(ds) => <DaemonSetExpandedDetail ds={ds} />}
+      renderDetail={(ds) => <DaemonSetExpandedDetail ds={ds} clusterId={resolvedId} />}
       searchPlaceholder="Search daemonsets..."
     />
   )

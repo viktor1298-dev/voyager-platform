@@ -1,10 +1,10 @@
 'use client'
 
-import { CircleCheck, Target, TrendingUp } from 'lucide-react'
+import { CircleCheck, ExternalLink, Target, TrendingUp } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, ResourceBar } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { RelatedResourceLink, ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -72,8 +72,49 @@ function HPASummary({ hpa }: { hpa: HPAData }) {
   )
 }
 
+function parseReference(reference: string): { kind: string; name: string } | null {
+  const parts = reference.split('/')
+  if (parts.length !== 2 || parts[0] === '—') return null
+  return { kind: parts[0]!, name: parts[1]! }
+}
+
+function kindToTab(kind: string): string {
+  const mapping: Record<string, string> = {
+    Deployment: 'deployments',
+    StatefulSet: 'statefulsets',
+    ReplicaSet: 'deployments',
+  }
+  return mapping[kind] ?? 'deployments'
+}
+
 function HPAExpandedDetail({ hpa }: { hpa: HPAData }) {
+  const ref = parseReference(hpa.reference)
+
   const tabs = [
+    {
+      id: 'target',
+      label: 'Target',
+      icon: <ExternalLink className="h-3.5 w-3.5" />,
+      content: (
+        <div className="space-y-2 p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+            Scale Target
+          </p>
+          {ref ? (
+            <RelatedResourceLink
+              tab={kindToTab(ref.kind)}
+              resourceKey={`${hpa.namespace}/${ref.name}`}
+              label={`${ref.kind}/${ref.name}`}
+              icon={<ExternalLink className="h-3.5 w-3.5" />}
+            />
+          ) : (
+            <p className="text-[11px] text-[var(--color-text-muted)]">
+              No scale target configured.
+            </p>
+          )}
+        </div>
+      ),
+    },
     {
       id: 'targets',
       label: 'Targets',

@@ -1,10 +1,10 @@
 'use client'
 
-import { Clock, List, Settings } from 'lucide-react'
+import { Clock, List, Play, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { RelatedResourceLink, ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -57,6 +57,35 @@ function CronJobSummary({ cj }: { cj: CronJobData }) {
 function CronJobExpandedDetail({ cj }: { cj: CronJobData }) {
   const tabs = [
     {
+      id: 'jobs',
+      label: 'Jobs',
+      icon: <Play className="h-3.5 w-3.5" />,
+      content: (
+        <div className="space-y-3 p-3">
+          <div className="grid grid-cols-[140px_1fr] gap-x-3 gap-y-1.5 text-[11px] font-mono">
+            <span className="text-[var(--color-text-muted)]">Active Jobs</span>
+            <span className="text-[var(--color-text-primary)]">{cj.activeJobs}</span>
+            <span className="text-[var(--color-text-muted)]">Last Scheduled</span>
+            <span className="text-[var(--color-text-primary)]">
+              {cj.lastScheduleTime ? timeAgo(cj.lastScheduleTime) : '---'}
+            </span>
+            <span className="text-[var(--color-text-muted)]">Last Successful</span>
+            <span className="text-[var(--color-text-primary)]">
+              {cj.lastSuccessfulTime ? timeAgo(cj.lastSuccessfulTime) : '---'}
+            </span>
+          </div>
+          <div className="pt-2 border-t border-[var(--color-border)]/30">
+            <RelatedResourceLink
+              tab="jobs"
+              resourceKey={`${cj.namespace}/${cj.name}`}
+              label={`View jobs from ${cj.name}`}
+              icon={<Play className="h-3.5 w-3.5" />}
+            />
+          </div>
+        </div>
+      ),
+    },
+    {
       id: 'schedule',
       label: 'Schedule',
       icon: <Clock className="h-3.5 w-3.5" />,
@@ -71,25 +100,6 @@ function CronJobExpandedDetail({ cj }: { cj: CronJobData }) {
           <span className="text-[var(--color-text-muted)]">Starting Deadline</span>
           <span className="text-[var(--color-text-primary)]">
             {cj.startingDeadlineSeconds ? `${cj.startingDeadlineSeconds}s` : '---'}
-          </span>
-        </div>
-      ),
-    },
-    {
-      id: 'jobs',
-      label: 'Jobs',
-      icon: <List className="h-3.5 w-3.5" />,
-      content: (
-        <div className="grid grid-cols-[140px_1fr] gap-x-3 gap-y-1.5 text-[11px] font-mono">
-          <span className="text-[var(--color-text-muted)]">Active Jobs</span>
-          <span className="text-[var(--color-text-primary)]">{cj.activeJobs}</span>
-          <span className="text-[var(--color-text-muted)]">Last Scheduled</span>
-          <span className="text-[var(--color-text-primary)]">
-            {cj.lastScheduleTime ? timeAgo(cj.lastScheduleTime) : '---'}
-          </span>
-          <span className="text-[var(--color-text-muted)]">Last Successful</span>
-          <span className="text-[var(--color-text-primary)]">
-            {cj.lastSuccessfulTime ? timeAgo(cj.lastSuccessfulTime) : '---'}
           </span>
         </div>
       ),

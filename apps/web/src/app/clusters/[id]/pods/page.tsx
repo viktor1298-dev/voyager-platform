@@ -6,14 +6,17 @@ import {
   ChevronDown,
   CircleCheck,
   Cpu,
+  FileText,
   HardDrive,
   Package,
+  Server,
   Trash2,
 } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, ExpandableCard, ResourceBar } from '@/components/expandable'
-import { SearchFilterBar } from '@/components/resource'
+import { LogViewer } from '@/components/logs'
+import { RelatedResourceLink, SearchFilterBar } from '@/components/resource'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -84,10 +87,36 @@ function parseMemoryMi(value: string | null): number {
 }
 
 // ---------------------------------------------------------------------------
+// Pod log viewer (inline, fetches logs when tab becomes active)
+// ---------------------------------------------------------------------------
+
+function PodLogViewer({
+  clusterId,
+  podName,
+  namespace,
+}: {
+  clusterId: string
+  podName: string
+  namespace: string
+}) {
+  const logsQuery = trpc.logs.get.useQuery(
+    { clusterId, podName, namespace, tailLines: 200 },
+    { staleTime: 15_000 },
+  )
+
+  const lines = useMemo(() => {
+    if (!logsQuery.data?.logs) return []
+    return logsQuery.data.logs.split('\n').filter(Boolean)
+  }, [logsQuery.data?.logs])
+
+  return <LogViewer lines={lines} isLoading={logsQuery.isLoading} />
+}
+
+// ---------------------------------------------------------------------------
 // Pod detail expanded content
 // ---------------------------------------------------------------------------
 
-function PodDetail({ pod }: { pod: PodData }) {
+function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
   const containers = pod.containers ?? []
 
   const tabs = [
@@ -237,6 +266,34 @@ function PodDetail({ pod }: { pod: PodData }) {
         </div>
       ),
     },
+    {
+      id: 'logs',
+      label: 'Logs',
+      icon: <FileText className="h-3.5 w-3.5" />,
+      content: <PodLogViewer clusterId={clusterId} podName={pod.name} namespace={pod.namespace} />,
+    },
+    ...(pod.nodeName
+      ? [
+          {
+            id: 'node',
+            label: 'Node',
+            icon: <Server className="h-3.5 w-3.5" />,
+            content: (
+              <div className="space-y-2 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+                  Scheduled Node
+                </p>
+                <RelatedResourceLink
+                  tab="nodes"
+                  resourceKey={pod.nodeName}
+                  label={pod.nodeName}
+                  icon={<Server className="h-3.5 w-3.5" />}
+                />
+              </div>
+            ),
+          },
+        ]
+      : []),
   ]
 
   return <DetailTabs id={`pod-${pod.namespace}-${pod.name}`} tabs={tabs} />
@@ -320,12 +377,14 @@ function NamespacePodGroup({
   isAdmin,
   onDeletePod,
   expandAll,
+  clusterId,
 }: {
   namespace: string
   pods: PodData[]
   isAdmin: boolean
   onDeletePod: (pod: PodData) => void
   expandAll: boolean
+  clusterId: string
 }) {
   const [open, setOpen] = useState(true)
 
@@ -350,7 +409,7 @@ function NamespacePodGroup({
               expanded={expandAll}
               summary={<PodSummary pod={pod} isAdmin={isAdmin} onDeletePod={onDeletePod} />}
             >
-              <PodDetail pod={pod} />
+              <PodDetail pod={pod} clusterId={clusterId} />
             </ExpandableCard>
           ))}
         </div>
@@ -497,6 +556,7 @@ export default function PodsPage() {
               isAdmin={isAdmin === true}
               onDeletePod={setDeletePodTarget}
               expandAll={expandAll}
+              clusterId={resolvedId}
             />
           ))}
         </div>
@@ -530,12 +590,25 @@ function DeletePodDialog({
   const [confirmText, setConfirmText] = useState('')
   const utils = trpc.useUtils()
   const deleteMutation = trpc.pods.delete.useMutation({
+    onMutate: async () => {
+      await utils.pods.list.cancel({ clusterId })
+      const previous = utils.pods.list.getData({ clusterId })
+      utils.pods.list.setData({ clusterId }, (old) =>
+        (old as PodData[] | undefined)?.filter(
+          (p) => !(p.name === pod.name && p.namespace === pod.namespace),
+        ),
+      )
+      return { previous }
+    },
+    onError: (err, _, context) => {
+      if (context?.previous) utils.pods.list.setData({ clusterId }, context.previous)
+      toast.error(`Failed to delete pod: ${err.message}`)
+    },
     onSuccess: () => {
       toast.success(`Pod ${pod.name} deleted`)
       utils.pods.list.invalidate({ clusterId })
       onClose()
     },
-    onError: (err) => toast.error(`Failed to delete pod: ${err.message}`),
   })
 
   const podShortName = pod.name.length > 20 ? pod.name.slice(0, 20) : pod.name

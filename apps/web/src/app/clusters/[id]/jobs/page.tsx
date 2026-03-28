@@ -1,10 +1,10 @@
 'use client'
 
-import { CircleCheck, Clock, Play, Settings } from 'lucide-react'
+import { Box, CircleCheck, Clock, Play, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -73,8 +73,14 @@ function JobSummary({ job }: { job: JobData }) {
   )
 }
 
-function JobExpandedDetail({ job }: { job: JobData }) {
+function JobExpandedDetail({ job, clusterId }: { job: JobData; clusterId: string }) {
   const tabs = [
+    {
+      id: 'pods',
+      label: 'Pods',
+      icon: <Box className="h-3.5 w-3.5" />,
+      content: <RelatedPodsList clusterId={clusterId} matchLabels={{ 'job-name': job.name }} />,
+    },
     {
       id: 'status',
       label: 'Status',
@@ -172,7 +178,7 @@ export default function JobsPage() {
         job.status.toLowerCase().includes(q)
       }
       renderSummary={(job) => <JobSummary job={job} />}
-      renderDetail={(job) => <JobExpandedDetail job={job} />}
+      renderDetail={(job) => <JobExpandedDetail job={job} clusterId={resolvedId} />}
       searchPlaceholder="Search jobs..."
     />
   )

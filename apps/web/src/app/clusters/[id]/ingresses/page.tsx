@@ -1,10 +1,10 @@
 'use client'
 
-import { Lock, Network, Route, Settings } from 'lucide-react'
+import { Globe, Lock, Network, Route, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { RelatedResourceLink, ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -56,7 +56,46 @@ function IngressSummary({ ing }: { ing: IngressData }) {
 }
 
 function IngressExpandedDetail({ ing }: { ing: IngressData }) {
+  // Collect unique services referenced by this ingress
+  const referencedServices = ing.rules.flatMap((rule) =>
+    rule.paths.map((path) => ({
+      key: `${rule.host}/${path.path}`,
+      serviceName: path.serviceName,
+      servicePort: path.servicePort,
+      namespace: ing.namespace,
+    })),
+  )
+
   const tabs = [
+    {
+      id: 'services',
+      label: 'Services',
+      icon: <Globe className="h-3.5 w-3.5" />,
+      content: (
+        <div className="space-y-2 p-3">
+          {referencedServices.length > 0 ? (
+            <>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+                Backend Services ({referencedServices.length})
+              </p>
+              {referencedServices.map((svc) => (
+                <div key={svc.key} className="flex items-center gap-2">
+                  <RelatedResourceLink
+                    tab="services"
+                    resourceKey={`${svc.namespace}/${svc.serviceName}`}
+                    label={`${svc.serviceName}:${svc.servicePort}`}
+                  />
+                </div>
+              ))}
+            </>
+          ) : (
+            <p className="text-[11px] text-[var(--color-text-muted)]">
+              No backend services referenced.
+            </p>
+          )}
+        </div>
+      ),
+    },
     {
       id: 'rules',
       label: 'Rules',

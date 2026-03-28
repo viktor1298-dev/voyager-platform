@@ -1,10 +1,10 @@
 'use client'
 
-import { Globe, Settings, Tag } from 'lucide-react'
+import { Box, Globe, Settings, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -75,8 +75,16 @@ function ServiceSummary({ s }: { s: ServiceDetail }) {
   )
 }
 
-function ServiceExpandedDetail({ svc }: { svc: ServiceDetail }) {
+function ServiceExpandedDetail({ svc, clusterId }: { svc: ServiceDetail; clusterId: string }) {
   const tabs = [
+    {
+      id: 'endpoints',
+      label: 'Endpoints',
+      icon: <Box className="h-3.5 w-3.5" />,
+      content: (
+        <RelatedPodsList clusterId={clusterId} matchLabels={svc.selector} title="Endpoint Pods" />
+      ),
+    },
     {
       id: 'selectors',
       label: 'Selectors',
@@ -215,7 +223,7 @@ export default function ServicesPage() {
         s.type.toLowerCase().includes(q)
       }
       renderSummary={(s) => <ServiceSummary s={s} />}
-      renderDetail={(s) => <ServiceExpandedDetail svc={s} />}
+      renderDetail={(s) => <ServiceExpandedDetail svc={s} clusterId={resolvedId} />}
       searchPlaceholder="Search services..."
       emptyMessage="No services found"
     />

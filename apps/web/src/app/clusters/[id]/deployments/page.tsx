@@ -1,10 +1,10 @@
 'use client'
 
-import { BarChart3, CircleCheck, Rocket, Settings } from 'lucide-react'
+import { BarChart3, Box, CircleCheck, Rocket, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -75,8 +75,14 @@ function DeploymentSummary({ d }: { d: DeploymentDetail }) {
   )
 }
 
-function DeploymentExpandedDetail({ d }: { d: DeploymentDetail }) {
+function DeploymentExpandedDetail({ d, clusterId }: { d: DeploymentDetail; clusterId: string }) {
   const tabs = [
+    {
+      id: 'pods',
+      label: 'Pods',
+      icon: <Box className="h-3.5 w-3.5" />,
+      content: <RelatedPodsList clusterId={clusterId} matchLabels={d.selector} />,
+    },
     {
       id: 'replicas',
       label: 'Replicas',
@@ -206,7 +212,7 @@ export default function DeploymentsPage() {
         d.status.toLowerCase().includes(q)
       }
       renderSummary={(d) => <DeploymentSummary d={d} />}
-      renderDetail={(d) => <DeploymentExpandedDetail d={d} />}
+      renderDetail={(d) => <DeploymentExpandedDetail d={d} clusterId={resolvedId} />}
       searchPlaceholder="Search deployments..."
       emptyMessage="No deployments found"
     />

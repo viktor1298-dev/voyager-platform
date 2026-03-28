@@ -53,6 +53,8 @@ export const statefulSetsRouter = router({
               : undefined,
           }))
 
+          const selector = (ss.spec?.selector?.matchLabels as Record<string, string>) ?? {}
+
           return {
             name: ss.metadata?.name ?? '',
             namespace: ss.metadata?.namespace ?? '',
@@ -64,6 +66,7 @@ export const statefulSetsRouter = router({
             age: computeAge(ss.metadata?.creationTimestamp),
             volumeClaimTemplates: vcts,
             conditions,
+            selector,
           }
         })
       } catch (err) {

@@ -56,6 +56,8 @@ export const daemonSetsRouter = router({
               : undefined,
           }))
 
+          const selector = (ds.spec?.selector?.matchLabels as Record<string, string>) ?? {}
+
           return {
             name: ds.metadata?.name ?? '',
             namespace: ds.metadata?.namespace ?? '',
@@ -69,6 +71,7 @@ export const daemonSetsRouter = router({
             nodeSelector,
             tolerations,
             conditions,
+            selector,
           }
         })
       } catch (err) {

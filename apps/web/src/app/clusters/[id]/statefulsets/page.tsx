@@ -1,10 +1,10 @@
 'use client'
 
-import { BarChart3, CircleCheck, Database, HardDrive } from 'lucide-react'
+import { BarChart3, Box, CircleCheck, Database, HardDrive } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs } from '@/components/expandable'
-import { ResourcePageScaffold } from '@/components/resource'
+import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -23,6 +23,7 @@ interface StatefulSetData {
     size: string
     accessModes: string[]
   }[]
+  selector: Record<string, string>
   conditions: {
     type: string
     status: string
@@ -75,8 +76,14 @@ function StatefulSetSummary({ ss }: { ss: StatefulSetData }) {
   )
 }
 
-function StatefulSetExpandedDetail({ ss }: { ss: StatefulSetData }) {
+function StatefulSetExpandedDetail({ ss, clusterId }: { ss: StatefulSetData; clusterId: string }) {
   const tabs = [
+    {
+      id: 'pods',
+      label: 'Pods',
+      icon: <Box className="h-3.5 w-3.5" />,
+      content: <RelatedPodsList clusterId={clusterId} matchLabels={ss.selector} />,
+    },
     {
       id: 'replicas',
       label: 'Replicas',
@@ -188,7 +195,7 @@ export default function StatefulSetsPage() {
         ss.name.toLowerCase().includes(q) || ss.namespace.toLowerCase().includes(q)
       }
       renderSummary={(ss) => <StatefulSetSummary ss={ss} />}
-      renderDetail={(ss) => <StatefulSetExpandedDetail ss={ss} />}
+      renderDetail={(ss) => <StatefulSetExpandedDetail ss={ss} clusterId={resolvedId} />}
       searchPlaceholder="Search statefulsets..."
       emptyMessage="No StatefulSets found"
     />
