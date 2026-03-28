@@ -101,6 +101,41 @@ export const servicesRouter = router({
       }
     }),
 
+  listDetail: protectedProcedure
+    .input(z.object({ clusterId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      try {
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const cacheKey = `${CACHE_KEYS.k8sServices(input.clusterId)}:detail`
+
+        const response = await cached(cacheKey, CACHE_TTL.K8S_RESOURCES_SEC, () =>
+          coreV1.listServiceForAllNamespaces(),
+        )
+
+        return response.items.map((svc) => ({
+          name: svc.metadata?.name ?? '',
+          namespace: svc.metadata?.namespace ?? '',
+          type: svc.spec?.type ?? 'ClusterIP',
+          clusterIP: svc.spec?.clusterIP ?? null,
+          ports: mapPorts(svc.spec?.ports),
+          createdAt: svc.metadata?.creationTimestamp
+            ? new Date(svc.metadata.creationTimestamp as unknown as string).toISOString()
+            : null,
+          selector: (svc.spec?.selector as Record<string, string>) ?? {},
+          externalTrafficPolicy: svc.spec?.externalTrafficPolicy ?? null,
+          sessionAffinity: svc.spec?.sessionAffinity ?? 'None',
+          loadBalancerIngress: (svc.status?.loadBalancer?.ingress ?? []).map((ing) => ({
+            ip: ing.ip ?? null,
+            hostname: ing.hostname ?? null,
+          })),
+          healthCheckNodePort: svc.spec?.healthCheckNodePort ?? null,
+        }))
+      } catch (error) {
+        handleK8sError(error, 'list services detail')
+      }
+    }),
+
   get: protectedProcedure
     .input(z.object({ clusterId: z.string().uuid(), name: z.string(), namespace: z.string() }))
     .output(serviceSummarySchema)

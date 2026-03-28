@@ -296,6 +296,66 @@ export const deploymentsRouter = router({
       })
     }),
 
+  listDetail: protectedProcedure
+    .input(z.object({ clusterId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const cacheKey = `${CACHE_KEYS.k8sDeploymentsList(input.clusterId)}:detail`
+      return cached(cacheKey, K8S_DEPLOYMENTS_CACHE_TTL, async () => {
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const api = kc.makeApiClient(k8s.AppsV1Api)
+        const { items: deployments } = await api.listDeploymentForAllNamespaces()
+
+        return (deployments ?? []).map((d) => {
+          const name = d.metadata?.name ?? 'unknown'
+          const namespace = d.metadata?.namespace ?? 'default'
+          const replicas = d.spec?.replicas ?? 0
+          const ready = d.status?.readyReplicas ?? 0
+          const updated = d.status?.updatedReplicas ?? 0
+          const available = d.status?.availableReplicas ?? 0
+          const unavailable = d.status?.unavailableReplicas ?? 0
+          const image = d.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
+
+          const strategy = d.spec?.strategy
+          const conditions = (d.status?.conditions ?? []).map((c) => ({
+            type: c.type ?? '',
+            status: c.status ?? 'Unknown',
+            reason: c.reason ?? undefined,
+            message: c.message ?? undefined,
+            lastTransitionTime: c.lastTransitionTime
+              ? new Date(c.lastTransitionTime as unknown as string).toISOString()
+              : undefined,
+          }))
+
+          const selector = (d.spec?.selector?.matchLabels as Record<string, string>) ?? {}
+
+          return {
+            name,
+            namespace,
+            replicas,
+            readyReplicas: ready,
+            updatedReplicas: updated,
+            availableReplicas: available,
+            unavailableReplicas: unavailable,
+            image,
+            status: deriveStatus({
+              ready,
+              replicas,
+              available,
+              unavailable: d.status?.unavailableReplicas ?? Math.max(replicas - ready, 0),
+              generation: d.metadata?.generation,
+              observedGeneration: d.status?.observedGeneration,
+            }),
+            age: computeAge(d.metadata?.creationTimestamp),
+            strategyType: strategy?.type ?? 'RollingUpdate',
+            maxSurge: strategy?.rollingUpdate?.maxSurge?.toString() ?? null,
+            maxUnavailable: strategy?.rollingUpdate?.maxUnavailable?.toString() ?? null,
+            selector,
+            conditions,
+          }
+        })
+      })
+    }),
+
   restart: adminProcedure
     .meta({
       openapi: {
