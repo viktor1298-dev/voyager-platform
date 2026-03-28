@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: true
 preset: new-york
 created: 2026-03-28
+revised: 2026-03-28
 ---
 
 # Phase 9 -- UI Design Contract
@@ -56,7 +57,7 @@ Source: Existing patterns in globals.css (`px-4`, `p-4`, `gap-1.5`, `py-2.5` in 
 | Role | Size | Weight | Line Height | Font |
 |------|------|--------|-------------|------|
 | Body | 14px | 400 (regular) | 1.5 | Geist Sans |
-| Label | 12px | 500 (medium) | 1.4 | Geist Sans |
+| Label | 12px | 600 (semibold) | 1.4 | Geist Sans |
 | Heading | 20px | 600 (semibold) | 1.2 | Geist Sans |
 | Mono | 13px | 400 (regular) | 1.4 | Geist Mono |
 
@@ -65,8 +66,8 @@ Phase 9-specific typography:
 - **YAML/JSON viewer**: 13px Geist Mono, weight 400, line-height 1.5
 - **Diff viewer**: 13px Geist Mono, weight 400, line-height 1.4
 - **RBAC matrix cell text**: 12px Geist Mono, weight 600, line-height 1.0 (single CRUD letter)
-- **Graph node labels**: 12px Geist Sans, weight 500, line-height 1.2
-- **Timeline axis labels**: 11px Geist Mono, weight 400, line-height 1.0
+- **Graph node labels**: 12px Geist Sans, weight 600, line-height 1.2
+- **Timeline axis labels**: 12px Geist Mono, weight 400, line-height 1.0
 
 Source: globals.css body `font-family: var(--font-geist-sans)`, existing code patterns (LogLine uses text-xs = 12px, body uses clamp 14-16px)
 
@@ -207,6 +208,7 @@ Source: Existing `--color-log-*`, `--color-status-*`, `--color-chart-*` token pa
 | Exit animation | Reverse slideUp, duration 150ms |
 | Keyboard | Ctrl+` toggles drawer visibility (VS Code convention) |
 | Collapsed state | Thin 32px bar at bottom showing session count, click to expand |
+| Focal point | Active terminal session text cursor -- the blinking cursor in the xterm.js viewport draws the eye to the input area where the user types commands |
 
 ### I-02: YAML Viewer (D-03)
 
@@ -266,7 +268,7 @@ Source: Existing `--color-log-*`, `--color-status-*`, `--color-chart-*` token pa
 |--------|-------------|---------|
 | Delete | Type-to-confirm dialog | Red border, input must match resource name exactly (case-sensitive) |
 | Restart | Single confirmation dialog | Shows pod count: "This will trigger a rolling restart of {N} pods" |
-| Scale | Inline, no dialog | Number input next to current value. "[current] -> [new] Apply" |
+| Scale | Inline, no dialog | Number input next to current value. "[current] -> [new] Update Replicas" |
 
 ### I-05: Live Log Streaming (D-04)
 
@@ -288,7 +290,7 @@ Source: Existing `--color-log-*`, `--color-status-*`, `--color-chart-*` token pa
 |----------|---------------|
 | Location | Events tab, toggle between "Timeline" and "Cards" view |
 | Toggle | Segmented control at top: [Timeline | Cards]. Default: Cards (preserves existing) |
-| Time axis | Horizontal, top of timeline, labels in `11px Geist Mono` |
+| Time axis | Horizontal, top of timeline, labels in 12px Geist Mono |
 | Swim lanes | Horizontal rows per resource type (Pods, Deployments, Nodes, etc.) |
 | Lane label | Left column, 120px width, resource type name in 12px semibold |
 | Lane toggle | Click lane label to collapse/expand that swim lane |
@@ -306,7 +308,7 @@ Source: Existing `--color-log-*`, `--color-status-*`, `--color-chart-*` token pa
 | Graph engine | `@xyflow/react` with dagre layout algorithm |
 | Node types | Ingress (hexagon), Service (diamond), Deployment/StatefulSet/DaemonSet (rectangle), Pod (circle), Node (rounded rectangle) |
 | Node size | Width: 160px (rectangle types), Height: 48px minimum |
-| Node content | Resource name (12px medium), status indicator dot (8px), resource count badge |
+| Node content | Resource name (12px semibold), status indicator dot (8px), resource count badge |
 | Node border | 2px solid, color = health status (`--color-graph-node-healthy/warning/error`) |
 | Node background | `--color-bg-card` |
 | Node hover | Border width 3px, subtle glow matching health color, tooltip with resource details |
@@ -319,6 +321,7 @@ Source: Existing `--color-log-*`, `--color-status-*`, `--color-chart-*` token pa
 | Filter | Namespace dropdown, resource name search |
 | Loading | Skeleton graph placeholder (5 placeholder nodes with shimmer) |
 | Empty | "No resources found in this cluster." centered message |
+| Focal point | Center cluster of Service-to-Deployment edges -- the densest connection hub in the graph, typically the Ingress-to-Service fan-out, draws the eye to the primary traffic flow |
 
 ### I-08: Network Policy Graph (D-10)
 
@@ -341,8 +344,8 @@ Source: Existing `--color-log-*`, `--color-status-*`, `--color-chart-*` token pa
 |----------|---------------|
 | Location | New tab: Cluster Ops > RBAC |
 | Layout | Scrollable matrix grid, sticky header row + first column |
-| Row labels | Service accounts / users (left column, 200px width, 12px medium) |
-| Column labels | Resources (top row, 80px width, rotated 45deg, 11px medium) |
+| Row labels | Service accounts / users (left column, 200px width, 12px semibold) |
+| Column labels | Resources (top row, 80px width, rotated 45deg, 12px semibold) |
 | Cell content | CRUD letters: C R U D (each 12px mono semibold) |
 | Cell: allowed | Letter in `--color-rbac-allowed`, background subtle green tint |
 | Cell: denied | Letter in `--color-rbac-denied` (dimmed), no background |
@@ -351,6 +354,7 @@ Source: Existing `--color-log-*`, `--color-status-*`, `--color-chart-*` token pa
 | Filter | By namespace (dropdown), by subject name (search input) |
 | Loading | Skeleton grid (6x6 cells with shimmer) |
 | Empty | "No RBAC bindings found. Check cluster role bindings." |
+| Focal point | Top-left quadrant of the matrix (first subject x first resource intersection) -- the sticky headers guide the eye to the first visible CRUD cell cluster where permission state is immediately scannable |
 
 ### I-10: Resource Quotas (D-12)
 
@@ -371,7 +375,7 @@ Source: Existing `--color-log-*`, `--color-status-*`, `--color-chart-*` token pa
 |----------|---------------|
 | Location | New tab: Cluster Ops > Helm |
 | Layout | `ResourcePageScaffold` with `SearchFilterBar`, namespace-grouped cards |
-| Card summary | Release name (14px medium), chart name + version (12px muted), status badge, revision number |
+| Card summary | Release name (14px semibold), chart name + version (12px muted), status badge, revision number |
 | Status badge | Deployed=green, Failed=red, Pending=amber (use `--color-helm-*` tokens) |
 | Expanded detail | `DetailTabs` with [Info] [Values] [Revisions] [Resources] |
 | Info tab | DetailGrid with chart name, app version, namespace, created, updated |
@@ -495,16 +499,16 @@ All animations use tokens from `apps/web/src/lib/animation-constants.ts`. See `d
 | Dialog body | "This action cannot be undone. This will permanently delete the {resource-type} **{resource-name}** from namespace **{namespace}**." |
 | Input label | "Type **{resource-name}** to confirm" |
 | Confirm button | "I understand, delete this {resource-type}" |
-| Cancel button | "Cancel" |
+| Dismiss button | "Keep {resource-type}" |
 | **Restart Confirmation** | |
 | Dialog title | "Restart {resource-type}" |
 | Dialog body | "This will trigger a rolling restart of **{pod-count} pods** managed by {resource-name}. Existing connections may be briefly interrupted." |
 | Confirm button | "Restart" |
-| Cancel button | "Cancel" |
+| Dismiss button | "No, don't restart" |
 | **Scale** | |
 | Current label | "Current: {N}" |
 | Input label | "New replicas" |
-| Apply button | "Apply" |
+| Apply button | "Update Replicas" |
 | Success toast | "Scaled {resource-name} to {N} replicas" |
 | **Port Forward** | |
 | Button label | "Port Forward" |
