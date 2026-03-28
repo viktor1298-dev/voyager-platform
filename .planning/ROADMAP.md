@@ -117,7 +117,9 @@ Plans:
   1. Ranges producing 500+ data points are downsampled via LTTB to ~200 visual points with no visible loss of shape
   2. Crosshair synchronization across 4 panels does not cause jank or dropped frames at 60fps
   3. Browser window resize does not cause layout thrashing (ResponsiveContainer resize is debounced)
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 07-01-PLAN.md — LTTB downsampling function with tests, wired into useMetricsData; verify crosshair throttle and resize debounce
 
 ## Progress
 
@@ -132,4 +134,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. Synchronized Crosshair | 1/1 | Complete | 2026-03-28 |
 | 5. Grafana Dark Panel Design | 0/1 | Not started | - |
 | 6. Data Freshness & UX Polish | 0/1 | Not started | - |
-| 7. Performance Optimization | 0/TBD | Not started | - |
+| 7. Performance Optimization | 0/1 | Not started | - |
