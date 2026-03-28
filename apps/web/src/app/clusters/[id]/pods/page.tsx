@@ -6,7 +6,6 @@ import {
   ChevronDown,
   CircleCheck,
   Cpu,
-  ExternalLink,
   FileText,
   HardDrive,
   Package,
@@ -18,15 +17,8 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, ExpandableCard, ResourceBar } from '@/components/expandable'
 import { LogViewer } from '@/components/logs'
-import {
-  ActionToolbar,
-  DeleteConfirmDialog,
-  PortForwardCopy,
-  RelatedResourceLink,
-  ResourceDiff,
-  SearchFilterBar,
-  YamlViewer,
-} from '@/components/resource'
+import { RelatedResourceLink, SearchFilterBar } from '@/components/resource'
+import { useTerminal } from '@/components/terminal/terminal-context'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -131,86 +123,7 @@ function PodLogViewer({
 // ---------------------------------------------------------------------------
 
 function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const containers = pod.containers ?? []
-  const utils = trpc.useUtils()
-
-  const deleteMutation = trpc.pods.delete.useMutation({
-    onSuccess: () => {
-      toast.success(`Pod ${pod.name} deleted`)
-      utils.pods.list.invalidate({ clusterId })
-      setDeleteDialogOpen(false)
-    },
-    onError: (err) => toast.error(`Delete failed: ${err.message}`),
-  })
-
-  // Gather all container ports for PortForwardCopy
-  const allPorts = containers.flatMap((c) =>
-    c.ports.map((p) => ({ containerPort: p.containerPort, name: p.name ?? undefined })),
-  )
-
-  const actions = (
-    <>
-      <ActionToolbar
-        actions={[
-          {
-            id: 'exec',
-            label: 'Exec',
-            icon: Terminal,
-            variant: 'accent',
-            onClick: () => {
-              /* terminal drawer integration in Plan 05 */
-            },
-          },
-          ...(allPorts.length > 0
-            ? [
-                {
-                  id: 'port-forward',
-                  label: 'Port Forward',
-                  icon: ExternalLink,
-                  variant: 'default' as const,
-                  onClick: () => {
-                    /* handled by render prop */
-                  },
-                  render: (button: React.ReactNode) => (
-                    <PortForwardCopy
-                      podName={pod.name}
-                      namespace={pod.namespace}
-                      containerPorts={allPorts}
-                      clusterContext={clusterId}
-                    >
-                      {button}
-                    </PortForwardCopy>
-                  ),
-                },
-              ]
-            : []),
-          {
-            id: 'delete',
-            label: 'Delete',
-            icon: Trash2,
-            variant: 'destructive',
-            onClick: () => setDeleteDialogOpen(true),
-          },
-        ]}
-      />
-      <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        resourceType="Pod"
-        resourceName={pod.name}
-        namespace={pod.namespace}
-        onConfirm={() =>
-          deleteMutation.mutate({
-            clusterId,
-            namespace: pod.namespace,
-            podName: pod.name,
-          })
-        }
-        isDeleting={deleteMutation.isPending}
-      />
-    </>
-  )
 
   const tabs = [
     {
@@ -365,30 +278,6 @@ function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
       icon: <FileText className="h-3.5 w-3.5" />,
       content: <PodLogViewer clusterId={clusterId} podName={pod.name} namespace={pod.namespace} />,
     },
-    {
-      id: 'yaml',
-      label: 'YAML',
-      content: (
-        <YamlViewer
-          clusterId={clusterId}
-          resourceType="pods"
-          resourceName={pod.name}
-          namespace={pod.namespace}
-        />
-      ),
-    },
-    {
-      id: 'diff',
-      label: 'Diff',
-      content: (
-        <ResourceDiff
-          clusterId={clusterId}
-          resourceType="pods"
-          resourceName={pod.name}
-          namespace={pod.namespace}
-        />
-      ),
-    },
     ...(pod.nodeName
       ? [
           {
@@ -413,7 +302,7 @@ function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
       : []),
   ]
 
-  return <DetailTabs id={`pod-${pod.namespace}-${pod.name}`} tabs={tabs} actions={actions} />
+  return <DetailTabs id={`pod-${pod.namespace}-${pod.name}`} tabs={tabs} />
 }
 
 // ---------------------------------------------------------------------------
@@ -424,10 +313,12 @@ function PodSummary({
   pod,
   isAdmin,
   onDeletePod,
+  onExecPod,
 }: {
   pod: PodData
   isAdmin: boolean
   onDeletePod: (pod: PodData) => void
+  onExecPod: (pod: PodData) => void
 }) {
   const statusColor =
     pod.status === 'Running' || pod.status === 'Succeeded'
@@ -460,6 +351,26 @@ function PodSummary({
       <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
         {pod.createdAt ? timeAgo(pod.createdAt) : '—'}
       </span>
+      {pod.status === 'Running' && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onExecPod(pod)
+                }}
+                className="p-1 rounded hover:bg-[var(--color-accent)]/10 text-[var(--color-text-dim)] hover:text-[var(--color-accent)] transition-colors shrink-0"
+                aria-label={`Exec into pod ${pod.name}`}
+              >
+                <Terminal className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Exec into pod</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
       {isAdmin && (
         <TooltipProvider>
           <Tooltip>
@@ -493,6 +404,7 @@ function NamespacePodGroup({
   pods,
   isAdmin,
   onDeletePod,
+  onExecPod,
   expandAll,
   clusterId,
   highlightPodKey,
@@ -503,6 +415,7 @@ function NamespacePodGroup({
   pods: PodData[]
   isAdmin: boolean
   onDeletePod: (pod: PodData) => void
+  onExecPod: (pod: PodData) => void
   expandAll: boolean
   clusterId: string
   highlightPodKey: string | null
@@ -545,7 +458,14 @@ function NamespacePodGroup({
               >
                 <ExpandableCard
                   expanded={expandAll || isHighlighted || undefined}
-                  summary={<PodSummary pod={pod} isAdmin={isAdmin} onDeletePod={onDeletePod} />}
+                  summary={
+                    <PodSummary
+                      pod={pod}
+                      isAdmin={isAdmin}
+                      onDeletePod={onDeletePod}
+                      onExecPod={onExecPod}
+                    />
+                  }
                 >
                   <PodDetail pod={pod} clusterId={clusterId} />
                 </ExpandableCard>
@@ -568,6 +488,7 @@ export default function PodsPage() {
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const isAdmin = useIsAdmin()
+  const { openTerminal } = useTerminal()
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
@@ -590,6 +511,18 @@ export default function PodsPage() {
       refetchInterval: 30000,
       staleTime: 5 * 60 * 1000,
     },
+  )
+
+  const handleExecPod = useCallback(
+    (pod: PodData) => {
+      openTerminal({
+        podName: pod.name,
+        container: pod.containers?.[0]?.name ?? pod.name,
+        namespace: pod.namespace,
+        clusterId: resolvedId,
+      })
+    },
+    [openTerminal, resolvedId],
   )
 
   const [deletePodTarget, setDeletePodTarget] = useState<PodData | null>(null)
@@ -719,6 +652,7 @@ export default function PodsPage() {
               pods={nsPods}
               isAdmin={isAdmin === true}
               onDeletePod={setDeletePodTarget}
+              onExecPod={handleExecPod}
               expandAll={expandAll}
               clusterId={resolvedId}
               highlightPodKey={highlightPodKey}

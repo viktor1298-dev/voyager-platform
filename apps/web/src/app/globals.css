@@ -177,6 +177,11 @@
   --color-logo-flame-outer: #f59e0b;
   --color-logo-flame-inner: #fbbf24;
 
+  /* Timeline event colors */
+  --color-timeline-normal: #38bdf8;
+  --color-timeline-warning: #f6c042;
+  --color-timeline-error: #ff4d6a;
+
   /* Glow effects */
   --glow-healthy: 0 0 20px rgba(16, 185, 129, 0.15);
   --glow-healthy-hover: 0 0 30px rgba(16, 185, 129, 0.25);
@@ -319,6 +324,11 @@ html.light {
   --color-logo-gradient-end: #6366f1;
   --color-logo-flame-outer: #d97706;
   --color-logo-flame-inner: #f59e0b;
+
+  /* Timeline event colors (light) */
+  --color-timeline-normal: #0284c7;
+  --color-timeline-warning: #d97706;
+  --color-timeline-error: #dc2626;
 
   --glass-bg: rgba(255, 255, 255, 0.6);
   --glass-border: rgba(0, 0, 0, 0.06);

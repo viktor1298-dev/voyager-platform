@@ -14,11 +14,6 @@ const CommandPalette = dynamic(
   () => import('./CommandPalette').then((m) => ({ default: m.CommandPalette })),
   { ssr: false },
 )
-
-const TerminalDrawer = dynamic(
-  () => import('./terminal/TerminalDrawer').then((m) => ({ default: m.TerminalDrawer })),
-  { ssr: false },
-)
 import { KeyboardShortcuts } from './KeyboardShortcuts'
 import { TerminalProvider } from './terminal/terminal-context'
 
@@ -103,7 +98,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
                   }}
                 />
                 <CommandPalette />
-                <TerminalDrawer />
                 <KeyboardShortcuts />
               </TerminalProvider>
             </QueryClientProvider>

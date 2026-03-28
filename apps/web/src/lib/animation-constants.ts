@@ -262,32 +262,10 @@ export const tabSlideRightVariants = {
   exit: { opacity: 0, x: -8, transition: { duration: DURATION.instant, ease: EASING.exit } },
 } as const
 
-// Phase 9: Drawer slide-up (VS Code-style terminal panel)
-export const drawerSlideUpVariants = {
-  hidden: { y: '100%' },
-  visible: { y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 24 } },
-} as const
-
-// Phase 9: Graph node appearance (topology map, network policy graph)
-export const graphNodeVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { type: 'spring' as const, stiffness: 350, damping: 24 },
-  },
-} as const
-
 // Phase 9: Swim lane entrance (events timeline)
 export const swimLaneVariants = {
   hidden: { opacity: 0, x: -12 },
   visible: { opacity: 1, x: 0 },
-} as const
-
-// Phase 9: Matrix cell fade (RBAC permission grid)
-export const matrixCellVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
 } as const
 
 // Resource bar fill animation
