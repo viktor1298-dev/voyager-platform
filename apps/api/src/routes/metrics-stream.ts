@@ -1,13 +1,13 @@
 import crypto from 'node:crypto'
 import { SSE_HEARTBEAT_INTERVAL_MS } from '@voyager/config'
-import type { MetricsStreamEvent } from '@voyager/types'
 import { clusters, db } from '@voyager/db'
+import type { MetricsStreamEvent } from '@voyager/types'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { metricsStreamJob } from '../jobs/metrics-stream-job.js'
 import { auth } from '../lib/auth.js'
 import { voyagerEmitter } from '../lib/event-emitter.js'
-import { metricsStreamJob } from '../jobs/metrics-stream-job.js'
 
 const querySchema = z.object({
   clusterId: z.string().uuid(),

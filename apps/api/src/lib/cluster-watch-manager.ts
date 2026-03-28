@@ -10,14 +10,12 @@ import type {
   PodEventType,
   PodPhase,
 } from '@voyager/types'
-import { connectionState } from './cluster-connection-state.js'
 import { clusterClientPool } from './cluster-client-pool.js'
+import { connectionState } from './cluster-connection-state.js'
 import { voyagerEmitter } from './event-emitter.js'
 import { parseCpuToNano, parseMemToBytes } from './k8s-units.js'
 
 // ── Helpers ─────────────────────────────────────────────────
-
-
 
 function mapContainerStatuses(
   statuses: k8s.V1ContainerStatus[] | undefined,
@@ -52,7 +50,8 @@ function mapPodToEvent(pod: k8s.V1Pod, type: PodEventType, clusterId: string): P
     reason: pod.status?.reason,
     message: pod.status?.message,
     restartCount: (pod.status?.containerStatuses ?? []).reduce(
-      (sum, cs) => sum + (cs.restartCount ?? 0), 0,
+      (sum, cs) => sum + (cs.restartCount ?? 0),
+      0,
     ),
     containerStatuses: mapContainerStatuses(pod.status?.containerStatuses),
     timestamp: new Date().toISOString(),
@@ -76,7 +75,9 @@ class ClusterWatchManager {
   async startCluster(clusterId: string): Promise<void> {
     if (this.clusters.has(clusterId)) return
     if (this.clusters.size >= MAX_CONCURRENT_CLUSTER_WATCHES) {
-      console.warn(`[ClusterWatchManager] Max watches reached (${MAX_CONCURRENT_CLUSTER_WATCHES}), skipping ${clusterId}`)
+      console.warn(
+        `[ClusterWatchManager] Max watches reached (${MAX_CONCURRENT_CLUSTER_WATCHES}), skipping ${clusterId}`,
+      )
       return
     }
 
@@ -88,8 +89,7 @@ class ClusterWatchManager {
       const appsApi = kc.makeApiClient(k8s.AppsV1Api)
 
       // Pod informer
-      const pods = k8s.makeInformer(kc, '/api/v1/pods',
-        () => coreApi.listPodForAllNamespaces())
+      const pods = k8s.makeInformer(kc, '/api/v1/pods', () => coreApi.listPodForAllNamespaces())
 
       pods.on('add', (pod: k8s.V1Pod) => {
         voyagerEmitter.emitPodEvent(mapPodToEvent(pod, 'added', clusterId))
@@ -105,22 +105,29 @@ class ClusterWatchManager {
       })
 
       // Deployment informer
-      const deployments = k8s.makeInformer(kc, '/apis/apps/v1/deployments',
-        () => appsApi.listDeploymentForAllNamespaces())
+      const deployments = k8s.makeInformer(kc, '/apis/apps/v1/deployments', () =>
+        appsApi.listDeploymentForAllNamespaces(),
+      )
 
       deployments.on('add', (dep: k8s.V1Deployment) => {
         voyagerEmitter.emit('deployment-event', {
-          type: 'added', clusterId, data: dep,
+          type: 'added',
+          clusterId,
+          data: dep,
         })
       })
       deployments.on('update', (dep: k8s.V1Deployment) => {
         voyagerEmitter.emit('deployment-event', {
-          type: 'modified', clusterId, data: dep,
+          type: 'modified',
+          clusterId,
+          data: dep,
         })
       })
       deployments.on('delete', (dep: k8s.V1Deployment) => {
         voyagerEmitter.emit('deployment-event', {
-          type: 'deleted', clusterId, data: dep,
+          type: 'deleted',
+          clusterId,
+          data: dep,
         })
       })
       deployments.on('error', (err: unknown) => {
@@ -128,22 +135,27 @@ class ClusterWatchManager {
       })
 
       // Node informer
-      const nodes = k8s.makeInformer(kc, '/api/v1/nodes',
-        () => coreApi.listNode())
+      const nodes = k8s.makeInformer(kc, '/api/v1/nodes', () => coreApi.listNode())
 
       nodes.on('add', (node: k8s.V1Node) => {
         voyagerEmitter.emit('node-event', {
-          type: 'added', clusterId, data: node,
+          type: 'added',
+          clusterId,
+          data: node,
         })
       })
       nodes.on('update', (node: k8s.V1Node) => {
         voyagerEmitter.emit('node-event', {
-          type: 'modified', clusterId, data: node,
+          type: 'modified',
+          clusterId,
+          data: node,
         })
       })
       nodes.on('delete', (node: k8s.V1Node) => {
         voyagerEmitter.emit('node-event', {
-          type: 'deleted', clusterId, data: node,
+          type: 'deleted',
+          clusterId,
+          data: node,
         })
       })
       nodes.on('error', (err: unknown) => {
@@ -165,7 +177,9 @@ class ClusterWatchManager {
 
       // Metrics polling (Metrics API is not watchable)
       const metricsInterval = setInterval(
-        () => this.pollMetrics(clusterId, kc), CLUSTER_METRICS_POLL_INTERVAL_MS)
+        () => this.pollMetrics(clusterId, kc),
+        CLUSTER_METRICS_POLL_INTERVAL_MS,
+      )
       // Initial metrics poll
       this.pollMetrics(clusterId, kc)
 
@@ -247,18 +261,22 @@ class ClusterWatchManager {
       try {
         const pods = await coreApi.listPodForAllNamespaces()
         podCount = pods.items?.length ?? 0
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       const event: MetricsEvent = {
         clusterId,
         cpuCores: totalCpuNano / 1e9,
-        cpuPercent: totalCpuAllocatable > 0
-          ? Math.round((totalCpuNano / totalCpuAllocatable) * 1000) / 10
-          : null,
+        cpuPercent:
+          totalCpuAllocatable > 0
+            ? Math.round((totalCpuNano / totalCpuAllocatable) * 1000) / 10
+            : null,
         memoryBytes: totalMemBytes,
-        memoryPercent: totalMemAllocatable > 0
-          ? Math.round((totalMemBytes / totalMemAllocatable) * 1000) / 10
-          : null,
+        memoryPercent:
+          totalMemAllocatable > 0
+            ? Math.round((totalMemBytes / totalMemAllocatable) * 1000) / 10
+            : null,
         podCount,
         timestamp: new Date().toISOString(),
       }

@@ -34,7 +34,7 @@ vi.mock('../lib/k8s-units.js', () => ({
   parseMemToBytes: vi.fn(() => 0),
 }))
 
-import { timeRangeSchema, GRAFANA_RANGES } from '../routers/metrics.js'
+import { GRAFANA_RANGES, timeRangeSchema } from '../routers/metrics.js'
 
 describe('PIPE-05: Metrics time range validation', () => {
   const validRanges = ['5m', '15m', '30m', '1h', '3h', '6h', '12h', '24h', '2d', '7d']

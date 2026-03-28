@@ -102,7 +102,11 @@ describe('KarpenterService', () => {
           ],
         }),
         listPodForAllNamespaces: vi.fn().mockResolvedValue({
-          items: [{ status: { phase: 'Pending' } }, { status: { phase: 'Running' } }, { status: { phase: 'Pending' } }],
+          items: [
+            { status: { phase: 'Pending' } },
+            { status: { phase: 'Running' } },
+            { status: { phase: 'Pending' } },
+          ],
         }),
       }),
     )

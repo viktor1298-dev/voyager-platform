@@ -17,17 +17,17 @@
     "health:check": "tsx scripts/health-check.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.15",
+    "@biomejs/biome": "^2.4.9",
     "@playwright/test": "^1.58.2",
-    "@types/node": "^25.2.3",
-    "turbo": "^2.8.8",
-    "typescript": "^5.7.0"
+    "@types/node": "^25.5.0",
+    "turbo": "^2.8.21",
+    "typescript": "^6.0.2"
   },
   "packageManager": "pnpm@10.6.2",
   "pnpm": {
     "overrides": {
       "h3": "1.15.5",
-      "esbuild": "^0.25.0"
+      "esbuild": "^0.27.0"
     },
     "onlyBuiltDependencies": [
       "@biomejs/biome",
@@ -37,14 +37,14 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "@aws-sdk/client-sts": "^3.996.0",
-    "@aws-sdk/util-format-url": "^3.374.0",
-    "@azure/arm-containerservice": "^24.1.0",
-    "@azure/identity": "^4.13.0",
+    "@aws-sdk/client-sts": "^3.1019.0",
+    "@aws-sdk/util-format-url": "^3.972.8",
+    "@azure/arm-containerservice": "^25.0.0",
+    "@azure/identity": "^4.13.1",
     "@google-cloud/container": "^6.7.0",
     "@radix-ui/react-progress": "^1.1.8",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@smithy/protocol-http": "^5.3.2",
-    "@smithy/signature-v4": "^5.3.2"
+    "@smithy/protocol-http": "^5.3.12",
+    "@smithy/signature-v4": "^5.3.12"
   }
 }

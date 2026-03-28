@@ -29,7 +29,14 @@ const normalizeHost = (value: string | null | undefined): string | null => {
 
   try {
     const parsed = new URL(`http://${host}`)
-    if (!parsed.hostname || parsed.username || parsed.password || parsed.pathname !== '/' || parsed.search || parsed.hash) {
+    if (
+      !parsed.hostname ||
+      parsed.username ||
+      parsed.password ||
+      parsed.pathname !== '/' ||
+      parsed.search ||
+      parsed.hash
+    ) {
       return null
     }
     return parsed.host

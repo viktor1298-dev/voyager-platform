@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 
 // Build a deeply-chainable mock DB for drizzle queries
-function chainMock(terminal: unknown = []) {
+function _chainMock(terminal: unknown = []) {
   const handler: ProxyHandler<any> = {
     get(_target, prop) {
       if (prop === 'then') return undefined // not a thenable
-      return (...args: unknown[]) => new Proxy(() => terminal, handler)
+      return (..._args: unknown[]) => new Proxy(() => terminal, handler)
     },
     apply(_target) {
       return new Proxy(() => terminal, handler)
@@ -21,11 +21,13 @@ function createMockDb() {
     select: vi.fn().mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
-          orderBy: vi.fn().mockReturnValue(Object.assign(Promise.resolve([]), {
-            limit: vi.fn().mockReturnValue({
-              offset: vi.fn().mockResolvedValue([]),
+          orderBy: vi.fn().mockReturnValue(
+            Object.assign(Promise.resolve([]), {
+              limit: vi.fn().mockReturnValue({
+                offset: vi.fn().mockResolvedValue([]),
+              }),
             }),
-          })),
+          ),
         }),
         orderBy: vi.fn().mockReturnValue({
           limit: vi.fn().mockReturnValue({
@@ -42,9 +44,15 @@ vi.mock('@voyager/db', () => ({
   db: {},
   Database: {},
   auditLog: {
-    id: 'id', userId: 'user_id', action: 'action', resource: 'resource',
-    resourceId: 'resource_id', timestamp: 'timestamp', userEmail: 'user_email',
-    details: 'details', ipAddress: 'ip_address',
+    id: 'id',
+    userId: 'user_id',
+    action: 'action',
+    resource: 'resource',
+    resourceId: 'resource_id',
+    timestamp: 'timestamp',
+    userEmail: 'user_email',
+    details: 'details',
+    ipAddress: 'ip_address',
   },
 }))
 
@@ -54,7 +62,7 @@ vi.mock('../lib/auth', () => ({
 
 import { logAudit } from '../lib/audit.js'
 import { auditRouter } from '../routers/audit.js'
-import { type Context, router } from '../trpc.js'
+import { router } from '../trpc.js'
 
 describe('logAudit', () => {
   it('inserts audit record with correct values', async () => {
@@ -68,13 +76,22 @@ describe('logAudit', () => {
     await logAudit(ctx, 'cluster.create', 'cluster', 'c1', { name: 'test' })
     expect(mockDb.insert).toHaveBeenCalled()
     expect(mockDb._insertValues).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: 'u1', action: 'cluster.create', resource: 'cluster', resourceId: 'c1' }),
+      expect.objectContaining({
+        userId: 'u1',
+        action: 'cluster.create',
+        resource: 'cluster',
+        resourceId: 'c1',
+      }),
     )
   })
 
   it('does not throw on db error', async () => {
     const ctx = {
-      db: { insert: vi.fn().mockReturnValue({ values: vi.fn().mockRejectedValue(new Error('db down')) }) } as any,
+      db: {
+        insert: vi
+          .fn()
+          .mockReturnValue({ values: vi.fn().mockRejectedValue(new Error('db down')) }),
+      } as any,
       user: { id: 'u1', email: 'test@test.com' },
     }
     await expect(logAudit(ctx, 'test', 'test')).resolves.toBeUndefined()

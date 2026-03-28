@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../lib/auth', () => ({
   auth: {
@@ -34,7 +34,9 @@ function createMockDb() {
     insert: () => ({
       values: (value: Omit<KeyRecord, 'updatedAt'>) => ({
         onConflictDoUpdate: async () => {
-          const existing = records.find((r) => r.userId === value.userId && r.provider === value.provider)
+          const existing = records.find(
+            (r) => r.userId === value.userId && r.provider === value.provider,
+          )
           if (existing) {
             existing.encryptedKey = value.encryptedKey
             existing.model = value.model

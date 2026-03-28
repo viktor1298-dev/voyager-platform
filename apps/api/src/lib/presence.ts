@@ -1,5 +1,6 @@
-import { CACHE_TTL } from '@voyager/config'
 import { EventEmitter } from 'node:events'
+import { CACHE_TTL } from '@voyager/config'
+
 const PRESENCE_SWEEP_INTERVAL_MS = 15_000
 /** Send a keepalive every 25s to prevent proxy/LB idle-connection timeouts (typically 60s) */
 const PRESENCE_KEEPALIVE_INTERVAL_MS = 25_000

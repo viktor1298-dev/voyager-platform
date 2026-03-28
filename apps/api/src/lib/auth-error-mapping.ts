@@ -27,7 +27,10 @@ export function mapAuthRouteErrorToStatus(path: string, error: unknown): number 
   return 500
 }
 
-export function mapAuthRouteErrorToBody(path: string, error: unknown): { error: string; code: string } {
+export function mapAuthRouteErrorToBody(
+  path: string,
+  error: unknown,
+): { error: string; code: string } {
   if (isSignInEmailPath(path) && isInvalidPasswordHashError(error)) {
     return {
       error: 'Invalid email or password',

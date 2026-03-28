@@ -1,14 +1,15 @@
+import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
 import { CACHE_TTL, LIMITS } from '@voyager/config'
 import { clusters, nodes } from '@voyager/db'
 import { count, eq } from 'drizzle-orm'
 import { z } from 'zod'
+import { K8S_CONFIG } from '../config/k8s.js'
 import { logAudit } from '../lib/audit.js'
-import { encryptCredential } from '../lib/credential-crypto.js'
-import { clusterClientPool } from '../lib/cluster-client-pool.js'
-import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
+import { createAuthorizationService } from '../lib/authorization.js'
 import { cached, invalidateK8sCache } from '../lib/cache.js'
 import { CACHE_KEYS } from '../lib/cache-keys.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import {
   awsConnectionConfigSchema,
   azureConnectionConfigSchema,
@@ -17,12 +18,11 @@ import {
   kubeconfigConnectionConfigSchema,
   minikubeConnectionConfigSchema,
 } from '../lib/connection-config.js'
+import { encryptCredential } from '../lib/credential-crypto.js'
 import { validateClusterConnection } from '../lib/k8s-client-factory.js'
-import * as k8s from '@kubernetes/client-node'
+import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
 import { normalizeProvider, VALID_PROVIDERS } from '../lib/providers.js'
-import { createAuthorizationService } from '../lib/authorization.js'
 import { adminProcedure, authorizedProcedure, protectedProcedure, router } from '../trpc.js'
-import { K8S_CONFIG } from '../config/k8s.js'
 
 const isEncryptionEnabled = /^[0-9a-fA-F]{64}$/.test(K8S_CONFIG.ENCRYPTION_KEY)
 
@@ -304,7 +304,7 @@ export const clustersRouter = router({
         ])
 
         // Fetch metrics-server data for CPU/Memory percentages
-        let nodeMetricsMap = new Map<string, { cpuPercent: number; memoryPercent: number }>()
+        const nodeMetricsMap = new Map<string, { cpuPercent: number; memoryPercent: number }>()
         try {
           const metricsClient = new k8s.Metrics(kc)
           const nodeMetrics = await metricsClient.getNodeMetrics()

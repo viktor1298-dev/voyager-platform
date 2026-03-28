@@ -72,10 +72,7 @@ export const tokensRouter = router({
       .where(
         and(
           eq(userTokens.userId, ctx.user.id),
-          or(
-            like(userTokens.name, 'test-token-%'),
-            like(userTokens.name, 'list-test-%'),
-          ),
+          or(like(userTokens.name, 'test-token-%'), like(userTokens.name, 'list-test-%')),
         ),
       )
       .returning({ id: userTokens.id })

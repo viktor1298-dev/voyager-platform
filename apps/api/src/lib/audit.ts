@@ -1,5 +1,5 @@
-import { auditLog } from '@voyager/db'
 import type { Database } from '@voyager/db'
+import { auditLog } from '@voyager/db'
 
 interface AuditContext {
   db: Database

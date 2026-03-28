@@ -63,7 +63,9 @@ describe('ensureBootstrapUser', () => {
   })
 
   it('recreates viewer when legacy seeded row exists without credential account', async () => {
-    selectLimitMock.mockResolvedValueOnce([{ id: 'viewer-001', role: 'viewer' }]).mockResolvedValueOnce([])
+    selectLimitMock
+      .mockResolvedValueOnce([{ id: 'viewer-001', role: 'viewer' }])
+      .mockResolvedValueOnce([])
     createBootstrapUserMock.mockResolvedValueOnce('viewer-recreated')
 
     const { ensureBootstrapUser } = await import('../lib/ensure-bootstrap-user.js')
@@ -92,7 +94,9 @@ describe('ensureBootstrapUser', () => {
   it('keeps existing viewer when credential account already exists and role matches', async () => {
     selectLimitMock
       .mockResolvedValueOnce([{ id: 'viewer-existing', role: 'viewer' }])
-      .mockResolvedValueOnce([{ providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' }])
+      .mockResolvedValueOnce([
+        { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
+      ])
 
     const { ensureBootstrapUser } = await import('../lib/ensure-bootstrap-user.js')
     const userId = await ensureBootstrapUser({
@@ -112,7 +116,9 @@ describe('ensureBootstrapUser', () => {
   it('maps viewer role to Better-Auth user role when fixing an existing wrong role', async () => {
     selectLimitMock
       .mockResolvedValueOnce([{ id: 'viewer-existing', role: 'admin' }])
-      .mockResolvedValueOnce([{ providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' }])
+      .mockResolvedValueOnce([
+        { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
+      ])
     setRoleMock.mockResolvedValueOnce({})
 
     const { ensureBootstrapUser } = await import('../lib/ensure-bootstrap-user.js')
@@ -134,7 +140,9 @@ describe('ensureBootstrapUser', () => {
   it('falls back to direct viewer role update when setRole is unauthorized', async () => {
     selectLimitMock
       .mockResolvedValueOnce([{ id: 'viewer-existing', role: 'admin' }])
-      .mockResolvedValueOnce([{ providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' }])
+      .mockResolvedValueOnce([
+        { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
+      ])
       .mockResolvedValueOnce([{ role: 'viewer' }])
     setRoleMock.mockRejectedValueOnce({ statusCode: 401 })
 

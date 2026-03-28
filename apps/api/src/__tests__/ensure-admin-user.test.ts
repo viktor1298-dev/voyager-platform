@@ -68,7 +68,9 @@ describe('ensureAdminUser', () => {
   })
 
   it('deletes and recreates when credential account is missing', async () => {
-    selectLimitMock.mockResolvedValueOnce([{ id: 'admin-001', role: 'admin' }]).mockResolvedValueOnce([])
+    selectLimitMock
+      .mockResolvedValueOnce([{ id: 'admin-001', role: 'admin' }])
+      .mockResolvedValueOnce([])
     createBootstrapUserMock.mockResolvedValue('admin-new')
 
     const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
@@ -86,7 +88,9 @@ describe('ensureAdminUser', () => {
   it('does not delete when credential account has modern Better-Auth hash', async () => {
     selectLimitMock
       .mockResolvedValueOnce([{ id: 'admin-001', role: 'admin' }])
-      .mockResolvedValueOnce([{ providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' }])
+      .mockResolvedValueOnce([
+        { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
+      ])
 
     const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
     await ensureAdminUser()
@@ -98,7 +102,9 @@ describe('ensureAdminUser', () => {
   it('deletes and recreates only when known legacy bcrypt credential is present', async () => {
     selectLimitMock
       .mockResolvedValueOnce([{ id: 'admin-001', role: 'admin' }])
-      .mockResolvedValueOnce([{ providerId: 'credential', password: '$2b$10$legacyhashlegacyhashlegacyhashlegacyha' }])
+      .mockResolvedValueOnce([
+        { providerId: 'credential', password: '$2b$10$legacyhashlegacyhashlegacyhashlegacyha' },
+      ])
     createBootstrapUserMock.mockResolvedValue('admin-new')
 
     const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
@@ -120,7 +126,9 @@ describe('ensureAdminUser', () => {
   it('falls back to direct role update when setRole is unauthorized for existing user', async () => {
     selectLimitMock
       .mockResolvedValueOnce([{ id: 'admin-existing', role: 'user' }])
-      .mockResolvedValueOnce([{ providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' }])
+      .mockResolvedValueOnce([
+        { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
+      ])
       .mockResolvedValueOnce([{ role: 'admin' }])
     setRoleMock.mockRejectedValueOnce({ statusCode: 401, status: 'UNAUTHORIZED' })
 
@@ -159,18 +167,24 @@ describe('ensureAdminUser', () => {
   it('throws explicit error when fallback role update cannot be verified', async () => {
     selectLimitMock
       .mockResolvedValueOnce([{ id: 'admin-existing', role: 'user' }])
-      .mockResolvedValueOnce([{ providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' }])
+      .mockResolvedValueOnce([
+        { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
+      ])
       .mockResolvedValueOnce([{ role: 'user' }])
     setRoleMock.mockRejectedValueOnce({ statusCode: 401 })
 
     const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
-    await expect(ensureAdminUser()).rejects.toThrow('Bootstrap fallback failed to verify admin role assignment')
+    await expect(ensureAdminUser()).rejects.toThrow(
+      'Bootstrap fallback failed to verify admin role assignment',
+    )
   })
 
   it('still throws when setRole fails with non-authorization error', async () => {
     selectLimitMock
       .mockResolvedValueOnce([{ id: 'admin-existing', role: 'user' }])
-      .mockResolvedValueOnce([{ providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' }])
+      .mockResolvedValueOnce([
+        { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
+      ])
     setRoleMock.mockRejectedValueOnce(new Error('boom'))
 
     const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')

@@ -1,4 +1,3 @@
-import { SSE_HEARTBEAT_INTERVAL_MS } from '@voyager/config/sse'
 import type {
   AlertEvent,
   ClusterStateChangeEvent,
@@ -166,10 +165,15 @@ export const subscriptionsRouter = router({
       if (input.clusterId && signal) {
         // IP3-005: Use follow mode with clusterId
         const podKey = `${input.clusterId}/${input.namespace}/${input.podName}${input.container ? `/${input.container}` : ''}`
-        streamLogsFollow(input.clusterId, input.namespace, input.podName, input.container, signal)
-          .catch((err) => {
-            console.error(`[logs] Follow mode failed for ${podKey}:`, err.message)
-          })
+        streamLogsFollow(
+          input.clusterId,
+          input.namespace,
+          input.podName,
+          input.container,
+          signal,
+        ).catch((err) => {
+          console.error(`[logs] Follow mode failed for ${podKey}:`, err.message)
+        })
 
         const stream = createEventStream<LogLineEvent>(`log:${podKey}`, signal)
         for await (const event of stream) {

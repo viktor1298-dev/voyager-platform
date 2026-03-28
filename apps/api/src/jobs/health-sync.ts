@@ -2,8 +2,8 @@ import * as k8s from '@kubernetes/client-node'
 import { clusters, db } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import { ZodError } from 'zod'
-import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { JOB_INTERVALS } from '../config/jobs.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
 
 type SyncHealthStatus = 'healthy' | 'warning' | 'error' | 'unknown'
 const HEALTH_SYNC_CONCURRENCY = 10

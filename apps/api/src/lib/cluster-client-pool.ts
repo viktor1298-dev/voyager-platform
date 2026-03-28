@@ -1,11 +1,11 @@
-import * as k8s from '@kubernetes/client-node'
+import type * as k8s from '@kubernetes/client-node'
 import { CACHE_TTL, TOKEN_REFRESH_THRESHOLD_RATIO } from '@voyager/config'
 import { clusters, db } from '@voyager/db'
 import { eq } from 'drizzle-orm'
+import { K8S_CONFIG } from '../config/k8s.js'
+import type { ClusterConnectionConfig } from './connection-config.js'
 import { decryptCredential } from './credential-crypto.js'
 import { createKubeConfigForCluster } from './k8s-client-factory.js'
-import type { ClusterConnectionConfig } from './connection-config.js'
-import { K8S_CONFIG } from '../config/k8s.js'
 
 // Default token TTL assumptions by provider (ms)
 const DEFAULT_TOKEN_TTL: Record<string, number> = {

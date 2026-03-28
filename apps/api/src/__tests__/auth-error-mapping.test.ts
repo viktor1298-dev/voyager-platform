@@ -22,8 +22,14 @@ describe('auth-error-mapping', () => {
   })
 
   it('maps invalid password hash on sign-in to 401', () => {
-    const status = mapAuthRouteErrorToStatus('/api/auth/sign-in/email', new Error('Invalid password hash'))
-    const body = mapAuthRouteErrorToBody('/api/auth/sign-in/email', new Error('Invalid password hash'))
+    const status = mapAuthRouteErrorToStatus(
+      '/api/auth/sign-in/email',
+      new Error('Invalid password hash'),
+    )
+    const body = mapAuthRouteErrorToBody(
+      '/api/auth/sign-in/email',
+      new Error('Invalid password hash'),
+    )
 
     expect(status).toBe(401)
     expect(body).toEqual({
@@ -33,7 +39,10 @@ describe('auth-error-mapping', () => {
   })
 
   it('keeps other auth errors as 500', () => {
-    const status = mapAuthRouteErrorToStatus('/api/auth/sign-up/email', new Error('Invalid password hash'))
+    const status = mapAuthRouteErrorToStatus(
+      '/api/auth/sign-up/email',
+      new Error('Invalid password hash'),
+    )
     const body = mapAuthRouteErrorToBody('/api/auth/get-session', new Error('something else'))
 
     expect(status).toBe(500)

@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { decryptApiKey, encryptApiKey } from '../services/ai-key-crypto.js'
 
 describe('ai-key-crypto', () => {

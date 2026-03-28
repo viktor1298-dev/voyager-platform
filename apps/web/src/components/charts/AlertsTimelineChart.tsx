@@ -110,7 +110,7 @@ export function AlertsTimelineChart({ data, range }: AlertsTimelineChartProps) {
           <ZAxis type="number" dataKey="z" range={BUBBLE_SIZE_RANGE} name="Count" />
           <Tooltip
             {...TOOLTIP_STYLE}
-            formatter={(value: number | undefined, name?: string) => {
+            formatter={(value, name) => {
               const safeValue = typeof value === 'number' ? value : 0
               if (name === 'Time') return formatTimestamp(new Date(safeValue).toISOString(), range)
               if (name === 'Severity') return SEVERITY_LABELS[safeValue] ?? safeValue

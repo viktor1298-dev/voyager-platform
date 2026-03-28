@@ -1,9 +1,9 @@
-import { ssoProviders } from '@voyager/db'
 import { TRPCError } from '@trpc/server'
+import { ssoProviders } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { adminProcedure, publicProcedure, router } from '../trpc.js'
 import { getPublicSsoProviders, testEntraDiscovery, upsertEntraSsoConfig } from '../lib/sso.js'
+import { adminProcedure, publicProcedure, router } from '../trpc.js'
 
 const microsoftConfigSchema = z.object({
   provider: z.literal('microsoft'),
@@ -27,7 +27,10 @@ export const ssoRouter = router({
       .limit(1)
 
     if (!input.clientSecret && !current[0]?.encryptedClientSecret) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'clientSecret is required for initial provider setup' })
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'clientSecret is required for initial provider setup',
+      })
     }
 
     const saved = await upsertEntraSsoConfig(ctx.db, {

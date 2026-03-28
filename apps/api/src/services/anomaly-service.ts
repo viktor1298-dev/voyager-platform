@@ -123,7 +123,13 @@ export class AnomalyService {
 
   async configure(
     clusterId: string,
-    rules: Array<{ metric: string; operator: RuleOperator; threshold: number; severity: AnomalySeverity; enabled: boolean }>,
+    rules: Array<{
+      metric: string
+      operator: RuleOperator
+      threshold: number
+      severity: AnomalySeverity
+      enabled: boolean
+    }>,
   ) {
     return this.db.transaction(async (tx) => {
       await tx.delete(anomalyRules).where(eq(anomalyRules.clusterId, clusterId))
@@ -150,7 +156,12 @@ export class AnomalyService {
 
   async detectAndPersist(clusterId: string, signals: ClusterSignals) {
     const effective = await this.getEffectiveThresholds(clusterId)
-    const findings = detectAnomalies(clusterId, signals, effective.thresholds, effective.ruleConfigs)
+    const findings = detectAnomalies(
+      clusterId,
+      signals,
+      effective.thresholds,
+      effective.ruleConfigs,
+    )
 
     if (findings.length === 0) {
       return []
@@ -208,7 +219,13 @@ export function detectAnomalies(
   const now = new Date()
   const findings: NewAnomaly[] = []
 
-  if (compareWithOperator(signals.cpuPercent5m, thresholds.cpuSpikePercent, ruleConfigs.cpu_spike.operator)) {
+  if (
+    compareWithOperator(
+      signals.cpuPercent5m,
+      thresholds.cpuSpikePercent,
+      ruleConfigs.cpu_spike.operator,
+    )
+  ) {
     findings.push(
       buildAnomaly(
         clusterId,
@@ -220,7 +237,13 @@ export function detectAnomalies(
     )
   }
 
-  if (compareWithOperator(signals.memoryPercent, thresholds.memoryPressurePercent, ruleConfigs.memory_pressure.operator)) {
+  if (
+    compareWithOperator(
+      signals.memoryPercent,
+      thresholds.memoryPressurePercent,
+      ruleConfigs.memory_pressure.operator,
+    )
+  ) {
     findings.push(
       buildAnomaly(
         clusterId,
@@ -232,7 +255,13 @@ export function detectAnomalies(
     )
   }
 
-  if (compareWithOperator(signals.podRestarts10m, thresholds.podRestartStormCount, ruleConfigs.pod_restart_storm.operator)) {
+  if (
+    compareWithOperator(
+      signals.podRestarts10m,
+      thresholds.podRestartStormCount,
+      ruleConfigs.pod_restart_storm.operator,
+    )
+  ) {
     findings.push(
       buildAnomaly(
         clusterId,
@@ -244,7 +273,13 @@ export function detectAnomalies(
     )
   }
 
-  if (compareWithOperator(signals.events5m, thresholds.eventFloodCount, ruleConfigs.event_flood.operator)) {
+  if (
+    compareWithOperator(
+      signals.events5m,
+      thresholds.eventFloodCount,
+      ruleConfigs.event_flood.operator,
+    )
+  ) {
     findings.push(
       buildAnomaly(
         clusterId,
@@ -256,7 +291,13 @@ export function detectAnomalies(
     )
   }
 
-  if (compareWithOperator(signals.deploymentStuckMinutes, thresholds.deploymentStuckMinutes, ruleConfigs.deployment_stuck.operator)) {
+  if (
+    compareWithOperator(
+      signals.deploymentStuckMinutes,
+      thresholds.deploymentStuckMinutes,
+      ruleConfigs.deployment_stuck.operator,
+    )
+  ) {
     findings.push(
       buildAnomaly(
         clusterId,
@@ -313,7 +354,13 @@ function normalizeOperator(operator: string): RuleOperator {
   }
 }
 
-function buildAnomaly(clusterId: string, type: AnomalyType, severity: AnomalySeverity, detectedAt: Date, description: string): NewAnomaly {
+function buildAnomaly(
+  clusterId: string,
+  type: AnomalyType,
+  severity: AnomalySeverity,
+  detectedAt: Date,
+  description: string,
+): NewAnomaly {
   return {
     clusterId,
     type,

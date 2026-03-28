@@ -56,7 +56,10 @@ function getExistingBootstrapState(params: {
     return { shouldReplaceUser: true, reason: 'missing-credential' }
   }
 
-  if (isKnownLegacySeededUserFingerprint(userId, email, legacyUserId) && isLegacyCredentialHash(credentialAccount)) {
+  if (
+    isKnownLegacySeededUserFingerprint(userId, email, legacyUserId) &&
+    isLegacyCredentialHash(credentialAccount)
+  ) {
     return { shouldReplaceUser: true, reason: 'legacy-credential-hash' }
   }
 
@@ -101,7 +104,11 @@ function isUnauthorizedAuthApiError(error: unknown): boolean {
   return false
 }
 
-async function setBootstrapRoleWithFallback(userId: string, email: string, desiredRole: 'admin' | 'viewer'): Promise<void> {
+async function setBootstrapRoleWithFallback(
+  userId: string,
+  email: string,
+  desiredRole: 'admin' | 'viewer',
+): Promise<void> {
   try {
     await auth.api.setRole({
       headers: internalHeaders,
@@ -112,11 +119,14 @@ async function setBootstrapRoleWithFallback(userId: string, email: string, desir
       throw error
     }
 
-    console.warn('Better-Auth setRole unauthorized during bootstrap; applying scoped DB role fallback', {
-      email,
-      userId,
-      desiredRole,
-    })
+    console.warn(
+      'Better-Auth setRole unauthorized during bootstrap; applying scoped DB role fallback',
+      {
+        email,
+        userId,
+        desiredRole,
+      },
+    )
 
     await db.update(userTable).set({ role: desiredRole }).where(eq(userTable.id, userId))
 
@@ -127,7 +137,9 @@ async function setBootstrapRoleWithFallback(userId: string, email: string, desir
       .limit(1)
 
     if (updatedUser?.role !== desiredRole) {
-      throw new Error(`Bootstrap fallback failed to verify ${desiredRole} role assignment for user ${userId} (${email})`)
+      throw new Error(
+        `Bootstrap fallback failed to verify ${desiredRole} role assignment for user ${userId} (${email})`,
+      )
     }
   }
 }
@@ -151,7 +163,9 @@ export async function ensureBootstrapUser(input: EnsureBootstrapUserInput): Prom
     const [credentialAccount] = await db
       .select({ providerId: accountTable.providerId, password: accountTable.password })
       .from(accountTable)
-      .where(and(eq(accountTable.userId, existingUserId), eq(accountTable.providerId, 'credential')))
+      .where(
+        and(eq(accountTable.userId, existingUserId), eq(accountTable.providerId, 'credential')),
+      )
       .limit(1)
 
     const existingState = getExistingBootstrapState({
@@ -162,12 +176,15 @@ export async function ensureBootstrapUser(input: EnsureBootstrapUserInput): Prom
     })
 
     if (existingState.shouldReplaceUser) {
-      console.warn('Detected bootstrap user without a valid Better-Auth credential; replacing record', {
-        email,
-        existingUserId,
-        desiredRole,
-        reason: existingState.reason,
-      })
+      console.warn(
+        'Detected bootstrap user without a valid Better-Auth credential; replacing record',
+        {
+          email,
+          existingUserId,
+          desiredRole,
+          reason: existingState.reason,
+        },
+      )
       await db.delete(userTable).where(eq(userTable.id, existingUserId))
       existingUserId = null
       existingUserRole = null

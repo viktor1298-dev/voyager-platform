@@ -31,7 +31,9 @@ class ClusterConnectionStateMachine {
     }
     voyagerEmitter.emitClusterStateChange(event)
 
-    console.log(`[ClusterState] ${clusterId}: ${currentState} → ${newState}${error ? ` (${error})` : ''}`)
+    console.log(
+      `[ClusterState] ${clusterId}: ${currentState} → ${newState}${error ? ` (${error})` : ''}`,
+    )
   }
 
   onWatchError(clusterId: string, err: unknown): void {

@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { CheckResult } from '../lib/health-checks.js'
 import {
   assessResults,
   checkPageSmoke,
   checkStartupHealth,
   scanLogsForErrors,
 } from '../lib/health-checks.js'
-import type { CheckResult } from '../lib/health-checks.js'
 
 // ─── scanLogsForErrors ───────────────────────────────────────────────────────
 

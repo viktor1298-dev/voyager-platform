@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { protectedProcedure, router } from '../trpc.js'
 import { getOnlineUsers, heartbeatPresence, subscribeToPresence } from '../lib/presence.js'
+import { protectedProcedure, router } from '../trpc.js'
 
 const PRESENCE_ONE_SHOT_ENV_KEYS = ['PLAYWRIGHT', 'E2E'] as const
 

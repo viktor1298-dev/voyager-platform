@@ -9,7 +9,7 @@ export function getKubeConfig(): k8s.KubeConfig {
     _kc = new k8s.KubeConfig()
     try {
       _kc.loadFromDefault()
-    } catch (e) {
+    } catch (_e) {
       _k8sDisabled = true
       console.warn('No kubeconfig found, K8s features disabled')
     }

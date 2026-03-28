@@ -1,7 +1,7 @@
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto'
 import { CACHE_TTL } from '@voyager/config'
-import { account, ssoProviders, teamMembers, type Database } from '@voyager/db'
+import { account, type Database, ssoProviders, teamMembers } from '@voyager/db'
 import { and, eq, inArray } from 'drizzle-orm'
-import { createDecipheriv, createCipheriv, createHash, randomBytes } from 'node:crypto'
 
 const MICROSOFT_PROVIDER_TYPE = 'microsoft-entra-id'
 const ENTRA_DISCOVERY_URL =

@@ -1,5 +1,3 @@
-import { db, user as userTable } from '@voyager/db'
-import { eq } from 'drizzle-orm'
 import { ensureBootstrapUser } from './ensure-bootstrap-user.js'
 
 const DEFAULT_ADMIN_EMAIL = 'admin@voyager.local'
@@ -14,7 +12,6 @@ type EnsureAdminUserOptions = {
    */
   allowLocalDevDefaults?: boolean
 }
-
 
 function getAdminCredentials(options: EnsureAdminUserOptions) {
   const adminEmail = process.env.ADMIN_EMAIL
@@ -42,7 +39,6 @@ function getAdminCredentials(options: EnsureAdminUserOptions) {
     'Missing ADMIN_EMAIL and ADMIN_PASSWORD for runtime admin bootstrap (defaults are only allowed for local seed path)',
   )
 }
-
 
 export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Promise<void> {
   const { adminEmail, adminPassword, adminName } = getAdminCredentials(options)

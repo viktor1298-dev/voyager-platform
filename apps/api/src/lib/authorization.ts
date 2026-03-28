@@ -1,19 +1,19 @@
 import { TRPCError } from '@trpc/server'
 import {
   accessRelations,
-  teamMembers,
-  teams,
-  user as userTable,
   type Database,
   type objectTypeEnum,
   type relationEnum,
   type subjectTypeEnum,
+  teamMembers,
+  teams,
+  user as userTable,
 } from '@voyager/db'
 import { and, eq, inArray, or } from 'drizzle-orm'
 
-export type SubjectType = typeof subjectTypeEnum.enumValues[number]
-export type Relation = typeof relationEnum.enumValues[number]
-export type ObjectType = typeof objectTypeEnum.enumValues[number]
+export type SubjectType = (typeof subjectTypeEnum.enumValues)[number]
+export type Relation = (typeof relationEnum.enumValues)[number]
+export type ObjectType = (typeof objectTypeEnum.enumValues)[number]
 
 export interface SubjectRef {
   type: SubjectType
@@ -44,12 +44,19 @@ interface AuthorizationRepo {
   ): Promise<RelationRecord[]>
   listRelationsForSubject(subject: SubjectRef): Promise<RelationRecord[]>
   listRelationsForObject(object: ObjectRef): Promise<RelationRecord[]>
-  listAccessibleObjectIds(subject: SubjectRef, objectType: ObjectType, relation: Relation): Promise<string[]>
+  listAccessibleObjectIds(
+    subject: SubjectRef,
+    objectType: ObjectType,
+    relation: Relation,
+  ): Promise<string[]>
   listTeamMemberUserIds(teamId: string): Promise<string[]>
   insertRelation(entry: RelationRecord & { createdBy?: string | null }): Promise<void>
   deleteRelation(entry: RelationRecord): Promise<number>
   listTeams(): Promise<Array<typeof teams.$inferSelect>>
-  createTeam(input: { name: string; description?: string | null }): Promise<typeof teams.$inferSelect>
+  createTeam(input: {
+    name: string
+    description?: string | null
+  }): Promise<typeof teams.$inferSelect>
   addTeamMember(input: { teamId: string; userId: string; role: 'admin' | 'member' }): Promise<void>
   removeTeamMember(input: { teamId: string; userId: string }): Promise<number>
 }
@@ -65,7 +72,10 @@ class DrizzleAuthorizationRepo implements AuthorizationRepo {
   constructor(private readonly db: Database) {}
 
   async getUserRole(userId: string): Promise<string | null> {
-    const [result] = await this.db.select({ role: userTable.role }).from(userTable).where(eq(userTable.id, userId))
+    const [result] = await this.db
+      .select({ role: userTable.role })
+      .from(userTable)
+      .where(eq(userTable.id, userId))
     return result?.role ?? null
   }
 
@@ -77,7 +87,10 @@ class DrizzleAuthorizationRepo implements AuthorizationRepo {
     return records.map((record) => record.teamId)
   }
 
-  async listRelationsForSubjects(subjects: SubjectRef[], object: ObjectRef): Promise<RelationRecord[]> {
+  async listRelationsForSubjects(
+    subjects: SubjectRef[],
+    object: ObjectRef,
+  ): Promise<RelationRecord[]> {
     if (subjects.length === 0) return []
 
     const subjectsByType = new Map<SubjectType, string[]>()
@@ -155,7 +168,12 @@ class DrizzleAuthorizationRepo implements AuthorizationRepo {
         objectId: accessRelations.objectId,
       })
       .from(accessRelations)
-      .where(and(eq(accessRelations.subjectType, subject.type), eq(accessRelations.subjectId, subject.id)))
+      .where(
+        and(
+          eq(accessRelations.subjectType, subject.type),
+          eq(accessRelations.subjectId, subject.id),
+        ),
+      )
   }
 
   async listRelationsForObject(object: ObjectRef): Promise<RelationRecord[]> {
@@ -168,10 +186,16 @@ class DrizzleAuthorizationRepo implements AuthorizationRepo {
         objectId: accessRelations.objectId,
       })
       .from(accessRelations)
-      .where(and(eq(accessRelations.objectType, object.type), eq(accessRelations.objectId, object.id)))
+      .where(
+        and(eq(accessRelations.objectType, object.type), eq(accessRelations.objectId, object.id)),
+      )
   }
 
-  async listAccessibleObjectIds(subject: SubjectRef, objectType: ObjectType, relation: Relation): Promise<string[]> {
+  async listAccessibleObjectIds(
+    subject: SubjectRef,
+    objectType: ObjectType,
+    relation: Relation,
+  ): Promise<string[]> {
     const expandedSubjects: SubjectRef[] = [subject]
 
     if (subject.type === 'user') {
@@ -219,7 +243,10 @@ class DrizzleAuthorizationRepo implements AuthorizationRepo {
   }
 
   async listTeamMemberUserIds(teamId: string): Promise<string[]> {
-    const rows = await this.db.select({ userId: teamMembers.userId }).from(teamMembers).where(eq(teamMembers.teamId, teamId))
+    const rows = await this.db
+      .select({ userId: teamMembers.userId })
+      .from(teamMembers)
+      .where(eq(teamMembers.teamId, teamId))
     return rows.map((row) => row.userId)
   }
 
@@ -279,7 +306,10 @@ class DrizzleAuthorizationRepo implements AuthorizationRepo {
 export class AuthorizationService {
   private readonly repo: AuthorizationRepo
 
-  constructor(private readonly db: Database, repo?: AuthorizationRepo) {
+  constructor(
+    private readonly db: Database,
+    repo?: AuthorizationRepo,
+  ) {
     this.repo = repo ?? new DrizzleAuthorizationRepo(db)
   }
 
@@ -314,7 +344,11 @@ export class AuthorizationService {
     }
 
     const expandedSubjects = await this.expandSubjects(subject, userRole)
-    const found = await this.repo.listRelationsForSubjectsAndObjects(expandedSubjects, objectType, objectIds)
+    const found = await this.repo.listRelationsForSubjectsAndObjects(
+      expandedSubjects,
+      objectType,
+      objectIds,
+    )
     const requiredLevel = RELATION_LEVEL[relation]
 
     const allowedObjectIds = new Set<string>()
@@ -327,7 +361,12 @@ export class AuthorizationService {
     return allowedObjectIds
   }
 
-  async grant(subject: SubjectRef, relation: Relation, object: ObjectRef, createdBy?: string): Promise<void> {
+  async grant(
+    subject: SubjectRef,
+    relation: Relation,
+    object: ObjectRef,
+    createdBy?: string,
+  ): Promise<void> {
     await this.repo.insertRelation({
       subjectType: subject.type,
       subjectId: subject.id,
@@ -358,7 +397,9 @@ export class AuthorizationService {
     if (!teamIds.length) return direct
 
     const inherited = (
-      await Promise.all(teamIds.map((teamId) => this.repo.listRelationsForSubject({ type: 'team', id: teamId })))
+      await Promise.all(
+        teamIds.map((teamId) => this.repo.listRelationsForSubject({ type: 'team', id: teamId })),
+      )
     ).flat()
 
     return [...direct, ...inherited.map((row) => ({ ...row, inheritedFromTeamId: row.subjectId }))]
@@ -381,7 +422,9 @@ export class AuthorizationService {
 
   async listSubjects(object: ObjectRef) {
     const direct = await this.repo.listRelationsForObject(object)
-    const expanded: Array<RelationRecord & { userId?: string; inheritedViaTeamId?: string }> = [...direct]
+    const expanded: Array<RelationRecord & { userId?: string; inheritedViaTeamId?: string }> = [
+      ...direct,
+    ]
 
     for (const entry of direct) {
       if (entry.subjectType !== 'team') continue
@@ -419,7 +462,10 @@ export class AuthorizationService {
     }
   }
 
-  private async expandSubjects(subject: SubjectRef, userRole?: string | null): Promise<SubjectRef[]> {
+  private async expandSubjects(
+    subject: SubjectRef,
+    userRole?: string | null,
+  ): Promise<SubjectRef[]> {
     if (subject.type !== 'user') return [subject]
 
     const subjects: SubjectRef[] = [subject]

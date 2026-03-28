@@ -1,8 +1,8 @@
 import * as k8s from '@kubernetes/client-node'
 import { clusters, db, events } from '@voyager/db'
-import { eq, and } from 'drizzle-orm'
-import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { and, eq } from 'drizzle-orm'
 import { JOB_INTERVALS } from '../config/jobs.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
 
 let intervalHandle: NodeJS.Timeout | null = null
 let isRunning = false

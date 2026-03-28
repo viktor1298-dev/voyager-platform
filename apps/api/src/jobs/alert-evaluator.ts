@@ -1,8 +1,8 @@
 import * as k8s from '@kubernetes/client-node'
-import { alerts, alertHistory, clusters, db } from '@voyager/db'
-import { eq, and, gte } from 'drizzle-orm'
-import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { alertHistory, alerts, clusters, db } from '@voyager/db'
+import { and, eq, gte } from 'drizzle-orm'
 import { JOB_INTERVALS } from '../config/jobs.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
 
 type MetricType = 'cpu' | 'memory' | 'pods' | 'restarts'
 type Operator = 'gt' | 'lt' | 'eq'

@@ -1,7 +1,7 @@
+import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { createAuthorizationService } from '../lib/authorization.js'
-import { TRPCError } from '@trpc/server'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const subjectSchema = z.object({
@@ -78,7 +78,9 @@ export const teamsRouter = router({
   }),
 
   create: adminProcedure
-    .input(z.object({ name: z.string().min(1).max(255), description: z.string().max(1000).optional() }))
+    .input(
+      z.object({ name: z.string().min(1).max(255), description: z.string().max(1000).optional() }),
+    )
     .mutation(async ({ ctx, input }) => {
       const service = createAuthorizationService(ctx.db)
       const team = await service.createTeam(input)

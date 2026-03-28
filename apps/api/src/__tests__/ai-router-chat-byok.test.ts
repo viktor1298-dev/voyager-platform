@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { describe, expect, it, vi, afterEach } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../lib/auth', () => ({
   auth: {

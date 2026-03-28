@@ -2,10 +2,10 @@ import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
 import { CACHE_TTL } from '@voyager/config'
 import { z } from 'zod'
-import { clusterClientPool } from '../lib/cluster-client-pool.js'
-import { handleK8sError } from '../lib/error-handler.js'
 import { cached } from '../lib/cache.js'
 import { CACHE_KEYS } from '../lib/cache-keys.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { handleK8sError } from '../lib/error-handler.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const resourceQuotaSchema = z.object({
@@ -59,10 +59,10 @@ export const namespacesRouter = router({
           // If multiple quotas exist per namespace, take the first one found
           if (!quotaMap.has(ns)) {
             quotaMap.set(ns, {
-              cpuLimit: hard['limits.cpu'] ?? hard['cpu'] ?? null,
-              memLimit: hard['limits.memory'] ?? hard['memory'] ?? null,
-              cpuUsed: used['limits.cpu'] ?? used['cpu'] ?? null,
-              memUsed: used['limits.memory'] ?? used['memory'] ?? null,
+              cpuLimit: hard['limits.cpu'] ?? hard.cpu ?? null,
+              memLimit: hard['limits.memory'] ?? hard.memory ?? null,
+              cpuUsed: used['limits.cpu'] ?? used.cpu ?? null,
+              memUsed: used['limits.memory'] ?? used.memory ?? null,
             })
           }
         }

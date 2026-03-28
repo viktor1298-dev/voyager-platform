@@ -25,14 +25,14 @@
     "db:seed": "tsx src/seed.ts"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.1",
-    "pg": "^8.13.0",
-    "zod": "4"
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.20.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/pg": "^8.11.0",
-    "drizzle-kit": "^0.31.9",
-    "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
   }
 }

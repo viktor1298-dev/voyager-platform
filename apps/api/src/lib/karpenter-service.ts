@@ -1,6 +1,7 @@
 import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
-import { clusters, karpenterCache, type Database } from '@voyager/db'
+import { CACHE_TTL } from '@voyager/config'
+import { clusters, type Database, karpenterCache } from '@voyager/db'
 import type {
   KarpenterEC2NodeClass,
   KarpenterMetrics,
@@ -9,9 +10,8 @@ import type {
 } from '@voyager/types'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { connectionConfigSchema, type ClusterConnectionConfig } from './connection-config.js'
+import { type ClusterConnectionConfig, connectionConfigSchema } from './connection-config.js'
 import { createKubeConfigForCluster } from './k8s-client-factory.js'
-import { CACHE_TTL } from '@voyager/config'
 import { KARPENTER_COST, KARPENTER_CRD, KARPENTER_LABELS } from './karpenter-constants.js'
 
 const clusterSchema = z.object({

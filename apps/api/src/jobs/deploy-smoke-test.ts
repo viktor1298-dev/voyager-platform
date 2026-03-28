@@ -1,10 +1,10 @@
 import * as k8s from '@kubernetes/client-node'
-import { db, alerts, alertHistory } from '@voyager/db'
+import { alertHistory, alerts, db } from '@voyager/db'
 import { eq } from 'drizzle-orm'
+import { JOB_INTERVALS } from '../config/jobs.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { voyagerEmitter } from '../lib/event-emitter.js'
-import { scanLogsForErrors, type CheckStatus } from '../lib/health-checks.js'
-import { JOB_INTERVALS } from '../config/jobs.js'
+import { type CheckStatus, scanLogsForErrors } from '../lib/health-checks.js'
 
 interface DeploymentEvent {
   type: 'added' | 'modified' | 'deleted'

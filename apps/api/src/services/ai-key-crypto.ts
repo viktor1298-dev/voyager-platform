@@ -13,10 +13,8 @@ export interface DecryptedUserAiKey {
 
 function readEncryptionSecret(): string {
   const secret = process.env.AI_KEYS_ENCRYPTION_KEY ?? process.env.AI_KEY_ENCRYPTION_KEY
-  if (!secret || !secret.trim()) {
-    throw new Error(
-      'AI_KEYS_ENCRYPTION_KEY is required for BYOK encryption/decryption operations',
-    )
+  if (!secret?.trim()) {
+    throw new Error('AI_KEYS_ENCRYPTION_KEY is required for BYOK encryption/decryption operations')
   }
 
   return secret.trim()

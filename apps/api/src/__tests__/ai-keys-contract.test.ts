@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../lib/auth', () => ({
   auth: {
@@ -42,7 +42,9 @@ function createMockDb() {
     insert: () => ({
       values: (value: Omit<KeyRecord, 'updatedAt'>) => ({
         onConflictDoUpdate: async () => {
-          const existing = records.find((r) => r.userId === value.userId && r.provider === value.provider)
+          const existing = records.find(
+            (r) => r.userId === value.userId && r.provider === value.provider,
+          )
           if (existing) {
             existing.encryptedKey = value.encryptedKey
             existing.model = value.model
@@ -151,7 +153,9 @@ describe('aiKeys router contract compatibility', () => {
     expect(getResponse.keys[0]?.provider).toBe('claude')
 
     const testConnectionResponse = aiKeysTestConnectionOutputSchema.parse(
-      await caller.aiKeys.testConnection(aiKeysTestConnectionInputSchema.parse({ provider: 'claude' })),
+      await caller.aiKeys.testConnection(
+        aiKeysTestConnectionInputSchema.parse({ provider: 'claude' }),
+      ),
     )
 
     expect(testConnectionResponse.success).toBe(true)

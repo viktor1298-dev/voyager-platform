@@ -79,8 +79,6 @@ describe('app router aiKeys alias compatibility', () => {
     const caller = createCaller()
 
     // testConnection throws TRPCError when no key stored; verify using 'claude' (internal name)
-    await expect(
-      caller.aiKeys.testConnection({ provider: 'claude' }),
-    ).rejects.toThrow()
+    await expect(caller.aiKeys.testConnection({ provider: 'claude' })).rejects.toThrow()
   })
 })

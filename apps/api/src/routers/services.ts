@@ -1,10 +1,10 @@
 import * as k8s from '@kubernetes/client-node'
 import { CACHE_TTL } from '@voyager/config'
 import { z } from 'zod'
-import { clusterClientPool } from '../lib/cluster-client-pool.js'
-import { handleK8sError } from '../lib/error-handler.js'
 import { cached } from '../lib/cache.js'
 import { CACHE_KEYS } from '../lib/cache-keys.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { handleK8sError } from '../lib/error-handler.js'
 import { protectedProcedure, router } from '../trpc.js'
 
 const servicePortSchema = z.object({

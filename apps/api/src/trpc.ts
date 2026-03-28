@@ -1,8 +1,8 @@
-import { TRPCError, initTRPC } from '@trpc/server'
-import { z } from 'zod'
-import type { OpenApiMeta } from 'trpc-to-openapi'
+import { initTRPC, TRPCError } from '@trpc/server'
 import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
 import { type Database, db } from '@voyager/db'
+import type { OpenApiMeta } from 'trpc-to-openapi'
+import { z } from 'zod'
 import { auth } from './lib/auth.js'
 import { createAuthorizationService, type ObjectType, type Relation } from './lib/authorization.js'
 import { captureException } from './lib/sentry.js'
@@ -44,21 +44,24 @@ export async function createContext({ req, res }: CreateFastifyContextOptions): 
 /** tRPC error codes that are client errors — don't report to Sentry */
 const CLIENT_ERROR_CODES = new Set(['UNAUTHORIZED', 'NOT_FOUND', 'BAD_REQUEST'])
 
-const t = initTRPC.context<Context>().meta<OpenApiMeta>().create({
-  errorFormatter({ shape, error }) {
-    // Report non-client errors to Sentry
-    if (!CLIENT_ERROR_CODES.has(error.code)) {
-      captureException(error)
-    }
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-        stack: process.env.HIDE_STACK_TRACES === 'true' ? undefined : error.stack,
-      },
-    }
-  },
-})
+const t = initTRPC
+  .context<Context>()
+  .meta<OpenApiMeta>()
+  .create({
+    errorFormatter({ shape, error }) {
+      // Report non-client errors to Sentry
+      if (!CLIENT_ERROR_CODES.has(error.code)) {
+        captureException(error)
+      }
+      return {
+        ...shape,
+        data: {
+          ...shape.data,
+          stack: process.env.HIDE_STACK_TRACES === 'true' ? undefined : error.stack,
+        },
+      }
+    },
+  })
 
 export const router = t.router
 export const publicProcedure = t.procedure.use(async ({ next }) => {
@@ -111,7 +114,9 @@ export const authorizedProcedure = (objectType: ObjectType, relation: Relation) 
         : rawInput
 
     const objectIdInput = authorizationObjectIdInputSchema.safeParse(inputPayload)
-    const objectId = objectIdInput.success ? objectIdInput.data.objectId ?? objectIdInput.data.id : undefined
+    const objectId = objectIdInput.success
+      ? (objectIdInput.data.objectId ?? objectIdInput.data.id)
+      : undefined
 
     if (!objectId) {
       throw new TRPCError({
@@ -121,11 +126,10 @@ export const authorizedProcedure = (objectType: ObjectType, relation: Relation) 
     }
 
     const authz = createAuthorizationService(opts.ctx.db)
-    const allowed = await authz.check(
-      { type: 'user', id: opts.ctx.user.id },
-      relation,
-      { type: objectType, id: objectId },
-    )
+    const allowed = await authz.check({ type: 'user', id: opts.ctx.user.id }, relation, {
+      type: objectType,
+      id: objectId,
+    })
 
     if (!allowed) {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'Permission denied' })

@@ -1,6 +1,6 @@
-import { alertHistory, alerts } from '@voyager/db'
 import { TRPCError } from '@trpc/server'
 import { LIMITS } from '@voyager/config'
+import { alertHistory, alerts } from '@voyager/db'
 import { desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'

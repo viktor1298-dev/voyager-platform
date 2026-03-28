@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock @voyager/db
 const mockExecute = vi.fn()
@@ -91,8 +91,8 @@ vi.mock('../lib/k8s-units.js', () => ({
   parseMemToBytes: vi.fn(() => 0),
 }))
 
-import { TIME_RANGE_CONFIG, GRAFANA_RANGES, metricsRouter } from '../routers/metrics.js'
-import { type Context, router } from '../trpc.js'
+import { GRAFANA_RANGES, metricsRouter, TIME_RANGE_CONFIG } from '../routers/metrics.js'
+import { router } from '../trpc.js'
 
 const appRouter = router({ metrics: metricsRouter })
 
@@ -119,14 +119,14 @@ describe('PIPE-01/02/03: Metrics pipeline', () => {
     })
 
     it('every bucketMs >= 60_000 after clamping to collector minimum', () => {
-      for (const [range, config] of Object.entries(TIME_RANGE_CONFIG)) {
+      for (const [_range, config] of Object.entries(TIME_RANGE_CONFIG)) {
         const effectiveBucketMs = Math.max(config.bucketMs, 60_000)
         expect(effectiveBucketMs).toBeGreaterThanOrEqual(60_000)
       }
     })
 
     it('each range produces 20-60 data points', () => {
-      for (const [range, config] of Object.entries(TIME_RANGE_CONFIG)) {
+      for (const [_range, config] of Object.entries(TIME_RANGE_CONFIG)) {
         const effectiveBucketMs = Math.max(config.bucketMs, 60_000)
         const dataPoints = Math.ceil(config.rangeMs / effectiveBucketMs)
         expect(dataPoints).toBeGreaterThanOrEqual(5) // 5m/60s = 5 points minimum

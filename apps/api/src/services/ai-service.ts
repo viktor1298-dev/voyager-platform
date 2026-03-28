@@ -1,13 +1,13 @@
 import { TRPCError } from '@trpc/server'
 import { AI_CONFIG } from '@voyager/config'
 import type { Database } from '@voyager/db'
-import { events, clusters, userAiKeys } from '@voyager/db'
+import { clusters, events, userAiKeys } from '@voyager/db'
 import { and, desc, eq, gte } from 'drizzle-orm'
 import { z } from 'zod'
 import { AiConversationStore } from './ai-conversation-store.js'
-import { type AiChatMessage, type AiCompletionRequest, AiProviderClient } from './ai-provider.js'
 import { decryptApiKey } from './ai-key-crypto.js'
 import { AiKeySettingsService } from './ai-key-settings-service.js'
+import { type AiChatMessage, type AiCompletionRequest, AiProviderClient } from './ai-provider.js'
 
 const AI_SCORE = {
   MAX: 100,
@@ -135,7 +135,10 @@ export class AIService {
     this.aiKeySettingsService = new AiKeySettingsService(ctx.db)
   }
 
-  private async resolveUserAiConfig(params: { userId: string; preferredProvider?: 'openai' | 'claude' }): Promise<{
+  private async resolveUserAiConfig(params: {
+    userId: string
+    preferredProvider?: 'openai' | 'claude'
+  }): Promise<{
     provider: 'openai' | 'anthropic'
     model: string
     apiKey: string
@@ -385,7 +388,12 @@ export class AIService {
     threadId?: string
     userId?: string
     provider?: 'openai' | 'claude'
-  }): Promise<{ answer: string; threadId?: string; provider?: 'openai' | 'anthropic'; model?: string }> {
+  }): Promise<{
+    answer: string
+    threadId?: string
+    provider?: 'openai' | 'anthropic'
+    model?: string
+  }> {
     const chunks: string[] = []
     const result = await this.answerQuestionStream(params, async (token) => {
       chunks.push(token)

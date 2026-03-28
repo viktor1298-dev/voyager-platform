@@ -1,12 +1,18 @@
-import { InMemoryProvider, OpenFeature, type EvaluationContext, type JsonValue } from '@openfeature/server-sdk'
 import { access, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import {
+  type EvaluationContext,
+  InMemoryProvider,
+  type JsonValue,
+  OpenFeature,
+} from '@openfeature/server-sdk'
 
 type PrimitiveFlag = boolean | string | number | JsonValue
 
 type RawFlags = Record<string, PrimitiveFlag>
 
-const FEATURE_FLAGS_FILE = process.env.FEATURE_FLAGS_FILE ?? resolve(process.cwd(), 'feature-flags.json')
+const FEATURE_FLAGS_FILE =
+  process.env.FEATURE_FLAGS_FILE ?? resolve(process.cwd(), 'feature-flags.json')
 const FEATURE_FLAG_ENV_PREFIX = 'FEATURE_FLAG_'
 
 function parseEnvValue(raw: string): PrimitiveFlag {
@@ -46,7 +52,13 @@ async function loadFlagsFromFile(): Promise<RawFlags> {
 function loadFlagsFromEnv(): RawFlags {
   const entries = Object.entries(process.env)
     .filter(([key, value]) => key.startsWith(FEATURE_FLAG_ENV_PREFIX) && value !== undefined)
-    .map(([key, value]) => [key.replace(FEATURE_FLAG_ENV_PREFIX, '').toLowerCase(), parseEnvValue(value ?? '')] as const)
+    .map(
+      ([key, value]) =>
+        [
+          key.replace(FEATURE_FLAG_ENV_PREFIX, '').toLowerCase(),
+          parseEnvValue(value ?? ''),
+        ] as const,
+    )
 
   return Object.fromEntries(entries)
 }
@@ -80,7 +92,10 @@ const providerConfigPromise = buildProviderConfig()
 providerConfigPromise
   .then((providerConfig) => OpenFeature.setProviderAndWait(new InMemoryProvider(providerConfig)))
   .catch((error) => {
-    console.error('[feature-flags] Failed to initialize OpenFeature provider, falling back to default values', error)
+    console.error(
+      '[feature-flags] Failed to initialize OpenFeature provider, falling back to default values',
+      error,
+    )
   })
 
 const client = OpenFeature.getClient('voyager-api')

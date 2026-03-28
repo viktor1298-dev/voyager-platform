@@ -53,8 +53,8 @@ vi.mock('../lib/event-emitter.js', () => {
   return { voyagerEmitter: emitter }
 })
 
-import { registerMetricsStreamRoute } from '../routes/metrics-stream.js'
 import Fastify from 'fastify'
+import { registerMetricsStreamRoute } from '../routes/metrics-stream.js'
 
 const VALID_UUID = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d'
 
@@ -129,7 +129,7 @@ describe('metrics-stream SSE route', () => {
 
     // inject() waits for the response to end, which SSE connections don't do
     // Use a timeout race to get enough time for subscribe to be called
-    const injectPromise = app.inject({
+    const _injectPromise = app.inject({
       method: 'GET',
       url: `/api/metrics/stream?clusterId=${VALID_UUID}`,
     })

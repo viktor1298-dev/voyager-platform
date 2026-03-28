@@ -1,11 +1,11 @@
 import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
+import { clusters as clustersTable, db } from '@voyager/db'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { cached, getRedisClient } from '../lib/cache.js'
 import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
-import { clusters as clustersTable, db } from '@voyager/db'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const K8S_DEPLOYMENTS_CACHE_TTL = 30

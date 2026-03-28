@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { encryptApiKey } from '../services/ai-key-crypto.js'
 import { AIService } from '../services/ai-service.js'
 
@@ -127,7 +127,11 @@ describe('AIService', () => {
     service.answerQuestionStream = async (_params, onToken) => {
       await onToken('Detected restart pressure. ')
       await onToken('Investigate crash loops.')
-      return { threadId: '11111111-1111-1111-1111-111111111111', provider: 'openai', model: 'gpt-4o-mini' }
+      return {
+        threadId: '11111111-1111-1111-1111-111111111111',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+      }
     }
 
     const response = await service.answerQuestion({

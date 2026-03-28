@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { type Database, aiMessages, aiThreads } from '@voyager/db'
+import { aiMessages, aiThreads, type Database } from '@voyager/db'
 import { and, asc, desc, eq } from 'drizzle-orm'
 import type { AiChatMessage } from './ai-provider.js'
 

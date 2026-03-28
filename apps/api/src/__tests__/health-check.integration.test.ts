@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as k8s from '@kubernetes/client-node'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock cluster-client-pool
 const mockGetClient = vi.fn()
@@ -22,7 +22,11 @@ function createMockKubeConfig(opts: { healthy?: boolean; throwError?: boolean } 
   } else {
     mockCoreApi.listNode.mockResolvedValue({
       items: [
-        { status: { conditions: [{ type: 'Ready', status: opts.healthy !== false ? 'True' : 'False' }] } },
+        {
+          status: {
+            conditions: [{ type: 'Ready', status: opts.healthy !== false ? 'True' : 'False' }],
+          },
+        },
       ],
     })
     mockCoreApi.listPodForAllNamespaces.mockResolvedValue({

@@ -1,17 +1,17 @@
 import * as k8s from '@kubernetes/client-node'
-import { z } from 'zod'
-import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import {
   clusters as clustersTable,
   db,
+  events,
   healthHistory,
   metricsHistory,
   nodeMetricsHistory,
-  events,
 } from '@voyager/db'
-import { protectedProcedure, router } from '../trpc.js'
+import { and, eq, gte, sql } from 'drizzle-orm'
+import { z } from 'zod'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
-import { eq, gte, and, sql } from 'drizzle-orm'
+import { protectedProcedure, router } from '../trpc.js'
 
 /** Shared constant for health-check polling interval (minutes) */
 const HEALTH_CHECK_INTERVAL_MINUTES = 5
@@ -121,7 +121,7 @@ function getBucketIndex(
   return index
 }
 
-function buildSeries<T>(
+function _buildSeries<T>(
   timeline: ReturnType<typeof getBucketTimeline>,
   values: Array<T | null>,
 ): Array<BucketPoint<T | null>> {

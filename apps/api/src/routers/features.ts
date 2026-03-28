@@ -92,7 +92,7 @@ export const featuresRouter = router({
       if (configuredValue === undefined) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: `Feature flag \"${input.name}\" not found`,
+          message: `Feature flag "${input.name}" not found`,
         })
       }
 

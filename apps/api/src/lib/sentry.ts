@@ -1,5 +1,5 @@
-import * as Sentry from '@sentry/node'
 import { createRequire } from 'node:module'
+import * as Sentry from '@sentry/node'
 
 const DSN = process.env.SENTRY_DSN
 const require = createRequire(import.meta.url)

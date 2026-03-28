@@ -2,10 +2,10 @@ import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
-import { clusterClientPool } from '../lib/cluster-client-pool.js'
-import { handleK8sError } from '../lib/error-handler.js'
 import { cached } from '../lib/cache.js'
 import { CACHE_KEYS } from '../lib/cache-keys.js'
+import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { handleK8sError } from '../lib/error-handler.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
@@ -21,7 +21,7 @@ export const podsRouter = router({
         )
 
         // Fetch pod metrics for CPU/Memory usage
-        let podMetricsMap = new Map<string, { cpuNano: number; memBytes: number }>()
+        const podMetricsMap = new Map<string, { cpuNano: number; memBytes: number }>()
         try {
           const metricsClient = new k8s.Metrics(kc)
           const podMetrics = await cached(CACHE_KEYS.k8sPodMetrics(input.clusterId), 15_000, () =>

@@ -64,7 +64,8 @@ describe('ai.analyze stability handling', () => {
         {
           severity: 'info',
           title: 'Cluster health looks stable',
-          description: 'No rule-based anomalies were detected in current metrics/events/log signals.',
+          description:
+            'No rule-based anomalies were detected in current metrics/events/log signals.',
           action: 'Continue monitoring and keep autoscaling and alerts tuned.',
         },
       ],

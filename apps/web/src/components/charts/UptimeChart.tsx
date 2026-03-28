@@ -108,7 +108,7 @@ export function UptimeChart({ data }: UptimeChartProps) {
           />
           <Tooltip
             {...TOOLTIP_STYLE}
-            formatter={(value: number | undefined) => [`${value ?? 0}%`, 'Uptime']}
+            formatter={(value) => [`${typeof value === 'number' ? value : 0}%`, 'Uptime']}
           />
           <Bar
             dataKey="uptime"

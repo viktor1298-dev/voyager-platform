@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 // Test that sentry module loads and works without DSN
 describe('Sentry initialization', () => {

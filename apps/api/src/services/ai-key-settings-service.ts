@@ -35,7 +35,8 @@ function sanitizeProviderValidationError(error: unknown): string {
 
   if (
     message.includes('404') ||
-    message.includes('model') && (message.includes('not found') || message.includes('does not exist'))
+    (message.includes('model') &&
+      (message.includes('not found') || message.includes('does not exist')))
   ) {
     return PROVIDER_VALIDATION_MESSAGES.modelUnavailable
   }
@@ -300,7 +301,8 @@ export class AiKeySettingsService {
       apiKey: decryptApiKey(row.encryptedKey),
       timeoutMs,
       maxOutputTokens,
-      baseUrl: provider === 'anthropic' ? process.env.ANTHROPIC_BASE_URL : process.env.OPENAI_BASE_URL,
+      baseUrl:
+        provider === 'anthropic' ? process.env.ANTHROPIC_BASE_URL : process.env.OPENAI_BASE_URL,
     }
   }
 

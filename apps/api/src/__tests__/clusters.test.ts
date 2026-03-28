@@ -48,7 +48,9 @@ function createCaller(user: Context['user'] = null) {
     select: vi.fn().mockReturnValue({
       from: vi.fn().mockImplementation(() => {
         // Return a thenable that also has groupBy for node counts query
-        const result = Promise.resolve([{ id: '1', name: 'test', provider: 'minikube', environment: 'development' }])
+        const result = Promise.resolve([
+          { id: '1', name: 'test', provider: 'minikube', environment: 'development' },
+        ])
         ;(result as any).groupBy = vi.fn().mockResolvedValue([{ clusterId: '1', count: 2 }])
         ;(result as any).where = vi.fn().mockResolvedValue([])
         return result
@@ -77,7 +79,7 @@ function createCaller(user: Context['user'] = null) {
     db: mockDb as unknown as Context['db'],
     user,
     session: user ? { userId: user.id, expiresAt: new Date(Date.now() + 86400000) } : null,
-    ipAddress: "127.0.0.1",
+    ipAddress: '127.0.0.1',
     res: { header: vi.fn() } as any,
   })
 }
@@ -86,7 +88,16 @@ describe('clusters.list', () => {
   it('returns clusters with node counts', async () => {
     const caller = createCaller({ id: 'u1', email: 'a@b.com', name: 'Admin', role: 'admin' })
     const result = await caller.clusters.list()
-    expect(result).toEqual([{ id: '1', name: 'test', provider: 'minikube', environment: 'development', nodeCount: 2, hasCredentials: false }])
+    expect(result).toEqual([
+      {
+        id: '1',
+        name: 'test',
+        provider: 'minikube',
+        environment: 'development',
+        nodeCount: 2,
+        hasCredentials: false,
+      },
+    ])
   })
 })
 
@@ -107,7 +118,11 @@ describe('clusters CUD routes require auth', () => {
   it('create throws UNAUTHORIZED without user', async () => {
     const caller = createCaller(null)
     await expect(
-      caller.clusters.create({ name: 'test', provider: 'kubeconfig', endpoint: 'https://example.com' }),
+      caller.clusters.create({
+        name: 'test',
+        provider: 'kubeconfig',
+        endpoint: 'https://example.com',
+      }),
     ).rejects.toThrow('Authentication required')
   })
 
@@ -183,7 +198,9 @@ describe('clusters.validateConnection', () => {
   })
 
   it('maps connection refused errors to BAD_GATEWAY', async () => {
-    mockValidateClusterConnection.mockRejectedValue(new Error('connect ECONNREFUSED 127.0.0.1:6443'))
+    mockValidateClusterConnection.mockRejectedValue(
+      new Error('connect ECONNREFUSED 127.0.0.1:6443'),
+    )
     const caller = createCaller(adminUser)
 
     await expect(
@@ -207,7 +224,9 @@ describe('clusters.validateConnection', () => {
   })
 
   it('maps timeout errors to GATEWAY_TIMEOUT', async () => {
-    mockValidateClusterConnection.mockRejectedValue(new Error('Request ETIMEDOUT while connecting to API'))
+    mockValidateClusterConnection.mockRejectedValue(
+      new Error('Request ETIMEDOUT while connecting to API'),
+    )
     const caller = createCaller(adminUser)
 
     await expect(

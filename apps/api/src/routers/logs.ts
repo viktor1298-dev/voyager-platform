@@ -1,6 +1,6 @@
 import * as k8s from '@kubernetes/client-node'
-import { clusters, db } from '@voyager/db'
 import { TRPCError } from '@trpc/server'
+import { clusters, db } from '@voyager/db'
 import { z } from 'zod'
 import { createAuthorizationService } from '../lib/authorization.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'

@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MetricsStreamEvent } from '@voyager/types'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // ── Shared mock state ─────────────────────────────────────────
 // vi.hoisted() lets us define mock state that vi.mock factories can reference
@@ -44,16 +44,15 @@ vi.mock('../lib/cluster-client-pool.js', () => ({
 }))
 
 vi.mock('@kubernetes/client-node', () => ({
-  Metrics: vi.fn(function () {
+  Metrics: function () {
     return mocks.metricsClient
-  }),
+  },
   CoreV1Api: vi.fn(),
 }))
 
+import { metricsStreamJob } from '../jobs/metrics-stream-job.js'
 // Imports after mocks
 import { voyagerEmitter } from '../lib/event-emitter.js'
-import { clusterClientPool } from '../lib/cluster-client-pool.js'
-import { metricsStreamJob } from '../jobs/metrics-stream-job.js'
 
 const CLUSTER_ID = '11111111-1111-1111-1111-111111111111'
 const CONN_A = 'conn-a'

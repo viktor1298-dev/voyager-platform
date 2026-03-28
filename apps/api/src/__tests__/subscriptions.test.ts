@@ -1,6 +1,6 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import type { AlertEvent, LogLineEvent, MetricsEvent, PodEvent } from '@voyager/types'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { voyagerEmitter } from '../lib/event-emitter.js'
-import type { PodEvent, MetricsEvent, AlertEvent, LogLineEvent } from '@voyager/types'
 
 describe('SSE Subscriptions — Event Emitter', () => {
   beforeEach(() => {
@@ -18,9 +18,7 @@ describe('SSE Subscriptions — Event Emitter', () => {
       namespace: 'default',
       phase: 'Running',
       restartCount: 0,
-      containerStatuses: [
-        { name: 'app', ready: true, restartCount: 0, state: 'running' },
-      ],
+      containerStatuses: [{ name: 'app', ready: true, restartCount: 0, state: 'running' }],
       timestamp: new Date().toISOString(),
     }
 
@@ -94,13 +92,21 @@ describe('SSE Subscriptions — Event Emitter', () => {
   it('should support multiple listeners on same event', () => {
     let count1 = 0
     let count2 = 0
-    voyagerEmitter.on('metrics', () => { count1++ })
-    voyagerEmitter.on('metrics', () => { count2++ })
+    voyagerEmitter.on('metrics', () => {
+      count1++
+    })
+    voyagerEmitter.on('metrics', () => {
+      count2++
+    })
 
     voyagerEmitter.emitMetrics({
       clusterId: 'test-cluster',
-      cpuPercent: 10, memoryPercent: 20, memoryBytes: 1000,
-      cpuCores: 1, podCount: 5, timestamp: new Date().toISOString(),
+      cpuPercent: 10,
+      memoryPercent: 20,
+      memoryBytes: 1000,
+      cpuCores: 1,
+      podCount: 5,
+      timestamp: new Date().toISOString(),
     })
 
     expect(count1).toBe(1)
@@ -113,8 +119,14 @@ describe('SSE Subscriptions — Event Emitter', () => {
     voyagerEmitter.on('pod-event', handler)
 
     voyagerEmitter.emitPodEvent({
-      type: 'added', clusterId: 'test-cluster', name: 'pod1', namespace: 'default', phase: 'Running',
-      restartCount: 0, containerStatuses: [], timestamp: new Date().toISOString(),
+      type: 'added',
+      clusterId: 'test-cluster',
+      name: 'pod1',
+      namespace: 'default',
+      phase: 'Running',
+      restartCount: 0,
+      containerStatuses: [],
+      timestamp: new Date().toISOString(),
     })
     expect(received).toHaveLength(1)
 
@@ -122,8 +134,14 @@ describe('SSE Subscriptions — Event Emitter', () => {
     voyagerEmitter.off('pod-event', handler)
 
     voyagerEmitter.emitPodEvent({
-      type: 'added', clusterId: 'test-cluster', name: 'pod2', namespace: 'default', phase: 'Running',
-      restartCount: 0, containerStatuses: [], timestamp: new Date().toISOString(),
+      type: 'added',
+      clusterId: 'test-cluster',
+      name: 'pod2',
+      namespace: 'default',
+      phase: 'Running',
+      restartCount: 0,
+      containerStatuses: [],
+      timestamp: new Date().toISOString(),
     })
     expect(received).toHaveLength(1) // Should NOT have received pod2
   })
@@ -143,20 +161,32 @@ describe('SSE Subscriptions — Async Generator Stream', () => {
 
     const handler = (data: PodEvent) => {
       queue.push(data)
-      if (resolve) { resolve(); resolve = null }
+      if (resolve) {
+        resolve()
+        resolve = null
+      }
     }
     voyagerEmitter.on('pod-event', handler)
     abortController.signal.addEventListener('abort', () => {
       done = true
       voyagerEmitter.off('pod-event', handler)
-      if (resolve) { resolve(); resolve = null }
+      if (resolve) {
+        resolve()
+        resolve = null
+      }
     })
 
     // Emit some events
     setTimeout(() => {
       voyagerEmitter.emitPodEvent({
-        type: 'added', clusterId: 'test-cluster', name: 'stream-pod', namespace: 'default', phase: 'Pending',
-        restartCount: 0, containerStatuses: [], timestamp: new Date().toISOString(),
+        type: 'added',
+        clusterId: 'test-cluster',
+        name: 'stream-pod',
+        namespace: 'default',
+        phase: 'Pending',
+        restartCount: 0,
+        containerStatuses: [],
+        timestamp: new Date().toISOString(),
       })
     }, 10)
 
@@ -167,7 +197,9 @@ describe('SSE Subscriptions — Async Generator Stream', () => {
     // Consume from queue
     while (!done || queue.length > 0) {
       while (queue.length === 0 && !done) {
-        await new Promise<void>((r) => { resolve = r })
+        await new Promise<void>((r) => {
+          resolve = r
+        })
       }
       if (queue.length > 0) {
         events.push(queue.shift()!)
@@ -182,7 +214,9 @@ describe('SSE Subscriptions — Async Generator Stream', () => {
     const abortController = new AbortController()
     let handlerCount = 0
 
-    const handler = () => { handlerCount++ }
+    const handler = () => {
+      handlerCount++
+    }
     voyagerEmitter.on('metrics', handler)
 
     abortController.abort()
@@ -190,8 +224,12 @@ describe('SSE Subscriptions — Async Generator Stream', () => {
     // After abort, emitting should still work for other listeners but our handler is unaffected
     voyagerEmitter.emitMetrics({
       clusterId: 'test-cluster',
-      cpuPercent: 10, memoryPercent: 20, memoryBytes: 1000,
-      cpuCores: 1, podCount: 5, timestamp: new Date().toISOString(),
+      cpuPercent: 10,
+      memoryPercent: 20,
+      memoryBytes: 1000,
+      cpuCores: 1,
+      podCount: 5,
+      timestamp: new Date().toISOString(),
     })
 
     expect(handlerCount).toBe(1) // Handler was NOT removed by abort in this case

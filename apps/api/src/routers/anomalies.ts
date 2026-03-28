@@ -44,7 +44,10 @@ export const anomaliesRouter = router({
       const updated = await service.acknowledge(input.id)
 
       if (!updated) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Anomaly not found or already acknowledged' })
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Anomaly not found or already acknowledged',
+        })
       }
 
       await logAudit(ctx, 'anomaly.acknowledge', 'anomaly', input.id, {
