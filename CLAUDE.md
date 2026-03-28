@@ -15,15 +15,16 @@ voyager-platform/
 │   │   └── src/
 │   │       ├── server.ts       # Entry point — DO NOT add migrate() here
 │   │       ├── routers/        # tRPC routers (28 routes: clusters, pods, nodes, alerts, ai, etc.)
-│   │       ├── routes/         # Non-tRPC routes (ai-stream, mcp)
-│   │       ├── jobs/           # Background jobs (health-sync, alert-evaluator, metrics, node-sync, event-sync, deploy-smoke-test)
+│   │       ├── routes/         # Non-tRPC routes (ai-stream, mcp, metrics-stream)
+│   │       ├── jobs/           # Background jobs (health-sync, alert-evaluator, metrics, node-sync, event-sync, deploy-smoke-test, metrics-stream-job)
 │   │       ├── config/         # Backend-only config (job intervals, K8s settings)
 │   │       └── lib/            # Auth, K8s watchers, telemetry, sentry, cache, authorization, error-handler, cache-keys, health-checks
 │   └── web/                    # Next.js 16 frontend (React 19, Tailwind 4)
 │       └── src/
 │           ├── app/            # App Router pages (clusters, alerts, settings, ai, etc.)
 │           ├── components/     # UI components (Sidebar, AppLayout, DataTable, charts)
-│           ├── lib/            # Utilities (trpc client, formatters, animation-constants)
+│           ├── hooks/          # Custom hooks (useMetricsData, useMetricsSSE)
+│           ├── lib/            # Utilities (trpc client, formatters, animation-constants, metrics-buffer, lttb)
 │           └── config/         # navigation.ts (6 sidebar items)
 ├── packages/
 │   ├── db/                     # Drizzle ORM schema + migrations
@@ -154,9 +155,9 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 - **routers/** → **services** → **lib/** (dependency direction; routers can skip services to call lib directly)
 - **lib/** has no dependencies on routers or services
 - tRPC procedures use `publicProcedure`, `protectedProcedure`, `adminProcedure`, or `authorizedProcedure` middleware
-- Non-tRPC routes: `ai-stream` (SSE streaming) and `mcp` (MCP protocol)
+- Non-tRPC routes: `ai-stream` (SSE streaming), `mcp` (MCP protocol), `metrics-stream` (SSE live metrics)
 - tRPC client uses `httpLink` (NOT `httpBatchLink`) — see Gotcha #1
-- Background jobs: `health-sync`, `alert-evaluator`, `metrics-history-collector`, `node-sync`, `event-sync`, `deploy-smoke-test`
+- Background jobs: `health-sync`, `alert-evaluator`, `metrics-history-collector`, `node-sync`, `event-sync`, `deploy-smoke-test`, `metrics-stream-job`
 - **All sync jobs run regardless of `K8S_ENABLED`** — only K8s watchers and deploy-smoke-test are gated (see Gotcha #14)
 
 ### Key Abstractions
@@ -169,6 +170,12 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 | **Auth** | `api/src/lib/auth.ts` | Better-Auth handler for `/api/auth/*`; session in PostgreSQL, token in cookie |
 | **Authorization** | `api/src/lib/authorization.ts` | `createAuthorizationService(db).check(subject, relation, object)` — DB-backed RBAC |
 | **Health Checks** | `api/src/lib/health-checks.ts` | Pure-function log scanner, startup probe, page smoke, result assessment — shared by CLI and K8s job |
+| **Metrics Stream Job** | `api/src/jobs/metrics-stream-job.ts` | Reference-counted K8s metrics polling — starts on first SSE subscriber, stops on last disconnect |
+| **Metrics SSE Route** | `api/src/routes/metrics-stream.ts` | `/api/metrics/stream?clusterId=<uuid>` — authenticated SSE endpoint streaming live K8s metrics at 10-15s resolution |
+| **Crosshair Provider** | `web/src/components/metrics/CrosshairProvider.tsx` | RAF-throttled shared crosshair state for synchronized hover across 4 metric panels |
+| **Metrics Buffer** | `web/src/lib/metrics-buffer.ts` | Circular buffer (65 points max) for SSE live data with time-based eviction |
+| **LTTB Downsampling** | `web/src/lib/lttb.ts` | Largest-Triangle-Three-Buckets algorithm (~50 LOC) — downsamples 500+ points to ~200 for chart perf |
+| **useMetricsData** | `web/src/hooks/useMetricsData.ts` | Unified data hook — SSE for ≤15m ranges, tRPC for ≥30m — seamless switching |
 
 ### State Management
 
@@ -232,7 +239,8 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | **UI/UX audit** | 219 findings across 6 dimensions — all fixed (2026-03-27). Reports in `docs/ui-audit/` |
 | **Animation enhancement** | B-style (Confident & Expressive) — 35 files, 4 waves complete (2026-03-27). Spec in `docs/superpowers/specs/`, standards in `docs/DESIGN.md` |
 | **Post-start health verification** | Local CLI (`pnpm health:check`) + K8s deploy smoke test job (2026-03-27). Spec in `docs/superpowers/specs/`, plan in `docs/superpowers/plans/` |
-| **Next** | Feature development via PRs to main |
+| **Metrics Graph Redesign** | Grafana-quality metrics viz — 7 phases complete (2026-03-28). TimescaleDB time_bucket(), SSE real-time, synchronized crosshair, dark panels, LTTB downsampling. Planning in `.planning/` |
+| **Next** | Visual QA of metrics page, then feature development via PRs to main |
 
 ## Database
 
@@ -270,6 +278,16 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | `apps/api/src/jobs/deploy-smoke-test.ts` | K8s deploy smoke test — listens for deployment rollouts, runs checks, creates alerts |
 | `apps/api/src/lib/k8s-client-factory.ts` | KubeConfig factory for all providers (kubeconfig, AWS, Azure, GKE, minikube) |
 | `scripts/health-check.ts` | `pnpm health:check` CLI — local dev post-start health verification |
+| `apps/api/src/routes/metrics-stream.ts` | SSE endpoint for live K8s metrics streaming (authenticated, per-cluster) |
+| `apps/api/src/jobs/metrics-stream-job.ts` | Reference-counted MetricsStreamJob — polls K8s only for clusters with SSE subscribers |
+| `apps/web/src/hooks/useMetricsData.ts` | Unified metrics hook — SSE for ≤15m, tRPC for ≥30m, auto-switches |
+| `apps/web/src/hooks/useMetricsSSE.ts` | SSE connection hook with exponential backoff + visibility-aware lifecycle |
+| `apps/web/src/lib/metrics-buffer.ts` | Circular buffer for SSE live data (65 points, time-based eviction) |
+| `apps/web/src/lib/lttb.ts` | LTTB downsampling (~50 LOC, zero deps) — 500+ points → ~200 |
+| `apps/web/src/components/metrics/CrosshairProvider.tsx` | RAF-throttled synchronized crosshair state across all metric panels |
+| `apps/web/src/components/metrics/DataFreshnessBadge.tsx` | Live/age/Stale freshness indicator with color coding |
+| `apps/web/src/components/metrics/MetricsPanelSkeleton.tsx` | Chart-shaped skeleton shimmer for per-panel loading |
+| `apps/web/src/components/metrics/DebouncedResponsiveContainer.tsx` | ResizeObserver-based container with 150ms debounce |
 | `docs/DESIGN.md` | 🔴 Animation & interaction design source of truth — read before ANY UI change |
 
 ## URL Structure
@@ -352,6 +370,18 @@ The cluster list page gets `nodeCount` by counting rows in the `nodes` table (po
 
 ### 13. SSR Hydration — Never Branch on `typeof window/document` in Render
 Checking `typeof window !== 'undefined'` or `typeof document !== 'undefined'` inside a component's render path creates a server/client branch that causes React hydration errors. The server renders one path, the client renders another. **Always use `useState(false)` + `useEffect(() => set(true))` to detect client-only features post-mount.** This has broken the login page multiple times via `PageTransition.tsx`.
+
+### 17. Metrics Time Ranges — Grafana Standard Only
+The metrics router accepts exactly 10 Grafana-standard ranges: `5m`, `15m`, `30m`, `1h`, `3h`, `6h`, `12h`, `24h`, `2d`, `7d`. Old ranges (`30s`, `1m`, `30d`) were removed because the 60s collector interval made sub-minute buckets always empty. The `TimeRangeSelector` also offers `custom` for absolute date/time — this falls back to `24h` for the DB query. **Never re-add sub-minute ranges.**
+
+### 18. Metrics Dual Data Source — SSE vs tRPC
+Short ranges (≤15m: `5m`, `15m`) use SSE streaming from K8s metrics-server via `/api/metrics/stream`. Historical ranges (≥30m) use `tRPC metrics.history` with TimescaleDB `time_bucket()` SQL. The `useMetricsData` hook handles switching automatically. **Never bypass this hook with direct tRPC calls for metrics.**
+
+### 19. Metrics Response Shape — Wrapped Object
+`metrics.history` returns `{ data: MetricsDataPoint[], serverTime: string, intervalMs: number }`, NOT a flat array. All consumers must access `.data` property. The old `historyQuery.data` → new `historyQuery.data?.data`.
+
+### 20. TimescaleDB Extension Required
+`charts/voyager/sql/init.sql` must include `CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;` — the `time_bucket()` function used by the metrics router depends on it. If missing, all metrics queries fail silently with empty results.
 
 ## 🚨 QA Gate Rules — MANDATORY
 
