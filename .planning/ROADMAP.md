@@ -117,13 +117,17 @@ Plans:
   2. "Expand All / Collapse All" toggle works on every resource tab including Pods
   3. Pod deletion and resource mutations trigger immediate UI updates via real-time data refresh (no manual refresh needed)
   4. Logs tab has syntax highlighting, log level coloring, search/filter, timestamp parsing, and structured log formatting
-  5. Expanded resource detail panels include cross-resource tabs (pod→logs, deployment→pods, statefulset→pods, service→endpoints) with hyperlinks for navigation
+  5. Expanded resource detail panels include cross-resource tabs (pod->logs, deployment->pods, statefulset->pods, service->endpoints) with hyperlinks for navigation
   6. Karpenter/autoscaling tab design unchanged
   7. `pnpm build` and `pnpm typecheck` pass with 0 errors
-**Plans:** 0 plans
+**Plans:** 5 plans
 
 Plans:
-(none yet)
+- [ ] 08-01-PLAN.md -- Foundation: ExpandableCard controlled mode, ResourcePageScaffold, SearchFilterBar, NamespaceGroup
+- [ ] 08-02-PLAN.md -- Tab redesign Set A: Services, Ingresses, StatefulSets, DaemonSets, Jobs
+- [ ] 08-03-PLAN.md -- Tab redesign Set B: CronJobs, HPA, ConfigMaps, Secrets, PVCs + Namespaces, Events, Pods expand-all
+- [ ] 08-04-PLAN.md -- Logs beautifier: LogViewer, LogLine, JsonRenderer, LogSearch + page integration
+- [ ] 08-05-PLAN.md -- Cross-resource navigation: hyperlinks, RelatedPodsList, pod logs tab, mutation cache fix
 
 ## Progress
 
@@ -138,4 +142,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8
 | 4. Push & Branch Cleanup | 2/2 | Complete | 2026-03-26 |
 | 5. GitHub Protection | 1/1 | Complete | 2026-03-26 |
 | 7. Performance Optimization | 1/1 | Complete | 2026-03-28 |
-| 8. Resource Explorer UX Overhaul | 0/? | In Progress | - |
+| 8. Resource Explorer UX Overhaul | 0/5 | In Progress | - |
