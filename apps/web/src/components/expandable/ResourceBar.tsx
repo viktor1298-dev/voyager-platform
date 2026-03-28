@@ -46,7 +46,7 @@ export function ResourceBar({ label, icon, used, total, unit, colorClass }: Reso
           <span className="text-[var(--color-text-secondary)]">({Math.round(percent)}%)</span>
         </span>
       </div>
-      <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
+      <div className="h-1.5 bg-[var(--color-track)] rounded-full overflow-hidden">
         <motion.div
           className={['h-full rounded-full', autoColorClass].join(' ')}
           initial={{ width: 0 }}
