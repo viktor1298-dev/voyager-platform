@@ -7,6 +7,7 @@ import {
   HardDrive,
   LayoutDashboard,
   Network,
+  Puzzle,
   Server,
   Settings,
   TrendingUp,
@@ -86,6 +87,16 @@ export const CLUSTER_TAB_ENTRIES: ClusterTabEntry[] = [
     children: [
       { id: 'hpa', label: 'HPA', path: '/hpa' },
       { id: 'autoscaling', label: 'Karpenter', path: '/autoscaling' },
+    ],
+  },
+  {
+    type: 'group',
+    id: 'cluster-ops',
+    label: 'Cluster Ops',
+    icon: Puzzle,
+    children: [
+      { id: 'helm', label: 'Helm', path: '/helm' },
+      { id: 'crds', label: 'CRDs', path: '/crds' },
     ],
   },
 ]
