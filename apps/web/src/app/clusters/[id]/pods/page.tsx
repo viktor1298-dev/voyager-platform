@@ -406,7 +406,7 @@ function NamespacePodGroup({
           {pods.map((pod) => (
             <ExpandableCard
               key={`${pod.namespace}/${pod.name}`}
-              expanded={expandAll}
+              expanded={expandAll || undefined}
               summary={<PodSummary pod={pod} isAdmin={isAdmin} onDeletePod={onDeletePod} />}
             >
               <PodDetail pod={pod} clusterId={clusterId} />

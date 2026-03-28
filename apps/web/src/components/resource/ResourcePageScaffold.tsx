@@ -169,7 +169,7 @@ export function ResourcePageScaffold<T>({
                     }
                   >
                     <ExpandableCard
-                      expanded={expandAll || highlighted}
+                      expanded={expandAll || highlighted || undefined}
                       summary={renderSummary(item)}
                     >
                       {renderDetail(item)}
@@ -193,7 +193,7 @@ export function ResourcePageScaffold<T>({
                         }
                       >
                         <ExpandableCard
-                          expanded={expandAll || highlighted}
+                          expanded={expandAll || highlighted || undefined}
                           summary={renderSummary(item)}
                         >
                           {renderDetail(item)}
