@@ -45,8 +45,8 @@ export function useResourceSSE(clusterId: string | null) {
   useEffect(() => {
     if (!clusterId) return
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || ''
-    const url = `${apiUrl}/api/resources/stream?clusterId=${encodeURIComponent(clusterId)}`
+    // Use relative URL — Next.js rewrites /api/* to the API server (same as useMetricsSSE)
+    const url = `/api/resources/stream?clusterId=${encodeURIComponent(clusterId)}`
     const es = new EventSource(url, { withCredentials: true })
     eventSourceRef.current = es
 

@@ -1,7 +1,8 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { ExpandableCard } from '@/components/expandable'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SearchFilterBar } from './SearchFilterBar'
@@ -38,6 +39,54 @@ export function ResourcePageScaffold<T>({
 }: ResourcePageScaffoldProps<T>) {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandAll, setExpandAll] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const highlightRef = useRef<HTMLDivElement>(null)
+
+  // Parse ?highlight={"name":"x","namespace":"y"} from URL (cross-resource navigation)
+  const highlightParam = searchParams.get('highlight')
+  const highlightTarget = useMemo(() => {
+    if (!highlightParam) return null
+    try {
+      return JSON.parse(highlightParam) as Record<string, string>
+    } catch {
+      return null
+    }
+  }, [highlightParam])
+
+  // Build a highlight key to match against getKey
+  const isHighlighted = useCallback(
+    (item: T) => {
+      if (!highlightTarget) return false
+      const key = getKey(item)
+      // Match by name/namespace combo or just name
+      if (highlightTarget.name && highlightTarget.namespace) {
+        return key === `${highlightTarget.namespace}/${highlightTarget.name}`
+      }
+      if (highlightTarget.name) {
+        return key.endsWith(highlightTarget.name) || key === highlightTarget.name
+      }
+      return false
+    },
+    [highlightTarget, getKey],
+  )
+
+  // Scroll to highlighted item and clear the param
+  useEffect(() => {
+    if (!highlightTarget || !highlightRef.current) return
+    const timer = setTimeout(() => {
+      highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      // Clear the highlight param after scrolling
+      const timeout = setTimeout(() => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.delete('highlight')
+        const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname
+        router.replace(newUrl, { scroll: false })
+      }, 2000)
+      return () => clearTimeout(timeout)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [highlightTarget, searchParams, router])
 
   const items = (queryResult.data ?? []) as T[]
 
@@ -107,27 +156,51 @@ export function ResourcePageScaffold<T>({
         <div className="space-y-2">
           {flatList
             ? // Flat list — no namespace grouping
-              filteredItems.map((item) => (
-                <ExpandableCard
-                  key={getKey(item)}
-                  expanded={expandAll}
-                  summary={renderSummary(item)}
-                >
-                  {renderDetail(item)}
-                </ExpandableCard>
-              ))
-            : // Namespace-grouped
-              grouped.map(([namespace, nsItems]) => (
-                <NamespaceGroup key={namespace} namespace={namespace} count={nsItems.length}>
-                  {nsItems.map((item) => (
+              filteredItems.map((item) => {
+                const highlighted = isHighlighted(item)
+                return (
+                  <div
+                    key={getKey(item)}
+                    ref={highlighted ? highlightRef : undefined}
+                    className={
+                      highlighted
+                        ? 'ring-2 ring-[var(--color-accent)] rounded-xl transition-all duration-500'
+                        : ''
+                    }
+                  >
                     <ExpandableCard
-                      key={getKey(item)}
-                      expanded={expandAll}
+                      expanded={expandAll || highlighted}
                       summary={renderSummary(item)}
                     >
                       {renderDetail(item)}
                     </ExpandableCard>
-                  ))}
+                  </div>
+                )
+              })
+            : // Namespace-grouped
+              grouped.map(([namespace, nsItems]) => (
+                <NamespaceGroup key={namespace} namespace={namespace} count={nsItems.length}>
+                  {nsItems.map((item) => {
+                    const highlighted = isHighlighted(item)
+                    return (
+                      <div
+                        key={getKey(item)}
+                        ref={highlighted ? highlightRef : undefined}
+                        className={
+                          highlighted
+                            ? 'ring-2 ring-[var(--color-accent)] rounded-xl transition-all duration-500'
+                            : ''
+                        }
+                      >
+                        <ExpandableCard
+                          expanded={expandAll || highlighted}
+                          summary={renderSummary(item)}
+                        >
+                          {renderDetail(item)}
+                        </ExpandableCard>
+                      </div>
+                    )
+                  })}
                 </NamespaceGroup>
               ))}
         </div>
