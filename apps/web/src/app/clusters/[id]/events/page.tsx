@@ -1,10 +1,11 @@
 'use client'
 
-import { Activity, Info, MessageSquare } from 'lucide-react'
-import { useMemo } from 'react'
+import { Activity, GanttChartSquare, Info, LayoutList, MessageSquare } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs } from '@/components/expandable'
+import { EventsTimeline } from '@/components/events/EventsTimeline'
 import { ResourcePageScaffold } from '@/components/resource'
 import { severityColor } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
@@ -119,11 +120,14 @@ function EventExpandedDetail({ event }: { event: EventData }) {
   )
 }
 
+type ViewMode = 'cards' | 'timeline'
+
 export default function EventsPage() {
   usePageTitle('Cluster Events')
 
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
+  const [viewMode, setViewMode] = useState<ViewMode>('cards')
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
@@ -161,7 +165,7 @@ export default function EventsPage() {
       reason: asText(e.reason),
       message: asText(e.message),
       namespace: asText(e.namespace),
-      involvedObject: '—',
+      involvedObject: '\u2014',
       count: null,
       lastTimestamp: e.createdAt
         ? e.createdAt instanceof Date
@@ -176,45 +180,82 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-3">
-      {/* Live indicator */}
+      {/* Header: Live indicator + View toggle */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span
             className={`h-2 w-2 rounded-full ${isAutoRefreshing ? 'bg-[var(--color-status-active)] animate-pulse' : 'bg-[var(--color-text-dim)]'}`}
           />
           <span className="text-xs text-[var(--color-text-muted)]">
-            {isAutoRefreshing ? 'Live — auto-refreshing every 10s' : 'Events'}
+            {isAutoRefreshing ? 'Live \u2014 auto-refreshing every 10s' : 'Events'}
           </span>
         </div>
-        <span className="text-xs font-mono text-[var(--color-text-dim)]">
-          {events.length} events
-        </span>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono text-[var(--color-text-dim)]">
+            {events.length} events
+          </span>
+
+          {/* View mode toggle */}
+          <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setViewMode('timeline')}
+              className={`flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors ${
+                viewMode === 'timeline'
+                  ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
+                  : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.03]'
+              }`}
+            >
+              <GanttChartSquare className="h-3 w-3" />
+              Timeline
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('cards')}
+              className={`flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors border-l border-[var(--color-border)] ${
+                viewMode === 'cards'
+                  ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
+                  : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.03]'
+              }`}
+            >
+              <LayoutList className="h-3 w-3" />
+              Cards
+            </button>
+          </div>
+        </div>
       </div>
 
-      <ResourcePageScaffold<EventData>
-        title="Events"
-        icon={<Activity className="h-10 w-10 text-[var(--color-text-dim)]" />}
-        queryResult={{
-          data: events,
-          isLoading,
-          error: null,
-        }}
-        getNamespace={(event) => event.namespace || 'cluster'}
-        getKey={(event) =>
-          `${event.namespace}-${event.reason}-${event.lastTimestamp}-${event.involvedObject}`
-        }
-        filterFn={(event, q) =>
-          event.reason.toLowerCase().includes(q) ||
-          event.message.toLowerCase().includes(q) ||
-          event.involvedObject.toLowerCase().includes(q) ||
-          event.type.toLowerCase().includes(q)
-        }
-        renderSummary={(event) => <EventSummary event={event} />}
-        renderDetail={(event) => <EventExpandedDetail event={event} />}
-        searchPlaceholder="Search events..."
-        emptyMessage="No events recorded yet"
-        emptyDescription="Kubernetes events appear here when something notable happens in your cluster."
-      />
+      {/* Timeline view */}
+      {viewMode === 'timeline' && <EventsTimeline events={events} />}
+
+      {/* Cards view (existing) */}
+      {viewMode === 'cards' && (
+        <ResourcePageScaffold<EventData>
+          title="Events"
+          icon={<Activity className="h-10 w-10 text-[var(--color-text-dim)]" />}
+          queryResult={{
+            data: events,
+            isLoading,
+            error: null,
+          }}
+          getNamespace={(event) => event.namespace || 'cluster'}
+          getKey={(event) =>
+            `${event.namespace}-${event.reason}-${event.lastTimestamp}-${event.involvedObject}`
+          }
+          filterFn={(event, q) =>
+            event.reason.toLowerCase().includes(q) ||
+            event.message.toLowerCase().includes(q) ||
+            event.involvedObject.toLowerCase().includes(q) ||
+            event.type.toLowerCase().includes(q)
+          }
+          renderSummary={(event) => <EventSummary event={event} />}
+          renderDetail={(event) => <EventExpandedDetail event={event} />}
+          searchPlaceholder="Search events..."
+          emptyMessage="No events recorded yet"
+          emptyDescription="Kubernetes events appear here when something notable happens in your cluster."
+        />
+      )}
     </div>
   )
 }

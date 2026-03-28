@@ -262,6 +262,12 @@ export const tabSlideRightVariants = {
   exit: { opacity: 0, x: -8, transition: { duration: DURATION.instant, ease: EASING.exit } },
 } as const
 
+// Phase 9: Swim lane entrance (events timeline)
+export const swimLaneVariants = {
+  hidden: { opacity: 0, x: -12 },
+  visible: { opacity: 1, x: 0 },
+} as const
+
 // Resource bar fill animation
 export const resourceBarVariants = {
   hidden: { width: 0 },
