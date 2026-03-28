@@ -132,7 +132,7 @@ Plans:
 - [x] 08-05-PLAN.md -- Tab redesign Set C: ConfigMaps, Secrets, PVCs + Namespaces, Events, Pods expand-all
 - [x] 08-06-PLAN.md -- Logs beautifier: LogViewer, LogLine, JsonRenderer, LogSearch, CSS log vars, page integration
 - [x] 08-07-PLAN.md -- Nodes page light-mode fix: bar visibility, spacing, visual hierarchy
-- [ ] 08-08-PLAN.md -- Cross-resource navigation: RelatedPodsList, hyperlinks, pod->logs tab, mutation cache fix
+- [x] 08-08-PLAN.md -- Cross-resource navigation: RelatedPodsList, hyperlinks, pod->logs tab, mutation cache fix
 
 ### Phase 9: Lens-Inspired Power Features
 **Goal**: Transform Voyager Platform into a full Lens-alternative with pod exec/terminal, live log streaming, YAML viewer, workload management (restart/scale), Helm releases, events timeline, resource diff, port forwarding, CRD browser, RBAC viewer, network policy visualization, and resource quotas dashboard. Update all existing features to be Lens-inspired with live data.
