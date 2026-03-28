@@ -23,6 +23,7 @@ import { karpenterRouter } from './karpenter.js'
 import { logsRouter } from './logs.js'
 import { metricsRouter } from './metrics.js'
 import { namespacesRouter } from './namespaces.js'
+import { networkPoliciesRouter } from './network-policies.js'
 import { nodesRouter } from './nodes.js'
 import { podsRouter } from './pods.js'
 import { presenceRouter } from './presence.js'
@@ -75,6 +76,7 @@ export const appRouter = router({
   services: servicesRouter,
   statefulSets: statefulSetsRouter,
   namespaces: namespacesRouter,
+  networkPolicies: networkPoliciesRouter,
   dashboardLayout: dashboardLayoutRouter,
 })
 

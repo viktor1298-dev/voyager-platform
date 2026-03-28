@@ -58,6 +58,7 @@ export const CLUSTER_TAB_ENTRIES: ClusterTabEntry[] = [
     children: [
       { id: 'services', label: 'Services', path: '/services' },
       { id: 'ingresses', label: 'Ingresses', path: '/ingresses' },
+      { id: 'network-policies', label: 'Network Policies', path: '/network-policies' },
     ],
   },
   {

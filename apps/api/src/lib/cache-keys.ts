@@ -29,6 +29,8 @@ export const CACHE_KEYS = {
 
   k8sTopology: (clusterId: string) => `k8s:${clusterId}:topology`,
 
+  k8sNetworkPolicies: (clusterId: string) => `k8s:${clusterId}:network-policies`,
+
   /** Global deployments list cache (not cluster-scoped) */
   k8sDeploymentsListGlobal: () => 'k8s:deployments:list:v2',
 
