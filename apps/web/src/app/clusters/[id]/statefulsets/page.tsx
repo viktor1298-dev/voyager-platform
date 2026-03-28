@@ -1,13 +1,28 @@
 'use client'
 
-import { BarChart3, Box, CircleCheck, Database, HardDrive } from 'lucide-react'
+import {
+  BarChart3,
+  Box,
+  CircleCheck,
+  Database,
+  HardDrive,
+  RotateCw,
+  Scaling,
+  Trash2,
+} from 'lucide-react'
 import { useParams } from 'next/navigation'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs } from '@/components/expandable'
 import {
+  ActionToolbar,
+  DeleteConfirmDialog,
   RelatedPodsList,
   ResourceDiff,
   ResourcePageScaffold,
+  RestartConfirmDialog,
+  ScaleInput,
   YamlViewer,
 } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
@@ -82,6 +97,96 @@ function StatefulSetSummary({ ss }: { ss: StatefulSetData }) {
 }
 
 function StatefulSetExpandedDetail({ ss, clusterId }: { ss: StatefulSetData; clusterId: string }) {
+  const [restartDialogOpen, setRestartDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [scaleOpen, setScaleOpen] = useState(false)
+
+  const utils = trpc.useUtils()
+  const restartMutation = trpc.statefulSets.restart.useMutation({
+    onSuccess: () => {
+      toast.success(`StatefulSet ${ss.name} restarted`)
+      utils.statefulSets.list.invalidate({ clusterId })
+      setRestartDialogOpen(false)
+    },
+    onError: (err) => toast.error(`Restart failed: ${err.message}`),
+  })
+  const scaleMutation = trpc.statefulSets.scale.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Scaled ${ss.name} to ${data.replicas} replicas`)
+      utils.statefulSets.list.invalidate({ clusterId })
+      setScaleOpen(false)
+    },
+    onError: (err) => toast.error(`Scale failed: ${err.message}`),
+  })
+  const deleteMutation = trpc.statefulSets.delete.useMutation({
+    onSuccess: () => {
+      toast.success(`StatefulSet ${ss.name} deleted`)
+      utils.statefulSets.list.invalidate({ clusterId })
+      setDeleteDialogOpen(false)
+    },
+    onError: (err) => toast.error(`Delete failed: ${err.message}`),
+  })
+
+  const actions = (
+    <>
+      <ActionToolbar
+        actions={[
+          {
+            id: 'restart',
+            label: 'Restart',
+            icon: RotateCw,
+            variant: 'default',
+            onClick: () => setRestartDialogOpen(true),
+          },
+          {
+            id: 'scale',
+            label: 'Scale',
+            icon: Scaling,
+            variant: 'default',
+            onClick: () => setScaleOpen((prev) => !prev),
+          },
+          {
+            id: 'delete',
+            label: 'Delete',
+            icon: Trash2,
+            variant: 'destructive',
+            onClick: () => setDeleteDialogOpen(true),
+          },
+        ]}
+      />
+      <RestartConfirmDialog
+        open={restartDialogOpen}
+        onOpenChange={setRestartDialogOpen}
+        resourceType="StatefulSet"
+        resourceName={ss.name}
+        podCount={ss.replicas}
+        onConfirm={() =>
+          restartMutation.mutate({
+            name: ss.name,
+            namespace: ss.namespace,
+            clusterId,
+          })
+        }
+        isRestarting={restartMutation.isPending}
+      />
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        resourceType="StatefulSet"
+        resourceName={ss.name}
+        namespace={ss.namespace}
+        onConfirm={() =>
+          deleteMutation.mutate({
+            name: ss.name,
+            namespace: ss.namespace,
+            clusterId,
+          })
+        }
+        isDeleting={deleteMutation.isPending}
+      />
+    </>
+  )
+
   const tabs = [
     {
       id: 'pods',
@@ -94,30 +199,46 @@ function StatefulSetExpandedDetail({ ss, clusterId }: { ss: StatefulSetData; clu
       label: 'Replicas',
       icon: <BarChart3 className="h-3.5 w-3.5" />,
       content: (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: 'Ready', value: ss.readyReplicas, total: ss.replicas },
-            { label: 'Current', value: ss.currentReplicas, total: ss.replicas },
-            { label: 'Updated', value: ss.updatedReplicas, total: ss.replicas },
-            { label: 'Desired', value: ss.replicas, total: null },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="rounded-lg border border-[var(--color-border)]/40 bg-white/[0.01] p-3 text-center"
-            >
-              <p className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                {item.label}
-              </p>
-              <p className="text-lg font-bold font-mono text-[var(--color-text-primary)]">
-                {item.value}
-                {item.total !== null && (
-                  <span className="text-xs font-normal text-[var(--color-text-muted)]">
-                    /{item.total}
-                  </span>
-                )}
-              </p>
-            </div>
-          ))}
+        <div className="space-y-3">
+          {scaleOpen && (
+            <ScaleInput
+              currentReplicas={ss.replicas}
+              onScale={(n) =>
+                scaleMutation.mutate({
+                  name: ss.name,
+                  namespace: ss.namespace,
+                  clusterId,
+                  replicas: n,
+                })
+              }
+              isScaling={scaleMutation.isPending}
+            />
+          )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'Ready', value: ss.readyReplicas, total: ss.replicas },
+              { label: 'Current', value: ss.currentReplicas, total: ss.replicas },
+              { label: 'Updated', value: ss.updatedReplicas, total: ss.replicas },
+              { label: 'Desired', value: ss.replicas, total: null },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-lg border border-[var(--color-border)]/40 bg-white/[0.01] p-3 text-center"
+              >
+                <p className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+                  {item.label}
+                </p>
+                <p className="text-lg font-bold font-mono text-[var(--color-text-primary)]">
+                  {item.value}
+                  {item.total !== null && (
+                    <span className="text-xs font-normal text-[var(--color-text-muted)]">
+                      /{item.total}
+                    </span>
+                  )}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       ),
     },
@@ -193,7 +314,7 @@ function StatefulSetExpandedDetail({ ss, clusterId }: { ss: StatefulSetData; clu
     },
   ]
 
-  return <DetailTabs id={`ss-${ss.namespace}-${ss.name}`} tabs={tabs} />
+  return <DetailTabs id={`ss-${ss.namespace}-${ss.name}`} tabs={tabs} actions={actions} />
 }
 
 export default function StatefulSetsPage() {

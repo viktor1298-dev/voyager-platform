@@ -6,10 +6,12 @@ import {
   ChevronDown,
   CircleCheck,
   Cpu,
+  ExternalLink,
   FileText,
   HardDrive,
   Package,
   Server,
+  Terminal,
   Trash2,
 } from 'lucide-react'
 import { useParams, useSearchParams } from 'next/navigation'
@@ -17,6 +19,9 @@ import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, ExpandableCard, ResourceBar } from '@/components/expandable'
 import { LogViewer } from '@/components/logs'
 import {
+  ActionToolbar,
+  DeleteConfirmDialog,
+  PortForwardCopy,
   RelatedResourceLink,
   ResourceDiff,
   SearchFilterBar,
@@ -126,7 +131,86 @@ function PodLogViewer({
 // ---------------------------------------------------------------------------
 
 function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const containers = pod.containers ?? []
+  const utils = trpc.useUtils()
+
+  const deleteMutation = trpc.pods.delete.useMutation({
+    onSuccess: () => {
+      toast.success(`Pod ${pod.name} deleted`)
+      utils.pods.list.invalidate({ clusterId })
+      setDeleteDialogOpen(false)
+    },
+    onError: (err) => toast.error(`Delete failed: ${err.message}`),
+  })
+
+  // Gather all container ports for PortForwardCopy
+  const allPorts = containers.flatMap((c) =>
+    c.ports.map((p) => ({ containerPort: p.containerPort, name: p.name ?? undefined })),
+  )
+
+  const actions = (
+    <>
+      <ActionToolbar
+        actions={[
+          {
+            id: 'exec',
+            label: 'Exec',
+            icon: Terminal,
+            variant: 'accent',
+            onClick: () => {
+              /* terminal drawer integration in Plan 05 */
+            },
+          },
+          ...(allPorts.length > 0
+            ? [
+                {
+                  id: 'port-forward',
+                  label: 'Port Forward',
+                  icon: ExternalLink,
+                  variant: 'default' as const,
+                  onClick: () => {
+                    /* handled by render prop */
+                  },
+                  render: (button: React.ReactNode) => (
+                    <PortForwardCopy
+                      podName={pod.name}
+                      namespace={pod.namespace}
+                      containerPorts={allPorts}
+                      clusterContext={clusterId}
+                    >
+                      {button}
+                    </PortForwardCopy>
+                  ),
+                },
+              ]
+            : []),
+          {
+            id: 'delete',
+            label: 'Delete',
+            icon: Trash2,
+            variant: 'destructive',
+            onClick: () => setDeleteDialogOpen(true),
+          },
+        ]}
+      />
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        resourceType="Pod"
+        resourceName={pod.name}
+        namespace={pod.namespace}
+        onConfirm={() =>
+          deleteMutation.mutate({
+            clusterId,
+            namespace: pod.namespace,
+            podName: pod.name,
+          })
+        }
+        isDeleting={deleteMutation.isPending}
+      />
+    </>
+  )
 
   const tabs = [
     {
@@ -329,7 +413,7 @@ function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
       : []),
   ]
 
-  return <DetailTabs id={`pod-${pod.namespace}-${pod.name}`} tabs={tabs} />
+  return <DetailTabs id={`pod-${pod.namespace}-${pod.name}`} tabs={tabs} actions={actions} />
 }
 
 // ---------------------------------------------------------------------------

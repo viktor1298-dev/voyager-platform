@@ -1,13 +1,28 @@
 'use client'
 
-import { BarChart3, Box, CircleCheck, Rocket, Settings } from 'lucide-react'
+import {
+  BarChart3,
+  Box,
+  CircleCheck,
+  Rocket,
+  RotateCw,
+  Scaling,
+  Settings,
+  Trash2,
+} from 'lucide-react'
 import { useParams } from 'next/navigation'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
 import {
+  ActionToolbar,
+  DeleteConfirmDialog,
   RelatedPodsList,
   ResourceDiff,
   ResourcePageScaffold,
+  RestartConfirmDialog,
+  ScaleInput,
   YamlViewer,
 } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
@@ -81,6 +96,96 @@ function DeploymentSummary({ d }: { d: DeploymentDetail }) {
 }
 
 function DeploymentExpandedDetail({ d, clusterId }: { d: DeploymentDetail; clusterId: string }) {
+  const [restartDialogOpen, setRestartDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [scaleOpen, setScaleOpen] = useState(false)
+
+  const utils = trpc.useUtils()
+  const restartMutation = trpc.deployments.restart.useMutation({
+    onSuccess: () => {
+      toast.success(`Deployment ${d.name} restarted`)
+      utils.deployments.listDetail.invalidate({ clusterId })
+      setRestartDialogOpen(false)
+    },
+    onError: (err) => toast.error(`Restart failed: ${err.message}`),
+  })
+  const scaleMutation = trpc.deployments.scale.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Scaled ${d.name} to ${data.replicas} replicas`)
+      utils.deployments.listDetail.invalidate({ clusterId })
+      setScaleOpen(false)
+    },
+    onError: (err) => toast.error(`Scale failed: ${err.message}`),
+  })
+  const deleteMutation = trpc.deployments.delete.useMutation({
+    onSuccess: () => {
+      toast.success(`Deployment ${d.name} deleted`)
+      utils.deployments.listDetail.invalidate({ clusterId })
+      setDeleteDialogOpen(false)
+    },
+    onError: (err) => toast.error(`Delete failed: ${err.message}`),
+  })
+
+  const actions = (
+    <>
+      <ActionToolbar
+        actions={[
+          {
+            id: 'restart',
+            label: 'Restart',
+            icon: RotateCw,
+            variant: 'default',
+            onClick: () => setRestartDialogOpen(true),
+          },
+          {
+            id: 'scale',
+            label: 'Scale',
+            icon: Scaling,
+            variant: 'default',
+            onClick: () => setScaleOpen((prev) => !prev),
+          },
+          {
+            id: 'delete',
+            label: 'Delete',
+            icon: Trash2,
+            variant: 'destructive',
+            onClick: () => setDeleteDialogOpen(true),
+          },
+        ]}
+      />
+      <RestartConfirmDialog
+        open={restartDialogOpen}
+        onOpenChange={setRestartDialogOpen}
+        resourceType="Deployment"
+        resourceName={d.name}
+        podCount={d.replicas}
+        onConfirm={() =>
+          restartMutation.mutate({
+            name: d.name,
+            namespace: d.namespace,
+            clusterId,
+          })
+        }
+        isRestarting={restartMutation.isPending}
+      />
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        resourceType="Deployment"
+        resourceName={d.name}
+        namespace={d.namespace}
+        onConfirm={() =>
+          deleteMutation.mutate({
+            name: d.name,
+            namespace: d.namespace,
+            clusterId,
+          })
+        }
+        isDeleting={deleteMutation.isPending}
+      />
+    </>
+  )
+
   const tabs = [
     {
       id: 'pods',
@@ -94,6 +199,20 @@ function DeploymentExpandedDetail({ d, clusterId }: { d: DeploymentDetail; clust
       icon: <BarChart3 className="h-3.5 w-3.5" />,
       content: (
         <div className="space-y-3">
+          {scaleOpen && (
+            <ScaleInput
+              currentReplicas={d.replicas}
+              onScale={(n) =>
+                scaleMutation.mutate({
+                  name: d.name,
+                  namespace: d.namespace,
+                  clusterId,
+                  replicas: n,
+                })
+              }
+              isScaling={scaleMutation.isPending}
+            />
+          )}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: 'Ready', value: d.readyReplicas, total: d.replicas },
@@ -208,7 +327,7 @@ function DeploymentExpandedDetail({ d, clusterId }: { d: DeploymentDetail; clust
     },
   ]
 
-  return <DetailTabs id={`dep-${d.namespace}-${d.name}`} tabs={tabs} />
+  return <DetailTabs id={`dep-${d.namespace}-${d.name}`} tabs={tabs} actions={actions} />
 }
 
 export default function DeploymentsPage() {
