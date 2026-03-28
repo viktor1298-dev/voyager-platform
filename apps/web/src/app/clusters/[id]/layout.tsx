@@ -1,29 +1,15 @@
 'use client'
 
 import { AnimatePresence, motion } from 'motion/react'
-import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { getClusterIdFromRouteSegment, getClusterRouteSegment } from '@/components/cluster-route'
+import { GroupedTabBar } from '@/components/clusters/GroupedTabBar'
+import { getAllTabPaths } from '@/components/clusters/cluster-tabs-config'
 import { trpc } from '@/lib/trpc'
-
-const CLUSTER_TABS = [
-  { id: 'overview', label: 'Overview', path: '' },
-  { id: 'nodes', label: 'Nodes', path: '/nodes' },
-  { id: 'pods', label: 'Pods', path: '/pods' },
-  { id: 'deployments', label: 'Deployments', path: '/deployments' },
-  { id: 'services', label: 'Services', path: '/services' },
-  { id: 'namespaces', label: 'Namespaces', path: '/namespaces' },
-  { id: 'events', label: 'Events', path: '/events' },
-  { id: 'logs', label: 'Logs', path: '/logs' },
-  { id: 'metrics', label: 'Metrics', path: '/metrics' },
-  { id: 'autoscaling', label: 'Karpenter', path: '/autoscaling' },
-] as const
-
-// P3-014: providerIcon removed — replaced by ProviderLogo component with layoutId support
 
 export default function ClusterLayout({ children }: { children: React.ReactNode }) {
   const { id: routeSegment } = useParams<{ id: string }>()
@@ -39,7 +25,18 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
   const isClusterLoading = dbCluster.isLoading
   const isNotFound = !isClusterLoading && !dbCluster.data && dbCluster.error
 
-  // Keyboard shortcuts: 1–9 for tabs, [ and ] for prev/next
+  // Determine active tab from pathname
+  const getActiveTab = () => {
+    // Strip the /clusters/[id] prefix
+    const base = `/clusters/${clusterRouteSegment}`
+    const rest = pathname.replace(base, '')
+    if (!rest || rest === '/') return 'overview'
+    const segment = rest.replace(/^\//, '').split('/')[0]
+    return segment || 'overview'
+  }
+  const activeTab = getActiveTab()
+
+  // Keyboard shortcuts: [ and ] for prev/next tab
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       // Skip if user is typing in an input/textarea/contenteditable
@@ -54,49 +51,28 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
       // Skip if modifier keys are pressed
       if (e.metaKey || e.ctrlKey || e.altKey) return
 
-      const tabsCount = CLUSTER_TABS.length
-      const currentTabIndex = CLUSTER_TABS.findIndex((tab) => {
-        const base = `/clusters/${clusterRouteSegment}`
-        const rest = pathname.replace(base, '')
-        if (!rest || rest === '/') return tab.id === 'overview'
-        const segment = rest.replace(/^\//, '').split('/')[0]
-        return tab.id === (segment || 'overview')
-      })
+      if (e.key !== '[' && e.key !== ']') return
 
-      if (e.key >= '1' && e.key <= '9') {
-        const idx = Number(e.key) - 1
-        if (idx < tabsCount) {
-          e.preventDefault()
-          const tab = CLUSTER_TABS[idx]
-          if (tab) router.push(`/clusters/${clusterRouteSegment}${tab.path}`)
-        }
-      } else if (e.key === '[') {
+      const allTabs = getAllTabPaths()
+      const tabsCount = allTabs.length
+      const currentTabIndex = allTabs.findIndex((tab) => tab.id === activeTab)
+
+      if (e.key === '[') {
         e.preventDefault()
         const prevIdx = (currentTabIndex - 1 + tabsCount) % tabsCount
-        const tab = CLUSTER_TABS[prevIdx]
+        const tab = allTabs[prevIdx]
         if (tab) router.push(`/clusters/${clusterRouteSegment}${tab.path}`)
       } else if (e.key === ']') {
         e.preventDefault()
         const nextIdx = (currentTabIndex + 1) % tabsCount
-        const tab = CLUSTER_TABS[nextIdx]
+        const tab = allTabs[nextIdx]
         if (tab) router.push(`/clusters/${clusterRouteSegment}${tab.path}`)
       }
     }
 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [clusterRouteSegment, pathname, router])
-
-  // Determine active tab from pathname
-  const getActiveTab = () => {
-    // Strip the /clusters/[id] prefix
-    const base = `/clusters/${clusterRouteSegment}`
-    const rest = pathname.replace(base, '')
-    if (!rest || rest === '/') return 'overview'
-    const segment = rest.replace(/^\//, '').split('/')[0]
-    return segment || 'overview'
-  }
-  const activeTab = getActiveTab()
+  }, [clusterRouteSegment, activeTab, router])
 
   // Show "Cluster not found" page when cluster doesn't exist
   if (isNotFound) {
@@ -208,37 +184,8 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
         </div>
       </div>
 
-      {/* 10-Tab Bar */}
-      <div className="mb-3 border-b border-[var(--color-border)] overflow-x-auto">
-        <nav className="flex items-end gap-0 min-w-max" aria-label="Cluster tabs">
-          {CLUSTER_TABS.map((tab) => {
-            const isActive = activeTab === tab.id
-            const href = `/clusters/${clusterRouteSegment}${tab.path}`
-            return (
-              <Link
-                key={tab.id}
-                href={href}
-                data-testid={`cluster-tab-${tab.id}`}
-                className={`relative px-4 py-2.5 text-[13px] font-medium whitespace-nowrap transition-colors ${
-                  isActive
-                    ? 'text-[var(--color-text-primary)]'
-                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
-                }`}
-              >
-                {tab.label}
-                {/* Active tab underline with layoutId spring animation */}
-                {isActive && (
-                  <motion.div
-                    layoutId="cluster-tab-underline"
-                    className="absolute bottom-0 left-0 right-0 h-[3px] rounded-t-full bg-[var(--color-accent)]"
-                    transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-                  />
-                )}
-              </Link>
-            )
-          })}
-        </nav>
-      </div>
+      {/* Grouped Tab Bar */}
+      <GroupedTabBar clusterRouteSegment={clusterRouteSegment} activeTab={activeTab} />
 
       {/* Tab Content with AnimatePresence */}
       <AnimatePresence mode="wait">
