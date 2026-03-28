@@ -125,13 +125,13 @@ Plans:
 **Plans:** 8 plans
 
 Plans:
-- [ ] 08-01-PLAN.md -- Foundation: ExpandableCard controlled mode, ResourcePageScaffold, SearchFilterBar, NamespaceGroup
+- [x] 08-01-PLAN.md -- Foundation: ExpandableCard controlled mode, ResourcePageScaffold, SearchFilterBar, NamespaceGroup
 - [ ] 08-02-PLAN.md -- K8s Watch backend: ResourceWatchManager, SSE resource stream, client-side useResourceSSE hook in layout
 - [ ] 08-03-PLAN.md -- Tab redesign Set A: Deployments, Services, Ingresses, StatefulSets
 - [ ] 08-04-PLAN.md -- Tab redesign Set B: DaemonSets, Jobs, CronJobs, HPA
 - [ ] 08-05-PLAN.md -- Tab redesign Set C: ConfigMaps, Secrets, PVCs + Namespaces, Events, Pods expand-all
 - [ ] 08-06-PLAN.md -- Logs beautifier: LogViewer, LogLine, JsonRenderer, LogSearch, CSS log vars, page integration
-- [ ] 08-07-PLAN.md -- Nodes page light-mode fix: bar visibility, spacing, visual hierarchy
+- [x] 08-07-PLAN.md -- Nodes page light-mode fix: bar visibility, spacing, visual hierarchy
 - [ ] 08-08-PLAN.md -- Cross-resource navigation: RelatedPodsList, hyperlinks, pod->logs tab, mutation cache fix
 
 ### Phase 9: Lens-Inspired Power Features
