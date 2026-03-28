@@ -18,9 +18,10 @@ pnpm seed:admin       # seed admin user
 src/
 ├── server.ts              # Entry point (DO NOT add migrate() here)
 ├── trpc.ts                # Context, procedure definitions (public/protected/admin/authorized)
-├── routers/               # 28 tRPC routers (index.ts = registry)
-├── routes/                # Non-tRPC: ai-stream.ts (SSE), mcp.ts
-├── jobs/                  # Background: health-sync, alert-evaluator, metrics-history-collector, node-sync, event-sync
+├── routers/               # 38 tRPC routers (index.ts = registry)
+├── routes/                # Non-tRPC: ai-stream.ts (SSE), mcp.ts, metrics-stream.ts (SSE live metrics)
+├── jobs/                  # Background: health-sync, alert-evaluator, metrics-history-collector, node-sync, event-sync, deploy-smoke-test, metrics-stream-job
+├── config/                # Backend-only config (jobs.ts intervals, k8s.ts client pool)
 ├── services/              # Business logic (AI, anomaly detection)
 └── lib/                   # Core modules (no deps on routers/services)
     ├── cluster-client-pool.ts   # Lazy per-cluster K8s clients

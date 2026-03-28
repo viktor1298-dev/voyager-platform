@@ -17,14 +17,15 @@ pnpm lint             # biome check src/
 ```
 src/
 ├── app/                   # App Router pages (~30 routes)
-│   ├── clusters/[id]/     # Cluster detail (10 tabs: overview, nodes, pods, deployments, services, namespaces, events, logs, metrics, autoscaling)
+│   ├── clusters/[id]/     # Cluster detail (19 resources via GroupedTabBar: overview, nodes, pods, deployments, services, namespaces, events, logs, metrics, autoscaling + ingresses, statefulsets, daemonsets, jobs, cronjobs, hpa, configmaps, secrets, pvcs)
 │   ├── settings/          # Settings hub
 │   └── login/             # Auth page
 ├── components/            # 30+ UI components
 │   ├── Sidebar.tsx        # Main sidebar (6 nav items)
 │   ├── AppLayout.tsx      # App shell with auto-collapse
-│   ├── providers.tsx      # All providers (tRPC, theme, MotionConfig)
+│   ├── providers.tsx      # All providers (tRPC, theme, LazyMotion — no strict flag)
 │   ├── DataTable.tsx      # Reusable table component
+│   ├── expandable/        # ExpandableCard, ExpandableTableRow, DetailTabs, ResourceBar, ConditionsList, TagPills, DetailRow, DetailGrid
 │   ├── CommandPalette.tsx # cmdk command palette
 │   └── ...
 ├── lib/
@@ -42,6 +43,7 @@ src/
 - **State:** Zustand stores for UI state, TanStack Query for server state (via tRPC)
 - **Auth:** Better-Auth cookie session; `handleTRPCError()` redirects to `/login` on UNAUTHORIZED
 - **Animations:** Motion v12 — use constants from `animation-constants.ts`, not inline values. **Read `docs/DESIGN.md` before any UI/animation change** — it defines the "Confident & Expressive" (Style B) design standard for all hover states, card effects, button feedback, chart animations, and status indicators
+- **Metrics data:** Use `useMetricsData` hook exclusively — SSE for ≤15m ranges, tRPC for ≥30m. Never bypass with direct tRPC calls. Key infra: `useMetricsSSE` (connection), `CrosshairProvider` (synced hover), `metrics-buffer` (circular SSE buffer), `lttb` (downsampling)
 - **Navigation:** `router.push()` for cluster links (not `<a>` tags) — E2E tests must use `page.click()` + `waitForURL()`
 - **Sidebar items:** Dashboard, Clusters, Alerts, Events, Logs, Settings (6 total in `navigation.ts`)
 - **Routes not in sidebar:** `/ai`, `/dashboards`, `/anomalies`, `/karpenter`, `/system-health` — accessible via in-app links or direct URL
