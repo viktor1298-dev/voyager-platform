@@ -293,7 +293,7 @@ export function MetricsAreaChart({
     >
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart
-          key={`${range}-${activeMetrics.join('-')}-${data.length}`}
+          key={`${range}-${activeMetrics.join('-')}`}
           data={chartData}
           margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
         >
@@ -386,6 +386,7 @@ export function MetricsAreaChart({
                 activeDot={{ r: 4, strokeWidth: 0 }}
                 connectNulls={false}
                 isAnimationActive={false}
+                animationDuration={0}
               />
             )
           })}
