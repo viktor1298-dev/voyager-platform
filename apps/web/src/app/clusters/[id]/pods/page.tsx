@@ -399,7 +399,7 @@ function NamespacePodGroup({
         <div className="mt-1 space-y-0.5 pl-2">
           {pods.map((pod) => {
             const statusColor =
-              pod.status === 'Running'
+              pod.status === 'Running' || pod.status === 'Succeeded'
                 ? 'bg-[var(--color-status-active)]'
                 : pod.status === 'Pending'
                   ? 'bg-[var(--color-status-warning)]'

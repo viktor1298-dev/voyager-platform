@@ -58,7 +58,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 function StatusBadge({ status }: { status: string }) {
   const color =
-    status === 'Running'
+    status === 'Running' || status === 'Succeeded'
       ? 'var(--color-status-active)'
       : status === 'Pending'
         ? 'var(--color-status-warning)'
