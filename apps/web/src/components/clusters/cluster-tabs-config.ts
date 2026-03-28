@@ -11,6 +11,7 @@ import {
   Settings,
   Shield,
   TrendingUp,
+  Wrench,
 } from 'lucide-react'
 
 export interface StandaloneTab {
@@ -93,10 +94,14 @@ export const CLUSTER_TAB_ENTRIES: ClusterTabEntry[] = [
   },
   {
     type: 'group',
-    id: 'access',
-    label: 'Access',
-    icon: Shield,
-    children: [{ id: 'rbac', label: 'RBAC', path: '/rbac' }],
+    id: 'cluster-ops',
+    label: 'Cluster Ops',
+    icon: Wrench,
+    children: [
+      { id: 'helm', label: 'Helm', path: '/helm' },
+      { id: 'crds', label: 'CRDs', path: '/crds' },
+      { id: 'rbac', label: 'RBAC', path: '/rbac' },
+    ],
   },
 ]
 

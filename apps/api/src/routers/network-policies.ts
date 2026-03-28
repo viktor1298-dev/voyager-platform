@@ -46,7 +46,9 @@ export const networkPoliciesRouter = router({
 
         return response.items.map((np) => {
           const ingressRules = (np.spec?.ingress ?? []).map((rule) => ({
-            from: (rule.from ?? []).map(mapPeer),
+            from: (
+              ((rule as Record<string, unknown>).from as Array<Record<string, unknown>>) ?? []
+            ).map(mapPeer),
             ports: mapPorts(rule.ports),
           }))
 
