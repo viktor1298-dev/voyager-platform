@@ -156,16 +156,16 @@ Plans:
 **Plans:** 10 plans
 
 Plans:
-- [ ] 09-01-PLAN.md -- Foundation: dependencies, CSS tokens, animation variants, YamlViewer, universal YAML router
-- [ ] 09-02-PLAN.md -- GroupedTabBar extension, ActionToolbar, confirmation dialogs, PortForwardCopy
-- [ ] 09-03-PLAN.md -- ResourceDiff component, YAML+Diff tabs on all 13 resource pages
-- [ ] 09-04-PLAN.md -- Workload mutations (restart/scale/delete) backend + ActionToolbar wiring
-- [ ] 09-05-PLAN.md -- Pod terminal: WebSocket backend + xterm.js TerminalDrawer frontend
-- [ ] 09-06-PLAN.md -- Live log streaming: SSE backend + LogViewer follow mode enhancement
-- [ ] 09-07-PLAN.md -- Helm releases + CRD browser: backend routers + frontend pages
-- [ ] 09-08-PLAN.md -- RBAC viewer + Network Policies + Resource Quotas: backend routers + frontend pages
-- [ ] 09-09-PLAN.md -- Topology map + Network Policy graph: React Flow visualizations
-- [ ] 09-10-PLAN.md -- Events timeline swim lanes + Pod Exec button wiring
+- [x] 09-01-PLAN.md -- Foundation: Phase 9 dependencies, CSS tokens, animation variants, YamlViewer, universal YAML router
+- [ ] 09-02-PLAN.md
+- [ ] 09-03-PLAN.md
+- [ ] 09-04-PLAN.md
+- [ ] 09-05-PLAN.md
+- [ ] 09-06-PLAN.md
+- [ ] 09-07-PLAN.md
+- [ ] 09-08-PLAN.md
+- [ ] 09-09-PLAN.md
+- [ ] 09-10-PLAN.md
 
 ## Progress
 
@@ -180,5 +180,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9
 | 4. Push & Branch Cleanup | 2/2 | Complete | 2026-03-26 |
 | 5. GitHub Protection | 1/1 | Complete | 2026-03-26 |
 | 7. Performance Optimization | 1/1 | Complete | 2026-03-28 |
-| 8. Resource Explorer UX Overhaul | 0/8 | In Progress | - |
-| 9. Lens-Inspired Power Features | 0/10 | Not Started | - |
+| 8. Resource Explorer UX Overhaul | 8/8 | Complete | 2026-03-28 |
+| 9. Lens-Inspired Power Features | 1/10 | In Progress | - |
