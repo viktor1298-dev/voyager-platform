@@ -14,6 +14,7 @@ import { NodeResourceBreakdown } from './NodeResourceBreakdown'
 import { MetricsEmptyState } from './MetricsEmptyState'
 import { NodeMetricsTable } from './NodeMetricsTable'
 import { downsampleMetrics } from '@/lib/lttb'
+import { CrosshairProvider } from './CrosshairProvider'
 import { useMetricsPreferences } from '@/stores/metrics-preferences'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -276,37 +277,39 @@ export function MetricsTimeSeriesPanel({
           />
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {PANEL_METRICS.map((panel) => {
-            const activeMetrics = panel.metrics.filter((metric) => visibleSeries[metric])
-            if (activeMetrics.length === 0) return null
+        <CrosshairProvider>
+          <div className="grid gap-4 md:grid-cols-2">
+            {PANEL_METRICS.map((panel) => {
+              const activeMetrics = panel.metrics.filter((metric) => visibleSeries[metric])
+              if (activeMetrics.length === 0) return null
 
-            return (
-              <section
-                key={`${panel.id}-${range}-${activeMetrics.join('-')}`}
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4"
-              >
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                      {panel.title}
-                    </h4>
-                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                      {panel.description}
-                    </p>
+              return (
+                <section
+                  key={`${panel.id}-${range}-${activeMetrics.join('-')}`}
+                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4"
+                >
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                        {panel.title}
+                      </h4>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                        {panel.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                <MetricsAreaChart
-                  data={normalizedData}
-                  range={range}
-                  activeMetrics={activeMetrics}
-                  height={chartHeight}
-                />
-              </section>
-            )
-          })}
-        </div>
+                  <MetricsAreaChart
+                    data={normalizedData}
+                    range={range}
+                    activeMetrics={activeMetrics}
+                    height={chartHeight}
+                  />
+                </section>
+              )
+            })}
+          </div>
+        </CrosshairProvider>
       )}
 
       {/* MX-005: Per-node metrics table from nodeTimeSeries route (Dima's new route) */}

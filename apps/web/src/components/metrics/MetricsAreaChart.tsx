@@ -1,6 +1,6 @@
 'use client'
 
-import { useId } from 'react'
+import { useId, useCallback, memo } from 'react'
 import {
   AreaChart,
   Area,
@@ -12,6 +12,8 @@ import {
   ReferenceLine,
 } from 'recharts'
 import type { MetricsRange } from './TimeRangeSelector'
+import { useCrosshairOptional } from './CrosshairProvider'
+import { CrosshairCursor } from './CrosshairCursor'
 
 export interface MetricsDataPoint {
   timestamp: string
@@ -171,7 +173,7 @@ function getBucketWindowLabel(point?: MetricsDataPoint | null, fallbackLabel?: s
   return fallbackLabel ? (formatDateTime(fallbackLabel) ?? String(fallbackLabel)) : ''
 }
 
-function CustomTooltip({
+const CustomTooltip = memo(function CustomTooltip({
   active,
   payload,
   label,
@@ -213,7 +215,7 @@ function CustomTooltip({
       })}
     </div>
   )
-}
+})
 
 function CurrentValueBadge({
   data,
@@ -286,6 +288,24 @@ export function MetricsAreaChart({
   const gridLines = primaryConfig?.yAxis === 'percent' ? [25, 50, 75] : []
   const chartId = useId()
 
+  // Crosshair synchronization — returns null when not inside CrosshairProvider
+  const crosshair = useCrosshairOptional()
+  const crosshairSetPosition = crosshair?.setPosition
+  const crosshairClear = crosshair?.clear
+
+  const handleMouseMove = useCallback(
+    (state: { activeLabel?: string; chartX?: number }) => {
+      if (crosshairSetPosition && state.activeLabel) {
+        crosshairSetPosition(state.activeLabel, state.chartX ?? null)
+      }
+    },
+    [crosshairSetPosition],
+  )
+
+  const handleMouseLeave = useCallback(() => {
+    crosshairClear?.()
+  }, [crosshairClear])
+
   return (
     <div
       role="img"
@@ -296,6 +316,8 @@ export function MetricsAreaChart({
           key={`${range}-${activeMetrics.join('-')}`}
           data={chartData}
           margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
         >
           <defs>
             {activeMetrics.map((key) => {
@@ -368,7 +390,10 @@ export function MetricsAreaChart({
             />
           )}
 
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={crosshairSetPosition ? <CrosshairCursor height={height - 8} /> : undefined}
+          />
 
           {activeMetrics.map((key) => {
             const cfg = METRIC_CONFIG[key]
