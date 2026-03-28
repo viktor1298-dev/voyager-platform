@@ -14,7 +14,13 @@ const CommandPalette = dynamic(
   () => import('./CommandPalette').then((m) => ({ default: m.CommandPalette })),
   { ssr: false },
 )
+
+const TerminalDrawer = dynamic(
+  () => import('./terminal/TerminalDrawer').then((m) => ({ default: m.TerminalDrawer })),
+  { ssr: false },
+)
 import { KeyboardShortcuts } from './KeyboardShortcuts'
+import { TerminalProvider } from './terminal/terminal-context'
 
 /**
  * Sanitize a display name from the auth session.
@@ -80,23 +86,26 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <trpc.Provider client={trpcClient} queryClient={queryClient}>
             <QueryClientProvider client={queryClient}>
-              <AuthSessionSync />
-              {children}
-              <Toaster
-                position="bottom-right"
-                richColors
-                closeButton
-                toastOptions={{
-                  className: 'font-sans',
-                  style: {
-                    background: 'var(--color-bg-card)',
-                    border: '1px solid var(--color-border)',
-                    color: 'var(--color-text-primary)',
-                  },
-                }}
-              />
-              <CommandPalette />
-              <KeyboardShortcuts />
+              <TerminalProvider>
+                <AuthSessionSync />
+                {children}
+                <Toaster
+                  position="bottom-right"
+                  richColors
+                  closeButton
+                  toastOptions={{
+                    className: 'font-sans',
+                    style: {
+                      background: 'var(--color-bg-card)',
+                      border: '1px solid var(--color-border)',
+                      color: 'var(--color-text-primary)',
+                    },
+                  }}
+                />
+                <CommandPalette />
+                <TerminalDrawer />
+                <KeyboardShortcuts />
+              </TerminalProvider>
             </QueryClientProvider>
           </trpc.Provider>
         </ThemeProvider>

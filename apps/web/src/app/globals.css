@@ -265,6 +265,12 @@
 
   /* Error text token */
   --color-error-text: #f87171;
+
+  /* Terminal (xterm.js) */
+  --color-terminal-bg: #1a1b26;
+  --color-terminal-fg: #c0caf5;
+  --color-terminal-cursor: #c0caf5;
+  --color-terminal-selection: rgba(99, 110, 123, 0.4);
 }
 
 /* Light theme overrides */
@@ -370,6 +376,12 @@ html.light {
   --chart-4: #db2777;
   --chart-5: #0891b2;
   --color-error-text: #dc2626;
+
+  /* Terminal (xterm.js) — light mode uses a lighter dark panel */
+  --color-terminal-bg: #1e1e2e;
+  --color-terminal-fg: #d4d4d4;
+  --color-terminal-cursor: #d4d4d4;
+  --color-terminal-selection: rgba(99, 110, 123, 0.5);
 }
 
 @media (max-width: 768px) {
@@ -769,4 +781,16 @@ select:focus-visible,
   ::view-transition-new(root) {
     animation: none !important;
   }
+}
+
+/* xterm.js scrollbar styling */
+.xterm-viewport::-webkit-scrollbar {
+  width: 6px;
+}
+.xterm-viewport::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+.xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-hover);
 }
