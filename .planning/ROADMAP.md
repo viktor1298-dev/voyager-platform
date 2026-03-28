@@ -12,11 +12,13 @@ This roadmap takes the Voyager Platform monorepo from a diverged state (54 unmer
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Safety Net** - Create recovery tags, record branch tips, enable rerere before any mutations
-- [ ] **Phase 2: The Big Merge** - Merge 54 commits from feat/init-monorepo into main with conflict resolution and normalization
-- [ ] **Phase 3: Validation Gate** - Verify the merged codebase compiles, type-checks, and passes all unit tests
-- [ ] **Phase 4: Push & Branch Cleanup** - Push merged main to origin and delete all 27 stale remote branches
-- [ ] **Phase 5: GitHub Protection** - Set up branch protection and auto-delete to prevent future branch accumulation
+- [x] **Phase 1: Safety Net** - Create recovery tags, record branch tips, enable rerere before any mutations
+- [x] **Phase 2: The Big Merge** - Merge 54 commits from feat/init-monorepo into main with conflict resolution and normalization
+- [x] **Phase 3: Validation Gate** - Verify the merged codebase compiles, type-checks, and passes all unit tests
+- [x] **Phase 4: Push & Branch Cleanup** - Push merged main to origin and delete all 27 stale remote branches
+- [x] **Phase 5: GitHub Protection** - Set up branch protection and auto-delete to prevent future branch accumulation
+- [x] **Phase 7: Performance Optimization** - Chart rendering with LTTB downsampling, synchronized crosshair, debounced resize
+- [ ] **Phase 8: Resource Explorer UX Overhaul** - Unify resource tabs, expand all, real-time data, logs beautifier, cross-resource navigation
 
 ## Phase Details
 
@@ -106,10 +108,27 @@ Plans:
 Plans:
 - [x] 07-01-PLAN.md -- LTTB downsampling, crosshair sync, debounced resize
 
+### Phase 8: Resource Explorer UX Overhaul
+**Goal**: Unify all cluster resource tabs to match Pods design (namespace-grouped, search/filter, expand all/collapse all), add real-time data updates, log beautification, and cross-resource navigation with hyperlinks
+**Depends on**: Phase 7 (all prior phases complete)
+**Requirements**: UX-01 through UX-15 (defined during planning)
+**Success Criteria** (what must be TRUE):
+  1. All resource tabs (services, ingresses, statefulsets, daemonsets, jobs, cronjobs, hpa, configmaps, secrets, pvcs) use namespace-grouped card layout with search/filter bar matching Pods design
+  2. "Expand All / Collapse All" toggle works on every resource tab including Pods
+  3. Pod deletion and resource mutations trigger immediate UI updates via real-time data refresh (no manual refresh needed)
+  4. Logs tab has syntax highlighting, log level coloring, search/filter, timestamp parsing, and structured log formatting
+  5. Expanded resource detail panels include cross-resource tabs (pod→logs, deployment→pods, statefulset→pods, service→endpoints) with hyperlinks for navigation
+  6. Karpenter/autoscaling tab design unchanged
+  7. `pnpm build` and `pnpm typecheck` pass with 0 errors
+**Plans:** 0 plans
+
+Plans:
+(none yet)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -119,3 +138,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7
 | 4. Push & Branch Cleanup | 2/2 | Complete | 2026-03-26 |
 | 5. GitHub Protection | 1/1 | Complete | 2026-03-26 |
 | 7. Performance Optimization | 1/1 | Complete | 2026-03-28 |
+| 8. Resource Explorer UX Overhaul | 0/? | In Progress | - |
