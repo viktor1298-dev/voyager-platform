@@ -30,6 +30,9 @@ export const CACHE_KEYS = {
   /** Global deployments list cache (not cluster-scoped) */
   k8sDeploymentsListGlobal: () => 'k8s:deployments:list:v2',
 
+  k8sYaml: (clusterId: string, resourceType: string, name: string, ns?: string) =>
+    `k8s:yaml:${clusterId}:${resourceType}:${ns ?? 'cluster'}:${name}`,
+
   /** Prefix for all cache keys scoped to a cluster */
   k8sPrefix: (clusterId: string) => `k8s:${clusterId}`,
 

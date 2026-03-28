@@ -35,6 +35,7 @@ import { subscriptionsRouter } from './subscriptions.js'
 import { tokensRouter } from './tokens.js'
 import { usersRouter } from './users.js'
 import { webhooksRouter } from './webhooks.js'
+import { yamlRouter } from './yaml.js'
 
 export const appRouter = router({
   ai: aiRouter,
@@ -74,6 +75,7 @@ export const appRouter = router({
   statefulSets: statefulSetsRouter,
   namespaces: namespacesRouter,
   dashboardLayout: dashboardLayoutRouter,
+  yaml: yamlRouter,
 })
 
 export type AppRouter = typeof appRouter
