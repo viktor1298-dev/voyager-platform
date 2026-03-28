@@ -7,10 +7,12 @@ import { auditRouter } from './audit.js'
 import { authRouter } from './auth.js'
 import { authorizationRouter, teamsRouter } from './authorization.js'
 import { clustersRouter } from './clusters.js'
+import { daemonSetsRouter } from './daemonsets.js'
 import { dashboardRouter } from './dashboard.js'
 import { dashboardLayoutRouter } from './dashboard-layout.js'
 import { deploymentsRouter } from './deployments.js'
 import { eventsRouter } from './events.js'
+import { ingressesRouter } from './ingresses.js'
 import { featuresRouter } from './features.js'
 import { healthRouter } from './health.js'
 import { karpenterRouter } from './karpenter.js'
@@ -22,6 +24,7 @@ import { podsRouter } from './pods.js'
 import { presenceRouter } from './presence.js'
 import { servicesRouter } from './services.js'
 import { ssoRouter } from './sso.js'
+import { statefulSetsRouter } from './statefulsets.js'
 import { subscriptionsRouter } from './subscriptions.js'
 import { tokensRouter } from './tokens.js'
 import { usersRouter } from './users.js'
@@ -36,6 +39,7 @@ export const appRouter = router({
   auth: authRouter,
   authorization: authorizationRouter,
   clusters: clustersRouter,
+  daemonSets: daemonSetsRouter,
   deployments: deploymentsRouter,
   dashboard: dashboardRouter,
   health: healthRouter,
@@ -43,6 +47,7 @@ export const appRouter = router({
   pods: podsRouter,
   events: eventsRouter,
   features: featuresRouter,
+  ingresses: ingressesRouter,
   logs: logsRouter,
   metrics: metricsRouter,
   karpenter: karpenterRouter,
@@ -54,6 +59,7 @@ export const appRouter = router({
   tokens: tokensRouter,
   webhooks: webhooksRouter,
   services: servicesRouter,
+  statefulSets: statefulSetsRouter,
   namespaces: namespacesRouter,
   dashboardLayout: dashboardLayoutRouter,
 })
