@@ -23,11 +23,15 @@ import { karpenterRouter } from './karpenter.js'
 import { logsRouter } from './logs.js'
 import { metricsRouter } from './metrics.js'
 import { namespacesRouter } from './namespaces.js'
+import { crdsRouter } from './crds.js'
+import { helmRouter } from './helm.js'
 import { networkPoliciesRouter } from './network-policies.js'
 import { nodesRouter } from './nodes.js'
 import { podsRouter } from './pods.js'
 import { presenceRouter } from './presence.js'
 import { pvcsRouter } from './pvcs.js'
+import { rbacRouter } from './rbac.js'
+import { resourceQuotasRouter } from './resource-quotas.js'
 import { secretsRouter } from './secrets.js'
 import { servicesRouter } from './services.js'
 import { ssoRouter } from './sso.js'
@@ -37,6 +41,7 @@ import { tokensRouter } from './tokens.js'
 import { topologyRouter } from './topology.js'
 import { usersRouter } from './users.js'
 import { webhooksRouter } from './webhooks.js'
+import { yamlRouter } from './yaml.js'
 
 export const appRouter = router({
   ai: aiRouter,
@@ -78,6 +83,11 @@ export const appRouter = router({
   namespaces: namespacesRouter,
   networkPolicies: networkPoliciesRouter,
   dashboardLayout: dashboardLayoutRouter,
+  yaml: yamlRouter,
+  helm: helmRouter,
+  crds: crdsRouter,
+  rbac: rbacRouter,
+  resourceQuotas: resourceQuotasRouter,
 })
 
 export type AppRouter = typeof appRouter
