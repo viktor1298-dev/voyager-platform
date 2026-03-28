@@ -18,7 +18,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Push & Branch Cleanup** - Push merged main to origin and delete all 27 stale remote branches
 - [x] **Phase 5: GitHub Protection** - Set up branch protection and auto-delete to prevent future branch accumulation
 - [x] **Phase 7: Performance Optimization** - Chart rendering with LTTB downsampling, synchronized crosshair, debounced resize
-- [ ] **Phase 8: Resource Explorer UX Overhaul** - Unify resource tabs, expand all, real-time data, logs beautifier, cross-resource navigation
+- [ ] **Phase 8: Resource Explorer UX Overhaul** - Unify resource tabs, expand all, Lens-inspired real-time K8s Watch, logs beautifier, cross-resource navigation
+- [ ] **Phase 9: Lens-Inspired Power Features** - Pod exec, live log streaming, YAML viewer, restart/scale, Helm, events timeline, CRD browser, RBAC, network policies
 
 ## Phase Details
 
@@ -109,30 +110,58 @@ Plans:
 - [x] 07-01-PLAN.md -- LTTB downsampling, crosshair sync, debounced resize
 
 ### Phase 8: Resource Explorer UX Overhaul
-**Goal**: Unify all cluster resource tabs to match Pods design (namespace-grouped, search/filter, expand all/collapse all), add real-time data updates, log beautification, and cross-resource navigation with hyperlinks
+**Goal**: Unify all cluster resource tabs to match Pods design (namespace-grouped, search/filter, expand all/collapse all), add Lens-inspired real-time K8s Watch for ALL resource types, log beautification, cross-resource navigation with hyperlinks, and Nodes page light-mode fix
 **Depends on**: Phase 7 (all prior phases complete)
-**Requirements**: UX-01 through UX-15 (defined during planning)
+**Requirements**: UX-01 through UX-18 (defined during planning)
 **Success Criteria** (what must be TRUE):
-  1. All resource tabs (services, ingresses, statefulsets, daemonsets, jobs, cronjobs, hpa, configmaps, secrets, pvcs) use namespace-grouped card layout with search/filter bar matching Pods design
+  1. All resource tabs (deployments, services, ingresses, statefulsets, daemonsets, jobs, cronjobs, hpa, configmaps, secrets, pvcs) use namespace-grouped card layout with search/filter bar matching Pods design
   2. "Expand All / Collapse All" toggle works on every resource tab including Pods
-  3. Pod deletion and resource mutations trigger immediate UI updates via real-time data refresh (no manual refresh needed)
+  3. K8s Watch-based real-time updates for ALL resource types (Lens-inspired) — resources update within ~1s of cluster changes, per-user per-cluster reference-counted watchers
   4. Logs tab has syntax highlighting, log level coloring, search/filter, timestamp parsing, and structured log formatting
   5. Expanded resource detail panels include cross-resource tabs (pod->logs, deployment->pods, statefulset->pods, service->endpoints) with hyperlinks for navigation
-  6. Karpenter/autoscaling tab design unchanged
-  7. `pnpm build` and `pnpm typecheck` pass with 0 errors
-**Plans:** 5 plans
+  6. Nodes page light-mode visibility fixed (CPU/Memory bars, spacing, visual hierarchy)
+  7. Karpenter/autoscaling tab design unchanged
+  8. `pnpm build` and `pnpm typecheck` pass with 0 errors
+**Plans:** 8 plans
 
 Plans:
 - [ ] 08-01-PLAN.md -- Foundation: ExpandableCard controlled mode, ResourcePageScaffold, SearchFilterBar, NamespaceGroup
-- [ ] 08-02-PLAN.md -- Tab redesign Set A: Services, Ingresses, StatefulSets, DaemonSets, Jobs
-- [ ] 08-03-PLAN.md -- Tab redesign Set B: CronJobs, HPA, ConfigMaps, Secrets, PVCs + Namespaces, Events, Pods expand-all
-- [ ] 08-04-PLAN.md -- Logs beautifier: LogViewer, LogLine, JsonRenderer, LogSearch + page integration
-- [ ] 08-05-PLAN.md -- Cross-resource navigation: hyperlinks, RelatedPodsList, pod logs tab, mutation cache fix
+- [ ] 08-02-PLAN.md -- K8s Watch backend: ResourceWatchManager, SSE resource stream, client-side useResourceSSE hook in layout
+- [ ] 08-03-PLAN.md -- Tab redesign Set A: Deployments, Services, Ingresses, StatefulSets
+- [ ] 08-04-PLAN.md -- Tab redesign Set B: DaemonSets, Jobs, CronJobs, HPA
+- [ ] 08-05-PLAN.md -- Tab redesign Set C: ConfigMaps, Secrets, PVCs + Namespaces, Events, Pods expand-all
+- [ ] 08-06-PLAN.md -- Logs beautifier: LogViewer, LogLine, JsonRenderer, LogSearch, CSS log vars, page integration
+- [ ] 08-07-PLAN.md -- Nodes page light-mode fix: bar visibility, spacing, visual hierarchy
+- [ ] 08-08-PLAN.md -- Cross-resource navigation: RelatedPodsList, hyperlinks, pod->logs tab, mutation cache fix
+
+### Phase 9: Lens-Inspired Power Features
+**Goal**: Transform Voyager Platform into a full Lens-alternative with pod exec/terminal, live log streaming, YAML viewer, workload management (restart/scale), Helm releases, events timeline, resource diff, port forwarding, CRD browser, RBAC viewer, network policy visualization, and resource quotas dashboard. Update all existing features to be Lens-inspired with live data.
+**Depends on**: Phase 8
+**Requirements**: LENS-01 through LENS-14 (defined during planning)
+**Success Criteria** (what must be TRUE):
+  1. Web terminal into any pod via kubectl exec (xterm.js + WebSocket)
+  2. Real-time log streaming via SSE (not polling) with follow mode
+  3. Resource YAML/JSON viewer with syntax highlighting and copy
+  4. Restart (rollout restart) and scale (replica count) for Deployments/StatefulSets/DaemonSets from UI
+  5. Helm releases list with chart version, app version, status, values viewer, upgrade/rollback
+  6. Events timeline visualization (not just table)
+  7. Resource diff — compare current vs desired state
+  8. Pod port forwarding to browser-accessible temporary URL
+  9. CRD browser — view any custom resource generically
+  10. RBAC viewer — who can do what on which resources
+  11. Network policy map — visual graph of traffic flows
+  12. Resource quotas dashboard — namespace usage vs limits
+  13. All existing tabs updated to Lens-inspired design with live data
+  14. `pnpm build` and `pnpm typecheck` pass with 0 errors
+**Plans:** 0 plans
+
+Plans:
+(none yet)
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -142,4 +171,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8
 | 4. Push & Branch Cleanup | 2/2 | Complete | 2026-03-26 |
 | 5. GitHub Protection | 1/1 | Complete | 2026-03-26 |
 | 7. Performance Optimization | 1/1 | Complete | 2026-03-28 |
-| 8. Resource Explorer UX Overhaul | 0/5 | In Progress | - |
+| 8. Resource Explorer UX Overhaul | 0/8 | In Progress | - |
+| 9. Lens-Inspired Power Features | 0/? | Not Started | - |
