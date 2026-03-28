@@ -205,3 +205,68 @@ export const alertEntranceVariants = {
   },
   exit: { opacity: 0, x: 12, scale: 0.95, transition: { duration: DURATION.fast } },
 }
+
+// Dropdown menu (grouped tab bar)
+export const dropdownVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: -4 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { type: 'spring' as const, stiffness: 400, damping: 28 },
+  },
+  exit: { opacity: 0, scale: 0.95, y: -4, transition: { duration: 0.12, ease: EASING.exit } },
+} as const
+
+export const dropdownItemVariants = {
+  hidden: { opacity: 0, x: -4 },
+  visible: { opacity: 1, x: 0, transition: { duration: DURATION.fast, ease: EASING.default } },
+} as const
+
+// Expandable card/row
+export const expandVariants = {
+  collapsed: { height: 0, opacity: 0 },
+  expanded: {
+    height: 'auto',
+    opacity: 1,
+    transition: {
+      height: { type: 'spring' as const, stiffness: 350, damping: 24 },
+      opacity: { duration: DURATION.fast, delay: 0.05 },
+    },
+  },
+  exit: {
+    height: 0,
+    opacity: 0,
+    transition: {
+      height: { duration: DURATION.fast, ease: EASING.exit },
+      opacity: { duration: DURATION.instant },
+    },
+  },
+} as const
+
+export const chevronVariants = {
+  collapsed: { rotate: 0 },
+  expanded: { rotate: 180 },
+} as const
+
+// Detail tab content slide
+export const tabSlideLeftVariants = {
+  hidden: { opacity: 0, x: -8 },
+  visible: { opacity: 1, x: 0, transition: { duration: DURATION.fast, ease: EASING.default } },
+  exit: { opacity: 0, x: 8, transition: { duration: DURATION.instant, ease: EASING.exit } },
+} as const
+
+export const tabSlideRightVariants = {
+  hidden: { opacity: 0, x: 8 },
+  visible: { opacity: 1, x: 0, transition: { duration: DURATION.fast, ease: EASING.default } },
+  exit: { opacity: 0, x: -8, transition: { duration: DURATION.instant, ease: EASING.exit } },
+} as const
+
+// Resource bar fill animation
+export const resourceBarVariants = {
+  hidden: { width: 0 },
+  visible: (percent: number) => ({
+    width: `${percent}%`,
+    transition: { duration: 0.6, ease: EASING.decelerate },
+  }),
+} as const
