@@ -12,7 +12,7 @@ import {
   Server,
   Trash2,
 } from 'lucide-react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, ExpandableCard, ResourceBar } from '@/components/expandable'
 import { LogViewer } from '@/components/logs'
@@ -24,7 +24,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 interface ContainerData {
@@ -382,6 +382,8 @@ function NamespacePodGroup({
   onDeletePod,
   expandAll,
   clusterId,
+  highlightPodKey,
+  highlightRef,
 }: {
   namespace: string
   pods: PodData[]
@@ -389,6 +391,8 @@ function NamespacePodGroup({
   onDeletePod: (pod: PodData) => void
   expandAll: boolean
   clusterId: string
+  highlightPodKey: string | null
+  highlightRef: React.RefObject<HTMLDivElement | null>
 }) {
   const [open, setOpen] = useState(true)
 
@@ -407,15 +411,28 @@ function NamespacePodGroup({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-1 space-y-1 pl-2">
-          {pods.map((pod) => (
-            <ExpandableCard
-              key={`${pod.namespace}/${pod.name}`}
-              expanded={expandAll || undefined}
-              summary={<PodSummary pod={pod} isAdmin={isAdmin} onDeletePod={onDeletePod} />}
-            >
-              <PodDetail pod={pod} clusterId={clusterId} />
-            </ExpandableCard>
-          ))}
+          {pods.map((pod) => {
+            const podKey = `${pod.namespace}/${pod.name}`
+            const isHighlighted = highlightPodKey === podKey
+            return (
+              <div
+                key={podKey}
+                ref={isHighlighted ? highlightRef : undefined}
+                className={
+                  isHighlighted
+                    ? 'ring-2 ring-[var(--color-accent)] rounded-lg transition-all duration-500'
+                    : ''
+                }
+              >
+                <ExpandableCard
+                  expanded={expandAll || isHighlighted || undefined}
+                  summary={<PodSummary pod={pod} isAdmin={isAdmin} onDeletePod={onDeletePod} />}
+                >
+                  <PodDetail pod={pod} clusterId={clusterId} />
+                </ExpandableCard>
+              </div>
+            )
+          })}
         </div>
       </CollapsibleContent>
     </Collapsible>
@@ -459,6 +476,38 @@ export default function PodsPage() {
   const [deletePodTarget, setDeletePodTarget] = useState<PodData | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [expandAll, setExpandAll] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const highlightRef = useRef<HTMLDivElement>(null)
+
+  // Parse ?highlight={"name":"x","namespace":"y"} for cross-resource navigation
+  const highlightParam = searchParams.get('highlight')
+  const highlightPodKey = useMemo(() => {
+    if (!highlightParam) return null
+    try {
+      const target = JSON.parse(highlightParam) as Record<string, string>
+      if (target.name && target.namespace) return `${target.namespace}/${target.name}`
+      if (target.name) return target.name
+      return null
+    } catch {
+      return null
+    }
+  }, [highlightParam])
+
+  // Scroll to highlighted pod and clear param
+  useEffect(() => {
+    if (!highlightPodKey) return
+    const timer = setTimeout(() => {
+      highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setTimeout(() => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.delete('highlight')
+        const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname
+        router.replace(newUrl, { scroll: false })
+      }, 2000)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [highlightPodKey, searchParams, router])
 
   const pods = (podsQuery.data ?? []) as PodData[]
 
@@ -561,6 +610,8 @@ export default function PodsPage() {
               onDeletePod={setDeletePodTarget}
               expandAll={expandAll}
               clusterId={resolvedId}
+              highlightPodKey={highlightPodKey}
+              highlightRef={highlightRef}
             />
           ))}
         </div>
