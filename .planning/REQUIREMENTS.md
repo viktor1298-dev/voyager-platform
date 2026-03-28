@@ -54,9 +54,9 @@
 
 ### Performance
 
-- [ ] **PERF-01**: Charts handle 1000+ data points without jank (LTTB downsamples to ~200 visual points)
-- [ ] **PERF-02**: Crosshair synchronization throttled to prevent render cascades across 4 panels
-- [ ] **PERF-03**: ResponsiveContainer resize debounced to prevent layout thrashing
+- [x] **PERF-01**: Charts handle 1000+ data points without jank (LTTB downsamples to ~200 visual points)
+- [x] **PERF-02**: Crosshair synchronization throttled to prevent render cascades across 4 panels
+- [x] **PERF-03**: ResponsiveContainer resize debounced to prevent layout thrashing
 
 ## v2 Requirements
 
@@ -114,9 +114,9 @@
 | UX-03 | Phase 6 | Pending |
 | UX-04 | Phase 6 | Pending |
 | UX-05 | Phase 6 | Pending |
-| PERF-01 | Phase 7 | Pending |
-| PERF-02 | Phase 7 | Pending |
-| PERF-03 | Phase 7 | Pending |
+| PERF-01 | Phase 7 | Complete |
+| PERF-02 | Phase 7 | Complete |
+| PERF-03 | Phase 7 | Complete |
 
 **Coverage:**
 - v1 requirements: 33 total

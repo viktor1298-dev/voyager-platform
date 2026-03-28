@@ -92,15 +92,30 @@ Plans:
 Plans:
 - [x] 05-01-PLAN.md -- Branch protection rules and auto-delete of merged branches
 
+### Phase 7: Performance Optimization
+**Goal**: Chart rendering performs smoothly with 1000+ data points, synchronized crosshair without jank, and debounced resize handling
+**Depends on**: None (independent of phases 1-5)
+**Requirements**: PERF-01, PERF-02, PERF-03
+**Success Criteria** (what must be TRUE):
+  1. LTTB downsampling limits chart data points to ~200 for any dataset size
+  2. Crosshair synchronization across 4 panels uses throttled shared state
+  3. ResponsiveContainer resizes are debounced
+  4. `pnpm build` passes with 0 errors
+**Plans:** 1 plan
+
+Plans:
+- [x] 07-01-PLAN.md -- LTTB downsampling, crosshair sync, debounced resize
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Safety Net | 0/1 | Planning complete | - |
-| 2. The Big Merge | 0/3 | Planning complete | - |
-| 3. Validation Gate | 0/1 | Planning complete | - |
-| 4. Push & Branch Cleanup | 0/2 | Planning complete | - |
-| 5. GitHub Protection | 0/1 | Planning complete | - |
+| 1. Safety Net | 1/1 | Complete | 2026-03-26 |
+| 2. The Big Merge | 3/3 | Complete | 2026-03-26 |
+| 3. Validation Gate | 1/1 | Complete | 2026-03-26 |
+| 4. Push & Branch Cleanup | 2/2 | Complete | 2026-03-26 |
+| 5. GitHub Protection | 1/1 | Complete | 2026-03-26 |
+| 7. Performance Optimization | 1/1 | Complete | 2026-03-28 |
