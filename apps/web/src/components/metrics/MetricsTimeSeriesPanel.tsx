@@ -1,25 +1,23 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { trpc } from '@/lib/trpc'
-import { TimeRangeSelector, type ApiMetricsRange } from './TimeRangeSelector'
+import { TimeRangeSelector } from './TimeRangeSelector'
 import { AutoRefreshToggle } from './AutoRefreshToggle'
 import {
   MetricsAreaChart,
-  METRIC_CONFIG,
-  formatMetricValue,
   type MetricKey,
   type MetricsDataPoint,
   getMetricConfig,
 } from './MetricsAreaChart'
 import { NodeResourceBreakdown } from './NodeResourceBreakdown'
 import { MetricsEmptyState } from './MetricsEmptyState'
-import { DataFreshnessBadge } from './DataFreshnessBadge'
 import { NodeMetricsTable } from './NodeMetricsTable'
+import { downsampleMetrics } from '@/lib/lttb'
+import { CrosshairProvider } from './CrosshairProvider'
 import { useMetricsPreferences } from '@/stores/metrics-preferences'
-import { MetricsPanelSkeleton } from './MetricsPanelSkeleton'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { Maximize2, Minimize2 } from 'lucide-react'
 
 const LOADING_TIMEOUT_MS = 30_000
 
@@ -61,22 +59,10 @@ const PANEL_METRICS: Array<{
   },
 ]
 
+const DEFAULT_VISIBLE_SERIES: MetricKey[] = ['cpu', 'memory', 'networkIn', 'networkOut', 'pods']
+
 function normalizeHistory(data: MetricsDataPoint[] | undefined) {
   return data ?? []
-}
-
-/**
- * Get the latest non-null value for a metric from the data array.
- */
-function getLatestValue(data: MetricsDataPoint[], metricKey: MetricKey): string {
-  const cfg = METRIC_CONFIG[metricKey]
-  for (let i = data.length - 1; i >= 0; i--) {
-    const val = data[i][cfg.dataKey]
-    if (typeof val === 'number' && !Number.isNaN(val)) {
-      return formatMetricValue(metricKey, val)
-    }
-  }
-  return '\u2014'
 }
 
 export function MetricsTimeSeriesPanel({
@@ -84,65 +70,21 @@ export function MetricsTimeSeriesPanel({
   isLive = false,
   compact = false,
 }: MetricsTimeSeriesPanelProps) {
-  const {
-    range,
-    autoRefresh,
-    refreshInterval,
-    setRange,
-    setAutoRefresh,
-    setRefreshInterval,
-    setCustomRange,
-  } = useMetricsPreferences()
+  const { range, autoRefresh, refreshInterval, setRange, setAutoRefresh, setRefreshInterval } =
+    useMetricsPreferences()
 
-  // STYLE-02: Click-to-isolate legend state (per panel — null means show all)
-  const [isolatedSeries, setIsolatedSeries] = useState<MetricKey | null>(null)
-  const [hoveredSeries, setHoveredSeries] = useState<MetricKey | null>(null)
-
-  // UX-02: Pause-on-hover refs
-  const hoverPauseRef = useRef(false)
-  const wasAutoRefreshRef = useRef(false)
-  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const handleChartMouseEnter = useCallback(() => {
-    if (autoRefresh) {
-      wasAutoRefreshRef.current = true
-      setAutoRefresh(false)
-      hoverPauseRef.current = true
-    }
-    if (resumeTimerRef.current) {
-      clearTimeout(resumeTimerRef.current)
-      resumeTimerRef.current = null
-    }
-  }, [autoRefresh, setAutoRefresh])
-
-  const handleChartMouseLeave = useCallback(() => {
-    if (hoverPauseRef.current) {
-      resumeTimerRef.current = setTimeout(() => {
-        if (wasAutoRefreshRef.current) {
-          setAutoRefresh(true)
-        }
-        hoverPauseRef.current = false
-        wasAutoRefreshRef.current = false
-        resumeTimerRef.current = null
-      }, 1_000)
-    }
-  }, [setAutoRefresh])
-
-  // Clean up resume timer on unmount
-  useEffect(() => {
-    return () => {
-      if (resumeTimerRef.current) {
-        clearTimeout(resumeTimerRef.current)
-      }
-    }
-  }, [])
+  const [visibleSeries, setVisibleSeries] = useState<Record<MetricKey, boolean>>({
+    cpu: true,
+    memory: true,
+    networkIn: true,
+    networkOut: true,
+    pods: true,
+  })
 
   const refetchInterval = autoRefresh ? refreshInterval : false
 
-  const apiRange = range === 'custom' ? '24h' : (range as ApiMetricsRange)
-
   const historyQuery = trpc.metrics.history.useQuery(
-    { clusterId, range: apiRange },
+    { clusterId, range },
     {
       refetchInterval,
       staleTime: 30_000,
@@ -181,8 +123,18 @@ export function MetricsTimeSeriesPanel({
     }
   }, [isLoading])
 
+  useEffect(() => {
+    setVisibleSeries((prev) => {
+      const next = { ...prev }
+      for (const metric of DEFAULT_VISIBLE_SERIES) {
+        if (typeof next[metric] !== 'boolean') next[metric] = true
+      }
+      return next
+    })
+  }, [])
+
   const normalizedData = useMemo(
-    () => normalizeHistory((historyQuery.data as { data?: MetricsDataPoint[] } | undefined)?.data),
+    () => downsampleMetrics(normalizeHistory(historyQuery.data as MetricsDataPoint[] | undefined)),
     [historyQuery.data],
   )
 
@@ -192,17 +144,19 @@ export function MetricsTimeSeriesPanel({
     historyQuery.refetch()
   }
 
-  const [expandedPanel, setExpandedPanel] = useState<string | null>(null)
+  function toggleMetric(key: MetricKey) {
+    setVisibleSeries((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }))
+  }
 
-  const handleBrushZoom = useCallback(
-    (startTs: string, endTs: string) => {
-      setCustomRange(startTs, endTs)
-    },
-    [setCustomRange],
-  )
-
-  const chartHeight = expandedPanel ? 400 : compact ? 200 : 240
+  const chartHeight = compact ? 200 : 240
   const panelSkeletonHeight = compact ? 200 : 240
+  const hasAnyVisibleSeries = Object.values(visibleSeries).some(Boolean)
+  const noVisiblePanels = PANEL_METRICS.every((panel) =>
+    panel.metrics.every((metric) => !visibleSeries[metric]),
+  )
 
   return (
     <div className={cn('space-y-4', compact && 'space-y-3')}>
@@ -222,7 +176,6 @@ export function MetricsTimeSeriesPanel({
             </p>
           )}
         </div>
-        <DataFreshnessBadge dataUpdatedAt={historyQuery.dataUpdatedAt} autoRefresh={autoRefresh} />
         {!compact ? (
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex flex-col items-end gap-1">
@@ -249,6 +202,34 @@ export function MetricsTimeSeriesPanel({
         )}
       </div>
 
+      <div className="flex flex-wrap items-center gap-1.5">
+        {DEFAULT_VISIBLE_SERIES.map((metricKey) => {
+          const config = getMetricConfig(metricKey)
+          const active = visibleSeries[metricKey]
+          return (
+            <button
+              key={metricKey}
+              type="button"
+              onClick={() => toggleMetric(metricKey)}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-mono font-medium transition-all',
+                active
+                  ? 'border-transparent text-white'
+                  : 'border-[var(--color-border)] bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
+              )}
+              style={active ? { background: config.color, borderColor: config.color } : undefined}
+              aria-pressed={active}
+            >
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ background: active ? 'white' : config.color }}
+              />
+              {config.label}
+            </button>
+          )
+        })}
+      </div>
+
       {isError ? (
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
           <MetricsEmptyState
@@ -273,139 +254,62 @@ export function MetricsTimeSeriesPanel({
       ) : isLoading ? (
         <div className="grid gap-4 md:grid-cols-2">
           {PANEL_METRICS.map((panel) => (
-            <MetricsPanelSkeleton key={panel.id} height={panelSkeletonHeight} />
+            <div
+              key={panel.id}
+              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4"
+            >
+              <Skeleton className="mb-3 h-4 w-40 rounded" />
+              <Skeleton className="mb-2 h-3 w-56 rounded" />
+              <Skeleton className="w-full rounded-lg" style={{ height: panelSkeletonHeight }} />
+            </div>
           ))}
         </div>
       ) : normalizedData.length === 0 ? (
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
           <MetricsEmptyState status="empty" onRetry={handleRetry} />
         </div>
+      ) : !hasAnyVisibleSeries || noVisiblePanels ? (
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+          <MetricsEmptyState
+            status="empty"
+            message="No visible metrics"
+            detail="Enable at least one metric series above to render a panel."
+          />
+        </div>
       ) : (
-        <div
-          className={cn('grid gap-4', expandedPanel ? 'md:grid-cols-1' : 'md:grid-cols-2')}
-          onMouseEnter={handleChartMouseEnter}
-          onMouseLeave={handleChartMouseLeave}
-        >
-          {(expandedPanel
-            ? PANEL_METRICS.filter((p) => p.id === expandedPanel)
-            : PANEL_METRICS
-          ).map((panel) => {
-            // Compute activeMetrics from isolatedSeries state
-            const activeMetrics =
-              isolatedSeries && panel.metrics.includes(isolatedSeries)
-                ? [isolatedSeries]
-                : panel.metrics
+        <CrosshairProvider>
+          <div className="grid gap-4 md:grid-cols-2">
+            {PANEL_METRICS.map((panel) => {
+              const activeMetrics = panel.metrics.filter((metric) => visibleSeries[metric])
+              if (activeMetrics.length === 0) return null
 
-            // UX-04: Per-panel data availability check
-            const panelHasData = activeMetrics.some((metricKey) => {
-              const cfg = METRIC_CONFIG[metricKey]
-              return normalizedData.some((point) => {
-                const val = point[cfg.dataKey]
-                return typeof val === 'number' && !Number.isNaN(val)
-              })
-            })
-
-            return (
-              <section
-                key={panel.id}
-                className="rounded-xl border border-[var(--color-border)] p-3"
-                style={{ background: 'var(--color-panel-bg)' }}
-              >
-                {/* Grafana-style panel header: uppercase title left, current values right */}
-                <div className="mb-2 flex items-center justify-between gap-3 px-1">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-dim)]">
-                    {panel.title}
-                  </h4>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      {panel.metrics.map((metricKey) => {
-                        const cfg = getMetricConfig(metricKey)
-                        const latestValue = getLatestValue(normalizedData, metricKey)
-                        return (
-                          <span
-                            key={metricKey}
-                            className="font-mono text-sm font-semibold"
-                            style={{ color: cfg.color }}
-                          >
-                            {latestValue}
-                          </span>
-                        )
-                      })}
+              return (
+                <section
+                  key={`${panel.id}-${range}-${activeMetrics.join('-')}`}
+                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4"
+                >
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                        {panel.title}
+                      </h4>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                        {panel.description}
+                      </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setExpandedPanel(expandedPanel === panel.id ? null : panel.id)}
-                      className="rounded-md p-1 text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)] hover:bg-white/5"
-                      aria-label={expandedPanel === panel.id ? 'Collapse panel' : 'Expand panel'}
-                    >
-                      {expandedPanel === panel.id ? (
-                        <Minimize2 className="h-3.5 w-3.5" />
-                      ) : (
-                        <Maximize2 className="h-3.5 w-3.5" />
-                      )}
-                    </button>
                   </div>
-                </div>
 
-                {/* UX-04: Per-panel empty state when this panel has no data */}
-                {!panelHasData ? (
-                  <div className="flex items-center justify-center" style={{ height: chartHeight }}>
-                    <MetricsEmptyState
-                      compact
-                      status="empty"
-                      message={`No ${panel.title.toLowerCase()} data`}
-                      detail="Data may not be available for the selected time range."
-                      onRetry={handleRetry}
-                    />
-                  </div>
-                ) : (
                   <MetricsAreaChart
                     data={normalizedData}
                     range={range}
                     activeMetrics={activeMetrics}
                     height={chartHeight}
-                    syncId="metrics-sync"
-                    showThresholds={panel.id === 'cpu' || panel.id === 'memory'}
-                    onBrushChange={handleBrushZoom}
                   />
-                )}
-
-                {/* STYLE-02: Interactive legend with click-to-isolate */}
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 px-1">
-                  {panel.metrics.map((metricKey) => {
-                    const cfg = getMetricConfig(metricKey)
-                    const isIsolated = isolatedSeries === metricKey
-                    const isDimmed = isolatedSeries !== null && !isIsolated
-                    const latestValue = getLatestValue(normalizedData, metricKey)
-
-                    return (
-                      <button
-                        key={metricKey}
-                        type="button"
-                        onClick={() => {
-                          setIsolatedSeries(isolatedSeries === metricKey ? null : metricKey)
-                        }}
-                        onMouseEnter={() => setHoveredSeries(metricKey)}
-                        onMouseLeave={() => setHoveredSeries(null)}
-                        className="legend-item flex items-center gap-1.5 rounded px-1.5 py-0.5 text-xs font-mono transition-opacity"
-                        style={{ opacity: isDimmed ? 0.3 : 1 }}
-                      >
-                        <span
-                          className="inline-block h-2 w-2 rounded-full"
-                          style={{ background: cfg.color }}
-                        />
-                        <span className="text-[var(--color-text-muted)]">{cfg.label}</span>
-                        <span className="font-medium text-[var(--color-text-primary)]">
-                          {latestValue}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </section>
-            )
-          })}
-        </div>
+                </section>
+              )
+            })}
+          </div>
+        </CrosshairProvider>
       )}
 
       {/* MX-005: Per-node metrics table from nodeTimeSeries route (Dima's new route) */}

@@ -15,48 +15,48 @@
 
 ### SSE Real-Time Streaming
 
-- [x] **SSE-01**: Dedicated Fastify SSE endpoint streams live K8s metrics for short ranges (≤15m) at 10-15s resolution
-- [x] **SSE-02**: MetricsStreamJob polls K8s metrics-server only for clusters with active SSE subscribers (reference-counted)
-- [x] **SSE-03**: SSE connection auto-reconnects with exponential backoff on disconnect
-- [x] **SSE-04**: Visibility-aware SSE lifecycle — pauses streaming when browser tab is hidden, resumes on focus
-- [x] **SSE-05**: Client-side circular buffer (max 65 points) manages live data with time-based eviction
+- [ ] **SSE-01**: Dedicated Fastify SSE endpoint streams live K8s metrics for short ranges (≤15m) at 10-15s resolution
+- [ ] **SSE-02**: MetricsStreamJob polls K8s metrics-server only for clusters with active SSE subscribers (reference-counted)
+- [ ] **SSE-03**: SSE connection auto-reconnects with exponential backoff on disconnect
+- [ ] **SSE-04**: Visibility-aware SSE lifecycle — pauses streaming when browser tab is hidden, resumes on focus
+- [ ] **SSE-05**: Client-side circular buffer (max 65 points) manages live data with time-based eviction
 
 ### Time Range Controls
 
-- [x] **TIME-01**: Time range selector offers Grafana-standard presets: 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d
-- [x] **TIME-02**: Custom absolute date/time range picker (from/to datetime) for arbitrary windows
-- [x] **TIME-03**: Selected time range persisted in Zustand store (localStorage) across page navigations
-- [x] **TIME-04**: Data source switches automatically — SSE for ≤15m, DB for ≥30m — seamless to user
+- [ ] **TIME-01**: Time range selector offers Grafana-standard presets: 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h, 2d, 7d
+- [ ] **TIME-02**: Custom absolute date/time range picker (from/to datetime) for arbitrary windows
+- [ ] **TIME-03**: Selected time range persisted in Zustand store (localStorage) across page navigations
+- [ ] **TIME-04**: Data source switches automatically — SSE for ≤15m, DB for ≥30m — seamless to user
 
 ### Synchronized Visualization
 
-- [x] **VIZ-01**: 4 panels (CPU, Memory, Network, Pods) display synchronized crosshair — hover one, all show same timestamp
-- [x] **VIZ-02**: Custom crosshair cursor renders as vertical line across full chart height with timestamp label
-- [x] **VIZ-03**: Brush zoom — user can drag-to-select a time region to zoom into that range
-- [x] **VIZ-04**: Threshold reference lines on CPU/Memory panels (85% critical red, 65% warning yellow)
-- [x] **VIZ-05**: Panel fullscreen expand — click to expand any panel to full-width detail view
+- [ ] **VIZ-01**: 4 panels (CPU, Memory, Network, Pods) display synchronized crosshair — hover one, all show same timestamp
+- [ ] **VIZ-02**: Custom crosshair cursor renders as vertical line across full chart height with timestamp label
+- [ ] **VIZ-03**: Brush zoom — user can drag-to-select a time region to zoom into that range
+- [ ] **VIZ-04**: Threshold reference lines on CPU/Memory panels (85% critical red, 65% warning yellow)
+- [ ] **VIZ-05**: Panel fullscreen expand — click to expand any panel to full-width detail view
 
 ### Grafana-Style Visual Design
 
-- [x] **STYLE-01**: Dark panel backgrounds with subtle grid lines, crisp mono-spaced axis labels, compact density
-- [x] **STYLE-02**: Interactive legend — click series name to isolate/toggle visibility, hover to highlight
-- [x] **STYLE-03**: Y-axis auto-scale based on actual data range (not fixed 0-100% for all panels)
-- [x] **STYLE-04**: Range-adaptive X-axis formatting (HH:MM:SS for minutes, HH:MM for hours, Mon Day for days)
-- [x] **STYLE-05**: Grafana-style tooltip with bucket window, precise values, color-coded series indicators
+- [ ] **STYLE-01**: Dark panel backgrounds with subtle grid lines, crisp mono-spaced axis labels, compact density
+- [ ] **STYLE-02**: Interactive legend — click series name to isolate/toggle visibility, hover to highlight
+- [ ] **STYLE-03**: Y-axis auto-scale based on actual data range (not fixed 0-100% for all panels)
+- [ ] **STYLE-04**: Range-adaptive X-axis formatting (HH:MM:SS for minutes, HH:MM for hours, Mon Day for days)
+- [ ] **STYLE-05**: Grafana-style tooltip with bucket window, precise values, color-coded series indicators
 
 ### Data Freshness & UX
 
-- [x] **UX-01**: Data freshness badge shows 'Live' / '2m ago' / 'Stale' with color coding
-- [x] **UX-02**: Pause-on-hover — auto-refresh freezes while user inspects tooltip, resumes on mouse leave
-- [x] **UX-03**: Loading states use skeleton shimmer per panel (not full-page spinner)
-- [x] **UX-04**: Empty/error states show actionable messages with retry button per panel
-- [x] **UX-05**: Fix MetricsAreaChart key-prop remount bug (remove `data.length` from key)
+- [ ] **UX-01**: Data freshness badge shows 'Live' / '2m ago' / 'Stale' with color coding
+- [ ] **UX-02**: Pause-on-hover — auto-refresh freezes while user inspects tooltip, resumes on mouse leave
+- [ ] **UX-03**: Loading states use skeleton shimmer per panel (not full-page spinner)
+- [ ] **UX-04**: Empty/error states show actionable messages with retry button per panel
+- [ ] **UX-05**: Fix MetricsAreaChart key-prop remount bug (remove `data.length` from key)
 
 ### Performance
 
-- [ ] **PERF-01**: Charts handle 1000+ data points without jank (LTTB downsamples to ~200 visual points)
-- [ ] **PERF-02**: Crosshair synchronization throttled to prevent render cascades across 4 panels
-- [ ] **PERF-03**: ResponsiveContainer resize debounced to prevent layout thrashing
+- [x] **PERF-01**: Charts handle 1000+ data points without jank (LTTB downsamples to ~200 visual points)
+- [x] **PERF-02**: Crosshair synchronization throttled to prevent render cascades across 4 panels
+- [x] **PERF-03**: ResponsiveContainer resize debounced to prevent layout thrashing
 
 ## v2 Requirements
 
@@ -90,33 +90,33 @@
 | PIPE-03 | Phase 1 | Pending |
 | PIPE-04 | Phase 1 | Pending |
 | PIPE-05 | Phase 1 | Pending |
-| SSE-01 | Phase 2 | Complete |
-| SSE-02 | Phase 2 | Complete |
-| SSE-03 | Phase 2 | Complete |
-| SSE-04 | Phase 2 | Complete |
-| SSE-05 | Phase 2 | Complete |
-| TIME-01 | Phase 3 | Complete |
-| TIME-02 | Phase 3 | Complete |
-| TIME-03 | Phase 3 | Complete |
-| TIME-04 | Phase 3 | Complete |
-| VIZ-01 | Phase 4 | Complete |
-| VIZ-02 | Phase 4 | Complete |
-| VIZ-03 | Phase 4 | Complete |
-| VIZ-04 | Phase 4 | Complete |
-| VIZ-05 | Phase 4 | Complete |
-| STYLE-01 | Phase 5 | Complete |
-| STYLE-02 | Phase 5 | Complete |
-| STYLE-03 | Phase 5 | Complete |
-| STYLE-04 | Phase 5 | Complete |
-| STYLE-05 | Phase 5 | Complete |
-| UX-01 | Phase 6 | Complete |
-| UX-02 | Phase 6 | Complete |
-| UX-03 | Phase 6 | Complete |
-| UX-04 | Phase 6 | Complete |
-| UX-05 | Phase 6 | Complete |
-| PERF-01 | Phase 7 | Pending |
-| PERF-02 | Phase 7 | Pending |
-| PERF-03 | Phase 7 | Pending |
+| SSE-01 | Phase 2 | Pending |
+| SSE-02 | Phase 2 | Pending |
+| SSE-03 | Phase 2 | Pending |
+| SSE-04 | Phase 2 | Pending |
+| SSE-05 | Phase 2 | Pending |
+| TIME-01 | Phase 3 | Pending |
+| TIME-02 | Phase 3 | Pending |
+| TIME-03 | Phase 3 | Pending |
+| TIME-04 | Phase 3 | Pending |
+| VIZ-01 | Phase 4 | Pending |
+| VIZ-02 | Phase 4 | Pending |
+| VIZ-03 | Phase 4 | Pending |
+| VIZ-04 | Phase 4 | Pending |
+| VIZ-05 | Phase 4 | Pending |
+| STYLE-01 | Phase 5 | Pending |
+| STYLE-02 | Phase 5 | Pending |
+| STYLE-03 | Phase 5 | Pending |
+| STYLE-04 | Phase 5 | Pending |
+| STYLE-05 | Phase 5 | Pending |
+| UX-01 | Phase 6 | Pending |
+| UX-02 | Phase 6 | Pending |
+| UX-03 | Phase 6 | Pending |
+| UX-04 | Phase 6 | Pending |
+| UX-05 | Phase 6 | Pending |
+| PERF-01 | Phase 7 | Complete |
+| PERF-02 | Phase 7 | Complete |
+| PERF-03 | Phase 7 | Complete |
 
 **Coverage:**
 - v1 requirements: 33 total
