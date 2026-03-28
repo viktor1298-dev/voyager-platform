@@ -17,7 +17,7 @@ import { MetricsEmptyState } from './MetricsEmptyState'
 import { DataFreshnessBadge } from './DataFreshnessBadge'
 import { NodeMetricsTable } from './NodeMetricsTable'
 import { useMetricsPreferences } from '@/stores/metrics-preferences'
-import { Skeleton } from '@/components/ui/skeleton'
+import { MetricsPanelSkeleton } from './MetricsPanelSkeleton'
 import { cn } from '@/lib/utils'
 import { Maximize2, Minimize2 } from 'lucide-react'
 
@@ -273,14 +273,7 @@ export function MetricsTimeSeriesPanel({
       ) : isLoading ? (
         <div className="grid gap-4 md:grid-cols-2">
           {PANEL_METRICS.map((panel) => (
-            <div
-              key={panel.id}
-              className="rounded-xl border border-[var(--color-border)] p-4"
-              style={{ background: 'var(--color-panel-bg)' }}
-            >
-              <Skeleton className="mb-3 h-4 w-40 rounded" />
-              <Skeleton className="w-full rounded-lg" style={{ height: panelSkeletonHeight }} />
-            </div>
+            <MetricsPanelSkeleton key={panel.id} height={panelSkeletonHeight} />
           ))}
         </div>
       ) : normalizedData.length === 0 ? (
@@ -302,6 +295,15 @@ export function MetricsTimeSeriesPanel({
               isolatedSeries && panel.metrics.includes(isolatedSeries)
                 ? [isolatedSeries]
                 : panel.metrics
+
+            // UX-04: Per-panel data availability check
+            const panelHasData = activeMetrics.some((metricKey) => {
+              const cfg = METRIC_CONFIG[metricKey]
+              return normalizedData.some((point) => {
+                const val = point[cfg.dataKey]
+                return typeof val === 'number' && !Number.isNaN(val)
+              })
+            })
 
             return (
               <section
@@ -345,15 +347,28 @@ export function MetricsTimeSeriesPanel({
                   </div>
                 </div>
 
-                <MetricsAreaChart
-                  data={normalizedData}
-                  range={range}
-                  activeMetrics={activeMetrics}
-                  height={chartHeight}
-                  syncId="metrics-sync"
-                  showThresholds={panel.id === 'cpu' || panel.id === 'memory'}
-                  onBrushChange={handleBrushZoom}
-                />
+                {/* UX-04: Per-panel empty state when this panel has no data */}
+                {!panelHasData ? (
+                  <div className="flex items-center justify-center" style={{ height: chartHeight }}>
+                    <MetricsEmptyState
+                      compact
+                      status="empty"
+                      message={`No ${panel.title.toLowerCase()} data`}
+                      detail="Data may not be available for the selected time range."
+                      onRetry={handleRetry}
+                    />
+                  </div>
+                ) : (
+                  <MetricsAreaChart
+                    data={normalizedData}
+                    range={range}
+                    activeMetrics={activeMetrics}
+                    height={chartHeight}
+                    syncId="metrics-sync"
+                    showThresholds={panel.id === 'cpu' || panel.id === 'memory'}
+                    onBrushChange={handleBrushZoom}
+                  />
+                )}
 
                 {/* STYLE-02: Interactive legend with click-to-isolate */}
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 px-1">

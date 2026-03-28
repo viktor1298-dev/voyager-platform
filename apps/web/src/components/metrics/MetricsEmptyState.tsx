@@ -14,6 +14,8 @@ interface MetricsEmptyStateProps {
   detail?: string | null
   /** Retry callback — shows a retry button when provided */
   onRetry?: () => void
+  /** Compact mode for in-panel usage (smaller padding, no large icon) */
+  compact?: boolean
 }
 
 export function MetricsEmptyState({
@@ -21,6 +23,7 @@ export function MetricsEmptyState({
   status = 'loading',
   detail,
   onRetry,
+  compact = false,
 }: MetricsEmptyStateProps) {
   const isError = status === 'error' || status === 'unavailable'
 
@@ -31,25 +34,38 @@ export function MetricsEmptyState({
     : 'Metrics will appear as data is collected from the cluster'
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4">
-      <div className="relative flex items-center justify-center">
-        {isError ? (
-          <div className="relative flex items-center justify-center h-14 w-14 rounded-full bg-[var(--color-status-error,hsl(0,72%,51%))]/15 border border-[var(--color-status-error,hsl(0,72%,51%))]/30">
-            <AlertTriangle className="h-6 w-6 text-[var(--color-status-error,hsl(0,72%,51%))]" />
-          </div>
-        ) : (
-          <>
-            <div className="absolute h-20 w-20 rounded-full bg-[var(--color-chart-cpu)]/10 animate-ping [animation-duration:2s]" />
-            <div className="relative flex items-center justify-center h-14 w-14 rounded-full bg-[var(--color-chart-cpu)]/15 border border-[var(--color-chart-cpu)]/30">
-              <Activity className="h-6 w-6 text-[var(--color-chart-cpu)]" />
+    <div
+      className={cn('flex flex-col items-center justify-center gap-4', compact ? 'py-8' : 'py-16')}
+    >
+      {compact ? (
+        <div className="flex items-center justify-center">
+          {isError ? (
+            <AlertTriangle className="h-4 w-4 text-[var(--color-status-error,hsl(0,72%,51%))]" />
+          ) : (
+            <Activity className="h-4 w-4 text-[var(--color-chart-cpu)]" />
+          )}
+        </div>
+      ) : (
+        <div className="relative flex items-center justify-center">
+          {isError ? (
+            <div className="relative flex items-center justify-center h-14 w-14 rounded-full bg-[var(--color-status-error,hsl(0,72%,51%))]/15 border border-[var(--color-status-error,hsl(0,72%,51%))]/30">
+              <AlertTriangle className="h-6 w-6 text-[var(--color-status-error,hsl(0,72%,51%))]" />
             </div>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <div className="absolute h-20 w-20 rounded-full bg-[var(--color-chart-cpu)]/10 animate-ping [animation-duration:2s]" />
+              <div className="relative flex items-center justify-center h-14 w-14 rounded-full bg-[var(--color-chart-cpu)]/15 border border-[var(--color-chart-cpu)]/30">
+                <Activity className="h-6 w-6 text-[var(--color-chart-cpu)]" />
+              </div>
+            </>
+          )}
+        </div>
+      )}
       <div className="text-center max-w-sm">
         <p
           className={cn(
-            'text-sm font-medium',
+            'font-medium',
+            compact ? 'text-xs' : 'text-sm',
             isError
               ? 'text-[var(--color-status-error,hsl(0,72%,51%))]'
               : 'text-[var(--color-text-primary)]',
@@ -57,7 +73,11 @@ export function MetricsEmptyState({
         >
           {message ?? defaultMessage}
         </p>
-        <p className="text-xs text-[var(--color-text-muted)] mt-1">{detail ?? defaultDetail}</p>
+        <p
+          className={cn('text-[var(--color-text-muted)] mt-1', compact ? 'text-[10px]' : 'text-xs')}
+        >
+          {detail ?? defaultDetail}
+        </p>
       </div>
       {onRetry && (
         <button
