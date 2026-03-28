@@ -91,7 +91,7 @@ Plans:
   5. Tooltip shows bucket time window, precise values for each series, and color-coded series indicators
 **Plans:** 1 plan
 Plans:
-- [ ] 05-01-PLAN.md — Dark panel styling, Grafana tooltip, Y-axis auto-scale, interactive legend, panel header redesign
+- [x] 05-01-PLAN.md — Dark panel styling, Grafana tooltip, Y-axis auto-scale, interactive legend, panel header redesign
 **UI hint**: yes
 
 ### Phase 6: Data Freshness & UX Polish

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-27T23:56:38.420Z"
-last_activity: 2026-03-27 -- Phase 05 execution started
+status: verifying
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-28T00:03:08.613Z"
+last_activity: 2026-03-28
 progress:
   total_phases: 7
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
   percent: 57
 ---
 
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 
 Phase: 05 (grafana-dark-panel-design) — EXECUTING
 Plan: 1 of 1
-Status: Executing Phase 05
-Last activity: 2026-03-27 -- Phase 05 execution started
+Status: Phase complete — ready for verification
+Last activity: 2026-03-28
 
 Progress: [=====.....] 57%
 
@@ -61,6 +61,7 @@ Progress: [=====.....] 57%
 | Phase 04 P02 | 2min | 2 tasks | 1 files |
 | Phase 05 P01 | 2min | 2 tasks | 0 files |
 | MGR Phase 04 P01 | 4min | 2 tasks | 3 files |
+| Phase 05 P01 | 5min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Branch protection: PR required (0 approvals), force push blocked, deletion blocked, enforce_admins=false for admin bypass
 - [MGR Phase 04]: Used Recharts syncId for crosshair sync (simpler than custom Zustand/ref; Phase 7 can optimize)
 - [MGR Phase 04]: Added setCustomRange to metrics-preferences store (was missing, needed for brush zoom)
+- [Phase 05]: Removed CurrentValueBadge and top-level toggle bar -- replaced by per-panel click-to-isolate legend and Grafana-style panel header with current values
+- [Phase 05]: Added 4 new CSS variables (panel-bg, panel-bg-inner, tooltip-bg, tooltip-border) for dedicated panel/tooltip theming in both dark and light modes
 
 ### Pending Todos
 
@@ -102,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T23:44:20Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-03-28T00:03:08.610Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None

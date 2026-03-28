@@ -38,11 +38,11 @@
 
 ### Grafana-Style Visual Design
 
-- [ ] **STYLE-01**: Dark panel backgrounds with subtle grid lines, crisp mono-spaced axis labels, compact density
-- [ ] **STYLE-02**: Interactive legend — click series name to isolate/toggle visibility, hover to highlight
-- [ ] **STYLE-03**: Y-axis auto-scale based on actual data range (not fixed 0-100% for all panels)
-- [ ] **STYLE-04**: Range-adaptive X-axis formatting (HH:MM:SS for minutes, HH:MM for hours, Mon Day for days)
-- [ ] **STYLE-05**: Grafana-style tooltip with bucket window, precise values, color-coded series indicators
+- [x] **STYLE-01**: Dark panel backgrounds with subtle grid lines, crisp mono-spaced axis labels, compact density
+- [x] **STYLE-02**: Interactive legend — click series name to isolate/toggle visibility, hover to highlight
+- [x] **STYLE-03**: Y-axis auto-scale based on actual data range (not fixed 0-100% for all panels)
+- [x] **STYLE-04**: Range-adaptive X-axis formatting (HH:MM:SS for minutes, HH:MM for hours, Mon Day for days)
+- [x] **STYLE-05**: Grafana-style tooltip with bucket window, precise values, color-coded series indicators
 
 ### Data Freshness & UX
 
@@ -104,11 +104,11 @@
 | VIZ-03 | Phase 4 | Complete |
 | VIZ-04 | Phase 4 | Complete |
 | VIZ-05 | Phase 4 | Complete |
-| STYLE-01 | Phase 5 | Pending |
-| STYLE-02 | Phase 5 | Pending |
-| STYLE-03 | Phase 5 | Pending |
-| STYLE-04 | Phase 5 | Pending |
-| STYLE-05 | Phase 5 | Pending |
+| STYLE-01 | Phase 5 | Complete |
+| STYLE-02 | Phase 5 | Complete |
+| STYLE-03 | Phase 5 | Complete |
+| STYLE-04 | Phase 5 | Complete |
+| STYLE-05 | Phase 5 | Complete |
 | UX-01 | Phase 6 | Pending |
 | UX-02 | Phase 6 | Pending |
 | UX-03 | Phase 6 | Pending |
