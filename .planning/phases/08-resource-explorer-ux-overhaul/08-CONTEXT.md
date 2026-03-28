@@ -8,9 +8,9 @@
 
 Unify all cluster resource tabs to match the Pods tab design pattern (namespace-grouped cards, search/filter bar, expand all/collapse all), add real-time data updates after mutations, beautify the logs viewer, and add cross-resource navigation with hyperlinks between related resources. This phase delivers 5 connected capabilities that together transform the resource explorer from a collection of disconnected table views into a cohesive, navigable K8s operations dashboard.
 
-**In scope:** Services, Ingresses, StatefulSets, DaemonSets, Jobs, CronJobs, HPA, ConfigMaps, Secrets, PVCs, Namespaces, Events tab redesign; Pods tab expand-all enhancement; logs viewer beautification; real-time data refresh; cross-resource hyperlinks.
+**In scope:** Services, Ingresses, StatefulSets, DaemonSets, Deployments, Jobs, CronJobs, HPA, ConfigMaps, Secrets, PVCs, Namespaces, Events tab redesign; Pods tab expand-all enhancement; Nodes page light-mode/spacing fix; logs viewer beautification; full K8s Watch-based real-time data for ALL resource types; cross-resource hyperlinks.
 
-**Out of scope:** Karpenter/autoscaling tab (already good, special design), Nodes tab (unique design with metrics), Overview tab, Metrics tab.
+**Out of scope:** Karpenter/autoscaling tab (already good, special design), Overview tab, Metrics tab. Lens power features (exec, helm, YAML viewer, etc.) deferred to Phase 9.
 
 </domain>
 
@@ -18,7 +18,7 @@ Unify all cluster resource tabs to match the Pods tab design pattern (namespace-
 ## Implementation Decisions
 
 ### D-01: Tab Redesign — Namespace-Grouped Card Layout
-All namespaced resource tabs (services, ingresses, statefulsets, daemonsets, jobs, cronjobs, hpa, configmaps, secrets, pvcs) will be converted from the current ExpandableTableRow table layout to the Pods-style design:
+All namespaced resource tabs (services, ingresses, statefulsets, daemonsets, **deployments**, jobs, cronjobs, hpa, configmaps, secrets, pvcs) will be converted from the current ExpandableTableRow table layout to the Pods-style design:
 - **Namespace-grouped** collapsible sections with namespace name + count badge
 - **Search/filter bar** at the top with real-time result count
 - **ExpandableCard** components for each resource item within namespace groups
@@ -28,7 +28,8 @@ All namespaced resource tabs (services, ingresses, statefulsets, daemonsets, job
 ### D-02: Cluster-Scoped Resource Handling
 - **Namespaces page**: Flat card list (it IS the namespace list — no namespace grouping). Search/filter + expand all still apply.
 - **Events page**: Group by `involvedObject.namespace`. Cluster-wide events go under a "cluster" group.
-- **Nodes page**: Not in scope — keep current design.
+- **Nodes page**: Keep unique table design but fix light-mode visibility issues (CPU/Memory bars invisible, poor spacing, visual hierarchy problems). NOT a full redesign — UI polish fix only.
+- **Deployments page**: Redesign to match Pods-style card layout (same as all other namespaced resources).
 
 ### D-03: Expand All / Collapse All Toggle
 - **Location**: Right-aligned button in the search/filter bar area, next to the search input
@@ -37,11 +38,15 @@ All namespaced resource tabs (services, ingresses, statefulsets, daemonsets, job
 - **Applies to**: All resource tabs including Pods (Pods currently lacks this)
 - **State**: Local component state, not persisted across page navigations
 
-### D-04: Real-Time Data Refresh After Mutations
-- **Pod deletion**: Call `utils.pods.list.invalidate()` on mutation success for immediate UI update. Add optimistic removal (filter deleted pod from cache immediately).
-- **Other mutations**: Same pattern — invalidate relevant query cache on mutation success.
-- **Background refresh**: K8s informers already detect changes. For resources with active SSE watchers (pods, deployments, nodes), events propagate automatically. For other resources, the existing 30s staleTime + refetchInterval handles refresh.
-- **Priority fix**: The current pod deletion bug is specifically that the mutation doesn't invalidate the query cache. Fix this first.
+### D-04: Real-Time Data — Full K8s Watch for ALL Resource Types (Lens-inspired)
+- **Architecture**: K8s Watch API (list-then-watch pattern) for ALL resource types, not just pods/deployments/nodes. This is how Lens does it.
+- **Per-user, per-cluster**: Watchers start when a user navigates to a cluster, stop when they leave. Reference-counted like the existing MetricsStreamJob pattern — first subscriber triggers watch, last disconnect stops it.
+- **Event flow**: K8s informer detects ADDED/MODIFIED/DELETED → voyagerEmitter fires event → SSE stream to client → client invalidates tRPC query cache → UI updates within ~1s.
+- **Event buffering**: Buffer events for ~1s before flushing to prevent UI thrashing during rapid changes (rolling deployments, etc.). Same pattern Lens uses.
+- **Resource types to watch**: pods, deployments, statefulsets, daemonsets, services, ingresses, jobs, cronjobs, hpa, configmaps, secrets, pvcs, namespaces, events, nodes (15 total).
+- **SSE endpoint**: New `/api/resources/stream?clusterId=<uuid>` SSE endpoint (similar to existing `/api/metrics/stream`). Streams resource change events per cluster.
+- **Pod deletion fix**: Additionally add optimistic cache removal on mutation success for immediate visual feedback.
+- **Scalability**: Each API pod manages its own watchers. K8s API servers handle hundreds of watch connections easily. Future optimization: shared watches via Redis pub/sub if needed at scale.
 
 ### D-05: Logs Beautifier
 - **Auto-detect format**: JSON vs plain text detection per log line
@@ -101,6 +106,7 @@ Add new tabs to expanded resource detail panels:
 - `apps/web/src/components/expandable/index.ts` — Full component index
 
 ### Current Resource Tab Pages (to be redesigned)
+- `apps/web/src/app/clusters/[id]/deployments/page.tsx`
 - `apps/web/src/app/clusters/[id]/services/page.tsx`
 - `apps/web/src/app/clusters/[id]/ingresses/page.tsx`
 - `apps/web/src/app/clusters/[id]/statefulsets/page.tsx`
@@ -113,6 +119,9 @@ Add new tabs to expanded resource detail panels:
 - `apps/web/src/app/clusters/[id]/pvcs/page.tsx`
 - `apps/web/src/app/clusters/[id]/namespaces/page.tsx`
 - `apps/web/src/app/clusters/[id]/events/page.tsx`
+
+### Nodes Page (light-mode fix)
+- `apps/web/src/app/clusters/[id]/nodes/page.tsx` — Nodes page (fix light-mode bar visibility, spacing)
 
 ### Logs
 - `apps/web/src/app/clusters/[id]/logs/page.tsx` — Current logs viewer (to be enhanced)
@@ -186,7 +195,27 @@ Add new tabs to expanded resource detail panels:
 <deferred>
 ## Deferred Ideas
 
-None — discussion stayed within phase scope
+### Phase 9 — Lens-Inspired Power Features (confirmed by user)
+**Tier 1 (High Impact):**
+- Pod exec/terminal — web terminal into any pod
+- Pod log streaming — real-time SSE-based log tail (not polling)
+- Resource YAML viewer — view raw YAML/JSON of any resource
+- Restart workloads — rollout restart for Deployments/StatefulSets/DaemonSets
+- Scale workloads — change replica count from the UI
+
+**Tier 2 (Weekly Use):**
+- Helm releases — view installed charts, versions, values, upgrade/rollback
+- Events timeline — visual timeline of cluster events
+- Resource diff — compare current vs desired state
+- Port forwarding — forward pod port to temporary browser-accessible URL
+
+**Tier 3 (Nice to Have):**
+- CRD browser — view custom resources generically
+- RBAC viewer — who can do what on which resources
+- Network policy map — visual graph of allowed traffic flows
+- Resource quotas dashboard — namespace usage vs limits
+
+**Plus:** Update all existing tabs/features to be Lens-inspired with live data
 
 </deferred>
 
