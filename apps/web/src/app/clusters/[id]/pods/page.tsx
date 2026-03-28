@@ -109,7 +109,11 @@ function PodLogViewer({
     return logsQuery.data.logs.split('\n').filter(Boolean)
   }, [logsQuery.data?.logs])
 
-  return <LogViewer lines={lines} isLoading={logsQuery.isLoading} />
+  return (
+    <div className="max-h-[300px] overflow-auto">
+      <LogViewer lines={lines} isLoading={logsQuery.isLoading} autoScroll={false} />
+    </div>
+  )
 }
 
 // ---------------------------------------------------------------------------

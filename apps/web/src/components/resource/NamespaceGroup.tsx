@@ -13,6 +13,8 @@ interface NamespaceGroupProps {
   count: number
   children: ReactNode
   defaultOpen?: boolean
+  /** Controlled open state — when defined, overrides internal state */
+  forceOpen?: boolean
 }
 
 export function NamespaceGroup({
@@ -20,8 +22,13 @@ export function NamespaceGroup({
   count,
   children,
   defaultOpen = true,
+  forceOpen,
 }: NamespaceGroupProps) {
-  const [open, setOpen] = useState(defaultOpen)
+  const [internalOpen, setInternalOpen] = useState(defaultOpen)
+  const open = forceOpen !== undefined ? forceOpen : internalOpen
+  const setOpen = (v: boolean) => {
+    if (forceOpen === undefined) setInternalOpen(v)
+  }
   const reducedMotion = useReducedMotion()
 
   const springTransition = reducedMotion

@@ -39,6 +39,7 @@ export function ResourcePageScaffold<T>({
 }: ResourcePageScaffoldProps<T>) {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandAll, setExpandAll] = useState(false)
+  const [namespacesOpen, setNamespacesOpen] = useState(true)
   const searchParams = useSearchParams()
   const router = useRouter()
   const highlightRef = useRef<HTMLDivElement>(null)
@@ -140,6 +141,8 @@ export function ResourcePageScaffold<T>({
         expandAll={expandAll}
         onExpandAllToggle={() => setExpandAll((prev) => !prev)}
         searchPlaceholder={searchPlaceholder}
+        namespacesOpen={flatList ? undefined : namespacesOpen}
+        onNamespacesToggle={flatList ? undefined : () => setNamespacesOpen((prev) => !prev)}
       />
 
       {filteredItems.length === 0 ? (
@@ -179,7 +182,12 @@ export function ResourcePageScaffold<T>({
               })
             : // Namespace-grouped
               grouped.map(([namespace, nsItems]) => (
-                <NamespaceGroup key={namespace} namespace={namespace} count={nsItems.length}>
+                <NamespaceGroup
+                  key={namespace}
+                  namespace={namespace}
+                  count={nsItems.length}
+                  forceOpen={namespacesOpen ? undefined : false}
+                >
                   {nsItems.map((item) => {
                     const highlighted = isHighlighted(item)
                     return (

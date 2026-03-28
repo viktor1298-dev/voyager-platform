@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronsUpDown, Search } from 'lucide-react'
+import { ChevronsUpDown, FoldVertical, UnfoldVertical, Search } from 'lucide-react'
 
 interface SearchFilterBarProps {
   searchQuery: string
@@ -10,6 +10,9 @@ interface SearchFilterBarProps {
   expandAll: boolean
   onExpandAllToggle: () => void
   searchPlaceholder?: string
+  /** Namespace collapse/expand — undefined hides the buttons (e.g. flatList mode) */
+  namespacesOpen?: boolean
+  onNamespacesToggle?: () => void
 }
 
 export function SearchFilterBar({
@@ -20,6 +23,8 @@ export function SearchFilterBar({
   expandAll,
   onExpandAllToggle,
   searchPlaceholder = 'Search by name, namespace, or status...',
+  namespacesOpen,
+  onNamespacesToggle,
 }: SearchFilterBarProps) {
   const hasFilter = searchQuery.trim().length > 0
 
@@ -45,7 +50,24 @@ export function SearchFilterBar({
         </span>
       )}
 
-      {/* Expand All / Collapse All */}
+      {/* Namespace collapse/expand */}
+      {onNamespacesToggle && (
+        <button
+          type="button"
+          onClick={onNamespacesToggle}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--color-border)] text-xs text-[var(--color-text-secondary)] hover:bg-white/[0.04] transition-colors shrink-0"
+          title={namespacesOpen ? 'Collapse all namespaces' : 'Expand all namespaces'}
+        >
+          {namespacesOpen ? (
+            <FoldVertical className="h-3.5 w-3.5" />
+          ) : (
+            <UnfoldVertical className="h-3.5 w-3.5" />
+          )}
+          {namespacesOpen ? 'Fold NS' : 'Unfold NS'}
+        </button>
+      )}
+
+      {/* Expand All / Collapse All cards */}
       <button
         type="button"
         onClick={onExpandAllToggle}
