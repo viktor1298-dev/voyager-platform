@@ -11,14 +11,26 @@ interface ExpandableCardProps {
   summary: ReactNode
   children: ReactNode
   defaultExpanded?: boolean
+  expanded?: boolean
+  onExpandedChange?: (expanded: boolean) => void
 }
 
 export function ExpandableCard({
   summary,
   children,
   defaultExpanded = false,
+  expanded,
+  onExpandedChange,
 }: ExpandableCardProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  const [internalExpanded, setInternalExpanded] = useState(defaultExpanded)
+  const isControlled = expanded !== undefined
+  const isExpanded = isControlled ? expanded : internalExpanded
+
+  const handleToggle = () => {
+    const next = !isExpanded
+    if (!isControlled) setInternalExpanded(next)
+    onExpandedChange?.(next)
+  }
   const reducedMotion = useReducedMotion()
 
   const springTransition = reducedMotion
@@ -38,7 +50,7 @@ export function ExpandableCard({
       <button
         type="button"
         className="flex w-full items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors duration-150 text-left"
-        onClick={() => setIsExpanded((prev) => !prev)}
+        onClick={handleToggle}
         aria-expanded={isExpanded}
       >
         <div className="flex-1 min-w-0">{summary}</div>
