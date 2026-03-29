@@ -7,7 +7,7 @@
  */
 import * as k8s from '@kubernetes/client-node'
 import { clusters, db, events, nodes } from '@voyager/db'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, notInArray } from 'drizzle-orm'
 import { WATCH_DB_SYNC_INTERVAL_MS } from '@voyager/config/sse'
 import type { WatchEvent } from '@voyager/types'
 import { voyagerEmitter } from './event-emitter.js'
@@ -109,6 +109,12 @@ async function syncNodes(clusterId: string): Promise<void> {
       })
     }
   }
+
+  // Delete stale nodes no longer reported by WatchManager
+  const currentNodeNames = rawNodes.map((n) => n.metadata?.name ?? 'unknown')
+  await db
+    .delete(nodes)
+    .where(and(eq(nodes.clusterId, clusterId), notInArray(nodes.name, currentNodeNames)))
 }
 
 // ── Event Insert (replicate event-sync.ts logic) ─────────────
