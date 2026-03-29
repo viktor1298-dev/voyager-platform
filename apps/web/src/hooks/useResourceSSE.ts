@@ -45,9 +45,8 @@ export function useResourceSSE(clusterId: string | null) {
   useEffect(() => {
     if (!clusterId) return
 
-    // Use relative URL — Next.js rewrites /api/* to the API server (same as useMetricsSSE)
     const url = `/api/resources/stream?clusterId=${encodeURIComponent(clusterId)}`
-    const es = new EventSource(url, { withCredentials: true })
+    const es = new EventSource(url)
     eventSourceRef.current = es
 
     es.addEventListener('resource-change', (e: MessageEvent) => {

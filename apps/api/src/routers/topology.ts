@@ -375,9 +375,16 @@ export const topologyRouter = router({
           }
         }
 
-        // Filter edges to only reference existing nodes
+        // Filter edges to only reference existing nodes and deduplicate by id
         const nodeIds = new Set(graphNodes.map((n) => n.id))
-        const validEdges = graphEdges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
+        const seenEdgeIds = new Set<string>()
+        const validEdges: TopologyEdge[] = []
+        for (const e of graphEdges) {
+          if (nodeIds.has(e.source) && nodeIds.has(e.target) && !seenEdgeIds.has(e.id)) {
+            seenEdgeIds.add(e.id)
+            validEdges.push(e)
+          }
+        }
 
         return { nodes: graphNodes, edges: validEdges }
       } catch (err) {

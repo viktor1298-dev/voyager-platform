@@ -95,6 +95,7 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
       'x-accel-buffering': 'no',
       connection: 'keep-alive',
     })
+    reply.raw.write(':connected\n\n')
 
     let lineCount = 0
     let abortController: AbortController | null = null

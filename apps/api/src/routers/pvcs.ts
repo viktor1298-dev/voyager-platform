@@ -25,7 +25,7 @@ export const pvcsRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
 
-        const response = await cached(`k8s:${input.clusterId}:pvcs`, 15_000, () =>
+        const response = await cached(`k8s:${input.clusterId}:pvcs`, 15, () =>
           coreV1.listPersistentVolumeClaimForAllNamespaces(),
         )
 

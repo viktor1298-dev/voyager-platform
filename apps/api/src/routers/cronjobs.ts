@@ -25,7 +25,7 @@ export const cronJobsRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const batchV1 = kc.makeApiClient(k8s.BatchV1Api)
 
-        const response = await cached(`k8s:${input.clusterId}:cronjobs`, 15_000, () =>
+        const response = await cached(`k8s:${input.clusterId}:cronjobs`, 15, () =>
           batchV1.listCronJobForAllNamespaces(),
         )
 

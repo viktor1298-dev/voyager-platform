@@ -1,7 +1,28 @@
 import * as k8s from '@kubernetes/client-node'
 import type { ResourceChangeEvent, ResourceChangeType, ResourceType } from '@voyager/types'
+import { invalidateKey } from './cache.js'
+import { CACHE_KEYS } from './cache-keys.js'
 import { clusterClientPool } from './cluster-client-pool.js'
 import { voyagerEmitter } from './event-emitter.js'
+
+/** Map SSE resource types to Redis cache key builders */
+const CACHE_KEY_MAP: Partial<Record<ResourceType, (clusterId: string) => string>> = {
+  pods: CACHE_KEYS.k8sPods,
+  deployments: CACHE_KEYS.k8sDeployments,
+  nodes: CACHE_KEYS.k8sNodes,
+  services: (id) => `k8s:${id}:services:all`,
+  configmaps: (id) => `k8s:${id}:configmaps`,
+  secrets: (id) => `k8s:${id}:secrets`,
+  pvcs: (id) => `k8s:${id}:pvcs`,
+  namespaces: CACHE_KEYS.k8sNamespaces,
+  events: CACHE_KEYS.k8sEvents,
+  statefulsets: (id) => `k8s:${id}:statefulsets`,
+  daemonsets: (id) => `k8s:${id}:daemonsets`,
+  jobs: (id) => `k8s:${id}:jobs`,
+  cronjobs: (id) => `k8s:${id}:cronjobs`,
+  hpa: (id) => `k8s:${id}:hpa`,
+  ingresses: (id) => `k8s:${id}:ingresses`,
+}
 
 /**
  * Resource type definitions with K8s API paths and list functions.
@@ -166,6 +187,10 @@ function emitResourceEvent(
     timestamp: new Date().toISOString(),
   }
   voyagerEmitter.emitResourceChange(clusterId, event)
+
+  // Invalidate Redis cache so the next tRPC refetch gets fresh K8s data
+  const keyFn = CACHE_KEY_MAP[resourceType]
+  if (keyFn) invalidateKey(keyFn(clusterId)).catch(() => {})
 }
 
 class ResourceWatchManager {
@@ -218,6 +243,12 @@ class ResourceWatchManager {
               `[ResourceWatchManager] Informer error for ${def.type} on ${clusterId}:`,
               err instanceof Error ? err.message : err,
             )
+            // Auto-reconnect after 5s — informers do NOT reconnect on their own
+            setTimeout(() => {
+              if (subscriberCounts.has(clusterId)) {
+                informer.start().catch(() => {})
+              }
+            }, 5000)
           })
 
           await informer.start()

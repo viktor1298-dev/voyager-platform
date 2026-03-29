@@ -14,7 +14,7 @@ export const resourceQuotasRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
 
-        const response = await cached(CACHE_KEYS.k8sResourceQuotas(input.clusterId), 15_000, () =>
+        const response = await cached(CACHE_KEYS.k8sResourceQuotas(input.clusterId), 15, () =>
           coreV1.listResourceQuotaForAllNamespaces(),
         )
 

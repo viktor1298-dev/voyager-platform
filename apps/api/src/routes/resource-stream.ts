@@ -82,6 +82,8 @@ export async function registerResourceStreamRoute(app: FastifyInstance): Promise
       'x-accel-buffering': 'no',
       connection: 'keep-alive',
     })
+    // Flush immediately so proxies/EventSource receive headers + initial data
+    reply.raw.write(':connected\n\n')
 
     const connectionId = crypto.randomUUID()
 

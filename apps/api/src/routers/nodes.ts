@@ -25,7 +25,7 @@ export const nodesRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
 
-        const nodesResponse = await cached(CACHE_KEYS.k8sNodes(input.clusterId), 15_000, () =>
+        const nodesResponse = await cached(CACHE_KEYS.k8sNodes(input.clusterId), 15, () =>
           coreV1.listNode(),
         )
 
@@ -33,7 +33,7 @@ export const nodesRouter = router({
         const nodeMetricsMap = new Map<string, { cpuNano: number; memBytes: number }>()
         try {
           const metricsClient = new k8s.Metrics(kc)
-          const nodeMetrics = await cached(CACHE_KEYS.k8sNodeMetrics(input.clusterId), 15_000, () =>
+          const nodeMetrics = await cached(CACHE_KEYS.k8sNodeMetrics(input.clusterId), 15, () =>
             metricsClient.getNodeMetrics(),
           )
           for (const nm of nodeMetrics.items) {

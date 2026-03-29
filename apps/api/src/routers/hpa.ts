@@ -25,7 +25,7 @@ export const hpaRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const autoscalingV2 = kc.makeApiClient(k8s.AutoscalingV2Api)
 
-        const response = await cached(`k8s:${input.clusterId}:hpa`, 15_000, () =>
+        const response = await cached(`k8s:${input.clusterId}:hpa`, 15, () =>
           autoscalingV2.listHorizontalPodAutoscalerForAllNamespaces(),
         )
 

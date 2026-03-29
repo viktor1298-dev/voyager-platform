@@ -2,7 +2,7 @@ import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
-import { cached } from '../lib/cache.js'
+import { cached, invalidateKey } from '../lib/cache.js'
 import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
@@ -41,7 +41,7 @@ export const podsRouter = router({
       try {
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const podsResponse = await cached(CACHE_KEYS.k8sPods(input.clusterId), 15_000, () =>
+        const podsResponse = await cached(CACHE_KEYS.k8sPods(input.clusterId), 15, () =>
           coreV1.listPodForAllNamespaces(),
         )
 
@@ -49,7 +49,7 @@ export const podsRouter = router({
         const podMetricsMap = new Map<string, { cpuNano: number; memBytes: number }>()
         try {
           const metricsClient = new k8s.Metrics(kc)
-          const podMetrics = await cached(CACHE_KEYS.k8sPodMetrics(input.clusterId), 15_000, () =>
+          const podMetrics = await cached(CACHE_KEYS.k8sPodMetrics(input.clusterId), 15, () =>
             metricsClient.getPodMetrics(''),
           )
           for (const pm of podMetrics.items) {
@@ -205,17 +205,32 @@ export const podsRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreApi = kc.makeApiClient(k8s.CoreV1Api)
         await coreApi.deleteNamespacedPod({ name: input.podName, namespace: input.namespace })
+      } catch (err) {
+        // 404 = pod already gone, treat as success
+        const is404 =
+          err instanceof Error && (err.message.includes('404') || err.message.includes('NotFound'))
+        if (!is404) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `Failed to delete pod ${input.podName}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+          })
+        }
+      }
+      // Invalidate pod caches so next list query fetches fresh data
+      await Promise.all([
+        invalidateKey(CACHE_KEYS.k8sPods(input.clusterId)),
+        invalidateKey(CACHE_KEYS.k8sPodsStored(input.clusterId)),
+        invalidateKey(CACHE_KEYS.k8sPodMetrics(input.clusterId)),
+      ])
+      try {
         await logAudit(ctx, 'pod.delete', 'pod', `${input.namespace}/${input.podName}`, {
           clusterId: input.clusterId,
           namespace: input.namespace,
           podName: input.podName,
         })
-        return { success: true, podName: input.podName }
-      } catch (err) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to delete pod ${input.podName}: ${err instanceof Error ? err.message : 'Unknown error'}`,
-        })
+      } catch {
+        /* audit must not break the operation */
       }
+      return { success: true, podName: input.podName }
     }),
 })

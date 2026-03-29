@@ -35,6 +35,14 @@ export async function cached<T>(key: string, ttl: number, fn: () => Promise<T>):
   return result
 }
 
+export async function invalidateKey(key: string): Promise<void> {
+  const redis = await getRedisClient()
+  if (!redis) return
+  try {
+    await redis.del(key)
+  } catch {}
+}
+
 export async function invalidateK8sCache(): Promise<number> {
   const redis = await getRedisClient()
   if (!redis) return 0

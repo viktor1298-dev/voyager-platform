@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
         destination: `${apiUrl}/trpc/:path*`,
       },
       {
-        source: '/api/:path*',
+        source: '/api/:path((?!resources/stream|metrics/stream|logs/stream).*)',
         destination: `${apiUrl}/api/:path*`,
       },
     ]

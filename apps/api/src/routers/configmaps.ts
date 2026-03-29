@@ -27,7 +27,7 @@ export const configMapsRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
 
-        const response = await cached(`k8s:${input.clusterId}:configmaps`, 15_000, () =>
+        const response = await cached(`k8s:${input.clusterId}:configmaps`, 15, () =>
           coreV1.listConfigMapForAllNamespaces(),
         )
 

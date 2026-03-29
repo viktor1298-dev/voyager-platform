@@ -102,6 +102,9 @@ class ClusterWatchManager {
       })
       pods.on('error', (err: unknown) => {
         connectionState.onWatchError(clusterId, err)
+        setTimeout(() => {
+          if (this.clusters.has(clusterId)) pods.start().catch(() => {})
+        }, 5000)
       })
 
       // Deployment informer
@@ -132,6 +135,9 @@ class ClusterWatchManager {
       })
       deployments.on('error', (err: unknown) => {
         connectionState.onWatchError(clusterId, err)
+        setTimeout(() => {
+          if (this.clusters.has(clusterId)) deployments.start().catch(() => {})
+        }, 5000)
       })
 
       // Node informer
@@ -160,6 +166,9 @@ class ClusterWatchManager {
       })
       nodes.on('error', (err: unknown) => {
         connectionState.onWatchError(clusterId, err)
+        setTimeout(() => {
+          if (this.clusters.has(clusterId)) nodes.start().catch(() => {})
+        }, 5000)
       })
 
       // Start all informers — clean up on partial failure

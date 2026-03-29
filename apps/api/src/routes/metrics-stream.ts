@@ -79,6 +79,7 @@ export async function registerMetricsStreamRoute(app: FastifyInstance): Promise<
       'x-accel-buffering': 'no',
       connection: 'keep-alive',
     })
+    reply.raw.write(':connected\n\n')
 
     const connectionId = crypto.randomUUID()
 

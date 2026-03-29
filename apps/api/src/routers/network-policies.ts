@@ -13,7 +13,7 @@ export const networkPoliciesRouter = router({
       try {
         const kc = await clusterClientPool.getClient(input.clusterId)
         const networkingV1 = kc.makeApiClient(k8s.NetworkingV1Api)
-        const response = await cached(CACHE_KEYS.k8sNetworkPolicies(input.clusterId), 15_000, () =>
+        const response = await cached(CACHE_KEYS.k8sNetworkPolicies(input.clusterId), 15, () =>
           networkingV1.listNetworkPolicyForAllNamespaces(),
         )
 

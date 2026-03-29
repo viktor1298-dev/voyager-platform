@@ -25,7 +25,7 @@ export const secretsRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
 
-        const response = await cached(`k8s:${input.clusterId}:secrets`, 15_000, () =>
+        const response = await cached(`k8s:${input.clusterId}:secrets`, 15, () =>
           coreV1.listSecretForAllNamespaces(),
         )
 

@@ -38,7 +38,7 @@ export const jobsRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const batchV1 = kc.makeApiClient(k8s.BatchV1Api)
 
-        const response = await cached(`k8s:${input.clusterId}:jobs`, 15_000, () =>
+        const response = await cached(`k8s:${input.clusterId}:jobs`, 15, () =>
           batchV1.listJobForAllNamespaces(),
         )
 
