@@ -26,21 +26,20 @@ const RESOURCE_INVALIDATION_MAP: Record<ResourceType, string> = {
   nodes: 'nodes',
 }
 
-/** Debounce window for batching tRPC cache invalidations (ms) */
-const INVALIDATION_DEBOUNCE_MS = 1_000
-
 /**
- * SSE hook that subscribes to /api/resources/stream for a cluster
- * and automatically invalidates tRPC query cache when resources change.
+ * Lens-style SSE hook: subscribes to /api/resources/stream for a cluster
+ * and triggers immediate refetch when K8s Watch detects changes.
+ *
+ * Flow: K8s Watch → informer → SSE → this hook → refetch (Redis cache already cleared by watch)
+ * Result: ~500ms-1s update latency (K8s API round-trip only)
  *
  * Placed once in the cluster layout — all tabs get live updates for free.
- * Uses EventSource (auto-reconnects on error) with cookie auth.
  */
 export function useResourceSSE(clusterId: string | null) {
   const utils = trpc.useUtils()
   const eventSourceRef = useRef<EventSource | null>(null)
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pendingInvalidations = useRef<Set<string>>(new Set())
+  const pendingRef = useRef<Set<string>>(new Set())
+  const rafRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (!clusterId) return
@@ -54,19 +53,19 @@ export function useResourceSSE(clusterId: string | null) {
         const events: ResourceChangeEvent[] = JSON.parse(e.data)
         for (const evt of events) {
           const routerKey = RESOURCE_INVALIDATION_MAP[evt.resourceType]
-          if (routerKey) pendingInvalidations.current.add(routerKey)
+          if (routerKey) pendingRef.current.add(routerKey)
         }
-        // Debounce: batch invalidations within 1s window to prevent UI thrashing
-        if (!debounceTimerRef.current) {
-          debounceTimerRef.current = setTimeout(() => {
-            for (const key of pendingInvalidations.current) {
-              // Invalidate the list query for the changed resource type
+        // Use requestAnimationFrame to batch within same frame but fire ASAP
+        if (!rafRef.current) {
+          rafRef.current = requestAnimationFrame(() => {
+            for (const key of pendingRef.current) {
+              // refetch forces immediate fetch, bypassing staleTime
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              ;(utils as Record<string, any>)[key]?.list?.invalidate?.({ clusterId })
+              ;(utils as Record<string, any>)[key]?.list?.refetch?.({ clusterId })
             }
-            pendingInvalidations.current.clear()
-            debounceTimerRef.current = null
-          }, INVALIDATION_DEBOUNCE_MS)
+            pendingRef.current.clear()
+            rafRef.current = null
+          })
         }
       } catch {
         // Ignore parse errors from malformed SSE data
@@ -74,18 +73,17 @@ export function useResourceSSE(clusterId: string | null) {
     })
 
     es.onerror = () => {
-      // EventSource auto-reconnects on error (built-in browser behavior)
       console.warn('[useResourceSSE] Connection error, auto-reconnecting...')
     }
 
     return () => {
       es.close()
       eventSourceRef.current = null
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current)
-        debounceTimerRef.current = null
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
       }
-      pendingInvalidations.current.clear()
+      pendingRef.current.clear()
     }
   }, [clusterId, utils])
 }
