@@ -356,6 +356,7 @@ function LoginPageContent() {
                     form.handleSubmit()
                   }}
                   className="space-y-4"
+                  suppressHydrationWarning
                 >
                   <div>
                     <label
@@ -376,6 +377,7 @@ function LoginPageContent() {
                             className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
                             placeholder="admin@voyager.local"
                             autoComplete="email"
+                            suppressHydrationWarning
                           />
                           {field.state.meta.errors?.length > 0 && (
                             <p className="mt-1 text-xs text-red-400">
@@ -406,6 +408,7 @@ function LoginPageContent() {
                             className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-dim)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
                             placeholder="••••••••"
                             autoComplete="current-password"
+                            suppressHydrationWarning
                           />
                           {field.state.meta.errors?.length > 0 && (
                             <p className="mt-1 text-xs text-red-400">
