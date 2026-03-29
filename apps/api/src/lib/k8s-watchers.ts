@@ -2,7 +2,6 @@ import * as k8s from '@kubernetes/client-node'
 import { SSE_DEPLOYMENT_PROGRESS_INTERVAL_MS, SSE_LOG_TAIL_LINES } from '@voyager/config/sse'
 import type { DeploymentProgressEvent, LogLineEvent } from '@voyager/types'
 import { clusterClientPool } from './cluster-client-pool.js'
-import { clusterWatchManager } from './cluster-watch-manager.js'
 import { voyagerEmitter } from './event-emitter.js'
 
 // ── Deployment Progress (on-demand, per-cluster) ────────────
@@ -176,6 +175,7 @@ export function streamLogs(
 
 // ── Cleanup ─────────────────────────────────────────────────
 
+/** @deprecated WatchManager.stopAll() handles this now. Kept for backward compat. */
 export function stopAllWatchers(): void {
-  clusterWatchManager.stopAll()
+  // No-op: WatchManager.stopAll() in server.ts handles all informer cleanup
 }

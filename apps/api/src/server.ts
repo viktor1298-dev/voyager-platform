@@ -12,14 +12,11 @@ import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify'
 import { fastifyTRPCOpenApiPlugin } from 'trpc-to-openapi'
 import { startAlertEvaluator, stopAlertEvaluator } from './jobs/alert-evaluator.js'
 import { startDeploySmokeTest, stopDeploySmokeTest } from './jobs/deploy-smoke-test.js'
-import { startEventSync, stopEventSync } from './jobs/event-sync.js'
-import { startHealthSync } from './jobs/health-sync.js'
 import {
   startMetricsHistoryCollector,
   stopMetricsHistoryCollector,
 } from './jobs/metrics-history-collector.js'
 import { metricsStreamJob } from './jobs/metrics-stream-job.js'
-import { startNodeSync, stopNodeSync } from './jobs/node-sync.js'
 import { auth } from './lib/auth.js'
 import { mapAuthRouteErrorToBody, mapAuthRouteErrorToStatus } from './lib/auth-error-mapping.js'
 import { shouldRequireAuth, UNAUTHORIZED_RESPONSE } from './lib/auth-guard.js'
@@ -27,6 +24,8 @@ import { resolveExternalRequestUrl } from './lib/auth-request.js'
 import { ensureAdminUser } from './lib/ensure-admin-user.js'
 import { ensureViewerUser } from './lib/ensure-viewer-user.js'
 import { stopAllWatchers } from './lib/k8s-watchers.js'
+import { watchManager } from './lib/watch-manager.js'
+import { startWatchDbWriter, stopWatchDbWriter } from './lib/watch-db-writer.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
 import { shutdownTelemetry } from './lib/telemetry.js'
@@ -37,7 +36,6 @@ import { registerLogStreamRoute } from './routes/log-stream.js'
 import { registerMetricsStreamRoute } from './routes/metrics-stream.js'
 import { registerPodTerminalRoute } from './routes/pod-terminal.js'
 import { registerResourceStreamRoute } from './routes/resource-stream.js'
-import { resourceWatchManager } from './lib/resource-watch-manager.js'
 import { createContext } from './trpc.js'
 
 // Validate CLUSTER_CRED_ENCRYPTION_KEY (64-char hex = 32 bytes AES-256 key)
@@ -274,24 +272,26 @@ const start = async () => {
 
     const k8sEnabled = process.env.K8S_ENABLED !== 'false'
 
-    // Always start sync jobs — they handle per-cluster errors gracefully and are needed
-    // for remotely-added clusters (kubeconfig, AWS, etc.) even without local K8s
-    // Always start sync jobs — they handle per-cluster errors gracefully and are needed
-    // for remotely-added clusters (kubeconfig, AWS, etc.) even without local K8s
-    startHealthSync()
+    // Initialize WatchManager (Lens-style live data pipeline)
+    // Watches are started on-demand when SSE clients subscribe
+    console.log('[server] WatchManager ready (watches start on first subscriber)')
+
+    // Start watch-db-writer — persists watch data to PostgreSQL (replaces legacy sync jobs)
+    startWatchDbWriter()
+    console.log('[server] WatchDbWriter started')
+
+    // Start remaining background jobs (alert evaluator, metrics collector)
     startAlertEvaluator()
     startMetricsHistoryCollector()
-    startNodeSync()
-    startEventSync()
 
     if (k8sEnabled) {
       startDeploySmokeTest()
       app.log.info(
-        'Background jobs started (health-sync, alert-evaluator, metrics, node-sync, event-sync, deploy-smoke-test)',
+        'Background jobs started (watch-manager, watch-db-writer, alert-evaluator, metrics, deploy-smoke-test)',
       )
     } else {
       app.log.info(
-        'K8s watchers disabled (K8S_ENABLED=false) — sync jobs running for registered clusters',
+        'K8s watchers disabled (K8S_ENABLED=false) — WatchManager and jobs running for registered clusters',
       )
     }
 
@@ -299,12 +299,11 @@ const start = async () => {
     for (const signal of signals) {
       process.on(signal, async () => {
         app.log.info(`${signal} received, shutting down gracefully`)
+        watchManager.stopAll()
+        stopWatchDbWriter()
         stopAlertEvaluator()
         stopMetricsHistoryCollector()
-        stopNodeSync()
-        stopEventSync()
         metricsStreamJob.stopAll()
-        resourceWatchManager.stopAll()
         if (k8sEnabled) {
           stopAllWatchers()
           stopDeploySmokeTest()
