@@ -530,7 +530,7 @@ export default function PodsPage() {
 
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: resolvedId },
-    { enabled: isLive, refetchInterval: 30000, retry: 1, staleTime: 30000 },
+    { enabled: isLive, retry: 1, staleTime: 30000 },
   )
   const liveFailed = isLive && liveQuery.isError
   const effectiveIsLive = isLive && !liveFailed
@@ -539,7 +539,6 @@ export default function PodsPage() {
     { clusterId: resolvedId },
     {
       enabled: isLive,
-      refetchInterval: 15000,
       staleTime: 15000,
     },
   )

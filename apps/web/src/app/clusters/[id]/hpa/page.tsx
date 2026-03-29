@@ -272,10 +272,7 @@ export default function HPAPage() {
     (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
   )
 
-  const query = trpc.hpa.list.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials, refetchInterval: 30000 },
-  )
+  const query = trpc.hpa.list.useQuery({ clusterId: resolvedId }, { enabled: hasCredentials })
 
   if (!hasCredentials) {
     return (

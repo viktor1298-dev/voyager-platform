@@ -473,7 +473,7 @@ export default function AutoscalingPage() {
 
   const nodeClaimsQuery = trpc.karpenter.listNodeClaims.useQuery(
     { clusterId: resolvedId },
-    { enabled: hasCredentials && !!resolvedId, retry: false, refetchInterval: 30000 },
+    { enabled: hasCredentials && !!resolvedId, retry: false },
   )
 
   const ec2ClassesQuery = trpc.karpenter.listEC2NodeClasses.useQuery(
@@ -483,7 +483,7 @@ export default function AutoscalingPage() {
 
   const metricsQuery = trpc.karpenter.getMetrics.useQuery(
     { clusterId: resolvedId },
-    { enabled: hasCredentials && !!resolvedId, retry: false, refetchInterval: 30000 },
+    { enabled: hasCredentials && !!resolvedId, retry: false },
   )
 
   // ---- Loading state ----

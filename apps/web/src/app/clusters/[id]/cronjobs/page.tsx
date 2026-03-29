@@ -166,10 +166,7 @@ export default function CronJobsPage() {
     (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
   )
 
-  const query = trpc.cronJobs.list.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials, refetchInterval: 30000 },
-  )
+  const query = trpc.cronJobs.list.useQuery({ clusterId: resolvedId }, { enabled: hasCredentials })
 
   if (!hasCredentials) {
     return (

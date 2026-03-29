@@ -143,10 +143,7 @@ export default function SecretsPage() {
     (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
   )
 
-  const query = trpc.secrets.list.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials, refetchInterval: 30000 },
-  )
+  const query = trpc.secrets.list.useQuery({ clusterId: resolvedId }, { enabled: hasCredentials })
 
   return (
     <ResourcePageScaffold<SecretData>

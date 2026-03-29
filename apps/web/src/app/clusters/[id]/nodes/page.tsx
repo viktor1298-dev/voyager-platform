@@ -232,7 +232,7 @@ export default function NodesPage() {
   // Live data via new listLive endpoint
   const liveQuery = trpc.nodes.listLive.useQuery(
     { clusterId: resolvedId },
-    { enabled: hasCredentials, refetchInterval: 30000, retry: false, staleTime: 30000 },
+    { enabled: hasCredentials, retry: false, staleTime: 30000 },
   )
   const liveFailed = hasCredentials && liveQuery.isError
   const isLive = hasCredentials && !liveFailed

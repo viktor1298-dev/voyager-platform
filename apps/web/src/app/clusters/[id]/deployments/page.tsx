@@ -344,7 +344,7 @@ export default function DeploymentsPage() {
 
   const query = trpc.deployments.listDetail.useQuery(
     { clusterId: resolvedId },
-    { enabled: hasCredentials && !!resolvedId, refetchInterval: 30000 },
+    { enabled: hasCredentials && !!resolvedId },
   )
 
   return (

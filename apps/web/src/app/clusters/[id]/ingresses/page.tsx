@@ -245,10 +245,7 @@ export default function IngressesPage() {
     (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
   )
 
-  const query = trpc.ingresses.list.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials, refetchInterval: 30000 },
-  )
+  const query = trpc.ingresses.list.useQuery({ clusterId: resolvedId }, { enabled: hasCredentials })
 
   return (
     <ResourcePageScaffold<IngressData>

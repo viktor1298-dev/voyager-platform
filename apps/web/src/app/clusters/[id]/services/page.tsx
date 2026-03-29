@@ -236,7 +236,7 @@ export default function ServicesPage() {
 
   const query = trpc.services.listDetail.useQuery(
     { clusterId: resolvedId },
-    { enabled: hasCredentials && !!resolvedId, refetchInterval: 30000 },
+    { enabled: hasCredentials && !!resolvedId },
   )
 
   return (

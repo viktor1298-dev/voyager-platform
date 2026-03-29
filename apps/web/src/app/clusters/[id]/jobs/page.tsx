@@ -181,10 +181,7 @@ export default function JobsPage() {
     (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
   )
 
-  const query = trpc.jobs.list.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials, refetchInterval: 30000 },
-  )
+  const query = trpc.jobs.list.useQuery({ clusterId: resolvedId }, { enabled: hasCredentials })
 
   if (!hasCredentials) {
     return (

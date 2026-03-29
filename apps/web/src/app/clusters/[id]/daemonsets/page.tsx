@@ -285,7 +285,7 @@ export default function DaemonSetsPage() {
 
   const query = trpc.daemonSets.list.useQuery(
     { clusterId: resolvedId },
-    { enabled: hasCredentials, refetchInterval: 30000 },
+    { enabled: hasCredentials },
   )
 
   if (!hasCredentials) {

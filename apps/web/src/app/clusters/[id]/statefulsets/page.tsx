@@ -331,7 +331,7 @@ export default function StatefulSetsPage() {
 
   const query = trpc.statefulSets.list.useQuery(
     { clusterId: resolvedId },
-    { enabled: hasCredentials, refetchInterval: 30000 },
+    { enabled: hasCredentials },
   )
 
   return (

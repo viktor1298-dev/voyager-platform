@@ -168,7 +168,7 @@ export default function NamespacesPage() {
 
   const query = trpc.namespaces.listDetail.useQuery(
     { clusterId: resolvedId },
-    { enabled: hasCredentials, refetchInterval: 30000 },
+    { enabled: hasCredentials },
   )
 
   return (

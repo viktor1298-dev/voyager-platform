@@ -12,8 +12,6 @@ import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
-const REFETCH_INTERVAL = 10000
-
 interface EventData {
   type: string
   reason: string
@@ -138,14 +136,14 @@ export default function EventsPage() {
 
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: resolvedId },
-    { enabled: isLive, refetchInterval: REFETCH_INTERVAL, retry: false, staleTime: 30000 },
+    { enabled: isLive, retry: false, staleTime: 30000 },
   )
   const liveFailed = isLive && liveQuery.isError
   const effectiveIsLive = isLive && !liveFailed
 
   const dbEvents = trpc.events.list.useQuery(
     { clusterId: resolvedId, limit: 50 },
-    { enabled: !effectiveIsLive, refetchInterval: REFETCH_INTERVAL },
+    { enabled: !effectiveIsLive },
   )
 
   const events: EventData[] = useMemo(() => {

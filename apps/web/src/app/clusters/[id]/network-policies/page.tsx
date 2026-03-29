@@ -49,10 +49,7 @@ export default function NetworkPoliciesPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const [viewMode, setViewMode] = useState<ViewMode>('list')
 
-  const policiesQuery = trpc.networkPolicies.list.useQuery(
-    { clusterId },
-    { staleTime: 15000, refetchInterval: 30000 },
-  )
+  const policiesQuery = trpc.networkPolicies.list.useQuery({ clusterId }, { staleTime: 15000 })
 
   const policies = (policiesQuery.data ?? []) as PolicyItem[]
 

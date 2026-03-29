@@ -255,7 +255,6 @@ export default function ClusterOverviewPage() {
     { clusterId: resolvedId },
     {
       enabled: isLive,
-      refetchInterval: 30000,
       retry: false,
       staleTime: 30000,
     },

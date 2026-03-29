@@ -84,10 +84,7 @@ export default function HelmReleasesPage() {
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
 
-  const query = trpc.helm.list.useQuery(
-    { clusterId: resolvedId },
-    { staleTime: 30_000, refetchInterval: 30_000 },
-  )
+  const query = trpc.helm.list.useQuery({ clusterId: resolvedId }, { staleTime: 30_000 })
 
   return (
     <ResourcePageScaffold<HelmReleaseSummary>

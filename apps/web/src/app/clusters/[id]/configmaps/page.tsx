@@ -117,7 +117,7 @@ export default function ConfigMapsPage() {
 
   const query = trpc.configMaps.list.useQuery(
     { clusterId: resolvedId },
-    { enabled: hasCredentials, refetchInterval: 30000 },
+    { enabled: hasCredentials },
   )
 
   return (
