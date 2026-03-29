@@ -36,72 +36,76 @@ function decrementConnections(clusterId: string): void {
 }
 
 export async function registerMetricsStreamRoute(app: FastifyInstance): Promise<void> {
-  app.get('/api/metrics/stream', async (request: FastifyRequest, reply: FastifyReply) => {
-    // 1. Validate input
-    const parsed = querySchema.safeParse(request.query)
-    if (!parsed.success) {
-      reply.code(400).send({ error: 'Invalid clusterId' })
-      return
-    }
+  app.get(
+    '/api/metrics/stream',
+    { config: { compress: false } },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      // 1. Validate input
+      const parsed = querySchema.safeParse(request.query)
+      if (!parsed.success) {
+        reply.code(400).send({ error: 'Invalid clusterId' })
+        return
+      }
 
-    // 2. Authenticate
-    const headers = new Headers()
-    for (const [key, value] of Object.entries(request.headers)) {
-      if (value) headers.append(key, String(value))
-    }
-    const sessionResult = await auth.api.getSession({ headers }).catch(() => null)
-    if (!sessionResult?.session || !sessionResult.user) {
-      reply.code(401).send({ error: 'Unauthorized' })
-      return
-    }
+      // 2. Authenticate
+      const headers = new Headers()
+      for (const [key, value] of Object.entries(request.headers)) {
+        if (value) headers.append(key, String(value))
+      }
+      const sessionResult = await auth.api.getSession({ headers }).catch(() => null)
+      if (!sessionResult?.session || !sessionResult.user) {
+        reply.code(401).send({ error: 'Unauthorized' })
+        return
+      }
 
-    // 3. Verify cluster exists
-    const { clusterId } = parsed.data
-    const [cluster] = await db
-      .select({ id: clusters.id })
-      .from(clusters)
-      .where(eq(clusters.id, clusterId))
-    if (!cluster) {
-      reply.code(404).send({ error: 'Cluster not found' })
-      return
-    }
+      // 3. Verify cluster exists
+      const { clusterId } = parsed.data
+      const [cluster] = await db
+        .select({ id: clusters.id })
+        .from(clusters)
+        .where(eq(clusters.id, clusterId))
+      if (!cluster) {
+        reply.code(404).send({ error: 'Cluster not found' })
+        return
+      }
 
-    // 4. Check connection limits
-    if (!incrementConnections(clusterId)) {
-      reply.code(429).send({ error: 'Too many connections' })
-      return
-    }
+      // 4. Check connection limits
+      if (!incrementConnections(clusterId)) {
+        reply.code(429).send({ error: 'Too many connections' })
+        return
+      }
 
-    // 5. Start SSE stream
-    reply.raw.writeHead(200, {
-      'content-type': 'text/event-stream; charset=utf-8',
-      'cache-control': 'no-cache, no-transform',
-      'x-accel-buffering': 'no',
-      connection: 'keep-alive',
-    })
-    reply.raw.write(':connected\n\n')
+      // 5. Start SSE stream
+      reply.raw.writeHead(200, {
+        'content-type': 'text/event-stream; charset=utf-8',
+        'cache-control': 'no-cache, no-transform',
+        'x-accel-buffering': 'no',
+        connection: 'keep-alive',
+      })
+      reply.raw.write(':connected\n\n')
 
-    const connectionId = crypto.randomUUID()
+      const connectionId = crypto.randomUUID()
 
-    // 6. Subscribe to metrics events for this cluster
-    const handler = (event: MetricsStreamEvent) => {
-      reply.raw.write(`event: metrics\ndata: ${JSON.stringify(event)}\n\n`)
-    }
-    voyagerEmitter.on(`metrics-stream:${clusterId}`, handler)
-    metricsStreamJob.subscribe(clusterId, connectionId)
+      // 6. Subscribe to metrics events for this cluster
+      const handler = (event: MetricsStreamEvent) => {
+        reply.raw.write(`event: metrics\ndata: ${JSON.stringify(event)}\n\n`)
+      }
+      voyagerEmitter.on(`metrics-stream:${clusterId}`, handler)
+      metricsStreamJob.subscribe(clusterId, connectionId)
 
-    // 7. Heartbeat keepalive
-    const heartbeat = setInterval(() => {
-      reply.raw.write(':keepalive\n\n')
-    }, SSE_HEARTBEAT_INTERVAL_MS)
+      // 7. Heartbeat keepalive
+      const heartbeat = setInterval(() => {
+        reply.raw.write(':keepalive\n\n')
+      }, SSE_HEARTBEAT_INTERVAL_MS)
 
-    // 8. Cleanup on disconnect
-    request.raw.on('close', () => {
-      clearInterval(heartbeat)
-      voyagerEmitter.off(`metrics-stream:${clusterId}`, handler)
-      metricsStreamJob.unsubscribe(clusterId, connectionId)
-      decrementConnections(clusterId)
-      reply.raw.end()
-    })
-  })
+      // 8. Cleanup on disconnect
+      request.raw.on('close', () => {
+        clearInterval(heartbeat)
+        voyagerEmitter.off(`metrics-stream:${clusterId}`, handler)
+        metricsStreamJob.unsubscribe(clusterId, connectionId)
+        decrementConnections(clusterId)
+        reply.raw.end()
+      })
+    },
+  )
 }
