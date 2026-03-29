@@ -94,7 +94,10 @@ export function LogViewer({
     })
     if (container) params.set('container', container)
 
-    const es = new EventSource(`/api/logs/stream?${params.toString()}`)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || ''
+    const es = new EventSource(`${apiUrl}/api/logs/stream?${params.toString()}`, {
+      withCredentials: true,
+    })
     eventSourceRef.current = es
 
     es.addEventListener('open', () => {

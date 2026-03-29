@@ -67,7 +67,11 @@ export function useMetricsSSE(
     if (!clusterId) return
 
     setConnectionState('connecting')
-    const es = new EventSource(`/api/metrics/stream?clusterId=${encodeURIComponent(clusterId)}`)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || ''
+    const es = new EventSource(
+      `${apiUrl}/api/metrics/stream?clusterId=${encodeURIComponent(clusterId)}`,
+      { withCredentials: true },
+    )
     eventSourceRef.current = es
 
     es.addEventListener('open', () => {
