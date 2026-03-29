@@ -187,6 +187,8 @@ interface ClusterWatches {
   >
   subscriberCount: number
   reconnectAttempts: Map<ResourceType, number>
+  /** Set of resource types whose initial list has completed (informer cache is populated) */
+  ready: Set<ResourceType>
 }
 
 // ── WatchManager Class ────────────────────────────────────────
@@ -223,6 +225,7 @@ export class WatchManager {
       informers: new Map(),
       subscriberCount: 1,
       reconnectAttempts: new Map(),
+      ready: new Set(),
     }
     this.clusters.set(clusterId, cluster)
 
@@ -261,10 +264,11 @@ export class WatchManager {
             this.handleInformerError(clusterId, def.type, err)
           })
 
-          // Connect handler — reset reconnect attempts
+          // Connect handler — mark ready + reset reconnect attempts
           informer.on('connect', () => {
             const c = this.clusters.get(clusterId)
             if (c) {
+              c.ready.add(def.type)
               c.reconnectAttempts.set(def.type, 0)
             }
           })
@@ -326,11 +330,16 @@ export class WatchManager {
     }
   }
 
-  getResources(clusterId: string, type: ResourceType): ReadonlyArray<k8s.KubernetesObject> {
+  /**
+   * Returns cached resources, or null if informer exists but initial list hasn't completed.
+   * Routers use null to trigger K8s API fallback during informer startup.
+   */
+  getResources(clusterId: string, type: ResourceType): ReadonlyArray<k8s.KubernetesObject> | null {
     const cluster = this.clusters.get(clusterId)
-    if (!cluster) return []
+    if (!cluster) return null
     const informer = cluster.informers.get(type)
-    if (!informer) return []
+    if (!informer) return null
+    if (!cluster.ready.has(type)) return null
     return informer.list()
   }
 

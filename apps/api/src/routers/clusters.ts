@@ -288,15 +288,18 @@ export const clustersRouter = router({
         let eventsItems: k8s.CoreV1Event[]
         let deploymentsItems: k8s.V1Deployment[]
 
-        if (watchManager.isWatching(input.clusterId)) {
-          nodesItems = watchManager.getResources(input.clusterId, 'nodes') as k8s.V1Node[]
-          podsItems = watchManager.getResources(input.clusterId, 'pods') as k8s.V1Pod[]
-          nsItems = watchManager.getResources(input.clusterId, 'namespaces') as k8s.V1Namespace[]
-          eventsItems = watchManager.getResources(input.clusterId, 'events') as k8s.CoreV1Event[]
-          deploymentsItems = watchManager.getResources(
-            input.clusterId,
-            'deployments',
-          ) as k8s.V1Deployment[]
+        const wNodes = watchManager.getResources(input.clusterId, 'nodes')
+        const wPods = watchManager.getResources(input.clusterId, 'pods')
+        const wNs = watchManager.getResources(input.clusterId, 'namespaces')
+        const wEvents = watchManager.getResources(input.clusterId, 'events')
+        const wDeploys = watchManager.getResources(input.clusterId, 'deployments')
+
+        if (wNodes && wPods && wNs && wEvents && wDeploys) {
+          nodesItems = wNodes as k8s.V1Node[]
+          podsItems = wPods as k8s.V1Pod[]
+          nsItems = wNs as k8s.V1Namespace[]
+          eventsItems = wEvents as k8s.CoreV1Event[]
+          deploymentsItems = wDeploys as k8s.V1Deployment[]
         } else {
           const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
           const appsV1 = kc.makeApiClient(k8s.AppsV1Api)
@@ -484,9 +487,9 @@ export const clustersRouter = router({
         }
 
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const rawNodes = watchManager.getResources(input.clusterId, 'nodes') as k8s.V1Node[]
-          return rawNodes.map(mapLiveNode)
+        const watchedNodes = watchManager.getResources(input.clusterId, 'nodes')
+        if (watchedNodes) {
+          return (watchedNodes as k8s.V1Node[]).map(mapLiveNode)
         }
 
         // Fallback: fetch from K8s API via cached()
@@ -550,12 +553,9 @@ export const clustersRouter = router({
         })
 
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const rawEvents = watchManager.getResources(
-            input.clusterId,
-            'events',
-          ) as k8s.CoreV1Event[]
-          return [...rawEvents]
+        const watchedEvents = watchManager.getResources(input.clusterId, 'events')
+        if (watchedEvents) {
+          return [...(watchedEvents as k8s.CoreV1Event[])]
             .sort(
               (a, b) =>
                 new Date(
@@ -629,16 +629,17 @@ export const clustersRouter = router({
         )
 
         // Read resources from WatchManager or fall back to K8s API
-        if (watchManager.isWatching(input.clusterId)) {
-          const nodesItems = watchManager.getResources(input.clusterId, 'nodes')
-          const podsItems = watchManager.getResources(input.clusterId, 'pods') as k8s.V1Pod[]
-          const nsItems = watchManager.getResources(input.clusterId, 'namespaces')
+        const wStatsNodes = watchManager.getResources(input.clusterId, 'nodes')
+        const wStatsPods = watchManager.getResources(input.clusterId, 'pods')
+        const wStatsNs = watchManager.getResources(input.clusterId, 'namespaces')
+        if (wStatsNodes && wStatsPods && wStatsNs) {
+          const pods = wStatsPods as k8s.V1Pod[]
           return {
             version: `v${versionInfo.major}.${versionInfo.minor}`,
-            nodeCount: nodesItems.length,
-            podCount: podsItems.length,
-            runningPods: podsItems.filter((p) => p.status?.phase === 'Running').length,
-            namespaceCount: nsItems.length,
+            nodeCount: wStatsNodes.length,
+            podCount: pods.length,
+            runningPods: pods.filter((p) => p.status?.phase === 'Running').length,
+            namespaceCount: wStatsNs.length,
           }
         }
 
