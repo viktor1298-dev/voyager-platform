@@ -46,9 +46,9 @@ export const nodesRouter = router({
         }
 
         // Read nodes from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const rawNodes = watchManager.getResources(input.clusterId, 'nodes') as k8s.V1Node[]
-          return rawNodes.map((node) => mapNode(node, nodeMetricsMap))
+        const watchedNodes = watchManager.getResources(input.clusterId, 'nodes')
+        if (watchedNodes) {
+          return (watchedNodes as k8s.V1Node[]).map((node) => mapNode(node, nodeMetricsMap))
         }
 
         // Fallback: fetch from K8s API via cached()

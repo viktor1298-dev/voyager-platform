@@ -52,14 +52,13 @@ export const servicesRouter = router({
     .query(async ({ input }) => {
       try {
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const rawServices = watchManager.getResources(
-            input.clusterId,
-            'services',
-          ) as k8s.V1Service[]
+        const watchedServices = watchManager.getResources(input.clusterId, 'services')
+        if (watchedServices) {
           const filtered = input.namespace
-            ? rawServices.filter((s) => s.metadata?.namespace === input.namespace)
-            : rawServices
+            ? (watchedServices as k8s.V1Service[]).filter(
+                (s) => s.metadata?.namespace === input.namespace,
+              )
+            : (watchedServices as k8s.V1Service[])
           return filtered.map((svc) => mapService(svc))
         }
 
@@ -87,14 +86,13 @@ export const servicesRouter = router({
     .query(async ({ input }) => {
       try {
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const rawServices = watchManager.getResources(
-            input.clusterId,
-            'services',
-          ) as k8s.V1Service[]
+        const watchedServicesByCluster = watchManager.getResources(input.clusterId, 'services')
+        if (watchedServicesByCluster) {
           const filtered = input.namespace
-            ? rawServices.filter((s) => s.metadata?.namespace === input.namespace)
-            : rawServices
+            ? (watchedServicesByCluster as k8s.V1Service[]).filter(
+                (s) => s.metadata?.namespace === input.namespace,
+              )
+            : (watchedServicesByCluster as k8s.V1Service[])
           return filtered.map((svc) => mapService(svc))
         }
 
@@ -140,12 +138,9 @@ export const servicesRouter = router({
         })
 
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const rawServices = watchManager.getResources(
-            input.clusterId,
-            'services',
-          ) as k8s.V1Service[]
-          return rawServices.map(mapDetail)
+        const watchedServicesDetail = watchManager.getResources(input.clusterId, 'services')
+        if (watchedServicesDetail) {
+          return (watchedServicesDetail as k8s.V1Service[]).map(mapDetail)
         }
 
         // Fallback: fetch from K8s API via cached()

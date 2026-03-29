@@ -13,9 +13,9 @@ export const ingressesRouter = router({
     .query(async ({ input }) => {
       try {
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const raw = watchManager.getResources(input.clusterId, 'ingresses') as k8s.V1Ingress[]
-          return raw.map((ing) => mapIngress(ing))
+        const watchedIngresses = watchManager.getResources(input.clusterId, 'ingresses')
+        if (watchedIngresses) {
+          return (watchedIngresses as k8s.V1Ingress[]).map((ing) => mapIngress(ing))
         }
 
         // Fallback: fetch from K8s API via cached()

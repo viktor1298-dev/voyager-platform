@@ -67,12 +67,9 @@ export const namespacesRouter = router({
         }
 
         // Read namespaces from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const rawNamespaces = watchManager.getResources(
-            input.clusterId,
-            'namespaces',
-          ) as k8s.V1Namespace[]
-          return rawNamespaces.map((ns) => {
+        const watchedNamespaces = watchManager.getResources(input.clusterId, 'namespaces')
+        if (watchedNamespaces) {
+          return (watchedNamespaces as k8s.V1Namespace[]).map((ns) => {
             const mapped = mapNamespace(ns)
             return { ...mapped, resourceQuota: quotaMap.get(mapped.name) ?? null }
           })

@@ -40,9 +40,9 @@ export const podsRouter = router({
         }
 
         // Read pods from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const rawPods = watchManager.getResources(input.clusterId, 'pods') as k8s.V1Pod[]
-          return rawPods.map((p) => mapPod(p, podMetricsMap))
+        const watchedPods = watchManager.getResources(input.clusterId, 'pods')
+        if (watchedPods) {
+          return (watchedPods as k8s.V1Pod[]).map((p) => mapPod(p, podMetricsMap))
         }
 
         // Fallback: fetch from K8s API via cached()

@@ -13,9 +13,9 @@ export const jobsRouter = router({
     .query(async ({ input }) => {
       try {
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const raw = watchManager.getResources(input.clusterId, 'jobs') as k8s.V1Job[]
-          return raw.map((job) => mapJob(job))
+        const watchedJobs = watchManager.getResources(input.clusterId, 'jobs')
+        if (watchedJobs) {
+          return (watchedJobs as k8s.V1Job[]).map((job) => mapJob(job))
         }
 
         // Fallback: fetch from K8s API via cached()

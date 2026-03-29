@@ -13,9 +13,9 @@ export const configMapsRouter = router({
     .query(async ({ input }) => {
       try {
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const raw = watchManager.getResources(input.clusterId, 'configmaps') as k8s.V1ConfigMap[]
-          return raw.map((cm) => mapConfigMap(cm))
+        const watchedConfigMaps = watchManager.getResources(input.clusterId, 'configmaps')
+        if (watchedConfigMaps) {
+          return (watchedConfigMaps as k8s.V1ConfigMap[]).map((cm) => mapConfigMap(cm))
         }
 
         // Fallback: fetch from K8s API via cached()

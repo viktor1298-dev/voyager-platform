@@ -80,9 +80,9 @@ export const eventsRouter = router({
     )
     .query(async ({ input }) => {
       // Read live K8s events from WatchManager in-memory store
-      if (watchManager.isWatching(input.clusterId)) {
-        const rawEvents = watchManager.getResources(input.clusterId, 'events') as k8s.CoreV1Event[]
-        const mapped = rawEvents.map((e) => mapEvent(e))
+      const watchedEvents = watchManager.getResources(input.clusterId, 'events')
+      if (watchedEvents) {
+        const mapped = (watchedEvents as k8s.CoreV1Event[]).map((e) => mapEvent(e))
         // Sort by timestamp descending and limit
         mapped.sort((a, b) => {
           const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0

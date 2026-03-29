@@ -13,12 +13,9 @@ export const pvcsRouter = router({
     .query(async ({ input }) => {
       try {
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const raw = watchManager.getResources(
-            input.clusterId,
-            'pvcs',
-          ) as k8s.V1PersistentVolumeClaim[]
-          return raw.map((pvc) => mapPVC(pvc))
+        const watchedPVCs = watchManager.getResources(input.clusterId, 'pvcs')
+        if (watchedPVCs) {
+          return (watchedPVCs as k8s.V1PersistentVolumeClaim[]).map((pvc) => mapPVC(pvc))
         }
 
         // Fallback: fetch from K8s API via cached()

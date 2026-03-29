@@ -13,12 +13,9 @@ export const hpaRouter = router({
     .query(async ({ input }) => {
       try {
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const raw = watchManager.getResources(
-            input.clusterId,
-            'hpa',
-          ) as k8s.V2HorizontalPodAutoscaler[]
-          return raw.map((hpa) => mapHPA(hpa))
+        const watchedHPAs = watchManager.getResources(input.clusterId, 'hpa')
+        if (watchedHPAs) {
+          return (watchedHPAs as k8s.V2HorizontalPodAutoscaler[]).map((hpa) => mapHPA(hpa))
         }
 
         // Fallback: fetch from K8s API via cached()

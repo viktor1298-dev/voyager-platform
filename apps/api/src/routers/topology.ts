@@ -66,20 +66,22 @@ export const topologyRouter = router({
         let nodeItems: k8s.V1Node[]
 
         // Read all 7 resource types from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          ingressItems = watchManager.getResources(input.clusterId, 'ingresses') as k8s.V1Ingress[]
-          serviceItems = watchManager.getResources(input.clusterId, 'services') as k8s.V1Service[]
-          deployItems = watchManager.getResources(
-            input.clusterId,
-            'deployments',
-          ) as k8s.V1Deployment[]
-          stsItems = watchManager.getResources(
-            input.clusterId,
-            'statefulsets',
-          ) as k8s.V1StatefulSet[]
-          dsItems = watchManager.getResources(input.clusterId, 'daemonsets') as k8s.V1DaemonSet[]
-          podItems = watchManager.getResources(input.clusterId, 'pods') as k8s.V1Pod[]
-          nodeItems = watchManager.getResources(input.clusterId, 'nodes') as k8s.V1Node[]
+        const watchedIngresses = watchManager.getResources(input.clusterId, 'ingresses')
+        const watchedServicesT = watchManager.getResources(input.clusterId, 'services')
+        const watchedDeploys = watchManager.getResources(input.clusterId, 'deployments')
+        const watchedSts = watchManager.getResources(input.clusterId, 'statefulsets')
+        const watchedDs = watchManager.getResources(input.clusterId, 'daemonsets')
+        const watchedPodsT = watchManager.getResources(input.clusterId, 'pods')
+        const watchedNodesT = watchManager.getResources(input.clusterId, 'nodes')
+
+        if (watchedIngresses && watchedServicesT && watchedDeploys && watchedSts && watchedDs && watchedPodsT && watchedNodesT) {
+          ingressItems = watchedIngresses as k8s.V1Ingress[]
+          serviceItems = watchedServicesT as k8s.V1Service[]
+          deployItems = watchedDeploys as k8s.V1Deployment[]
+          stsItems = watchedSts as k8s.V1StatefulSet[]
+          dsItems = watchedDs as k8s.V1DaemonSet[]
+          podItems = watchedPodsT as k8s.V1Pod[]
+          nodeItems = watchedNodesT as k8s.V1Node[]
         } else {
           // Fallback: fetch from K8s API via cached()
           const kc = await clusterClientPool.getClient(input.clusterId)

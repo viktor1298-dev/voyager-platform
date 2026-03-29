@@ -228,12 +228,11 @@ export const deploymentsRouter = router({
     .output(z.array(deploymentInfoSchema))
     .query(async ({ input }): Promise<DeploymentInfo[]> => {
       // Read from WatchManager in-memory store when available
-      if (watchManager.isWatching(input.clusterId)) {
-        const rawDeps = watchManager.getResources(
-          input.clusterId,
-          'deployments',
-        ) as k8s.V1Deployment[]
-        return rawDeps.map((d) => mapDeployment(d, input.clusterId, input.clusterId))
+      const watchedDeps = watchManager.getResources(input.clusterId, 'deployments')
+      if (watchedDeps) {
+        return (watchedDeps as k8s.V1Deployment[]).map((d) =>
+          mapDeployment(d, input.clusterId, input.clusterId),
+        )
       }
 
       // Fallback: fetch from K8s API via cached()
@@ -362,12 +361,9 @@ export const deploymentsRouter = router({
       }
 
       // Read from WatchManager in-memory store when available
-      if (watchManager.isWatching(input.clusterId)) {
-        const rawDeps = watchManager.getResources(
-          input.clusterId,
-          'deployments',
-        ) as k8s.V1Deployment[]
-        return rawDeps.map(mapDetail)
+      const watchedDepsDetail = watchManager.getResources(input.clusterId, 'deployments')
+      if (watchedDepsDetail) {
+        return (watchedDepsDetail as k8s.V1Deployment[]).map(mapDetail)
       }
 
       // Fallback: fetch from K8s API via cached()

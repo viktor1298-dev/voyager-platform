@@ -15,12 +15,9 @@ export const statefulSetsRouter = router({
     .query(async ({ input }) => {
       try {
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const raw = watchManager.getResources(
-            input.clusterId,
-            'statefulsets',
-          ) as k8s.V1StatefulSet[]
-          return raw.map((ss) => mapStatefulSet(ss))
+        const watchedStatefulSets = watchManager.getResources(input.clusterId, 'statefulsets')
+        if (watchedStatefulSets) {
+          return (watchedStatefulSets as k8s.V1StatefulSet[]).map((ss) => mapStatefulSet(ss))
         }
 
         // Fallback: fetch from K8s API via cached()

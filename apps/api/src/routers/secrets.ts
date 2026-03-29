@@ -13,9 +13,9 @@ export const secretsRouter = router({
     .query(async ({ input }) => {
       try {
         // Read from WatchManager in-memory store when available
-        if (watchManager.isWatching(input.clusterId)) {
-          const raw = watchManager.getResources(input.clusterId, 'secrets') as k8s.V1Secret[]
-          return raw.map((secret) => mapSecret(secret))
+        const watchedSecrets = watchManager.getResources(input.clusterId, 'secrets')
+        if (watchedSecrets) {
+          return (watchedSecrets as k8s.V1Secret[]).map((secret) => mapSecret(secret))
         }
 
         // Fallback: fetch from K8s API via cached()
