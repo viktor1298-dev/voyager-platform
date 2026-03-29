@@ -15,6 +15,7 @@ const CommandPalette = dynamic(
   { ssr: false },
 )
 import { KeyboardShortcuts } from './KeyboardShortcuts'
+import { TerminalDrawer } from './terminal/TerminalDrawer'
 import { TerminalProvider } from './terminal/terminal-context'
 
 /**
@@ -99,6 +100,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 />
                 <CommandPalette />
                 <KeyboardShortcuts />
+                <TerminalDrawer />
               </TerminalProvider>
             </QueryClientProvider>
           </trpc.Provider>
