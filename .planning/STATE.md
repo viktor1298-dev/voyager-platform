@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-03-29T17:15:14.119Z"
+stopped_at: Completed 10-04-PLAN.md
+last_updated: "2026-03-29T17:33:07.629Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 31
-  completed_plans: 27
+  completed_plans: 28
   percent: 14
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 10 (lens-style-live-data-k8s-watch-stream-architecture) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -71,6 +71,7 @@ Progress: [#.........] 14%
 | Phase 08 P08 | 9min | 2 tasks | 14 files |
 | Phase 09 P10 | 9min | 2 tasks | 9 files |
 | Phase 10 P01 | 9min | 1 tasks | 8 files |
+| Phase 10 P04 | 15min | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,8 @@ Recent decisions affecting current work:
 - [Phase 10]: Debounced periodic sync (60s) for watch-db-writer instead of per-event DB writes to avoid overwhelming PostgreSQL
 - [Phase 10]: WatchManager uses makeInformer ObjectCache for getResources/getResource (zero-copy, no API call)
 - [Phase 10]: Resource mappers accept optional metricsMap for pods/nodes so routers enrich with metrics while watch events default to null
+- [Phase 10]: Watch-first router pattern: check watchManager.isWatching() before cached() K8s API call, fallback when not watching
+- [Phase 10]: Shared mapper dedup: all 15 resource routers use resource-mappers.ts instead of inline transformation
 
 ### Roadmap Evolution
 
@@ -141,6 +144,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T17:15:14.117Z
-Stopped at: Completed 10-01-PLAN.md
+Last session: 2026-03-29T17:33:07.627Z
+Stopped at: Completed 10-04-PLAN.md
 Resume file: None
