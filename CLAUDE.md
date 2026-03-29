@@ -11,35 +11,22 @@ Voyager Platform is a **Kubernetes operations dashboard** — multi-cloud cluste
 ```
 voyager-platform/
 ├── apps/
-│   ├── api/                    # Fastify 5 backend (tRPC 11, Drizzle ORM, Better-Auth)
-│   │   └── src/
-│   │       ├── server.ts       # Entry point — DO NOT add migrate() here
-│   │       ├── routers/        # tRPC routers (45 routes: clusters, pods, nodes, alerts, ai, ingresses, statefulsets, daemonsets, jobs, cronjobs, hpa, configmaps, secrets, pvcs, yaml, helm, crds, rbac, networkPolicies, resourceQuotas, topology, etc.)
-│   │       ├── routes/         # Non-tRPC routes (ai-stream, mcp, metrics-stream, log-stream, pod-terminal)
-│   │       ├── jobs/           # Background jobs (health-sync, alert-evaluator, metrics, node-sync, event-sync, deploy-smoke-test, metrics-stream-job)
-│   │       ├── config/         # Backend-only config (job intervals, K8s settings)
-│   │       └── lib/            # Auth, K8s watchers, telemetry, sentry, cache, authorization, error-handler, cache-keys, health-checks
-│   └── web/                    # Next.js 16 frontend (React 19, Tailwind 4)
-│       └── src/
-│           ├── app/            # App Router pages (clusters, alerts, settings, ai, etc.)
-│           ├── components/     # UI components (Sidebar, AppLayout, DataTable, charts)
-│           ├── hooks/          # Custom hooks (useMetricsData, useMetricsSSE)
-│           ├── lib/            # Utilities (trpc client, formatters, animation-constants, metrics-buffer, lttb)
-│           └── config/         # navigation.ts (6 sidebar items)
+│   ├── api/                    # Fastify 5 backend — see apps/api/CLAUDE.md
+│   └── web/                    # Next.js 16 frontend — see apps/web/CLAUDE.md
 ├── packages/
-│   ├── db/                     # Drizzle ORM schema + migrations
+│   ├── db/                     # Drizzle ORM schema — see packages/db/CLAUDE.md
 │   ├── config/                 # Shared config (SSE, AI, routes, cache TTLs, validation limits)
 │   ├── types/                  # Shared TypeScript types (SSE events, AI contracts)
 │   └── ui/                     # Shared UI components (shadcn/ui)
-├── charts/voyager/             # Helm chart for K8s deployment
-│   ├── sql/init.sql            # 🔴 Schema source of truth
-│   └── templates/              # K8s manifests
+├── charts/voyager/             # Helm chart — see charts/voyager/CLAUDE.md
 ├── docker/                     # Dockerfile.api, Dockerfile.web
 ├── tests/
 │   ├── e2e/                    # Playwright E2E tests
 │   └── visual/                 # Visual regression tests
 └── scripts/                    # Utility scripts (health-check.ts)
 ```
+
+Each major directory has its own `CLAUDE.md` with domain-specific details — always read it when working in that area.
 
 ## Tech Stack
 
@@ -133,7 +120,7 @@ pnpm db:seed                  # Optional: seed mock clusters/nodes/events
 
 7. **QA gate: 8.5+/10** — Desktop QA (1920×1080) must pass before declaring phase complete.
 
-8. **Before any UI/animation change, read `docs/DESIGN.md`** — It is the animation and interaction design source of truth. All hover states, card effects, button feedback, chart animations, and status indicators MUST follow the standards defined there. The design style is "Confident & Expressive" (Raycast/Arc Style B).
+8. **Before any UI/animation change, read `docs/DESIGN.md`** — It is the animation and interaction design source of truth. The design style is "Confident & Expressive" (Raycast/Arc Style B).
 
 ## Architecture
 
@@ -160,57 +147,6 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 
 **Live data pipeline:** K8s Watch API → informers detect changes → SSE pushes events to browser → `useResourceSSE` triggers immediate refetch → Redis cache invalidated by watch → fresh data from K8s API. All 15 resource types covered. Update latency: ~5-8s.
 
-### Backend Layers
-
-- **routers/** → **services** → **lib/** (dependency direction; routers can skip services to call lib directly)
-- **lib/** has no dependencies on routers or services
-- tRPC procedures use `publicProcedure`, `protectedProcedure`, `adminProcedure`, or `authorizedProcedure` middleware
-- Non-tRPC routes: `ai-stream` (SSE streaming), `mcp` (MCP protocol), `metrics-stream` (SSE live metrics), `log-stream` (SSE pod log streaming), `pod-terminal` (WebSocket pod exec), `resource-stream` (SSE live K8s Watch events for all resource types)
-- tRPC client uses `httpLink` (NOT `httpBatchLink`) — see Gotcha #1
-- Background jobs: `health-sync`, `alert-evaluator`, `metrics-history-collector`, `node-sync`, `event-sync`, `deploy-smoke-test`, `metrics-stream-job`
-- **All sync jobs run regardless of `K8S_ENABLED`** — only K8s watchers and deploy-smoke-test are gated (see Gotcha #14)
-
-### Key Abstractions
-
-| Abstraction | Location | Pattern |
-|-------------|----------|---------|
-| **K8s Resource Routers** | `api/src/routers/{resource}.ts` | `authorizedProcedure('cluster', 'viewer')` + `clusterClientPool.getClient()` + `cached()` with 15s TTL (⚠️ seconds, see Gotcha #28); read-only, RBAC-checked. Redis cache auto-invalidated by ResourceWatchManager on K8s changes. Pattern used by: ingresses, statefulSets, daemonSets, jobs, cronJobs, hpa, configMaps, secrets, pvcs, yaml, helm, crds, rbac, networkPolicies, resourceQuotas, topology |
-| **Cluster Client Pool** | `api/src/lib/cluster-client-pool.ts` | Lazy-loaded per-cluster K8s clients; caches KubeConfig, handles credential decryption for AWS/Azure/GKE |
-| **Cluster Watch Manager** | `api/src/lib/cluster-watch-manager.ts` | K8s informers for pods/deployments/nodes per cluster → emits to `voyagerEmitter`; auto-reconnects on error (5s delay) |
-| **Resource Watch Manager** | `api/src/lib/resource-watch-manager.ts` | K8s informers for 12 additional resource types (services, configmaps, secrets, pvcs, namespaces, events, statefulsets, daemonsets, jobs, cronjobs, hpa, ingresses); reference-counted per SSE subscriber; invalidates Redis cache on change |
-| **Resource Stream Route** | `api/src/routes/resource-stream.ts` | SSE endpoint `/api/resources/stream` — bridges watch events from both managers, buffered, authenticated, connection-limited |
-| **SSE Route Handler Proxies** | `web/src/app/api/{resources,metrics,logs}/stream/route.ts` | Next.js Route Handlers using `node:http` to stream SSE from API to browser (Next.js rewrites can't proxy SSE) |
-| **useResourceSSE** | `web/src/hooks/useResourceSSE.ts` | SSE hook in cluster layout — receives K8s Watch events, triggers immediate TanStack Query refetch via `requestAnimationFrame` batching |
-| **Event Emitter** | `api/src/lib/event-emitter.ts` | Decouples K8s watchers from SSE subscriptions (one watch, many consumers) |
-| **Auth** | `api/src/lib/auth.ts` | Better-Auth handler for `/api/auth/*`; session in PostgreSQL, token in cookie |
-| **Authorization** | `api/src/lib/authorization.ts` | `createAuthorizationService(db).check(subject, relation, object)` — DB-backed RBAC |
-| **Health Checks** | `api/src/lib/health-checks.ts` | Pure-function log scanner, startup probe, page smoke, result assessment — shared by CLI and K8s job |
-| **Metrics Stream Job** | `api/src/jobs/metrics-stream-job.ts` | Reference-counted K8s metrics polling — starts on first SSE subscriber, stops on last disconnect |
-| **Metrics SSE Route** | `api/src/routes/metrics-stream.ts` | `/api/metrics/stream?clusterId=<uuid>` — authenticated SSE endpoint streaming live K8s metrics at 10-15s resolution |
-| **Crosshair Provider** | `web/src/components/metrics/CrosshairProvider.tsx` | RAF-throttled shared crosshair state for synchronized hover across 4 metric panels |
-| **Metrics Buffer** | `web/src/lib/metrics-buffer.ts` | Circular buffer (65 points max) for SSE live data with time-based eviction |
-| **LTTB Downsampling** | `web/src/lib/lttb.ts` | Largest-Triangle-Three-Buckets algorithm (~50 LOC) — downsamples 500+ points to ~200 for chart perf |
-| **useMetricsData** | `web/src/hooks/useMetricsData.ts` | Unified data hook — SSE for ≤15m ranges, tRPC for ≥30m — seamless switching |
-| **Terminal Drawer** | `web/src/components/terminal/TerminalDrawer.tsx` | VS Code-style bottom panel — xterm.js, multi-tab sessions, WebSocket to K8s exec |
-| **Terminal Context** | `web/src/components/terminal/terminal-context.tsx` | `useTerminal()` hook — session management, openTerminal/closeTerminal for pod exec |
-| **Pod Terminal Route** | `api/src/routes/pod-terminal.ts` | WebSocket route bridging browser WS ↔ K8s exec via PassThrough streams |
-| **Log Stream Route** | `api/src/routes/log-stream.ts` | SSE endpoint for real-time pod log streaming with follow mode |
-| **YAML Router** | `api/src/routers/yaml.ts` | Universal K8s raw resource fetcher — supports 16 resource types |
-| **YamlViewer** | `web/src/components/resource/YamlViewer.tsx` | Syntax-highlighted read-only YAML viewer with copy, theme-aware |
-| **ResourceDiff** | `web/src/components/resource/ResourceDiff.tsx` | Side-by-side diff (current vs last-applied annotation), Helm revision support |
-| **ActionToolbar** | `web/src/components/resource/ActionToolbar.tsx` | Restart/Scale/Delete action buttons with tiered confirmation dialogs |
-| **Topology Map** | `web/src/components/topology/TopologyMap.tsx` | React Flow interactive graph — Ingress→Service→Pod→Node with dagre layout |
-| **RBAC Matrix** | `web/src/components/rbac/RbacMatrix.tsx` | Permission grid — users×resources with CRUD letter cells |
-| **Events Timeline** | `web/src/components/events/EventsTimeline.tsx` | Horizontal swim lane visualization with resource-type grouping |
-
-### State Management
-
-- **Server state (DB):** Clusters, nodes, alerts, users, webhooks — PostgreSQL
-- **Real-time state (SSE):** Pod updates, deployment progress, metrics — EventEmitter → SSE to clients
-- **Client state:** UI filters, sidebar collapse, dashboard layout — Zustand stores
-- **Session:** Better-Auth cookie session (secure, httpOnly, sameSite=strict) — no JWT
-- **Cache:** tRPC useQuery with `staleTime` and `refetchInterval` per endpoint
-
 ### Centralized Config
 
 Configuration is split between shared (API + Web) and backend-only:
@@ -218,7 +154,7 @@ Configuration is split between shared (API + Web) and backend-only:
 | File | Exports | Used By |
 |------|---------|---------|
 | `packages/config/src/routes.ts` | `API_ROUTES`, `AUTH_BYPASS_PATHS`, `RATE_LIMIT_BYPASS_PATHS` | server.ts, auth-guard.ts |
-| `packages/config/src/cache.ts` | `CACHE_TTL` (K8S_RESOURCES_SEC, CLUSTER_CLIENT_MS, etc.) | cluster-client-pool, routers, karpenter, sso, presence |
+| `packages/config/src/cache.ts` | `CACHE_TTL` (K8S_RESOURCES_SEC, CLUSTER_CLIENT_MS, etc.) | cluster-client-pool, routers |
 | `packages/config/src/validation.ts` | `LIMITS` (NAME_MAX, LIST_MAX, etc.) | All tRPC routers with Zod schemas |
 | `packages/config/src/sse.ts` | SSE heartbeat/reconnect constants | SSE subscriptions |
 | `packages/config/src/ai.ts` | `AI_CONFIG` | AI service |
@@ -227,34 +163,6 @@ Configuration is split between shared (API + Web) and backend-only:
 
 **Rule:** Do NOT add new hardcoded values to routers or jobs. Add constants to the appropriate config file and import from there.
 
-### Error Handling
-
-- **K8s router errors:** Use `handleK8sError(error, operation)` from `api/src/lib/error-handler.ts` — standardized pattern across all K8s routers
-- tRPC errors: `TRPCError { code, message }` — codes: `BAD_REQUEST`, `NOT_FOUND`, `UNAUTHORIZED`, `FORBIDDEN`, `CONFLICT`, `INTERNAL_SERVER_ERROR`
-- Client-caused errors (`UNAUTHORIZED`, `NOT_FOUND`, `BAD_REQUEST`) → no Sentry; server errors → Sentry
-- Frontend: `handleTRPCError()` in `web/src/lib/trpc.ts` redirects to `/login` on UNAUTHORIZED
-- Redis failures are non-fatal: catch and fall back to direct function call
-- Audit logging errors must never break the main operation: `try { logAudit(...) } catch { console.error(...) }`
-- K8s connection errors: logged, don't crash API; health check returns degraded
-
-### Cache Keys
-
-All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Never construct cache key strings inline** — use `CACHE_KEYS.k8sServices(clusterId, ns)` etc. This prevents key format drift and makes invalidation patterns reliable.
-
-### Cross-Cutting
-
-- Rate limiting: 200 req/min per IP via `@fastify/rate-limit`; whitelist: `/api/auth/`, `/health`, `/trpc`
-- OpenAPI: auto-generated via `trpc-to-openapi` + `@fastify/swagger`
-- Health: `/health` (always up), `/health/metrics-collector` (collector status)
-- View Transitions: enabled via `next.config.ts` experimental flag + CSS `@view-transition` in globals.css
-- Package optimization: `optimizePackageImports` for lucide-react, recharts, @iconify/react, @xyflow/react in next.config.ts
-- QueryClient: global `staleTime: 30s` to prevent unnecessary refetches
-- Chart colors: all charts use CSS custom properties (`--chart-1..5`, `--color-chart-*`, `--color-threshold-*`) from globals.css — never hardcode colors
-- Container queries: `WidgetWrapper.tsx` uses `@container` for responsive dashboard widgets
-- CommandPalette: dynamically imported via `next/dynamic` in providers.tsx (~20KB savings)
-- Animation components: `FadeIn`, `SlideIn`, `AnimatedList`, `PageTransition`, `SuccessCheck` in `components/animations/` — reusable Motion wrappers with reduced-motion support
-- Animation style: "Confident & Expressive" (B-style) — springs stiffness 350/damping 24, card hover lift y:-4, badge bounce pop, chart entry stagger, alert severity glow. See `docs/DESIGN.md`
-
 ## Current State
 
 | Item | Details |
@@ -262,224 +170,37 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | **Milestone** | v1.0 Reset & Stabilization — complete (tagged `v1.0`) |
 | **Main branch** | Single source of truth — PRs required, force push blocked |
 | **Build status** | `pnpm build` ✓, `pnpm typecheck` ✓, `pnpm test` ✓ (all passing) |
-| **UI/UX audit** | 219 findings across 6 dimensions — all fixed (2026-03-27). Reports in `docs/ui-audit/` |
-| **Animation enhancement** | B-style (Confident & Expressive) — 35 files, 4 waves complete (2026-03-27). Spec in `docs/superpowers/specs/`, standards in `docs/DESIGN.md` |
-| **Post-start health verification** | Local CLI (`pnpm health:check`) + K8s deploy smoke test job (2026-03-27). Spec in `docs/superpowers/specs/`, plan in `docs/superpowers/plans/` |
-| **Metrics Graph Redesign** | Grafana-quality metrics viz — 7 phases complete (2026-03-28). TimescaleDB time_bucket(), SSE real-time, synchronized crosshair, dark panels, LTTB downsampling |
-| **K8s Resource Explorer** | 8 waves complete (2026-03-28). GroupedTabBar navigation, expandable component library, 19 resource types with detail panels, 10 new tRPC routers. Spec in `docs/superpowers/specs/` |
-| **Lens-Inspired Power Features** | 10 plans, 4 waves complete (2026-03-28). Pod exec terminal (xterm.js + WebSocket), live log streaming (SSE follow), YAML viewer + resource diff on all resources, workload mutations (restart/scale/delete), Helm releases viewer, CRD browser, RBAC permission matrix, network policy graph (React Flow), resource quotas dashboard, events timeline swim lanes, resource topology map. 7 new tRPC routers, first WebSocket in codebase. Plans in `.planning/phases/09-lens-inspired-power-features/` |
-| **Live Data Pipeline** | K8s Watch → SSE → UI refetch. Fixed: cache TTL bug (15000s→15s), SSE proxy (Route Handlers), informer reconnection, Redis cache invalidation on watch events. 15 resource types watched. ~5-8s update latency (2026-03-29). Next optimization: push data through SSE for instant updates. |
+| **Metrics Graph Redesign** | Grafana-quality metrics viz — complete (2026-03-28). TimescaleDB, SSE real-time, synchronized crosshair, LTTB downsampling |
+| **K8s Resource Explorer** | 8 waves complete (2026-03-28). GroupedTabBar, 19 resource types, 10 new tRPC routers |
+| **Lens-Inspired Power Features** | 10 plans, 4 waves complete (2026-03-28). Pod exec, log streaming, YAML/diff, Helm, CRDs, RBAC, topology, network policies, resource quotas, events timeline |
+| **Live Data Pipeline** | K8s Watch → SSE → UI refetch. 15 resource types. ~5-8s update latency (2026-03-29) |
 | **Next** | Push resource data through SSE (Lens-instant updates), then v2.0 milestone |
 
-## Database
+## Known Gotchas (Cross-Cutting)
 
-- **Schema source of truth:** `charts/voyager/sql/init.sql` (NOT the Drizzle schema files)
-- **Local dev:** `docker compose up -d` runs Postgres (timescale/timescaledb:latest-pg17) + Redis 7
-- **ORM:** Drizzle (schema in `packages/db/src/schema/`)
-- **Access (K8s):**
-  ```bash
-  kubectl exec -n voyager deploy/postgres -- psql -U voyager -d voyager -c "SELECT ..."
-  ```
-- **Seed after fresh install:** Required — `SELECT count(*) FROM users` = 0 means empty DB
-- **Helm secrets:** `cp charts/voyager/values-local.example.yaml charts/voyager/values-local.yaml` (gitignored)
+> **Domain-specific gotchas live in sub-file CLAUDE.md files:** `apps/api/`, `apps/web/`, `packages/db/`, `charts/voyager/`
 
-## Key Files
-
-| Path | What |
-|------|------|
-| `apps/api/src/server.ts` | Fastify entry point (🔴 no migrate!) |
-| `apps/api/src/routers/index.ts` | tRPC router registry (45 routes) |
-| `apps/api/src/trpc.ts` | tRPC context creation, procedure definitions |
-| `apps/web/src/app/clusters/[id]/layout.tsx` | Cluster detail layout with GroupedTabBar (25 resource types in 7 categorized groups) |
-| `apps/web/src/components/Sidebar.tsx` | Main sidebar (6 items) |
-| `apps/web/src/components/AppLayout.tsx` | App shell with auto-collapse logic |
-| `apps/web/src/components/providers.tsx` | All providers (tRPC, theme, LazyMotion — no `strict` flag, TerminalProvider + TerminalDrawer, CommandPalette dynamically imported) |
-| `apps/web/src/components/charts/chart-theme.ts` | Shared chart colors, tooltip style, threshold helpers — references `--chart-*` CSS vars |
-| `apps/web/src/config/navigation.ts` | Sidebar navigation config |
-| `apps/web/src/lib/trpc.ts` | tRPC client setup + `handleTRPCError` |
-| `apps/web/src/lib/animation-constants.ts` | Motion v12 timing/easing/variant constants (B-style: springs, card hover, badge pop, error shake, chart anim, glow) |
-| `charts/voyager/sql/init.sql` | DB schema (source of truth) |
-| `apps/api/src/lib/error-handler.ts` | Shared `handleK8sError()` for all K8s routers |
-| `apps/api/src/lib/cache-keys.ts` | Centralized Redis cache key builders |
-| `apps/api/src/config/jobs.ts` | Background job interval constants |
-| `apps/api/src/config/k8s.ts` | K8s client pool config (getter for ENCRYPTION_KEY) |
-| `apps/api/src/lib/health-checks.ts` | Shared health check logic: log scanner, startup probe, page smoke, result assessment |
-| `apps/api/src/jobs/deploy-smoke-test.ts` | K8s deploy smoke test — listens for deployment rollouts, runs checks, creates alerts |
-| `apps/api/src/lib/k8s-client-factory.ts` | KubeConfig factory for all providers (kubeconfig, AWS, Azure, GKE, minikube) |
-| `scripts/health-check.ts` | `pnpm health:check` CLI — local dev post-start health verification |
-| `apps/api/src/routes/metrics-stream.ts` | SSE endpoint for live K8s metrics streaming (authenticated, per-cluster) |
-| `apps/api/src/jobs/metrics-stream-job.ts` | Reference-counted MetricsStreamJob — polls K8s only for clusters with SSE subscribers |
-| `apps/web/src/hooks/useMetricsData.ts` | Unified metrics hook — SSE for ≤15m, tRPC for ≥30m, auto-switches |
-| `apps/web/src/hooks/useMetricsSSE.ts` | SSE connection hook with exponential backoff + visibility-aware lifecycle |
-| `apps/web/src/lib/metrics-buffer.ts` | Circular buffer for SSE live data (65 points, time-based eviction) |
-| `apps/web/src/lib/lttb.ts` | LTTB downsampling (~50 LOC, zero deps) — 500+ points → ~200 |
-| `apps/web/src/components/metrics/CrosshairProvider.tsx` | RAF-throttled synchronized crosshair state across all metric panels |
-| `apps/web/src/components/metrics/DataFreshnessBadge.tsx` | Live/age/Stale freshness indicator with color coding |
-| `apps/web/src/components/metrics/MetricsPanelSkeleton.tsx` | Chart-shaped skeleton shimmer for per-panel loading |
-| `apps/web/src/components/metrics/DebouncedResponsiveContainer.tsx` | ResizeObserver-based container with 150ms debounce |
-| `apps/web/src/components/expandable/` | Reusable expandable detail components: ExpandableCard, ExpandableTableRow, DetailTabs, ResourceBar, ConditionsList, TagPills, DetailRow, DetailGrid |
-| `apps/web/src/components/resource/` | YamlViewer, ResourceDiff, ActionToolbar, DeleteConfirmDialog, RestartConfirmDialog, ScaleInput, PortForwardCopy, SearchFilterBar, RelatedResourceLink |
-| `apps/web/src/components/terminal/` | TerminalDrawer (VS Code bottom panel), TerminalSession (xterm.js), TerminalTab, terminal-context (useTerminal hook) |
-| `apps/web/src/components/topology/` | TopologyMap (React Flow), TopologyNode (custom node), topology utilities |
-| `apps/web/src/components/events/` | EventsTimeline (swim lanes), TimelineSwimLane, TimelineEventDot |
-| `apps/web/src/components/rbac/` | RbacMatrix, RbacCell (CRUD letter display) |
-| `apps/web/src/components/helm/` | HelmReleaseDetail (Info/Values/Revisions/Resources tabs) |
-| `apps/web/src/components/crds/` | CrdBrowser, CrdInstanceList |
-| `apps/web/src/components/quotas/` | ResourceQuotaCard (gauge bars) |
-| `apps/web/src/components/network/` | NetworkPolicyGraph (React Flow allow/deny edges) |
-| `apps/web/src/components/clusters/cluster-tabs-config.ts` | GroupedTabBar tab configuration (7 groups, 25 tabs) |
-| `apps/api/src/routes/resource-stream.ts` | SSE endpoint for live K8s Watch events — all 15 resource types, reference-counted informers |
-| `apps/api/src/lib/resource-watch-manager.ts` | K8s informers for 12 resource types with auto-reconnect, Redis cache invalidation on change |
-| `apps/web/src/app/api/resources/stream/route.ts` | Next.js Route Handler — `node:http` streaming proxy for resource SSE |
-| `apps/web/src/app/api/metrics/stream/route.ts` | Next.js Route Handler — `node:http` streaming proxy for metrics SSE |
-| `apps/web/src/app/api/logs/stream/route.ts` | Next.js Route Handler — `node:http` streaming proxy for log SSE |
-| `apps/web/src/hooks/useResourceSSE.ts` | SSE hook — K8s Watch events → rAF-batched TanStack Query refetch; placed in cluster layout |
-| `apps/api/src/routes/pod-terminal.ts` | WebSocket pod exec route (first WS in codebase) |
-| `apps/api/src/routes/log-stream.ts` | SSE pod log streaming with follow mode |
-| `apps/api/src/routers/yaml.ts` | Universal K8s raw resource YAML fetcher (16 types) |
-| `apps/api/src/routers/helm.ts` | Helm releases (base64+gzip decode from K8s secrets) |
-| `apps/api/src/routers/crds.ts` | CRD browser (ApiextensionsV1Api + CustomObjectsApi) |
-| `apps/api/src/routers/rbac.ts` | RBAC permission matrix aggregation |
-| `apps/api/src/routers/topology.ts` | Resource topology graph (nodes + edges) |
-| `docs/DESIGN.md` | 🔴 Animation & interaction design source of truth — read before ANY UI change |
-
-## URL Structure
-
-**Sidebar navigation (6 items):** `/` Dashboard, `/clusters`, `/alerts`, `/events`, `/logs`, `/settings`
-
-```
-# Sidebar routes
-/                               → Dashboard
-/clusters                       → Clusters list
-/alerts                         → Global alerts
-/events                         → Global events
-/logs                           → Global logs
-/settings                       → Settings hub
-
-# Cluster detail (25 resources via GroupedTabBar, 7 groups)
-/clusters/[id]                  → Overview (default tab, includes topology map)
-/clusters/[id]/nodes|pods|deployments|services|namespaces|events|logs|metrics|autoscaling
-/clusters/[id]/ingresses|statefulsets|daemonsets|jobs|cronjobs|hpa|configmaps|secrets|pvcs
-/clusters/[id]/helm|crds|rbac|network-policies|resource-quotas
-
-# Not in sidebar (accessible via direct URL or in-app links)
-/ai                             → AI Assistant
-/dashboards                     → Shared Dashboards
-/anomalies                      → Anomaly detection
-/karpenter                      → Karpenter autoscaler
-/system-health                  → System health overview
-/health                         → Health checks
-/login                          → Login page
-
-# Settings sub-pages (also accessible as top-level routes)
-/users, /teams, /permissions, /webhooks, /features, /feature-flags, /audit
-/deployments, /namespaces, /services  → Global views (not cluster-scoped)
-```
-
-## Known Gotchas
-
-### 1. tRPC Link — Do NOT Revert to httpBatchLink
-We switched from `httpBatchLink` to `httpLink` (`web/src/lib/trpc.ts`) because batched URLs exceeded nginx limits, causing 404s that broke ALL queries in the batch, saturated the React scheduler, and froze navigation. **Never revert to `httpBatchLink`.**
-
-### 2. E2E: Check URL Before Fixing Selectors
-When E2E tests fail on "element not found" — first verify the test navigates to the correct URL. `goto('/')` may redirect away from the expected page. Fix the URL before touching selectors or timeouts.
-
-### 3. Router.push vs `<a>` Links
-Clusters page uses `router.push()`, not `<a href>` links. Tests that look for `a[href*="/clusters/"]` will always fail. Use `page.click()` on the element or `waitForURL()` instead.
-
-### 4. Fresh Cluster = Empty DB
-After `helm install` with revision=1, the database is empty. Seed is required after fresh install. Detection: `SELECT count(*) FROM users` returns 0.
-
-### 5. `pnpm install` Fails in Worktrees
+### `pnpm install` Fails in Worktrees
 Run `pnpm install --frozen-lockfile` from repo root, not from a git worktree. Node modules may be empty after merge otherwise.
 
-### 6. `@tanstack/react-form` — Not Dead Weight (Yet)
-Despite appearing unused at first glance, it IS used in login/users/teams pages. Don't remove without checking.
+### Metrics Time Ranges — Grafana Standard Only
+Exactly 10 ranges: `5m`, `15m`, `30m`, `1h`, `3h`, `6h`, `12h`, `24h`, `2d`, `7d`. Sub-minute ranges were removed (60s collector interval makes them empty). `custom` range falls back to `24h`. **Never re-add sub-minute ranges.**
 
-### 7. BASE_URL for E2E
-The correct value is `http://voyager-platform.voyagerlabs.co`. Wrong BASE_URL is the #1 cause of E2E login failures ("logout button not found").
+### E2E: BASE_URL
+Correct value: `http://voyager-platform.voyagerlabs.co`. Wrong BASE_URL is the #1 cause of E2E login failures.
 
-### 8. Zod v4 `z.record` Requires Two Arguments
-`z.record(z.unknown())` fails — must be `z.record(z.string(), z.unknown())`. Always pass both key and value schemas.
-
-### 9. tRPC v11 — Never Use `getUntypedClient()` for Subscriptions or Mutations
-`getUntypedClient()` does not expose `.subscription()` or `.mutation()` methods in tRPC v11. Always use tRPC React hooks: `trpc.router.procedure.useSubscription()`, `trpc.router.procedure.useMutation()`. The `usePresence` hook was refactored to fix this (commit `19dcb21`).
-
-### 10. LazyMotion — Do NOT Add `strict` Flag
-`<LazyMotion strict>` crashes any component that uses `motion.div` instead of `m.div`. Since many components use `motion.*`, the `strict` flag was removed from `providers.tsx`. Do not re-add it without converting all `motion.*` imports to `m.*` first.
-
-### 11. `useMutation` in useEffect Dependencies
-tRPC's `useMutation()` returns a new object reference every render. Putting it in a `useEffect` dependency array causes infinite re-renders. Use a ref pattern instead: `const mutRef = useRef(mutation); mutRef.current = mutation;` then call `mutRef.current.mutate()` inside the effect.
-
-### 12. Docker Compose Auto-Initializes DB Schema
-`docker compose up -d` auto-runs `charts/voyager/sql/init.sql` on first start (mounted into `/docker-entrypoint-initdb.d/`). No manual `db:push` needed for local dev. The init.sql is fully idempotent (CREATE IF NOT EXISTS, ON CONFLICT DO NOTHING).
-
-### 14. K8S_ENABLED=false Does NOT Disable Sync Jobs
-`K8S_ENABLED=false` only disables K8s watchers (informers) and deploy-smoke-test. All sync jobs (health-sync, node-sync, event-sync, metrics-collector, alert-evaluator) **always run** regardless of this flag. They handle per-cluster errors gracefully and are required for remotely-added clusters (kubeconfig, AWS, etc.) that have their own embedded credentials.
-
-### 15. Kubeconfig Provider — Context Fallback
-When loading a kubeconfig via `loadFromString()`, if no explicit `context` param is provided, the factory falls back to `current-context` from the YAML, then to the first context in the list. Without this fallback, the KubeConfig object may have no context selected, causing all API calls to fail silently.
-
-### 16. Cluster List Node Count Comes from `nodes` Table
-The cluster list page gets `nodeCount` by counting rows in the `nodes` table (populated by node-sync), NOT from `clusters.nodesCount`. If node-sync isn't running, cluster cards show 0 nodes even if health-sync updated `clusters.nodesCount` correctly.
-
-### 13. SSR Hydration — Never Branch on `typeof window/document` in Render
-Checking `typeof window !== 'undefined'` or `typeof document !== 'undefined'` inside a component's render path creates a server/client branch that causes React hydration errors. The server renders one path, the client renders another. **Always use `useState(false)` + `useEffect(() => set(true))` to detect client-only features post-mount.** This has broken the login page multiple times via `PageTransition.tsx`.
-
-### 17. Metrics Time Ranges — Grafana Standard Only
-The metrics router accepts exactly 10 Grafana-standard ranges: `5m`, `15m`, `30m`, `1h`, `3h`, `6h`, `12h`, `24h`, `2d`, `7d`. Old ranges (`30s`, `1m`, `30d`) were removed because the 60s collector interval made sub-minute buckets always empty. The `TimeRangeSelector` also offers `custom` for absolute date/time — this falls back to `24h` for the DB query. **Never re-add sub-minute ranges.**
-
-### 18. Metrics Dual Data Source — SSE vs tRPC
-Short ranges (≤15m: `5m`, `15m`) use SSE streaming from K8s metrics-server via `/api/metrics/stream`. Historical ranges (≥30m) use `tRPC metrics.history` with TimescaleDB `time_bucket()` SQL. The `useMetricsData` hook handles switching automatically. **Never bypass this hook with direct tRPC calls for metrics.**
-
-### 19. Metrics Response Shape — Wrapped Object
-`metrics.history` returns `{ data: MetricsDataPoint[], serverTime: string, intervalMs: number }`, NOT a flat array. All consumers must access `.data` property. The old `historyQuery.data` → new `historyQuery.data?.data`.
-
-### 20. TimescaleDB Extension Required
-`charts/voyager/sql/init.sql` must include `CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;` — the `time_bucket()` function used by the metrics router depends on it. If missing, all metrics queries fail silently with empty results.
-
-### 21. handleK8sError Causes `void` Return Type Inference
-Routers that use `handleK8sError(err, op)` in catch blocks infer return type as `void | undefined` because TypeScript can't prove the function always throws. Frontend code using `trpc.router.procedure.useQuery` gets `void | undefined` for `.data`. **Fix: define explicit interface types and cast with `as`** — e.g., `const data = (query.data ?? []) as MyType[]`. Do NOT use `NonNullable<ReturnType<typeof trpc.x.y.useQuery>['data']>`.
-
-### 22. Pod Terminal — First WebSocket in Codebase
-The pod terminal route (`api/src/routes/pod-terminal.ts`) uses `@fastify/websocket` for bidirectional communication. Everything else in the codebase uses SSE. The WebSocket plugin must be registered in `server.ts` before any WS routes. The terminal uses `@kubernetes/client-node` `Exec` class which returns a `Promise<WebSocket>` that's bridged to the browser WS via PassThrough streams.
-
-### 23. xterm.js — Dynamic Import Required (SSR Safety)
-`@xterm/xterm` accesses `window` and `document` on import. Must use `next/dynamic` or `import()` inside `useEffect` — never import at module top level. The `TerminalSession.tsx` component follows the correct pattern with `useState(false)` + `useEffect` mount guard (Gotcha #13).
-
-### 24. React Flow — Stable `nodeTypes` Reference Required
-`@xyflow/react` re-renders the entire graph when `nodeTypes` object reference changes. Always define `nodeTypes` outside the component or wrap in `useMemo`. Failing to do this causes infinite re-renders on any state change in the topology map.
-
-### 25. Helm Release Decoding — base64 + gzip + JSON
-Helm v3 stores releases as K8s Secrets with `type=helm.sh/release.v1`. The `.data.release` field is base64-encoded, gzip-compressed JSON. Decode pipeline: `Buffer.from(b64, 'base64')` → `zlib.gunzipSync()` → `JSON.parse()`. List secrets metadata-only first, decode on-demand per release to avoid OOM with many releases.
-
-### 26. GroupedTabBar — 7 Groups, New "Cluster Ops" Group
-The GroupedTabBar now has 7 groups: standalone tabs (Overview, Nodes, Events, Logs, Metrics), Workloads, Networking (includes Network Policies), Config (includes Resource Quotas), Storage, Scaling, and **Cluster Ops** (Helm, CRDs, RBAC). Config is in `cluster-tabs-config.ts`. When a child tab is active, the dropdown button shows the **child's label** (e.g., "Helm ▼") not the group label ("Cluster Ops") — this is by design.
-
-### 28. Redis `cached()` TTL Is in SECONDS, Not Milliseconds
-The `cached(key, ttl, fn)` helper passes `ttl` directly to `redis.setEx()` which expects **seconds**. Writing `cached(key, 15_000, fn)` caches for 15,000 seconds (4.1 hours), not 15 seconds. Always use plain integers: `cached(key, 15, fn)`. This bug caused all K8s resource data to be frozen for hours.
-
-### 29. SSE Through Next.js Rewrites — Socket Hang Up
-Next.js `rewrites()` cannot proxy SSE endpoints — the proxy buffers the response and drops the long-lived connection (`ECONNRESET: socket hang up`). SSE endpoints (`/api/resources/stream`, `/api/metrics/stream`, `/api/logs/stream`) use dedicated Next.js Route Handlers in `web/src/app/api/*/stream/route.ts` that proxy via `node:http` with true streaming. The Next.js rewrite config excludes these paths. **Never add SSE endpoints to rewrites — always create a Route Handler.**
-
-### 30. K8s Informers Do NOT Auto-Reconnect
-`@kubernetes/client-node` `makeInformer()` does not reconnect on error. When the watch connection drops (ETIMEDOUT, network error), the informer dies silently. **Always call `informer.start()` in the error handler** with a delay (5s). Both `ClusterWatchManager` and `ResourceWatchManager` implement this pattern. Without it, all live data stops flowing after the first network hiccup.
-
-### 31. SSE Endpoints Must Flush Immediately
-SSE endpoints must write data immediately after `writeHead()` — e.g., `reply.raw.write(':connected\n\n')`. Without this initial flush, the Next.js Route Handler proxy and the browser's `EventSource` both hang in CONNECTING state waiting for the first byte. The SSE heartbeat (30s interval) arrives too late.
-
-### 27. TerminalDrawer Must Be Mounted in providers.tsx
-The `<TerminalDrawer />` component must be rendered inside `<TerminalProvider>` in `providers.tsx`. The terminal context (`useTerminal()`) manages sessions and drawer state, but the drawer itself renders as a fixed-position element outside the page component tree. If TerminalDrawer is not in providers.tsx, clicking Exec does nothing — no error, no drawer.
+### E2E: Check URL Before Fixing Selectors
+When E2E tests fail on "element not found" — first verify the test navigates to the correct URL. Fix the URL before touching selectors or timeouts.
 
 ## 🚨 QA Gate Rules — MANDATORY
 
 QA validation after code changes **MUST** follow these rules. Violations = QA FAIL regardless of visual appearance.
 
 ### Hard Gates (any failure = BLOCK)
-1. **Console errors = FAIL** — After every page navigation, check browser console. Any `[ERROR]` entry (hydration, runtime, uncaught) is an automatic QA failure. Warnings are noted but don't block.
-2. **Login page MUST be tested unauthenticated** — Clear all cookies/storage BEFORE testing login. Use `browser_evaluate` to clear cookies, or open an incognito context. If the page auto-redirects, QA has NOT tested login.
-3. **Every page must render content** — A page that loads but shows a blank screen, error overlay, or only a spinner is a FAIL. Verify actual content elements exist in the DOM snapshot.
-4. **Both themes must be tested** — Test at minimum: login (dark + light), dashboard (dark + light), one data-heavy page (dark + light). Theme switching must not produce console errors.
+1. **Console errors = FAIL** — After every page navigation, check browser console. Any `[ERROR]` entry is an automatic QA failure.
+2. **Login page MUST be tested unauthenticated** — Clear all cookies/storage BEFORE testing login.
+3. **Every page must render content** — Blank screen, error overlay, or only spinner = FAIL.
+4. **Both themes must be tested** — Login + dashboard + one data-heavy page in dark + light.
 
 ### QA Checklist (execute in order)
 ```
@@ -494,21 +215,15 @@ QA validation after code changes **MUST** follow these rules. Violations = QA FA
 9. Check for regressions     → compare against known-good screenshots if available
 ```
 
-### What "Tested" Means
-- **Screenshot taken** (visual proof)
-- **DOM snapshot checked** (expected elements present: h1, nav, data)
-- **Console checked** (0 errors after page load settles)
-- **Both themes verified** (at least login + dashboard + one data page)
-
 ## Agent Pipeline (GSD)
 
-Dev (Ron/Shiri/Dima) → Review (Lior 10/10) → Merge (Gil) → Deploy (Uri) → E2E (Yuval 0-fail) → QA (Mai 8.5+/10) → Loop until clean. Pipeline never declares `complete` — only `deployed-awaiting-review`. Vik decides when done. Agents are spawned via GSD workflow commands, not direct git commits.
+Dev (Ron/Shiri/Dima) → Review (Lior 10/10) → Merge (Gil) → Deploy (Uri) → E2E (Yuval 0-fail) → QA (Mai 8.5+/10) → Loop until clean. Pipeline never declares `complete` — only `deployed-awaiting-review`. Vik decides when done.
 
 ## Environment Variables
 
 Key env vars for root `.env` (loaded by API via `--env-file`):
 - `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `CLUSTER_CRED_ENCRYPTION_KEY` (64-char hex, required)
-- `K8S_ENABLED` (default: `true`) — set to `false` for local dev without K8s cluster (disables watchers only, sync jobs still run — see Gotcha #14)
+- `K8S_ENABLED` (default: `true`) — set to `false` for local dev without K8s cluster (disables watchers only, sync jobs still run)
 - `PORT` (default: `4000`) — API port (use `4001` if NoMachine occupies 4000)
 - `ADMIN_EMAIL`, `ADMIN_PASSWORD` — required for runtime admin bootstrap
 - `SENTRY_DSN`, `OTEL_EXPORTER_OTLP_ENDPOINT` (optional observability)
