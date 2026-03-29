@@ -45,10 +45,14 @@ interface HelmRevision {
  * Helm stores releases as: base64(gzip(json)) in the secret's `release` data field.
  */
 function decodeHelmRelease(releaseData: string): Record<string, unknown> {
-  // Secret data values are already base64-decoded by the K8s client when using .data
-  // But Helm double-encodes: the secret .data value is base64, then the release payload
-  // inside is also base64(gzip(json)).
-  const compressed = Buffer.from(releaseData, 'base64')
+  // Helm v3 stores releases as: base64(gzip(json)) in the secret's .data.release field.
+  // The @kubernetes/client-node returns .data values as base64 strings.
+  // So the full chain is: base64-decode → base64-decode (Helm's own encoding) → gunzip → JSON.parse
+  //
+  // First base64 decode: K8s secret .data encoding
+  const helmEncoded = Buffer.from(releaseData, 'base64').toString('utf-8')
+  // Second base64 decode: Helm's own base64 layer wrapping the gzip
+  const compressed = Buffer.from(helmEncoded, 'base64')
   const jsonBuffer = gunzipSync(compressed)
   return JSON.parse(jsonBuffer.toString('utf-8')) as Record<string, unknown>
 }
