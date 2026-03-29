@@ -181,11 +181,11 @@ Plans:
   6. health-sync, node-sync, event-sync jobs removed; metrics-collector and metrics-stream-job kept
   7. ConnectionStatusBadge shows Live/Reconnecting/Disconnected in cluster header
   8. `pnpm build` and `pnpm typecheck` pass with 0 errors
-**Plans:** 1/5 plans executed
+**Plans:** 2/5 plans executed
 
 Plans:
 - [x] 10-01-PLAN.md — Foundation: WatchManager, resource mappers, WatchEvent types, unit tests
-- [ ] 10-02-PLAN.md — Data-carrying SSE rewrite with 1-second batching
+- [x] 10-02-PLAN.md — Data-carrying SSE rewrite with 1-second batching
 - [ ] 10-03-PLAN.md — Client-side setQueryData + ConnectionStatusBadge
 - [ ] 10-04-PLAN.md — tRPC router migration to read from WatchManager
 - [ ] 10-05-PLAN.md — Big bang switch: remove polling, delete 3 jobs, server integration
@@ -205,4 +205,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9 -> 10
 | 7. Performance Optimization | 1/1 | Complete | 2026-03-28 |
 | 8. Resource Explorer UX Overhaul | 8/8 | Complete | 2026-03-28 |
 | 9. Lens-Inspired Power Features | 1/10 | In Progress | - |
-| 10. Lens-Style Live Data | 1/5 | In Progress|  |
+| 10. Lens-Style Live Data | 2/5 | In Progress|  |
