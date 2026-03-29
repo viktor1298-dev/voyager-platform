@@ -1,9 +1,10 @@
+import { EventEmitter } from 'node:events'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // ── Hoisted mock state ────────────────────────────────────────
 const mocks = vi.hoisted(() => {
-  const { EventEmitter } = require('node:events')
-  const emitter = new EventEmitter()
+  const { EventEmitter: EE } = require('node:events')
+  const emitter = new EE()
   emitter.setMaxListeners(100)
 
   return {
@@ -13,9 +14,6 @@ const mocks = vi.hoisted(() => {
     watchUnsubscribe: vi.fn(),
     watchIsWatching: vi.fn().mockReturnValue(true),
     emitter,
-    // Also mock resourceWatchManager (current impl import — will be removed)
-    rwmSubscribe: vi.fn(),
-    rwmUnsubscribe: vi.fn(),
   }
 })
 
@@ -53,14 +51,6 @@ vi.mock('../lib/watch-manager.js', () => ({
   },
 }))
 
-// Mock resource-watch-manager (old, needed until resource-stream.ts is rewritten)
-vi.mock('../lib/resource-watch-manager.js', () => ({
-  resourceWatchManager: {
-    subscribe: mocks.rwmSubscribe,
-    unsubscribe: mocks.rwmUnsubscribe,
-  },
-}))
-
 // Mock event-emitter with a real EventEmitter (hoisted)
 vi.mock('../lib/event-emitter.js', () => ({
   voyagerEmitter: mocks.emitter,
@@ -68,15 +58,42 @@ vi.mock('../lib/event-emitter.js', () => ({
 
 import type { WatchEvent, WatchEventBatch, WatchStatusEvent } from '@voyager/types'
 import Fastify, { type FastifyInstance } from 'fastify'
-import { registerResourceStreamRoute } from '../routes/resource-stream.js'
+import { handleResourceStream, registerResourceStreamRoute } from '../routes/resource-stream.js'
 
 const VALID_UUID = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d'
+
+// ── Helper: Create mock Fastify request/reply for handler testing ──
+function createMockRequestReply(clusterId: string) {
+  const writes: string[] = []
+  const rawRequest = new EventEmitter()
+  const rawReply = new EventEmitter()
+
+  const request = {
+    query: { clusterId },
+    headers: { authorization: 'Bearer test' },
+    raw: rawRequest,
+  }
+
+  const reply = {
+    code: vi.fn().mockReturnThis(),
+    send: vi.fn(),
+    raw: Object.assign(rawReply, {
+      writeHead: vi.fn(),
+      write: vi.fn((data: string) => {
+        writes.push(data)
+        return true
+      }),
+      end: vi.fn(),
+    }),
+  }
+
+  return { request, reply, writes, rawRequest }
+}
 
 describe('resource-stream SSE route (data-carrying)', () => {
   let app: FastifyInstance
 
   beforeEach(async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
     vi.clearAllMocks()
     mocks.emitter.removeAllListeners()
     app = Fastify({ logger: false })
@@ -85,11 +102,10 @@ describe('resource-stream SSE route (data-carrying)', () => {
   })
 
   afterEach(async () => {
-    vi.useRealTimers()
     await app.close()
   })
 
-  // ── Auth & Validation ──────────────────────────────────────
+  // ── Auth & Validation (uses Fastify inject) ────────────────
 
   it('returns 401 without auth', async () => {
     mocks.getSession.mockResolvedValue(null)
@@ -126,302 +142,247 @@ describe('resource-stream SSE route (data-carrying)', () => {
     expect(response.statusCode).toBe(404)
   })
 
-  // ── SSE Format & Data ──────────────────────────────────────
+  // ── SSE Behavior (uses handler directly with mocked request/reply) ──
 
-  it('calls watchManager.subscribe on valid SSE connection', async () => {
-    mocks.getSession.mockResolvedValue({
-      session: { id: 'sess-1' },
-      user: { id: 'user-1', role: 'admin' },
-    })
-    mocks.dbSelectResult.mockResolvedValue([{ id: VALID_UUID }])
-
-    const _injectPromise = app.inject({
-      method: 'GET',
-      url: `/api/resources/stream?clusterId=${VALID_UUID}`,
-    })
-
-    await vi.advanceTimersByTimeAsync(50)
-
-    expect(mocks.watchSubscribe).toHaveBeenCalledWith(VALID_UUID)
-  })
-
-  it('emits SSE watch events with WatchEventBatch format', async () => {
-    mocks.getSession.mockResolvedValue({
-      session: { id: 'sess-1' },
-      user: { id: 'user-1', role: 'admin' },
-    })
-    mocks.dbSelectResult.mockResolvedValue([{ id: VALID_UUID }])
-
-    const injectPromise = app.inject({
-      method: 'GET',
-      url: `/api/resources/stream?clusterId=${VALID_UUID}`,
+  describe('SSE handler behavior', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      // Set up auth and DB mocks for all SSE tests
+      mocks.getSession.mockResolvedValue({
+        session: { id: 'sess-1' },
+        user: { id: 'user-1', role: 'admin' },
+      })
+      mocks.dbSelectResult.mockResolvedValue([{ id: VALID_UUID }])
     })
 
-    // Wait for handler to set up
-    await vi.advanceTimersByTimeAsync(100)
-
-    // Skip past initial load window (5 seconds)
-    await vi.advanceTimersByTimeAsync(5_100)
-
-    // Emit a watch event
-    const watchEvent: WatchEvent = {
-      type: 'MODIFIED',
-      resourceType: 'pods',
-      object: { name: 'test-pod', namespace: 'default', status: 'Running' },
-    }
-    mocks.emitter.emit(`watch-event:${VALID_UUID}`, watchEvent)
-
-    // Advance past batch buffer (1000ms)
-    await vi.advanceTimersByTimeAsync(1_100)
-
-    // Close connection to get response
-    await app.close()
-    const response = await injectPromise
-
-    // Parse SSE data from response body
-    const body = response.body
-    expect(body).toContain(':connected')
-    expect(body).toContain('event: watch')
-
-    // Extract the data line after 'event: watch'
-    const watchDataMatch = body.match(/event: watch\ndata: (.+)\n/)
-    expect(watchDataMatch).toBeTruthy()
-
-    const batch: WatchEventBatch = JSON.parse(watchDataMatch![1])
-    expect(batch.clusterId).toBe(VALID_UUID)
-    expect(batch.events).toHaveLength(1)
-    expect(batch.events[0].type).toBe('MODIFIED')
-    expect(batch.events[0].resourceType).toBe('pods')
-    expect(batch.events[0].object).toEqual({
-      name: 'test-pod',
-      namespace: 'default',
-      status: 'Running',
-    })
-    expect(batch.timestamp).toBeTruthy()
-  })
-
-  it('batches multiple events within 1 second into a single SSE message', async () => {
-    mocks.getSession.mockResolvedValue({
-      session: { id: 'sess-1' },
-      user: { id: 'user-1', role: 'admin' },
-    })
-    mocks.dbSelectResult.mockResolvedValue([{ id: VALID_UUID }])
-
-    const injectPromise = app.inject({
-      method: 'GET',
-      url: `/api/resources/stream?clusterId=${VALID_UUID}`,
+    afterEach(() => {
+      vi.useRealTimers()
     })
 
-    await vi.advanceTimersByTimeAsync(100)
-    // Skip initial load window
-    await vi.advanceTimersByTimeAsync(5_100)
+    it('calls watchManager.subscribe on valid connection', async () => {
+      const { request, reply, rawRequest } = createMockRequestReply(VALID_UUID)
+      await handleResourceStream(request as any, reply as any)
 
-    // Emit 3 events rapidly (same tick)
-    mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
-      type: 'ADDED',
-      resourceType: 'pods',
-      object: { name: 'pod-1' },
-    } satisfies WatchEvent)
-    mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
-      type: 'MODIFIED',
-      resourceType: 'deployments',
-      object: { name: 'deploy-1' },
-    } satisfies WatchEvent)
-    mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
-      type: 'DELETED',
-      resourceType: 'services',
-      object: { name: 'svc-1' },
-    } satisfies WatchEvent)
+      expect(mocks.watchSubscribe).toHaveBeenCalledWith(VALID_UUID)
 
-    // Advance past batch buffer
-    await vi.advanceTimersByTimeAsync(1_100)
-
-    await app.close()
-    const response = await injectPromise
-    const body = response.body
-
-    // Should have exactly ONE 'event: watch' line (batched)
-    const watchMatches = body.match(/event: watch\ndata: (.+)\n/g)
-    expect(watchMatches).toHaveLength(1)
-
-    const batchData = body.match(/event: watch\ndata: (.+)\n/)
-    const batch: WatchEventBatch = JSON.parse(batchData![1])
-    expect(batch.events).toHaveLength(3)
-    expect(batch.events[0].type).toBe('ADDED')
-    expect(batch.events[1].type).toBe('MODIFIED')
-    expect(batch.events[2].type).toBe('DELETED')
-  })
-
-  it('sends status events immediately (not batched)', async () => {
-    mocks.getSession.mockResolvedValue({
-      session: { id: 'sess-1' },
-      user: { id: 'user-1', role: 'admin' },
-    })
-    mocks.dbSelectResult.mockResolvedValue([{ id: VALID_UUID }])
-
-    const injectPromise = app.inject({
-      method: 'GET',
-      url: `/api/resources/stream?clusterId=${VALID_UUID}`,
+      // Cleanup
+      rawRequest.emit('close')
     })
 
-    await vi.advanceTimersByTimeAsync(100)
+    it('writes :connected flush immediately after headers', async () => {
+      const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
+      await handleResourceStream(request as any, reply as any)
 
-    // Emit a status event
-    const statusEvent: WatchStatusEvent = {
-      clusterId: VALID_UUID,
-      state: 'reconnecting',
-      resourceType: 'pods',
-      error: 'Connection reset',
-    }
-    mocks.emitter.emit(`watch-status:${VALID_UUID}`, statusEvent)
+      expect(reply.raw.writeHead).toHaveBeenCalledWith(
+        200,
+        expect.objectContaining({
+          'content-type': 'text/event-stream; charset=utf-8',
+        }),
+      )
+      expect(writes[0]).toBe(':connected\n\n')
 
-    // No need to wait for batch timer — status should be immediate
-    await vi.advanceTimersByTimeAsync(50)
-
-    await app.close()
-    const response = await injectPromise
-    const body = response.body
-
-    expect(body).toContain('event: status')
-    const statusMatch = body.match(/event: status\ndata: (.+)\n/)
-    expect(statusMatch).toBeTruthy()
-
-    const parsed: WatchStatusEvent = JSON.parse(statusMatch![1])
-    expect(parsed.state).toBe('reconnecting')
-    expect(parsed.clusterId).toBe(VALID_UUID)
-  })
-
-  it('sends heartbeat comments at SSE_HEARTBEAT_INTERVAL_MS', async () => {
-    mocks.getSession.mockResolvedValue({
-      session: { id: 'sess-1' },
-      user: { id: 'user-1', role: 'admin' },
-    })
-    mocks.dbSelectResult.mockResolvedValue([{ id: VALID_UUID }])
-
-    const injectPromise = app.inject({
-      method: 'GET',
-      url: `/api/resources/stream?clusterId=${VALID_UUID}`,
+      rawRequest.emit('close')
     })
 
-    await vi.advanceTimersByTimeAsync(100)
+    it('emits SSE watch events with WatchEventBatch format (event: watch)', async () => {
+      const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
+      await handleResourceStream(request as any, reply as any)
 
-    // Advance past heartbeat interval (30s)
-    await vi.advanceTimersByTimeAsync(30_100)
+      // Skip past initial load window
+      await vi.advanceTimersByTimeAsync(5_100)
 
-    await app.close()
-    const response = await injectPromise
-    const body = response.body
+      // Emit a watch event
+      mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
+        type: 'MODIFIED',
+        resourceType: 'pods',
+        object: { name: 'test-pod', namespace: 'default', status: 'Running' },
+      } satisfies WatchEvent)
 
-    expect(body).toContain(':heartbeat')
-  })
+      // Advance past batch buffer (1000ms)
+      await vi.advanceTimersByTimeAsync(1_100)
 
-  it('suppresses initial ADDED events within 5s of subscribe', async () => {
-    mocks.getSession.mockResolvedValue({
-      session: { id: 'sess-1' },
-      user: { id: 'user-1', role: 'admin' },
+      // Find the 'event: watch' write
+      const watchWrite = writes.find((w) => w.startsWith('event: watch'))
+      expect(watchWrite).toBeTruthy()
+
+      const dataLine = watchWrite!.match(/event: watch\ndata: (.+)\n/)
+      expect(dataLine).toBeTruthy()
+
+      const batch: WatchEventBatch = JSON.parse(dataLine![1])
+      expect(batch.clusterId).toBe(VALID_UUID)
+      expect(batch.events).toHaveLength(1)
+      expect(batch.events[0].type).toBe('MODIFIED')
+      expect(batch.events[0].resourceType).toBe('pods')
+      expect(batch.events[0].object).toEqual({
+        name: 'test-pod',
+        namespace: 'default',
+        status: 'Running',
+      })
+      expect(batch.timestamp).toBeTruthy()
+
+      rawRequest.emit('close')
     })
-    mocks.dbSelectResult.mockResolvedValue([{ id: VALID_UUID }])
 
-    const injectPromise = app.inject({
-      method: 'GET',
-      url: `/api/resources/stream?clusterId=${VALID_UUID}`,
+    it('batches multiple events within 1 second into a single SSE message', async () => {
+      const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
+      await handleResourceStream(request as any, reply as any)
+
+      // Skip initial load window
+      await vi.advanceTimersByTimeAsync(5_100)
+
+      // Emit 3 events rapidly
+      mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
+        type: 'ADDED',
+        resourceType: 'pods',
+        object: { name: 'pod-1' },
+      } satisfies WatchEvent)
+      mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
+        type: 'MODIFIED',
+        resourceType: 'deployments',
+        object: { name: 'deploy-1' },
+      } satisfies WatchEvent)
+      mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
+        type: 'DELETED',
+        resourceType: 'services',
+        object: { name: 'svc-1' },
+      } satisfies WatchEvent)
+
+      // Advance past batch buffer
+      await vi.advanceTimersByTimeAsync(1_100)
+
+      // Should have exactly ONE 'event: watch' write (all batched together)
+      const watchWrites = writes.filter((w) => w.startsWith('event: watch'))
+      expect(watchWrites).toHaveLength(1)
+
+      const dataLine = watchWrites[0].match(/event: watch\ndata: (.+)\n/)
+      const batch: WatchEventBatch = JSON.parse(dataLine![1])
+      expect(batch.events).toHaveLength(3)
+      expect(batch.events[0].type).toBe('ADDED')
+      expect(batch.events[1].type).toBe('MODIFIED')
+      expect(batch.events[2].type).toBe('DELETED')
+
+      rawRequest.emit('close')
     })
 
-    await vi.advanceTimersByTimeAsync(100)
+    it('sends status events immediately (not batched)', async () => {
+      const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
+      await handleResourceStream(request as any, reply as any)
 
-    // Emit ADDED events within initial load window (< 5s from subscribe)
-    mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
-      type: 'ADDED',
-      resourceType: 'pods',
-      object: { name: 'initial-pod' },
-    } satisfies WatchEvent)
-
-    // But MODIFIED within the window should NOT be suppressed
-    mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
-      type: 'MODIFIED',
-      resourceType: 'pods',
-      object: { name: 'modified-pod' },
-    } satisfies WatchEvent)
-
-    // Advance past batch buffer
-    await vi.advanceTimersByTimeAsync(1_100)
-
-    await app.close()
-    const response = await injectPromise
-    const body = response.body
-
-    // The ADDED should be suppressed, MODIFIED should get through
-    const watchMatches = body.match(/event: watch\ndata: (.+)\n/g)
-    if (watchMatches) {
-      for (const match of watchMatches) {
-        const dataStr = match.match(/data: (.+)\n/)![1]
-        const batch: WatchEventBatch = JSON.parse(dataStr)
-        // No ADDED events should be in any batch
-        for (const event of batch.events) {
-          expect(event.type).not.toBe('ADDED')
-        }
-        // MODIFIED should be present
-        expect(batch.events.some((e) => e.type === 'MODIFIED')).toBe(true)
+      // Emit a status event
+      const statusEvent: WatchStatusEvent = {
+        clusterId: VALID_UUID,
+        state: 'reconnecting',
+        resourceType: 'pods',
+        error: 'Connection reset',
       }
-    } else {
-      // If no watch events at all, the MODIFIED was also missing — fail
-      expect(watchMatches).toBeTruthy()
-    }
-  })
+      mocks.emitter.emit(`watch-status:${VALID_UUID}`, statusEvent)
 
-  it('does NOT suppress ADDED events after 5s window', async () => {
-    mocks.getSession.mockResolvedValue({
-      session: { id: 'sess-1' },
-      user: { id: 'user-1', role: 'admin' },
-    })
-    mocks.dbSelectResult.mockResolvedValue([{ id: VALID_UUID }])
+      // Status events are immediate — no need to advance batch timer
+      const statusWrite = writes.find((w) => w.startsWith('event: status'))
+      expect(statusWrite).toBeTruthy()
 
-    const injectPromise = app.inject({
-      method: 'GET',
-      url: `/api/resources/stream?clusterId=${VALID_UUID}`,
-    })
+      const dataLine = statusWrite!.match(/event: status\ndata: (.+)\n/)
+      expect(dataLine).toBeTruthy()
 
-    await vi.advanceTimersByTimeAsync(100)
-    // Wait past the initial load window
-    await vi.advanceTimersByTimeAsync(5_100)
+      const parsed: WatchStatusEvent = JSON.parse(dataLine![1])
+      expect(parsed.state).toBe('reconnecting')
+      expect(parsed.clusterId).toBe(VALID_UUID)
+      expect(parsed.error).toBe('Connection reset')
 
-    // Now ADDED events should NOT be suppressed
-    mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
-      type: 'ADDED',
-      resourceType: 'pods',
-      object: { name: 'new-pod' },
-    } satisfies WatchEvent)
-
-    await vi.advanceTimersByTimeAsync(1_100)
-
-    await app.close()
-    const response = await injectPromise
-    const body = response.body
-
-    const watchData = body.match(/event: watch\ndata: (.+)\n/)
-    expect(watchData).toBeTruthy()
-    const batch: WatchEventBatch = JSON.parse(watchData![1])
-    expect(batch.events.some((e) => e.type === 'ADDED')).toBe(true)
-  })
-
-  it('writes :connected immediately after headers', async () => {
-    mocks.getSession.mockResolvedValue({
-      session: { id: 'sess-1' },
-      user: { id: 'user-1', role: 'admin' },
-    })
-    mocks.dbSelectResult.mockResolvedValue([{ id: VALID_UUID }])
-
-    const injectPromise = app.inject({
-      method: 'GET',
-      url: `/api/resources/stream?clusterId=${VALID_UUID}`,
+      rawRequest.emit('close')
     })
 
-    await vi.advanceTimersByTimeAsync(100)
+    it('sends heartbeat comments at SSE_HEARTBEAT_INTERVAL_MS', async () => {
+      const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
+      await handleResourceStream(request as any, reply as any)
 
-    await app.close()
-    const response = await injectPromise
+      // Advance past heartbeat interval (30s)
+      await vi.advanceTimersByTimeAsync(30_100)
 
-    // :connected should be the first thing in the body
-    expect(response.body.startsWith(':connected\n\n')).toBe(true)
+      const heartbeats = writes.filter((w) => w === ':heartbeat\n\n')
+      expect(heartbeats.length).toBeGreaterThanOrEqual(1)
+
+      rawRequest.emit('close')
+    })
+
+    it('suppresses initial ADDED events within 5s of subscribe', async () => {
+      const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
+      await handleResourceStream(request as any, reply as any)
+
+      // Emit ADDED within initial load window — should be suppressed
+      mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
+        type: 'ADDED',
+        resourceType: 'pods',
+        object: { name: 'initial-pod' },
+      } satisfies WatchEvent)
+
+      // Emit MODIFIED within same window — should NOT be suppressed
+      mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
+        type: 'MODIFIED',
+        resourceType: 'pods',
+        object: { name: 'modified-pod' },
+      } satisfies WatchEvent)
+
+      // Advance past batch buffer
+      await vi.advanceTimersByTimeAsync(1_100)
+
+      const watchWrites = writes.filter((w) => w.startsWith('event: watch'))
+      expect(watchWrites).toHaveLength(1)
+
+      const dataLine = watchWrites[0].match(/event: watch\ndata: (.+)\n/)
+      const batch: WatchEventBatch = JSON.parse(dataLine![1])
+
+      // Only MODIFIED should be present — ADDED was suppressed
+      expect(batch.events).toHaveLength(1)
+      expect(batch.events[0].type).toBe('MODIFIED')
+      expect(batch.events[0].object).toEqual({ name: 'modified-pod' })
+
+      rawRequest.emit('close')
+    })
+
+    it('does NOT suppress ADDED events after 5s window', async () => {
+      const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
+      await handleResourceStream(request as any, reply as any)
+
+      // Wait past the initial load window
+      await vi.advanceTimersByTimeAsync(5_100)
+
+      // Now ADDED events should NOT be suppressed
+      mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
+        type: 'ADDED',
+        resourceType: 'pods',
+        object: { name: 'new-pod' },
+      } satisfies WatchEvent)
+
+      await vi.advanceTimersByTimeAsync(1_100)
+
+      const watchWrites = writes.filter((w) => w.startsWith('event: watch'))
+      expect(watchWrites).toHaveLength(1)
+
+      const dataLine = watchWrites[0].match(/event: watch\ndata: (.+)\n/)
+      const batch: WatchEventBatch = JSON.parse(dataLine![1])
+      expect(batch.events.some((e) => e.type === 'ADDED')).toBe(true)
+      expect(batch.events[0].object).toEqual({ name: 'new-pod' })
+
+      rawRequest.emit('close')
+    })
+
+    it('cleans up on connection close', async () => {
+      const { request, reply, rawRequest } = createMockRequestReply(VALID_UUID)
+      await handleResourceStream(request as any, reply as any)
+
+      // Verify listeners are attached
+      expect(mocks.emitter.listenerCount(`watch-event:${VALID_UUID}`)).toBe(1)
+      expect(mocks.emitter.listenerCount(`watch-status:${VALID_UUID}`)).toBe(1)
+
+      // Trigger connection close
+      rawRequest.emit('close')
+
+      // Verify cleanup
+      expect(mocks.watchUnsubscribe).toHaveBeenCalledWith(VALID_UUID)
+      expect(mocks.emitter.listenerCount(`watch-event:${VALID_UUID}`)).toBe(0)
+      expect(mocks.emitter.listenerCount(`watch-status:${VALID_UUID}`)).toBe(0)
+      expect(reply.raw.end).toHaveBeenCalled()
+    })
   })
 })
