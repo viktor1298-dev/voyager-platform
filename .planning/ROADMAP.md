@@ -21,6 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 8: Resource Explorer UX Overhaul** - Unify resource tabs, expand all, Lens-inspired real-time K8s Watch, logs beautifier, cross-resource navigation
 - [ ] **Phase 9: Lens-Inspired Power Features** - Pod exec, live log streaming, YAML viewer, restart/scale, Helm, events timeline, CRD browser, RBAC, network policies
 - [x] **Phase 10: Lens-Style Live Data** - Replace polling with K8s Watch stream architecture, unified WatchManager, data-carrying SSE, zero refetchInterval (completed 2026-03-29)
+- [ ] **Phase 11: Lens-Grade Live Data Redesign** - Immediate SSE, direct browser-to-API connection, Zustand resource store, snapshot-on-connect
 
 ## Phase Details
 
@@ -190,10 +191,31 @@ Plans:
 - [x] 10-04-PLAN.md — tRPC router migration to read from WatchManager
 - [x] 10-05-PLAN.md — Big bang switch: remove polling, delete 3 jobs, server integration
 
+### Phase 11: Lens-Grade Live Data Redesign
+**Goal:** Strip polling-era workarounds and rebuild live data to match Lens desktop performance. Kill 1s batch buffer (immediate SSE), direct browser-to-API SSE connection (bypass Next.js proxy), replace per-resource setQueryData with reactive Zustand resource store, remove 5s initial load window (SSE sends full state on connect), keep TanStack Query only for non-live DB-backed data. Target: <100ms update latency, 3 layers instead of 5, zero dropped events.
+**Requirements**: L11-IMMEDIATE-SSE, L11-COMPRESS-FIX, L11-SNAPSHOT, L11-ZUSTAND-STORE, L11-SELECTOR-READS, L11-DIRECT-SSE, L11-PROXY-REMOVAL, L11-ZUSTAND-WIRE, L11-CONSUMER-MIGRATION, L11-NO-POLLING-WATCHED
+**Depends on:** Phase 10
+**Success Criteria** (what must be TRUE):
+  1. SSE events arrive immediately (no 1s batch buffer, no 5s initial load window)
+  2. Browser connects directly to API SSE endpoint (no Next.js proxy routes)
+  3. Zustand resource store holds all live K8s data with selector-based subscriptions
+  4. All 15 resource pages read from Zustand store (not tRPC list queries)
+  5. Snapshot event sends full informer cache on SSE connect (replaces tRPC initial fetch)
+  6. Compression disabled on all SSE routes (no buffering)
+  7. TanStack Query retained for DB-backed data (users, alerts, Helm, CRDs, metrics history)
+  8. `pnpm build` and `pnpm typecheck` pass with 0 errors
+**Plans:** 4 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — Backend SSE rewrite: immediate flush, compression disable, snapshot event
+- [ ] 11-02-PLAN.md — Zustand resource store + useResources hooks + unit tests
+- [ ] 11-03-PLAN.md — Direct SSE connection, useResourceSSE rewrite, proxy deletion
+- [ ] 11-04-PLAN.md — Consumer migration: 15 resource pages from tRPC to Zustand
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9 -> 10
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9 -> 10 -> 11
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -206,3 +228,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9 -> 10
 | 8. Resource Explorer UX Overhaul | 8/8 | Complete | 2026-03-28 |
 | 9. Lens-Inspired Power Features | 1/10 | In Progress | - |
 | 10. Lens-Style Live Data | 5/5 | Complete    | 2026-03-29 |
+| 11. Lens-Grade Live Data Redesign | 0/4 | Planned | - |
