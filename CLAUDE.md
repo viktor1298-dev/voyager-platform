@@ -14,8 +14,8 @@ voyager-platform/
 │   ├── api/                    # Fastify 5 backend (tRPC 11, Drizzle ORM, Better-Auth)
 │   │   └── src/
 │   │       ├── server.ts       # Entry point — DO NOT add migrate() here
-│   │       ├── routers/        # tRPC routers (38 routes: clusters, pods, nodes, alerts, ai, ingresses, statefulsets, daemonsets, jobs, cronjobs, hpa, configmaps, secrets, pvcs, etc.)
-│   │       ├── routes/         # Non-tRPC routes (ai-stream, mcp, metrics-stream)
+│   │       ├── routers/        # tRPC routers (45 routes: clusters, pods, nodes, alerts, ai, ingresses, statefulsets, daemonsets, jobs, cronjobs, hpa, configmaps, secrets, pvcs, yaml, helm, crds, rbac, networkPolicies, resourceQuotas, topology, etc.)
+│   │       ├── routes/         # Non-tRPC routes (ai-stream, mcp, metrics-stream, log-stream, pod-terminal)
 │   │       ├── jobs/           # Background jobs (health-sync, alert-evaluator, metrics, node-sync, event-sync, deploy-smoke-test, metrics-stream-job)
 │   │       ├── config/         # Backend-only config (job intervals, K8s settings)
 │   │       └── lib/            # Auth, K8s watchers, telemetry, sentry, cache, authorization, error-handler, cache-keys, health-checks
@@ -45,8 +45,8 @@ voyager-platform/
 
 | Layer | Stack |
 |-------|-------|
-| **Frontend** | Next.js 16, React 19, Tailwind 4, Motion 12, shadcn/ui, TanStack Query, Zustand 5, cmdk, nuqs |
-| **Backend** | Fastify 5, tRPC 11, Drizzle ORM, Better-Auth, Node.js 22 |
+| **Frontend** | Next.js 16, React 19, Tailwind 4, Motion 12, shadcn/ui, TanStack Query, Zustand 5, cmdk, nuqs, React Flow (@xyflow/react), xterm.js |
+| **Backend** | Fastify 5, tRPC 11, Drizzle ORM, Better-Auth, @fastify/websocket, Node.js 22 |
 | **Database** | PostgreSQL 17 + TimescaleDB |
 | **Cache** | Redis 7 |
 | **Feature Flags** | OpenFeature + flagd (`apps/api/feature-flags.json`) |
@@ -155,7 +155,7 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 - **routers/** → **services** → **lib/** (dependency direction; routers can skip services to call lib directly)
 - **lib/** has no dependencies on routers or services
 - tRPC procedures use `publicProcedure`, `protectedProcedure`, `adminProcedure`, or `authorizedProcedure` middleware
-- Non-tRPC routes: `ai-stream` (SSE streaming), `mcp` (MCP protocol), `metrics-stream` (SSE live metrics)
+- Non-tRPC routes: `ai-stream` (SSE streaming), `mcp` (MCP protocol), `metrics-stream` (SSE live metrics), `log-stream` (SSE pod log streaming), `pod-terminal` (WebSocket pod exec)
 - tRPC client uses `httpLink` (NOT `httpBatchLink`) — see Gotcha #1
 - Background jobs: `health-sync`, `alert-evaluator`, `metrics-history-collector`, `node-sync`, `event-sync`, `deploy-smoke-test`, `metrics-stream-job`
 - **All sync jobs run regardless of `K8S_ENABLED`** — only K8s watchers and deploy-smoke-test are gated (see Gotcha #14)
@@ -164,7 +164,7 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 
 | Abstraction | Location | Pattern |
 |-------------|----------|---------|
-| **K8s Resource Routers** | `api/src/routers/{resource}.ts` | `authorizedProcedure('cluster', 'viewer')` + `clusterClientPool.getClient()` + `cached()` with 15s TTL; read-only, RBAC-checked. Pattern used by: ingresses, statefulSets, daemonSets, jobs, cronJobs, hpa, configMaps, secrets, pvcs |
+| **K8s Resource Routers** | `api/src/routers/{resource}.ts` | `authorizedProcedure('cluster', 'viewer')` + `clusterClientPool.getClient()` + `cached()` with 15s TTL; read-only, RBAC-checked. Pattern used by: ingresses, statefulSets, daemonSets, jobs, cronJobs, hpa, configMaps, secrets, pvcs, yaml, helm, crds, rbac, networkPolicies, resourceQuotas, topology |
 | **Cluster Client Pool** | `api/src/lib/cluster-client-pool.ts` | Lazy-loaded per-cluster K8s clients; caches KubeConfig, handles credential decryption for AWS/Azure/GKE |
 | **Cluster Watch Manager** | `api/src/lib/cluster-watch-manager.ts` | K8s informers per cluster → emits to `voyagerEmitter`; no polling |
 | **Event Emitter** | `api/src/lib/event-emitter.ts` | Decouples K8s watchers from SSE subscriptions (one watch, many consumers) |
@@ -177,6 +177,17 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 | **Metrics Buffer** | `web/src/lib/metrics-buffer.ts` | Circular buffer (65 points max) for SSE live data with time-based eviction |
 | **LTTB Downsampling** | `web/src/lib/lttb.ts` | Largest-Triangle-Three-Buckets algorithm (~50 LOC) — downsamples 500+ points to ~200 for chart perf |
 | **useMetricsData** | `web/src/hooks/useMetricsData.ts` | Unified data hook — SSE for ≤15m ranges, tRPC for ≥30m — seamless switching |
+| **Terminal Drawer** | `web/src/components/terminal/TerminalDrawer.tsx` | VS Code-style bottom panel — xterm.js, multi-tab sessions, WebSocket to K8s exec |
+| **Terminal Context** | `web/src/components/terminal/terminal-context.tsx` | `useTerminal()` hook — session management, openTerminal/closeTerminal for pod exec |
+| **Pod Terminal Route** | `api/src/routes/pod-terminal.ts` | WebSocket route bridging browser WS ↔ K8s exec via PassThrough streams |
+| **Log Stream Route** | `api/src/routes/log-stream.ts` | SSE endpoint for real-time pod log streaming with follow mode |
+| **YAML Router** | `api/src/routers/yaml.ts` | Universal K8s raw resource fetcher — supports 16 resource types |
+| **YamlViewer** | `web/src/components/resource/YamlViewer.tsx` | Syntax-highlighted read-only YAML viewer with copy, theme-aware |
+| **ResourceDiff** | `web/src/components/resource/ResourceDiff.tsx` | Side-by-side diff (current vs last-applied annotation), Helm revision support |
+| **ActionToolbar** | `web/src/components/resource/ActionToolbar.tsx` | Restart/Scale/Delete action buttons with tiered confirmation dialogs |
+| **Topology Map** | `web/src/components/topology/TopologyMap.tsx` | React Flow interactive graph — Ingress→Service→Pod→Node with dagre layout |
+| **RBAC Matrix** | `web/src/components/rbac/RbacMatrix.tsx` | Permission grid — users×resources with CRUD letter cells |
+| **Events Timeline** | `web/src/components/events/EventsTimeline.tsx` | Horizontal swim lane visualization with resource-type grouping |
 
 ### State Management
 
@@ -222,7 +233,7 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 - OpenAPI: auto-generated via `trpc-to-openapi` + `@fastify/swagger`
 - Health: `/health` (always up), `/health/metrics-collector` (collector status)
 - View Transitions: enabled via `next.config.ts` experimental flag + CSS `@view-transition` in globals.css
-- Package optimization: `optimizePackageImports` for lucide-react, recharts, @iconify/react in next.config.ts
+- Package optimization: `optimizePackageImports` for lucide-react, recharts, @iconify/react, @xyflow/react in next.config.ts
 - QueryClient: global `staleTime: 30s` to prevent unnecessary refetches
 - Chart colors: all charts use CSS custom properties (`--chart-1..5`, `--color-chart-*`, `--color-threshold-*`) from globals.css — never hardcode colors
 - Container queries: `WidgetWrapper.tsx` uses `@container` for responsive dashboard widgets
@@ -242,7 +253,8 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | **Post-start health verification** | Local CLI (`pnpm health:check`) + K8s deploy smoke test job (2026-03-27). Spec in `docs/superpowers/specs/`, plan in `docs/superpowers/plans/` |
 | **Metrics Graph Redesign** | Grafana-quality metrics viz — 7 phases complete (2026-03-28). TimescaleDB time_bucket(), SSE real-time, synchronized crosshair, dark panels, LTTB downsampling |
 | **K8s Resource Explorer** | 8 waves complete (2026-03-28). GroupedTabBar navigation, expandable component library, 19 resource types with detail panels, 10 new tRPC routers. Spec in `docs/superpowers/specs/` |
-| **Next** | Visual QA, then v2.0 milestone feature development |
+| **Lens-Inspired Power Features** | 10 plans, 4 waves complete (2026-03-28). Pod exec terminal (xterm.js + WebSocket), live log streaming (SSE follow), YAML viewer + resource diff on all resources, workload mutations (restart/scale/delete), Helm releases viewer, CRD browser, RBAC permission matrix, network policy graph (React Flow), resource quotas dashboard, events timeline swim lanes, resource topology map. 7 new tRPC routers, first WebSocket in codebase. Plans in `.planning/phases/09-lens-inspired-power-features/` |
+| **Next** | Browser QA validation, then v2.0 milestone feature development |
 
 ## Database
 
@@ -261,12 +273,12 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | Path | What |
 |------|------|
 | `apps/api/src/server.ts` | Fastify entry point (🔴 no migrate!) |
-| `apps/api/src/routers/index.ts` | tRPC router registry (38 routes) |
+| `apps/api/src/routers/index.ts` | tRPC router registry (45 routes) |
 | `apps/api/src/trpc.ts` | tRPC context creation, procedure definitions |
-| `apps/web/src/app/clusters/[id]/layout.tsx` | Cluster detail layout with GroupedTabBar (19 resource types in categorized dropdowns) |
+| `apps/web/src/app/clusters/[id]/layout.tsx` | Cluster detail layout with GroupedTabBar (25 resource types in 7 categorized groups) |
 | `apps/web/src/components/Sidebar.tsx` | Main sidebar (6 items) |
 | `apps/web/src/components/AppLayout.tsx` | App shell with auto-collapse logic |
-| `apps/web/src/components/providers.tsx` | All providers (tRPC, theme, LazyMotion — no `strict` flag, CommandPalette dynamically imported) |
+| `apps/web/src/components/providers.tsx` | All providers (tRPC, theme, LazyMotion — no `strict` flag, TerminalProvider, CommandPalette dynamically imported) |
 | `apps/web/src/components/charts/chart-theme.ts` | Shared chart colors, tooltip style, threshold helpers — references `--chart-*` CSS vars |
 | `apps/web/src/config/navigation.ts` | Sidebar navigation config |
 | `apps/web/src/lib/trpc.ts` | tRPC client setup + `handleTRPCError` |
@@ -291,6 +303,23 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | `apps/web/src/components/metrics/MetricsPanelSkeleton.tsx` | Chart-shaped skeleton shimmer for per-panel loading |
 | `apps/web/src/components/metrics/DebouncedResponsiveContainer.tsx` | ResizeObserver-based container with 150ms debounce |
 | `apps/web/src/components/expandable/` | Reusable expandable detail components: ExpandableCard, ExpandableTableRow, DetailTabs, ResourceBar, ConditionsList, TagPills, DetailRow, DetailGrid |
+| `apps/web/src/components/resource/` | YamlViewer, ResourceDiff, ActionToolbar, DeleteConfirmDialog, RestartConfirmDialog, ScaleInput, PortForwardCopy, SearchFilterBar, RelatedResourceLink |
+| `apps/web/src/components/terminal/` | TerminalDrawer (VS Code bottom panel), TerminalSession (xterm.js), TerminalTab, terminal-context (useTerminal hook) |
+| `apps/web/src/components/topology/` | TopologyMap (React Flow), TopologyNode (custom node), topology utilities |
+| `apps/web/src/components/events/` | EventsTimeline (swim lanes), TimelineSwimLane, TimelineEventDot |
+| `apps/web/src/components/rbac/` | RbacMatrix, RbacCell (CRUD letter display) |
+| `apps/web/src/components/helm/` | HelmReleaseDetail (Info/Values/Revisions/Resources tabs) |
+| `apps/web/src/components/crds/` | CrdBrowser, CrdInstanceList |
+| `apps/web/src/components/quotas/` | ResourceQuotaCard (gauge bars) |
+| `apps/web/src/components/network/` | NetworkPolicyGraph (React Flow allow/deny edges) |
+| `apps/web/src/components/clusters/cluster-tabs-config.ts` | GroupedTabBar tab configuration (7 groups, 25 tabs) |
+| `apps/api/src/routes/pod-terminal.ts` | WebSocket pod exec route (first WS in codebase) |
+| `apps/api/src/routes/log-stream.ts` | SSE pod log streaming with follow mode |
+| `apps/api/src/routers/yaml.ts` | Universal K8s raw resource YAML fetcher (16 types) |
+| `apps/api/src/routers/helm.ts` | Helm releases (base64+gzip decode from K8s secrets) |
+| `apps/api/src/routers/crds.ts` | CRD browser (ApiextensionsV1Api + CustomObjectsApi) |
+| `apps/api/src/routers/rbac.ts` | RBAC permission matrix aggregation |
+| `apps/api/src/routers/topology.ts` | Resource topology graph (nodes + edges) |
 | `docs/DESIGN.md` | 🔴 Animation & interaction design source of truth — read before ANY UI change |
 
 ## URL Structure
@@ -306,10 +335,11 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 /logs                           → Global logs
 /settings                       → Settings hub
 
-# Cluster detail (19 resources via GroupedTabBar)
-/clusters/[id]                  → Overview (default tab)
+# Cluster detail (25 resources via GroupedTabBar, 7 groups)
+/clusters/[id]                  → Overview (default tab, includes topology map)
 /clusters/[id]/nodes|pods|deployments|services|namespaces|events|logs|metrics|autoscaling
 /clusters/[id]/ingresses|statefulsets|daemonsets|jobs|cronjobs|hpa|configmaps|secrets|pvcs
+/clusters/[id]/helm|crds|rbac|network-policies|resource-quotas
 
 # Not in sidebar (accessible via direct URL or in-app links)
 /ai                             → AI Assistant
@@ -390,6 +420,21 @@ Short ranges (≤15m: `5m`, `15m`) use SSE streaming from K8s metrics-server via
 ### 21. handleK8sError Causes `void` Return Type Inference
 Routers that use `handleK8sError(err, op)` in catch blocks infer return type as `void | undefined` because TypeScript can't prove the function always throws. Frontend code using `trpc.router.procedure.useQuery` gets `void | undefined` for `.data`. **Fix: define explicit interface types and cast with `as`** — e.g., `const data = (query.data ?? []) as MyType[]`. Do NOT use `NonNullable<ReturnType<typeof trpc.x.y.useQuery>['data']>`.
 
+### 22. Pod Terminal — First WebSocket in Codebase
+The pod terminal route (`api/src/routes/pod-terminal.ts`) uses `@fastify/websocket` for bidirectional communication. Everything else in the codebase uses SSE. The WebSocket plugin must be registered in `server.ts` before any WS routes. The terminal uses `@kubernetes/client-node` `Exec` class which returns a `Promise<WebSocket>` that's bridged to the browser WS via PassThrough streams.
+
+### 23. xterm.js — Dynamic Import Required (SSR Safety)
+`@xterm/xterm` accesses `window` and `document` on import. Must use `next/dynamic` or `import()` inside `useEffect` — never import at module top level. The `TerminalSession.tsx` component follows the correct pattern with `useState(false)` + `useEffect` mount guard (Gotcha #13).
+
+### 24. React Flow — Stable `nodeTypes` Reference Required
+`@xyflow/react` re-renders the entire graph when `nodeTypes` object reference changes. Always define `nodeTypes` outside the component or wrap in `useMemo`. Failing to do this causes infinite re-renders on any state change in the topology map.
+
+### 25. Helm Release Decoding — base64 + gzip + JSON
+Helm v3 stores releases as K8s Secrets with `type=helm.sh/release.v1`. The `.data.release` field is base64-encoded, gzip-compressed JSON. Decode pipeline: `Buffer.from(b64, 'base64')` → `zlib.gunzipSync()` → `JSON.parse()`. List secrets metadata-only first, decode on-demand per release to avoid OOM with many releases.
+
+### 26. GroupedTabBar — 7 Groups, New "Cluster Ops" Group
+The GroupedTabBar now has 7 groups: standalone tabs (Overview, Nodes, Events, Logs, Metrics), Workloads, Networking (includes Network Policies), Config (includes Resource Quotas), Storage, Scaling, and **Cluster Ops** (Helm, CRDs, RBAC). Config is in `cluster-tabs-config.ts`.
+
 ## 🚨 QA Gate Rules — MANDATORY
 
 QA validation after code changes **MUST** follow these rules. Violations = QA FAIL regardless of visual appearance.
@@ -461,19 +506,19 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**Metrics Graph Redesign**
+**Lens-Inspired Power Features**
 
-A full-stack redesign of the voyager-platform metrics visualization system — replacing broken time range logic and basic Recharts panels with Grafana-quality, real-time metrics graphs. The metrics tab (`/clusters/[id]/metrics`) is the primary monitoring surface for K8s ops teams managing multi-cloud clusters.
+Transform Voyager Platform from a read-only K8s dashboard into a full Lens-alternative with interactive operational capabilities. Phase 9 added: pod exec terminal (xterm.js + WebSocket), live log streaming (SSE follow), universal YAML viewer + resource diff, workload management (restart/scale/delete), Helm releases viewer, CRD browser, RBAC permission matrix, network policy visualization (React Flow), resource quotas dashboard, events timeline swim lanes, and resource topology map.
 
-**Core Value:** Every time range the user selects must show correct, populated data with Grafana-grade visualization quality — short ranges show real-time K8s metrics via SSE, historical ranges show properly bucketed DB data.
+**Core Value:** Every K8s resource in the dashboard is now actionable — operators can exec into pods, view YAML, compare diffs, restart workloads, browse Helm releases, inspect RBAC, and visualize network policies and resource topology — all without leaving the browser.
 
 ### Constraints
 
-- **Tech stack**: Must use existing Recharts (already installed) — no switching to D3/Visx/ECharts
 - **Design system**: Must follow `docs/DESIGN.md` B-style animation standards
-- **SSE infra**: Must integrate with existing `voyagerEmitter` pattern, not add WebSocket
-- **DB schema**: metrics_history and node_metrics_history tables stay as-is — no schema migration
-- **Collector interval**: 60s collection frequency stays — SSE bridges the gap for short ranges
+- **Graph library**: React Flow (@xyflow/react) for topology and network policy graphs — dagre for layout
+- **Terminal**: xterm.js for pod exec, WebSocket bridge to K8s API (first WS in codebase, everything else is SSE)
+- **Helm**: Read-only in Phase 9 (list, view values, revision history). Upgrade/rollback mutations deferred.
+- **Port forwarding**: Copy kubectl command only — no actual proxy from web app
 <!-- GSD:project-end -->
 
 <!-- GSD auto-generated sections (Technology Stack, Conventions, Architecture) removed 2026-03-28.
