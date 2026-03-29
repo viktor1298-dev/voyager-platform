@@ -64,7 +64,7 @@ export default function EventsPage() {
 
   const eventsQuery = trpc.clusters.liveEvents.useQuery(
     { clusterId: activeClusterId ?? '', limit: 50 },
-    { refetchInterval: 30000, enabled: Boolean(activeClusterId) },
+    { enabled: Boolean(activeClusterId) },
   )
   const events = useMemo(
     () =>
@@ -251,7 +251,11 @@ export default function EventsPage() {
           loading={hasActiveCluster ? eventsQuery.isLoading : false}
           emptyIcon={<Calendar className="h-8 w-8" />}
           emptyTitle={hasActiveCluster ? 'All quiet in the last hour' : 'Select a cluster first'}
-          emptyDescription={hasActiveCluster ? 'No Kubernetes events found. Adjust the time range filter to see historical events.' : 'Choose an active cluster from the top bar to load live Kubernetes events.'}
+          emptyDescription={
+            hasActiveCluster
+              ? 'No Kubernetes events found. Adjust the time range filter to see historical events.'
+              : 'Choose an active cluster from the top bar to load live Kubernetes events.'
+          }
           mobileCard={(event) => {
             const isWarning = event.type === 'Warning'
             return (

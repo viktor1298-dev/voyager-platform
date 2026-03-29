@@ -38,7 +38,7 @@ export default function ServicesPage() {
 
   const servicesQuery = trpc.services.list.useQuery(
     { clusterId: clusterId! },
-    { enabled: !!clusterId, refetchInterval: 30_000 },
+    { enabled: !!clusterId },
   )
 
   const data = useMemo(() => (servicesQuery.data ?? []) as ServiceRow[], [servicesQuery.data])

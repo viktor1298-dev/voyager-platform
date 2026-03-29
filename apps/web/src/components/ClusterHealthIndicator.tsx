@@ -11,7 +11,6 @@ import { AlertTriangle, CheckCircle2, HelpCircle, RefreshCw, XCircle } from 'luc
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { trpc } from '@/lib/trpc'
-import { HEALTH_STATUS_REFETCH_MS } from '@/lib/cluster-constants'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 import { timeAgo } from '@/lib/time-utils'
 import { statusChangeTransition } from '@/lib/animation-constants'
@@ -38,12 +37,7 @@ export function ClusterHealthIndicator({
   const [checking, setChecking] = useState(false)
   const utils = trpc.useUtils()
 
-  const statusQuery = trpc.health.status.useQuery(
-    {},
-    {
-      refetchInterval: HEALTH_STATUS_REFETCH_MS,
-    },
-  )
+  const statusQuery = trpc.health.status.useQuery({})
   const entry = statusQuery.data?.find((s) => s.clusterId === clusterId)
 
   const handleCheck = useCallback(

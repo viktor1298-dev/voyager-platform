@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
-import { DB_CLUSTER_REFETCH_MS, LIVE_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
+import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { useClusterContext } from '@/stores/cluster-context'
 import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
 import { ClusterHealthIndicator } from '@/components/ClusterHealthIndicator'
@@ -38,7 +38,6 @@ export function ClusterHealthWidget() {
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
     {
-      refetchInterval: Math.min(LIVE_CLUSTER_REFETCH_MS, intervalMs),
       enabled: Boolean(activeClusterId),
     },
   )

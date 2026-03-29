@@ -2,16 +2,11 @@
 
 import { useClusterContext } from '@/stores/cluster-context'
 import { trpc } from '@/lib/trpc'
-import { LIVE_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
-import { useDashboardRefreshInterval } from '@/components/dashboard/DashboardRefreshContext'
-
 export function PodStatusWidget() {
   const activeClusterId = useClusterContext((s) => s.activeClusterId)
-  const intervalMs = useDashboardRefreshInterval()
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
     {
-      refetchInterval: Math.min(LIVE_CLUSTER_REFETCH_MS, intervalMs),
       enabled: Boolean(activeClusterId),
     },
   )

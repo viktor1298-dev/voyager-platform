@@ -73,7 +73,6 @@ export function TopBar() {
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
     {
-      refetchInterval: 30000,
       retry: 2,
       enabled: Boolean(activeClusterId),
     },

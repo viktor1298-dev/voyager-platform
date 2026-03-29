@@ -96,8 +96,8 @@ function UptimeBars({ history }: { history: Array<{ status: string; checkedAt: s
 export default function HealthPage() {
   usePageTitle('System Health')
 
-  const healthQuery = trpc.health.status.useQuery({}, { refetchInterval: 30_000 })
-  const eventsQuery = trpc.events.list.useQuery({ limit: 20 }, { refetchInterval: 60_000 })
+  const healthQuery = trpc.health.status.useQuery({})
+  const eventsQuery = trpc.events.list.useQuery({ limit: 20 })
 
   const healthData = healthQuery.data ?? []
   const isLoading = healthQuery.isLoading

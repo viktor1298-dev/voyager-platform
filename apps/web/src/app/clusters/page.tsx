@@ -16,13 +16,31 @@ import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { usePermission } from '@/hooks/usePermission'
 import { getClusterRouteSegment } from '@/components/cluster-route'
 import { getClusterEnvironment, getClusterTags } from '@/lib/cluster-meta'
-import { normalizeLiveHealthStatus, healthBadgeVariant, healthBadgeLabel, type LiveHealthStatus } from '@/lib/cluster-status'
-import { getBestRelationForUser, getRelationBadgeClass, type Relation } from '@/lib/mock-access-control'
+import {
+  normalizeLiveHealthStatus,
+  healthBadgeVariant,
+  healthBadgeLabel,
+  type LiveHealthStatus,
+} from '@/lib/cluster-status'
+import {
+  getBestRelationForUser,
+  getRelationBadgeClass,
+  type Relation,
+} from '@/lib/mock-access-control'
 import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
 import type { ColumnDef } from '@tanstack/react-table'
-import { AlertTriangle, CheckCircle2, Database, Eye, HelpCircle, Plus, Trash2, XCircle } from 'lucide-react'
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Database,
+  Eye,
+  HelpCircle,
+  Plus,
+  Trash2,
+  XCircle,
+} from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -141,7 +159,7 @@ export default function ClustersPage() {
   const router = useRouter()
   const isAdmin = useIsAdmin()
   const clusters = trpc.clusters.list.useQuery()
-  const liveHealth = trpc.health.status.useQuery({}, { refetchInterval: 30000 })
+  const liveHealth = trpc.health.status.useQuery({})
   const clusterQueryKey = [['clusters', 'list'], { type: 'query' }] as const
 
   const createCluster = trpc.clusters.create.useMutation(
@@ -149,7 +167,16 @@ export default function ClustersPage() {
       queryKey: clusterQueryKey,
       updater: (old, vars) => [
         ...(old ?? []),
-        { id: `temp-${Date.now()}`, name: vars.name, provider: vars.provider, status: 'pending', version: null, nodeCount: 0, endpoint: vars.endpoint, updatedAt: new Date().toISOString() },
+        {
+          id: `temp-${Date.now()}`,
+          name: vars.name,
+          provider: vars.provider,
+          status: 'pending',
+          version: null,
+          nodeCount: 0,
+          endpoint: vars.endpoint,
+          updatedAt: new Date().toISOString(),
+        },
       ],
       successMessage: 'Cluster added successfully',
       errorMessage: 'Failed to add cluster — rolled back',
@@ -172,10 +199,13 @@ export default function ClustersPage() {
   const [isClient, setIsClient] = useState(false)
   const currentUserId = useAuthStore((state) => state.user?.id)
 
-  const getPermissionForCluster = useCallback((clusterId: string): Relation | null => {
-    if (!currentUserId) return null
-    return getBestRelationForUser(currentUserId, clusterId)
-  }, [currentUserId])
+  const getPermissionForCluster = useCallback(
+    (clusterId: string): Relation | null => {
+      if (!currentUserId) return null
+      return getBestRelationForUser(currentUserId, clusterId)
+    },
+    [currentUserId],
+  )
 
   useEffect(() => {
     setIsClient(true)
@@ -222,7 +252,11 @@ export default function ClustersPage() {
       statuses.add((cluster.healthStatus ?? cluster.status ?? 'unknown').toLowerCase())
       providers.add(cluster.provider ?? 'unknown')
       health.add(normalizeLiveHealthStatus(cluster.healthStatus ?? cluster.status))
-      for (const tag of getClusterTags({ name: cluster.name, provider: cluster.provider ?? undefined, source: 'db' })) {
+      for (const tag of getClusterTags({
+        name: cluster.name,
+        provider: cluster.provider ?? undefined,
+        source: 'db',
+      })) {
         tags.add(tag)
       }
     }
@@ -243,12 +277,23 @@ export default function ClustersPage() {
       if (filters.environment !== 'all' && env !== filters.environment) return false
       const statusValue = (cluster.healthStatus ?? cluster.status ?? 'unknown').toLowerCase()
       if (filters.status !== 'all' && statusValue !== filters.status) return false
-      if (filters.provider !== 'all' && (cluster.provider ?? 'unknown') !== filters.provider) return false
+      if (filters.provider !== 'all' && (cluster.provider ?? 'unknown') !== filters.provider)
+        return false
       const healthValue = normalizeLiveHealthStatus(cluster.healthStatus ?? cluster.status)
       if (filters.health !== 'all' && healthValue !== filters.health) return false
-      const clusterTags = getClusterTags({ name: cluster.name, provider: cluster.provider ?? undefined, source: 'db' })
-      if (filters.tags.length > 0 && !filters.tags.every((tag) => clusterTags.includes(tag))) return false
-      if (q && !`${cluster.name} ${cluster.provider ?? ''} ${clusterTags.join(' ')}`.toLowerCase().includes(q)) {
+      const clusterTags = getClusterTags({
+        name: cluster.name,
+        provider: cluster.provider ?? undefined,
+        source: 'db',
+      })
+      if (filters.tags.length > 0 && !filters.tags.every((tag) => clusterTags.includes(tag)))
+        return false
+      if (
+        q &&
+        !`${cluster.name} ${cluster.provider ?? ''} ${clusterTags.join(' ')}`
+          .toLowerCase()
+          .includes(q)
+      ) {
         return false
       }
       return true
@@ -269,7 +314,9 @@ export default function ClustersPage() {
         accessorKey: 'name',
         header: 'Name',
         cell: ({ row }) => (
-          <span className="font-semibold text-[var(--color-text-primary)]">{row.original.name}</span>
+          <span className="font-semibold text-[var(--color-text-primary)]">
+            {row.original.name}
+          </span>
         ),
       },
       {
@@ -288,14 +335,16 @@ export default function ClustersPage() {
         id: 'healthStatus',
         header: 'Health',
         cell: ({ row }) => {
-          const liveStatus = normalizeLiveHealthStatus(row.original.healthStatus ?? row.original.status)
+          const liveStatus = normalizeLiveHealthStatus(
+            row.original.healthStatus ?? row.original.status,
+          )
           return (
             <div className="flex items-center gap-2">
               <HealthIcon status={liveStatus} />
-              <span className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`} />
-              <Badge variant={healthBadgeVariant(liveStatus)}>
-                {healthBadgeLabel(liveStatus)}
-              </Badge>
+              <span
+                className={`h-2 w-2 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`}
+              />
+              <Badge variant={healthBadgeVariant(liveStatus)}>{healthBadgeLabel(liveStatus)}</Badge>
             </div>
           )
         },
@@ -313,24 +362,34 @@ export default function ClustersPage() {
         accessorKey: 'version',
         header: 'Version',
         cell: ({ row }) => (
-          <span className="text-xs text-[var(--color-text-secondary)] font-mono">{row.original.version ?? '—'}</span>
+          <span className="text-xs text-[var(--color-text-secondary)] font-mono">
+            {row.original.version ?? '—'}
+          </span>
         ),
       },
       {
         accessorKey: 'nodeCount',
         header: 'Nodes',
         cell: ({ row }) => (
-          <span className="text-xs text-[var(--color-text-secondary)] font-mono tabular-nums">{row.original.nodeCount}</span>
+          <span className="text-xs text-[var(--color-text-secondary)] font-mono tabular-nums">
+            {row.original.nodeCount}
+          </span>
         ),
       },
-      ...(hasAnyEndpoint ? [{
-        accessorKey: 'endpoint' as const,
-        header: 'Endpoint',
-        cell: ({ row }: { row: { original: ClusterRow } }) => (
-          <span className="text-xs text-[var(--color-text-secondary)] font-mono max-w-[200px] truncate block">{row.original.endpoint ?? '—'}</span>
-        ),
-        meta: { className: 'hidden lg:table-cell' },
-      } as ColumnDef<ClusterRow, unknown>] : []),
+      ...(hasAnyEndpoint
+        ? [
+            {
+              accessorKey: 'endpoint' as const,
+              header: 'Endpoint',
+              cell: ({ row }: { row: { original: ClusterRow } }) => (
+                <span className="text-xs text-[var(--color-text-secondary)] font-mono max-w-[200px] truncate block">
+                  {row.original.endpoint ?? '—'}
+                </span>
+              ),
+              meta: { className: 'hidden lg:table-cell' },
+            } as ColumnDef<ClusterRow, unknown>,
+          ]
+        : []),
       {
         id: 'lastSeen',
         accessorFn: (row) => row.updatedAt,
@@ -359,10 +418,13 @@ export default function ClustersPage() {
     [getPermissionForCluster, hasAnyEndpoint, isAdmin, isClient],
   )
 
-  const toCreateClusterInput = useCallback((payload: AddClusterWizardPayload): CreateClusterInput => {
-    const { name, provider, endpoint, connectionConfig } = payload
-    return { name, provider, endpoint, connectionConfig }
-  }, [])
+  const toCreateClusterInput = useCallback(
+    (payload: AddClusterWizardPayload): CreateClusterInput => {
+      const { name, provider, endpoint, connectionConfig } = payload
+      return { name, provider, endpoint, connectionConfig }
+    },
+    [],
+  )
 
   const btnPrimary =
     'px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer min-h-[44px]'
@@ -370,171 +432,232 @@ export default function ClustersPage() {
   return (
     <AppLayout>
       <PageTransition>
-      <Breadcrumbs />
+        <Breadcrumbs />
 
-      {clusters.error && (
-        <QueryError message={clusters.error.message} onRetry={() => clusters.refetch()} />
-      )}
-
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
-            Clusters
-          </h1>
-          <p className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider mt-1">
-            {filteredClusters.length}/{clusterList.length} visible
-          </p>
-        </div>
-        {isAdmin && (
-          <button type="button" className={btnPrimary} onClick={() => setShowAddModal(true)}>
-            <span className="flex items-center gap-1.5">
-              <Plus className="h-4 w-4" />
-              Add Cluster
-            </span>
-          </button>
+        {clusters.error && (
+          <QueryError message={clusters.error.message} onRetry={() => clusters.refetch()} />
         )}
-      </div>
 
-      <FilterBar options={filterOptions} onChange={onFiltersChange} className="mb-4" />
-
-      {/* Fix #1: Card layout for ≤5 clusters, DataTable for larger sets */}
-      {!clusters.isLoading && filteredClusters.length > 0 && filteredClusters.length <= 5 ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredClusters.map((row) => {
-            const liveStatus = normalizeLiveHealthStatus(row.healthStatus ?? row.status)
-            const relation = getPermissionForCluster(row.id)
-            const tags = getClusterTags({ name: row.name, provider: row.provider ?? undefined, source: 'db' })
-            return (
-              <button
-                key={row.id}
-                type="button"
-                onClick={() => router.push(`/clusters/${getClusterRouteSegment(row)}`)}
-                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 cursor-pointer hover:border-[var(--color-accent)]/40 hover:bg-white/[0.02] transition-colors space-y-3 text-left"
-                aria-label={`View cluster ${row.name}`}
-              >
-                {/* Top: Provider + Name + Health */}
-                <div className="flex items-center gap-2.5">
-                  <ProviderLogo provider={row.provider ?? 'default'} size={20} layoutId={`cluster-icon-${row.id}`} />
-                  <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm flex-1">{row.name}</span>
-                  <HealthIcon status={liveStatus} />
-                  <Badge variant={healthBadgeVariant(liveStatus)}>
-                    {healthBadgeLabel(liveStatus)}
-                  </Badge>
-                </div>
-
-                {/* Metrics grid */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: 'Nodes', value: String(row.nodeCount) },
-                    { label: 'Version', value: row.version ?? '—' },
-                    { label: 'Provider', value: (row.provider ?? '—').toUpperCase() },
-                  ].map((m) => (
-                    <div key={m.label} className="text-center rounded-lg bg-white/[0.03] py-1.5 px-1">
-                      <div className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{m.label}</div>
-                      <div className={`text-xs font-bold ${m.value === '—' || m.value === '0' ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-text-primary)]'}`}>{m.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Bottom: Tags + Access + Last Seen */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {relation && <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>}
-                  {tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="text-xs font-mono px-1.5 py-0.5 rounded-full bg-white/[0.05] text-[var(--color-text-dim)] border border-[var(--color-border)]">{tag}</span>
-                  ))}
-                  <span className="ml-auto text-xs text-[var(--color-text-dim)]" suppressHydrationWarning>
-                    {formatLastSeen(row.updatedAt, isClient)}
-                  </span>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      ) : (
-      <DataTable
-        data={filteredClusters}
-        columns={columns}
-        onRowClick={(row) => router.push(`/clusters/${getClusterRouteSegment(row)}`)}
-        loading={clusters.isLoading}
-        emptyIcon={<Database className="h-10 w-10" />}
-        emptyTitle="No clusters"
-        mobileCard={(row) => {
-          const liveStatus = normalizeLiveHealthStatus(row.healthStatus ?? row.status)
-          const relation = getPermissionForCluster(row.id)
-          const tags = getClusterTags({ name: row.name, provider: row.provider ?? undefined, source: 'db' })
-          return (
-            <button
-              type="button"
-              onClick={() => router.push(`/clusters/${getClusterRouteSegment(row)}`)}
-              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 cursor-pointer active:bg-white/[0.03] space-y-3 text-left"
-              aria-label={`View cluster ${row.name}`}
-            >
-              {/* Top: Status dot + Name */}
-              <div className="flex items-center gap-2.5">
-                <span className={`h-2.5 w-2.5 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`} />
-                <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm flex-1">{row.name}</span>
-                {/* P3-010: layoutId for shared element transition to cluster detail */}
-                <ProviderLogo provider={row.provider ?? 'default'} layoutId={`cluster-icon-${row.id}`} />
-              </div>
-
-              {/* Middle: Metrics grid */}
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: 'Nodes', value: String(row.nodeCount) },
-                  { label: 'Version', value: row.version ?? '—' },
-                  { label: 'Status', value: healthBadgeLabel(liveStatus) },
-                ].map((m) => (
-                  <div key={m.label} className="text-center rounded-lg bg-white/[0.03] py-1.5 px-1">
-                    <div className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider">{m.label}</div>
-                    <div className={`text-xs font-bold ${m.value === '—' || m.value === '0' ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-text-primary)]'}`}>{m.value}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Bottom: Tags + Access */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {relation && <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>}
-                {tags.slice(0, 3).map((tag) => (
-                  <span key={tag} className="text-xs font-mono px-1.5 py-0.5 rounded-full bg-white/[0.05] text-[var(--color-text-dim)] border border-[var(--color-border)]">{tag}</span>
-                ))}
-                <span className="ml-auto text-xs text-[var(--color-text-dim)]" suppressHydrationWarning>
-                  {formatLastSeen(row.updatedAt, isClient)}
-                </span>
-              </div>
+        {/* Header */}
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+              Clusters
+            </h1>
+            <p className="text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider mt-1">
+              {filteredClusters.length}/{clusterList.length} visible
+            </p>
+          </div>
+          {isAdmin && (
+            <button type="button" className={btnPrimary} onClick={() => setShowAddModal(true)}>
+              <span className="flex items-center gap-1.5">
+                <Plus className="h-4 w-4" />
+                Add Cluster
+              </span>
             </button>
-          )
-        }}
-      />
-      )}
+          )}
+        </div>
 
-      {/* Add Cluster Modal */}
-      <Dialog open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Cluster">
-        <AddClusterWizard
-          pending={createCluster.isPending}
-          onCancel={() => setShowAddModal(false)}
-          onSubmit={(payload) => createCluster.mutate(toCreateClusterInput(payload))}
+        <FilterBar options={filterOptions} onChange={onFiltersChange} className="mb-4" />
+
+        {/* Fix #1: Card layout for ≤5 clusters, DataTable for larger sets */}
+        {!clusters.isLoading && filteredClusters.length > 0 && filteredClusters.length <= 5 ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredClusters.map((row) => {
+              const liveStatus = normalizeLiveHealthStatus(row.healthStatus ?? row.status)
+              const relation = getPermissionForCluster(row.id)
+              const tags = getClusterTags({
+                name: row.name,
+                provider: row.provider ?? undefined,
+                source: 'db',
+              })
+              return (
+                <button
+                  key={row.id}
+                  type="button"
+                  onClick={() => router.push(`/clusters/${getClusterRouteSegment(row)}`)}
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 cursor-pointer hover:border-[var(--color-accent)]/40 hover:bg-white/[0.02] transition-colors space-y-3 text-left"
+                  aria-label={`View cluster ${row.name}`}
+                >
+                  {/* Top: Provider + Name + Health */}
+                  <div className="flex items-center gap-2.5">
+                    <ProviderLogo
+                      provider={row.provider ?? 'default'}
+                      size={20}
+                      layoutId={`cluster-icon-${row.id}`}
+                    />
+                    <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm flex-1">
+                      {row.name}
+                    </span>
+                    <HealthIcon status={liveStatus} />
+                    <Badge variant={healthBadgeVariant(liveStatus)}>
+                      {healthBadgeLabel(liveStatus)}
+                    </Badge>
+                  </div>
+
+                  {/* Metrics grid */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: 'Nodes', value: String(row.nodeCount) },
+                      { label: 'Version', value: row.version ?? '—' },
+                      { label: 'Provider', value: (row.provider ?? '—').toUpperCase() },
+                    ].map((m) => (
+                      <div
+                        key={m.label}
+                        className="text-center rounded-lg bg-white/[0.03] py-1.5 px-1"
+                      >
+                        <div className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
+                          {m.label}
+                        </div>
+                        <div
+                          className={`text-xs font-bold ${m.value === '—' || m.value === '0' ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-text-primary)]'}`}
+                        >
+                          {m.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Bottom: Tags + Access + Last Seen */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {relation && (
+                      <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>
+                    )}
+                    {tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs font-mono px-1.5 py-0.5 rounded-full bg-white/[0.05] text-[var(--color-text-dim)] border border-[var(--color-border)]"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    <span
+                      className="ml-auto text-xs text-[var(--color-text-dim)]"
+                      suppressHydrationWarning
+                    >
+                      {formatLastSeen(row.updatedAt, isClient)}
+                    </span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          <DataTable
+            data={filteredClusters}
+            columns={columns}
+            onRowClick={(row) => router.push(`/clusters/${getClusterRouteSegment(row)}`)}
+            loading={clusters.isLoading}
+            emptyIcon={<Database className="h-10 w-10" />}
+            emptyTitle="No clusters"
+            mobileCard={(row) => {
+              const liveStatus = normalizeLiveHealthStatus(row.healthStatus ?? row.status)
+              const relation = getPermissionForCluster(row.id)
+              const tags = getClusterTags({
+                name: row.name,
+                provider: row.provider ?? undefined,
+                source: 'db',
+              })
+              return (
+                <button
+                  type="button"
+                  onClick={() => router.push(`/clusters/${getClusterRouteSegment(row)}`)}
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 cursor-pointer active:bg-white/[0.03] space-y-3 text-left"
+                  aria-label={`View cluster ${row.name}`}
+                >
+                  {/* Top: Status dot + Name */}
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full shrink-0 animate-pulse-slow ${getStatusDotClass(liveStatus)}`}
+                    />
+                    <span className="font-semibold text-[var(--color-text-primary)] truncate text-sm flex-1">
+                      {row.name}
+                    </span>
+                    {/* P3-010: layoutId for shared element transition to cluster detail */}
+                    <ProviderLogo
+                      provider={row.provider ?? 'default'}
+                      layoutId={`cluster-icon-${row.id}`}
+                    />
+                  </div>
+
+                  {/* Middle: Metrics grid */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: 'Nodes', value: String(row.nodeCount) },
+                      { label: 'Version', value: row.version ?? '—' },
+                      { label: 'Status', value: healthBadgeLabel(liveStatus) },
+                    ].map((m) => (
+                      <div
+                        key={m.label}
+                        className="text-center rounded-lg bg-white/[0.03] py-1.5 px-1"
+                      >
+                        <div className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
+                          {m.label}
+                        </div>
+                        <div
+                          className={`text-xs font-bold ${m.value === '—' || m.value === '0' ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-text-primary)]'}`}
+                        >
+                          {m.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Bottom: Tags + Access */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {relation && (
+                      <Badge className={getRelationBadgeClass(relation)}>{relation}</Badge>
+                    )}
+                    {tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs font-mono px-1.5 py-0.5 rounded-full bg-white/[0.05] text-[var(--color-text-dim)] border border-[var(--color-border)]"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    <span
+                      className="ml-auto text-xs text-[var(--color-text-dim)]"
+                      suppressHydrationWarning
+                    >
+                      {formatLastSeen(row.updatedAt, isClient)}
+                    </span>
+                  </div>
+                </button>
+              )
+            }}
+          />
+        )}
+
+        {/* Add Cluster Modal */}
+        <Dialog open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Cluster">
+          <AddClusterWizard
+            pending={createCluster.isPending}
+            onCancel={() => setShowAddModal(false)}
+            onSubmit={(payload) => createCluster.mutate(toCreateClusterInput(payload))}
+          />
+        </Dialog>
+
+        {/* Delete Confirmation */}
+        <ConfirmDialog
+          open={deleteTarget !== null}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={() => deleteTarget && deleteCluster.mutate({ id: deleteTarget.id })}
+          title="Delete Cluster"
+          description={
+            <>
+              Are you sure you want to delete{' '}
+              <span className="font-semibold text-[var(--color-text-primary)]">
+                {deleteTarget?.name}
+              </span>
+              ? This action cannot be undone.
+            </>
+          }
+          confirmLabel="Delete"
+          variant="danger"
+          loading={deleteCluster.isPending}
+          error={deleteCluster.error?.message}
         />
-      </Dialog>
-
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        open={deleteTarget !== null}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={() => deleteTarget && deleteCluster.mutate({ id: deleteTarget.id })}
-        title="Delete Cluster"
-        description={
-          <>
-            Are you sure you want to delete{' '}
-            <span className="font-semibold text-[var(--color-text-primary)]">{deleteTarget?.name}</span>?
-            This action cannot be undone.
-          </>
-        }
-        confirmLabel="Delete"
-        variant="danger"
-        loading={deleteCluster.isPending}
-        error={deleteCluster.error?.message}
-      />
       </PageTransition>
     </AppLayout>
   )

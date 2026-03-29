@@ -65,7 +65,7 @@ export function TopologyMap({ clusterId }: TopologyMapProps) {
 
   const graphQuery = trpc.topology.graph.useQuery(
     { clusterId, namespace: namespace || undefined },
-    { staleTime: 15000, refetchInterval: 30000 },
+    { staleTime: 15000 },
   )
 
   const graphData = graphQuery.data as

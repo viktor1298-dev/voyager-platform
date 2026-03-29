@@ -53,10 +53,7 @@ interface CrdBrowserProps {
 }
 
 export function CrdBrowser({ clusterId }: CrdBrowserProps) {
-  const crdsQuery = trpc.crds.list.useQuery(
-    { clusterId },
-    { staleTime: 30_000, refetchInterval: 30_000 },
-  )
+  const crdsQuery = trpc.crds.list.useQuery({ clusterId }, { staleTime: 30_000 })
 
   const [searchQuery, setSearchQuery] = useState('')
   const [expandAll, setExpandAll] = useState(false)

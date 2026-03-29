@@ -15,7 +15,7 @@ import {
   normalizeHealth,
   type ClusterEnvironment,
 } from '@/lib/cluster-meta'
-import { LIVE_CLUSTER_REFETCH_MS, DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
+import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import { useClusterContext } from '@/stores/cluster-context'
@@ -168,7 +168,6 @@ function DashboardContent() {
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
     {
-      refetchInterval: LIVE_CLUSTER_REFETCH_MS,
       enabled: Boolean(activeClusterId),
     },
   )

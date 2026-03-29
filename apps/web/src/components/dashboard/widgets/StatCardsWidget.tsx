@@ -8,7 +8,7 @@ import { DURATION, cardHover, cardTap } from '@/lib/animation-constants'
 import { SkeletonText } from '@/components/Skeleton'
 import { SparklineChart, generateStableTimeSeries } from '@/components/charts/SparklineChart'
 import { trpc } from '@/lib/trpc'
-import { DB_CLUSTER_REFETCH_MS, LIVE_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
+import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { useClusterContext } from '@/stores/cluster-context'
 import { cn } from '@/lib/utils'
 import { AnomalyWidget } from '@/components/anomalies/AnomalyWidget'
@@ -117,7 +117,6 @@ export function StatCardsWidget() {
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: activeClusterId ?? '' },
     {
-      refetchInterval: Math.min(LIVE_CLUSTER_REFETCH_MS, intervalMs),
       enabled: Boolean(activeClusterId),
     },
   )

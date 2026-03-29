@@ -70,7 +70,7 @@ export default function NamespacesPage() {
 
   const namespacesQuery = trpc.namespaces.list.useQuery(
     { clusterId: clusterId! },
-    { enabled: !!clusterId, refetchInterval: 30_000 },
+    { enabled: !!clusterId },
   )
 
   const data = useMemo(() => (namespacesQuery.data ?? []) as NamespaceRow[], [namespacesQuery.data])
@@ -101,7 +101,10 @@ export default function NamespacesPage() {
           />
 
           {namespacesQuery.error ? (
-            <QueryError message={namespacesQuery.error.message} onRetry={() => namespacesQuery.refetch()} />
+            <QueryError
+              message={namespacesQuery.error.message}
+              onRetry={() => namespacesQuery.refetch()}
+            />
           ) : (
             <DataTable
               columns={columns}

@@ -160,7 +160,7 @@ export default function DeploymentsPage() {
 
   const deploymentsQuery = trpc.deployments.list.useQuery(
     activeClusterId ? { clusterId: activeClusterId } : undefined,
-    { refetchInterval: 30_000 },
+    {},
   )
   const deployQueryKey = [['deployments', 'list'], { type: 'query' }] as const
 

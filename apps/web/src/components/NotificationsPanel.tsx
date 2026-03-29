@@ -108,7 +108,7 @@ export function NotificationsPanel() {
   const { lastReadAt: lastReadTimestamp, setLastRead } = useNotificationsStore()
   const panelRef = useRef<HTMLDivElement>(null)
 
-  const eventsQuery = trpc.events.list.useQuery({ limit: 50 }, { refetchInterval: 30000 })
+  const eventsQuery = trpc.events.list.useQuery({ limit: 50 })
 
   const allEvents = (eventsQuery.data ?? []) as KubeEvent[]
   const alerts = allEvents.filter((e) => e.kind === 'Warning')

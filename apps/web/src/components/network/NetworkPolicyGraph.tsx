@@ -105,10 +105,7 @@ export function NetworkPolicyGraph({ clusterId }: NetworkPolicyGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<NetworkPolicyNodeData>>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge<NetworkPolicyEdgeData>>([])
 
-  const policiesQuery = trpc.networkPolicies.list.useQuery(
-    { clusterId },
-    { staleTime: 15000, refetchInterval: 30000 },
-  )
+  const policiesQuery = trpc.networkPolicies.list.useQuery({ clusterId }, { staleTime: 15000 })
 
   const policies = (policiesQuery.data ?? []) as PolicyItem[]
 
