@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-03-29T20:58:00.741Z"
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-03-29T21:06:09.627Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 10
   completed_phases: 9
   total_plans: 35
-  completed_plans: 33
+  completed_plans: 34
   percent: 14
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 11 (lens-grade-live-data-redesign) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -75,6 +75,7 @@ Progress: [#.........] 14%
 | Phase 10 P05 | 14min | 3 tasks | 42 files |
 | Phase 11 P02 | 3min | 2 tasks | 3 files |
 | Phase 11 P01 | 3min | 2 tasks | 5 files |
+| Phase 11 P03 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,8 @@ Recent decisions affecting current work:
 - [Phase 11]: Immediate flush per event instead of batch buffer for <50ms SSE latency
 - [Phase 11]: Snapshot event sends full informer cache per resource type on connect (no initial load window)
 - [Phase 11]: Compression disabled on all 3 SSE routes via Fastify { config: { compress: false } }
+- [Phase 11]: useResourceStore.getState() for stable SSE action references outside React render cycle
+- [Phase 11]: Direct browser-to-API SSE via NEXT_PUBLIC_API_URL + withCredentials for all EventSource connections
 
 ### Roadmap Evolution
 
@@ -156,6 +159,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T20:58:00.739Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-03-29T21:06:09.625Z
+Stopped at: Completed 11-03-PLAN.md
 Resume file: None

@@ -204,12 +204,12 @@ Plans:
   6. Compression disabled on all SSE routes (no buffering)
   7. TanStack Query retained for DB-backed data (users, alerts, Helm, CRDs, metrics history)
   8. `pnpm build` and `pnpm typecheck` pass with 0 errors
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 - [x] 11-01-PLAN.md — Backend SSE rewrite: immediate flush, compression disable, snapshot event
 - [x] 11-02-PLAN.md — Zustand resource store + useResources hooks + unit tests
-- [ ] 11-03-PLAN.md — Direct SSE connection, useResourceSSE rewrite, proxy deletion
+- [x] 11-03-PLAN.md — Direct SSE connection, useResourceSSE rewrite, proxy deletion
 - [ ] 11-04-PLAN.md — Consumer migration: 15 resource pages from tRPC to Zustand
 
 ## Progress
@@ -228,4 +228,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9 -> 10 -> 1
 | 8. Resource Explorer UX Overhaul | 8/8 | Complete | 2026-03-28 |
 | 9. Lens-Inspired Power Features | 1/10 | In Progress | - |
 | 10. Lens-Style Live Data | 5/5 | Complete    | 2026-03-29 |
-| 11. Lens-Grade Live Data Redesign | 2/4 | In Progress|  |
+| 11. Lens-Grade Live Data Redesign | 3/4 | In Progress|  |
