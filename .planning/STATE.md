@@ -144,9 +144,10 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260328-m02 | Fix Karpenter: use ClusterClientPool, rename Autoscaling tab to Karpenter | 2026-03-28 | 28353f5 | [260328-m02-fix-karpenter-use-clusterclientpool-rena](./quick/260328-m02-fix-karpenter-use-clusterclientpool-rena/) |
+| 260329-uzc | Fix stale node bug in watch-db-writer syncNodes() | 2026-03-29 | 945db3b | [260329-uzc-fix-stale-node-bug-in-watch-db-writer-sy](./quick/260329-uzc-fix-stale-node-bug-in-watch-db-writer-sy/) |
 
 ## Session Continuity
 
-Last session: 2026-03-29T17:51:47.412Z
-Stopped at: Completed 10-05-PLAN.md
+Last session: 2026-03-29T19:22:00Z
+Stopped at: Completed quick task 260329-uzc
 Resume file: None
