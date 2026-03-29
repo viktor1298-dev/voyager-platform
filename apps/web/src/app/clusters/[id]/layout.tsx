@@ -9,6 +9,7 @@ import { ProviderLogo } from '@/components/ProviderLogo'
 import { getClusterIdFromRouteSegment, getClusterRouteSegment } from '@/components/cluster-route'
 import { GroupedTabBar } from '@/components/clusters/GroupedTabBar'
 import { getAllTabPaths } from '@/components/clusters/cluster-tabs-config'
+import { ConnectionStatusBadge } from '@/components/ConnectionStatusBadge'
 import { useResourceSSE } from '@/hooks/useResourceSSE'
 import { trpc } from '@/lib/trpc'
 
@@ -17,7 +18,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
 
   // Real-time resource updates — SSE connection covers ALL tabs
-  useResourceSSE(clusterId)
+  const { connectionState } = useResourceSSE(clusterId)
 
   const pathname = usePathname()
   const router = useRouter()
@@ -182,6 +183,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
                         </>
                       )
                     })()}
+                  <ConnectionStatusBadge state={connectionState} />
                 </div>
               </>
             )}
