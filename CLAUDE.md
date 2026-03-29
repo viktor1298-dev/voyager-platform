@@ -278,7 +278,7 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | `apps/web/src/app/clusters/[id]/layout.tsx` | Cluster detail layout with GroupedTabBar (25 resource types in 7 categorized groups) |
 | `apps/web/src/components/Sidebar.tsx` | Main sidebar (6 items) |
 | `apps/web/src/components/AppLayout.tsx` | App shell with auto-collapse logic |
-| `apps/web/src/components/providers.tsx` | All providers (tRPC, theme, LazyMotion — no `strict` flag, TerminalProvider, CommandPalette dynamically imported) |
+| `apps/web/src/components/providers.tsx` | All providers (tRPC, theme, LazyMotion — no `strict` flag, TerminalProvider + TerminalDrawer, CommandPalette dynamically imported) |
 | `apps/web/src/components/charts/chart-theme.ts` | Shared chart colors, tooltip style, threshold helpers — references `--chart-*` CSS vars |
 | `apps/web/src/config/navigation.ts` | Sidebar navigation config |
 | `apps/web/src/lib/trpc.ts` | tRPC client setup + `handleTRPCError` |
@@ -433,7 +433,10 @@ The pod terminal route (`api/src/routes/pod-terminal.ts`) uses `@fastify/websock
 Helm v3 stores releases as K8s Secrets with `type=helm.sh/release.v1`. The `.data.release` field is base64-encoded, gzip-compressed JSON. Decode pipeline: `Buffer.from(b64, 'base64')` → `zlib.gunzipSync()` → `JSON.parse()`. List secrets metadata-only first, decode on-demand per release to avoid OOM with many releases.
 
 ### 26. GroupedTabBar — 7 Groups, New "Cluster Ops" Group
-The GroupedTabBar now has 7 groups: standalone tabs (Overview, Nodes, Events, Logs, Metrics), Workloads, Networking (includes Network Policies), Config (includes Resource Quotas), Storage, Scaling, and **Cluster Ops** (Helm, CRDs, RBAC). Config is in `cluster-tabs-config.ts`.
+The GroupedTabBar now has 7 groups: standalone tabs (Overview, Nodes, Events, Logs, Metrics), Workloads, Networking (includes Network Policies), Config (includes Resource Quotas), Storage, Scaling, and **Cluster Ops** (Helm, CRDs, RBAC). Config is in `cluster-tabs-config.ts`. When a child tab is active, the dropdown button shows the **child's label** (e.g., "Helm ▼") not the group label ("Cluster Ops") — this is by design.
+
+### 27. TerminalDrawer Must Be Mounted in providers.tsx
+The `<TerminalDrawer />` component must be rendered inside `<TerminalProvider>` in `providers.tsx`. The terminal context (`useTerminal()`) manages sessions and drawer state, but the drawer itself renders as a fixed-position element outside the page component tree. If TerminalDrawer is not in providers.tsx, clicking Exec does nothing — no error, no drawer.
 
 ## 🚨 QA Gate Rules — MANDATORY
 
