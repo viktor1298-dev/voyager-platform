@@ -386,7 +386,17 @@ export function mapConfigMap(cm: k8s.V1ConfigMap) {
 // ── Secret Mapper ─────────────────────────────────────────────
 
 export function mapSecret(secret: k8s.V1Secret) {
-  const dataKeyNames = Object.keys(secret.data ?? {})
+  const rawData = secret.data ?? {}
+  const dataKeyNames = Object.keys(rawData)
+
+  // Decode base64 secret data — show actual values like Lens/kubectl
+  const dataEntries = Object.entries(rawData).map(([key, value]) => {
+    try {
+      return { key, value: Buffer.from(value, 'base64').toString('utf-8'), size: value.length }
+    } catch {
+      return { key, value: '(binary data)', size: value.length }
+    }
+  })
 
   const annotations = Object.fromEntries(
     Object.entries((secret.metadata?.annotations as Record<string, string>) ?? {}).filter(
@@ -400,6 +410,7 @@ export function mapSecret(secret: k8s.V1Secret) {
     type: secret.type ?? 'Opaque',
     dataKeysCount: dataKeyNames.length,
     dataKeyNames,
+    dataEntries,
     age: computeAge(secret.metadata?.creationTimestamp),
     labels: (secret.metadata?.labels as Record<string, string>) ?? {},
     annotations,
