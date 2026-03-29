@@ -15,6 +15,7 @@ import {
   RestartConfirmDialog,
   YamlViewer,
 } from '@/components/resource'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -279,31 +280,16 @@ export default function DaemonSetsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  const query = trpc.daemonSets.list.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials },
-  )
-
-  if (!hasCredentials) {
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-        <p className="text-sm font-medium">Live data unavailable</p>
-        <p className="text-xs text-[var(--color-text-dim)] mt-1">
-          Connect cluster credentials to view DaemonSets.
-        </p>
-      </div>
-    )
-  }
+  const daemonsets = useClusterResources<DaemonSetData>(resolvedId, 'daemonsets')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = daemonsets.length === 0 && connectionState === 'initializing'
 
   return (
     <ResourcePageScaffold<DaemonSetData>
       title="DaemonSets"
       icon={<Layers className="h-5 w-5 text-[var(--color-text-muted)]" />}
-      queryResult={query}
+      queryResult={{ data: daemonsets, isLoading, error: null }}
       getNamespace={(ds) => ds.namespace}
       getKey={(ds) => `${ds.namespace}/${ds.name}`}
       filterFn={(ds, q) =>

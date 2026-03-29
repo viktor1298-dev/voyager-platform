@@ -10,6 +10,7 @@ import {
   ResourcePageScaffold,
   YamlViewer,
 } from '@/components/resource'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -268,25 +269,16 @@ export default function HPAPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  const query = trpc.hpa.list.useQuery({ clusterId: resolvedId }, { enabled: hasCredentials })
-
-  if (!hasCredentials) {
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-        <p className="text-sm font-medium">Live data unavailable</p>
-      </div>
-    )
-  }
+  const hpa = useClusterResources<HPAData>(resolvedId, 'hpa')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = hpa.length === 0 && connectionState === 'initializing'
 
   return (
     <ResourcePageScaffold<HPAData>
       title="HPAs"
       icon={<TrendingUp className="h-5 w-5 text-[var(--color-text-muted)]" />}
-      queryResult={query}
+      queryResult={{ data: hpa, isLoading, error: null }}
       getNamespace={(hpa) => hpa.namespace}
       getKey={(hpa) => `${hpa.namespace}/${hpa.name}`}
       filterFn={(hpa, q) =>

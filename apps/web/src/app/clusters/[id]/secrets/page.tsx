@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
 import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -139,21 +140,16 @@ export default function SecretsPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  const query = trpc.secrets.list.useQuery({ clusterId: resolvedId }, { enabled: hasCredentials })
+  const secrets = useClusterResources<SecretData>(resolvedId, 'secrets')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = secrets.length === 0 && connectionState === 'initializing'
 
   return (
     <ResourcePageScaffold<SecretData>
       title="Secrets"
       icon={<Lock className="h-10 w-10 text-[var(--color-text-dim)]" />}
-      queryResult={{
-        data: hasCredentials ? ((query.data ?? []) as SecretData[]) : undefined,
-        isLoading: hasCredentials ? query.isLoading : false,
-        error: query.error,
-      }}
+      queryResult={{ data: secrets, isLoading, error: null }}
       getNamespace={(s) => s.namespace}
       getKey={(s) => `${s.namespace}/${s.name}`}
       filterFn={(s, q) =>
@@ -164,12 +160,8 @@ export default function SecretsPage() {
       renderSummary={(s) => <SecretSummary secret={s} />}
       renderDetail={(s) => <SecretExpandedDetail secret={s} clusterId={resolvedId} />}
       searchPlaceholder="Search secrets..."
-      emptyMessage={hasCredentials ? 'No secrets found' : 'Live data unavailable'}
-      emptyDescription={
-        hasCredentials
-          ? 'Secrets will appear here when available in the cluster.'
-          : 'Connect cluster credentials to view secrets.'
-      }
+      emptyMessage="No secrets found"
+      emptyDescription="Secrets will appear here when available in the cluster."
     />
   )
 }

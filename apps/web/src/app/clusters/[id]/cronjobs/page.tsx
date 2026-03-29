@@ -10,6 +10,7 @@ import {
   ResourcePageScaffold,
   YamlViewer,
 } from '@/components/resource'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -162,25 +163,16 @@ export default function CronJobsPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  const query = trpc.cronJobs.list.useQuery({ clusterId: resolvedId }, { enabled: hasCredentials })
-
-  if (!hasCredentials) {
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-        <p className="text-sm font-medium">Live data unavailable</p>
-      </div>
-    )
-  }
+  const cronjobs = useClusterResources<CronJobData>(resolvedId, 'cronjobs')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = cronjobs.length === 0 && connectionState === 'initializing'
 
   return (
     <ResourcePageScaffold<CronJobData>
       title="CronJobs"
       icon={<Clock className="h-5 w-5 text-[var(--color-text-muted)]" />}
-      queryResult={query}
+      queryResult={{ data: cronjobs, isLoading, error: null }}
       getNamespace={(cj) => cj.namespace}
       getKey={(cj) => `${cj.namespace}/${cj.name}`}
       filterFn={(cj, q) =>

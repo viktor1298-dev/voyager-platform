@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
 import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -162,24 +163,16 @@ export default function NamespacesPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  const query = trpc.namespaces.listDetail.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials },
-  )
+  const namespaces = useClusterResources<NamespaceData>(resolvedId, 'namespaces')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = namespaces.length === 0 && connectionState === 'initializing'
 
   return (
     <ResourcePageScaffold<NamespaceData>
       title="Namespaces"
       icon={<FolderOpen className="h-10 w-10 text-[var(--color-text-dim)]" />}
-      queryResult={{
-        data: hasCredentials ? ((query.data ?? []) as NamespaceData[]) : undefined,
-        isLoading: hasCredentials ? query.isLoading : false,
-        error: query.error,
-      }}
+      queryResult={{ data: namespaces, isLoading, error: null }}
       flatList
       getNamespace={() => 'all'}
       getKey={(ns) => ns.name}
@@ -189,12 +182,8 @@ export default function NamespacesPage() {
       renderSummary={(ns) => <NamespaceSummary ns={ns} />}
       renderDetail={(ns) => <NamespaceExpandedDetail ns={ns} clusterId={resolvedId} />}
       searchPlaceholder="Search namespaces..."
-      emptyMessage={hasCredentials ? 'No namespaces found' : 'Live data unavailable'}
-      emptyDescription={
-        hasCredentials
-          ? 'Namespaces will appear here when available in the cluster.'
-          : 'Connect cluster credentials to view namespaces.'
-      }
+      emptyMessage="No namespaces found"
+      emptyDescription="Namespaces will appear here when available in the cluster."
     />
   )
 }

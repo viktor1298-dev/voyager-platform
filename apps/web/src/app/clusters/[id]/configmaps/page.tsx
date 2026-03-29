@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
 import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -111,24 +112,16 @@ export default function ConfigMapsPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  const query = trpc.configMaps.list.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials },
-  )
+  const configmaps = useClusterResources<ConfigMapData>(resolvedId, 'configmaps')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = configmaps.length === 0 && connectionState === 'initializing'
 
   return (
     <ResourcePageScaffold<ConfigMapData>
       title="ConfigMaps"
       icon={<FileText className="h-10 w-10 text-[var(--color-text-dim)]" />}
-      queryResult={{
-        data: hasCredentials ? ((query.data ?? []) as ConfigMapData[]) : undefined,
-        isLoading: hasCredentials ? query.isLoading : false,
-        error: query.error,
-      }}
+      queryResult={{ data: configmaps, isLoading, error: null }}
       getNamespace={(cm) => cm.namespace}
       getKey={(cm) => `${cm.namespace}/${cm.name}`}
       filterFn={(cm, q) =>
@@ -137,12 +130,8 @@ export default function ConfigMapsPage() {
       renderSummary={(cm) => <ConfigMapSummary cm={cm} />}
       renderDetail={(cm) => <ConfigMapExpandedDetail cm={cm} clusterId={resolvedId} />}
       searchPlaceholder="Search configmaps..."
-      emptyMessage={hasCredentials ? 'No ConfigMaps found' : 'Live data unavailable'}
-      emptyDescription={
-        hasCredentials
-          ? 'ConfigMaps will appear here when available in the cluster.'
-          : 'Connect cluster credentials to view ConfigMaps.'
-      }
+      emptyMessage="No ConfigMaps found"
+      emptyDescription="ConfigMaps will appear here when available in the cluster."
     />
   )
 }

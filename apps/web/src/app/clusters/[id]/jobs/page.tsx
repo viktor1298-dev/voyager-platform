@@ -10,6 +10,7 @@ import {
   ResourcePageScaffold,
   YamlViewer,
 } from '@/components/resource'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -177,25 +178,16 @@ export default function JobsPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  const query = trpc.jobs.list.useQuery({ clusterId: resolvedId }, { enabled: hasCredentials })
-
-  if (!hasCredentials) {
-    return (
-      <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-        <p className="text-sm font-medium">Live data unavailable</p>
-      </div>
-    )
-  }
+  const jobs = useClusterResources<JobData>(resolvedId, 'jobs')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = jobs.length === 0 && connectionState === 'initializing'
 
   return (
     <ResourcePageScaffold<JobData>
       title="Jobs"
       icon={<Play className="h-5 w-5 text-[var(--color-text-muted)]" />}
-      queryResult={query}
+      queryResult={{ data: jobs, isLoading, error: null }}
       getNamespace={(job) => job.namespace}
       getKey={(job) => `${job.namespace}/${job.name}`}
       filterFn={(job, q) =>

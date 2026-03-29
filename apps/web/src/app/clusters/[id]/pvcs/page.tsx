@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
 import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -188,21 +189,16 @@ export default function PVCsPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  const query = trpc.pvcs.list.useQuery({ clusterId: resolvedId }, { enabled: hasCredentials })
+  const pvcs = useClusterResources<PVCData>(resolvedId, 'pvcs')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = pvcs.length === 0 && connectionState === 'initializing'
 
   return (
     <ResourcePageScaffold<PVCData>
       title="PVCs"
       icon={<HardDrive className="h-10 w-10 text-[var(--color-text-dim)]" />}
-      queryResult={{
-        data: hasCredentials ? ((query.data ?? []) as PVCData[]) : undefined,
-        isLoading: hasCredentials ? query.isLoading : false,
-        error: query.error,
-      }}
+      queryResult={{ data: pvcs, isLoading, error: null }}
       getNamespace={(pvc) => pvc.namespace}
       getKey={(pvc) => `${pvc.namespace}/${pvc.name}`}
       filterFn={(pvc, q) =>
@@ -214,12 +210,8 @@ export default function PVCsPage() {
       renderSummary={(pvc) => <PVCSummary pvc={pvc} />}
       renderDetail={(pvc) => <PVCExpandedDetail pvc={pvc} clusterId={resolvedId} />}
       searchPlaceholder="Search PVCs..."
-      emptyMessage={hasCredentials ? 'No PVCs found' : 'Live data unavailable'}
-      emptyDescription={
-        hasCredentials
-          ? 'PVCs will appear here when available in the cluster.'
-          : 'Connect cluster credentials to view PVCs.'
-      }
+      emptyMessage="No PVCs found"
+      emptyDescription="PVCs will appear here when available in the cluster."
     />
   )
 }

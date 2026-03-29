@@ -25,6 +25,7 @@ import {
   ScaleInput,
   YamlViewer,
 } from '@/components/resource'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -325,20 +326,16 @@ export default function StatefulSetsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  const query = trpc.statefulSets.list.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials },
-  )
+  const statefulsets = useClusterResources<StatefulSetData>(resolvedId, 'statefulsets')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = statefulsets.length === 0 && connectionState === 'initializing'
 
   return (
     <ResourcePageScaffold<StatefulSetData>
       title="StatefulSets"
       icon={<Database className="h-5 w-5" />}
-      queryResult={query}
+      queryResult={{ data: statefulsets, isLoading, error: null }}
       getNamespace={(ss) => ss.namespace}
       getKey={(ss) => `${ss.namespace}/${ss.name}`}
       filterFn={(ss, q) =>
