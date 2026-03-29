@@ -187,7 +187,7 @@ Plans:
 - [x] 10-01-PLAN.md — Foundation: WatchManager, resource mappers, WatchEvent types, unit tests
 - [x] 10-02-PLAN.md — Data-carrying SSE rewrite with 1-second batching
 - [ ] 10-03-PLAN.md — Client-side setQueryData + ConnectionStatusBadge
-- [ ] 10-04-PLAN.md — tRPC router migration to read from WatchManager
+- [x] 10-04-PLAN.md — tRPC router migration to read from WatchManager
 - [ ] 10-05-PLAN.md — Big bang switch: remove polling, delete 3 jobs, server integration
 
 ## Progress

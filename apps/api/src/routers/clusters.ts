@@ -22,6 +22,7 @@ import { encryptCredential } from '../lib/credential-crypto.js'
 import { validateClusterConnection } from '../lib/k8s-client-factory.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
 import { normalizeProvider, VALID_PROVIDERS } from '../lib/providers.js'
+import { watchManager } from '../lib/watch-manager.js'
 import { adminProcedure, authorizedProcedure, protectedProcedure, router } from '../trpc.js'
 
 const isEncryptionEnabled = /^[0-9a-fA-F]{64}$/.test(K8S_CONFIG.ENCRYPTION_KEY)
@@ -271,37 +272,59 @@ export const clustersRouter = router({
           .where(eq(clusters.id, input.clusterId))
 
         const kc = await clusterClientPool.getClient(input.clusterId)
-        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const appsV1 = kc.makeApiClient(k8s.AppsV1Api)
         const versionApi = kc.makeApiClient(k8s.VersionApi)
 
-        const [
-          versionInfo,
-          nodesResponse,
-          podsResponse,
-          nsResponse,
-          eventsResponse,
-          deploymentsResponse,
-        ] = await Promise.all([
-          cached(CACHE_KEYS.k8sVersion(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
-            versionApi.getCode(),
-          ),
-          cached(CACHE_KEYS.k8sNodes(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
-            coreV1.listNode(),
-          ),
-          cached(CACHE_KEYS.k8sPods(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
-            coreV1.listPodForAllNamespaces(),
-          ),
-          cached(CACHE_KEYS.k8sNamespaces(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
-            coreV1.listNamespace(),
-          ),
-          cached(CACHE_KEYS.k8sEvents(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
-            coreV1.listEventForAllNamespaces(),
-          ),
-          cached(CACHE_KEYS.k8sDeployments(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
-            appsV1.listDeploymentForAllNamespaces(),
-          ),
-        ])
+        // Version is always fetched from API (not a watched type)
+        const versionInfo = await cached(
+          CACHE_KEYS.k8sVersion(input.clusterId),
+          CACHE_TTL.K8S_RESOURCES_SEC,
+          () => versionApi.getCode(),
+        )
+
+        // Read resources from WatchManager or fall back to K8s API
+        let nodesItems: k8s.V1Node[]
+        let podsItems: k8s.V1Pod[]
+        let nsItems: k8s.V1Namespace[]
+        let eventsItems: k8s.CoreV1Event[]
+        let deploymentsItems: k8s.V1Deployment[]
+
+        if (watchManager.isWatching(input.clusterId)) {
+          nodesItems = watchManager.getResources(input.clusterId, 'nodes') as k8s.V1Node[]
+          podsItems = watchManager.getResources(input.clusterId, 'pods') as k8s.V1Pod[]
+          nsItems = watchManager.getResources(input.clusterId, 'namespaces') as k8s.V1Namespace[]
+          eventsItems = watchManager.getResources(input.clusterId, 'events') as k8s.CoreV1Event[]
+          deploymentsItems = watchManager.getResources(
+            input.clusterId,
+            'deployments',
+          ) as k8s.V1Deployment[]
+        } else {
+          const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+          const appsV1 = kc.makeApiClient(k8s.AppsV1Api)
+
+          const [nodesResponse, podsResponse, nsResponse, eventsResponse, deploymentsResponse] =
+            await Promise.all([
+              cached(CACHE_KEYS.k8sNodes(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
+                coreV1.listNode(),
+              ),
+              cached(CACHE_KEYS.k8sPods(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
+                coreV1.listPodForAllNamespaces(),
+              ),
+              cached(CACHE_KEYS.k8sNamespaces(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
+                coreV1.listNamespace(),
+              ),
+              cached(CACHE_KEYS.k8sEvents(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
+                coreV1.listEventForAllNamespaces(),
+              ),
+              cached(CACHE_KEYS.k8sDeployments(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
+                appsV1.listDeploymentForAllNamespaces(),
+              ),
+            ])
+          nodesItems = nodesResponse.items ?? []
+          podsItems = podsResponse.items ?? []
+          nsItems = nsResponse.items ?? []
+          eventsItems = eventsResponse.items ?? []
+          deploymentsItems = deploymentsResponse.items ?? []
+        }
 
         // Fetch metrics-server data for CPU/Memory percentages
         const nodeMetricsMap = new Map<string, { cpuPercent: number; memoryPercent: number }>()
@@ -311,7 +334,7 @@ export const clustersRouter = router({
           for (const nm of nodeMetrics.items) {
             const nodeName = nm.metadata?.name
             if (!nodeName) continue
-            const node = nodesResponse.items.find((n) => n.metadata?.name === nodeName)
+            const node = nodesItems.find((n) => n.metadata?.name === nodeName)
             if (!node) continue
             const cpuCapNano = parseCpuToNano(
               node.status?.allocatable?.cpu ?? node.status?.capacity?.cpu ?? '0',
@@ -331,7 +354,7 @@ export const clustersRouter = router({
           // metrics-server may not be available
         }
 
-        const k8sNodes = nodesResponse.items.map((node) => {
+        const k8sNodes = nodesItems.map((node) => {
           const nodeName = node.metadata?.name ?? ''
           const metrics = nodeMetricsMap.get(nodeName)
           return {
@@ -354,14 +377,12 @@ export const clustersRouter = router({
           }
         })
 
-        const totalPods = podsResponse.items.length
-        const runningPods = podsResponse.items.filter((p) => p.status?.phase === 'Running').length
+        const totalPods = podsItems.length
+        const runningPods = podsItems.filter((p) => p.status?.phase === 'Running').length
 
-        const namespaces = nsResponse.items
-          .map((ns) => ns.metadata?.name)
-          .filter(Boolean) as string[]
+        const namespaces = nsItems.map((ns) => ns.metadata?.name).filter(Boolean) as string[]
 
-        const events = eventsResponse.items
+        const events = [...eventsItems]
           .sort((a, b) => {
             const aTime = (a.lastTimestamp || a.metadata?.creationTimestamp) as unknown as
               | string
@@ -382,7 +403,7 @@ export const clustersRouter = router({
             lastTimestamp: event.lastTimestamp || event.metadata?.creationTimestamp,
           }))
 
-        const deployments = deploymentsResponse.items.map((d) => ({
+        const deployments = deploymentsItems.map((d) => ({
           name: d.metadata?.name,
           namespace: d.metadata?.namespace,
           replicas: d.spec?.replicas,
@@ -442,14 +463,8 @@ export const clustersRouter = router({
     )
     .query(async ({ input }) => {
       try {
-        const kc = await clusterClientPool.getClient(input.clusterId)
-        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const nodesResponse = await cached(
-          CACHE_KEYS.k8sNodes(input.clusterId),
-          CACHE_TTL.K8S_RESOURCES_SEC,
-          () => coreV1.listNode(),
-        )
-        return nodesResponse.items.map((node) => {
+        // Helper to map node to liveNodes shape
+        const mapLiveNode = (node: k8s.V1Node) => {
           const conditions = node.status?.conditions || []
           const ready = conditions.find((c) => c.type === 'Ready')
           return {
@@ -466,7 +481,23 @@ export const clustersRouter = router({
             pods: `${node.status?.allocatable?.pods}`,
             createdAt: node.metadata?.creationTimestamp,
           }
-        })
+        }
+
+        // Read from WatchManager in-memory store when available
+        if (watchManager.isWatching(input.clusterId)) {
+          const rawNodes = watchManager.getResources(input.clusterId, 'nodes') as k8s.V1Node[]
+          return rawNodes.map(mapLiveNode)
+        }
+
+        // Fallback: fetch from K8s API via cached()
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const nodesResponse = await cached(
+          CACHE_KEYS.k8sNodes(input.clusterId),
+          CACHE_TTL.K8S_RESOURCES_SEC,
+          () => coreV1.listNode(),
+        )
+        return nodesResponse.items.map(mapLiveNode)
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -506,6 +537,39 @@ export const clustersRouter = router({
     .query(async ({ input }) => {
       try {
         const limit = input.limit ?? 50
+
+        // Helper to map raw K8s event to liveEvents shape
+        const mapLiveEvent = (e: k8s.CoreV1Event) => ({
+          type: e.type,
+          reason: e.reason,
+          message: e.message,
+          namespace: e.metadata?.namespace,
+          object: `${e.involvedObject?.kind}/${e.involvedObject?.name}`,
+          count: e.count,
+          lastSeen: e.lastTimestamp || e.metadata?.creationTimestamp,
+        })
+
+        // Read from WatchManager in-memory store when available
+        if (watchManager.isWatching(input.clusterId)) {
+          const rawEvents = watchManager.getResources(
+            input.clusterId,
+            'events',
+          ) as k8s.CoreV1Event[]
+          return [...rawEvents]
+            .sort(
+              (a, b) =>
+                new Date(
+                  ((b.lastTimestamp || b.metadata?.creationTimestamp) as unknown as string) ?? 0,
+                ).getTime() -
+                new Date(
+                  ((a.lastTimestamp || a.metadata?.creationTimestamp) as unknown as string) ?? 0,
+                ).getTime(),
+            )
+            .slice(0, limit)
+            .map(mapLiveEvent)
+        }
+
+        // Fallback: fetch from K8s API via cached()
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
         const eventsResponse = await cached(
@@ -524,15 +588,7 @@ export const clustersRouter = router({
               ).getTime(),
           )
           .slice(0, limit)
-          .map((e) => ({
-            type: e.type,
-            reason: e.reason,
-            message: e.message,
-            namespace: e.metadata?.namespace,
-            object: `${e.involvedObject?.kind}/${e.involvedObject?.name}`,
-            count: e.count,
-            lastSeen: e.lastTimestamp || e.metadata?.creationTimestamp,
-          }))
+          .map(mapLiveEvent)
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -563,13 +619,32 @@ export const clustersRouter = router({
     .query(async ({ input }) => {
       try {
         const kc = await clusterClientPool.getClient(input.clusterId)
-        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
         const versionApi = kc.makeApiClient(k8s.VersionApi)
 
-        const [versionInfo, nodesRes, podsRes, nsRes] = await Promise.all([
-          cached(CACHE_KEYS.k8sVersion(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
-            versionApi.getCode(),
-          ),
+        // Version is always fetched from API (not a watched type)
+        const versionInfo = await cached(
+          CACHE_KEYS.k8sVersion(input.clusterId),
+          CACHE_TTL.K8S_RESOURCES_SEC,
+          () => versionApi.getCode(),
+        )
+
+        // Read resources from WatchManager or fall back to K8s API
+        if (watchManager.isWatching(input.clusterId)) {
+          const nodesItems = watchManager.getResources(input.clusterId, 'nodes')
+          const podsItems = watchManager.getResources(input.clusterId, 'pods') as k8s.V1Pod[]
+          const nsItems = watchManager.getResources(input.clusterId, 'namespaces')
+          return {
+            version: `v${versionInfo.major}.${versionInfo.minor}`,
+            nodeCount: nodesItems.length,
+            podCount: podsItems.length,
+            runningPods: podsItems.filter((p) => p.status?.phase === 'Running').length,
+            namespaceCount: nsItems.length,
+          }
+        }
+
+        // Fallback: fetch from K8s API via cached()
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const [nodesRes, podsRes, nsRes] = await Promise.all([
           cached(CACHE_KEYS.k8sNodes(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
             coreV1.listNode(),
           ),

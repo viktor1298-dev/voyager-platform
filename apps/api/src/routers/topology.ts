@@ -4,6 +4,7 @@ import { cached } from '../lib/cache.js'
 import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
+import { watchManager } from '../lib/watch-manager.js'
 import { protectedProcedure, router } from '../trpc.js'
 
 const MAX_NODES = 200
@@ -56,39 +57,68 @@ export const topologyRouter = router({
     )
     .query(async ({ input }) => {
       try {
-        const kc = await clusterClientPool.getClient(input.clusterId)
-        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const appsV1 = kc.makeApiClient(k8s.AppsV1Api)
-        const networkingV1 = kc.makeApiClient(k8s.NetworkingV1Api)
+        let ingressItems: k8s.V1Ingress[]
+        let serviceItems: k8s.V1Service[]
+        let deployItems: k8s.V1Deployment[]
+        let stsItems: k8s.V1StatefulSet[]
+        let dsItems: k8s.V1DaemonSet[]
+        let podItems: k8s.V1Pod[]
+        let nodeItems: k8s.V1Node[]
 
-        const [ingressRes, serviceRes, deployRes, stsRes, dsRes, podRes, nodeRes] = await cached(
-          CACHE_KEYS.k8sTopology(input.clusterId),
-          15_000,
-          () =>
-            Promise.all([
-              networkingV1.listIngressForAllNamespaces(),
-              coreV1.listServiceForAllNamespaces(),
-              appsV1.listDeploymentForAllNamespaces(),
-              appsV1.listStatefulSetForAllNamespaces(),
-              appsV1.listDaemonSetForAllNamespaces(),
-              coreV1.listPodForAllNamespaces(),
-              coreV1.listNode(),
-            ]),
-        )
+        // Read all 7 resource types from WatchManager in-memory store when available
+        if (watchManager.isWatching(input.clusterId)) {
+          ingressItems = watchManager.getResources(input.clusterId, 'ingresses') as k8s.V1Ingress[]
+          serviceItems = watchManager.getResources(input.clusterId, 'services') as k8s.V1Service[]
+          deployItems = watchManager.getResources(
+            input.clusterId,
+            'deployments',
+          ) as k8s.V1Deployment[]
+          stsItems = watchManager.getResources(
+            input.clusterId,
+            'statefulsets',
+          ) as k8s.V1StatefulSet[]
+          dsItems = watchManager.getResources(input.clusterId, 'daemonsets') as k8s.V1DaemonSet[]
+          podItems = watchManager.getResources(input.clusterId, 'pods') as k8s.V1Pod[]
+          nodeItems = watchManager.getResources(input.clusterId, 'nodes') as k8s.V1Node[]
+        } else {
+          // Fallback: fetch from K8s API via cached()
+          const kc = await clusterClientPool.getClient(input.clusterId)
+          const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+          const appsV1 = kc.makeApiClient(k8s.AppsV1Api)
+          const networkingV1 = kc.makeApiClient(k8s.NetworkingV1Api)
+
+          const [ingressRes, serviceRes, deployRes, stsRes, dsRes, podRes, nodeRes] = await cached(
+            CACHE_KEYS.k8sTopology(input.clusterId),
+            15_000,
+            () =>
+              Promise.all([
+                networkingV1.listIngressForAllNamespaces(),
+                coreV1.listServiceForAllNamespaces(),
+                appsV1.listDeploymentForAllNamespaces(),
+                appsV1.listStatefulSetForAllNamespaces(),
+                appsV1.listDaemonSetForAllNamespaces(),
+                coreV1.listPodForAllNamespaces(),
+                coreV1.listNode(),
+              ]),
+          )
+          ingressItems = ingressRes.items ?? []
+          serviceItems = serviceRes.items ?? []
+          deployItems = deployRes.items ?? []
+          stsItems = stsRes.items ?? []
+          dsItems = dsRes.items ?? []
+          podItems = podRes.items ?? []
+          nodeItems = nodeRes.items ?? []
+        }
 
         const ns = input.namespace
 
-        const ingresses = (ingressRes.items ?? []).filter(
-          (r) => !ns || r.metadata?.namespace === ns,
-        )
-        const services = (serviceRes.items ?? []).filter((r) => !ns || r.metadata?.namespace === ns)
-        const deployments = (deployRes.items ?? []).filter(
-          (r) => !ns || r.metadata?.namespace === ns,
-        )
-        const statefulSets = (stsRes.items ?? []).filter((r) => !ns || r.metadata?.namespace === ns)
-        const daemonSets = (dsRes.items ?? []).filter((r) => !ns || r.metadata?.namespace === ns)
-        const pods = (podRes.items ?? []).filter((r) => !ns || r.metadata?.namespace === ns)
-        const nodes = nodeRes.items ?? []
+        const ingresses = ingressItems.filter((r) => !ns || r.metadata?.namespace === ns)
+        const services = serviceItems.filter((r) => !ns || r.metadata?.namespace === ns)
+        const deployments = deployItems.filter((r) => !ns || r.metadata?.namespace === ns)
+        const statefulSets = stsItems.filter((r) => !ns || r.metadata?.namespace === ns)
+        const daemonSets = dsItems.filter((r) => !ns || r.metadata?.namespace === ns)
+        const pods = podItems.filter((r) => !ns || r.metadata?.namespace === ns)
+        const nodes = [...nodeItems]
 
         const graphNodes: TopologyNode[] = []
         const graphEdges: TopologyEdge[] = []

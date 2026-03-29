@@ -1,7 +1,10 @@
+import type * as k8s from '@kubernetes/client-node'
 import { LIMITS } from '@voyager/config'
 import { events } from '@voyager/db'
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import { z } from 'zod'
+import { mapEvent } from '../lib/resource-mappers.js'
+import { watchManager } from '../lib/watch-manager.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const eventSchema = z
@@ -66,6 +69,29 @@ export const eventsRouter = router({
       }
       const [created] = await ctx.db.insert(events).values(values).returning()
       return created
+    }),
+
+  listLive: protectedProcedure
+    .input(
+      z.object({
+        clusterId: z.string().uuid(),
+        limit: z.number().int().min(1).max(200).optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      // Read live K8s events from WatchManager in-memory store
+      if (watchManager.isWatching(input.clusterId)) {
+        const rawEvents = watchManager.getResources(input.clusterId, 'events') as k8s.CoreV1Event[]
+        const mapped = rawEvents.map((e) => mapEvent(e))
+        // Sort by timestamp descending and limit
+        mapped.sort((a, b) => {
+          const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0
+          const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0
+          return bTime - aTime
+        })
+        return mapped.slice(0, input.limit ?? 50)
+      }
+      return []
     }),
 
   stats: protectedProcedure
