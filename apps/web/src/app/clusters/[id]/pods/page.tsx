@@ -28,6 +28,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -523,25 +524,10 @@ export default function PodsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
-  const isLive = hasCredentials
 
-  const liveQuery = trpc.clusters.live.useQuery(
-    { clusterId: resolvedId },
-    { enabled: isLive, retry: 1, staleTime: 30000 },
-  )
-  const liveFailed = isLive && liveQuery.isError
-  const effectiveIsLive = isLive && !liveFailed
-
-  const podsQuery = trpc.pods.list.useQuery(
-    { clusterId: resolvedId },
-    {
-      enabled: isLive,
-      staleTime: 15000,
-    },
-  )
+  const pods = useClusterResources<PodData>(resolvedId, 'pods')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = pods.length === 0 && connectionState === 'initializing'
 
   const handleExecPod = useCallback(
     (pod: PodData) => {
@@ -570,7 +556,7 @@ export default function PodsPage() {
   const hasScrolled = useRef(false)
   useEffect(() => {
     if (!highlightPodKey || hasScrolled.current) return
-    if (!podsQuery.data || (podsQuery.data as PodData[]).length === 0) return
+    if (pods.length === 0) return
     // Data loaded — wait a tick for DOM to render the card, then scroll
     const timer = setTimeout(() => {
       if (highlightRef.current) {
@@ -579,9 +565,7 @@ export default function PodsPage() {
       }
     }, 300)
     return () => clearTimeout(timer)
-  }, [highlightPodKey, podsQuery.data])
-
-  const pods = (podsQuery.data ?? []) as PodData[]
+  }, [highlightPodKey, pods])
 
   const filteredPods = useMemo(() => {
     if (!searchQuery.trim()) return pods
@@ -604,9 +588,9 @@ export default function PodsPage() {
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]))
   }, [filteredPods])
 
-  const isOffline = isLive && liveFailed
+  const isOffline = connectionState === 'disconnected' && pods.length === 0
 
-  if (!isLive && !podsQuery.data) {
+  if (isOffline) {
     return (
       <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
         <div className="rounded-full bg-white/[0.04] p-3 mb-3">
@@ -625,18 +609,13 @@ export default function PodsPage() {
     <>
       <h1 className="sr-only">Cluster Pods</h1>
 
-      {/* Offline warning banner */}
-      {isOffline && (
+      {/* Reconnecting warning banner */}
+      {connectionState === 'reconnecting' && (
         <div className="mb-3 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--color-status-warning)]/40 bg-[var(--color-status-warning)]/[0.06] text-[var(--color-status-warning)]">
           <span className="text-sm">⚠️</span>
           <div>
-            <p className="text-xs font-medium">Cluster offline</p>
-            <p className="text-xs opacity-70">
-              Showing last-known pod data.
-              {podsQuery.dataUpdatedAt > 0
-                ? ` Last updated ${new Date(podsQuery.dataUpdatedAt).toLocaleTimeString()}.`
-                : ''}
-            </p>
+            <p className="text-xs font-medium">Reconnecting to cluster...</p>
+            <p className="text-xs opacity-70">Showing last-known pod data.</p>
           </div>
         </div>
       )}
@@ -655,7 +634,7 @@ export default function PodsPage() {
       />
 
       {/* Pod list */}
-      {podsQuery.isLoading ? (
+      {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full" />

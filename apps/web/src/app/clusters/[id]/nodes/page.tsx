@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, CircleCheck, Cpu, HardDrive, MapPin, RefreshCw, Server, Tag } from 'lucide-react'
+import { Box, CircleCheck, Cpu, HardDrive, MapPin, Server, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import {
@@ -12,6 +12,7 @@ import {
 } from '@/components/expandable'
 import { Skeleton } from '@/components/ui/skeleton'
 import { nodeStatusColor } from '@/lib/status-utils'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -225,42 +226,13 @@ export default function NodesPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  // Live data via new listLive endpoint
-  const liveQuery = trpc.nodes.listLive.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials, retry: false, staleTime: 30000 },
-  )
-  const liveFailed = hasCredentials && liveQuery.isError
-  const isLive = hasCredentials && !liveFailed
+  const nodes = useClusterResources<LiveNode>(resolvedId, 'nodes')
+  const connectionState = useConnectionState(resolvedId)
 
-  // Fallback to DB nodes if live unavailable
-  const dbNodes = trpc.nodes.list.useQuery({ clusterId: resolvedId }, { enabled: !isLive })
-
-  const liveNodes = (liveQuery.data ?? []) as LiveNode[]
-
-  // For DB fallback, map to a compatible shape (no expandable details)
-  const dbNodeRows = (dbNodes.data ?? []).map((n) => ({
-    name: n.name,
-    status: n.status ?? 'Unknown',
-    role: n.role ?? 'worker',
-    kubeletVersion: n.k8sVersion ?? '',
-    os: '',
-    cpuAllocatableMillis: n.cpuAllocatable ?? 0,
-    cpuCapacityMillis: n.cpuCapacity ?? 0,
-    memAllocatableMi: n.memoryAllocatable ? Math.round(Number(n.memoryAllocatable) / 1024) : 0,
-    memCapacityMi: n.memoryCapacity ? Math.round(Number(n.memoryCapacity) / 1024) : 0,
-    cpuPercent: null as number | null,
-    memPercent: null as number | null,
-  }))
-
-  const isLoading = hasCredentials ? liveQuery.isLoading : dbNodes.isLoading
-  const isEmpty = isLive ? liveNodes.length === 0 : dbNodeRows.length === 0
-  const isOffline = hasCredentials && liveFailed
-  const activeQuery = isLive ? liveQuery : dbNodes
+  const isLoading = nodes.length === 0 && connectionState === 'initializing'
+  const isEmpty = nodes.length === 0
+  const isOffline = connectionState === 'disconnected' && isEmpty
 
   return (
     <>
@@ -287,14 +259,9 @@ export default function NodesPage() {
               ? 'Node data is unavailable while the cluster is offline. Check cluster connectivity and try again.'
               : 'Nodes appear here when your cluster has worker nodes registered.'}
           </p>
-          <button
-            type="button"
-            onClick={() => activeQuery.refetch()}
-            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors cursor-pointer"
-          >
-            <RefreshCw className="h-3 w-3" />
-            Refresh
-          </button>
+          <span className="mt-3 text-xs text-[var(--color-text-dim)]">
+            Waiting for SSE connection...
+          </span>
         </div>
       )}
 
@@ -311,58 +278,16 @@ export default function NodesPage() {
                 <th className="text-left px-3 py-3 min-w-[130px]">CPU %</th>
                 <th className="text-left px-3 py-3">Memory</th>
                 <th className="text-left px-3 py-3 min-w-[130px]">Mem %</th>
-                {isLive && <th className="w-8" />}
+                <th className="w-8" />
               </tr>
             </thead>
             <tbody>
-              {isLive
-                ? liveNodes.map((node) => (
-                    <ExpandableTableRow
-                      key={node.name}
-                      columnCount={8}
-                      cells={
-                        <>
-                          <td className="px-4 py-3">
-                            <span className="font-medium font-mono text-[var(--color-text-primary)]">
-                              {node.name}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3">
-                            <span className="inline-flex items-center gap-1.5">
-                              <span
-                                className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`}
-                              />
-                              <span className="text-[var(--color-text-secondary)]">
-                                {node.status}
-                              </span>
-                            </span>
-                          </td>
-                          <td className="px-3 py-3 text-[var(--color-text-muted)]">{node.role}</td>
-                          <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
-                            {node.kubeletVersion}
-                          </td>
-                          <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
-                            {node.cpuAllocatableMillis}m / {node.cpuCapacityMillis}m
-                          </td>
-                          <td className="px-3 py-3">
-                            <InlineBar value={node.cpuPercent} label="CPU" />
-                          </td>
-                          <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
-                            {node.memAllocatableMi}Mi / {node.memCapacityMi}Mi
-                          </td>
-                          <td className="px-3 py-3">
-                            <InlineBar value={node.memPercent} label="Memory" />
-                          </td>
-                        </>
-                      }
-                      detail={<NodeDetail node={node} />}
-                    />
-                  ))
-                : dbNodeRows.map((node, i) => (
-                    <tr
-                      key={i}
-                      className="border-b border-[var(--color-border)]/40 last:border-0 hover:bg-[var(--color-bg-card-hover)] transition-colors"
-                    >
+              {nodes.map((node) => (
+                <ExpandableTableRow
+                  key={node.name}
+                  columnCount={8}
+                  cells={
+                    <>
                       <td className="px-4 py-3">
                         <span className="font-medium font-mono text-[var(--color-text-primary)]">
                           {node.name}
@@ -381,19 +306,22 @@ export default function NodesPage() {
                         {node.kubeletVersion}
                       </td>
                       <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
-                        {node.cpuAllocatableMillis}m
+                        {node.cpuAllocatableMillis}m / {node.cpuCapacityMillis}m
                       </td>
                       <td className="px-3 py-3">
                         <InlineBar value={node.cpuPercent} label="CPU" />
                       </td>
                       <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
-                        {node.memAllocatableMi}Mi
+                        {node.memAllocatableMi}Mi / {node.memCapacityMi}Mi
                       </td>
                       <td className="px-3 py-3">
                         <InlineBar value={node.memPercent} label="Memory" />
                       </td>
-                    </tr>
-                  ))}
+                    </>
+                  }
+                  detail={<NodeDetail node={node} />}
+                />
+              ))}
             </tbody>
           </table>
         </div>

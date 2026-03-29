@@ -8,6 +8,7 @@ import { DetailTabs } from '@/components/expandable'
 import { EventsTimeline } from '@/components/events/EventsTimeline'
 import { ResourcePageScaffold } from '@/components/resource'
 import { severityColor } from '@/lib/status-utils'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -129,34 +130,20 @@ export default function EventsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
-  const isLive = hasCredentials
 
-  const liveQuery = trpc.clusters.live.useQuery(
-    { clusterId: resolvedId },
-    { enabled: isLive, retry: false, staleTime: 30000 },
-  )
-  const liveFailed = isLive && liveQuery.isError
-  const effectiveIsLive = isLive && !liveFailed
+  const liveEvents = useClusterResources<EventData>(resolvedId, 'events')
+  const connectionState = useConnectionState(resolvedId)
+  const effectiveIsLive = connectionState === 'connected' || connectionState === 'reconnecting'
 
+  // Fallback to DB events when SSE is not connected
   const dbEvents = trpc.events.list.useQuery(
     { clusterId: resolvedId, limit: 50 },
-    { enabled: !effectiveIsLive },
+    { enabled: !effectiveIsLive && liveEvents.length === 0 },
   )
 
   const events: EventData[] = useMemo(() => {
-    if (effectiveIsLive) {
-      return (liveQuery.data?.events ?? []).map((e) => ({
-        type: asText(e.type, 'Normal'),
-        reason: asText(e.reason),
-        message: asText(e.message),
-        namespace: asText(e.namespace),
-        involvedObject: e.involvedObject,
-        count: e.count ?? null,
-        lastTimestamp: e.lastTimestamp ? String(e.lastTimestamp) : null,
-      }))
+    if (liveEvents.length > 0) {
+      return liveEvents
     }
     return (dbEvents.data ?? []).map((e) => ({
       type: asText(e.type, 'Normal'),
@@ -171,10 +158,10 @@ export default function EventsPage() {
           : String(e.createdAt)
         : null,
     }))
-  }, [effectiveIsLive, liveQuery.data, dbEvents.data])
+  }, [liveEvents, dbEvents.data])
 
-  const isLoading = effectiveIsLive ? liveQuery.isLoading : dbEvents.isLoading
-  const isAutoRefreshing = effectiveIsLive ? liveQuery.isFetching : dbEvents.isFetching
+  const isLoading = liveEvents.length === 0 && connectionState === 'initializing'
+  const isAutoRefreshing = effectiveIsLive
 
   return (
     <div className="space-y-3">

@@ -25,6 +25,7 @@ import {
   ScaleInput,
   YamlViewer,
 } from '@/components/resource'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -338,20 +339,16 @@ export default function DeploymentsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  const query = trpc.deployments.listDetail.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials && !!resolvedId },
-  )
+  const deployments = useClusterResources<DeploymentDetail>(resolvedId, 'deployments')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = deployments.length === 0 && connectionState === 'initializing'
 
   return (
     <ResourcePageScaffold<DeploymentDetail>
       title="Deployments"
       icon={<Rocket className="h-5 w-5" />}
-      queryResult={query}
+      queryResult={{ data: deployments, isLoading, error: null }}
       getNamespace={(d) => d.namespace}
       getKey={(d) => `${d.namespace}/${d.name}`}
       filterFn={(d, q) =>

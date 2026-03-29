@@ -10,6 +10,7 @@ import {
   ResourcePageScaffold,
   YamlViewer,
 } from '@/components/resource'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -230,20 +231,16 @@ export default function ServicesPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
 
-  const query = trpc.services.listDetail.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials && !!resolvedId },
-  )
+  const services = useClusterResources<ServiceDetail>(resolvedId, 'services')
+  const connectionState = useConnectionState(resolvedId)
+  const isLoading = services.length === 0 && connectionState === 'initializing'
 
   return (
     <ResourcePageScaffold<ServiceDetail>
       title="Services"
       icon={<Globe className="h-5 w-5" />}
-      queryResult={query}
+      queryResult={{ data: services, isLoading, error: null }}
       getNamespace={(s) => s.namespace}
       getKey={(s) => `${s.namespace}/${s.name}`}
       filterFn={(s, q) =>

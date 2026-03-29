@@ -17,6 +17,7 @@ import { MetricsTimeSeriesPanel } from '@/components/metrics/MetricsTimeSeriesPa
 import { TopologyMap } from '@/components/topology/TopologyMap'
 import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -246,33 +247,29 @@ export default function ClusterOverviewPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
-  const isLive = hasCredentials
 
-  const liveQuery = trpc.clusters.live.useQuery(
-    { clusterId: resolvedId },
-    {
-      enabled: isLive,
-      retry: false,
-      staleTime: 30000,
-    },
-  )
+  // Zustand store for live resource data
+  const liveNodes = useClusterResources<Record<string, unknown>>(resolvedId, 'nodes')
+  const liveEvents = useClusterResources<Record<string, unknown>>(resolvedId, 'events')
+  const livePods = useClusterResources<Record<string, unknown>>(resolvedId, 'pods')
+  const liveNamespaces = useClusterResources<Record<string, unknown>>(resolvedId, 'namespaces')
+  const connectionState = useConnectionState(resolvedId)
+  const effectiveIsLive = connectionState === 'connected' || connectionState === 'reconnecting'
 
-  // Fallback to stored data when live query fails
-  const liveFailed = isLive && liveQuery.isError
-  const effectiveIsLive = isLive && !liveFailed
   const [activeTab, setActiveTab] = useState(effectiveIsLive ? 'live' : 'stored')
 
   useEffect(() => {
     setActiveTab(effectiveIsLive ? 'live' : 'stored')
   }, [effectiveIsLive])
 
-  const dbNodes = trpc.nodes.list.useQuery({ clusterId: resolvedId }, { enabled: !effectiveIsLive })
+  // Fallback to DB data when not live
+  const dbNodes = trpc.nodes.list.useQuery(
+    { clusterId: resolvedId },
+    { enabled: !effectiveIsLive && liveNodes.length === 0 },
+  )
   const dbEvents = trpc.events.list.useQuery(
     { clusterId: resolvedId, limit: 20 },
-    { enabled: !effectiveIsLive },
+    { enabled: !effectiveIsLive && liveEvents.length === 0 },
   )
 
   // M-P3-003: Fetch anomalies for AI insight chips
@@ -281,7 +278,8 @@ export default function ClusterOverviewPage() {
     { staleTime: 60000 },
   )
 
-  const isLoading = effectiveIsLive ? liveQuery.isLoading : dbCluster.isLoading
+  const isLoading =
+    connectionState === 'initializing' && liveNodes.length === 0 && dbCluster.isLoading
 
   const lastConnectedAtRaw = (() => {
     const v = dbCluster.data?.lastConnectedAt
@@ -312,25 +310,26 @@ export default function ClusterOverviewPage() {
     return <LoadingState message="Loading cluster details..." />
   }
 
-  const liveData = liveQuery.data
+  const runningPodCount = useMemo(() => {
+    return livePods.filter((p) => (p as Record<string, unknown>)['status'] === 'Running').length
+  }, [livePods])
+
   const cluster = effectiveIsLive
     ? {
-        name: liveData?.name ?? 'minikube',
-        provider: String(liveData?.provider ?? 'minikube'),
-        version: String(liveData?.version ?? '—'),
-        status: liveData?.status ?? 'unknown',
+        name: String(dbCluster.data?.name ?? 'minikube'),
+        provider: String(dbCluster.data?.provider ?? 'minikube'),
+        version: String(dbCluster.data?.version ?? '—'),
+        status: String(dbCluster.data?.status ?? 'unknown'),
         healthStatus: String(
-          liveData?.status ??
-            (dbCluster.data as Record<string, unknown>)?.healthStatus ??
+          (dbCluster.data as Record<string, unknown>)?.healthStatus ??
             dbCluster.data?.status ??
             'unknown',
         ),
-        liveStatus: liveData?.status ?? 'unknown',
-        endpoint: liveData?.endpoint ?? '—',
-        nodeCount: liveData?.nodes?.length ?? 0,
-        podCount: liveData?.totalPods ?? 0,
-        runningPods: liveData?.runningPods ?? 0,
-        namespaceCount: liveData?.namespaces?.length ?? 0,
+        endpoint: String((dbCluster.data as Record<string, unknown>)?.endpoint ?? '—'),
+        nodeCount: liveNodes.length,
+        podCount: livePods.length,
+        runningPods: runningPodCount,
+        namespaceCount: liveNamespaces.length,
         lastConnectedAt: lastConnectedAtRaw,
       }
     : {
@@ -351,74 +350,79 @@ export default function ClusterOverviewPage() {
         namespaceCount: 0,
       }
 
-  const nodes: NodeRow[] = effectiveIsLive
-    ? (liveData?.nodes ?? []).map((n: Record<string, unknown>, i: number) => ({
-        id: `node-${i}`,
-        name: asText(n['name'], ''),
-        status:
-          n['status'] === 'ready'
-            ? 'Ready'
-            : n['status'] === 'notready'
-              ? 'NotReady'
-              : asText(n['status'], 'Unknown'),
-        role: asText(n['role'], 'worker'),
-        kubeletVersion: asText(n['kubeletVersion']),
-        os: asText(n['os'] ?? n['operatingSystem']),
-        cpu:
-          n['cpuAllocatable'] != null
-            ? `${n['cpuAllocatable']}m / ${n['cpuCapacity'] ?? '?'}m`
-            : '—',
-        memory:
-          n['memoryAllocatable'] != null
-            ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi / ${Math.round(Number(n['memoryCapacity'] ?? 0) / 1024)}Mi`
-            : '—',
-        cpuPercent: typeof n['cpuPercent'] === 'number' ? n['cpuPercent'] : null,
-        memoryPercent: typeof n['memoryPercent'] === 'number' ? n['memoryPercent'] : null,
-      }))
-    : (dbNodes.data ?? []).map((n: Record<string, unknown>, i: number) => ({
-        id: `node-db-${i}`,
-        name: asText(n['name'], ''),
-        status: asText(n['status'], 'Unknown'),
-        role: asText(n['role'], 'worker'),
-        kubeletVersion: asText(n['k8sVersion']),
-        os: '—',
-        cpu: n['cpuAllocatable'] != null ? `${n['cpuAllocatable']}m` : '—',
-        memory:
-          n['memoryAllocatable'] != null
-            ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi`
-            : '—',
-        cpuPercent: null,
-        memoryPercent: null,
-      }))
+  const nodes: NodeRow[] =
+    liveNodes.length > 0
+      ? liveNodes.map((n: Record<string, unknown>, i: number) => ({
+          id: `node-${i}`,
+          name: asText(n['name'], ''),
+          status:
+            n['status'] === 'ready'
+              ? 'Ready'
+              : n['status'] === 'notready'
+                ? 'NotReady'
+                : asText(n['status'], 'Unknown'),
+          role: asText(n['role'], 'worker'),
+          kubeletVersion: asText(n['kubeletVersion']),
+          os: asText(n['os'] ?? n['operatingSystem']),
+          cpu:
+            n['cpuAllocatableMillis'] != null
+              ? `${n['cpuAllocatableMillis']}m / ${n['cpuCapacityMillis'] ?? '?'}m`
+              : '—',
+          memory:
+            n['memAllocatableMi'] != null
+              ? `${n['memAllocatableMi']}Mi / ${n['memCapacityMi'] ?? 0}Mi`
+              : '—',
+          cpuPercent: typeof n['cpuPercent'] === 'number' ? n['cpuPercent'] : null,
+          memoryPercent: typeof n['memPercent'] === 'number' ? n['memPercent'] : null,
+        }))
+      : (dbNodes.data ?? []).map((n: Record<string, unknown>, i: number) => ({
+          id: `node-db-${i}`,
+          name: asText(n['name'], ''),
+          status: asText(n['status'], 'Unknown'),
+          role: asText(n['role'], 'worker'),
+          kubeletVersion: asText(n['k8sVersion']),
+          os: '—',
+          cpu: n['cpuAllocatable'] != null ? `${n['cpuAllocatable']}m` : '—',
+          memory:
+            n['memoryAllocatable'] != null
+              ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi`
+              : '—',
+          cpuPercent: null,
+          memoryPercent: null,
+        }))
 
-  const events: EventRow[] = effectiveIsLive
-    ? (liveData?.events ?? []).map((e, i: number) => ({
-        id: `event-live-${i}`,
-        type: asText(e.type, 'Normal'),
-        reason: asText(e.reason),
-        message: asText(e.message),
-        namespace: asText(e.namespace),
-        timestamp: e.lastTimestamp ? String(e.lastTimestamp) : null,
-      }))
-    : (dbEvents.data ?? []).map((e) => ({
-        id: String(e.id),
-        type: asText(e.type, 'Normal'),
-        reason: asText(e.reason),
-        message: asText(e.message),
-        namespace: asText(e.namespace),
-        timestamp: e.createdAt
-          ? e.createdAt instanceof Date
-            ? e.createdAt.toISOString()
-            : String(e.createdAt)
-          : null,
-      }))
+  const events: EventRow[] =
+    liveEvents.length > 0
+      ? liveEvents.map((e: Record<string, unknown>, i: number) => ({
+          id: `event-live-${i}`,
+          type: asText(e['type'], 'Normal'),
+          reason: asText(e['reason']),
+          message: asText(e['message']),
+          namespace: asText(e['namespace']),
+          timestamp: e['lastTimestamp'] ? String(e['lastTimestamp']) : null,
+        }))
+      : (dbEvents.data ?? []).map((e) => ({
+          id: String(e.id),
+          type: asText(e.type, 'Normal'),
+          reason: asText(e.reason),
+          message: asText(e.message),
+          namespace: asText(e.namespace),
+          timestamp: e.createdAt
+            ? e.createdAt instanceof Date
+              ? e.createdAt.toISOString()
+              : String(e.createdAt)
+            : null,
+        }))
 
   const normalizedStatus =
     typeof (cluster.healthStatus ?? cluster.status) === 'string'
       ? normalizeLiveHealthStatus(cluster.healthStatus ?? cluster.status)
       : 'unknown'
 
-  const isUnreachable = normalizedStatus === 'error' || normalizedStatus === 'unknown' || liveFailed
+  const isUnreachable =
+    normalizedStatus === 'error' ||
+    normalizedStatus === 'unknown' ||
+    connectionState === 'disconnected'
   const lastContactAgo = cluster.lastConnectedAt ? timeAgo(cluster.lastConnectedAt) : null
 
   return (
@@ -441,7 +445,6 @@ export default function ClusterOverviewPage() {
             type="button"
             onClick={() => {
               dbCluster.refetch()
-              if (effectiveIsLive) liveQuery.refetch()
             }}
             className="shrink-0 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-status-warning)]/30 text-[var(--color-status-warning)] hover:bg-[var(--color-status-warning)]/10 transition-colors cursor-pointer"
           >
