@@ -90,11 +90,19 @@ export async function handleResourceStream(
   }
 
   // 5. Start SSE stream
+  // CORS headers must be set manually because reply.raw.writeHead() bypasses
+  // Fastify's onSend hook where @fastify/cors normally adds them.
+  const origin = request.headers.origin
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
+  const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
+
   reply.raw.writeHead(200, {
     'content-type': 'text/event-stream; charset=utf-8',
     'cache-control': 'no-cache, no-transform',
     'x-accel-buffering': 'no',
     connection: 'keep-alive',
+    'access-control-allow-origin': corsOrigin,
+    'access-control-allow-credentials': 'true',
   })
   // Flush immediately so proxies/EventSource receive headers + initial data
   reply.raw.write(':connected\n\n')

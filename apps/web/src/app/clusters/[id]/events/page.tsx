@@ -15,12 +15,14 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface EventData {
   type: string
+  kind: string
   reason: string
   message: string
   namespace: string
-  involvedObject: string
+  involvedObject: string | { kind?: string; name?: string; namespace?: string } | null
   count: number | null
   lastTimestamp: string | null
+  timestamp: string | null
 }
 
 function asText(value: unknown, fallback = '—'): string {
@@ -31,6 +33,12 @@ function asText(value: unknown, fallback = '—'): string {
   if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint')
     return String(value)
   return fallback
+}
+
+function involvedObjectText(obj: EventData['involvedObject']): string {
+  if (!obj) return '—'
+  if (typeof obj === 'string') return obj
+  return [obj.kind, obj.name].filter(Boolean).join('/') || '—'
 }
 
 function EventSummary({ event }: { event: EventData }) {
@@ -54,7 +62,7 @@ function EventSummary({ event }: { event: EventData }) {
         {event.message}
       </span>
       <span className="text-xs font-mono text-[var(--color-accent)] shrink-0 hidden sm:inline">
-        {event.involvedObject}
+        {involvedObjectText(event.involvedObject)}
       </span>
       {event.count != null && event.count > 1 && (
         <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)] shrink-0">
@@ -93,7 +101,9 @@ function EventExpandedDetail({ event }: { event: EventData }) {
           <span className="text-[var(--color-text-muted)]">Reason</span>
           <span className="text-[var(--color-text-primary)]">{event.reason}</span>
           <span className="text-[var(--color-text-muted)]">Object</span>
-          <span className="text-[var(--color-accent)]">{event.involvedObject}</span>
+          <span className="text-[var(--color-accent)]">
+            {involvedObjectText(event.involvedObject)}
+          </span>
           <span className="text-[var(--color-text-muted)]">Namespace</span>
           <span className="text-[var(--color-text-secondary)]">{event.namespace}</span>
           {event.count != null && (
@@ -131,19 +141,43 @@ export default function EventsPage() {
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
 
-  const liveEvents = useClusterResources<EventData>(resolvedId, 'events')
+  // Raw shape from resource mapper (SSE snapshot/watch)
+  interface RawEvent {
+    id: string
+    namespace: string | null
+    kind: string
+    reason: string | null
+    message: string | null
+    source: string | null
+    involvedObject: { kind?: string; name?: string; namespace?: string } | null
+    timestamp: string | null
+    count?: number | null
+    name?: string
+  }
+
+  const liveEventsRaw = useClusterResources<RawEvent>(resolvedId, 'events')
   const connectionState = useConnectionState(resolvedId)
   const effectiveIsLive = connectionState === 'connected' || connectionState === 'reconnecting'
 
   // Fallback to DB events when SSE is not connected
   const dbEvents = trpc.events.list.useQuery(
     { clusterId: resolvedId, limit: 50 },
-    { enabled: !effectiveIsLive && liveEvents.length === 0 },
+    { enabled: !effectiveIsLive && liveEventsRaw.length === 0 },
   )
 
   const events: EventData[] = useMemo(() => {
-    if (liveEvents.length > 0) {
-      return liveEvents
+    if (liveEventsRaw.length > 0) {
+      return liveEventsRaw.map((e) => ({
+        type: e.kind ?? 'Normal',
+        kind: e.kind ?? 'Normal',
+        reason: e.reason ?? '—',
+        message: e.message ?? '—',
+        namespace: e.namespace ?? '—',
+        involvedObject: e.involvedObject,
+        count: e.count ?? null,
+        lastTimestamp: e.timestamp,
+        timestamp: e.timestamp,
+      }))
     }
     return (dbEvents.data ?? []).map((e) => ({
       type: asText(e.type, 'Normal'),
@@ -157,10 +191,13 @@ export default function EventsPage() {
           ? e.createdAt.toISOString()
           : String(e.createdAt)
         : null,
+      timestamp: null,
+      kind: asText(e.type, 'Normal'),
     }))
-  }, [liveEvents, dbEvents.data])
+  }, [liveEventsRaw, dbEvents.data])
 
-  const isLoading = liveEvents.length === 0 && connectionState === 'initializing'
+  const isLoading = liveEventsRaw.length === 0 && connectionState === 'initializing'
+  const liveEvents = liveEventsRaw
   const isAutoRefreshing = effectiveIsLive
 
   return (
@@ -226,12 +263,12 @@ export default function EventsPage() {
           }}
           getNamespace={(event) => event.namespace || 'cluster'}
           getKey={(event) =>
-            `${event.namespace}-${event.reason}-${event.lastTimestamp}-${event.involvedObject}`
+            `${event.namespace}-${event.reason}-${event.lastTimestamp}-${involvedObjectText(event.involvedObject)}`
           }
           filterFn={(event, q) =>
             event.reason.toLowerCase().includes(q) ||
             event.message.toLowerCase().includes(q) ||
-            event.involvedObject.toLowerCase().includes(q) ||
+            involvedObjectText(event.involvedObject).toLowerCase().includes(q) ||
             event.type.toLowerCase().includes(q)
           }
           renderSummary={(event) => <EventSummary event={event} />}

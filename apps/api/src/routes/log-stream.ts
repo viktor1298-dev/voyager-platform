@@ -91,12 +91,18 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
         return
       }
 
-      // 6. Start SSE stream
+      // 6. Start SSE stream (CORS headers added manually — writeHead bypasses @fastify/cors)
+      const origin = request.headers.origin
+      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
+      const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
+
       reply.raw.writeHead(200, {
         'content-type': 'text/event-stream; charset=utf-8',
         'cache-control': 'no-cache, no-transform',
         'x-accel-buffering': 'no',
         connection: 'keep-alive',
+        'access-control-allow-origin': corsOrigin,
+        'access-control-allow-credentials': 'true',
       })
       reply.raw.write(':connected\n\n')
 

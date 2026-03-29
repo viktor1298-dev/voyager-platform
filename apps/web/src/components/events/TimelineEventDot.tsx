@@ -9,7 +9,7 @@ interface EventLike {
   reason: string
   message: string
   namespace: string
-  involvedObject: string
+  involvedObject: string | { kind?: string; name?: string; namespace?: string } | null
   count: number | null
   lastTimestamp: string | null
 }
@@ -21,6 +21,12 @@ interface TimelineEventDotProps {
   laneWidth: number
 }
 
+function involvedObjectText(obj: EventLike['involvedObject']): string {
+  if (!obj) return '—'
+  if (typeof obj === 'string') return obj
+  return [obj.kind, obj.name].filter(Boolean).join('/') || '—'
+}
+
 function getEventColor(type: string): string {
   const lower = type.toLowerCase()
   if (lower.includes('error') || lower.includes('failed') || lower === 'warning') {
@@ -30,8 +36,9 @@ function getEventColor(type: string): string {
   return 'var(--color-timeline-normal)'
 }
 
-function getEventKind(involvedObject: string): string {
-  // involvedObject format is typically "Kind/Name" or just a name
+function getEventKind(involvedObject: EventLike['involvedObject']): string {
+  if (!involvedObject) return ''
+  if (typeof involvedObject === 'object') return involvedObject.kind || ''
   if (involvedObject.includes('/')) {
     return involvedObject.split('/')[0]
   }
@@ -108,11 +115,11 @@ export function TimelineEventDot({
 
               {/* Details grid */}
               <div className="grid grid-cols-[70px_1fr] gap-x-2 gap-y-1 text-[10px] font-mono border-t border-[var(--color-border)]/50 pt-2">
-                {event.involvedObject && event.involvedObject !== '\u2014' && (
+                {event.involvedObject && involvedObjectText(event.involvedObject) !== '—' && (
                   <>
                     <span className="text-[var(--color-text-dim)]">Object</span>
                     <span className="text-[var(--color-accent)] truncate">
-                      {event.involvedObject}
+                      {involvedObjectText(event.involvedObject)}
                     </span>
                   </>
                 )}

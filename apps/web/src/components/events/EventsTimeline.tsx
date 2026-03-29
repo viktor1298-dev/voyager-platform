@@ -11,7 +11,7 @@ interface EventLike {
   reason: string
   message: string
   namespace: string
-  involvedObject: string
+  involvedObject: string | { kind?: string; name?: string; namespace?: string } | null
   count: number | null
   lastTimestamp: string | null
 }
@@ -20,9 +20,11 @@ interface EventsTimelineProps {
   events: EventLike[]
 }
 
-/** Extract resource kind from involvedObject ("Pod/my-pod" -> "Pod") */
-function getResourceKind(involvedObject: string): string {
-  if (!involvedObject || involvedObject === '\u2014') return 'Unknown'
+/** Extract resource kind from involvedObject */
+function getResourceKind(involvedObject: EventLike['involvedObject']): string {
+  if (!involvedObject) return 'Unknown'
+  if (typeof involvedObject === 'object') return involvedObject.kind || 'Unknown'
+  if (involvedObject === '\u2014') return 'Unknown'
   if (involvedObject.includes('/')) {
     return involvedObject.split('/')[0]
   }

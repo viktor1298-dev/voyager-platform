@@ -4,6 +4,9 @@ import { useResourceStore, type ConnectionState } from '@/stores/resource-store'
 
 export type { ConnectionState }
 
+/** Stable empty array reference — prevents Zustand selector infinite loop */
+const EMPTY: unknown[] = []
+
 /**
  * Read resources for a specific cluster + type from the Zustand store.
  * Uses a memoized selector so only components watching this (clusterId, type)
@@ -11,7 +14,10 @@ export type { ConnectionState }
  */
 export function useClusterResources<T>(clusterId: string, type: ResourceType): T[] {
   return useResourceStore(
-    useCallback((s) => (s.resources.get(`${clusterId}:${type}`) ?? []) as T[], [clusterId, type]),
+    useCallback(
+      (s) => (s.resources.get(`${clusterId}:${type}`) ?? EMPTY) as T[],
+      [clusterId, type],
+    ),
   )
 }
 

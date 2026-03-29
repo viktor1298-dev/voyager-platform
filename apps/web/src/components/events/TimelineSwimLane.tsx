@@ -11,7 +11,7 @@ interface EventLike {
   reason: string
   message: string
   namespace: string
-  involvedObject: string
+  involvedObject: string | { kind?: string; name?: string; namespace?: string } | null
   count: number | null
   lastTimestamp: string | null
 }
