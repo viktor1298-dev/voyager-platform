@@ -539,8 +539,8 @@ export default function PodsPage() {
     { clusterId: resolvedId },
     {
       enabled: effectiveIsLive,
-      refetchInterval: 30000,
-      staleTime: 5 * 60 * 1000,
+      refetchInterval: 15000,
+      staleTime: 15000,
     },
   )
 
