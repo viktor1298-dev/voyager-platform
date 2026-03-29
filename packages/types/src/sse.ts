@@ -139,3 +139,25 @@ export interface ResourceChangeEvent {
   namespace: string | null
   timestamp: string
 }
+
+// ── Watch Event Types (Phase 10) ──────────────────────────────
+export type WatchEventType = 'ADDED' | 'MODIFIED' | 'DELETED'
+
+export interface WatchEvent {
+  type: WatchEventType
+  resourceType: ResourceType
+  object: unknown // Transformed resource (same shape as tRPC response item)
+}
+
+export interface WatchEventBatch {
+  clusterId: string
+  events: WatchEvent[]
+  timestamp: string
+}
+
+export interface WatchStatusEvent {
+  clusterId: string
+  state: 'connected' | 'reconnecting' | 'disconnected' | 'initializing'
+  resourceType?: ResourceType
+  error?: string
+}

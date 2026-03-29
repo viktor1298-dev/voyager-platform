@@ -56,3 +56,20 @@ export const MAX_RESOURCE_CONNECTIONS_PER_CLUSTER = 10
 
 /** Maximum total concurrent SSE connections globally for resource stream */
 export const MAX_RESOURCE_CONNECTIONS_GLOBAL = 50
+
+// ── Watch Manager Constants (Phase 10) ────────────────────────
+
+/** Base delay for watch informer reconnection (ms) */
+export const WATCH_RECONNECT_BASE_MS = 1_000
+
+/** Maximum delay for watch informer reconnection (ms) */
+export const WATCH_RECONNECT_MAX_MS = 30_000
+
+/** Jitter ratio applied to reconnection delay (0-1) */
+export const WATCH_RECONNECT_JITTER_RATIO = 0.1
+
+/** How often the watch-db-writer syncs dirty resources to PostgreSQL (ms) */
+export const WATCH_DB_SYNC_INTERVAL_MS = 60_000
+
+/** Timeout for watch heartbeat — if no data in this window, reconnect (ms) */
+export const WATCH_HEARTBEAT_TIMEOUT_MS = 90_000

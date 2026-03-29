@@ -8,6 +8,8 @@ import type {
   MetricsStreamEvent,
   PodEvent,
   ResourceChangeEvent,
+  WatchEvent,
+  WatchStatusEvent,
 } from '@voyager/types'
 
 /**
@@ -45,6 +47,14 @@ class VoyagerEventEmitter extends EventEmitter {
 
   emitResourceChange(clusterId: string, event: ResourceChangeEvent): void {
     this.emit(`resource-change:${clusterId}`, event)
+  }
+
+  emitWatchEvent(clusterId: string, event: WatchEvent): void {
+    this.emit(`watch-event:${clusterId}`, event)
+  }
+
+  emitWatchStatus(event: WatchStatusEvent): void {
+    this.emit(`watch-status:${event.clusterId}`, event)
   }
 }
 
