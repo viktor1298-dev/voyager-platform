@@ -20,6 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: Performance Optimization** - Chart rendering with LTTB downsampling, synchronized crosshair, debounced resize
 - [ ] **Phase 8: Resource Explorer UX Overhaul** - Unify resource tabs, expand all, Lens-inspired real-time K8s Watch, logs beautifier, cross-resource navigation
 - [ ] **Phase 9: Lens-Inspired Power Features** - Pod exec, live log streaming, YAML viewer, restart/scale, Helm, events timeline, CRD browser, RBAC, network policies
+- [ ] **Phase 10: Lens-Style Live Data** - Replace polling with K8s Watch stream architecture, unified WatchManager, data-carrying SSE, zero refetchInterval
 
 ## Phase Details
 
@@ -167,10 +168,32 @@ Plans:
 - [ ] 09-09-PLAN.md
 - [ ] 09-10-PLAN.md
 
+### Phase 10: Lens-Style Live Data — K8s Watch Stream Architecture
+**Goal**: Replace the entire SSE-triggered-refetch + polling architecture with a Lens-style data streaming pipeline. K8s Watch API events carry full resource objects directly to the browser via SSE, and the client applies them to TanStack Query cache without refetch round-trips. Kill all frontend polling for watched resources (~45 refetchInterval entries). Unify two watch managers into a single in-memory store. Replace 3 of 4 background sync jobs with watch-based updates.
+**Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09
+**Depends on:** Phase 9
+**Success Criteria** (what must be TRUE):
+  1. Unified WatchManager replaces both ClusterWatchManager and ResourceWatchManager
+  2. SSE events carry full transformed resource objects (not signals) with 1-second batching
+  3. Client applies SSE data via TanStack Query setQueryData — zero refetch round-trips
+  4. All 15 watched resource routers read from WatchManager in-memory store (~0ms vs ~200ms K8s API)
+  5. Zero refetchInterval for watched K8s resources; ~19 kept for DB/metrics queries
+  6. health-sync, node-sync, event-sync jobs removed; metrics-collector and metrics-stream-job kept
+  7. ConnectionStatusBadge shows Live/Reconnecting/Disconnected in cluster header
+  8. `pnpm build` and `pnpm typecheck` pass with 0 errors
+**Plans:** 5 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Foundation: WatchManager, resource mappers, WatchEvent types, unit tests
+- [ ] 10-02-PLAN.md — Data-carrying SSE rewrite with 1-second batching
+- [ ] 10-03-PLAN.md — Client-side setQueryData + ConnectionStatusBadge
+- [ ] 10-04-PLAN.md — tRPC router migration to read from WatchManager
+- [ ] 10-05-PLAN.md — Big bang switch: remove polling, delete 3 jobs, server integration
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9 -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -182,13 +205,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9
 | 7. Performance Optimization | 1/1 | Complete | 2026-03-28 |
 | 8. Resource Explorer UX Overhaul | 8/8 | Complete | 2026-03-28 |
 | 9. Lens-Inspired Power Features | 1/10 | In Progress | - |
-
-### Phase 10: Lens-Style Live Data — K8s Watch Stream Architecture
-
-**Goal:** [To be planned]
-**Requirements**: TBD
-**Depends on:** Phase 9
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (run /gsd:plan-phase 10 to break down)
+| 10. Lens-Style Live Data | 0/5 | Planned | - |
