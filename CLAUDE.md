@@ -145,7 +145,7 @@ Browser → Next.js (SSR/CSR) → tRPC Client
                                      useResourceSSE → TanStack Query refetch
 ```
 
-**Live data pipeline:** K8s Watch API → informers detect changes → SSE pushes events to browser → `useResourceSSE` triggers immediate refetch → Redis cache invalidated by watch → fresh data from K8s API. All 15 resource types covered. Update latency: ~5-8s.
+**Live data pipeline (Lens-style, Phase 10):** K8s Watch API → unified WatchManager (informer ObjectCache = in-memory store) → SSE pushes full transformed objects (`event: watch`) → `useResourceSSE` applies directly to TanStack Query cache via `setQueryData()` → components re-render. No polling, no refetch round-trips. 15 resource types. Update latency: <2s. Fallback to K8s API via `cached()` when watches not ready.
 
 ### Centralized Config
 
@@ -173,7 +173,7 @@ Configuration is split between shared (API + Web) and backend-only:
 | **Metrics Graph Redesign** | Grafana-quality metrics viz — complete (2026-03-28). TimescaleDB, SSE real-time, synchronized crosshair, LTTB downsampling |
 | **K8s Resource Explorer** | 8 waves complete (2026-03-28). GroupedTabBar, 19 resource types, 10 new tRPC routers |
 | **Lens-Inspired Power Features** | 10 plans, 4 waves complete (2026-03-28). Pod exec, log streaming, YAML/diff, Helm, CRDs, RBAC, topology, network policies, resource quotas, events timeline |
-| **Live Data Pipeline** | K8s Watch → SSE → UI refetch. 15 resource types. ~5-8s update latency (2026-03-29) |
+| **Live Data Pipeline** | Lens-style: K8s Watch → WatchManager → SSE full objects → setQueryData. <2s latency. No polling. (2026-03-29) |
 | **Next** | Push resource data through SSE (Lens-instant updates), then v2.0 milestone |
 
 ## Known Gotchas (Cross-Cutting)

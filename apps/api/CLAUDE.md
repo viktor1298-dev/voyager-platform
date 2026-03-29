@@ -32,8 +32,11 @@ src/
     ├── authorization.ts         # DB-backed RBAC
     ├── credential-crypto.ts     # Cluster credential encryption/decryption
     ├── error-handler.ts         # handleK8sError() — shared across all K8s routers
-    ├── cache-keys.ts            # Centralized Redis cache key builders
-    ├── cache.ts                 # Redis cache (failures are non-fatal)
+    ├── watch-manager.ts         # Unified K8s informers — in-memory ObjectCache for all 15 resource types (Phase 10)
+    ├── watch-db-writer.ts       # Debounced PostgreSQL sync from watch events (replaces health-sync/node-sync/event-sync)
+    ├── resource-mappers.ts      # 15 shared mapper functions (K8s objects → frontend shapes)
+    ├── cache-keys.ts            # Centralized Redis cache key builders (fallback path only)
+    ├── cache.ts                 # Redis cache (failures are non-fatal, used as fallback when watches not ready)
     ├── health-checks.ts         # Log scanner, startup probe, page smoke, result assessment
     ├── k8s-client-factory.ts    # KubeConfig factory for all providers
     ├── feature-flags.ts         # OpenFeature + flagd
@@ -66,11 +69,12 @@ All Redis cache keys are centralized in `lib/cache-keys.ts`. **Never construct c
 
 | Abstraction | File | Pattern |
 |-------------|------|---------|
-| **K8s Resource Routers** | `routers/{resource}.ts` | `authorizedProcedure('cluster', 'viewer')` + `clusterClientPool.getClient()` + `cached()` with 15s TTL (seconds, not ms!). Redis cache auto-invalidated by ResourceWatchManager. Used by: ingresses, statefulSets, daemonSets, jobs, cronJobs, hpa, configMaps, secrets, pvcs, yaml, helm, crds, rbac, networkPolicies, resourceQuotas, topology |
+| **K8s Resource Routers** | `routers/{resource}.ts` | `watchManager.getResources()` for in-memory data (returns null if not ready → fallback to `cached()` K8s API call). 15 watched types + topology + clusters. Non-watched: yaml, helm, crds, rbac, networkPolicies, resourceQuotas |
+| **Unified WatchManager** | `lib/watch-manager.ts` | Single manager for all 15 K8s resource types. Informer ObjectCache = in-memory store. Per-cluster persistent lifecycle with reference counting. `getResources()` returns null until informer initial list completes (prevents race condition). Exponential backoff reconnect on errors. |
+| **Resource Mappers** | `lib/resource-mappers.ts` | 15 shared mapper functions (K8s raw → frontend shape). Used by both tRPC routers and SSE events to guarantee identical data shapes. |
+| **Watch DB Writer** | `lib/watch-db-writer.ts` | Debounced periodic PostgreSQL sync from watch events. Replaces deleted health-sync/node-sync/event-sync jobs. |
 | **Cluster Client Pool** | `lib/cluster-client-pool.ts` | Lazy-loaded per-cluster K8s clients; caches KubeConfig, handles credential decryption |
-| **Cluster Watch Manager** | `lib/cluster-watch-manager.ts` | Informers for pods/deployments/nodes → `voyagerEmitter`; auto-reconnects (5s delay) |
-| **Resource Watch Manager** | `lib/resource-watch-manager.ts` | Informers for 12 types; reference-counted per SSE subscriber; invalidates Redis cache |
-| **Resource Stream Route** | `routes/resource-stream.ts` | SSE `/api/resources/stream` — bridges watch events, buffered, authenticated |
+| **Resource Stream Route** | `routes/resource-stream.ts` | SSE `/api/resources/stream` — sends `event: watch` with full transformed objects (WatchEventBatch), 1s server-side batching, per-cluster persistent watches |
 | **Event Emitter** | `lib/event-emitter.ts` | Decouples watchers from SSE (one watch, many consumers) |
 | **Metrics Stream Job** | `jobs/metrics-stream-job.ts` | Reference-counted K8s metrics polling — starts on first SSE subscriber |
 | **Metrics SSE Route** | `routes/metrics-stream.ts` | `/api/metrics/stream?clusterId=<uuid>` — live K8s metrics at 10-15s resolution |
