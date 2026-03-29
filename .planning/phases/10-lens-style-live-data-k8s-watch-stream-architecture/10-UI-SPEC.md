@@ -50,11 +50,11 @@ Exceptions: none -- this phase introduces no new layout structures, only small i
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 14px | 400 (regular) | 1.5 |
-| Label | 12px | 500 (medium) | 1.4 |
-| Heading | 20px | 800 (extrabold) | 1.2 |
+| Label | 12px | 400 (regular) | 1.4 |
+| Heading | 20px | 600 (semibold) | 1.2 |
 | Mono (indicators) | 11px | 400 (regular) | 1.0 |
 
-Source: Existing project conventions. The "Mono" role is used by the existing `DataFreshnessBadge` (11px, `font-mono`, `text-xs`). All new indicators in this phase follow the same pattern.
+Phase 10 introduces only small indicator components (ConnectionStatusBadge, toast messages) that use 12px mono labels and 14px body text -- both at weight 400. No new headings are introduced; the existing cluster header h1 (`text-xl font-extrabold`) is not modified by this phase. The two declared weights (400 and 600) cover all new UI elements. Existing page headings that use `font-extrabold` (800) or `font-medium` (500) elsewhere in the codebase are outside this phase's scope and remain unchanged.
 
 ---
 
@@ -92,6 +92,8 @@ This phase introduces **three** small UI components and **one** animation patter
 
 **Purpose:** Show SSE connection health in the cluster header (next to provider badge and cluster status).
 **Location:** `apps/web/src/app/clusters/[id]/layout.tsx` -- inside the cluster header `<div>`, after the cluster status badge.
+
+**Visual hierarchy of the cluster header row:** The cluster name (h1, `text-xl font-extrabold`) remains the primary visual anchor. Below it, the secondary metadata row contains, left to right: provider text label, cluster status pill, and the new `ConnectionStatusBadge`. The badge is a peer of the status pill -- same 12px mono size, same inline-flex alignment -- so the cluster name dominates and the metadata row provides supporting context at a glance.
 
 | State | Dot Color | Label | Dot Animation | Visibility |
 |-------|-----------|-------|---------------|------------|
