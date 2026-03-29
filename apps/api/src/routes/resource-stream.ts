@@ -1,18 +1,17 @@
 /**
  * SSE endpoint for live K8s resource data streaming.
  *
- * Carries full transformed resource objects (D-01) in 1-second batched
- * WatchEventBatch payloads (D-02). Replaces the old signal-only approach
- * that required clients to refetch via tRPC.
+ * Phase 11 redesign: immediate flush (no batch buffer), snapshot event on
+ * connect, compression disabled. Replaces the Phase 10 batched approach.
  *
  * Event types:
- *   - `watch`  — batched resource changes (WatchEventBatch)
- *   - `status` — connection health changes (WatchStatusEvent, immediate)
+ *   - `snapshot` — full informer cache per resource type (sent on connect)
+ *   - `watch`    — individual resource changes (WatchEventBatch with 1 event)
+ *   - `status`   — connection health changes (WatchStatusEvent, immediate)
  */
 import {
   MAX_RESOURCE_CONNECTIONS_GLOBAL,
   MAX_RESOURCE_CONNECTIONS_PER_CLUSTER,
-  RESOURCE_STREAM_BUFFER_MS,
   SSE_HEARTBEAT_INTERVAL_MS,
 } from '@voyager/config/sse'
 import { clusters, db } from '@voyager/db'
@@ -22,14 +21,11 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { auth } from '../lib/auth.js'
 import { voyagerEmitter } from '../lib/event-emitter.js'
-import { watchManager } from '../lib/watch-manager.js'
+import { RESOURCE_DEFS, watchManager } from '../lib/watch-manager.js'
 
 const querySchema = z.object({
   clusterId: z.string().uuid(),
 })
-
-/** Initial load window in ms — suppress ADDED events from informer list replay */
-const INITIAL_LOAD_WINDOW_MS = 5_000
 
 // ── Connection Limits ────────────────────────────────────────
 
@@ -106,46 +102,37 @@ export async function handleResourceStream(
   // 6. Subscribe to unified WatchManager (reference-counted informers)
   await watchManager.subscribe(clusterId)
 
-  // 7. Initial load window — suppress ADDED events from informer list replay
-  //    (D-04: tRPC query provides initial data, SSE only carries live updates)
-  let initialLoadWindow = true
-  const initialLoadTimer = setTimeout(() => {
-    initialLoadWindow = false
-  }, INITIAL_LOAD_WINDOW_MS)
-
-  // 8. Event batch buffer (D-02: 1-second server-side batching)
-  let batch: WatchEvent[] = []
-  let batchTimer: ReturnType<typeof setTimeout> | null = null
-
-  function flushBatch(): void {
-    if (batch.length === 0) return
-    const payload: WatchEventBatch = {
-      clusterId,
-      events: batch,
-      timestamp: new Date().toISOString(),
-    }
-    batch = []
-    batchTimer = null
-    try {
-      reply.raw.write(`event: watch\ndata: ${JSON.stringify(payload)}\n\n`)
-    } catch {
-      // Connection may be closed — ignore write errors
+  // 7. Send snapshot — current informer state for each resource type
+  for (const def of RESOURCE_DEFS) {
+    const resources = watchManager.getResources(clusterId, def.type)
+    if (resources && resources.length > 0) {
+      const mapped = resources.map((obj) => def.mapper(obj, clusterId))
+      try {
+        reply.raw.write(
+          `event: snapshot\ndata: ${JSON.stringify({ resourceType: def.type, items: mapped })}\n\n`,
+        )
+      } catch {
+        /* connection closed */
+      }
     }
   }
 
-  // 9. Listen on watch-event:<clusterId> for resource changes
+  // 8. Listen on watch-event:<clusterId> — immediate write (no batching)
   const onWatchEvent = (event: WatchEvent): void => {
-    // Suppress initial list replay (D-04)
-    if (initialLoadWindow && event.type === 'ADDED') return
-
-    batch.push(event)
-    if (!batchTimer) {
-      batchTimer = setTimeout(flushBatch, RESOURCE_STREAM_BUFFER_MS)
+    const payload: WatchEventBatch = {
+      clusterId,
+      events: [event],
+      timestamp: new Date().toISOString(),
+    }
+    try {
+      reply.raw.write(`event: watch\ndata: ${JSON.stringify(payload)}\n\n`)
+    } catch {
+      /* connection closed */
     }
   }
   voyagerEmitter.on(`watch-event:${clusterId}`, onWatchEvent)
 
-  // 10. Listen on watch-status:<clusterId> — write immediately (no batching)
+  // 9. Listen on watch-status:<clusterId> — write immediately
   const onWatchStatus = (event: WatchStatusEvent): void => {
     try {
       reply.raw.write(`event: status\ndata: ${JSON.stringify(event)}\n\n`)
@@ -155,7 +142,7 @@ export async function handleResourceStream(
   }
   voyagerEmitter.on(`watch-status:${clusterId}`, onWatchStatus)
 
-  // 11. Heartbeat keepalive
+  // 10. Heartbeat keepalive
   const heartbeat = setInterval(() => {
     try {
       reply.raw.write(':heartbeat\n\n')
@@ -164,14 +151,9 @@ export async function handleResourceStream(
     }
   }, SSE_HEARTBEAT_INTERVAL_MS)
 
-  // 12. Cleanup on disconnect
+  // 11. Cleanup on disconnect
   request.raw.on('close', () => {
-    clearTimeout(initialLoadTimer)
     clearInterval(heartbeat)
-    if (batchTimer) {
-      clearTimeout(batchTimer)
-      batchTimer = null
-    }
     voyagerEmitter.off(`watch-event:${clusterId}`, onWatchEvent)
     voyagerEmitter.off(`watch-status:${clusterId}`, onWatchStatus)
     watchManager.unsubscribe(clusterId)
@@ -185,5 +167,5 @@ export async function handleResourceStream(
 }
 
 export async function registerResourceStreamRoute(app: FastifyInstance): Promise<void> {
-  app.get('/api/resources/stream', handleResourceStream)
+  app.get('/api/resources/stream', { config: { compress: false } }, handleResourceStream)
 }

@@ -18,7 +18,7 @@ import * as mappers from './resource-mappers.js'
 
 // ── Resource Definitions ──────────────────────────────────────
 
-interface ResourceDef {
+export interface ResourceDef {
   type: ResourceType
   apiPath: string
   listFn: (kc: k8s.KubeConfig) => () => Promise<{ items: k8s.KubernetesObject[] }>
@@ -75,7 +75,7 @@ function networkingV1ListFn(
   }
 }
 
-const RESOURCE_DEFS: ResourceDef[] = [
+export const RESOURCE_DEFS: ResourceDef[] = [
   // CoreV1Api resources
   {
     type: 'pods',

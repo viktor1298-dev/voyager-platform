@@ -48,8 +48,8 @@ export const MAX_CONCURRENT_CLUSTER_WATCHES = 20
 /** How often MetricsStreamJob polls K8s metrics-server for SSE subscribers (ms) */
 export const SSE_METRICS_STREAM_POLL_MS = 15_000
 
-/** Resource stream: buffer window before flushing events to SSE clients (ms) */
-export const RESOURCE_STREAM_BUFFER_MS = 1_000
+/** Resource stream: buffer window (ms). Set to 0 — Phase 11 uses immediate flush */
+export const RESOURCE_STREAM_BUFFER_MS = 0
 
 /** Maximum concurrent SSE connections per cluster for resource stream */
 export const MAX_RESOURCE_CONNECTIONS_PER_CLUSTER = 10
