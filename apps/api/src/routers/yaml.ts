@@ -101,7 +101,13 @@ export const yamlRouter = router({
           15_000,
           () => fetchResource(kc, input.resourceType, input.name, input.namespace),
         )
-        return resource
+        // Strip managedFields — noise in YAML view, not useful for operators
+        const cleaned = resource as Record<string, unknown>
+        if (cleaned.metadata && typeof cleaned.metadata === 'object') {
+          const meta = cleaned.metadata as Record<string, unknown>
+          delete meta.managedFields
+        }
+        return cleaned
       } catch (err) {
         handleK8sError(err, 'get resource yaml')
       }

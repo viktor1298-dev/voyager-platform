@@ -106,7 +106,7 @@ function NamespaceExpandedDetail({ ns, clusterId }: { ns: NamespaceData; cluster
       label: 'Labels',
       icon: <Tag className="h-3.5 w-3.5" />,
       content:
-        Object.keys(ns.labels).length > 0 ? (
+        Object.keys(ns.labels ?? {}).length > 0 ? (
           <TagPills tags={ns.labels} />
         ) : (
           <p className="text-[11px] text-[var(--color-text-muted)]">No labels.</p>
@@ -117,9 +117,9 @@ function NamespaceExpandedDetail({ ns, clusterId }: { ns: NamespaceData; cluster
       label: 'Annotations',
       icon: <Tag className="h-3.5 w-3.5" />,
       content:
-        Object.keys(ns.annotations).length > 0 ? (
+        Object.keys(ns.annotations ?? {}).length > 0 ? (
           <div className="space-y-1">
-            {Object.entries(ns.annotations).map(([key, value]) => (
+            {Object.entries(ns.annotations ?? {}).map(([key, value]) => (
               <div
                 key={key}
                 className="grid grid-cols-[1fr_2fr] gap-2 text-[11px] font-mono px-2 py-1 bg-white/[0.02] rounded"

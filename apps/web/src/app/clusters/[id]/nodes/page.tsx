@@ -105,10 +105,10 @@ function NodeDetail({ node }: { node: LiveNode }) {
       icon: <Tag className="h-3.5 w-3.5" />,
       content: (
         <div className="space-y-4">
-          {Object.keys(node.labels).length > 0 && (
+          {Object.keys(node.labels ?? {}).length > 0 && (
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
-                Labels ({Object.keys(node.labels).length})
+                Labels ({Object.keys(node.labels ?? {}).length})
               </p>
               <TagPills tags={node.labels} />
             </div>
@@ -158,7 +158,7 @@ function NodeDetail({ node }: { node: LiveNode }) {
               </div>
             </div>
           )}
-          {Object.keys(node.labels).length === 0 &&
+          {Object.keys(node.labels ?? {}).length === 0 &&
             node.taints.length === 0 &&
             node.addresses.length === 0 && (
               <p className="text-[11px] text-[var(--color-text-muted)]">

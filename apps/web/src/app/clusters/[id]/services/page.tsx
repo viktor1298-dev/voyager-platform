@@ -88,7 +88,11 @@ function ServiceExpandedDetail({ svc, clusterId }: { svc: ServiceDetail; cluster
       label: 'Endpoints',
       icon: <Box className="h-3.5 w-3.5" />,
       content: (
-        <RelatedPodsList clusterId={clusterId} matchLabels={svc.selector} title="Endpoint Pods" />
+        <RelatedPodsList
+          clusterId={clusterId}
+          matchLabels={svc.selector ?? {}}
+          title="Endpoint Pods"
+        />
       ),
     },
     {
@@ -97,12 +101,12 @@ function ServiceExpandedDetail({ svc, clusterId }: { svc: ServiceDetail; cluster
       icon: <Tag className="h-3.5 w-3.5" />,
       content: (
         <div className="space-y-3">
-          {Object.keys(svc.selector).length > 0 ? (
+          {Object.keys(svc.selector ?? {}).length > 0 ? (
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
                 Label Selectors
               </p>
-              <TagPills tags={svc.selector} />
+              <TagPills tags={svc.selector ?? {}} />
             </div>
           ) : (
             <p className="text-[11px] text-[var(--color-text-muted)]">

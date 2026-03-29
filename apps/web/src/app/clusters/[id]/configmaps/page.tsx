@@ -70,7 +70,7 @@ function ConfigMapExpandedDetail({ cm, clusterId }: { cm: ConfigMapData; cluster
       label: 'Labels',
       icon: <Tag className="h-3.5 w-3.5" />,
       content:
-        Object.keys(cm.labels).length > 0 ? (
+        Object.keys(cm.labels ?? {}).length > 0 ? (
           <TagPills tags={cm.labels} />
         ) : (
           <p className="text-[11px] text-[var(--color-text-muted)]">No labels.</p>

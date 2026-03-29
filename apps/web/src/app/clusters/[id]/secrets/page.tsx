@@ -87,7 +87,7 @@ function SecretExpandedDetail({ secret, clusterId }: { secret: SecretData; clust
       label: 'Labels',
       icon: <Tag className="h-3.5 w-3.5" />,
       content:
-        Object.keys(secret.labels).length > 0 ? (
+        Object.keys(secret.labels ?? {}).length > 0 ? (
           <TagPills tags={secret.labels} />
         ) : (
           <p className="text-[11px] text-[var(--color-text-muted)]">No labels.</p>
@@ -98,7 +98,7 @@ function SecretExpandedDetail({ secret, clusterId }: { secret: SecretData; clust
       label: 'Annotations',
       icon: <Tag className="h-3.5 w-3.5" />,
       content:
-        Object.keys(secret.annotations).length > 0 ? (
+        Object.keys(secret.annotations ?? {}).length > 0 ? (
           <TagPills tags={secret.annotations} />
         ) : (
           <p className="text-[11px] text-[var(--color-text-muted)]">No annotations.</p>

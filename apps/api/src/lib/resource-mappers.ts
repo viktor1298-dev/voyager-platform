@@ -220,6 +220,19 @@ export function mapDeployment(
   const unavailable = deployment.status?.unavailableReplicas ?? Math.max(replicas - ready, 0)
   const image = deployment.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
 
+  const conditions = (deployment.status?.conditions ?? []).map((c) => ({
+    type: c.type ?? '',
+    status: c.status ?? '',
+    reason: c.reason ?? null,
+    message: c.message ?? null,
+    lastTransitionTime: c.lastTransitionTime
+      ? new Date(c.lastTransitionTime as unknown as string).toISOString()
+      : null,
+  }))
+
+  const strategy = deployment.spec?.strategy
+  const selector = (deployment.spec?.selector?.matchLabels as Record<string, string>) ?? {}
+
   return {
     clusterId,
     clusterName,
@@ -240,6 +253,11 @@ export function mapDeployment(
     lastUpdated: findLastUpdated(deployment),
     age: computeAge(deployment.metadata?.creationTimestamp),
     rolloutHistory: [] as Array<{ revision: string; image: string; updatedAt: string }>,
+    selector,
+    conditions,
+    strategyType: strategy?.type ?? null,
+    maxSurge: strategy?.rollingUpdate?.maxSurge ?? null,
+    maxUnavailable: strategy?.rollingUpdate?.maxUnavailable ?? null,
   }
 }
 
@@ -253,6 +271,14 @@ export function mapService(svc: k8s.V1Service) {
     clusterIP: svc.spec?.clusterIP ?? null,
     ports: mapPorts(svc.spec?.ports),
     createdAt: svc.metadata?.creationTimestamp ?? null,
+    selector: (svc.spec?.selector as Record<string, string>) ?? {},
+    externalTrafficPolicy: svc.spec?.externalTrafficPolicy ?? null,
+    sessionAffinity: svc.spec?.sessionAffinity ?? 'None',
+    loadBalancerIngress: (svc.status?.loadBalancer?.ingress ?? []).map((i) => ({
+      ip: i.ip ?? null,
+      hostname: i.hostname ?? null,
+    })),
+    healthCheckNodePort: svc.spec?.healthCheckNodePort ?? null,
   }
 }
 
@@ -408,6 +434,7 @@ export function mapNamespace(ns: k8s.V1Namespace) {
     name: ns.metadata?.name ?? '',
     status: ns.status?.phase ?? null,
     labels: (ns.metadata?.labels as Record<string, string>) ?? null,
+    annotations: (ns.metadata?.annotations as Record<string, string>) ?? {},
     createdAt: ns.metadata?.creationTimestamp ?? null,
     resourceQuota: null as {
       cpuLimit: string | null

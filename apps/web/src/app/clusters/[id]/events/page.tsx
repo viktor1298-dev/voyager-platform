@@ -262,8 +262,8 @@ export default function EventsPage() {
             error: null,
           }}
           getNamespace={(event) => event.namespace || 'cluster'}
-          getKey={(event) =>
-            `${event.namespace}-${event.reason}-${event.lastTimestamp}-${involvedObjectText(event.involvedObject)}`
+          getKey={(event, idx) =>
+            `${event.namespace}-${event.reason}-${event.lastTimestamp}-${involvedObjectText(event.involvedObject)}-${idx}`
           }
           filterFn={(event, q) =>
             event.reason.toLowerCase().includes(q) ||

@@ -2,6 +2,7 @@
 
 import { Clock, Copy, FileText, GitBranch, Info, Package } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { stringify } from 'yaml'
 import { DetailGrid, DetailTabs, ExpandableCard } from '@/components/expandable'
 import { RelatedResourceLink } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
@@ -42,7 +43,7 @@ function statusColor(status: string): string {
 
 function ValuesViewer({ values }: { values: Record<string, unknown> }) {
   const [copied, setCopied] = useState(false)
-  const formatted = useMemo(() => JSON.stringify(values, null, 2), [values])
+  const formatted = useMemo(() => stringify(values, { indent: 2, lineWidth: 120 }), [values])
   const isEmpty = Object.keys(values).length === 0
 
   const handleCopy = () => {

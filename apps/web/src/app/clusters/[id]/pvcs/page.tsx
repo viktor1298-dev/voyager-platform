@@ -122,7 +122,7 @@ function PVCExpandedDetail({ pvc, clusterId }: { pvc: PVCData; clusterId: string
       icon: <Settings className="h-3.5 w-3.5" />,
       content: (
         <div className="space-y-3">
-          {Object.keys(pvc.labels).length > 0 && (
+          {Object.keys(pvc.labels ?? {}).length > 0 && (
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
                 Labels
@@ -147,7 +147,7 @@ function PVCExpandedDetail({ pvc, clusterId }: { pvc: PVCData; clusterId: string
               </div>
             </div>
           )}
-          {Object.keys(pvc.labels).length === 0 && pvc.finalizers.length === 0 && (
+          {Object.keys(pvc.labels ?? {}).length === 0 && pvc.finalizers.length === 0 && (
             <p className="text-[11px] text-[var(--color-text-muted)]">No additional config.</p>
           )}
         </div>

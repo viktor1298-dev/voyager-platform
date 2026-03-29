@@ -285,12 +285,12 @@ function DeploymentExpandedDetail({ d, clusterId }: { d: DeploymentDetail; clust
               </>
             )}
           </div>
-          {Object.keys(d.selector).length > 0 && (
+          {Object.keys(d.selector ?? {}).length > 0 && (
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
                 Selector Labels
               </p>
-              <TagPills tags={d.selector} />
+              <TagPills tags={d.selector ?? {}} />
             </div>
           )}
         </div>

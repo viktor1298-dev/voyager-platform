@@ -194,10 +194,10 @@ function IngressExpandedDetail({ ing, clusterId }: { ing: IngressData; clusterId
               </>
             )}
           </div>
-          {Object.keys(ing.annotations).length > 0 && (
+          {Object.keys(ing.annotations ?? {}).length > 0 && (
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
-                Annotations ({Object.keys(ing.annotations).length})
+                Annotations ({Object.keys(ing.annotations ?? {}).length})
               </p>
               <TagPills tags={ing.annotations} />
             </div>

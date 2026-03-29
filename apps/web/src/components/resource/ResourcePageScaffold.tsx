@@ -13,7 +13,7 @@ export interface ResourcePageScaffoldProps<T> {
   icon: ReactNode
   queryResult: { data: T[] | undefined; isLoading: boolean; error: unknown }
   getNamespace: (item: T) => string
-  getKey: (item: T) => string
+  getKey: (item: T, index: number) => string
   filterFn: (item: T, query: string) => boolean
   renderSummary: (item: T) => ReactNode
   renderDetail: (item: T) => ReactNode
@@ -50,7 +50,7 @@ export function ResourcePageScaffold<T>({
   const isHighlighted = useCallback(
     (item: T) => {
       if (!highlightKey) return false
-      const key = getKey(item)
+      const key = getKey(item, 0)
       return (
         key === highlightKey ||
         key.endsWith(`/${highlightKey}`) ||
@@ -145,11 +145,11 @@ export function ResourcePageScaffold<T>({
         <div className="space-y-2">
           {flatList
             ? // Flat list — no namespace grouping
-              filteredItems.map((item) => {
+              filteredItems.map((item, idx) => {
                 const highlighted = isHighlighted(item)
                 return (
                   <div
-                    key={getKey(item)}
+                    key={getKey(item, idx)}
                     ref={highlighted ? highlightRef : undefined}
                     className={
                       highlighted
@@ -174,11 +174,11 @@ export function ResourcePageScaffold<T>({
                   count={nsItems.length}
                   forceOpen={namespacesOpen ? undefined : false}
                 >
-                  {nsItems.map((item) => {
+                  {nsItems.map((item, idx) => {
                     const highlighted = isHighlighted(item)
                     return (
                       <div
-                        key={getKey(item)}
+                        key={getKey(item, idx)}
                         ref={highlighted ? highlightRef : undefined}
                         className={
                           highlighted
