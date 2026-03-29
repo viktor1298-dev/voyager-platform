@@ -128,6 +128,7 @@ Recent decisions affecting current work:
 ### Roadmap Evolution
 
 - Phase 10 added: Lens-Style Live Data — K8s Watch Stream Architecture
+- Phase 11 added: Lens-Grade Live Data Redesign — strip polling-era workarounds, immediate SSE, direct connection, Zustand resource store
 
 ### Pending Todos
 
