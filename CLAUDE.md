@@ -146,16 +146,26 @@ Browser → Next.js (SSR/CSR) → tRPC Client
                               ↙        ↘
                      PostgreSQL      Kubernetes API
                      (Drizzle)       (@kubernetes/client-node)
-                         ↑
-                      Redis (cache)
+                         ↑                    ↑
+                      Redis (cache)     K8s Watch API (informers)
+                                              ↓
+                                     ResourceWatchManager (15 types)
+                                              ↓
+                                     SSE /api/resources/stream
+                                              ↓
+                                     Next.js Route Handler proxy
+                                              ↓
+                                     useResourceSSE → TanStack Query refetch
 ```
+
+**Live data pipeline:** K8s Watch API → informers detect changes → SSE pushes events to browser → `useResourceSSE` triggers immediate refetch → Redis cache invalidated by watch → fresh data from K8s API. All 15 resource types covered. Update latency: ~5-8s.
 
 ### Backend Layers
 
 - **routers/** → **services** → **lib/** (dependency direction; routers can skip services to call lib directly)
 - **lib/** has no dependencies on routers or services
 - tRPC procedures use `publicProcedure`, `protectedProcedure`, `adminProcedure`, or `authorizedProcedure` middleware
-- Non-tRPC routes: `ai-stream` (SSE streaming), `mcp` (MCP protocol), `metrics-stream` (SSE live metrics), `log-stream` (SSE pod log streaming), `pod-terminal` (WebSocket pod exec)
+- Non-tRPC routes: `ai-stream` (SSE streaming), `mcp` (MCP protocol), `metrics-stream` (SSE live metrics), `log-stream` (SSE pod log streaming), `pod-terminal` (WebSocket pod exec), `resource-stream` (SSE live K8s Watch events for all resource types)
 - tRPC client uses `httpLink` (NOT `httpBatchLink`) — see Gotcha #1
 - Background jobs: `health-sync`, `alert-evaluator`, `metrics-history-collector`, `node-sync`, `event-sync`, `deploy-smoke-test`, `metrics-stream-job`
 - **All sync jobs run regardless of `K8S_ENABLED`** — only K8s watchers and deploy-smoke-test are gated (see Gotcha #14)
@@ -164,9 +174,13 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 
 | Abstraction | Location | Pattern |
 |-------------|----------|---------|
-| **K8s Resource Routers** | `api/src/routers/{resource}.ts` | `authorizedProcedure('cluster', 'viewer')` + `clusterClientPool.getClient()` + `cached()` with 15s TTL; read-only, RBAC-checked. Pattern used by: ingresses, statefulSets, daemonSets, jobs, cronJobs, hpa, configMaps, secrets, pvcs, yaml, helm, crds, rbac, networkPolicies, resourceQuotas, topology |
+| **K8s Resource Routers** | `api/src/routers/{resource}.ts` | `authorizedProcedure('cluster', 'viewer')` + `clusterClientPool.getClient()` + `cached()` with 15s TTL (⚠️ seconds, see Gotcha #28); read-only, RBAC-checked. Redis cache auto-invalidated by ResourceWatchManager on K8s changes. Pattern used by: ingresses, statefulSets, daemonSets, jobs, cronJobs, hpa, configMaps, secrets, pvcs, yaml, helm, crds, rbac, networkPolicies, resourceQuotas, topology |
 | **Cluster Client Pool** | `api/src/lib/cluster-client-pool.ts` | Lazy-loaded per-cluster K8s clients; caches KubeConfig, handles credential decryption for AWS/Azure/GKE |
-| **Cluster Watch Manager** | `api/src/lib/cluster-watch-manager.ts` | K8s informers per cluster → emits to `voyagerEmitter`; no polling |
+| **Cluster Watch Manager** | `api/src/lib/cluster-watch-manager.ts` | K8s informers for pods/deployments/nodes per cluster → emits to `voyagerEmitter`; auto-reconnects on error (5s delay) |
+| **Resource Watch Manager** | `api/src/lib/resource-watch-manager.ts` | K8s informers for 12 additional resource types (services, configmaps, secrets, pvcs, namespaces, events, statefulsets, daemonsets, jobs, cronjobs, hpa, ingresses); reference-counted per SSE subscriber; invalidates Redis cache on change |
+| **Resource Stream Route** | `api/src/routes/resource-stream.ts` | SSE endpoint `/api/resources/stream` — bridges watch events from both managers, buffered, authenticated, connection-limited |
+| **SSE Route Handler Proxies** | `web/src/app/api/{resources,metrics,logs}/stream/route.ts` | Next.js Route Handlers using `node:http` to stream SSE from API to browser (Next.js rewrites can't proxy SSE) |
+| **useResourceSSE** | `web/src/hooks/useResourceSSE.ts` | SSE hook in cluster layout — receives K8s Watch events, triggers immediate TanStack Query refetch via `requestAnimationFrame` batching |
 | **Event Emitter** | `api/src/lib/event-emitter.ts` | Decouples K8s watchers from SSE subscriptions (one watch, many consumers) |
 | **Auth** | `api/src/lib/auth.ts` | Better-Auth handler for `/api/auth/*`; session in PostgreSQL, token in cookie |
 | **Authorization** | `api/src/lib/authorization.ts` | `createAuthorizationService(db).check(subject, relation, object)` — DB-backed RBAC |
@@ -254,7 +268,8 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | **Metrics Graph Redesign** | Grafana-quality metrics viz — 7 phases complete (2026-03-28). TimescaleDB time_bucket(), SSE real-time, synchronized crosshair, dark panels, LTTB downsampling |
 | **K8s Resource Explorer** | 8 waves complete (2026-03-28). GroupedTabBar navigation, expandable component library, 19 resource types with detail panels, 10 new tRPC routers. Spec in `docs/superpowers/specs/` |
 | **Lens-Inspired Power Features** | 10 plans, 4 waves complete (2026-03-28). Pod exec terminal (xterm.js + WebSocket), live log streaming (SSE follow), YAML viewer + resource diff on all resources, workload mutations (restart/scale/delete), Helm releases viewer, CRD browser, RBAC permission matrix, network policy graph (React Flow), resource quotas dashboard, events timeline swim lanes, resource topology map. 7 new tRPC routers, first WebSocket in codebase. Plans in `.planning/phases/09-lens-inspired-power-features/` |
-| **Next** | Browser QA validation, then v2.0 milestone feature development |
+| **Live Data Pipeline** | K8s Watch → SSE → UI refetch. Fixed: cache TTL bug (15000s→15s), SSE proxy (Route Handlers), informer reconnection, Redis cache invalidation on watch events. 15 resource types watched. ~5-8s update latency (2026-03-29). Next optimization: push data through SSE for instant updates. |
+| **Next** | Push resource data through SSE (Lens-instant updates), then v2.0 milestone |
 
 ## Database
 
@@ -313,6 +328,12 @@ All Redis cache keys are centralized in `apps/api/src/lib/cache-keys.ts`. **Neve
 | `apps/web/src/components/quotas/` | ResourceQuotaCard (gauge bars) |
 | `apps/web/src/components/network/` | NetworkPolicyGraph (React Flow allow/deny edges) |
 | `apps/web/src/components/clusters/cluster-tabs-config.ts` | GroupedTabBar tab configuration (7 groups, 25 tabs) |
+| `apps/api/src/routes/resource-stream.ts` | SSE endpoint for live K8s Watch events — all 15 resource types, reference-counted informers |
+| `apps/api/src/lib/resource-watch-manager.ts` | K8s informers for 12 resource types with auto-reconnect, Redis cache invalidation on change |
+| `apps/web/src/app/api/resources/stream/route.ts` | Next.js Route Handler — `node:http` streaming proxy for resource SSE |
+| `apps/web/src/app/api/metrics/stream/route.ts` | Next.js Route Handler — `node:http` streaming proxy for metrics SSE |
+| `apps/web/src/app/api/logs/stream/route.ts` | Next.js Route Handler — `node:http` streaming proxy for log SSE |
+| `apps/web/src/hooks/useResourceSSE.ts` | SSE hook — K8s Watch events → rAF-batched TanStack Query refetch; placed in cluster layout |
 | `apps/api/src/routes/pod-terminal.ts` | WebSocket pod exec route (first WS in codebase) |
 | `apps/api/src/routes/log-stream.ts` | SSE pod log streaming with follow mode |
 | `apps/api/src/routers/yaml.ts` | Universal K8s raw resource YAML fetcher (16 types) |
@@ -434,6 +455,18 @@ Helm v3 stores releases as K8s Secrets with `type=helm.sh/release.v1`. The `.dat
 
 ### 26. GroupedTabBar — 7 Groups, New "Cluster Ops" Group
 The GroupedTabBar now has 7 groups: standalone tabs (Overview, Nodes, Events, Logs, Metrics), Workloads, Networking (includes Network Policies), Config (includes Resource Quotas), Storage, Scaling, and **Cluster Ops** (Helm, CRDs, RBAC). Config is in `cluster-tabs-config.ts`. When a child tab is active, the dropdown button shows the **child's label** (e.g., "Helm ▼") not the group label ("Cluster Ops") — this is by design.
+
+### 28. Redis `cached()` TTL Is in SECONDS, Not Milliseconds
+The `cached(key, ttl, fn)` helper passes `ttl` directly to `redis.setEx()` which expects **seconds**. Writing `cached(key, 15_000, fn)` caches for 15,000 seconds (4.1 hours), not 15 seconds. Always use plain integers: `cached(key, 15, fn)`. This bug caused all K8s resource data to be frozen for hours.
+
+### 29. SSE Through Next.js Rewrites — Socket Hang Up
+Next.js `rewrites()` cannot proxy SSE endpoints — the proxy buffers the response and drops the long-lived connection (`ECONNRESET: socket hang up`). SSE endpoints (`/api/resources/stream`, `/api/metrics/stream`, `/api/logs/stream`) use dedicated Next.js Route Handlers in `web/src/app/api/*/stream/route.ts` that proxy via `node:http` with true streaming. The Next.js rewrite config excludes these paths. **Never add SSE endpoints to rewrites — always create a Route Handler.**
+
+### 30. K8s Informers Do NOT Auto-Reconnect
+`@kubernetes/client-node` `makeInformer()` does not reconnect on error. When the watch connection drops (ETIMEDOUT, network error), the informer dies silently. **Always call `informer.start()` in the error handler** with a delay (5s). Both `ClusterWatchManager` and `ResourceWatchManager` implement this pattern. Without it, all live data stops flowing after the first network hiccup.
+
+### 31. SSE Endpoints Must Flush Immediately
+SSE endpoints must write data immediately after `writeHead()` — e.g., `reply.raw.write(':connected\n\n')`. Without this initial flush, the Next.js Route Handler proxy and the browser's `EventSource` both hang in CONNECTING state waiting for the first byte. The SSE heartbeat (30s interval) arrives too late.
 
 ### 27. TerminalDrawer Must Be Mounted in providers.tsx
 The `<TerminalDrawer />` component must be rendered inside `<TerminalProvider>` in `providers.tsx`. The terminal context (`useTerminal()`) manages sessions and drawer state, but the drawer itself renders as a fixed-position element outside the page component tree. If TerminalDrawer is not in providers.tsx, clicking Exec does nothing — no error, no drawer.
