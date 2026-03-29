@@ -115,6 +115,10 @@ Recent decisions affecting current work:
 - [Phase 09]: Used GanttChartSquare icon for Timeline toggle (Timeline not in installed lucide version)
 - [Phase 09]: Exec button only visible for Running pods (exec into non-running would fail)
 
+### Roadmap Evolution
+
+- Phase 10 added: Lens-Style Live Data — K8s Watch Stream Architecture
+
 ### Pending Todos
 
 None yet.
