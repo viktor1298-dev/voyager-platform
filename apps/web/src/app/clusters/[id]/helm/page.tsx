@@ -2,12 +2,10 @@
 
 import { Box, Package } from 'lucide-react'
 import { useParams } from 'next/navigation'
-import { useMemo, useState } from 'react'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { ExpandableCard } from '@/components/expandable'
+import { DetailTabs } from '@/components/expandable'
 import { HelmReleaseDetail } from '@/components/helm/HelmReleaseDetail'
-import { SearchFilterBar } from '@/components/resource'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ResourcePageScaffold, YamlViewer } from '@/components/resource'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
@@ -36,9 +34,6 @@ function statusBadge(status: string) {
     case 'pending-upgrade':
     case 'pending-rollback':
       colorClasses = 'bg-amber-500/15 text-amber-400'
-      break
-    case 'superseded':
-      colorClasses = 'bg-[var(--color-text-dim)]/15 text-[var(--color-text-muted)]'
       break
     default:
       colorClasses = 'bg-[var(--color-text-dim)]/15 text-[var(--color-text-muted)]'
@@ -70,6 +65,16 @@ function ReleaseSummary({ release }: { release: HelmReleaseSummary }) {
   )
 }
 
+function ReleaseDetail({ release, clusterId }: { release: HelmReleaseSummary; clusterId: string }) {
+  return (
+    <HelmReleaseDetail
+      clusterId={clusterId}
+      releaseName={release.name}
+      namespace={release.namespace}
+    />
+  )
+}
+
 export default function HelmReleasesPage() {
   usePageTitle('Helm Releases')
 
@@ -79,75 +84,29 @@ export default function HelmReleasesPage() {
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
 
-  const helmQuery = trpc.helm.list.useQuery(
+  const query = trpc.helm.list.useQuery(
     { clusterId: resolvedId },
     { staleTime: 30_000, refetchInterval: 30_000 },
   )
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [expandAll, setExpandAll] = useState(false)
-
-  const releases = (helmQuery.data ?? []) as HelmReleaseSummary[]
-
-  const filteredReleases = useMemo(() => {
-    if (!searchQuery.trim()) return releases
-    const q = searchQuery.toLowerCase().trim()
-    return releases.filter(
-      (r) =>
+  return (
+    <ResourcePageScaffold<HelmReleaseSummary>
+      title="Helm Releases"
+      icon={<Package className="h-5 w-5" />}
+      queryResult={query}
+      getNamespace={(r) => r.namespace}
+      getKey={(r) => `${r.namespace}/${r.name}`}
+      filterFn={(r, q) =>
         r.name.toLowerCase().includes(q) ||
         r.namespace.toLowerCase().includes(q) ||
         r.chartName.toLowerCase().includes(q) ||
-        r.status.toLowerCase().includes(q),
-    )
-  }, [releases, searchQuery])
-
-  return (
-    <>
-      <h1 className="sr-only">Helm Releases</h1>
-
-      <SearchFilterBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        totalCount={releases.length}
-        filteredCount={filteredReleases.length}
-        expandAll={expandAll}
-        onExpandAllToggle={() => setExpandAll((prev) => !prev)}
-        searchPlaceholder="Search releases by name, chart, or status..."
-      />
-
-      {helmQuery.isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-        </div>
-      ) : filteredReleases.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
-          <div className="rounded-full bg-white/[0.04] p-3 mb-3">
-            <Box className="h-8 w-8 text-[var(--color-text-dim)]" />
-          </div>
-          <p className="text-sm font-medium text-[var(--color-text-muted)]">No Helm Releases</p>
-          <p className="text-xs text-[var(--color-text-dim)] mt-1 max-w-xs">
-            No Helm releases found in this cluster. Deploy a Helm chart to see releases here.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-1.5">
-          {filteredReleases.map((release) => (
-            <ExpandableCard
-              key={`${release.namespace}/${release.name}`}
-              expanded={expandAll || undefined}
-              summary={<ReleaseSummary release={release} />}
-            >
-              <HelmReleaseDetail
-                clusterId={resolvedId}
-                releaseName={release.name}
-                namespace={release.namespace}
-              />
-            </ExpandableCard>
-          ))}
-        </div>
-      )}
-    </>
+        r.status.toLowerCase().includes(q)
+      }
+      renderSummary={(r) => <ReleaseSummary release={r} />}
+      renderDetail={(r) => <ReleaseDetail release={r} clusterId={resolvedId} />}
+      emptyMessage="No Helm Releases"
+      emptyDescription="No Helm releases found in this cluster. Deploy a Helm chart to see releases here."
+      searchPlaceholder="Search releases by name, chart, or status..."
+    />
   )
 }
