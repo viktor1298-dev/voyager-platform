@@ -6,6 +6,8 @@ import { cached } from '../lib/cache.js'
 import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
+import { mapNamespace } from '../lib/resource-mappers.js'
+import { watchManager } from '../lib/watch-manager.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
 
 const resourceQuotaSchema = z.object({
@@ -32,16 +34,14 @@ export const namespacesRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
 
-        const [nsResponse, quotaResponse] = await Promise.all([
-          cached(CACHE_KEYS.k8sNamespaces(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
-            coreV1.listNamespace(),
-          ),
-          cached(CACHE_KEYS.k8sResourceQuotas(input.clusterId), CACHE_TTL.K8S_RESOURCES_SEC, () =>
-            coreV1.listResourceQuotaForAllNamespaces(),
-          ).catch(() => ({ items: [] as k8s.V1ResourceQuota[] })),
-        ])
+        // Resource quotas are not watched — always fetch from API
+        const quotaResponse = await cached(
+          CACHE_KEYS.k8sResourceQuotas(input.clusterId),
+          CACHE_TTL.K8S_RESOURCES_SEC,
+          () => coreV1.listResourceQuotaForAllNamespaces(),
+        ).catch(() => ({ items: [] as k8s.V1ResourceQuota[] }))
 
-        // Build a map of namespace → aggregated resource quota
+        // Build a map of namespace -> aggregated resource quota
         const quotaMap = new Map<
           string,
           {
@@ -56,7 +56,6 @@ export const namespacesRouter = router({
           if (!ns) continue
           const hard = quota.status?.hard ?? {}
           const used = quota.status?.used ?? {}
-          // If multiple quotas exist per namespace, take the first one found
           if (!quotaMap.has(ns)) {
             quotaMap.set(ns, {
               cpuLimit: hard['limits.cpu'] ?? hard.cpu ?? null,
@@ -66,6 +65,25 @@ export const namespacesRouter = router({
             })
           }
         }
+
+        // Read namespaces from WatchManager in-memory store when available
+        if (watchManager.isWatching(input.clusterId)) {
+          const rawNamespaces = watchManager.getResources(
+            input.clusterId,
+            'namespaces',
+          ) as k8s.V1Namespace[]
+          return rawNamespaces.map((ns) => {
+            const mapped = mapNamespace(ns)
+            return { ...mapped, resourceQuota: quotaMap.get(mapped.name) ?? null }
+          })
+        }
+
+        // Fallback: fetch namespaces from K8s API via cached()
+        const nsResponse = await cached(
+          CACHE_KEYS.k8sNamespaces(input.clusterId),
+          CACHE_TTL.K8S_RESOURCES_SEC,
+          () => coreV1.listNamespace(),
+        )
 
         return nsResponse.items.map((ns) => {
           const name = ns.metadata?.name ?? ''

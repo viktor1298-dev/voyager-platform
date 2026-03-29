@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { cached } from '../lib/cache.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
+import { mapIngress } from '../lib/resource-mappers.js'
+import { watchManager } from '../lib/watch-manager.js'
 import { authorizedProcedure, router } from '../trpc.js'
 
 export const ingressesRouter = router({
@@ -10,6 +12,13 @@ export const ingressesRouter = router({
     .input(z.object({ clusterId: z.string().uuid() }))
     .query(async ({ input }) => {
       try {
+        // Read from WatchManager in-memory store when available
+        if (watchManager.isWatching(input.clusterId)) {
+          const raw = watchManager.getResources(input.clusterId, 'ingresses') as k8s.V1Ingress[]
+          return raw.map((ing) => mapIngress(ing))
+        }
+
+        // Fallback: fetch from K8s API via cached()
         const kc = await clusterClientPool.getClient(input.clusterId)
         const networkingV1 = kc.makeApiClient(k8s.NetworkingV1Api)
 
@@ -17,47 +26,7 @@ export const ingressesRouter = router({
           networkingV1.listIngressForAllNamespaces(),
         )
 
-        return response.items.map((ing) => {
-          const rules = (ing.spec?.rules ?? []).map((rule) => ({
-            host: rule.host ?? '*',
-            paths: (rule.http?.paths ?? []).map((p) => ({
-              path: p.path ?? '/',
-              pathType: p.pathType ?? 'Prefix',
-              serviceName: p.backend?.service?.name ?? '',
-              servicePort: p.backend?.service?.port?.number ?? p.backend?.service?.port?.name ?? '',
-            })),
-          }))
-
-          const tls = (ing.spec?.tls ?? []).map((t) => ({
-            hosts: t.hosts ?? [],
-            secretName: t.secretName ?? '',
-          }))
-
-          const hosts = rules.map((r) => r.host).filter((h) => h !== '*')
-
-          return {
-            name: ing.metadata?.name ?? '',
-            namespace: ing.metadata?.namespace ?? '',
-            ingressClassName: ing.spec?.ingressClassName ?? null,
-            hosts,
-            ports: tls.length > 0 ? '80, 443' : '80',
-            createdAt: ing.metadata?.creationTimestamp
-              ? new Date(ing.metadata.creationTimestamp as unknown as string).toISOString()
-              : null,
-            rules,
-            tls,
-            annotations: (ing.metadata?.annotations as Record<string, string>) ?? {},
-            defaultBackend: ing.spec?.defaultBackend
-              ? {
-                  serviceName: ing.spec.defaultBackend.service?.name ?? '',
-                  servicePort:
-                    ing.spec.defaultBackend.service?.port?.number ??
-                    ing.spec.defaultBackend.service?.port?.name ??
-                    '',
-                }
-              : null,
-          }
-        })
+        return response.items.map((ing) => mapIngress(ing))
       } catch (err) {
         handleK8sError(err, 'list ingresses')
       }
