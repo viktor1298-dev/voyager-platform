@@ -5,6 +5,8 @@ import { cached } from '../lib/cache.js'
 import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
+import { mapService } from '../lib/resource-mappers.js'
+import { watchManager } from '../lib/watch-manager.js'
 import { protectedProcedure, router } from '../trpc.js'
 
 const servicePortSchema = z.object({
@@ -49,6 +51,19 @@ export const servicesRouter = router({
     .output(z.array(serviceSummarySchema))
     .query(async ({ input }) => {
       try {
+        // Read from WatchManager in-memory store when available
+        if (watchManager.isWatching(input.clusterId)) {
+          const rawServices = watchManager.getResources(
+            input.clusterId,
+            'services',
+          ) as k8s.V1Service[]
+          const filtered = input.namespace
+            ? rawServices.filter((s) => s.metadata?.namespace === input.namespace)
+            : rawServices
+          return filtered.map((svc) => mapService(svc))
+        }
+
+        // Fallback: fetch from K8s API via cached()
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
         const cacheKey = CACHE_KEYS.k8sServices(input.clusterId, input.namespace)
@@ -59,14 +74,7 @@ export const servicesRouter = router({
             : coreV1.listServiceForAllNamespaces(),
         )
 
-        return response.items.map((svc) => ({
-          name: svc.metadata?.name ?? '',
-          namespace: svc.metadata?.namespace ?? '',
-          type: svc.spec?.type ?? 'ClusterIP',
-          clusterIP: svc.spec?.clusterIP ?? null,
-          ports: mapPorts(svc.spec?.ports),
-          createdAt: svc.metadata?.creationTimestamp ?? null,
-        }))
+        return response.items.map((svc) => mapService(svc))
       } catch (error) {
         handleK8sError(error, 'list services')
       }
@@ -78,6 +86,19 @@ export const servicesRouter = router({
     .output(z.array(serviceSummarySchema))
     .query(async ({ input }) => {
       try {
+        // Read from WatchManager in-memory store when available
+        if (watchManager.isWatching(input.clusterId)) {
+          const rawServices = watchManager.getResources(
+            input.clusterId,
+            'services',
+          ) as k8s.V1Service[]
+          const filtered = input.namespace
+            ? rawServices.filter((s) => s.metadata?.namespace === input.namespace)
+            : rawServices
+          return filtered.map((svc) => mapService(svc))
+        }
+
+        // Fallback: fetch from K8s API via cached()
         const kc = await clusterClientPool.getClient(input.clusterId)
         const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
         const cacheKey = CACHE_KEYS.k8sServices(input.clusterId, input.namespace)
@@ -88,14 +109,7 @@ export const servicesRouter = router({
             : coreV1.listServiceForAllNamespaces(),
         )
 
-        return response.items.map((svc) => ({
-          name: svc.metadata?.name ?? '',
-          namespace: svc.metadata?.namespace ?? '',
-          type: svc.spec?.type ?? 'ClusterIP',
-          clusterIP: svc.spec?.clusterIP ?? null,
-          ports: mapPorts(svc.spec?.ports),
-          createdAt: svc.metadata?.creationTimestamp ?? null,
-        }))
+        return response.items.map((svc) => mapService(svc))
       } catch (error) {
         handleK8sError(error, 'list services')
       }
@@ -105,15 +119,8 @@ export const servicesRouter = router({
     .input(z.object({ clusterId: z.string().uuid() }))
     .query(async ({ input }) => {
       try {
-        const kc = await clusterClientPool.getClient(input.clusterId)
-        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
-        const cacheKey = `${CACHE_KEYS.k8sServices(input.clusterId)}:detail`
-
-        const response = await cached(cacheKey, CACHE_TTL.K8S_RESOURCES_SEC, () =>
-          coreV1.listServiceForAllNamespaces(),
-        )
-
-        return response.items.map((svc) => ({
+        // Helper to map service to detail shape
+        const mapDetail = (svc: k8s.V1Service) => ({
           name: svc.metadata?.name ?? '',
           namespace: svc.metadata?.namespace ?? '',
           type: svc.spec?.type ?? 'ClusterIP',
@@ -130,7 +137,27 @@ export const servicesRouter = router({
             hostname: ing.hostname ?? null,
           })),
           healthCheckNodePort: svc.spec?.healthCheckNodePort ?? null,
-        }))
+        })
+
+        // Read from WatchManager in-memory store when available
+        if (watchManager.isWatching(input.clusterId)) {
+          const rawServices = watchManager.getResources(
+            input.clusterId,
+            'services',
+          ) as k8s.V1Service[]
+          return rawServices.map(mapDetail)
+        }
+
+        // Fallback: fetch from K8s API via cached()
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+        const cacheKey = `${CACHE_KEYS.k8sServices(input.clusterId)}:detail`
+
+        const response = await cached(cacheKey, CACHE_TTL.K8S_RESOURCES_SEC, () =>
+          coreV1.listServiceForAllNamespaces(),
+        )
+
+        return response.items.map(mapDetail)
       } catch (error) {
         handleK8sError(error, 'list services detail')
       }
