@@ -14,6 +14,8 @@ interface ResourceStoreState {
   setResources: (clusterId: string, type: ResourceType, items: unknown[]) => void
   /** Apply ADDED/MODIFIED/DELETED to the array for event.resourceType */
   applyEvent: (clusterId: string, event: WatchEvent) => void
+  /** Apply multiple events in a single state update (batch flush from 1s buffer) */
+  applyEvents: (clusterId: string, events: WatchEvent[]) => void
   /** Update connection state for a cluster */
   setConnectionState: (clusterId: string, state: ConnectionState) => void
   /** Remove all data for a cluster and set its connection state to 'disconnected' */
@@ -74,6 +76,58 @@ export const useResourceStore = create<ResourceStoreState>()(
 
         const next = new Map(state.resources)
         next.set(key, updated)
+        return { resources: next }
+      }),
+
+    applyEvents: (clusterId, events) =>
+      set((state) => {
+        const next = new Map(state.resources)
+
+        for (const event of events) {
+          const key = `${clusterId}:${event.resourceType}`
+          const current = next.get(key)
+          if (!current) continue
+
+          const obj = event.object as { name: string; namespace?: string | null }
+
+          switch (event.type) {
+            case 'ADDED': {
+              const idx = current.findIndex((item) => {
+                const i = item as { name: string; namespace?: string | null }
+                return i.name === obj.name && i.namespace === obj.namespace
+              })
+              if (idx >= 0) {
+                const updated = [...current]
+                updated[idx] = event.object
+                next.set(key, updated)
+              } else {
+                next.set(key, [...current, event.object])
+              }
+              break
+            }
+            case 'MODIFIED': {
+              next.set(
+                key,
+                current.map((item) => {
+                  const i = item as { name: string; namespace?: string | null }
+                  return i.name === obj.name && i.namespace === obj.namespace ? event.object : item
+                }),
+              )
+              break
+            }
+            case 'DELETED': {
+              next.set(
+                key,
+                current.filter((item) => {
+                  const i = item as { name: string; namespace?: string | null }
+                  return !(i.name === obj.name && i.namespace === obj.namespace)
+                }),
+              )
+              break
+            }
+          }
+        }
+
         return { resources: next }
       }),
 
