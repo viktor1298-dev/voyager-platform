@@ -667,6 +667,62 @@ export function mapCronJob(cj: k8s.V1CronJob) {
   }
 }
 
+// ── Network Policy Mapper ────────────────────────────────────
+
+export function mapNetworkPolicy(np: k8s.V1NetworkPolicy) {
+  return {
+    name: np.metadata?.name ?? '',
+    namespace: np.metadata?.namespace ?? '',
+    createdAt: np.metadata?.creationTimestamp
+      ? new Date(np.metadata.creationTimestamp as unknown as string).toISOString()
+      : null,
+    podSelector: (np.spec?.podSelector?.matchLabels as Record<string, string>) ?? {},
+    policyTypes: np.spec?.policyTypes ?? [],
+    ingressRules: (np.spec?.ingress ?? []).map((rule) => ({
+      from: (rule._from ?? []).map((peer) => ({
+        podSelector: (peer.podSelector?.matchLabels as Record<string, string>) ?? null,
+        namespaceSelector: (peer.namespaceSelector?.matchLabels as Record<string, string>) ?? null,
+        ipBlock: peer.ipBlock
+          ? { cidr: peer.ipBlock.cidr, except: peer.ipBlock.except ?? [] }
+          : null,
+      })),
+      ports: (rule.ports ?? []).map((p) => ({
+        protocol: p.protocol ?? 'TCP',
+        port: p.port != null ? String(p.port) : null,
+      })),
+    })),
+    egressRules: (np.spec?.egress ?? []).map((rule) => ({
+      to: (rule.to ?? []).map((peer) => ({
+        podSelector: (peer.podSelector?.matchLabels as Record<string, string>) ?? null,
+        namespaceSelector: (peer.namespaceSelector?.matchLabels as Record<string, string>) ?? null,
+        ipBlock: peer.ipBlock
+          ? { cidr: peer.ipBlock.cidr, except: peer.ipBlock.except ?? [] }
+          : null,
+      })),
+      ports: (rule.ports ?? []).map((p) => ({
+        protocol: p.protocol ?? 'TCP',
+        port: p.port != null ? String(p.port) : null,
+      })),
+    })),
+    labels: (np.metadata?.labels as Record<string, string>) ?? {},
+  }
+}
+
+// ── Resource Quota Mapper ────────────────────────────────────
+
+export function mapResourceQuota(rq: k8s.V1ResourceQuota) {
+  return {
+    name: rq.metadata?.name ?? '',
+    namespace: rq.metadata?.namespace ?? '',
+    hard: (rq.status?.hard as Record<string, string>) ?? {},
+    used: (rq.status?.used as Record<string, string>) ?? {},
+    createdAt: rq.metadata?.creationTimestamp
+      ? new Date(rq.metadata.creationTimestamp as unknown as string).toISOString()
+      : null,
+    labels: (rq.metadata?.labels as Record<string, string>) ?? {},
+  }
+}
+
 // ── HPA Mapper ────────────────────────────────────────────────
 
 export function mapHPA(hpa: k8s.V2HorizontalPodAutoscaler) {
