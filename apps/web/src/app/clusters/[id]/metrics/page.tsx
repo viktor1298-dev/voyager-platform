@@ -14,12 +14,14 @@ export default function MetricsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean((dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials)
+  const hasCredentials = Boolean(
+    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
+  )
   const isLive = hasCredentials
 
   const liveQuery = trpc.clusters.live.useQuery(
     { clusterId: resolvedId },
-    { enabled: isLive, refetchInterval: 60000, retry: false, staleTime: 30000 },
+    { enabled: isLive, retry: false, staleTime: 30000 },
   )
   const effectiveIsLive = isLive && !liveQuery.isError
 

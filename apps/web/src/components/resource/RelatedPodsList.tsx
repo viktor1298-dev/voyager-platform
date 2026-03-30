@@ -1,8 +1,8 @@
 'use client'
 
-import { Box, Loader2 } from 'lucide-react'
+import { Box } from 'lucide-react'
 import { useMemo } from 'react'
-import { trpc } from '@/lib/trpc'
+import { useClusterResources } from '@/hooks/useResources'
 import { RelatedResourceLink } from './RelatedResourceLink'
 
 interface PodItem {
@@ -26,7 +26,7 @@ function statusDot(status: string): string {
 
 /**
  * Reusable list of pods matching label selectors.
- * Fetches pods via trpc.pods.list and performs client-side label matching.
+ * Reads pods from Zustand store (SSE-fed via useResourceSSE in cluster layout).
  * Each pod links to the Pods tab with highlight query param.
  */
 export function RelatedPodsList({
@@ -34,8 +34,7 @@ export function RelatedPodsList({
   matchLabels,
   title = 'Related Pods',
 }: RelatedPodsListProps) {
-  const podsQuery = trpc.pods.list.useQuery({ clusterId }, { staleTime: 30_000 })
-  const pods = (podsQuery.data ?? []) as PodItem[]
+  const pods = useClusterResources<PodItem>(clusterId, 'pods')
 
   const matchingPods = useMemo(() => {
     if (Object.keys(matchLabels).length === 0) return []
@@ -43,15 +42,6 @@ export function RelatedPodsList({
       Object.entries(matchLabels).every(([key, value]) => pod.labels?.[key] === value),
     )
   }, [pods, matchLabels])
-
-  if (podsQuery.isLoading) {
-    return (
-      <div className="flex items-center gap-2 p-3">
-        <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--color-text-dim)]" />
-        <span className="text-[11px] text-[var(--color-text-muted)]">Loading pods...</span>
-      </div>
-    )
-  }
 
   if (matchingPods.length === 0) {
     return (
