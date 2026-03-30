@@ -7,6 +7,7 @@ import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { NetworkPolicyGraph } from '@/components/network/NetworkPolicyGraph'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { SectionLoadingSkeleton } from '@/components/resource'
 import { timeAgo } from '@/lib/time-utils'
 
 type ViewMode = 'list' | 'graph'
@@ -90,16 +91,7 @@ export default function NetworkPoliciesPage() {
         <NetworkPolicyGraph clusterId={clusterId} />
       ) : (
         <div>
-          {!snapshotsReady && policies.length === 0 && (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div
-                  key={`skel-${i}`}
-                  className="h-24 rounded-lg bg-[var(--color-bg-card-hover)] animate-pulse"
-                />
-              ))}
-            </div>
-          )}
+          {!snapshotsReady && policies.length === 0 && <SectionLoadingSkeleton sections={2} />}
 
           {connectionState === 'disconnected' && policies.length === 0 && (
             <div className="text-sm text-[var(--color-text-muted)] text-center py-8">

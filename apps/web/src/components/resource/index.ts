@@ -1,4 +1,9 @@
 export { ResourcePageScaffold } from './ResourcePageScaffold'
+export {
+  ResourceLoadingSkeleton,
+  TableLoadingSkeleton,
+  SectionLoadingSkeleton,
+} from './ResourceLoadingSkeleton'
 export type { ResourcePageScaffoldProps } from './ResourcePageScaffold'
 export { SearchFilterBar } from './SearchFilterBar'
 export { NamespaceGroup } from './NamespaceGroup'

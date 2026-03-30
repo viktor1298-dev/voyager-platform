@@ -26,7 +26,7 @@ import {
   ResourceBar,
   TagPills,
 } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { SectionLoadingSkeleton } from '@/components/resource'
 import type { KarpenterEC2NodeClass, KarpenterNodeClaim, KarpenterNodePool } from '@voyager/types'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { trpc } from '@/lib/trpc'
@@ -105,16 +105,6 @@ function MetricCard({
           <span className="text-sm font-normal text-[var(--color-text-muted)] ml-1">{unit}</span>
         )}
       </span>
-    </div>
-  )
-}
-
-function SectionSkeleton({ count = 3 }: { count?: number }) {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i} className="h-12 w-full rounded-lg" />
-      ))}
     </div>
   )
 }
@@ -488,13 +478,7 @@ export default function AutoscalingPage() {
 
   // ---- Loading state ----
   if (dbCluster.isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
-      </div>
-    )
+    return <SectionLoadingSkeleton sections={4} />
   }
 
   // ---- No credentials ----
@@ -592,7 +576,7 @@ export default function AutoscalingPage() {
       <section>
         <SectionHeading icon={Layers} title="NodePools" count={nodePools.length} />
         {nodePoolsQuery.isLoading ? (
-          <SectionSkeleton />
+          <SectionLoadingSkeleton sections={3} />
         ) : nodePools.length === 0 ? (
           <p className="text-xs text-[var(--color-text-muted)]">No NodePools found.</p>
         ) : (
@@ -641,7 +625,7 @@ export default function AutoscalingPage() {
       <section>
         <SectionHeading icon={Cpu} title="NodeClaims" count={nodeClaims.length} />
         {nodeClaimsQuery.isLoading ? (
-          <SectionSkeleton />
+          <SectionLoadingSkeleton sections={3} />
         ) : nodeClaims.length === 0 ? (
           <p className="text-xs text-[var(--color-text-muted)]">No NodeClaims found.</p>
         ) : (
@@ -698,7 +682,7 @@ export default function AutoscalingPage() {
       <section>
         <SectionHeading icon={Server} title="EC2 Node Classes" count={ec2Classes.length} />
         {ec2ClassesQuery.isLoading ? (
-          <SectionSkeleton count={2} />
+          <SectionLoadingSkeleton sections={2} />
         ) : ec2Classes.length === 0 ? (
           <p className="text-xs text-[var(--color-text-muted)]">No EC2 Node Classes found.</p>
         ) : (

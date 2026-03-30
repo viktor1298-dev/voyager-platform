@@ -11,7 +11,7 @@ import {
   ResourceBar,
   TagPills,
 } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
+import { TableLoadingSkeleton } from '@/components/resource'
 import { nodeStatusColor } from '@/lib/status-utils'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
@@ -282,13 +282,7 @@ export default function NodesPage() {
     <>
       <h1 className="sr-only">Cluster Nodes</h1>
 
-      {isLoading && (
-        <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-lg" />
-          ))}
-        </div>
-      )}
+      {isLoading && <TableLoadingSkeleton rows={4} cols={7} />}
 
       {!isLoading && isEmpty && (
         <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">

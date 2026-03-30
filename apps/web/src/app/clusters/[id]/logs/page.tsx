@@ -6,7 +6,7 @@ import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { LogViewer } from '@/components/logs'
 import { useEffect, useMemo, useState } from 'react'
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from 'react-resizable-panels'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ResourceLoadingSkeleton } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -80,13 +80,7 @@ export default function LogsPage() {
   const logLines = useMemo(() => logText.split('\n').filter(Boolean), [logText])
 
   if (dbCluster.isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
-      </div>
-    )
+    return <ResourceLoadingSkeleton />
   }
 
   if (!hasCredentials) {

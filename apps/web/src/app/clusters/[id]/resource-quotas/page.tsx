@@ -4,9 +4,8 @@ import { ChevronDown, Gauge } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { SearchFilterBar } from '@/components/resource'
+import { SearchFilterBar, SectionLoadingSkeleton } from '@/components/resource'
 import { ResourceQuotaCard } from '@/components/quotas/ResourceQuotaCard'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -129,11 +128,7 @@ export default function ResourceQuotasPage() {
       />
 
       {isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full" />
-          ))}
-        </div>
+        <SectionLoadingSkeleton sections={2} />
       ) : filteredQuotas.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
           <div className="rounded-full bg-white/[0.04] p-3 mb-3">

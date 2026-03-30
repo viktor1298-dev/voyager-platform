@@ -19,13 +19,13 @@ import { ConditionsList, DetailTabs, ExpandableCard, ResourceBar } from '@/compo
 import { LogViewer } from '@/components/logs'
 import {
   RelatedResourceLink,
+  ResourceLoadingSkeleton,
   SearchFilterBar,
   YamlViewer,
   ResourceDiff,
 } from '@/components/resource'
 import { useTerminal } from '@/components/terminal/terminal-context'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
@@ -636,11 +636,7 @@ export default function PodsPage() {
 
       {/* Pod list */}
       {isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
-          ))}
-        </div>
+        <ResourceLoadingSkeleton />
       ) : filteredPods.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
           <div className="rounded-full bg-white/[0.04] p-3 mb-3">

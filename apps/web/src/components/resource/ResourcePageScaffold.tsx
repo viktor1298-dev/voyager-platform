@@ -4,8 +4,8 @@ import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ExpandableCard } from '@/components/expandable'
-import { Skeleton } from '@/components/ui/skeleton'
 import { SearchFilterBar } from './SearchFilterBar'
+import { ResourceLoadingSkeleton } from './ResourceLoadingSkeleton'
 import { NamespaceGroup } from './NamespaceGroup'
 
 export interface ResourcePageScaffoldProps<T> {
@@ -95,13 +95,7 @@ export function ResourcePageScaffold<T>({
 
   // Loading state
   if (queryResult.isLoading) {
-    return (
-      <div className="space-y-2">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    )
+    return <ResourceLoadingSkeleton />
   }
 
   // Empty state

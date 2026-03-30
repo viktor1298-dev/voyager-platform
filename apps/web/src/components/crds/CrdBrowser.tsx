@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import { ExpandableCard } from '@/components/expandable'
 import { CrdInstanceList } from './CrdInstanceList'
 import { SearchFilterBar } from '@/components/resource'
-import { Skeleton } from '@/components/ui/skeleton'
+import { SectionLoadingSkeleton } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 
 interface CrdSummaryData {
@@ -85,11 +85,7 @@ export function CrdBrowser({ clusterId }: CrdBrowserProps) {
       />
 
       {crdsQuery.isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-        </div>
+        <SectionLoadingSkeleton sections={2} />
       ) : filteredCrds.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
           <div className="rounded-full bg-white/[0.04] p-3 mb-3">

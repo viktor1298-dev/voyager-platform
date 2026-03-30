@@ -5,8 +5,7 @@ import { useParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, ExpandableCard } from '@/components/expandable'
-import { SearchFilterBar } from '@/components/resource'
-import { Skeleton } from '@/components/ui/skeleton'
+import { SearchFilterBar, SectionLoadingSkeleton } from '@/components/resource'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { trpc } from '@/lib/trpc'
@@ -251,11 +250,7 @@ export default function RbacPage() {
       />
 
       {matrixQuery.isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-        </div>
+        <SectionLoadingSkeleton sections={2} />
       ) : filteredSubjects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
           <div className="rounded-full bg-white/[0.04] p-3 mb-3">
