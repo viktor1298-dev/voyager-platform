@@ -1,231 +1,92 @@
-# Roadmap: Voyager Platform Reset & Stabilization
+# Roadmap: Live Data Pipeline
 
 ## Overview
 
-This roadmap takes the Voyager Platform monorepo from a diverged state (54 unmerged commits on feat/init-monorepo, 27 stale remote branches) to a clean single-branch repository where main is the sole source of truth, all meaningful work is merged, the project builds and passes tests, and GitHub protections prevent recurrence. The five phases are strictly sequential -- each phase gates on the previous completing fully.
+Fix the broken SSE pipeline so K8s resource updates flow continuously from cluster to browser, then harden reconnection and optimize burst performance, expand live watching to all 24 resource types with per-cluster lifecycle, and clean up ~900 lines of dead code plus missing DB indexes. The pipeline works end-to-end after Phase 1; it is production-grade after Phase 2; it covers all resources after Phase 3; the codebase is clean after Phase 4.
 
 ## Phases
 
 **Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+- Integer phases (1, 2, 3, 4): Planned milestone work
+- Decimal phases (e.g., 2.1): Urgent insertions (marked with INSERTED)
 
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [x] **Phase 1: Safety Net** - Create recovery tags, record branch tips, enable rerere before any mutations
-- [x] **Phase 2: The Big Merge** - Merge 54 commits from feat/init-monorepo into main with conflict resolution and normalization
-- [x] **Phase 3: Validation Gate** - Verify the merged codebase compiles, type-checks, and passes all unit tests
-- [x] **Phase 4: Push & Branch Cleanup** - Push merged main to origin and delete all 27 stale remote branches
-- [x] **Phase 5: GitHub Protection** - Set up branch protection and auto-delete to prevent future branch accumulation
-- [x] **Phase 7: Performance Optimization** - Chart rendering with LTTB downsampling, synchronized crosshair, debounced resize
-- [ ] **Phase 8: Resource Explorer UX Overhaul** - Unify resource tabs, expand all, Lens-inspired real-time K8s Watch, logs beautifier, cross-resource navigation
-- [ ] **Phase 9: Lens-Inspired Power Features** - Pod exec, live log streaming, YAML viewer, restart/scale, Helm, events timeline, CRD browser, RBAC, network policies
-- [x] **Phase 10: Lens-Style Live Data** - Replace polling with K8s Watch stream architecture, unified WatchManager, data-carrying SSE, zero refetchInterval (completed 2026-03-29)
-- [x] **Phase 11: Lens-Grade Live Data Redesign** - Immediate SSE, direct browser-to-API connection, Zustand resource store, snapshot-on-connect (completed 2026-03-29)
+- [ ] **Phase 1: Diagnose & Fix Pipeline** - Find and fix root cause of SSE stopping after first event; eliminate TQ polling conflict
+- [ ] **Phase 2: Harden & Optimize** - Add reconnection reliability (event IDs, heartbeat, backoff) and client-side event batching for burst performance
+- [ ] **Phase 3: Expand Coverage** - Extend live watching to all 24 cluster tab types with per-cluster on-demand lifecycle
+- [ ] **Phase 4: Cleanup** - Remove dead code, add missing DB indexes, fix ignoreBuildErrors
 
 ## Phase Details
 
-### Phase 1: Safety Net
-**Goal**: Full recovery capability exists before any repository mutation occurs
+### Phase 1: Diagnose & Fix Pipeline
+**Goal**: SSE stream continuously delivers live K8s events to the browser without stopping, and the UI updates in real-time without polling fallback
 **Depends on**: Nothing (first phase)
-**Requirements**: SAFE-01, SAFE-02, SAFE-03
+**Requirements**: PIPE-01, PIPE-02, PIPE-03, PIPE-04
 **Success Criteria** (what must be TRUE):
-  1. Tags `pre-merge-snapshot` (on main) and `pre-cleanup-feat` (on feat/init-monorepo) exist and point to correct SHAs
-  2. `.planning/branch-tips.txt` contains the SHA hash for every remote branch (all 27+)
-  3. `git rerere` is enabled so conflict resolutions are recorded for replay on retry
-  4. Running `git tag -l pre-merge*` and `git tag -l pre-cleanup*` shows both recovery tags
-**Plans:** 1 plan
-
-Plans:
-- [x] 01-01-PLAN.md -- Recovery tags, rerere config, and branch-tips recording
-
-### Phase 2: The Big Merge
-**Goal**: All 54 commits from feat/init-monorepo are integrated into main with conflicts resolved, imports normalized, and schema integrity preserved
-**Depends on**: Phase 1
-**Requirements**: MERGE-01, MERGE-02, MERGE-03, MERGE-04, MERGE-05, MERGE-06
-**Success Criteria** (what must be TRUE):
-  1. `git log main` shows a merge commit integrating feat/init-monorepo with a descriptive message documenting the resolution
-  2. Zero conflict markers remain in the working tree (`grep -rn "<<<<<<< " .` returns nothing)
-  3. All Motion imports use the `motion` convention consistently (no mixed `m` / `motion` imports across component files)
-  4. `init.sql` contains 33 CREATE TABLE statements (nodeMetricsHistory preserved from main)
-  5. Auto-resolved files (server.ts, ClusterHealthWidget.tsx, page.tsx) have been manually reviewed for evil-merge logic errors
-**Plans:** 3 plans
-
-Plans:
-- [x] 02-01-PLAN.md -- Execute merge and resolve all 9 conflicting files (Tier 1-4)
-- [x] 02-02-PLAN.md -- Evil-merge review, Motion import normalization, schema integrity
-- [x] 02-03-PLAN.md -- Validation gate (typecheck + lint + build + test) and merge commit
-
-### Phase 3: Validation Gate
-**Goal**: The merged codebase provably compiles and passes all automated checks
-**Depends on**: Phase 2
-**Requirements**: VALID-01, VALID-02, VALID-03
-**Success Criteria** (what must be TRUE):
-  1. `pnpm build` exits with code 0 (TypeScript compilation succeeds for all packages)
-  2. `pnpm typecheck` exits with code 0 (strict TypeScript checking passes)
-  3. `pnpm test` exits with code 0 (all Vitest unit tests pass)
-**Plans:** 1 plan
-
-Plans:
-- [x] 03-01-PLAN.md -- Full validation gate with Docker (build + typecheck + 128 tests including integration)
-
-### Phase 4: Push & Branch Cleanup
-**Goal**: Origin reflects the merged main and all stale branches are removed with no work lost
-**Depends on**: Phase 3
-**Requirements**: CLEAN-01, CLEAN-02, CLEAN-03, CLEAN-04, CLEAN-05
-**Success Criteria** (what must be TRUE):
-  1. `git push origin main` has completed successfully -- origin/main matches local main
-  2. `git branch -r` shows only `origin/HEAD` and `origin/main` (all 27 stale branches deleted)
-  3. worktree/ron and worktree/dima commits are verified as contained in feat/init-monorepo (via `git merge-base --is-ancestor`) before their branches are deleted
-  4. fix/v117-phase-d-r2's unique commit (eaa87c6) is evaluated, documented (cherry-picked or discarded with rationale), before branch deletion
-  5. Local stale branches (claude/objective-shockley and others) are cleaned up
+  1. QA test: delete a pod, take 4 screenshots every 3 seconds (at 0s, 3s, 6s, 9s) — each screenshot must show progressively updated data (pod terminating → new pod starting → running), proving live data not 10s polling
+  2. User can trigger a pod delete or scale operation and see the change appear in the dashboard without refreshing the page, continuously (not just the first event)
+  3. No TanStack Query polling requests appear in the browser network tab for resource types that are SSE-fed (pods, deployments, services, etc.)
+  4. After leaving a cluster view open for 10+ minutes, events continue arriving (no silent informer death)
+  5. **Phase gate:** Full functional QA — navigate every cluster tab, perform actions (delete pod, scale deployment), verify live data updates on each tab via screenshot + console check
 **Plans:** 2 plans
 
 Plans:
-- [x] 04-01-PLAN.md -- Push main to origin and delete 22 fully-merged remote branches (Batch 1)
-- [x] 04-02-PLAN.md -- Verify and delete Batch 2 (feat/init-monorepo, worktree/ron, worktree/dima), document and delete Batch 3 (fix/v117-phase-d-r2), local cleanup
+- [ ] 01-01-PLAN.md — Fix backend pipeline (heartbeat timeout + watch-db-writer refactor)
+- [ ] 01-02-PLAN.md — Fix frontend polling conflicts + E2E live data test
 
-### Phase 5: GitHub Protection
-**Goal**: Branch protection rules prevent future divergence and stale branch accumulation
-**Depends on**: Phase 4
-**Requirements**: PROT-01, PROT-02
+### Phase 2: Harden & Optimize
+**Goal**: SSE connections are resilient to network drops and server restarts, and the UI handles burst events (rolling updates) without jank
+**Depends on**: Phase 1
+**Requirements**: CONN-01, CONN-02, CONN-03, PERF-01, PERF-02
 **Success Criteria** (what must be TRUE):
-  1. GitHub branch protection on main requires pull requests (no direct push), prevents force push, and prevents branch deletion
-  2. GitHub repository setting "Automatically delete head branches" is enabled -- merged PR branches are cleaned up automatically
-**Plans:** 1 plan
+  1. User's SSE connection drops (network blip or API restart) and automatically reconnects within 30 seconds with no visible flash of empty state
+  2. No events are lost during reconnection -- resources that changed while disconnected appear after reconnect (Last-Event-ID replay)
+  3. User triggers a rolling update (50+ events in 5 seconds) and the UI updates smoothly without frame drops or input lag
+  4. If an informer silently stops emitting events, the system detects and recovers within 30 seconds (heartbeat timeout)
+  5. **Phase gate:** Full functional QA — navigate every cluster tab, trigger reconnect scenarios, verify no empty state flashes, test burst events via rolling update
+**Plans**: TBD
 
 Plans:
-- [x] 05-01-PLAN.md -- Branch protection rules and auto-delete of merged branches
+- [ ] 02-01: TBD
+- [ ] 02-02: TBD
 
-### Phase 7: Performance Optimization
-**Goal**: Chart rendering performs smoothly with 1000+ data points, synchronized crosshair without jank, and debounced resize handling
-**Depends on**: None (independent of phases 1-5)
-**Requirements**: PERF-01, PERF-02, PERF-03
+### Phase 3: Expand Coverage
+**Goal**: All 24 cluster tab resource types show live data, and watches are scoped to only the cluster the user is viewing
+**Depends on**: Phase 2
+**Requirements**: COVER-01, COVER-02, COVER-03
 **Success Criteria** (what must be TRUE):
-  1. LTTB downsampling limits chart data points to ~200 for any dataset size
-  2. Crosshair synchronization across 4 panels uses throttled shared state
-  3. ResponsiveContainer resizes are debounced
-  4. `pnpm build` passes with 0 errors
-**Plans:** 1 plan
+  1. User views any of the 15 currently-watched resource types and sees live updates without polling or page refresh
+  2. User views network policies, resource quotas, Helm releases, CRDs, or topology and sees live updates (9 additional types)
+  3. User switches from Cluster A to Cluster B -- watches for Cluster A stop within 10 seconds, watches for Cluster B start immediately
+  4. With 30 clusters in the system, only the actively-viewed cluster(s) have running watches (verified via API health/metrics endpoint)
+  5. **Phase gate:** Full functional QA — navigate all 24 cluster tabs one by one, perform human actions (create/delete/scale resources), verify live updates on each tab, test cluster switching
+**Plans**: TBD
 
 Plans:
-- [x] 07-01-PLAN.md -- LTTB downsampling, crosshair sync, debounced resize
+- [ ] 03-01: TBD
+- [ ] 03-02: TBD
 
-### Phase 8: Resource Explorer UX Overhaul
-**Goal**: Unify all cluster resource tabs to match Pods design (namespace-grouped, search/filter, expand all/collapse all), add Lens-inspired real-time K8s Watch for ALL resource types, log beautification, cross-resource navigation with hyperlinks, and Nodes page light-mode fix
-**Depends on**: Phase 7 (all prior phases complete)
-**Requirements**: UX-01 through UX-18 (defined during planning)
+### Phase 4: Cleanup
+**Goal**: Dead code removed, database queries fast, build pipeline honest
+**Depends on**: Nothing (independent -- can run in parallel with Phases 2-3)
+**Requirements**: CLEAN-01, CLEAN-02, CLEAN-03
 **Success Criteria** (what must be TRUE):
-  1. All resource tabs (deployments, services, ingresses, statefulsets, daemonsets, jobs, cronjobs, hpa, configmaps, secrets, pvcs) use namespace-grouped card layout with search/filter bar matching Pods design
-  2. "Expand All / Collapse All" toggle works on every resource tab including Pods
-  3. K8s Watch-based real-time updates for ALL resource types (Lens-inspired) — resources update within ~1s of cluster changes, per-user per-cluster reference-counted watchers
-  4. Logs tab has syntax highlighting, log level coloring, search/filter, timestamp parsing, and structured log formatting
-  5. Expanded resource detail panels include cross-resource tabs (pod->logs, deployment->pods, statefulset->pods, service->endpoints) with hyperlinks for navigation
-  6. Nodes page light-mode visibility fixed (CPU/Memory bars, spacing, visual hierarchy)
-  7. Karpenter/autoscaling tab design unchanged
-  8. `pnpm build` and `pnpm typecheck` pass with 0 errors
-**Plans:** 8 plans
+  1. The files cluster-watch-manager.ts, resource-watch-manager.ts, cluster-connection-state.ts, and subscriptions.ts no longer exist in the codebase
+  2. Database queries on events, nodes, audit_log, alert_history, and health_history tables use indexes (verified via EXPLAIN ANALYZE)
+  3. `pnpm build` succeeds with `ignoreBuildErrors: false` in next.config.ts (no TypeScript errors hidden)
+  4. **Phase gate:** Full functional QA — verify no regressions after cleanup, navigate all pages, check console for errors
+**Plans**: TBD
 
 Plans:
-- [x] 08-01-PLAN.md -- Foundation: ExpandableCard controlled mode, ResourcePageScaffold, SearchFilterBar, NamespaceGroup
-- [x] 08-02-PLAN.md -- K8s Watch backend: ResourceWatchManager, SSE resource stream, client-side useResourceSSE hook in layout
-- [x] 08-03-PLAN.md -- Tab redesign Set A: Deployments, Services, Ingresses, StatefulSets
-- [x] 08-04-PLAN.md -- Tab redesign Set B: DaemonSets, Jobs, CronJobs, HPA
-- [x] 08-05-PLAN.md -- Tab redesign Set C: ConfigMaps, Secrets, PVCs + Namespaces, Events, Pods expand-all
-- [x] 08-06-PLAN.md -- Logs beautifier: LogViewer, LogLine, JsonRenderer, LogSearch, CSS log vars, page integration
-- [x] 08-07-PLAN.md -- Nodes page light-mode fix: bar visibility, spacing, visual hierarchy
-- [x] 08-08-PLAN.md -- Cross-resource navigation: RelatedPodsList, hyperlinks, pod->logs tab, mutation cache fix
-
-### Phase 9: Lens-Inspired Power Features
-**Goal**: Transform Voyager Platform into a full Lens-alternative with pod exec/terminal, live log streaming, YAML viewer, workload management (restart/scale), Helm releases, events timeline, resource diff, port forwarding, CRD browser, RBAC viewer, network policy visualization, and resource quotas dashboard. Update all existing features to be Lens-inspired with live data.
-**Depends on**: Phase 8
-**Requirements**: LENS-01 through LENS-14 (defined during planning)
-**Success Criteria** (what must be TRUE):
-  1. Web terminal into any pod via kubectl exec (xterm.js + WebSocket)
-  2. Real-time log streaming via SSE (not polling) with follow mode
-  3. Resource YAML/JSON viewer with syntax highlighting and copy
-  4. Restart (rollout restart) and scale (replica count) for Deployments/StatefulSets/DaemonSets from UI
-  5. Helm releases list with chart version, app version, status, values viewer, upgrade/rollback
-  6. Events timeline visualization (not just table)
-  7. Resource diff — compare current vs desired state
-  8. Pod port forwarding to browser-accessible temporary URL
-  9. CRD browser — view any custom resource generically
-  10. RBAC viewer — who can do what on which resources
-  11. Network policy map — visual graph of traffic flows
-  12. Resource quotas dashboard — namespace usage vs limits
-  13. All existing tabs updated to Lens-inspired design with live data
-  14. `pnpm build` and `pnpm typecheck` pass with 0 errors
-**Plans:** 10 plans
-
-Plans:
-- [x] 09-01-PLAN.md -- Foundation: Phase 9 dependencies, CSS tokens, animation variants, YamlViewer, universal YAML router
-- [x] 09-02-PLAN.md
-- [x] 09-03-PLAN.md
-- [x] 09-04-PLAN.md
-- [x] 09-05-PLAN.md
-- [x] 09-06-PLAN.md
-- [ ] 09-07-PLAN.md
-- [ ] 09-08-PLAN.md
-- [ ] 09-09-PLAN.md
-- [ ] 09-10-PLAN.md
-
-### Phase 10: Lens-Style Live Data — K8s Watch Stream Architecture
-**Goal**: Replace the entire SSE-triggered-refetch + polling architecture with a Lens-style data streaming pipeline. K8s Watch API events carry full resource objects directly to the browser via SSE, and the client applies them to TanStack Query cache without refetch round-trips. Kill all frontend polling for watched resources (~45 refetchInterval entries). Unify two watch managers into a single in-memory store. Replace 3 of 4 background sync jobs with watch-based updates.
-**Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09
-**Depends on:** Phase 9
-**Success Criteria** (what must be TRUE):
-  1. Unified WatchManager replaces both ClusterWatchManager and ResourceWatchManager
-  2. SSE events carry full transformed resource objects (not signals) with 1-second batching
-  3. Client applies SSE data via TanStack Query setQueryData — zero refetch round-trips
-  4. All 15 watched resource routers read from WatchManager in-memory store (~0ms vs ~200ms K8s API)
-  5. Zero refetchInterval for watched K8s resources; ~19 kept for DB/metrics queries
-  6. health-sync, node-sync, event-sync jobs removed; metrics-collector and metrics-stream-job kept
-  7. ConnectionStatusBadge shows Live/Reconnecting/Disconnected in cluster header
-  8. `pnpm build` and `pnpm typecheck` pass with 0 errors
-**Plans:** 5/5 plans complete
-
-Plans:
-- [x] 10-01-PLAN.md — Foundation: WatchManager, resource mappers, WatchEvent types, unit tests
-- [x] 10-02-PLAN.md — Data-carrying SSE rewrite with 1-second batching
-- [x] 10-03-PLAN.md — Client-side setQueryData + ConnectionStatusBadge
-- [x] 10-04-PLAN.md — tRPC router migration to read from WatchManager
-- [x] 10-05-PLAN.md — Big bang switch: remove polling, delete 3 jobs, server integration
-
-### Phase 11: Lens-Grade Live Data Redesign
-**Goal:** Strip polling-era workarounds and rebuild live data to match Lens desktop performance. Kill 1s batch buffer (immediate SSE), direct browser-to-API SSE connection (bypass Next.js proxy), replace per-resource setQueryData with reactive Zustand resource store, remove 5s initial load window (SSE sends full state on connect), keep TanStack Query only for non-live DB-backed data. Target: <100ms update latency, 3 layers instead of 5, zero dropped events.
-**Requirements**: L11-IMMEDIATE-SSE, L11-COMPRESS-FIX, L11-SNAPSHOT, L11-ZUSTAND-STORE, L11-SELECTOR-READS, L11-DIRECT-SSE, L11-PROXY-REMOVAL, L11-ZUSTAND-WIRE, L11-CONSUMER-MIGRATION, L11-NO-POLLING-WATCHED
-**Depends on:** Phase 10
-**Success Criteria** (what must be TRUE):
-  1. SSE events arrive immediately (no 1s batch buffer, no 5s initial load window)
-  2. Browser connects directly to API SSE endpoint (no Next.js proxy routes)
-  3. Zustand resource store holds all live K8s data with selector-based subscriptions
-  4. All 15 resource pages read from Zustand store (not tRPC list queries)
-  5. Snapshot event sends full informer cache on SSE connect (replaces tRPC initial fetch)
-  6. Compression disabled on all SSE routes (no buffering)
-  7. TanStack Query retained for DB-backed data (users, alerts, Helm, CRDs, metrics history)
-  8. `pnpm build` and `pnpm typecheck` pass with 0 errors
-**Plans:** 4/4 plans complete
-
-Plans:
-- [x] 11-01-PLAN.md — Backend SSE rewrite: immediate flush, compression disable, snapshot event
-- [x] 11-02-PLAN.md — Zustand resource store + useResources hooks + unit tests
-- [x] 11-03-PLAN.md — Direct SSE connection, useResourceSSE rewrite, proxy deletion
-- [x] 11-04-PLAN.md — Consumer migration: 15 resource pages from tRPC to Zustand
+- [ ] 04-01: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9 -> 10 -> 11
+Phases 1-3 execute sequentially. Phase 4 is independent and can execute in parallel with Phases 2-3.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Safety Net | 1/1 | Complete | 2026-03-26 |
-| 2. The Big Merge | 3/3 | Complete | 2026-03-26 |
-| 3. Validation Gate | 1/1 | Complete | 2026-03-26 |
-| 4. Push & Branch Cleanup | 2/2 | Complete | 2026-03-26 |
-| 5. GitHub Protection | 1/1 | Complete | 2026-03-26 |
-| 7. Performance Optimization | 1/1 | Complete | 2026-03-28 |
-| 8. Resource Explorer UX Overhaul | 8/8 | Complete | 2026-03-28 |
-| 9. Lens-Inspired Power Features | 1/10 | In Progress | - |
-| 10. Lens-Style Live Data | 5/5 | Complete    | 2026-03-29 |
-| 11. Lens-Grade Live Data Redesign | 4/4 | Complete    | 2026-03-29 |
+| 1. Diagnose & Fix Pipeline | 0/2 | Not started | - |
+| 2. Harden & Optimize | 0/2 | Not started | - |
+| 3. Expand Coverage | 0/2 | Not started | - |
+| 4. Cleanup | 0/1 | Not started | - |
