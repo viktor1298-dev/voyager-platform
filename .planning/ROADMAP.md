@@ -59,11 +59,11 @@ Plans:
   3. User switches from Cluster A to Cluster B -- watches for Cluster A stop within 10 seconds, watches for Cluster B start immediately
   4. With 30 clusters in the system, only the actively-viewed cluster(s) have running watches (verified via API health/metrics endpoint)
   5. **Phase gate:** Full functional QA — navigate all 24 cluster tabs one by one, perform human actions (create/delete/scale resources), verify live updates on each tab, test cluster switching
-**Plans:** 2 plans
+**Plans**: TBD
 
 Plans:
-- [ ] 03-01-PLAN.md — Backend: add network-policies + resource-quotas informers, mappers, and watch health endpoint
-- [ ] 03-02-PLAN.md — Frontend: switch 3 tabs (network-policies, resource-quotas, helm) from tRPC to live Zustand store
+- [x] 03-01-PLAN.md -- Add network-policies and resource-quotas to watch pipeline, watch health endpoint, lifecycle verification
+- [ ] 03-02-PLAN.md -- TBD
 
 ### Phase 4: Cleanup
 **Goal**: Dead code removed, database queries fast, build pipeline honest
@@ -88,5 +88,5 @@ Phases 1-3 execute sequentially. Phase 4 is independent and can execute in paral
 |-------|----------------|--------|-----------|
 | 1. Diagnose & Fix Pipeline | 2/2 | Complete    | 2026-03-30 |
 | 2. Harden & Optimize | 0/2 | Not started | - |
-| 3. Expand Coverage | 0/2 | Not started | - |
+| 3. Expand Coverage | 1/2 | In progress | - |
 | 4. Cleanup | 0/1 | Not started | - |

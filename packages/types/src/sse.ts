@@ -128,6 +128,8 @@ export type ResourceType =
   | 'namespaces'
   | 'events'
   | 'nodes'
+  | 'network-policies'
+  | 'resource-quotas'
 
 export type ResourceChangeType = 'added' | 'modified' | 'deleted'
 

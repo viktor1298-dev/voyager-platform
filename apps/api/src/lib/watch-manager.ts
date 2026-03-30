@@ -177,6 +177,18 @@ export const RESOURCE_DEFS: ResourceDef[] = [
     listFn: networkingV1ListFn('listIngressForAllNamespaces'),
     mapper: (obj) => mappers.mapIngress(obj as k8s.V1Ingress),
   },
+  {
+    type: 'network-policies',
+    apiPath: '/apis/networking.k8s.io/v1/networkpolicies',
+    listFn: networkingV1ListFn('listNetworkPolicyForAllNamespaces'),
+    mapper: (obj) => mappers.mapNetworkPolicy(obj as k8s.V1NetworkPolicy),
+  },
+  {
+    type: 'resource-quotas',
+    apiPath: '/api/v1/resourcequotas',
+    listFn: coreV1ListFn('listResourceQuotaForAllNamespaces'),
+    mapper: (obj) => mappers.mapResourceQuota(obj as k8s.V1ResourceQuota),
+  },
 ]
 
 // ── Cluster Watches ───────────────────────────────────────────

@@ -36,6 +36,7 @@ import { registerLogStreamRoute } from './routes/log-stream.js'
 import { registerMetricsStreamRoute } from './routes/metrics-stream.js'
 import { registerPodTerminalRoute } from './routes/pod-terminal.js'
 import { registerResourceStreamRoute } from './routes/resource-stream.js'
+import { registerWatchHealthRoute } from './routes/watch-health.js'
 import { createContext } from './trpc.js'
 
 // Validate CLUSTER_CRED_ENCRYPTION_KEY (64-char hex = 32 bytes AES-256 key)
@@ -249,6 +250,7 @@ await registerMcpRoute(app)
 await registerMetricsStreamRoute(app)
 await registerPodTerminalRoute(app)
 await registerResourceStreamRoute(app)
+await registerWatchHealthRoute(app)
 
 app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
 
