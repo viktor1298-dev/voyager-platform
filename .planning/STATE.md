@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 ## Current Position
 
 Phase: 3
-Plan: Not started
-Status: Phase complete — ready for verification
+Plan: 1 of 2
+Status: Plan 03-01 complete, Plan 03-02 next
 Last activity: 2026-03-30
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P01 | 3min | 2 tasks | 2 files |
 | Phase 01 P02 | 3min | 2 tasks | 4 files |
 | Phase 02 P02 | 3min | 2 tasks | 2 files |
+| Phase 03 P01 | 5min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - [Phase 02]: 10-second heartbeat check interval for 45-second timeout (4+ checks per window)
 - [Phase 02]: 1-second buffer window for event batching (balances latency vs render reduction)
 - [Phase 02]: Native EventSource auto-reconnect disabled: es.close() in onerror, custom backoff reconnect
+- [Phase 03]: NetworkPolicy mapper uses rule._from (K8s TS SDK keyword collision) -- matches existing router pattern
+- [Phase 03]: Watch health endpoint at /api/watches/health added to AUTH_BYPASS_PATHS (monitoring endpoint)
+- [Phase 03]: Subscribe/unsubscribe lifecycle verified correct -- refcount stops informers on 0, clearCluster prevents stale data
 
 ### Pending Todos
 
@@ -84,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T03:00:38.399Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-03-30T18:27:30Z
+Stopped at: Completed 03-01-PLAN.md
 Resume file: None
