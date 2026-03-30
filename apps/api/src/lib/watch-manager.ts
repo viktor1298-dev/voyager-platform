@@ -10,6 +10,7 @@ import {
   WATCH_RECONNECT_BASE_MS,
   WATCH_RECONNECT_MAX_MS,
   WATCH_RECONNECT_JITTER_RATIO,
+  WATCH_HEARTBEAT_TIMEOUT_MS,
 } from '@voyager/config/sse'
 import type { ResourceType, WatchEvent, WatchEventType } from '@voyager/types'
 import { clusterClientPool } from './cluster-client-pool.js'
@@ -204,6 +205,36 @@ function mapK8sEventToWatchType(k8sEvent: 'add' | 'update' | 'delete'): WatchEve
 
 export class WatchManager {
   private clusters = new Map<string, ClusterWatches>()
+  private heartbeatTimers = new Map<string, NodeJS.Timeout>()
+
+  private resetHeartbeat(clusterId: string, type: ResourceType): void {
+    const key = `${clusterId}:${type}`
+    const existing = this.heartbeatTimers.get(key)
+    if (existing) clearTimeout(existing)
+
+    const timer = setTimeout(() => {
+      console.warn(
+        `[WatchManager] Heartbeat timeout for ${type} on ${clusterId}, restarting informer`,
+      )
+      const cluster = this.clusters.get(clusterId)
+      const informer = cluster?.informers.get(type)
+      if (informer) {
+        informer.stop()
+        informer.start().catch((err) => this.handleInformerError(clusterId, type, err))
+      }
+    }, WATCH_HEARTBEAT_TIMEOUT_MS)
+
+    this.heartbeatTimers.set(key, timer)
+  }
+
+  private clearHeartbeat(clusterId: string, type: ResourceType): void {
+    const key = `${clusterId}:${type}`
+    const existing = this.heartbeatTimers.get(key)
+    if (existing) {
+      clearTimeout(existing)
+      this.heartbeatTimers.delete(key)
+    }
+  }
 
   async subscribe(clusterId: string): Promise<void> {
     let cluster = this.clusters.get(clusterId)
@@ -256,6 +287,7 @@ export class WatchManager {
                 object: mapped,
               }
               voyagerEmitter.emitWatchEvent(clusterId, watchEvent)
+              this.resetHeartbeat(clusterId, def.type)
             })
           }
 
@@ -270,6 +302,7 @@ export class WatchManager {
             if (c) {
               c.ready.add(def.type)
               c.reconnectAttempts.set(def.type, 0)
+              this.resetHeartbeat(clusterId, def.type)
             }
           })
 
@@ -323,6 +356,9 @@ export class WatchManager {
         } catch {
           // Ignore stop errors
         }
+      }
+      for (const [type] of cluster.informers) {
+        this.clearHeartbeat(clusterId, type)
       }
       this.clusters.delete(clusterId)
       voyagerEmitter.emitWatchStatus({ clusterId, state: 'disconnected' })
@@ -380,6 +416,10 @@ export class WatchManager {
       voyagerEmitter.emitWatchStatus({ clusterId, state: 'disconnected' })
     }
     this.clusters.clear()
+    for (const timer of this.heartbeatTimers.values()) {
+      clearTimeout(timer)
+    }
+    this.heartbeatTimers.clear()
     console.log('[WatchManager] Stopped all informers for all clusters')
   }
 
