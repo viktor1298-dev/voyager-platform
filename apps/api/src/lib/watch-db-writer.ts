@@ -234,36 +234,43 @@ async function runSync(): Promise<void> {
 export function startWatchDbWriter(): void {
   if (syncInterval) return // Already running
 
-  // Register event listeners for all clusters
-  const onWatchEvent = (clusterId: string) => (event: WatchEvent) => {
-    dirtySet.add(`${clusterId}:${event.resourceType}`)
+  // Auto-subscribe to each watch-event:{clusterId} channel as they're created
+  const onNewListener = (eventName: string | symbol) => {
+    if (typeof eventName !== 'string') return
+    if (!eventName.startsWith('watch-event:')) return
+    const clusterId = eventName.slice('watch-event:'.length)
+    if (listeners.has(clusterId)) return
+
+    const listener = (event: WatchEvent) => {
+      dirtySet.add(`${clusterId}:${event.resourceType}`)
+    }
+    listeners.set(clusterId, listener)
+    voyagerEmitter.on(eventName, listener)
   }
 
-  // Listen for new watch events on any cluster
-  // We use a wildcard-like pattern by listening to the emitter's newListener
-  // and registering per-cluster. But simpler: we register a general listener.
-  const generalListener = (event: WatchEvent) => {
-    // This is called from emitWatchEvent with the clusterId as part of the event channel
-    // We need to extract clusterId from the event channel name
-    // Since emitWatchEvent emits on `watch-event:${clusterId}`, we hook into all active clusters
-    dirtySet.add(`unknown:${event.resourceType}`)
-  }
+  voyagerEmitter.on('newListener', onNewListener)
 
-  // Better approach: listen at the emitter level for all watch-event:* channels
-  // We'll intercept at the emit level using a wrapper
-  const originalEmit = voyagerEmitter.emitWatchEvent.bind(voyagerEmitter)
-  voyagerEmitter.emitWatchEvent = (clusterId: string, event: WatchEvent) => {
-    dirtySet.add(`${clusterId}:${event.resourceType}`)
-    originalEmit(clusterId, event)
+  // Also subscribe to any already-active channels (in case watches started before db-writer)
+  const existingChannels = voyagerEmitter
+    .eventNames()
+    .filter((name): name is string => typeof name === 'string' && name.startsWith('watch-event:'))
+  for (const channel of existingChannels) {
+    const clusterId = channel.slice('watch-event:'.length)
+    if (listeners.has(clusterId)) continue
+    const listener = (event: WatchEvent) => {
+      dirtySet.add(`${clusterId}:${event.resourceType}`)
+    }
+    listeners.set(clusterId, listener)
+    voyagerEmitter.on(channel, listener)
   }
-
-  // Store the original for cleanup
-  listeners.set('__emitWatchEvent', generalListener)
 
   // Start periodic sync
   syncInterval = setInterval(() => {
     runSync().catch((err) => console.error('[watch-db-writer] Periodic sync failed:', err))
   }, WATCH_DB_SYNC_INTERVAL_MS)
+
+  // Store the newListener handler reference for cleanup
+  listeners.set('__newListener', onNewListener as unknown as (event: WatchEvent) => void)
 
   console.log(`[watch-db-writer] Started (sync every ${WATCH_DB_SYNC_INTERVAL_MS / 1000}s)`)
 }
@@ -274,7 +281,17 @@ export function stopWatchDbWriter(): void {
     syncInterval = null
   }
 
-  // Remove all listeners
+  // Remove newListener handler
+  const newListenerHandler = listeners.get('__newListener')
+  if (newListenerHandler) {
+    voyagerEmitter.off('newListener', newListenerHandler as (...args: unknown[]) => void)
+    listeners.delete('__newListener')
+  }
+
+  // Remove all per-cluster listeners
+  for (const [clusterId, listener] of listeners) {
+    voyagerEmitter.off(`watch-event:${clusterId}`, listener)
+  }
   listeners.clear()
 
   console.log('[watch-db-writer] Stopped')
