@@ -202,6 +202,8 @@ interface ClusterWatches {
   reconnectAttempts: Map<ResourceType, number>
   /** Set of resource types whose initial list has completed (informer cache is populated) */
   ready: Set<ResourceType>
+  /** Generation counter — prevents stale error handlers from affecting new subscriptions */
+  generation: number
 }
 
 // ── WatchManager Class ────────────────────────────────────────
@@ -218,18 +220,24 @@ function mapK8sEventToWatchType(k8sEvent: 'add' | 'update' | 'delete'): WatchEve
 export class WatchManager {
   private clusters = new Map<string, ClusterWatches>()
   private heartbeatTimers = new Map<string, NodeJS.Timeout>()
+  private generationCounter = 0
 
   private resetHeartbeat(clusterId: string, type: ResourceType): void {
     const key = `${clusterId}:${type}`
     const existing = this.heartbeatTimers.get(key)
     if (existing) clearTimeout(existing)
 
+    // Capture generation so heartbeat timer doesn't restart informers from a stale subscription
+    const currentCluster = this.clusters.get(clusterId)
+    const generation = currentCluster?.generation ?? 0
+
     const timer = setTimeout(() => {
       console.warn(
         `[WatchManager] Heartbeat timeout for ${type} on ${clusterId}, restarting informer`,
       )
       const cluster = this.clusters.get(clusterId)
-      const informer = cluster?.informers.get(type)
+      if (!cluster || cluster.generation !== generation) return
+      const informer = cluster.informers.get(type)
       if (informer) {
         informer.stop()
         informer.start().catch((err) => this.handleInformerError(clusterId, type, err))
@@ -264,11 +272,13 @@ export class WatchManager {
     }
 
     // First subscriber — create informers
+    const generation = ++this.generationCounter
     cluster = {
       informers: new Map(),
       subscriberCount: 1,
       reconnectAttempts: new Map(),
       ready: new Set(),
+      generation,
     }
     this.clusters.set(clusterId, cluster)
 
@@ -439,6 +449,12 @@ export class WatchManager {
     const cluster = this.clusters.get(clusterId)
     if (!cluster) return
 
+    // Capture generation to detect stale error handlers from previous subscriptions.
+    // When unsubscribe() stops informers, their async error callbacks may fire after
+    // a new subscribe() creates a fresh cluster entry. Without this check, the stale
+    // handler would call start() on the new informers, causing double-start chaos.
+    const generation = cluster.generation
+
     const attempt = (cluster.reconnectAttempts.get(type) ?? 0) + 1
     cluster.reconnectAttempts.set(type, attempt)
     const delay = Math.min(WATCH_RECONNECT_BASE_MS * 2 ** (attempt - 1), WATCH_RECONNECT_MAX_MS)
@@ -456,8 +472,9 @@ export class WatchManager {
     })
 
     setTimeout(() => {
-      if (this.isWatching(clusterId)) {
-        const informer = cluster.informers.get(type)
+      const current = this.clusters.get(clusterId)
+      if (current && current.generation === generation && current.subscriberCount > 0) {
+        const informer = current.informers.get(type)
         informer?.start().catch((startErr) => this.handleInformerError(clusterId, type, startErr))
       }
     }, delay + jitter)
