@@ -322,9 +322,14 @@ export class WatchManager {
           informer.on('connect', () => {
             const c = this.clusters.get(clusterId)
             if (c) {
+              const wasReconnecting = (c.reconnectAttempts.get(def.type) ?? 0) > 0
               c.ready.add(def.type)
               c.reconnectAttempts.set(def.type, 0)
               this.resetHeartbeat(clusterId, def.type)
+              // Re-emit connected when an informer recovers from error
+              if (wasReconnecting) {
+                voyagerEmitter.emitWatchStatus({ clusterId, state: 'connected' })
+              }
             }
           })
 
@@ -426,6 +431,12 @@ export class WatchManager {
   isWatching(clusterId: string): boolean {
     const cluster = this.clusters.get(clusterId)
     return !!cluster && cluster.subscriberCount > 0
+  }
+
+  /** True when the cluster has active informers (watches running and healthy) */
+  isConnected(clusterId: string): boolean {
+    const cluster = this.clusters.get(clusterId)
+    return !!cluster && cluster.informers.size > 0
   }
 
   getActiveClusterIds(): string[] {

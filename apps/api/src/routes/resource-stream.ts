@@ -124,10 +124,16 @@ export async function handleResourceStream(
   // Flush immediately so proxies/EventSource receive headers + initial data
   reply.raw.write(':connected\n\n')
 
-  // 6. Subscribe to unified WatchManager (reference-counted informers)
+  // 6. Register status listener BEFORE subscribe so events during initialization aren't lost
+  const onWatchStatus = (event: WatchStatusEvent): void => {
+    writeEventWithId('status', JSON.stringify(event))
+  }
+  voyagerEmitter.on(`watch-status:${clusterId}`, onWatchStatus)
+
+  // 7. Subscribe to unified WatchManager (reference-counted informers)
   await watchManager.subscribe(clusterId)
 
-  // 7. Check Last-Event-ID for reconnect replay (CONN-01)
+  // 8. Check Last-Event-ID for reconnect replay (CONN-01)
   const lastEventIdHeader = request.headers['last-event-id']
   const lastEventId = lastEventIdHeader ? Number(lastEventIdHeader) : NaN
   let replayed = false
@@ -158,7 +164,7 @@ export async function handleResourceStream(
     }
   }
 
-  // 8. Listen on watch-event:<clusterId> — immediate write (no batching)
+  // 9. Listen on watch-event:<clusterId> — immediate write (no batching)
   const onWatchEvent = (event: WatchEvent): void => {
     const payload: WatchEventBatch = {
       clusterId,
@@ -169,13 +175,14 @@ export async function handleResourceStream(
   }
   voyagerEmitter.on(`watch-event:${clusterId}`, onWatchEvent)
 
-  // 9. Listen on watch-status:<clusterId> — write immediately
-  const onWatchStatus = (event: WatchStatusEvent): void => {
-    writeEventWithId('status', JSON.stringify(event))
+  // 10. Send explicit connected status for already-subscribed clusters (reconnect case)
+  // When this is a reconnect, subscribe() just increments the counter without emitting
+  // any status event — the client needs to know the cluster is connected.
+  if (watchManager.isConnected(clusterId)) {
+    writeEventWithId('status', JSON.stringify({ clusterId, state: 'connected' }))
   }
-  voyagerEmitter.on(`watch-status:${clusterId}`, onWatchStatus)
 
-  // 10. Heartbeat keepalive (named event so client JavaScript can listen)
+  // 12. Heartbeat keepalive (named event so client JavaScript can listen)
   const heartbeat = setInterval(() => {
     try {
       reply.raw.write('event: heartbeat\ndata: \n\n')
@@ -184,7 +191,7 @@ export async function handleResourceStream(
     }
   }, SSE_HEARTBEAT_INTERVAL_MS)
 
-  // 11. Cleanup on disconnect
+  // 13. Cleanup on disconnect
   request.raw.on('close', () => {
     clearInterval(heartbeat)
     voyagerEmitter.off(`watch-event:${clusterId}`, onWatchEvent)
