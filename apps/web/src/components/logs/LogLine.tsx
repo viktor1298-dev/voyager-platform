@@ -15,6 +15,7 @@ interface LogLineProps {
   lineNumber: number
   searchQuery?: string
   wordWrap: boolean
+  beautify?: boolean
 }
 
 const LOG_LEVEL_STYLES: Record<
@@ -43,13 +44,21 @@ const LOG_LEVEL_STYLES: Record<
   },
 }
 
-export function LogLine({ line, lineNumber, searchQuery, wordWrap }: LogLineProps) {
+export function LogLine({
+  line,
+  lineNumber,
+  searchQuery,
+  wordWrap,
+  beautify = true,
+}: LogLineProps) {
   const parsed = useMemo(() => {
+    if (!beautify)
+      return { timestamp: null, content: line, level: null as LogLevel, jsonDetected: false }
     const { timestamp, content } = extractTimestamp(line)
     const level = detectLogLevel(content)
     const jsonDetected = isJsonLine(content)
     return { timestamp, content, level, jsonDetected }
-  }, [line])
+  }, [line, beautify])
 
   const levelStyle = parsed.level ? LOG_LEVEL_STYLES[parsed.level] : null
 
@@ -75,7 +84,7 @@ export function LogLine({ line, lineNumber, searchQuery, wordWrap }: LogLineProp
       </span>
 
       {/* Timestamp */}
-      {parsed.timestamp && (
+      {beautify && parsed.timestamp && (
         <span
           className="shrink-0 pr-2"
           style={{ color: 'var(--color-log-timestamp)' }}
@@ -86,7 +95,7 @@ export function LogLine({ line, lineNumber, searchQuery, wordWrap }: LogLineProp
       )}
 
       {/* Level badge */}
-      {levelStyle && (
+      {beautify && levelStyle && (
         <span
           className="shrink-0 inline-flex items-center justify-center rounded px-1.5 mr-2 text-[10px] font-semibold leading-4"
           style={{
@@ -100,7 +109,7 @@ export function LogLine({ line, lineNumber, searchQuery, wordWrap }: LogLineProp
 
       {/* Content */}
       <span className="flex-1 min-w-0" style={{ color: 'var(--color-log-text)' }}>
-        {parsed.jsonDetected ? (
+        {beautify && parsed.jsonDetected ? (
           <JsonRenderer json={parsed.content} searchQuery={searchQuery} />
         ) : (
           highlightText(parsed.content, searchQuery)

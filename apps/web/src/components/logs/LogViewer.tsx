@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowDown, WrapText } from 'lucide-react'
+import { ArrowDown, Sparkles, WrapText } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -38,6 +38,7 @@ export function LogViewer({
 }: LogViewerProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [wordWrap, setWordWrap] = useState(true)
+  const [beautify, setBeautify] = useState(true)
   const [isFollowing, setIsFollowing] = useState(false)
   const [sseLines, setSseLines] = useState<string[]>([])
   const [connectionState, setConnectionState] = useState<SSEConnectionState>('disconnected')
@@ -294,6 +295,20 @@ export function LogViewer({
 
           <button
             type="button"
+            onClick={() => setBeautify((b) => !b)}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border transition-colors ${
+              beautify
+                ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30 text-[var(--color-accent)]'
+                : 'bg-[var(--color-bg-card)] border-[var(--color-border)] text-[var(--color-text-dim)]'
+            }`}
+            aria-label={beautify ? 'Disable log beautifier' : 'Enable log beautifier'}
+            title={beautify ? 'Beautifier on' : 'Beautifier off'}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Beautify</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setWordWrap((w) => !w)}
             className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border transition-colors ${
               wordWrap
@@ -332,6 +347,7 @@ export function LogViewer({
                 lineNumber={i + 1}
                 searchQuery={searchQuery}
                 wordWrap={wordWrap}
+                beautify={beautify}
               />
             ))}
             <div ref={bottomRef} />
