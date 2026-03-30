@@ -77,7 +77,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 04-01: TBD
+- [x] 04-01-PLAN.md -- Dead code removal (~1312 lines), DB indexes on 5 tables, remove ignoreBuildErrors
 
 ## Progress
 
@@ -89,4 +89,4 @@ Phases 1-3 execute sequentially. Phase 4 is independent and can execute in paral
 | 1. Diagnose & Fix Pipeline | 2/2 | Complete    | 2026-03-30 |
 | 2. Harden & Optimize | 0/2 | Not started | - |
 | 3. Expand Coverage | 1/2 | In progress | - |
-| 4. Cleanup | 0/1 | Not started | - |
+| 4. Cleanup | 1/1 | Complete | 2026-03-30 |
