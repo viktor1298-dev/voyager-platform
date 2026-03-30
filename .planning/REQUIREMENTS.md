@@ -8,7 +8,7 @@
 ### Core Pipeline Fix
 
 - [x] **PIPE-01**: SSE stream delivers continuous events without stopping (diagnose and fix root cause — informer silent death, TQ polling conflict, or connection drop)
-- [ ] **PIPE-02**: TanStack Query polling disabled for all SSE-fed resource types (no stale overwrites of live data)
+- [x] **PIPE-02**: TanStack Query polling disabled for all SSE-fed resource types (no stale overwrites of live data)
 - [x] **PIPE-03**: K8s informer lifecycle robust — auto-recreate on silent death (not just restart), handle non-410 errors
 - [x] **PIPE-04**: `watch-db-writer` monkeypatch on emitWatchEvent verified safe (no silent event loss to SSE consumers)
 
@@ -59,7 +59,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | PIPE-01 | Phase 1 | Complete |
-| PIPE-02 | Phase 1 | Pending |
+| PIPE-02 | Phase 1 | Complete |
 | PIPE-03 | Phase 1 | Complete |
 | PIPE-04 | Phase 1 | Complete |
 | CONN-01 | Phase 2 | Pending |

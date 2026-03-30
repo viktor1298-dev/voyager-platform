@@ -31,7 +31,7 @@ Fix the broken SSE pipeline so K8s resource updates flow continuously from clust
 
 Plans:
 - [x] 01-01-PLAN.md — Fix backend pipeline (heartbeat timeout + watch-db-writer refactor)
-- [ ] 01-02-PLAN.md — Fix frontend polling conflicts + E2E live data test
+- [x] 01-02-PLAN.md — Fix frontend polling conflicts + E2E live data test
 
 ### Phase 2: Harden & Optimize
 **Goal**: SSE connections are resilient to network drops and server restarts, and the UI handles burst events (rolling updates) without jank
