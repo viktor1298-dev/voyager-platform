@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Box, CircleCheck, Cpu, HardDrive, MapPin, Server, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
@@ -227,9 +228,35 @@ export default function NodesPage() {
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
 
-  const nodes = useClusterResources<LiveNode>(resolvedId, 'nodes')
+  const sseNodes = useClusterResources<LiveNode>(resolvedId, 'nodes')
   const connectionState = useConnectionState(resolvedId)
   const snapshotsReady = useSnapshotsReady(resolvedId)
+
+  // Fetch node metrics via tRPC (Metrics API is not watchable, SSE has no usage data)
+  const nodesWithMetrics = trpc.nodes.listLive.useQuery(
+    { clusterId: resolvedId },
+    { refetchInterval: 15_000, staleTime: 10_000 },
+  )
+
+  // Enrich SSE nodes with metrics from tRPC
+  const nodes = useMemo(() => {
+    if (!nodesWithMetrics.data) return sseNodes
+    const metricsMap = new Map<string, LiveNode>()
+    for (const n of nodesWithMetrics.data as LiveNode[]) {
+      metricsMap.set(n.name, n)
+    }
+    return sseNodes.map((node) => {
+      const withMetrics = metricsMap.get(node.name)
+      if (!withMetrics) return node
+      return {
+        ...node,
+        cpuUsageMillis: withMetrics.cpuUsageMillis,
+        memUsageMi: withMetrics.memUsageMi,
+        cpuPercent: withMetrics.cpuPercent,
+        memPercent: withMetrics.memPercent,
+      }
+    })
+  }, [sseNodes, nodesWithMetrics.data])
 
   const isLoading = nodes.length === 0 && !snapshotsReady
   const isEmpty = nodes.length === 0
