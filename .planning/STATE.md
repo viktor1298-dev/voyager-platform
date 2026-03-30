@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-30T18:42:17.406Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-03-30T18:58:14Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 4
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 ## Current Position
 
 Phase: 4
-Plan: Not started
-Status: Ready to execute
+Plan: 2 of 2 complete
+Status: Plan 04-02 complete
 Last activity: 2026-03-30
 
 Progress: [█████░░░░░] 50%
@@ -57,6 +57,7 @@ Progress: [█████░░░░░] 50%
 | Phase 02 P02 | 3min | 2 tasks | 2 files |
 | Phase 03 P01 | 5min | 2 tasks | 6 files |
 | Phase 03-expand-coverage P02 | 5min | 2 tasks | 7 files |
+| Phase 04-cleanup P02 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Subscribe/unsubscribe lifecycle verified correct -- refcount stops informers on 0, clearCluster prevents stale data
 - [Phase 03-expand-coverage]: Kept ResourcePageScaffold for Helm page with synthetic queryResult instead of direct rendering
 - [Phase 03-expand-coverage]: Helm list view shows name/status/revision from labels; chart details in detail view via tRPC decode
+- [Phase 04-cleanup]: Standard B-tree indexes for all 8 new DB indexes -- correct for equality/range queries on UUID/timestamp columns
+- [Phase 04-cleanup]: Drizzle index() omits DESC (unsupported) -- init.sql handles actual sort order at DB level
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T18:36:14.446Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-03-30T18:58:14Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None

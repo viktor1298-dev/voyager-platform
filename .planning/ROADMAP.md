@@ -78,7 +78,7 @@ Plans:
 
 Plans:
 - [ ] 04-01-PLAN.md — Remove dead code (~1100 lines) and enforce honest build (ignoreBuildErrors removal)
-- [ ] 04-02-PLAN.md — Add 8 missing database indexes on 5 tables
+- [x] 04-02-PLAN.md — Add 8 missing database indexes on 5 tables
 
 ## Progress
 
@@ -90,4 +90,4 @@ Phases 1-3 execute sequentially. Phase 4 is independent and can execute in paral
 | 1. Diagnose & Fix Pipeline | 2/2 | Complete    | 2026-03-30 |
 | 2. Harden & Optimize | 0/2 | Not started | - |
 | 3. Expand Coverage | 1/2 | In progress | - |
-| 4. Cleanup | 0/2 | Not started | - |
+| 4. Cleanup | 1/2 | In progress | - |

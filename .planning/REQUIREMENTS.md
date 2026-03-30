@@ -32,7 +32,7 @@
 ### Cleanup
 
 - [ ] **CLEAN-01**: Remove dead code — legacy watchers (cluster-watch-manager, resource-watch-manager, cluster-connection-state), unused subscriptions router, dead emitter methods (~900 lines)
-- [ ] **CLEAN-02**: Add missing DB indexes on events, nodes, audit_log, alert_history, health_history tables
+- [x] **CLEAN-02**: Add missing DB indexes on events, nodes, audit_log, alert_history, health_history tables
 - [ ] **CLEAN-03**: Remove `ignoreBuildErrors: true` from Next.js config and fix any build errors it was hiding
 
 ## v2 Requirements
@@ -71,7 +71,7 @@
 | COVER-02 | Phase 3 | Pending |
 | COVER-03 | Phase 3 | Complete |
 | CLEAN-01 | Phase 4 | Pending |
-| CLEAN-02 | Phase 4 | Pending |
+| CLEAN-02 | Phase 4 | Complete |
 | CLEAN-03 | Phase 4 | Pending |
 
 **Coverage:**
