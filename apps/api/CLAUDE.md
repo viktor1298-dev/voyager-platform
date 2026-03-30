@@ -18,15 +18,13 @@ pnpm seed:admin       # seed admin user
 src/
 ├── server.ts              # Entry point (DO NOT add migrate() here — Iron Rule #1)
 ├── trpc.ts                # Context, procedure definitions (public/protected/admin/authorized)
-├── routers/               # 45 tRPC routers (index.ts = registry)
+├── routers/               # 43 tRPC routers (index.ts = registry)
 ├── routes/                # Non-tRPC: ai-stream (SSE), mcp, metrics-stream (SSE), log-stream (SSE), pod-terminal (WebSocket), resource-stream (SSE)
 ├── jobs/                  # Background: health-sync, alert-evaluator, metrics-history-collector, node-sync, event-sync, deploy-smoke-test, metrics-stream-job
 ├── config/                # Backend-only config (jobs.ts intervals, k8s.ts client pool)
 ├── services/              # Business logic (AI, anomaly detection)
 └── lib/                   # Core modules (no deps on routers/services)
     ├── cluster-client-pool.ts   # Lazy per-cluster K8s clients (AWS/Azure/GKE)
-    ├── cluster-watch-manager.ts # K8s informers for pods/deployments/nodes → voyagerEmitter
-    ├── resource-watch-manager.ts # K8s informers for 12 additional resource types; Redis cache invalidation
     ├── event-emitter.ts         # Decouples watchers from SSE consumers
     ├── auth.ts                  # Better-Auth handler (/api/auth/*)
     ├── authorization.ts         # DB-backed RBAC

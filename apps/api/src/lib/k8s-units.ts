@@ -1,4 +1,4 @@
-/** Shared K8s unit parsers — used by metrics router and cluster-watch-manager */
+/** Shared K8s unit parsers — used by metrics router and watch-manager */
 
 export function parseCpuToNano(cpu: string): number {
   if (cpu.endsWith('n')) return Number.parseInt(cpu, 10)

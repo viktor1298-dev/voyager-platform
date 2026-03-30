@@ -23,7 +23,6 @@ import { shouldRequireAuth, UNAUTHORIZED_RESPONSE } from './lib/auth-guard.js'
 import { resolveExternalRequestUrl } from './lib/auth-request.js'
 import { ensureAdminUser } from './lib/ensure-admin-user.js'
 import { ensureViewerUser } from './lib/ensure-viewer-user.js'
-import { stopAllWatchers } from './lib/k8s-watchers.js'
 import { watchManager } from './lib/watch-manager.js'
 import { startWatchDbWriter, stopWatchDbWriter } from './lib/watch-db-writer.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
@@ -307,7 +306,6 @@ const start = async () => {
         stopMetricsHistoryCollector()
         metricsStreamJob.stopAll()
         if (k8sEnabled) {
-          stopAllWatchers()
           stopDeploySmokeTest()
         }
         await flushSentry()
