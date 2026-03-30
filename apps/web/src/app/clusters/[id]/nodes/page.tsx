@@ -51,7 +51,7 @@ interface LiveNode {
 // Node detail expanded content
 // ---------------------------------------------------------------------------
 
-function NodeDetail({ node }: { node: LiveNode }) {
+function NodeDetail({ node, podCount }: { node: LiveNode; podCount: number }) {
   const tabs = [
     {
       id: 'resources',
@@ -73,15 +73,7 @@ function NodeDetail({ node }: { node: LiveNode }) {
             total={node.memAllocatableMi}
             unit="Mi"
           />
-          <ResourceBar label="Pods" used={0} total={node.podsAllocatable} />
-          {node.ephStorageAllocatableGi > 0 && (
-            <ResourceBar
-              label="Ephemeral Storage"
-              used={0}
-              total={node.ephStorageAllocatableGi}
-              unit="Gi"
-            />
-          )}
+          <ResourceBar label="Pods" used={podCount} total={node.podsAllocatable} />
           <div className="pt-2 border-t border-[var(--color-border)]/30">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
               Capacity vs Allocatable
@@ -95,6 +87,18 @@ function NodeDetail({ node }: { node: LiveNode }) {
               <div className="text-[var(--color-text-primary)]">{node.memCapacityMi} Mi</div>
               <div className="text-[var(--color-text-muted)]">Mem Allocatable</div>
               <div className="text-[var(--color-text-primary)]">{node.memAllocatableMi} Mi</div>
+              {node.ephStorageAllocatableGi > 0 && (
+                <>
+                  <div className="text-[var(--color-text-muted)]">Eph Storage Capacity</div>
+                  <div className="text-[var(--color-text-primary)]">
+                    {node.ephStorageCapacityGi} Gi
+                  </div>
+                  <div className="text-[var(--color-text-muted)]">Eph Storage Allocatable</div>
+                  <div className="text-[var(--color-text-primary)]">
+                    {node.ephStorageAllocatableGi} Gi
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -258,6 +262,18 @@ export default function NodesPage() {
     })
   }, [sseNodes, nodesWithMetrics.data])
 
+  // Count pods per node from SSE pod data
+  const pods = useClusterResources<{ nodeName: string | null }>(resolvedId, 'pods')
+  const podCountByNode = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const pod of pods) {
+      if (pod.nodeName) {
+        counts.set(pod.nodeName, (counts.get(pod.nodeName) ?? 0) + 1)
+      }
+    }
+    return counts
+  }, [pods])
+
   const isLoading = nodes.length === 0 && !snapshotsReady
   const isEmpty = nodes.length === 0
   const isOffline = connectionState === 'disconnected' && isEmpty
@@ -347,7 +363,7 @@ export default function NodesPage() {
                       </td>
                     </>
                   }
-                  detail={<NodeDetail node={node} />}
+                  detail={<NodeDetail node={node} podCount={podCountByNode.get(node.name) ?? 0} />}
                 />
               ))}
             </tbody>
