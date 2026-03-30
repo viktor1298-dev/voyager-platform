@@ -10,7 +10,7 @@ Fix the broken SSE pipeline so K8s resource updates flow continuously from clust
 - Integer phases (1, 2, 3, 4): Planned milestone work
 - Decimal phases (e.g., 2.1): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Diagnose & Fix Pipeline** - Find and fix root cause of SSE stopping after first event; eliminate TQ polling conflict
+- [x] **Phase 1: Diagnose & Fix Pipeline** - Find and fix root cause of SSE stopping after first event; eliminate TQ polling conflict (completed 2026-03-30)
 - [ ] **Phase 2: Harden & Optimize** - Add reconnection reliability (event IDs, heartbeat, backoff) and client-side event batching for burst performance
 - [ ] **Phase 3: Expand Coverage** - Extend live watching to all 24 cluster tab types with per-cluster on-demand lifecycle
 - [ ] **Phase 4: Cleanup** - Remove dead code, add missing DB indexes, fix ignoreBuildErrors
@@ -27,7 +27,7 @@ Fix the broken SSE pipeline so K8s resource updates flow continuously from clust
   3. No TanStack Query polling requests appear in the browser network tab for resource types that are SSE-fed (pods, deployments, services, etc.)
   4. After leaving a cluster view open for 10+ minutes, events continue arriving (no silent informer death)
   5. **Phase gate:** Full functional QA — navigate every cluster tab, perform actions (delete pod, scale deployment), verify live data updates on each tab via screenshot + console check
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 01-01-PLAN.md — Fix backend pipeline (heartbeat timeout + watch-db-writer refactor)
@@ -43,11 +43,11 @@ Plans:
   3. User triggers a rolling update (50+ events in 5 seconds) and the UI updates smoothly without frame drops or input lag
   4. If an informer silently stops emitting events, the system detects and recovers within 30 seconds (heartbeat timeout)
   5. **Phase gate:** Full functional QA — navigate every cluster tab, trigger reconnect scenarios, verify no empty state flashes, test burst events via rolling update
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md — Server-side event IDs, ring buffer replay, and named heartbeat event
+- [ ] 02-02-PLAN.md — Client-side reconnect with backoff, heartbeat monitor, and event buffer
 
 ### Phase 3: Expand Coverage
 **Goal**: All 24 cluster tab resource types show live data, and watches are scoped to only the cluster the user is viewing
@@ -86,7 +86,7 @@ Phases 1-3 execute sequentially. Phase 4 is independent and can execute in paral
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Diagnose & Fix Pipeline | 0/2 | Not started | - |
+| 1. Diagnose & Fix Pipeline | 2/2 | Complete    | 2026-03-30 |
 | 2. Harden & Optimize | 0/2 | Not started | - |
 | 3. Expand Coverage | 0/2 | Not started | - |
 | 4. Cleanup | 0/1 | Not started | - |
