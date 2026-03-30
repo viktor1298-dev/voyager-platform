@@ -63,7 +63,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md -- Add network-policies and resource-quotas to watch pipeline, watch health endpoint, lifecycle verification
-- [ ] 03-02-PLAN.md -- TBD
+- [x] 03-02-PLAN.md -- TBD
 
 ### Phase 4: Cleanup
 **Goal**: Dead code removed, database queries fast, build pipeline honest

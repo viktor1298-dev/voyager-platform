@@ -25,9 +25,9 @@
 
 ### Coverage Expansion
 
-- [ ] **COVER-01**: All 15 currently-watched types update in browser via live SSE without polling or page refresh
+- [x] **COVER-01**: All 15 currently-watched types update in browser via live SSE without polling or page refresh
 - [ ] **COVER-02**: Per-cluster on-demand watching — start watches when user opens a cluster, stop when they leave (30-cluster scale)
-- [ ] **COVER-03**: Expand to all 24 cluster tab types — add network policies, resource quotas to informers; derive Helm from watched secrets; derive topology from pods/services/deployments; handle CRDs and RBAC
+- [x] **COVER-03**: Expand to all 24 cluster tab types — add network policies, resource quotas to informers; derive Helm from watched secrets; derive topology from pods/services/deployments; handle CRDs and RBAC
 
 ### Cleanup
 
@@ -67,9 +67,9 @@
 | CONN-03 | Phase 2 | Complete |
 | PERF-01 | Phase 2 | Complete |
 | PERF-02 | Phase 2 | Complete |
-| COVER-01 | Phase 3 | Pending |
+| COVER-01 | Phase 3 | Complete |
 | COVER-02 | Phase 3 | Pending |
-| COVER-03 | Phase 3 | Pending |
+| COVER-03 | Phase 3 | Complete |
 | CLEAN-01 | Phase 4 | Pending |
 | CLEAN-02 | Phase 4 | Pending |
 | CLEAN-03 | Phase 4 | Pending |
