@@ -93,8 +93,8 @@ export function ResourcePageScaffold<T>({
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]))
   }, [filteredItems, getNamespace, flatList, title])
 
-  // Loading state
-  if (queryResult.isLoading) {
+  // Loading state — show skeleton when explicitly loading OR when data hasn't arrived yet
+  if (queryResult.isLoading || queryResult.data === undefined) {
     return <ResourceLoadingSkeleton />
   }
 

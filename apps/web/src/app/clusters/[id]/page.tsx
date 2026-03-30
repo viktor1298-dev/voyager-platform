@@ -291,6 +291,10 @@ export default function ClusterOverviewPage() {
     return { dot: 'bg-[var(--color-status-error)]', label: 'Disconnected' }
   }, [lastConnectedAtRaw])
 
+  const runningPodCount = useMemo(() => {
+    return livePods.filter((p) => (p as Record<string, unknown>)['status'] === 'Running').length
+  }, [livePods])
+
   const error = dbCluster.error
   if (!isLoading && error) {
     return <QueryError message={error.message} onRetry={() => dbCluster.refetch()} />
@@ -299,10 +303,6 @@ export default function ClusterOverviewPage() {
   if (isLoading) {
     return <LoadingState message="Loading cluster details..." />
   }
-
-  const runningPodCount = useMemo(() => {
-    return livePods.filter((p) => (p as Record<string, unknown>)['status'] === 'Running').length
-  }, [livePods])
 
   const cluster = effectiveIsLive
     ? {
