@@ -73,3 +73,6 @@ export const WATCH_DB_SYNC_INTERVAL_MS = 60_000
 
 /** Timeout for watch heartbeat — if no data in this window, reconnect (ms) */
 export const WATCH_HEARTBEAT_TIMEOUT_MS = 90_000
+
+/** Client-side heartbeat timeout -- if no SSE data received in this window, reconnect (ms). 1.5x server heartbeat interval. */
+export const SSE_CLIENT_HEARTBEAT_TIMEOUT_MS = 45_000
