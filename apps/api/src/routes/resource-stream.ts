@@ -12,6 +12,7 @@
 import {
   MAX_RESOURCE_CONNECTIONS_GLOBAL,
   MAX_RESOURCE_CONNECTIONS_PER_CLUSTER,
+  SSE_EVENT_BUFFER_SIZE,
   SSE_HEARTBEAT_INTERVAL_MS,
 } from '@voyager/config/sse'
 import { clusters, db } from '@voyager/db'
@@ -89,6 +90,22 @@ export async function handleResourceStream(
     return
   }
 
+  // Per-connection event ID counter and replay buffer (CONN-01)
+  let eventCounter = 0
+  const replayBuffer: Array<{ id: number; raw: string }> = []
+
+  function writeEventWithId(eventType: string, data: string): void {
+    eventCounter++
+    const raw = `event: ${eventType}\nid: ${eventCounter}\ndata: ${data}\n\n`
+    replayBuffer.push({ id: eventCounter, raw })
+    if (replayBuffer.length > SSE_EVENT_BUFFER_SIZE) replayBuffer.shift()
+    try {
+      reply.raw.write(raw)
+    } catch {
+      /* connection closed */
+    }
+  }
+
   // 5. Start SSE stream
   // CORS headers must be set manually because reply.raw.writeHead() bypasses
   // Fastify's onSend hook where @fastify/cors normally adds them.
@@ -110,17 +127,33 @@ export async function handleResourceStream(
   // 6. Subscribe to unified WatchManager (reference-counted informers)
   await watchManager.subscribe(clusterId)
 
-  // 7. Send snapshot — current informer state for each resource type
-  for (const def of RESOURCE_DEFS) {
-    const resources = watchManager.getResources(clusterId, def.type)
-    if (resources && resources.length > 0) {
-      const mapped = resources.map((obj) => def.mapper(obj, clusterId))
-      try {
-        reply.raw.write(
-          `event: snapshot\ndata: ${JSON.stringify({ resourceType: def.type, items: mapped })}\n\n`,
-        )
-      } catch {
-        /* connection closed */
+  // 7. Check Last-Event-ID for reconnect replay (CONN-01)
+  const lastEventIdHeader = request.headers['last-event-id']
+  const lastEventId = lastEventIdHeader ? Number(lastEventIdHeader) : NaN
+  let replayed = false
+
+  if (!Number.isNaN(lastEventId) && lastEventId > 0) {
+    const startIdx = replayBuffer.findIndex((e) => e.id > lastEventId)
+    if (startIdx >= 0) {
+      // Replay missed events — no snapshot needed
+      for (let i = startIdx; i < replayBuffer.length; i++) {
+        try {
+          reply.raw.write(replayBuffer[i].raw)
+        } catch {
+          return
+        }
+      }
+      replayed = true
+    }
+  }
+
+  if (!replayed) {
+    // Send full snapshot — either first connect or buffer overflow
+    for (const def of RESOURCE_DEFS) {
+      const resources = watchManager.getResources(clusterId, def.type)
+      if (resources && resources.length > 0) {
+        const mapped = resources.map((obj) => def.mapper(obj, clusterId))
+        writeEventWithId('snapshot', JSON.stringify({ resourceType: def.type, items: mapped }))
       }
     }
   }
@@ -132,28 +165,20 @@ export async function handleResourceStream(
       events: [event],
       timestamp: new Date().toISOString(),
     }
-    try {
-      reply.raw.write(`event: watch\ndata: ${JSON.stringify(payload)}\n\n`)
-    } catch {
-      /* connection closed */
-    }
+    writeEventWithId('watch', JSON.stringify(payload))
   }
   voyagerEmitter.on(`watch-event:${clusterId}`, onWatchEvent)
 
   // 9. Listen on watch-status:<clusterId> — write immediately
   const onWatchStatus = (event: WatchStatusEvent): void => {
-    try {
-      reply.raw.write(`event: status\ndata: ${JSON.stringify(event)}\n\n`)
-    } catch {
-      // Connection may be closed
-    }
+    writeEventWithId('status', JSON.stringify(event))
   }
   voyagerEmitter.on(`watch-status:${clusterId}`, onWatchStatus)
 
-  // 10. Heartbeat keepalive
+  // 10. Heartbeat keepalive (named event so client JavaScript can listen)
   const heartbeat = setInterval(() => {
     try {
-      reply.raw.write(':heartbeat\n\n')
+      reply.raw.write('event: heartbeat\ndata: \n\n')
     } catch {
       // Connection may be closed
     }
