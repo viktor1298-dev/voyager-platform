@@ -47,7 +47,7 @@ Plans:
 
 Plans:
 - [ ] 02-01-PLAN.md — Server-side event IDs, ring buffer replay, and named heartbeat event
-- [ ] 02-02-PLAN.md — Client-side reconnect with backoff, heartbeat monitor, and event buffer
+- [x] 02-02-PLAN.md — Client-side reconnect with backoff, heartbeat monitor, and event buffer
 
 ### Phase 3: Expand Coverage
 **Goal**: All 24 cluster tab resource types show live data, and watches are scoped to only the cluster the user is viewing

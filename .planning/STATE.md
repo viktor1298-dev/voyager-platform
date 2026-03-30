@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-03-30T00:56:15.907Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-30T03:00:38.401Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
   percent: 0
 ---
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01 P01 | 3min | 2 tasks | 2 files |
 | Phase 01 P02 | 3min | 2 tasks | 4 files |
+| Phase 02 P02 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,9 @@ Recent decisions affecting current work:
 - [Phase 01]: EventEmitter newListener pattern for auto-discovery of watch-event channels -- replaces fragile monkeypatch
 - [Phase 01]: Extracted wireHandlers() in useResourceSSE to DRY EventSource setup between init and visibility-change reconnect
 - [Phase 01]: RelatedPodsList switched from tRPC polling to Zustand store (useClusterResources) -- SSE-fed data only
+- [Phase 02]: 10-second heartbeat check interval for 45-second timeout (4+ checks per window)
+- [Phase 02]: 1-second buffer window for event batching (balances latency vs render reduction)
+- [Phase 02]: Native EventSource auto-reconnect disabled: es.close() in onerror, custom backoff reconnect
 
 ### Pending Todos
 
@@ -80,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T00:56:15.905Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-03-30T03:00:38.399Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None

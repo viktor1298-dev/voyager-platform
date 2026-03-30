@@ -15,13 +15,13 @@
 ### Reconnection & Reliability
 
 - [ ] **CONN-01**: SSE event IDs for no-data-loss reconnection (Last-Event-ID replay)
-- [ ] **CONN-02**: Informer heartbeat timeout — detect and recover from silent disconnects within 30s
-- [ ] **CONN-03**: SSE auto-reconnect with exponential backoff, no visible flash of empty state during reconnect
+- [x] **CONN-02**: Informer heartbeat timeout — detect and recover from silent disconnects within 30s
+- [x] **CONN-03**: SSE auto-reconnect with exponential backoff, no visible flash of empty state during reconnect
 
 ### Performance
 
-- [ ] **PERF-01**: Client-side 1-second event buffer (Rancher pattern) to batch UI updates during burst events (rolling update = 50+ events in 5s)
-- [ ] **PERF-02**: Zustand bulk state updates — batch multiple events into single render cycle
+- [x] **PERF-01**: Client-side 1-second event buffer (Rancher pattern) to batch UI updates during burst events (rolling update = 50+ events in 5s)
+- [x] **PERF-02**: Zustand bulk state updates — batch multiple events into single render cycle
 
 ### Coverage Expansion
 
@@ -63,10 +63,10 @@
 | PIPE-03 | Phase 1 | Complete |
 | PIPE-04 | Phase 1 | Complete |
 | CONN-01 | Phase 2 | Pending |
-| CONN-02 | Phase 2 | Pending |
-| CONN-03 | Phase 2 | Pending |
-| PERF-01 | Phase 2 | Pending |
-| PERF-02 | Phase 2 | Pending |
+| CONN-02 | Phase 2 | Complete |
+| CONN-03 | Phase 2 | Complete |
+| PERF-01 | Phase 2 | Complete |
+| PERF-02 | Phase 2 | Complete |
 | COVER-01 | Phase 3 | Pending |
 | COVER-02 | Phase 3 | Pending |
 | COVER-03 | Phase 3 | Pending |
