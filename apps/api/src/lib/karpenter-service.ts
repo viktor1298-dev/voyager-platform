@@ -238,7 +238,14 @@ export class KarpenterService {
         },
         replicas: typeof spec.replicas === 'number' ? spec.replicas : null,
         status: {
-          nodes: typeof status.nodes === 'number' ? status.nodes : 0,
+          nodes:
+            typeof status.nodes === 'number'
+              ? status.nodes
+              : typeof resources.nodes === 'string'
+                ? Number.parseInt(resources.nodes, 10) || 0
+                : typeof resources.nodes === 'number'
+                  ? resources.nodes
+                  : 0,
           conditions: mapConditions(status.conditions),
           resources: Object.fromEntries(
             Object.entries(resources).map(([key, value]) => [key, String(value)]),
