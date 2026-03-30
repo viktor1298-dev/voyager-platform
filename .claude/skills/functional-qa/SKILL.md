@@ -146,36 +146,77 @@ Action:  Run kubectl delete pod <pod-name> -n <namespace> --wait=false
 Record:  Exact timestamp of delete command
 ```
 
-### Step 3: Watch for UI Update (DO NOT REFRESH)
+### Step 3: Take 4 Sequential Screenshots (DO NOT REFRESH)
+
+**Why 4 screenshots:** A single snapshot only proves "the first event arrived." The real bug is
+data that updates ONCE then freezes — the pod shows "3s ago" forever instead of progressing to
+"6s", "9s", "12s". Four screenshots at 3-second intervals prove CONTINUOUS live data, not just
+a one-time update. This is the #1 reason QA has historically given false PASSes.
 
 ```
-Action:  Wait 3 seconds (browser_wait_for time=3)
-Action:  Take a NEW snapshot (browser_snapshot)
-Check:   Look for ONE of these changes in the snapshot:
-         - New pod name appeared (replacement pod with different hash)
-         - Pod status changed to "Terminating" or "Pending"
-         - Pod count changed
-         - Old pod disappeared from the list
-Action:  If no change after 3s, wait 5 more seconds and check again
-Action:  If no change after 8s total, this is a FAILURE
+Action:  Wait 3 seconds
+Action:  SCREENSHOT 1 (at T+3s): browser_snapshot → save to file
+Record:  For the deleted/replacement pod, capture: name, status, age, ready count
+
+Action:  Wait 3 seconds
+Action:  SCREENSHOT 2 (at T+6s): browser_snapshot → save to file
+Record:  Same pod — capture: name, status, age, ready count
+
+Action:  Wait 3 seconds
+Action:  SCREENSHOT 3 (at T+9s): browser_snapshot → save to file
+Record:  Same pod — capture: name, status, age, ready count
+
+Action:  Wait 3 seconds
+Action:  SCREENSHOT 4 (at T+12s): browser_snapshot → save to file
+Record:  Same pod — capture: name, status, age, ready count
 ```
 
-### Step 4: Verify the Change is Real
+### Step 4: Verify Progressive Change Across Screenshots
+
+```
+Check:   Compare the 4 snapshots for the SAME pod. At least ONE of these must show
+         PROGRESSIVE change (not just the same value repeated 4 times):
+
+         - Age field progresses: "3s" → "6s" → "9s" → "12s" (or similar increasing values)
+         - Status transitions: "Terminating" → gone, or "Pending" → "ContainerCreating" → "Running"
+         - Ready count changes: "0/1" → "1/1"
+         - Pod count changes across snapshots (old pod disappears, new pod appears)
+
+         A SINGLE changed value repeated identically across all 4 screenshots = FROZEN DATA = FAIL.
+         Example of FAIL: all 4 show "4s ago" — data arrived once and stopped updating.
+         Example of PASS: "3s ago" → "6s ago" → "9s ago" → "12s ago" — continuous live updates.
+
+Fail if: All 4 snapshots show identical data for the target pod (no progression)
+Fail if: Pod status/age doesn't change across ANY of the 4 snapshots
+```
+
+### Step 5: Cross-Reference with kubectl
 
 ```
 Action:  Run kubectl get pods -n <namespace> to see the current state
-Action:  Compare kubectl output with what the UI shows
-Check:   UI reflects the actual cluster state (new pod showing, old pod gone or terminating)
-Fail if: UI still shows the pre-delete state after 8 seconds
+Action:  Compare kubectl output with SCREENSHOT 4 (the latest)
+Check:   UI reflects the actual cluster state at T+12s
+Fail if: UI still shows the pre-delete state
 ```
 
-### Step 5: Document the Timeline
+### Step 6: Document the Timeline Table
 
 ```
-Report:  "Delete sent at HH:MM:SS"
-Report:  "UI updated at HH:MM:SS (after Xs)"
-Report:  "Change observed: [what changed in the UI]"
-Report:  "kubectl confirms: [what kubectl shows]"
+Report in this EXACT format:
+
+| Screenshot | Time | Pod Name | Status | Ready | Age | Changed? |
+|-----------|------|----------|--------|-------|-----|----------|
+| Baseline  | T+0s | old-pod-hash | Running | 1/1 | 5m | — |
+| Shot 1    | T+3s | new-pod-hash | Running | 0/1 | 3s | YES: new pod |
+| Shot 2    | T+6s | new-pod-hash | Running | 0/1 | 6s | YES: age +3s |
+| Shot 3    | T+9s | new-pod-hash | Running | 1/1 | 9s | YES: age +3s, ready |
+| Shot 4    | T+12s | new-pod-hash | Running | 1/1 | 12s | YES: age +3s |
+
+kubectl at T+12s: [what kubectl shows]
+
+Verdict: PASS (4/4 screenshots show progressive data updates)
+   — OR —
+Verdict: FAIL (screenshots N and M show identical data — live updates stopped after Xs)
 ```
 
 ## Resource-Specific kubectl Commands
@@ -235,11 +276,16 @@ After testing, produce this EXACT report format. Do not summarize. Do not abbrev
 | Click [tab1] | [rendered/crashed] | [0/N errors] |
 | Click [tab2] | [rendered/crashed] | [0/N errors] |
 
-### Live Data Test (if applicable)
-- Delete command: [kubectl delete pod X at HH:MM:SS]
-- UI update observed: [yes at HH:MM:SS / no after 8s]
-- Change: [what changed]
-- kubectl confirms: [current state]
+### Live Data Test (if applicable — MUST use 4-screenshot protocol)
+| Screenshot | Time | Pod Name | Status | Ready | Age | Changed? |
+|-----------|------|----------|--------|-------|-----|----------|
+| Baseline  | T+0s | [old-pod] | [status] | [ready] | [age] | — |
+| Shot 1    | T+3s | [pod] | [status] | [ready] | [age] | [YES/NO + what] |
+| Shot 2    | T+6s | [pod] | [status] | [ready] | [age] | [YES/NO + what] |
+| Shot 3    | T+9s | [pod] | [status] | [ready] | [age] | [YES/NO + what] |
+| Shot 4    | T+12s | [pod] | [status] | [ready] | [age] | [YES/NO + what] |
+kubectl at T+12s: [current state]
+Verdict: PASS (progressive) / FAIL (frozen after shot N)
 
 ### Verdict: [PASS / FAIL]
 - If FAIL: [exact error messages and what's broken]
@@ -262,3 +308,5 @@ doing any of these, STOP and redo the test properly.
 | Screenshot of page list, no expand test | Expand is where bugs hide | Click items, click their tabs |
 | "24 events in 15 seconds via curl" | Proves backend, not frontend | Watch the browser DOM update in real-time |
 | Batch-testing tabs via HTTP status codes | 200 status != working page | Navigate in browser, interact, verify content |
+| ONE screenshot after pod delete = "live data works" | Data may update once then freeze. Pod shows "3s ago" forever. | Take 4 screenshots at 3s intervals. Check age PROGRESSES across all 4. |
+| "New pod appeared in UI" (single check) | Replacement pod appearing proves one SSE event arrived — NOT that streaming is continuous | 4-screenshot protocol: verify age field changes across ALL snapshots |
