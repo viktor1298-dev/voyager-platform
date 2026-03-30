@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { LayoutGrid, Network } from 'lucide-react'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { NetworkPolicyGraph } from '@/components/network/NetworkPolicyGraph'
-import { trpc } from '@/lib/trpc'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { timeAgo } from '@/lib/time-utils'
 
@@ -49,9 +49,8 @@ export default function NetworkPoliciesPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const [viewMode, setViewMode] = useState<ViewMode>('list')
 
-  const policiesQuery = trpc.networkPolicies.list.useQuery({ clusterId }, { staleTime: 15000 })
-
-  const policies = (policiesQuery.data ?? []) as PolicyItem[]
+  const policies = useClusterResources<PolicyItem>(clusterId, 'network-policies')
+  const connectionState = useConnectionState(clusterId)
 
   return (
     <div>
@@ -90,7 +89,7 @@ export default function NetworkPoliciesPage() {
         <NetworkPolicyGraph clusterId={clusterId} />
       ) : (
         <div>
-          {policiesQuery.isLoading && (
+          {connectionState === 'initializing' && policies.length === 0 && (
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div
@@ -101,23 +100,25 @@ export default function NetworkPoliciesPage() {
             </div>
           )}
 
-          {policiesQuery.isError && (
+          {connectionState === 'disconnected' && policies.length === 0 && (
             <div className="text-sm text-[var(--color-text-muted)] text-center py-8">
               Failed to load network policies.
             </div>
           )}
 
-          {!policiesQuery.isLoading && policies.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Network className="h-8 w-8 text-[var(--color-text-dim)] mb-3" />
-              <p className="text-sm font-medium text-[var(--color-text-muted)]">
-                No network policies found
-              </p>
-              <p className="text-xs text-[var(--color-text-dim)] mt-1">
-                All traffic is allowed by default.
-              </p>
-            </div>
-          )}
+          {connectionState !== 'initializing' &&
+            policies.length === 0 &&
+            connectionState !== 'disconnected' && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Network className="h-8 w-8 text-[var(--color-text-dim)] mb-3" />
+                <p className="text-sm font-medium text-[var(--color-text-muted)]">
+                  No network policies found
+                </p>
+                <p className="text-xs text-[var(--color-text-dim)] mt-1">
+                  All traffic is allowed by default.
+                </p>
+              </div>
+            )}
 
           {policies.length > 0 && (
             <div className="space-y-3">

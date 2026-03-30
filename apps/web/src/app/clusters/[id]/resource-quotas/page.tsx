@@ -8,8 +8,8 @@ import { SearchFilterBar } from '@/components/resource'
 import { ResourceQuotaCard } from '@/components/quotas/ResourceQuotaCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { useClusterResources, useConnectionState } from '@/hooks/useResources'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { trpc } from '@/lib/trpc'
 
 interface ResourceQuotaData {
   name: string
@@ -70,22 +70,12 @@ export default function ResourceQuotasPage() {
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
 
-  const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
-  const resolvedId = dbCluster.data?.id ?? clusterId
-  const hasCredentials = Boolean(
-    (dbCluster.data as Record<string, unknown> | undefined)?.hasCredentials,
-  )
-
-  const quotasQuery = trpc.resourceQuotas.list.useQuery(
-    { clusterId: resolvedId },
-    { enabled: hasCredentials, staleTime: 30_000 },
-  )
+  const quotas = useClusterResources<ResourceQuotaData>(clusterId, 'resource-quotas')
+  const connectionState = useConnectionState(clusterId)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [namespacesOpen, setNamespacesOpen] = useState(true)
   const [expandAll, setExpandAll] = useState(false)
-
-  const quotas = (quotasQuery.data ?? []) as ResourceQuotaData[]
 
   const filteredQuotas = useMemo(() => {
     if (!searchQuery.trim()) return quotas
@@ -105,7 +95,9 @@ export default function ResourceQuotasPage() {
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]))
   }, [filteredQuotas])
 
-  if (!hasCredentials && !quotasQuery.data) {
+  const isLoading = connectionState === 'initializing' && quotas.length === 0
+
+  if (connectionState === 'disconnected' && quotas.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
         <div className="rounded-full bg-white/[0.04] p-3 mb-3">
@@ -135,7 +127,7 @@ export default function ResourceQuotasPage() {
         onNamespacesToggle={() => setNamespacesOpen((prev) => !prev)}
       />
 
-      {quotasQuery.isLoading ? (
+      {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-20 w-full" />

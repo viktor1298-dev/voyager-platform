@@ -25,16 +25,6 @@ interface EventData {
   timestamp: string | null
 }
 
-function asText(value: unknown, fallback = '—'): string {
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    return trimmed.length > 0 ? trimmed : fallback
-  }
-  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint')
-    return String(value)
-  return fallback
-}
-
 function involvedObjectText(obj: EventData['involvedObject']): string {
   if (!obj) return '—'
   if (typeof obj === 'string') return obj
@@ -159,42 +149,19 @@ export default function EventsPage() {
   const connectionState = useConnectionState(resolvedId)
   const effectiveIsLive = connectionState === 'connected' || connectionState === 'reconnecting'
 
-  // Fallback to DB events when SSE is not connected
-  const dbEvents = trpc.events.list.useQuery(
-    { clusterId: resolvedId, limit: 50 },
-    { enabled: !effectiveIsLive && liveEventsRaw.length === 0 },
-  )
-
   const events: EventData[] = useMemo(() => {
-    if (liveEventsRaw.length > 0) {
-      return liveEventsRaw.map((e) => ({
-        type: e.kind ?? 'Normal',
-        kind: e.kind ?? 'Normal',
-        reason: e.reason ?? '—',
-        message: e.message ?? '—',
-        namespace: e.namespace ?? '—',
-        involvedObject: e.involvedObject,
-        count: e.count ?? null,
-        lastTimestamp: e.timestamp,
-        timestamp: e.timestamp,
-      }))
-    }
-    return (dbEvents.data ?? []).map((e) => ({
-      type: asText(e.type, 'Normal'),
-      reason: asText(e.reason),
-      message: asText(e.message),
-      namespace: asText(e.namespace),
-      involvedObject: '\u2014',
-      count: null,
-      lastTimestamp: e.createdAt
-        ? e.createdAt instanceof Date
-          ? e.createdAt.toISOString()
-          : String(e.createdAt)
-        : null,
-      timestamp: null,
-      kind: asText(e.type, 'Normal'),
+    return liveEventsRaw.map((e) => ({
+      type: e.kind ?? 'Normal',
+      kind: e.kind ?? 'Normal',
+      reason: e.reason ?? '—',
+      message: e.message ?? '—',
+      namespace: e.namespace ?? '—',
+      involvedObject: e.involvedObject,
+      count: e.count ?? null,
+      lastTimestamp: e.timestamp,
+      timestamp: e.timestamp,
     }))
-  }, [liveEventsRaw, dbEvents.data])
+  }, [liveEventsRaw])
 
   const isLoading = liveEventsRaw.length === 0 && connectionState === 'initializing'
   const liveEvents = liveEventsRaw

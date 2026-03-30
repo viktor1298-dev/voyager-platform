@@ -262,16 +262,6 @@ export default function ClusterOverviewPage() {
     setActiveTab(effectiveIsLive ? 'live' : 'stored')
   }, [effectiveIsLive])
 
-  // Fallback to DB data when not live
-  const dbNodes = trpc.nodes.list.useQuery(
-    { clusterId: resolvedId },
-    { enabled: !effectiveIsLive && liveNodes.length === 0 },
-  )
-  const dbEvents = trpc.events.list.useQuery(
-    { clusterId: resolvedId, limit: 20 },
-    { enabled: !effectiveIsLive && liveEvents.length === 0 },
-  )
-
   // M-P3-003: Fetch anomalies for AI insight chips
   const anomaliesQuery = trpc.anomalies.list.useQuery(
     { clusterId: resolvedId, page: 1, pageSize: 50 },
@@ -344,75 +334,44 @@ export default function ClusterOverviewPage() {
         ),
         endpoint: String((dbCluster.data as Record<string, unknown>)?.endpoint ?? '—'),
         lastConnectedAt: lastConnectedAtRaw,
-        nodeCount: dbNodes.data?.length ?? 0,
-        podCount: 0,
+        nodeCount: liveNodes.length,
+        podCount: livePods.length,
         runningPods: 0,
-        namespaceCount: 0,
+        namespaceCount: liveNamespaces.length,
       }
 
-  const nodes: NodeRow[] =
-    liveNodes.length > 0
-      ? liveNodes.map((n: Record<string, unknown>, i: number) => ({
-          id: `node-${i}`,
-          name: asText(n['name'], ''),
-          status:
-            n['status'] === 'ready'
-              ? 'Ready'
-              : n['status'] === 'notready'
-                ? 'NotReady'
-                : asText(n['status'], 'Unknown'),
-          role: asText(n['role'], 'worker'),
-          kubeletVersion: asText(n['kubeletVersion']),
-          os: asText(n['os'] ?? n['operatingSystem']),
-          cpu:
-            n['cpuAllocatableMillis'] != null
-              ? `${n['cpuAllocatableMillis']}m / ${n['cpuCapacityMillis'] ?? '?'}m`
-              : '—',
-          memory:
-            n['memAllocatableMi'] != null
-              ? `${n['memAllocatableMi']}Mi / ${n['memCapacityMi'] ?? 0}Mi`
-              : '—',
-          cpuPercent: typeof n['cpuPercent'] === 'number' ? n['cpuPercent'] : null,
-          memoryPercent: typeof n['memPercent'] === 'number' ? n['memPercent'] : null,
-        }))
-      : (dbNodes.data ?? []).map((n: Record<string, unknown>, i: number) => ({
-          id: `node-db-${i}`,
-          name: asText(n['name'], ''),
-          status: asText(n['status'], 'Unknown'),
-          role: asText(n['role'], 'worker'),
-          kubeletVersion: asText(n['k8sVersion']),
-          os: '—',
-          cpu: n['cpuAllocatable'] != null ? `${n['cpuAllocatable']}m` : '—',
-          memory:
-            n['memoryAllocatable'] != null
-              ? `${Math.round(Number(n['memoryAllocatable']) / 1024)}Mi`
-              : '—',
-          cpuPercent: null,
-          memoryPercent: null,
-        }))
+  const nodes: NodeRow[] = liveNodes.map((n: Record<string, unknown>, i: number) => ({
+    id: `node-${i}`,
+    name: asText(n['name'], ''),
+    status:
+      n['status'] === 'ready'
+        ? 'Ready'
+        : n['status'] === 'notready'
+          ? 'NotReady'
+          : asText(n['status'], 'Unknown'),
+    role: asText(n['role'], 'worker'),
+    kubeletVersion: asText(n['kubeletVersion']),
+    os: asText(n['os'] ?? n['operatingSystem']),
+    cpu:
+      n['cpuAllocatableMillis'] != null
+        ? `${n['cpuAllocatableMillis']}m / ${n['cpuCapacityMillis'] ?? '?'}m`
+        : '—',
+    memory:
+      n['memAllocatableMi'] != null
+        ? `${n['memAllocatableMi']}Mi / ${n['memCapacityMi'] ?? 0}Mi`
+        : '—',
+    cpuPercent: typeof n['cpuPercent'] === 'number' ? n['cpuPercent'] : null,
+    memoryPercent: typeof n['memPercent'] === 'number' ? n['memPercent'] : null,
+  }))
 
-  const events: EventRow[] =
-    liveEvents.length > 0
-      ? liveEvents.map((e: Record<string, unknown>, i: number) => ({
-          id: `event-live-${i}`,
-          type: asText(e['type'], 'Normal'),
-          reason: asText(e['reason']),
-          message: asText(e['message']),
-          namespace: asText(e['namespace']),
-          timestamp: e['lastTimestamp'] ? String(e['lastTimestamp']) : null,
-        }))
-      : (dbEvents.data ?? []).map((e) => ({
-          id: String(e.id),
-          type: asText(e.type, 'Normal'),
-          reason: asText(e.reason),
-          message: asText(e.message),
-          namespace: asText(e.namespace),
-          timestamp: e.createdAt
-            ? e.createdAt instanceof Date
-              ? e.createdAt.toISOString()
-              : String(e.createdAt)
-            : null,
-        }))
+  const events: EventRow[] = liveEvents.map((e: Record<string, unknown>, i: number) => ({
+    id: `event-live-${i}`,
+    type: asText(e['type'], 'Normal'),
+    reason: asText(e['reason']),
+    message: asText(e['message']),
+    namespace: asText(e['namespace']),
+    timestamp: e['lastTimestamp'] ? String(e['lastTimestamp']) : null,
+  }))
 
   const normalizedStatus =
     typeof (cluster.healthStatus ?? cluster.status) === 'string'
