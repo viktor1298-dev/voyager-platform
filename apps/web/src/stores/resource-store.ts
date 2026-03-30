@@ -12,6 +12,9 @@ interface ResourceStoreState {
   /** Clusters that have received at least one snapshot — used to distinguish
    *  "connected but waiting for data" from "connected and data is empty" */
   snapshotsReady: Set<string>
+  /** Monotonic counter incremented every 5s — forces relative time labels to re-render
+   *  even when no SSE events arrive. Without this, "3s ago" freezes until the next K8s event. */
+  tick: number
 
   /** Replace entire array for a (clusterId, resourceType) key (used by snapshot event) */
   setResources: (clusterId: string, type: ResourceType, items: unknown[]) => void
@@ -23,6 +26,8 @@ interface ResourceStoreState {
   setConnectionState: (clusterId: string, state: ConnectionState) => void
   /** Remove all data for a cluster and set its connection state to 'disconnected' */
   clearCluster: (clusterId: string) => void
+  /** Increment tick counter — called by useResourceTick() interval */
+  incrementTick: () => void
 }
 
 export const useResourceStore = create<ResourceStoreState>()(
@@ -30,6 +35,7 @@ export const useResourceStore = create<ResourceStoreState>()(
     resources: new Map(),
     connectionState: {},
     snapshotsReady: new Set(),
+    tick: 0,
 
     setResources: (clusterId, type, items) =>
       set((state) => {
@@ -145,6 +151,8 @@ export const useResourceStore = create<ResourceStoreState>()(
       set((state) => ({
         connectionState: { ...state.connectionState, [clusterId]: connState },
       })),
+
+    incrementTick: () => set((state) => ({ tick: state.tick + 1 })),
 
     clearCluster: (clusterId) =>
       set((state) => {
