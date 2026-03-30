@@ -21,7 +21,7 @@ export function useClusterResources<T>(clusterId: string, type: ResourceType): T
   // useState + setInterval is immune to Zustand's selector equality checks.
   const [, setTick] = useState(0)
   useEffect(() => {
-    const timer = setInterval(() => setTick((t) => t + 1), 5_000)
+    const timer = setInterval(() => setTick((t) => t + 1), 1_000)
     return () => clearInterval(timer)
   }, [])
 

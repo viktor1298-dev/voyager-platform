@@ -181,7 +181,7 @@ export function mapPod(
   return {
     name: p.metadata?.name ?? '',
     namespace: p.metadata?.namespace ?? '',
-    status: p.status?.phase ?? 'Unknown',
+    status: p.metadata?.deletionTimestamp ? 'Terminating' : (p.status?.phase ?? 'Unknown'),
     createdAt: p.metadata?.creationTimestamp
       ? new Date(p.metadata.creationTimestamp as unknown as string).toISOString()
       : null,
