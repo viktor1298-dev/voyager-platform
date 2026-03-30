@@ -26,54 +26,78 @@ export function useResourceSSE(clusterId: string | null): { connectionState: Con
     const { setResources, applyEvent, setConnectionState, clearCluster } =
       useResourceStore.getState()
 
-    setConnectionState(clusterId, 'initializing')
-
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || ''
     const url = `${apiUrl}/api/resources/stream?clusterId=${encodeURIComponent(clusterId)}`
-    const es = new EventSource(url, { withCredentials: true })
-    eventSourceRef.current = es
 
-    es.onopen = () => setConnectionState(clusterId, 'connected')
+    /** Wire up all SSE event listeners on an EventSource instance */
+    function wireHandlers(es: EventSource) {
+      es.onopen = () => setConnectionState(clusterId!, 'connected')
 
-    es.addEventListener('snapshot', (e: MessageEvent) => {
-      try {
-        const { resourceType, items } = JSON.parse(e.data)
-        setResources(clusterId, resourceType, items)
-      } catch {
-        /* ignore parse errors */
-      }
-    })
-
-    es.addEventListener('watch', (e: MessageEvent) => {
-      try {
-        const batch: WatchEventBatch = JSON.parse(e.data)
-        for (const event of batch.events) {
-          applyEvent(clusterId, event)
+      es.addEventListener('snapshot', (e: MessageEvent) => {
+        try {
+          const { resourceType, items } = JSON.parse(e.data)
+          setResources(clusterId!, resourceType, items)
+        } catch {
+          /* ignore parse errors */
         }
-      } catch {
-        /* ignore */
-      }
-    })
+      })
 
-    es.addEventListener('status', (e: MessageEvent) => {
-      try {
-        const status: WatchStatusEvent = JSON.parse(e.data)
-        setConnectionState(clusterId, status.state as ConnectionState)
-      } catch {
-        /* ignore */
-      }
-    })
+      es.addEventListener('watch', (e: MessageEvent) => {
+        try {
+          const batch: WatchEventBatch = JSON.parse(e.data)
+          for (const event of batch.events) {
+            applyEvent(clusterId!, event)
+          }
+        } catch {
+          /* ignore */
+        }
+      })
 
-    es.onerror = () => {
-      if (es.readyState === EventSource.CONNECTING) {
-        setConnectionState(clusterId, 'reconnecting')
-      } else if (es.readyState === EventSource.CLOSED) {
-        setConnectionState(clusterId, 'disconnected')
+      es.addEventListener('status', (e: MessageEvent) => {
+        try {
+          const status: WatchStatusEvent = JSON.parse(e.data)
+          setConnectionState(clusterId!, status.state as ConnectionState)
+        } catch {
+          /* ignore */
+        }
+      })
+
+      es.onerror = () => {
+        if (es.readyState === EventSource.CONNECTING) {
+          setConnectionState(clusterId!, 'reconnecting')
+        } else if (es.readyState === EventSource.CLOSED) {
+          setConnectionState(clusterId!, 'disconnected')
+        }
       }
     }
 
+    setConnectionState(clusterId, 'initializing')
+
+    const es = new EventSource(url, { withCredentials: true })
+    eventSourceRef.current = es
+    wireHandlers(es)
+
+    /** Reconnect EventSource when tab returns from background and connection died */
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return
+      const current = eventSourceRef.current
+      if (!current || current.readyState === EventSource.CLOSED) {
+        // EventSource died while tab was backgrounded — reconnect
+        if (current) current.close()
+        setConnectionState(clusterId, 'reconnecting')
+
+        const newEs = new EventSource(url, { withCredentials: true })
+        eventSourceRef.current = newEs
+        wireHandlers(newEs)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     return () => {
-      es.close()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      const current = eventSourceRef.current
+      if (current) current.close()
       eventSourceRef.current = null
       clearCluster(clusterId)
     }
