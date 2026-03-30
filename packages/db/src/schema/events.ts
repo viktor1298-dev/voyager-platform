@@ -1,4 +1,13 @@
-import { jsonb, pgTable, primaryKey, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import {
+  index,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core'
 import { clusters } from './clusters.js'
 
 export const events = pgTable(
@@ -19,5 +28,8 @@ export const events = pgTable(
   },
   // Composite PK (id + timestamp) is required by TimescaleDB: the partitioning
   // column (timestamp) must be part of every unique index/constraint.
-  (table) => [primaryKey({ columns: [table.id, table.timestamp] })],
+  (table) => [
+    primaryKey({ columns: [table.id, table.timestamp] }),
+    index('idx_events_cluster_ts').on(table.clusterId, table.timestamp),
+  ],
 )

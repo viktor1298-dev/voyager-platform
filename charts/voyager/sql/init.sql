@@ -125,6 +125,8 @@ CREATE TABLE IF NOT EXISTS nodes (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE INDEX IF NOT EXISTS "idx_nodes_cluster" ON "nodes" ("cluster_id");
+CREATE INDEX IF NOT EXISTS "idx_nodes_cluster_name" ON "nodes" ("cluster_id", "name");
 
 CREATE TABLE IF NOT EXISTS events (
   id UUID NOT NULL DEFAULT uuid_generate_v4(),
@@ -139,6 +141,7 @@ CREATE TABLE IF NOT EXISTS events (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (id, timestamp)
 );
+CREATE INDEX IF NOT EXISTS "idx_events_cluster_ts" ON "events" ("cluster_id", "timestamp" DESC);
 
 CREATE TABLE IF NOT EXISTS alerts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -162,6 +165,7 @@ CREATE TABLE IF NOT EXISTS alert_history (
   message VARCHAR(1000) NOT NULL,
   acknowledged BOOLEAN NOT NULL DEFAULT FALSE
 );
+CREATE INDEX IF NOT EXISTS "idx_alert_history_alert_triggered" ON "alert_history" ("alert_id", "triggered_at" DESC);
 
 CREATE TABLE IF NOT EXISTS health_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -171,6 +175,8 @@ CREATE TABLE IF NOT EXISTS health_history (
   response_time_ms INTEGER,
   details TEXT
 );
+CREATE INDEX IF NOT EXISTS "idx_health_history_cluster_checked" ON "health_history" ("cluster_id", "checked_at" DESC);
+CREATE INDEX IF NOT EXISTS "idx_health_history_checked" ON "health_history" ("checked_at");
 
 -- SSO Providers (migration 0005)
 CREATE TABLE IF NOT EXISTS "sso_providers" (
@@ -411,6 +417,8 @@ CREATE TABLE IF NOT EXISTS "audit_log" (
   "ip_address" varchar(45),
   "timestamp" timestamp with time zone DEFAULT now() NOT NULL
 );
+CREATE INDEX IF NOT EXISTS "idx_audit_log_timestamp" ON "audit_log" ("timestamp" DESC);
+CREATE INDEX IF NOT EXISTS "idx_audit_log_resource_id" ON "audit_log" ("resource_id", "timestamp" DESC);
 
 -- Metrics history (missing table — added v190)
 CREATE TABLE IF NOT EXISTS "metrics_history" (
