@@ -1,0 +1,84 @@
+# Requirements: Voyager Platform — Live Data Pipeline
+
+**Defined:** 2026-03-30
+**Core Value:** Every resource visible in the dashboard updates in real-time as it changes in the cluster — no polling, no page refresh, no delay.
+
+## v1 Requirements
+
+### Core Pipeline Fix
+
+- [x] **PIPE-01**: SSE stream delivers continuous events without stopping (diagnose and fix root cause — informer silent death, TQ polling conflict, or connection drop)
+- [ ] **PIPE-02**: TanStack Query polling disabled for all SSE-fed resource types (no stale overwrites of live data)
+- [x] **PIPE-03**: K8s informer lifecycle robust — auto-recreate on silent death (not just restart), handle non-410 errors
+- [x] **PIPE-04**: `watch-db-writer` monkeypatch on emitWatchEvent verified safe (no silent event loss to SSE consumers)
+
+### Reconnection & Reliability
+
+- [ ] **CONN-01**: SSE event IDs for no-data-loss reconnection (Last-Event-ID replay)
+- [ ] **CONN-02**: Informer heartbeat timeout — detect and recover from silent disconnects within 30s
+- [ ] **CONN-03**: SSE auto-reconnect with exponential backoff, no visible flash of empty state during reconnect
+
+### Performance
+
+- [ ] **PERF-01**: Client-side 1-second event buffer (Rancher pattern) to batch UI updates during burst events (rolling update = 50+ events in 5s)
+- [ ] **PERF-02**: Zustand bulk state updates — batch multiple events into single render cycle
+
+### Coverage Expansion
+
+- [ ] **COVER-01**: All 15 currently-watched types update in browser via live SSE without polling or page refresh
+- [ ] **COVER-02**: Per-cluster on-demand watching — start watches when user opens a cluster, stop when they leave (30-cluster scale)
+- [ ] **COVER-03**: Expand to all 24 cluster tab types — add network policies, resource quotas to informers; derive Helm from watched secrets; derive topology from pods/services/deployments; handle CRDs and RBAC
+
+### Cleanup
+
+- [ ] **CLEAN-01**: Remove dead code — legacy watchers (cluster-watch-manager, resource-watch-manager, cluster-connection-state), unused subscriptions router, dead emitter methods (~900 lines)
+- [ ] **CLEAN-02**: Add missing DB indexes on events, nodes, audit_log, alert_history, health_history tables
+- [ ] **CLEAN-03**: Remove `ignoreBuildErrors: true` from Next.js config and fix any build errors it was hiding
+
+## v2 Requirements
+
+### Advanced Live Features
+
+- **ADV-01**: Multi-replica SSE scaling (Redis pub/sub for cross-pod event broadcasting)
+- **ADV-02**: CRD dynamic informers (watch custom resources with arbitrary schemas)
+- **ADV-03**: Live metrics streaming improvements (sub-5s latency for node/pod CPU/memory)
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Electron desktop app | Web-first, same approach as Rancher/Headlamp/K8s Dashboard v3 |
+| WebSocket for live data | SSE is correct for server→client streaming; WS stays for pod exec only |
+| Watch all clusters simultaneously | Resource waste at 30-cluster scale; per-cluster on-demand only |
+| Helm mutations (upgrade/rollback) | Read-only for now, mutations deferred |
+| Port forwarding proxy | Copy kubectl command only |
+| RBAC watch (K8s has no RBAC watch API) | Aggregate on-demand via tRPC, refresh on tab focus |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| PIPE-01 | Phase 1 | Complete |
+| PIPE-02 | Phase 1 | Pending |
+| PIPE-03 | Phase 1 | Complete |
+| PIPE-04 | Phase 1 | Complete |
+| CONN-01 | Phase 2 | Pending |
+| CONN-02 | Phase 2 | Pending |
+| CONN-03 | Phase 2 | Pending |
+| PERF-01 | Phase 2 | Pending |
+| PERF-02 | Phase 2 | Pending |
+| COVER-01 | Phase 3 | Pending |
+| COVER-02 | Phase 3 | Pending |
+| COVER-03 | Phase 3 | Pending |
+| CLEAN-01 | Phase 4 | Pending |
+| CLEAN-02 | Phase 4 | Pending |
+| CLEAN-03 | Phase 4 | Pending |
+
+**Coverage:**
+- v1 requirements: 15 total
+- Mapped to phases: 15
+- Unmapped: 0
+
+---
+*Requirements defined: 2026-03-30*
+*Last updated: 2026-03-30 after roadmap creation*
