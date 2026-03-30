@@ -9,7 +9,13 @@ export const API_ROUTES = {
 } as const
 
 /** Paths that bypass authentication checks (used by auth-guard.ts) */
-export const AUTH_BYPASS_PATHS = ['/api/auth/', '/health', '/docs', '/openapi.json'] as const
+export const AUTH_BYPASS_PATHS = [
+  '/api/auth/',
+  '/health',
+  '/docs',
+  '/openapi.json',
+  '/api/watches/health',
+] as const
 
 /** Paths exempt from rate limiting (used by server.ts) — separate from auth bypass */
 export const RATE_LIMIT_BYPASS_PATHS = ['/api/auth/', '/health', '/trpc'] as const
