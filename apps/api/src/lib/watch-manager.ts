@@ -371,7 +371,15 @@ export class WatchManager {
 
     cluster.subscriberCount--
     if (cluster.subscriberCount <= 0) {
-      // Last subscriber gone — stop all informers
+      // Delete entry FIRST so stale error handlers see no cluster
+      this.clusters.delete(clusterId)
+
+      // Clear heartbeat timers before stopping informers
+      for (const [type] of cluster.informers) {
+        this.clearHeartbeat(clusterId, type)
+      }
+
+      // Stop all informers — abort in-flight HTTP requests
       for (const [, informer] of cluster.informers) {
         try {
           informer.stop()
@@ -379,10 +387,11 @@ export class WatchManager {
           // Ignore stop errors
         }
       }
-      for (const [type] of cluster.informers) {
-        this.clearHeartbeat(clusterId, type)
-      }
-      this.clusters.delete(clusterId)
+
+      // Invalidate cached KubeConfig so next subscribe gets a fresh HTTP agent.
+      // informer.stop() may corrupt the shared agent's connection pool.
+      clusterClientPool.invalidate(clusterId)
+
       voyagerEmitter.emitWatchStatus({ clusterId, state: 'disconnected' })
       console.log(`[WatchManager] Stopped all informers for cluster ${clusterId}`)
     }
