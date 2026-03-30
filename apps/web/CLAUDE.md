@@ -16,8 +16,8 @@ pnpm lint             # biome check src/
 
 ```
 src/
-├── app/                   # App Router pages (~30 routes)
-│   ├── clusters/[id]/     # Cluster detail (25 resources via GroupedTabBar, 7 groups)
+├── app/                   # App Router pages (~55 routes)
+│   ├── clusters/[id]/     # Cluster detail (29 tabs via GroupedTabBar: 5 standalone + 24 grouped across 7 groups)
 │   ├── api/               # Route Handlers for SSE proxying (resources, metrics, logs)
 │   ├── settings/          # Settings hub
 │   └── login/             # Auth page
@@ -82,7 +82,7 @@ src/
 **Sidebar navigation (6 items):** `/` Dashboard, `/clusters`, `/alerts`, `/events`, `/logs`, `/settings`
 
 ```
-# Cluster detail (25 resources via GroupedTabBar, 7 groups)
+# Cluster detail (29 tabs via GroupedTabBar, 7 groups)
 /clusters/[id]                  → Overview (default, includes topology map)
 /clusters/[id]/nodes|pods|deployments|services|namespaces|events|logs|metrics|autoscaling
 /clusters/[id]/ingresses|statefulsets|daemonsets|jobs|cronjobs|hpa|configmaps|secrets|pvcs

@@ -19,8 +19,8 @@ src/
 ├── server.ts              # Entry point (DO NOT add migrate() here — Iron Rule #1)
 ├── trpc.ts                # Context, procedure definitions (public/protected/admin/authorized)
 ├── routers/               # 43 tRPC routers (index.ts = registry)
-├── routes/                # Non-tRPC: ai-stream (SSE), mcp, metrics-stream (SSE), log-stream (SSE), pod-terminal (WebSocket), resource-stream (SSE)
-├── jobs/                  # Background: health-sync, alert-evaluator, metrics-history-collector, node-sync, event-sync, deploy-smoke-test, metrics-stream-job
+├── routes/                # Non-tRPC: ai-stream (SSE), mcp, metrics-stream (SSE), log-stream (SSE), pod-terminal (WebSocket), resource-stream (SSE), watch-health
+├── jobs/                  # Background: alert-evaluator, metrics-history-collector, deploy-smoke-test, metrics-stream-job
 ├── config/                # Backend-only config (jobs.ts intervals, k8s.ts client pool)
 ├── services/              # Business logic (AI, anomaly detection)
 └── lib/                   # Core modules (no deps on routers/services)
@@ -30,9 +30,9 @@ src/
     ├── authorization.ts         # DB-backed RBAC
     ├── credential-crypto.ts     # Cluster credential encryption/decryption
     ├── error-handler.ts         # handleK8sError() — shared across all K8s routers
-    ├── watch-manager.ts         # Unified K8s informers — in-memory ObjectCache for all 15 resource types (Phase 10)
-    ├── watch-db-writer.ts       # Debounced PostgreSQL sync from watch events (replaces health-sync/node-sync/event-sync)
-    ├── resource-mappers.ts      # 15 shared mapper functions (K8s objects → frontend shapes)
+    ├── watch-manager.ts         # Unified K8s informers — in-memory ObjectCache for all 17 resource types
+    ├── watch-db-writer.ts       # Debounced PostgreSQL sync from watch events (replaces former health-sync/node-sync/event-sync jobs)
+    ├── resource-mappers.ts      # 17 shared mapper functions (K8s objects → frontend shapes)
     ├── cache-keys.ts            # Centralized Redis cache key builders (fallback path only)
     ├── cache.ts                 # Redis cache (failures are non-fatal, used as fallback when watches not ready)
     ├── health-checks.ts         # Log scanner, startup probe, page smoke, result assessment
@@ -67,10 +67,10 @@ All Redis cache keys are centralized in `lib/cache-keys.ts`. **Never construct c
 
 | Abstraction | File | Pattern |
 |-------------|------|---------|
-| **K8s Resource Routers** | `routers/{resource}.ts` | `watchManager.getResources()` for in-memory data (returns null if not ready → fallback to `cached()` K8s API call). 15 watched types + topology + clusters. Non-watched: yaml, helm, crds, rbac, networkPolicies, resourceQuotas |
-| **Unified WatchManager** | `lib/watch-manager.ts` | Single manager for all 15 K8s resource types. Informer ObjectCache = in-memory store. Per-cluster persistent lifecycle with reference counting. `getResources()` returns null until informer initial list completes (prevents race condition). Exponential backoff reconnect on errors. |
-| **Resource Mappers** | `lib/resource-mappers.ts` | 15 shared mapper functions (K8s raw → frontend shape). Used by both tRPC routers and SSE events to guarantee identical data shapes. |
-| **Watch DB Writer** | `lib/watch-db-writer.ts` | Debounced periodic PostgreSQL sync from watch events. Replaces deleted health-sync/node-sync/event-sync jobs. |
+| **K8s Resource Routers** | `routers/{resource}.ts` | `watchManager.getResources()` for in-memory data (returns null if not ready → fallback to `cached()` K8s API call). 17 watched types + topology + clusters. Non-watched: yaml, helm, crds, rbac |
+| **Unified WatchManager** | `lib/watch-manager.ts` | Single manager for all 17 K8s resource types. Informer ObjectCache = in-memory store. Per-cluster persistent lifecycle with reference counting. `getResources()` returns null until informer initial list completes (prevents race condition). Exponential backoff reconnect on errors. |
+| **Resource Mappers** | `lib/resource-mappers.ts` | 17 shared mapper functions (K8s raw → frontend shape). Used by both tRPC routers and SSE events to guarantee identical data shapes. |
+| **Watch DB Writer** | `lib/watch-db-writer.ts` | Debounced periodic PostgreSQL sync from watch events. |
 | **Cluster Client Pool** | `lib/cluster-client-pool.ts` | Lazy-loaded per-cluster K8s clients; caches KubeConfig, handles credential decryption |
 | **Resource Stream Route** | `routes/resource-stream.ts` | SSE `/api/resources/stream` — sends `event: watch` with full transformed objects (WatchEventBatch), 1s server-side batching, per-cluster persistent watches |
 | **Event Emitter** | `lib/event-emitter.ts` | Decouples watchers from SSE (one watch, many consumers) |
@@ -92,8 +92,8 @@ All Redis cache keys are centralized in `lib/cache-keys.ts`. **Never construct c
 
 ## Gotchas
 
-### K8S_ENABLED=false Does NOT Disable Sync Jobs
-`K8S_ENABLED=false` only disables K8s watchers (informers) and deploy-smoke-test. All sync jobs (health-sync, node-sync, event-sync, metrics-collector, alert-evaluator) **always run**. They handle per-cluster errors gracefully and are required for remotely-added clusters with embedded credentials.
+### K8S_ENABLED=false Does NOT Disable All Jobs
+`K8S_ENABLED=false` only disables K8s watchers (informers) and deploy-smoke-test. Remaining jobs (metrics-history-collector, alert-evaluator) **always run**. They handle per-cluster errors gracefully and are required for remotely-added clusters with embedded credentials.
 
 ### Kubeconfig Provider — Context Fallback
 When loading a kubeconfig via `loadFromString()`, if no explicit `context` param is provided, the factory falls back to `current-context` from the YAML, then to the first context. Without this, the KubeConfig object may have no context selected, causing API calls to fail silently.
