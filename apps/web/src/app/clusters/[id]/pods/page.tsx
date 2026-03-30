@@ -28,7 +28,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -527,7 +527,8 @@ export default function PodsPage() {
 
   const pods = useClusterResources<PodData>(resolvedId, 'pods')
   const connectionState = useConnectionState(resolvedId)
-  const isLoading = pods.length === 0 && connectionState === 'initializing'
+  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const isLoading = pods.length === 0 && !snapshotsReady
 
   const handleExecPod = useCallback(
     (pod: PodData) => {

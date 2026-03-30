@@ -6,6 +6,7 @@ import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { HelmReleaseDetail } from '@/components/helm/HelmReleaseDetail'
 import { ResourcePageScaffold } from '@/components/resource'
 import { useHelmReleases, type HelmRelease } from '@/hooks/useHelmReleases'
+import { useSnapshotsReady } from '@/hooks/useResources'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { timeAgo } from '@/lib/time-utils'
 
@@ -72,7 +73,8 @@ export default function HelmReleasesPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
 
   const { releases, connectionState } = useHelmReleases(clusterId)
-  const isLoading = connectionState === 'initializing' && releases.length === 0
+  const snapshotsReady = useSnapshotsReady(clusterId)
+  const isLoading = !snapshotsReady && releases.length === 0
 
   return (
     <ResourcePageScaffold<HelmRelease>

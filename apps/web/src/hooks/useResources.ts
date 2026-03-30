@@ -30,3 +30,12 @@ export function useConnectionState(clusterId: string): ConnectionState {
     useCallback((s) => s.connectionState[clusterId] ?? 'disconnected', [clusterId]),
   )
 }
+
+/**
+ * Check if a cluster has received at least one SSE snapshot.
+ * Use to distinguish "connected but waiting for data" from "connected and data is empty".
+ * Pages should show loading skeleton when connected && !snapshotsReady.
+ */
+export function useSnapshotsReady(clusterId: string): boolean {
+  return useResourceStore(useCallback((s) => s.snapshotsReady.has(clusterId), [clusterId]))
+}

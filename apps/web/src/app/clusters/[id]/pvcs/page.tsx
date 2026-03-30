@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
 import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -191,8 +191,8 @@ export default function PVCsPage() {
   const resolvedId = dbCluster.data?.id ?? clusterId
 
   const pvcs = useClusterResources<PVCData>(resolvedId, 'pvcs')
-  const connectionState = useConnectionState(resolvedId)
-  const isLoading = pvcs.length === 0 && connectionState === 'initializing'
+  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const isLoading = pvcs.length === 0 && !snapshotsReady
 
   return (
     <ResourcePageScaffold<PVCData>

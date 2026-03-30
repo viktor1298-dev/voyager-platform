@@ -10,7 +10,7 @@ import {
   ResourcePageScaffold,
   YamlViewer,
 } from '@/components/resource'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -237,8 +237,8 @@ export default function ServicesPage() {
   const resolvedId = dbCluster.data?.id ?? clusterId
 
   const services = useClusterResources<ServiceDetail>(resolvedId, 'services')
-  const connectionState = useConnectionState(resolvedId)
-  const isLoading = services.length === 0 && connectionState === 'initializing'
+  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const isLoading = services.length === 0 && !snapshotsReady
 
   return (
     <ResourcePageScaffold<ServiceDetail>

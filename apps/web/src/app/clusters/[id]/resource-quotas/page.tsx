@@ -8,7 +8,7 @@ import { SearchFilterBar } from '@/components/resource'
 import { ResourceQuotaCard } from '@/components/quotas/ResourceQuotaCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface ResourceQuotaData {
@@ -72,6 +72,7 @@ export default function ResourceQuotasPage() {
 
   const quotas = useClusterResources<ResourceQuotaData>(clusterId, 'resource-quotas')
   const connectionState = useConnectionState(clusterId)
+  const snapshotsReady = useSnapshotsReady(clusterId)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [namespacesOpen, setNamespacesOpen] = useState(true)
@@ -95,7 +96,7 @@ export default function ResourceQuotasPage() {
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]))
   }, [filteredQuotas])
 
-  const isLoading = connectionState === 'initializing' && quotas.length === 0
+  const isLoading = !snapshotsReady && quotas.length === 0
 
   if (connectionState === 'disconnected' && quotas.length === 0) {
     return (

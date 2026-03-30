@@ -10,7 +10,7 @@ import {
   ResourcePageScaffold,
   YamlViewer,
 } from '@/components/resource'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -271,8 +271,8 @@ export default function HPAPage() {
   const resolvedId = dbCluster.data?.id ?? clusterId
 
   const hpa = useClusterResources<HPAData>(resolvedId, 'hpa')
-  const connectionState = useConnectionState(resolvedId)
-  const isLoading = hpa.length === 0 && connectionState === 'initializing'
+  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const isLoading = hpa.length === 0 && !snapshotsReady
 
   return (
     <ResourcePageScaffold<HPAData>

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
 import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -165,8 +165,8 @@ export default function NamespacesPage() {
   const resolvedId = dbCluster.data?.id ?? clusterId
 
   const namespaces = useClusterResources<NamespaceData>(resolvedId, 'namespaces')
-  const connectionState = useConnectionState(resolvedId)
-  const isLoading = namespaces.length === 0 && connectionState === 'initializing'
+  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const isLoading = namespaces.length === 0 && !snapshotsReady
 
   return (
     <ResourcePageScaffold<NamespaceData>

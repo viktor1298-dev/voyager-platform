@@ -12,7 +12,7 @@ import {
 } from '@/components/expandable'
 import { Skeleton } from '@/components/ui/skeleton'
 import { nodeStatusColor } from '@/lib/status-utils'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -229,8 +229,9 @@ export default function NodesPage() {
 
   const nodes = useClusterResources<LiveNode>(resolvedId, 'nodes')
   const connectionState = useConnectionState(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId)
 
-  const isLoading = nodes.length === 0 && connectionState === 'initializing'
+  const isLoading = nodes.length === 0 && !snapshotsReady
   const isEmpty = nodes.length === 0
   const isOffline = connectionState === 'disconnected' && isEmpty
 

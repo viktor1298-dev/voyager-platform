@@ -25,7 +25,7 @@ import {
   ScaleInput,
   YamlViewer,
 } from '@/components/resource'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -328,8 +328,8 @@ export default function StatefulSetsPage() {
   const resolvedId = dbCluster.data?.id ?? clusterId
 
   const statefulsets = useClusterResources<StatefulSetData>(resolvedId, 'statefulsets')
-  const connectionState = useConnectionState(resolvedId)
-  const isLoading = statefulsets.length === 0 && connectionState === 'initializing'
+  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const isLoading = statefulsets.length === 0 && !snapshotsReady
 
   return (
     <ResourcePageScaffold<StatefulSetData>

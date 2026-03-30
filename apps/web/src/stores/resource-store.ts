@@ -9,6 +9,9 @@ interface ResourceStoreState {
   resources: Map<string, unknown[]>
   /** Per-cluster connection state */
   connectionState: Record<string, ConnectionState>
+  /** Clusters that have received at least one snapshot — used to distinguish
+   *  "connected but waiting for data" from "connected and data is empty" */
+  snapshotsReady: Set<string>
 
   /** Replace entire array for a (clusterId, resourceType) key (used by snapshot event) */
   setResources: (clusterId: string, type: ResourceType, items: unknown[]) => void
@@ -26,12 +29,19 @@ export const useResourceStore = create<ResourceStoreState>()(
   subscribeWithSelector((set) => ({
     resources: new Map(),
     connectionState: {},
+    snapshotsReady: new Set(),
 
     setResources: (clusterId, type, items) =>
       set((state) => {
         const key = `${clusterId}:${type}`
         const next = new Map(state.resources)
         next.set(key, items)
+        // Mark cluster as having received snapshots
+        if (!state.snapshotsReady.has(clusterId)) {
+          const ready = new Set(state.snapshotsReady)
+          ready.add(clusterId)
+          return { resources: next, snapshotsReady: ready }
+        }
         return { resources: next }
       }),
 
@@ -145,8 +155,11 @@ export const useResourceStore = create<ResourceStoreState>()(
             next.delete(key)
           }
         }
+        const ready = new Set(state.snapshotsReady)
+        ready.delete(clusterId)
         return {
           resources: next,
+          snapshotsReady: ready,
           connectionState: { ...state.connectionState, [clusterId]: 'disconnected' as const },
         }
       }),

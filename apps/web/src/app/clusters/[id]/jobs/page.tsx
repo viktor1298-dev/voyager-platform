@@ -10,7 +10,7 @@ import {
   ResourcePageScaffold,
   YamlViewer,
 } from '@/components/resource'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -180,8 +180,8 @@ export default function JobsPage() {
   const resolvedId = dbCluster.data?.id ?? clusterId
 
   const jobs = useClusterResources<JobData>(resolvedId, 'jobs')
-  const connectionState = useConnectionState(resolvedId)
-  const isLoading = jobs.length === 0 && connectionState === 'initializing'
+  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const isLoading = jobs.length === 0 && !snapshotsReady
 
   return (
     <ResourcePageScaffold<JobData>

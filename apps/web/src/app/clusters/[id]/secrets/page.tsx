@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
 import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -142,8 +142,8 @@ export default function SecretsPage() {
   const resolvedId = dbCluster.data?.id ?? clusterId
 
   const secrets = useClusterResources<SecretData>(resolvedId, 'secrets')
-  const connectionState = useConnectionState(resolvedId)
-  const isLoading = secrets.length === 0 && connectionState === 'initializing'
+  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const isLoading = secrets.length === 0 && !snapshotsReady
 
   return (
     <ResourcePageScaffold<SecretData>

@@ -25,7 +25,7 @@ import {
   ScaleInput,
   YamlViewer,
 } from '@/components/resource'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -341,8 +341,8 @@ export default function DeploymentsPage() {
   const resolvedId = dbCluster.data?.id ?? clusterId
 
   const deployments = useClusterResources<DeploymentDetail>(resolvedId, 'deployments')
-  const connectionState = useConnectionState(resolvedId)
-  const isLoading = deployments.length === 0 && connectionState === 'initializing'
+  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const isLoading = deployments.length === 0 && !snapshotsReady
 
   return (
     <ResourcePageScaffold<DeploymentDetail>

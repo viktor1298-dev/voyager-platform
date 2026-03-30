@@ -15,7 +15,7 @@ import {
   RestartConfirmDialog,
   YamlViewer,
 } from '@/components/resource'
-import { useClusterResources, useConnectionState } from '@/hooks/useResources'
+import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -282,8 +282,8 @@ export default function DaemonSetsPage() {
   const resolvedId = dbCluster.data?.id ?? clusterId
 
   const daemonsets = useClusterResources<DaemonSetData>(resolvedId, 'daemonsets')
-  const connectionState = useConnectionState(resolvedId)
-  const isLoading = daemonsets.length === 0 && connectionState === 'initializing'
+  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const isLoading = daemonsets.length === 0 && !snapshotsReady
 
   return (
     <ResourcePageScaffold<DaemonSetData>
