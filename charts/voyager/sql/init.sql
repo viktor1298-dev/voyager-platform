@@ -620,12 +620,3 @@ CREATE TABLE IF NOT EXISTS "node_metrics_history" (
 CREATE INDEX IF NOT EXISTS "idx_node_metrics_cluster_ts" ON "node_metrics_history" ("cluster_id", "timestamp");
 CREATE INDEX IF NOT EXISTS "idx_node_metrics_node" ON "node_metrics_history" ("cluster_id", "node_name", "timestamp");
 
--- Missing indexes on high-query tables (CLEAN-02)
-CREATE INDEX IF NOT EXISTS "idx_events_cluster_ts" ON "events" ("cluster_id", "timestamp" DESC);
-CREATE INDEX IF NOT EXISTS "idx_events_kind" ON "events" ("cluster_id", "kind", "timestamp" DESC);
-CREATE INDEX IF NOT EXISTS "idx_nodes_cluster" ON "nodes" ("cluster_id");
-CREATE INDEX IF NOT EXISTS "idx_audit_log_user_ts" ON "audit_log" ("user_id", "timestamp" DESC);
-CREATE INDEX IF NOT EXISTS "idx_audit_log_ts" ON "audit_log" ("timestamp" DESC);
-CREATE INDEX IF NOT EXISTS "idx_audit_log_action" ON "audit_log" ("action", "timestamp" DESC);
-CREATE INDEX IF NOT EXISTS "idx_alert_history_alert_ts" ON "alert_history" ("alert_id", "triggered_at" DESC);
-CREATE INDEX IF NOT EXISTS "idx_health_history_cluster_ts" ON "health_history" ("cluster_id", "checked_at" DESC);
