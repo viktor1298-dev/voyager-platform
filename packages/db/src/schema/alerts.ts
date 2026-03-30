@@ -1,4 +1,4 @@
-import { boolean, numeric, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, index, numeric, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 
 export const alerts = pgTable('alerts', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -14,13 +14,17 @@ export const alerts = pgTable('alerts', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
-export const alertHistory = pgTable('alert_history', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  alertId: uuid('alert_id')
-    .notNull()
-    .references(() => alerts.id, { onDelete: 'cascade' }),
-  triggeredAt: timestamp('triggered_at', { withTimezone: true }).notNull().defaultNow(),
-  value: numeric('value').notNull(),
-  message: varchar('message', { length: 1000 }).notNull(),
-  acknowledged: boolean('acknowledged').notNull().default(false),
-})
+export const alertHistory = pgTable(
+  'alert_history',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    alertId: uuid('alert_id')
+      .notNull()
+      .references(() => alerts.id, { onDelete: 'cascade' }),
+    triggeredAt: timestamp('triggered_at', { withTimezone: true }).notNull().defaultNow(),
+    value: numeric('value').notNull(),
+    message: varchar('message', { length: 1000 }).notNull(),
+    acknowledged: boolean('acknowledged').notNull().default(false),
+  },
+  (table) => [index('idx_alert_history_alert_triggered').on(table.alertId, table.triggeredAt)],
+)
