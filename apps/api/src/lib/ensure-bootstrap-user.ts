@@ -188,6 +188,23 @@ export async function ensureBootstrapUser(input: EnsureBootstrapUserInput): Prom
       await db.delete(userTable).where(eq(userTable.id, existingUserId))
       existingUserId = null
       existingUserRole = null
+    } else {
+      // Credential exists — verify password still matches env var
+      try {
+        await auth.api.signInEmail({
+          body: { email, password },
+          headers: internalHeaders,
+        })
+      } catch {
+        // Password mismatch — delete and recreate with correct password
+        console.warn('Bootstrap user password mismatch with env var; recreating credential', {
+          email,
+          existingUserId,
+        })
+        await db.delete(userTable).where(eq(userTable.id, existingUserId))
+        existingUserId = null
+        existingUserRole = null
+      }
     }
   }
 
