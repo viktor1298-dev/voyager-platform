@@ -43,6 +43,9 @@ spec:
         - name: api
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
           imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: {{ .Values.api.port }}
           env:
@@ -55,6 +58,12 @@ spec:
                 name: voyager-config
             - secretRef:
                 name: voyager-secret
+          startupProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.api.port }}
+            failureThreshold: 30
+            periodSeconds: 2
           readinessProbe:
             httpGet:
               path: /health

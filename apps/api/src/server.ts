@@ -2,6 +2,7 @@
 
 import compress from '@fastify/compress'
 import cors from '@fastify/cors'
+import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import websocket from '@fastify/websocket'
 import swagger from '@fastify/swagger'
@@ -19,6 +20,7 @@ import {
 } from './jobs/metrics-history-collector.js'
 import { metricsStreamJob } from './jobs/metrics-stream-job.js'
 import { closeDatabase } from '@voyager/db'
+import { sql } from 'drizzle-orm'
 import { auth } from './lib/auth.js'
 import { mapAuthRouteErrorToBody, mapAuthRouteErrorToStatus } from './lib/auth-error-mapping.js'
 import { shouldRequireAuth, UNAUTHORIZED_RESPONSE } from './lib/auth-guard.js'
@@ -71,6 +73,10 @@ initSentry()
 const app = Fastify({ logger: true })
 
 app.register(compress, { global: true })
+app.register(helmet, {
+  contentSecurityPolicy: false, // CSP managed by Next.js / ingress
+  crossOriginEmbedderPolicy: false, // Allow embedding for Swagger UI
+})
 
 const DEFAULT_RATE_LIMIT_MAX = Number.parseInt(process.env.RATE_LIMIT_MAX || '200', 10)
 const DEFAULT_RATE_LIMIT_WINDOW = process.env.RATE_LIMIT_TIME_WINDOW || '1 minute'
@@ -229,7 +235,10 @@ app.route({
   method: ['GET', 'POST'],
   url: '/api/auth/sign-in/*',
   config: {
-    rateLimit: false,
+    rateLimit: {
+      max: 10,
+      timeWindow: '1 minute',
+    },
   },
   handler: handleAuthRoute,
 })
@@ -270,7 +279,32 @@ await registerPodTerminalRoute(app)
 await registerResourceStreamRoute(app)
 await registerWatchHealthRoute(app)
 
-app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
+app.get('/health', { config: { rateLimit: false } }, async () => {
+  let dbOk = false
+  let redisOk = false
+
+  try {
+    const { db } = await import('@voyager/db')
+    const result = await db.execute(sql`SELECT 1`)
+    dbOk = Array.isArray(result.rows) && result.rows.length > 0
+  } catch {
+    dbOk = false
+  }
+
+  try {
+    const { getRedisClient } = await import('./lib/cache.js')
+    const redis = await getRedisClient()
+    if (redis) {
+      const pong = await redis.ping()
+      redisOk = pong === 'PONG'
+    }
+  } catch {
+    redisOk = false
+  }
+
+  const status = dbOk && redisOk ? 'ok' : 'degraded'
+  return { status, db: dbOk, redis: redisOk }
+})
 
 /** Public health endpoint — intentionally unauthenticated. Returns collector running status. */
 app.get('/health/metrics-collector', { config: { rateLimit: false } }, async () => {

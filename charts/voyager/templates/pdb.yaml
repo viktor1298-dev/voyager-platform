@@ -1,0 +1,27 @@
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: voyager-api-pdb
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "voyager.labels" . | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "voyager.selectorLabels.api" . | nindent 6 }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: voyager-web-pdb
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "voyager.labels" . | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "voyager.selectorLabels.web" . | nindent 6 }}
+{{- end }}

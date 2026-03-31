@@ -18,4 +18,4 @@ export const AUTH_BYPASS_PATHS = [
 ] as const
 
 /** Paths exempt from rate limiting (used by server.ts) — separate from auth bypass */
-export const RATE_LIMIT_BYPASS_PATHS = ['/api/auth/', '/health', '/trpc'] as const
+export const RATE_LIMIT_BYPASS_PATHS = ['/api/auth/', '/health'] as const

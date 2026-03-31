@@ -63,6 +63,12 @@ redis:
 rbac:
   create: true
 
+networkPolicy:
+  enabled: false
+
+pdb:
+  enabled: false
+
 secret:
   dbPassword: ""  # Override per environment
   betterAuthSecret: ""   # Override per environment

@@ -61,4 +61,5 @@ COPY --from=builder /app/packages/db/drizzle ./drizzle
 ENV HIDE_STACK_TRACES=true
 USER voyager
 EXPOSE 4000
+HEALTHCHECK --interval=30s --timeout=5s CMD wget -qO- http://localhost:4000/health || exit 1
 CMD ["node", "dist/server.js"]

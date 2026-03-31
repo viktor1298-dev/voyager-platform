@@ -1,0 +1,146 @@
+{{- if .Values.networkPolicy.enabled }}
+# API: allow ingress from web and ingress controller only
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: voyager-api-netpol
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "voyager.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "voyager.selectorLabels.api" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "voyager.selectorLabels.web" . | nindent 14 }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: {{ .Values.api.port }}
+          protocol: TCP
+  egress:
+    # Allow DNS
+    - to: []
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Allow postgres
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - port: {{ .Values.db.port }}
+          protocol: TCP
+    # Allow redis
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - port: {{ .Values.redis.port }}
+          protocol: TCP
+    # Allow external (K8s API, OTel, Sentry, etc.)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+---
+# Postgres: only allow ingress from API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: voyager-postgres-netpol
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "voyager.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "voyager.selectorLabels.api" . | nindent 14 }}
+      ports:
+        - port: {{ .Values.db.port }}
+          protocol: TCP
+---
+# Redis: only allow ingress from API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: voyager-redis-netpol
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "voyager.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "voyager.selectorLabels.api" . | nindent 14 }}
+      ports:
+        - port: {{ .Values.redis.port }}
+          protocol: TCP
+---
+# Web: allow ingress from ingress controller only
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: voyager-web-netpol
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "voyager.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "voyager.selectorLabels.web" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: {{ .Values.web.port }}
+          protocol: TCP
+  egress:
+    # Allow DNS
+    - to: []
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Allow API
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "voyager.selectorLabels.api" . | nindent 14 }}
+      ports:
+        - port: {{ .Values.api.port }}
+          protocol: TCP
+{{- end }}

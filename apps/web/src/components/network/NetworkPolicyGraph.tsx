@@ -390,6 +390,7 @@ export function NetworkPolicyGraph({ clusterId }: NetworkPolicyGraphProps) {
         <select
           value={namespace}
           onChange={(e) => setNamespace(e.target.value)}
+          aria-label="Filter by namespace"
           className="text-xs px-2 py-1.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-primary)] outline-none"
         >
           <option value="">All Namespaces</option>

@@ -21,6 +21,8 @@ spec:
       containers:
         - name: redis
           image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          securityContext:
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: {{ .Values.redis.port }}
           command: ["redis-server", "--appendonly", "yes", "--dir", "/data"]

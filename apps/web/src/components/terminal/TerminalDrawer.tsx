@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { ChevronDown, Minus, Terminal as TerminalIcon } from 'lucide-react'
+import { ChevronDown, Minus, X, Terminal as TerminalIcon } from 'lucide-react'
 import { DURATION, EASING } from '@/lib/animation-constants'
 import { useTerminal } from './terminal-context'
 import { TerminalTab } from './TerminalTab'
@@ -37,6 +37,8 @@ export function TerminalDrawer() {
   const isDragging = useRef(false)
   const startY = useRef(0)
   const startHeight = useRef(0)
+  const drawerRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   // Initialize height on first render (needs window)
   useEffect(() => {
@@ -44,6 +46,19 @@ export function TerminalDrawer() {
       setHeight(Math.round(window.innerHeight * DEFAULT_HEIGHT_RATIO))
     }
   }, [height])
+
+  // Focus management: move focus to drawer when opened, restore on close
+  useEffect(() => {
+    if (isDrawerOpen && sessions.length > 0) {
+      previousFocusRef.current = document.activeElement as HTMLElement
+      requestAnimationFrame(() => {
+        drawerRef.current?.focus({ preventScroll: true })
+      })
+    } else if (!isDrawerOpen && previousFocusRef.current) {
+      previousFocusRef.current.focus({ preventScroll: true })
+      previousFocusRef.current = null
+    }
+  }, [isDrawerOpen, sessions.length])
 
   // Keyboard shortcut: Ctrl+backtick toggles drawer
   useEffect(() => {
@@ -93,12 +108,16 @@ export function TerminalDrawer() {
     <AnimatePresence>
       {isDrawerOpen && (
         <motion.div
+          ref={drawerRef}
+          tabIndex={-1}
+          role="region"
+          aria-label="Terminal panel"
           key="terminal-drawer"
           variants={drawerVariants}
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="fixed bottom-0 left-0 right-0 z-[100] flex flex-col border-t border-[var(--color-border)] bg-[var(--color-bg-primary)]"
+          className="fixed bottom-0 left-0 right-0 z-[100] flex flex-col border-t border-[var(--color-border)] bg-[var(--color-bg-primary)] outline-none"
           style={{ height: collapsed ? COLLAPSED_HEIGHT : height }}
         >
           {/* Drag handle */}
@@ -136,6 +155,15 @@ export function TerminalDrawer() {
                 ) : (
                   <Minus className="w-3.5 h-3.5" />
                 )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(false)}
+                className="p-1 rounded hover:bg-[var(--color-border)] transition-colors duration-150 active:scale-95"
+                title="Close terminal"
+                aria-label="Close terminal panel"
+              >
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
