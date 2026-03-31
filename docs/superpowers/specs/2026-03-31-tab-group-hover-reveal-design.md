@@ -145,9 +145,39 @@ The bridge element uses `position: fixed` inside a static-positioned wrapper. Th
 - [ ] `pnpm typecheck` passes
 - [ ] `pnpm build` passes
 
-## QA Validation
+## QA Validation (Loop Until 100% Pass)
 
-After implementation, run full QA using the `functional-qa` skill:
+After implementation, run full QA using the `functional-qa` skill. **If any check fails, fix the issue and re-run the entire QA from step 1. Repeat until all checks pass with 0 failures.**
+
+```
+┌─────────────────────────────────┐
+│         IMPLEMENT CHANGES       │
+└────────────┬────────────────────┘
+             ▼
+┌─────────────────────────────────┐
+│     RESTART DEV SERVERS         │
+│     pnpm dev                    │
+└────────────┬────────────────────┘
+             ▼
+┌─────────────────────────────────┐
+│     RUN FULL QA CHECKLIST       │
+│     (all 10 checks below)       │
+└────────────┬────────────────────┘
+             ▼
+        ┌────────────┐
+        │ ALL PASSED? │
+        └─┬────────┬─┘
+      YES │        │ NO
+          ▼        ▼
+     ┌────────┐  ┌──────────────────┐
+     │  DONE  │  │  FIX THE ISSUE   │
+     └────────┘  └───────┬──────────┘
+                         │
+                         ▼
+                 (loop back to RESTART)
+```
+
+### QA Checklist (all must pass)
 
 1. Restart dev servers (`pnpm dev`)
 2. Navigate to any cluster detail page
@@ -159,3 +189,5 @@ After implementation, run full QA using the `functional-qa` skill:
 8. Test both dark and light themes
 9. Check browser console — 0 errors
 10. Screenshot each group dropdown open state for QA record
+
+**Exit condition:** 10/10 checks pass. No partial passes. No skips.
