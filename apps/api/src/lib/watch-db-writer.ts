@@ -7,7 +7,7 @@
  */
 import * as k8s from '@kubernetes/client-node'
 import { clusters, db, events, nodes } from '@voyager/db'
-import { and, eq, notInArray } from 'drizzle-orm'
+import { and, eq, notInArray, sql } from 'drizzle-orm'
 import { WATCH_DB_SYNC_INTERVAL_MS } from '@voyager/config/sse'
 import type { WatchEvent } from '@voyager/types'
 import { voyagerEmitter } from './event-emitter.js'
@@ -51,7 +51,7 @@ async function syncNodes(clusterId: string): Promise<void> {
     }
   }
 
-  for (const node of rawNodes) {
+  const nodeValues = rawNodes.map((node) => {
     const name = node.metadata?.name ?? 'unknown'
     const conditions = node.status?.conditions ?? []
     const readyCondition = conditions.find((c) => c.type === 'Ready')
@@ -73,41 +73,37 @@ async function syncNodes(clusterId: string): Promise<void> {
     const k8sVersion = node.status?.nodeInfo?.kubeletVersion ?? null
     const podsCount = podCountByNode.get(name) ?? 0
 
-    // Upsert: find existing by clusterId + name
-    const existing = await db
-      .select({ id: nodes.id })
-      .from(nodes)
-      .where(and(eq(nodes.clusterId, clusterId), eq(nodes.name, name)))
-      .limit(1)
-
-    if (existing.length > 0) {
-      await db
-        .update(nodes)
-        .set({
-          status,
-          role,
-          cpuCapacity: cpuCapMilli,
-          cpuAllocatable: cpuAllocMilli,
-          memoryCapacity: memCapBytes,
-          memoryAllocatable: memAllocBytes,
-          podsCount,
-          k8sVersion,
-        })
-        .where(eq(nodes.id, existing[0].id))
-    } else {
-      await db.insert(nodes).values({
-        clusterId,
-        name,
-        status,
-        role,
-        cpuCapacity: cpuCapMilli,
-        cpuAllocatable: cpuAllocMilli,
-        memoryCapacity: memCapBytes,
-        memoryAllocatable: memAllocBytes,
-        podsCount,
-        k8sVersion,
-      })
+    return {
+      clusterId,
+      name,
+      status,
+      role,
+      cpuCapacity: cpuCapMilli,
+      cpuAllocatable: cpuAllocMilli,
+      memoryCapacity: memCapBytes,
+      memoryAllocatable: memAllocBytes,
+      podsCount,
+      k8sVersion,
     }
+  })
+
+  if (nodeValues.length > 0) {
+    await db
+      .insert(nodes)
+      .values(nodeValues)
+      .onConflictDoUpdate({
+        target: [nodes.clusterId, nodes.name],
+        set: {
+          status: sql`excluded.status`,
+          role: sql`excluded.role`,
+          cpuCapacity: sql`excluded.cpu_capacity`,
+          cpuAllocatable: sql`excluded.cpu_allocatable`,
+          memoryCapacity: sql`excluded.memory_capacity`,
+          memoryAllocatable: sql`excluded.memory_allocatable`,
+          podsCount: sql`excluded.pods_count`,
+          k8sVersion: sql`excluded.k8s_version`,
+        },
+      })
   }
 
   // Delete stale nodes no longer reported by WatchManager
@@ -123,40 +119,35 @@ async function syncEvents(clusterId: string): Promise<void> {
   const rawEvents = watchManager.getResources(clusterId, 'events') as k8s.CoreV1Event[]
   if (rawEvents.length === 0) return
 
-  for (const event of rawEvents) {
-    const uid = event.metadata?.uid
-    if (!uid) continue
+  const eventValues = rawEvents
+    .filter((event) => event.metadata?.uid)
+    .map((event) => {
+      const uid = event.metadata!.uid!
+      const eventTimestamp =
+        event.lastTimestamp ?? event.eventTime ?? event.metadata?.creationTimestamp
+      const ts = eventTimestamp ? new Date(eventTimestamp as unknown as string) : new Date()
 
-    const eventTimestamp =
-      event.lastTimestamp ?? event.eventTime ?? event.metadata?.creationTimestamp
-    const ts = eventTimestamp ? new Date(eventTimestamp as unknown as string) : new Date()
-
-    // Check if event already exists by uid + timestamp
-    const existing = await db
-      .select({ id: events.id })
-      .from(events)
-      .where(and(eq(events.id, uid), eq(events.timestamp, ts)))
-      .limit(1)
-
-    if (existing.length > 0) continue
-
-    await db.insert(events).values({
-      id: uid,
-      clusterId,
-      namespace: event.metadata?.namespace ?? null,
-      kind: event.type ?? 'Normal',
-      reason: event.reason ?? null,
-      message: event.message ?? null,
-      source: event.source?.component ?? null,
-      involvedObject: event.involvedObject
-        ? {
-            kind: event.involvedObject.kind,
-            name: event.involvedObject.name,
-            namespace: event.involvedObject.namespace,
-          }
-        : null,
-      timestamp: ts,
+      return {
+        id: uid,
+        clusterId,
+        namespace: event.metadata?.namespace ?? null,
+        kind: event.type ?? 'Normal',
+        reason: event.reason ?? null,
+        message: event.message ?? null,
+        source: event.source?.component ?? null,
+        involvedObject: event.involvedObject
+          ? {
+              kind: event.involvedObject.kind,
+              name: event.involvedObject.name,
+              namespace: event.involvedObject.namespace,
+            }
+          : null,
+        timestamp: ts,
+      }
     })
+
+  if (eventValues.length > 0) {
+    await db.insert(events).values(eventValues).onConflictDoNothing()
   }
 }
 

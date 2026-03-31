@@ -1,4 +1,13 @@
-import { bigint, index, integer, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import {
+  bigint,
+  index,
+  integer,
+  pgTable,
+  timestamp,
+  unique,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core'
 import { clusters } from './clusters.js'
 
 export const nodes = pgTable(
@@ -26,5 +35,6 @@ export const nodes = pgTable(
   (table) => [
     index('idx_nodes_cluster').on(table.clusterId),
     index('idx_nodes_cluster_name').on(table.clusterId, table.name),
+    unique('nodes_cluster_name_unique').on(table.clusterId, table.name),
   ],
 )
