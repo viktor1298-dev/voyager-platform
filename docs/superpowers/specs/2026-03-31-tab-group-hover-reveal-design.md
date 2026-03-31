@@ -121,6 +121,13 @@ The bridge element uses `position: fixed` inside a static-positioned wrapper. Th
 
 **No other files modified.** No new dependencies. No config changes.
 
+## Skills
+
+| Skill | Purpose |
+|---|---|
+| `ui-ux-pro-max` | UX guidelines for hover interactions, animation timing, accessibility patterns |
+| `frontend-design` | Production-grade implementation quality, polished interaction design |
+
 ## Testing Checklist
 
 - [ ] Hover group tab → dropdown appears with spring animation
@@ -137,3 +144,18 @@ The bridge element uses `position: fixed` inside a static-positioned wrapper. Th
 - [ ] Console: 0 errors
 - [ ] `pnpm typecheck` passes
 - [ ] `pnpm build` passes
+
+## QA Validation
+
+After implementation, run full QA using the `functional-qa` skill:
+
+1. Restart dev servers (`pnpm dev`)
+2. Navigate to any cluster detail page
+3. Verify all 7 group tabs respond to hover (Workloads, Networking, Config, Storage, Scaling, Cluster Ops)
+4. Verify dropdown items navigate correctly
+5. Verify click on group label navigates to first child
+6. Verify fast sweep between groups — no flicker, smooth transitions
+7. Verify standalone tabs (Overview, Nodes, Events, Logs, Metrics) are unaffected
+8. Test both dark and light themes
+9. Check browser console — 0 errors
+10. Screenshot each group dropdown open state for QA record
