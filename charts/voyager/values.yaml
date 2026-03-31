@@ -45,8 +45,8 @@ config:
 
 db:
   image:
-    repository: postgres
-    tag: "17-alpine"
+    repository: timescale/timescaledb
+    tag: "latest-pg17"
   port: 5432
   persistence:
     enabled: true

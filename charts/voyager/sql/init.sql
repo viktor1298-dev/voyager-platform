@@ -128,6 +128,12 @@ CREATE TABLE IF NOT EXISTS nodes (
 CREATE INDEX IF NOT EXISTS "idx_nodes_cluster" ON "nodes" ("cluster_id");
 CREATE INDEX IF NOT EXISTS "idx_nodes_cluster_name" ON "nodes" ("cluster_id", "name");
 
+-- Unique constraint for batch upsert support
+DO $$ BEGIN
+  ALTER TABLE nodes ADD CONSTRAINT nodes_cluster_name_unique UNIQUE (cluster_id, name);
+EXCEPTION WHEN duplicate_table THEN NULL;
+END $$;
+
 CREATE TABLE IF NOT EXISTS events (
   id UUID NOT NULL DEFAULT uuid_generate_v4(),
   cluster_id UUID NOT NULL REFERENCES clusters(id) ON DELETE CASCADE,
@@ -422,7 +428,7 @@ CREATE INDEX IF NOT EXISTS "idx_audit_log_resource_id" ON "audit_log" ("resource
 
 -- Metrics history (missing table — added v190)
 CREATE TABLE IF NOT EXISTS "metrics_history" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "id" uuid DEFAULT gen_random_uuid() NOT NULL,
   "cluster_id" uuid NOT NULL REFERENCES "clusters"("id") ON DELETE CASCADE,
   "timestamp" timestamp with time zone DEFAULT now() NOT NULL,
   "cpu_percent" real NOT NULL,
@@ -430,7 +436,8 @@ CREATE TABLE IF NOT EXISTS "metrics_history" (
   "pod_count" integer DEFAULT 0 NOT NULL,
   "node_count" integer DEFAULT 0 NOT NULL,
   "network_bytes_in" bigint DEFAULT 0,
-  "network_bytes_out" bigint DEFAULT 0
+  "network_bytes_out" bigint DEFAULT 0,
+  PRIMARY KEY ("id", "timestamp")
 );
 CREATE INDEX IF NOT EXISTS "idx_metrics_history_cluster_ts" ON "metrics_history" ("cluster_id", "timestamp");
 -- M-P3-002: Add network columns to existing deployments (idempotent)
@@ -608,15 +615,26 @@ CREATE INDEX IF NOT EXISTS "karpenter_cache_cluster_type_observed_idx" ON "karpe
 
 -- Per-node metrics history (Phase 5 MX-002)
 CREATE TABLE IF NOT EXISTS "node_metrics_history" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "id" uuid DEFAULT gen_random_uuid(),
   "cluster_id" uuid NOT NULL REFERENCES "clusters"("id") ON DELETE CASCADE,
   "node_name" text NOT NULL,
   "timestamp" timestamp with time zone NOT NULL DEFAULT now(),
   "cpu_percent" real NOT NULL,
   "mem_percent" real NOT NULL,
   "cpu_millis" integer NOT NULL DEFAULT 0,
-  "mem_mi" integer NOT NULL DEFAULT 0
+  "mem_mi" integer NOT NULL DEFAULT 0,
+  PRIMARY KEY ("id", "timestamp")
 );
 CREATE INDEX IF NOT EXISTS "idx_node_metrics_cluster_ts" ON "node_metrics_history" ("cluster_id", "timestamp");
 CREATE INDEX IF NOT EXISTS "idx_node_metrics_node" ON "node_metrics_history" ("cluster_id", "node_name", "timestamp");
+
+-- TimescaleDB hypertables for time-series data
+SELECT create_hypertable('metrics_history', 'timestamp', if_not_exists => TRUE, migrate_data => TRUE);
+SELECT create_hypertable('node_metrics_history', 'timestamp', if_not_exists => TRUE, migrate_data => TRUE);
+SELECT create_hypertable('events', 'timestamp', if_not_exists => TRUE, migrate_data => TRUE);
+
+-- Data retention policies
+SELECT add_retention_policy('metrics_history', INTERVAL '30 days', if_not_exists => TRUE);
+SELECT add_retention_policy('node_metrics_history', INTERVAL '14 days', if_not_exists => TRUE);
+SELECT add_retention_policy('events', INTERVAL '7 days', if_not_exists => TRUE);
 
