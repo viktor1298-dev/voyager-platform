@@ -41,7 +41,7 @@ function ReleaseSummary({ release }: { release: HelmRelease }) {
       </span>
       {release.chartVersion && (
         <span className="text-[12px] font-mono text-[var(--color-text-muted)] shrink-0">
-          v{release.chartVersion}
+          {release.chartVersion}
         </span>
       )}
       {statusBadge(release.status)}
