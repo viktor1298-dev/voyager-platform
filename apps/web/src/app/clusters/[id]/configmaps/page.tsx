@@ -1,10 +1,11 @@
 'use client'
 
-import { FileText, Key, Tag } from 'lucide-react'
+import { FileText, GitFork, Key, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
 import { ResourcePageScaffold } from '@/components/resource'
+import { RelationsTab } from '@/components/resource/RelationsTab'
 import { ResourceDiff } from '@/components/resource/ResourceDiff'
 import { YamlViewer } from '@/components/resource/YamlViewer'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
@@ -77,6 +78,19 @@ function ConfigMapExpandedDetail({ cm, clusterId }: { cm: ConfigMapData; cluster
         ) : (
           <p className="text-[11px] text-[var(--color-text-muted)]">No labels.</p>
         ),
+    },
+    {
+      id: 'relations',
+      label: 'Relations',
+      icon: <GitFork className="h-3.5 w-3.5" />,
+      content: (
+        <RelationsTab
+          clusterId={clusterId}
+          kind="ConfigMap"
+          namespace={cm.namespace}
+          name={cm.name}
+        />
+      ),
     },
     {
       id: 'yaml',

@@ -7,6 +7,7 @@ import {
   CircleCheck,
   Cpu,
   FileText,
+  GitFork,
   HardDrive,
   Package,
   Server,
@@ -22,6 +23,7 @@ import {
   ResourceLoadingSkeleton,
   SearchFilterBar,
 } from '@/components/resource'
+import { RelationsTab } from '@/components/resource/RelationsTab'
 import { ResourceDiff } from '@/components/resource/ResourceDiff'
 import { YamlViewer } from '@/components/resource/YamlViewer'
 import { useTerminal } from '@/components/terminal/terminal-context'
@@ -74,6 +76,9 @@ interface PodData {
     lastTransitionTime?: string
   }[]
   labels: Record<string, string>
+  configMapRefs: string[]
+  secretRefs: string[]
+  pvcRefs: string[]
 }
 
 // ---------------------------------------------------------------------------
@@ -308,6 +313,14 @@ function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
           },
         ]
       : []),
+    {
+      id: 'relations',
+      label: 'Relations',
+      icon: <GitFork className="h-3.5 w-3.5" />,
+      content: (
+        <RelationsTab clusterId={clusterId} kind="Pod" namespace={pod.namespace} name={pod.name} />
+      ),
+    },
     {
       id: 'yaml',
       label: 'YAML',

@@ -1,10 +1,11 @@
 'use client'
 
-import { Box, CircleCheck, Clock, Play, Settings } from 'lucide-react'
+import { Box, CircleCheck, Clock, GitFork, Play, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs } from '@/components/expandable'
 import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
+import { RelationsTab } from '@/components/resource/RelationsTab'
 import { ResourceDiff } from '@/components/resource/ResourceDiff'
 import { YamlViewer } from '@/components/resource/YamlViewer'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
@@ -124,6 +125,14 @@ function JobExpandedDetail({ job, clusterId }: { job: JobData; clusterId: string
         ) : (
           <p className="text-[11px] text-[var(--color-text-muted)]">No conditions reported.</p>
         ),
+    },
+    {
+      id: 'relations',
+      label: 'Relations',
+      icon: <GitFork className="h-3.5 w-3.5" />,
+      content: (
+        <RelationsTab clusterId={clusterId} kind="Job" namespace={job.namespace} name={job.name} />
+      ),
     },
     {
       id: 'yaml',

@@ -1,10 +1,11 @@
 'use client'
 
-import { Clock, List, Play, Settings } from 'lucide-react'
+import { Clock, GitFork, List, Play, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs } from '@/components/expandable'
 import { RelatedResourceLink, ResourcePageScaffold } from '@/components/resource'
+import { RelationsTab } from '@/components/resource/RelationsTab'
 import { ResourceDiff } from '@/components/resource/ResourceDiff'
 import { YamlViewer } from '@/components/resource/YamlViewer'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
@@ -115,6 +116,19 @@ function CronJobExpandedDetail({ cj, clusterId }: { cj: CronJobData; clusterId: 
           <span className="text-[var(--color-text-muted)]">Failed History Limit</span>
           <span className="text-[var(--color-text-primary)]">{cj.failedJobsHistoryLimit}</span>
         </div>
+      ),
+    },
+    {
+      id: 'relations',
+      label: 'Relations',
+      icon: <GitFork className="h-3.5 w-3.5" />,
+      content: (
+        <RelationsTab
+          clusterId={clusterId}
+          kind="CronJob"
+          namespace={cj.namespace}
+          name={cj.name}
+        />
       ),
     },
     {

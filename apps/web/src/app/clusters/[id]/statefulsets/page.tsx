@@ -5,6 +5,7 @@ import {
   Box,
   CircleCheck,
   Database,
+  GitFork,
   HardDrive,
   RotateCw,
   Scaling,
@@ -23,6 +24,7 @@ import {
   RestartConfirmDialog,
   ScaleInput,
 } from '@/components/resource'
+import { RelationsTab } from '@/components/resource/RelationsTab'
 import { ResourceDiff } from '@/components/resource/ResourceDiff'
 import { YamlViewer } from '@/components/resource/YamlViewer'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
@@ -276,6 +278,19 @@ function StatefulSetExpandedDetail({ ss, clusterId }: { ss: StatefulSetData; clu
         ) : (
           <p className="text-[11px] text-[var(--color-text-muted)]">No conditions reported.</p>
         ),
+    },
+    {
+      id: 'relations',
+      label: 'Relations',
+      icon: <GitFork className="h-3.5 w-3.5" />,
+      content: (
+        <RelationsTab
+          clusterId={clusterId}
+          kind="StatefulSet"
+          namespace={ss.namespace}
+          name={ss.name}
+        />
+      ),
     },
     {
       id: 'yaml',

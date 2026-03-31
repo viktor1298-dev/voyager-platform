@@ -1,6 +1,6 @@
 'use client'
 
-import { BarChart3, Box, CircleCheck, Layers, RotateCw, Tag, Trash2 } from 'lucide-react'
+import { BarChart3, Box, CircleCheck, GitFork, Layers, RotateCw, Tag, Trash2 } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -14,6 +14,7 @@ import {
   ResourcePageScaffold,
   RestartConfirmDialog,
 } from '@/components/resource'
+import { RelationsTab } from '@/components/resource/RelationsTab'
 import { ResourceDiff } from '@/components/resource/ResourceDiff'
 import { YamlViewer } from '@/components/resource/YamlViewer'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
@@ -235,6 +236,19 @@ function DaemonSetExpandedDetail({ ds, clusterId }: { ds: DaemonSetData; cluster
         ) : (
           <p className="text-[11px] text-[var(--color-text-muted)]">No conditions reported.</p>
         ),
+    },
+    {
+      id: 'relations',
+      label: 'Relations',
+      icon: <GitFork className="h-3.5 w-3.5" />,
+      content: (
+        <RelationsTab
+          clusterId={clusterId}
+          kind="DaemonSet"
+          namespace={ds.namespace}
+          name={ds.name}
+        />
+      ),
     },
     {
       id: 'yaml',

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Box, CircleCheck, Cpu, HardDrive, MapPin, Server, Tag } from 'lucide-react'
+import { Box, CircleCheck, Cpu, GitFork, HardDrive, MapPin, Server, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import {
@@ -12,6 +12,7 @@ import {
   TagPills,
 } from '@/components/expandable'
 import { TableLoadingSkeleton } from '@/components/resource'
+import { RelationsTab } from '@/components/resource/RelationsTab'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
@@ -51,7 +52,15 @@ interface LiveNode {
 // Node detail expanded content
 // ---------------------------------------------------------------------------
 
-function NodeDetail({ node, podCount }: { node: LiveNode; podCount: number }) {
+function NodeDetail({
+  node,
+  podCount,
+  clusterId,
+}: {
+  node: LiveNode
+  podCount: number
+  clusterId: string
+}) {
   const tabs = [
     {
       id: 'resources',
@@ -178,6 +187,12 @@ function NodeDetail({ node, podCount }: { node: LiveNode; podCount: number }) {
       label: 'Conditions',
       icon: <CircleCheck className="h-3.5 w-3.5" />,
       content: <ConditionsList conditions={node.conditions} />,
+    },
+    {
+      id: 'relations',
+      label: 'Relations',
+      icon: <GitFork className="h-3.5 w-3.5" />,
+      content: <RelationsTab clusterId={clusterId} kind="Node" namespace="" name={node.name} />,
     },
   ]
 
@@ -352,7 +367,13 @@ export default function NodesPage() {
                       </td>
                     </>
                   }
-                  detail={<NodeDetail node={node} podCount={podCountByNode.get(node.name) ?? 0} />}
+                  detail={
+                    <NodeDetail
+                      node={node}
+                      podCount={podCountByNode.get(node.name) ?? 0}
+                      clusterId={resolvedId}
+                    />
+                  }
                 />
               ))}
             </tbody>

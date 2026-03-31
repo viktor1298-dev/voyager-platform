@@ -4,6 +4,7 @@ import {
   BarChart3,
   Box,
   CircleCheck,
+  GitFork,
   Rocket,
   RotateCw,
   Scaling,
@@ -23,6 +24,7 @@ import {
   RestartConfirmDialog,
   ScaleInput,
 } from '@/components/resource'
+import { RelationsTab } from '@/components/resource/RelationsTab'
 import { ResourceDiff } from '@/components/resource/ResourceDiff'
 import { YamlViewer } from '@/components/resource/YamlViewer'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
@@ -287,6 +289,19 @@ function DeploymentExpandedDetail({ d, clusterId }: { d: DeploymentDetail; clust
       label: 'Conditions',
       icon: <CircleCheck className="h-3.5 w-3.5" />,
       content: <ConditionsList conditions={d.conditions} />,
+    },
+    {
+      id: 'relations',
+      label: 'Relations',
+      icon: <GitFork className="h-3.5 w-3.5" />,
+      content: (
+        <RelationsTab
+          clusterId={clusterId}
+          kind="Deployment"
+          namespace={d.namespace}
+          name={d.name}
+        />
+      ),
     },
     {
       id: 'yaml',
