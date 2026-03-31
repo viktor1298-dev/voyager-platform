@@ -221,11 +221,48 @@ function mapK8sEventToWatchType(k8sEvent: 'add' | 'update' | 'delete'): WatchEve
  *  Prevents cold cache on browser refresh — informers stay warm for 60s. */
 const UNSUBSCRIBE_GRACE_MS = 60_000
 
+/** Minimum interval between status events sent to SSE clients (ms).
+ *  Prevents informer connect/error oscillation from flooding the browser. */
+const STATUS_THROTTLE_MS = 2_000
+
+/** How long a connection must be stable before resetting backoff to 0 (ms).
+ *  Prevents backoff from resetting on brief connect-then-error cycles. */
+const STABLE_CONNECTION_MS = 10_000
+
 export class WatchManager {
   private clusters = new Map<string, ClusterWatches>()
   private heartbeatTimers = new Map<string, NodeJS.Timeout>()
   private graceTimers = new Map<string, NodeJS.Timeout>()
   private generationCounter = 0
+  private lastStatusEmit = new Map<string, number>()
+  private pendingStatusTimers = new Map<string, NodeJS.Timeout>()
+  private stableTimers = new Map<string, NodeJS.Timeout>()
+
+  /** Throttled status emit — coalesces rapid connect/reconnect oscillations */
+  private emitThrottledStatus(event: { clusterId: string; state: string; error?: string }): void {
+    const now = Date.now()
+    const last = this.lastStatusEmit.get(event.clusterId) ?? 0
+
+    // Clear any pending deferred emit
+    const pendingTimer = this.pendingStatusTimers.get(event.clusterId)
+    if (pendingTimer) clearTimeout(pendingTimer)
+
+    if (now - last >= STATUS_THROTTLE_MS) {
+      this.lastStatusEmit.set(event.clusterId, now)
+      voyagerEmitter.emitWatchStatus(event as Parameters<typeof voyagerEmitter.emitWatchStatus>[0])
+    } else {
+      // Defer: emit the latest state after the throttle window
+      const remaining = STATUS_THROTTLE_MS - (now - last)
+      const timer = setTimeout(() => {
+        this.pendingStatusTimers.delete(event.clusterId)
+        this.lastStatusEmit.set(event.clusterId, Date.now())
+        voyagerEmitter.emitWatchStatus(
+          event as Parameters<typeof voyagerEmitter.emitWatchStatus>[0],
+        )
+      }, remaining)
+      this.pendingStatusTimers.set(event.clusterId, timer)
+    }
+  }
 
   private resetHeartbeat(clusterId: string, type: ResourceType): void {
     const key = `${clusterId}:${type}`
@@ -330,17 +367,31 @@ export class WatchManager {
             this.handleInformerError(clusterId, def.type, err)
           })
 
-          // Connect handler — mark ready + reset reconnect attempts
+          // Connect handler — mark ready, defer backoff reset until stable
           informer.on('connect', () => {
             const c = this.clusters.get(clusterId)
             if (c) {
               const wasReconnecting = (c.reconnectAttempts.get(def.type) ?? 0) > 0
               c.ready.add(def.type)
-              c.reconnectAttempts.set(def.type, 0)
               this.resetHeartbeat(clusterId, def.type)
-              // Re-emit connected when an informer recovers from error
+
+              // Don't reset backoff immediately — wait for stable connection.
+              // This prevents backoff from resetting on brief connect-then-error
+              // cycles that flood the SSE stream with status events.
+              const stableKey = `${clusterId}:${def.type}`
+              const existingStable = this.stableTimers.get(stableKey)
+              if (existingStable) clearTimeout(existingStable)
+              this.stableTimers.set(
+                stableKey,
+                setTimeout(() => {
+                  this.stableTimers.delete(stableKey)
+                  const current = this.clusters.get(clusterId)
+                  if (current) current.reconnectAttempts.set(def.type, 0)
+                }, STABLE_CONNECTION_MS),
+              )
+
               if (wasReconnecting) {
-                voyagerEmitter.emitWatchStatus({ clusterId, state: 'connected' })
+                this.emitThrottledStatus({ clusterId, state: 'connected' })
               }
             }
           })
@@ -411,9 +462,15 @@ export class WatchManager {
     // Delete entry FIRST so stale error handlers see no cluster
     this.clusters.delete(clusterId)
 
-    // Clear heartbeat timers before stopping informers
+    // Clear heartbeat and stable-connection timers before stopping informers
     for (const [type] of cluster.informers) {
       this.clearHeartbeat(clusterId, type)
+      const stableKey = `${clusterId}:${type}`
+      const stableTimer = this.stableTimers.get(stableKey)
+      if (stableTimer) {
+        clearTimeout(stableTimer)
+        this.stableTimers.delete(stableKey)
+      }
     }
 
     // Stop all informers — abort in-flight HTTP requests
@@ -497,6 +554,14 @@ export class WatchManager {
       clearTimeout(timer)
     }
     this.graceTimers.clear()
+    for (const timer of this.stableTimers.values()) {
+      clearTimeout(timer)
+    }
+    this.stableTimers.clear()
+    for (const timer of this.pendingStatusTimers.values()) {
+      clearTimeout(timer)
+    }
+    this.pendingStatusTimers.clear()
     console.log('[WatchManager] Stopped all informers for all clusters')
   }
 
@@ -519,10 +584,9 @@ export class WatchManager {
       `[WatchManager] Informer error for ${type} on cluster ${clusterId}, reconnecting in ${Math.round(delay + jitter)}ms (attempt ${attempt})`,
     )
 
-    voyagerEmitter.emitWatchStatus({
+    this.emitThrottledStatus({
       clusterId,
       state: 'reconnecting',
-      resourceType: type,
       error: err instanceof Error ? err.message : String(err),
     })
 
