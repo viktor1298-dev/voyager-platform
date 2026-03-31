@@ -22,3 +22,7 @@ pool.on('error', (err) => console.error('[pg-pool] Unexpected error on idle clie
 
 export const db = drizzle(pool, { schema })
 export type Database = typeof db
+
+export async function closeDatabase(): Promise<void> {
+  await pool.end()
+}

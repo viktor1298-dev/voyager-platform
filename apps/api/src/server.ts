@@ -17,9 +17,11 @@ import {
   stopMetricsHistoryCollector,
 } from './jobs/metrics-history-collector.js'
 import { metricsStreamJob } from './jobs/metrics-stream-job.js'
+import { closeDatabase } from '@voyager/db'
 import { auth } from './lib/auth.js'
 import { mapAuthRouteErrorToBody, mapAuthRouteErrorToStatus } from './lib/auth-error-mapping.js'
 import { shouldRequireAuth, UNAUTHORIZED_RESPONSE } from './lib/auth-guard.js'
+import { closeRedis } from './lib/cache.js'
 import { resolveExternalRequestUrl } from './lib/auth-request.js'
 import { ensureAdminUser } from './lib/ensure-admin-user.js'
 import { stopPresenceSweep } from './lib/presence.js'
@@ -51,6 +53,15 @@ if (CLUSTER_CRED_ENCRYPTION_KEY === '0'.repeat(64)) {
   throw new Error(
     'CLUSTER_CRED_ENCRYPTION_KEY must not be all zeros — generate with: openssl rand -hex 32',
   )
+}
+
+if (process.env.NODE_ENV === 'production') {
+  if (process.env.JWT_SECRET === 'change-me-in-production') {
+    throw new Error('JWT_SECRET must be changed in production')
+  }
+  if (process.env.ADMIN_PASSWORD === 'admin123') {
+    throw new Error('ADMIN_PASSWORD must be changed in production')
+  }
 }
 
 // Initialize Sentry early
@@ -324,6 +335,8 @@ const start = async () => {
             stopDeploySmokeTest()
           }
           stopPresenceSweep()
+          await closeDatabase()
+          await closeRedis()
           await flushSentry()
           await shutdownTelemetry()
           await app.close()

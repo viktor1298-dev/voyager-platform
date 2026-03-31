@@ -6,10 +6,14 @@ let client: ReturnType<typeof createClient> | null = null
 
 export async function getRedisClient() {
   if (!client) {
-    client = createClient({ url: REDIS_URL })
+    client = createClient({
+      url: REDIS_URL,
+      socket: {
+        reconnectStrategy: (retries: number) => Math.min(retries * 100, 5000),
+      },
+    })
     client.on('error', (err) => {
       console.warn('Redis error:', err)
-      client = null
     })
     await client.connect().catch(() => {
       client = null
@@ -41,6 +45,14 @@ export async function invalidateKey(key: string): Promise<void> {
   try {
     await redis.del(key)
   } catch {}
+}
+
+export async function closeRedis(): Promise<void> {
+  try {
+    await client?.quit()
+  } catch {
+    // ignore
+  }
 }
 
 export async function invalidateK8sCache(): Promise<number> {
