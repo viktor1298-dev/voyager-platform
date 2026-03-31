@@ -1,0 +1,184 @@
+[     120ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     152ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     442ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     572ms] [LOG] [Fast Refresh] done in 234ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     781ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     989ms] [LOG] [Fast Refresh] done in 308ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  191436ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  191798ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  191809ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  193877ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  193885ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  269998ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  270008ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  272573ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  272590ms] [LOG] [Fast Refresh] done in 120ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  294649ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  294656ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  309287ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  309297ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  459438ms] [WARNING] You have Reduced Motion enabled on your device. Animations may not appear as expected.. For more information and steps for solving, visit https://motion.dev/troubleshooting/reduced-motion-disabled @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1179009ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1179010ms] [LOG] [Fast Refresh] done in 988ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1206274ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1206933ms] [LOG] [Fast Refresh] done in 771ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1264566ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1273962ms] [LOG] [Fast Refresh] done in 9497ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1526425ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1526425ms] [LOG] [Fast Refresh] done in 253ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1561015ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1561993ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1562348ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1563358ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1563995ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1564024ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1565033ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1567056ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1567997ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1569447ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[ 1571068ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1574340ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1574349ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.history?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22range%22%3A%226h%22%7D:0
+[ 1575350ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1575516ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 1576001ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1576076ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1577085ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1577359ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.history?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22range%22%3A%226h%22%7D:0
+[ 1577364ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1578664ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1579092ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1579671ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1580367ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.history?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22range%22%3A%226h%22%7D:0
+[ 1581680ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1583101ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1585688ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1588109ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1589118ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1591126ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1592004ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1593367ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1594376ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1595135ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1595660ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.nodeBreakdown?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1596669ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.nodeBreakdown?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1599447ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[ 1600144ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1601155ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1603167ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1607178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1612188ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1613197ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1615207ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1615697ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1616706ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1618717ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1619216ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1620530ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 1622006ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1622732ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1624225ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1624383ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1625236ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1625395ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1626701ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1626711ms] [LOG] [Fast Refresh] done in 110ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1627246ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1629446ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[ 1631255ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1636263ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1637270ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1637371ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1638379ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1639282ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1640375ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.history?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22range%22%3A%226h%22%7D:0
+[ 1640386ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1643291ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1643382ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.history?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22range%22%3A%226h%22%7D:0
+[ 1646389ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.history?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22range%22%3A%226h%22%7D:0
+[ 1648298ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1649307ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1651315ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1652009ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1652745ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1653753ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1655322ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1655404ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1655762ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1656412ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1656678ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.nodeBreakdown?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1657688ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.nodeBreakdown?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1659446ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[ 1659768ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1660330ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1661337ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1663347ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1665539ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 1667355ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1672363ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1673372ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1675380ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1679387ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1682012ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1684394ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1685401ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1686419ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1687409ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1687427ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1689446ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[ 1689777ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1690786ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1691416ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1692794ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1696425ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1696802ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1697432ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1699441ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1700396ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1701404ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1703412ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1703448ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1706397ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.history?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22range%22%3A%226h%22%7D:0
+[ 1708457ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1709404ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.history?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22range%22%3A%226h%22%7D:0
+[ 1709464ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1710546ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 1711472ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1712014ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1712412ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.history?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%2C%22range%22%3A%226h%22%7D:0
+[ 1715480ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1717437ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1717694ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.nodeBreakdown?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1718445ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1718700ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.nodeBreakdown?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1719447ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[ 1720488ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1721497ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1723502ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1726811ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1727510ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/topology.graph?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1727819ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1728530ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:3000/trpc/presence.subscribe:0
+[ 1729533ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=bJ9ltRi4JBgJVcSwIutLI' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[ 1729822ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1730534ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=bJ9ltRi4JBgJVcSwIutLI' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[ 1732140ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1732279ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.subscribe:0
+[ 1733559ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1733598ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1733771ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1733829ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[ 1733856ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.get?input=%7B%22id%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1733867ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/resources.snapshot?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[ 1734012ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[ 1734021ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[ 1734025ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1734029ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1734092ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[ 1734093ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[ 1734109ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.subscribe:0
+[ 1734151ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0
+[ 1735034ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[ 1740087ms] [WARNING] The resource http://localhost:3000/_next/static/chunks/0bsr_%40xyflow_react_dist_style_0u.i6ky.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/login?returnUrl=%2Fclusters%2Fbe3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1:0
+[ 1936357ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1936388ms] [LOG] [Fast Refresh] done in 132ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431

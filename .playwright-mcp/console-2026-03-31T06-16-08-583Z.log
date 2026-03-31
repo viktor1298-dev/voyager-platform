@@ -1,0 +1,560 @@
+[     175ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     314ms] [LOG] [Fast Refresh] done in 240ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     355ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     371ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   14949ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   14987ms] [LOG] [Fast Refresh] done in 138ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   25057ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   25068ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   25233ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   25480ms] [LOG] [Fast Refresh] done in 347ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  264460ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  264626ms] [LOG] [Fast Refresh] done in 267ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  302405ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  303391ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  305393ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  309395ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  311510ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  312521ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  317398ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  325246ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[  325661ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  325750ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  326670ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  326758ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  328679ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  328766ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  332773ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  333400ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  340766ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[  342530ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  343541ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  355242ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[  362785ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  363403ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  363792ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  365800ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  369807ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  373550ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  374558ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  385178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[  385774ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[  388687ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  389693ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  391700ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  393405ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  399816ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  400824ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  402831ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  404565ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  405573ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  406840ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  414365ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  415021ms] [LOG] [Fast Refresh] done in 631ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  415237ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[  423407ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  424322ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  425631ms] [LOG] [Fast Refresh] done in 1326ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  425964ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  426044ms] [LOG] [Fast Refresh] done in 181ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  426328ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  427236ms] [LOG] [Fast Refresh] done in 1009ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  430782ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[  435581ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  436589ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  436847ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  437856ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  438582ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  439980ms] [LOG] [Fast Refresh] done in 1418ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  440048ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  440254ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  441369ms] [LOG] [Fast Refresh] done in 31ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  441470ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  441765ms] [LOG] [Fast Refresh] done in 395ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  444064ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  445230ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[  451707ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  452713ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  453413ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  454732ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  466599ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  467603ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  474072ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  475077ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  475175ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[  475787ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[  477088ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  481096ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  483416ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  497613ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  498622ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  505244ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[  511106ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  512114ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  513419ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  514124ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  514741ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  515750ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  517759ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  518132ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  520795ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[  528631ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  529640ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  535248ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[  543421ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  548140ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  549148ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  551155ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  555163ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  559649ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  560656ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  565218ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[  565803ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[  573423ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  575404ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=vStv09KFX_qTeYAMvcLSq' failed:  @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  576412ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=vStv09KFX_qTeYAMvcLSq' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  578994ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  579070ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  580762ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  581438ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  581450ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  581486ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[  581488ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[  581533ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.get?input=%7B%22id%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[  581533ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/resources.snapshot?input=%7B%22clusterId%22%3A%22be3ed763-7a2b-4172-a5a6-01dcd27de1ce%22%7D:0
+[  581534ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.getOnlineUsers:0
+[  581581ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  581583ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/events.list?input=%7B%22limit%22%3A50%7D:0
+[  581587ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[  581589ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.heartbeat:0
+[  581593ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/alerts.unacknowledgedCount:0
+[  581622ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/presence.subscribe:0
+[  581647ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  581652ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0
+[  581682ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  581684ms] [LOG] [Fast Refresh] done in 105ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  582587ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/clusters.list:0
+[  651644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  656644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  661644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  666644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  671247ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  671275ms] [LOG] [Fast Refresh] done in 129ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  671645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  676645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  681644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  686645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  691645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  696644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  701643ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  706644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  711644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  716643ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  718979ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=6KZrKL_7Haou9HLm4wndw' failed:  @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  719986ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=6KZrKL_7Haou9HLm4wndw' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  721643ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  722141ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  723709ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  723740ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  723815ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  723855ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[  723866ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0
+[  808804ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  813805ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  815110ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UuFCGcpK1-oB8H0vecZzR' failed:  @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  816118ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UuFCGcpK1-oB8H0vecZzR' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  817121ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UuFCGcpK1-oB8H0vecZzR' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  818125ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UuFCGcpK1-oB8H0vecZzR' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  818804ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  819129ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UuFCGcpK1-oB8H0vecZzR' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  820130ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UuFCGcpK1-oB8H0vecZzR' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  823804ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  825137ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UuFCGcpK1-oB8H0vecZzR' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  828805ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  830148ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UuFCGcpK1-oB8H0vecZzR' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  833804ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  835158ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=UuFCGcpK1-oB8H0vecZzR' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  838803ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  840182ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  841672ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  841696ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  841787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  841830ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[  841864ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0
+[ 1648133ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1648230ms] [LOG] [Fast Refresh] done in 197ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1701777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1706777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1711777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1716777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1721776ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1724823ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1725002ms] [LOG] [Fast Refresh] done in 280ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1725740ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1725786ms] [LOG] [Fast Refresh] done in 148ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1726778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1731777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1736777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1741777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1746778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1751777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1756776ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1761310ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1761338ms] [LOG] [Fast Refresh] done in 130ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1761609ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1761615ms] [LOG] [Fast Refresh] done in 107ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1761777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1766778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1771777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1776777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1781778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1786778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1791777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1796778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1801777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1806777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1811777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1816778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1821778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1826778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1831778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1836778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1841778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1846778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1851778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1856777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1861777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1866777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1871777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1876778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1881778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1886777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1891778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1896777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1901777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1906777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1911777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1916778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1921777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1926777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1931777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1936776ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1941776ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1946777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1951777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1956777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1961777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1966776ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1971777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1976778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1981777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1986777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1991778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 1996777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2001777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2006777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2011777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2016777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2021777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2026778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2031777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2036777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2041777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2046777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2051777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2056777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2061777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2066778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2071778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2076778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2081777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2086778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2091777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2096777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2101778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2106777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2111778ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2116776ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2161777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2186777ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 2789663ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 2789684ms] [LOG] [Fast Refresh] done in 122ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 2797302ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 2799492ms] [LOG] [Fast Refresh] done in 2292ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3686789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3691784ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3696790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3711064ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3711257ms] [LOG] [Fast Refresh] done in 295ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3721783ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3726066ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3726257ms] [LOG] [Fast Refresh] done in 292ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3729139ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3730554ms] [LOG] [Fast Refresh] done in 1438ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3736786ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3738451ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3741791ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3744904ms] [LOG] [Fast Refresh] done in 6549ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3746236ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3746429ms] [LOG] [Fast Refresh] done in 293ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3746762ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3746783ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3746810ms] [LOG] [Fast Refresh] done in 148ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3746958ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3747068ms] [LOG] [Fast Refresh] done in 210ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3747243ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3747351ms] [LOG] [Fast Refresh] done in 208ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3747562ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3747581ms] [LOG] [Fast Refresh] done in 120ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3747812ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3747814ms] [LOG] [Fast Refresh] done in 102ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3748112ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3748167ms] [LOG] [Fast Refresh] done in 155ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3748271ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3748578ms] [LOG] [Fast Refresh] done in 407ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3749769ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3749928ms] [LOG] [Fast Refresh] done in 261ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3755346ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3756786ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3757961ms] [LOG] [Fast Refresh] done in 2698ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3758106ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3758201ms] [LOG] [Fast Refresh] done in 197ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3758856ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3758866ms] [LOG] [Fast Refresh] done in 110ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3758975ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3758979ms] [LOG] [Fast Refresh] done in 105ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3759080ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3759252ms] [LOG] [Fast Refresh] done in 273ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3759459ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3759804ms] [LOG] [Fast Refresh] done in 445ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3761785ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3763204ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3764314ms] [LOG] [Fast Refresh] done in 883ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3771785ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3776786ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3778666ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3778669ms] [LOG] [Fast Refresh] done in 106ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3781784ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3786784ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3791785ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3796702ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3796703ms] [LOG] [Fast Refresh] done in 103ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 3796784ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3801784ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3806784ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3811785ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3816784ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3821785ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3826786ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3831786ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3836785ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3841790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3846786ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3851788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3856786ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3861786ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3866789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3871787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3876787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3881786ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3886787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3891787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3896787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3901788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3906787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3911787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3916787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3921787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3926787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3931788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3936787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3941788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3946788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3951787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3956788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3961787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3966787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3971788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3976787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3981787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3986788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3991788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 3996788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4001787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4006788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4011787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4016788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4021787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4026788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4031788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4036787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4041787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4046788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4051787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4056787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4061788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4066787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4071787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4076787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4081787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4084906ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4084909ms] [LOG] [Fast Refresh] done in 104ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4086788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4091787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4096788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4101788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4106788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4111788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4116789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4121788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4126787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4131788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4136788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4141787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4146789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4151788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4156788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4161788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4166789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4171789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4176788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4181789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4186789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4191788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4196788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4201789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4206789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4211788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4216788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4221788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4226788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4231788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4236787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4241787ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4246788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4251788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4256788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4261788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4266789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4271788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4276789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4281788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4286788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4291788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4296789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4301788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4306788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4311789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4316789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4321789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4326790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4331789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4336788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4341791ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4346791ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4351792ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4356789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4361788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4366790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4371791ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4376790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4381788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4386789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4391788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4396790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4401789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4406790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4411790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4416789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4421790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4426789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4431790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4436789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4441790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4446789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4451789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4456789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4461791ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4466790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4471788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4476790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4481790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4486789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4491789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4496790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4501789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4506790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4511791ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4516791ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4521789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4526791ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4531790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4536790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4541791ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4546789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4551790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4556790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4561789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4566790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4571789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4576790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4581789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4586790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4591789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4596790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4601788ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4606790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4611792ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4616789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4621789ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4626790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4631790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4633493ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4635488ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4635488ms] [LOG] [Fast Refresh] done in 2013ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4635814ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4635837ms] [LOG] [Fast Refresh] done in 124ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4635876ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0
+[ 4635884ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[ 4636332ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4636339ms] [LOG] [Fast Refresh] done in 108ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4636442ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4636466ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4636584ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4636658ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4636665ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[ 4636722ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0
+[ 4636806ms] [LOG] [Fast Refresh] done in 322ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4637091ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4637278ms] [LOG] [Fast Refresh] done in 288ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4641645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4643484ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4643575ms] [LOG] [Fast Refresh] done in 192ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 4646650ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4651646ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4656643ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4661644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4666644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4671645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4676645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4681645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4686647ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4691644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4696645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4701645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4706644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4711644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4716645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4721645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4726645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4731646ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4736645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4741645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4746645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4751647ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4756648ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4761647ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4766645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4771645ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4776647ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[ 4781646ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0

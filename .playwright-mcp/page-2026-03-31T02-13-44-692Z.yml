@@ -1,0 +1,942 @@
+- generic [ref=e1]:
+  - link "Skip to content" [ref=e3] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e6]
+      - generic [ref=e7]: VOYAGER
+    - generic [ref=e8]:
+      - combobox "Active cluster" [ref=e10]:
+        - option "Select Cluster" [selected]
+        - option "🟢 test-cluster-minikube"
+        - option "⚪ prod-cluster-eks"
+        - option "🟢 eks-devops-separate-us-east-1"
+      - generic [ref=e11]:
+        - generic [ref=e12]: 1.3%
+        - generic [ref=e13]: CPU
+    - generic [ref=e14]:
+      - generic [ref=e15]: Voyager Admin
+      - button "Open command palette" [ref=e16] [cursor=pointer]:
+        - img [ref=e17]
+        - generic [ref=e20]: ⌘K
+      - button "Change theme" [ref=e22] [cursor=pointer]:
+        - img [ref=e23]
+      - button "8" [ref=e26] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e30]: "8"
+      - button "Logout" [ref=e31] [cursor=pointer]:
+        - img [ref=e32]
+        - generic [ref=e35]: Logout
+      - generic "Connected · Synced just now" [ref=e36]:
+        - generic [ref=e38]: Live
+  - complementary [ref=e39]:
+    - navigation "Main navigation" [ref=e40]:
+      - link [ref=e42] [cursor=pointer]:
+        - /url: /
+        - img [ref=e43]
+      - link [expanded] [ref=e49] [cursor=pointer]:
+        - /url: /clusters
+        - img [ref=e51]
+      - link "12" [ref=e55] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e56]
+        - generic [ref=e59]: "12"
+      - link [ref=e61] [cursor=pointer]:
+        - /url: /events
+        - img [ref=e62]
+      - link [ref=e65] [cursor=pointer]:
+        - /url: /logs
+        - img [ref=e66]
+      - link [ref=e70] [cursor=pointer]:
+        - /url: /settings
+        - img [ref=e71]
+    - button "Expand sidebar" [ref=e74] [cursor=pointer]:
+      - img [ref=e75]
+  - main [ref=e77]:
+    - generic [ref=e78]:
+      - generic "1 user online" [ref=e79]:
+        - generic [ref=e83]: "1"
+      - img "Voyager Admin is online" [ref=e86]:
+        - text: VA
+        - generic: Voyager Admin
+    - generic [ref=e88]:
+      - navigation [ref=e89]:
+        - link "Dashboard" [ref=e91] [cursor=pointer]:
+          - /url: /
+          - img [ref=e92]
+        - generic [ref=e95]:
+          - img [ref=e96]
+          - link "Clusters" [ref=e98] [cursor=pointer]:
+            - /url: /clusters
+        - generic [ref=e99]:
+          - img [ref=e100]
+          - link "eks-devops-separate-us-east-1" [ref=e102] [cursor=pointer]:
+            - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1
+        - generic [ref=e103]:
+          - img [ref=e104]
+          - generic "helm" [ref=e106]
+      - generic [ref=e108]:
+        - generic:
+          - img
+        - generic [ref=e109]:
+          - heading "eks-devops-separate-us-east-1" [level=1] [ref=e110]
+          - generic [ref=e111]:
+            - generic [ref=e112]: kubeconfig
+            - generic [ref=e113]: active
+            - status [ref=e114]:
+              - generic [ref=e116]: Live
+      - navigation "Cluster tabs" [ref=e118]:
+        - link "Overview" [ref=e119] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1
+          - img [ref=e120]
+          - text: Overview
+        - link "Nodes" [ref=e125] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/nodes
+          - img [ref=e126]
+          - text: Nodes
+        - link "Events" [ref=e129] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/events
+          - img [ref=e130]
+          - text: Events
+        - link "Logs" [ref=e132] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/logs
+          - img [ref=e133]
+          - text: Logs
+        - link "Metrics" [ref=e136] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/metrics
+          - img [ref=e137]
+          - text: Metrics
+        - button "Workloads" [ref=e140] [cursor=pointer]:
+          - img [ref=e141]
+          - text: Workloads
+          - img [ref=e145]
+        - button "Networking" [ref=e148] [cursor=pointer]:
+          - img [ref=e149]
+          - text: Networking
+          - img [ref=e155]
+        - button "Config" [ref=e158] [cursor=pointer]:
+          - img [ref=e159]
+          - text: Config
+          - img [ref=e163]
+        - button "Storage" [ref=e166] [cursor=pointer]:
+          - img [ref=e167]
+          - text: Storage
+          - img [ref=e170]
+        - button "Scaling" [ref=e173] [cursor=pointer]:
+          - img [ref=e174]
+          - text: Scaling
+          - img [ref=e178]
+        - button "Helm" [ref=e181] [cursor=pointer]:
+          - img [ref=e182]
+          - text: Helm
+          - img [ref=e185]
+      - generic [ref=e188]:
+        - heading "Helm Releases" [level=1] [ref=e189]
+        - generic [ref=e190]:
+          - generic [ref=e191]:
+            - img [ref=e192]
+            - textbox "Search resources" [ref=e195]:
+              - /placeholder: Search releases by name or status...
+          - button "Fold NS" [ref=e196] [cursor=pointer]:
+            - img [ref=e197]
+            - text: Fold NS
+          - button "Collapse All" [active] [ref=e679] [cursor=pointer]:
+            - img [ref=e201]
+            - text: Collapse All
+        - generic [ref=e204]:
+          - generic [ref=e205]:
+            - button "karpenter 1" [expanded] [ref=e206] [cursor=pointer]:
+              - img [ref=e208]
+              - generic [ref=e210]: karpenter
+              - generic [ref=e211]: "1"
+            - generic [ref=e215]:
+              - button "karpenter karpenter-1.5.1 deployed rev 1 131d ago" [expanded] [ref=e216] [cursor=pointer]:
+                - generic [ref=e218]:
+                  - img [ref=e219]
+                  - generic [ref=e223]: karpenter
+                  - generic [ref=e224]: karpenter-1.5.1
+                  - generic [ref=e225]: deployed
+                  - generic [ref=e226]: rev 1
+                  - generic [ref=e227]: 131d ago
+                - img [ref=e229]
+              - generic [ref=e682]:
+                - generic [ref=e683]:
+                  - button "Info" [ref=e684] [cursor=pointer]:
+                    - img [ref=e686]
+                    - text: Info
+                  - button "Values" [ref=e689] [cursor=pointer]:
+                    - img [ref=e691]
+                    - text: Values
+                  - button "Revisions" [ref=e694] [cursor=pointer]:
+                    - img [ref=e696]
+                    - text: Revisions
+                  - button "Resources" [ref=e700] [cursor=pointer]:
+                    - img [ref=e702]
+                    - text: Resources
+                - generic [ref=e709]:
+                  - generic [ref=e710]: Chart
+                  - generic [ref=e711]: karpenter-1.5.1
+                  - generic [ref=e712]: App Version
+                  - generic [ref=e713]: 1.5.1
+                  - generic [ref=e714]: Namespace
+                  - generic [ref=e715]: karpenter
+                  - generic [ref=e716]: Revision
+                  - generic [ref=e717]: "1"
+                  - generic [ref=e718]: First Deployed
+                  - generic [ref=e719]: 131d ago
+                  - generic [ref=e720]: Last Deployed
+                  - generic [ref=e721]: 131d ago
+          - generic [ref=e231]:
+            - button "keda 1" [expanded] [ref=e232] [cursor=pointer]:
+              - img [ref=e234]
+              - generic [ref=e236]: keda
+              - generic [ref=e237]: "1"
+            - generic [ref=e241]:
+              - button "keda keda-2.10.0 deployed rev 1 131d ago" [expanded] [ref=e242] [cursor=pointer]:
+                - generic [ref=e244]:
+                  - img [ref=e245]
+                  - generic [ref=e249]: keda
+                  - generic [ref=e250]: keda-2.10.0
+                  - generic [ref=e251]: deployed
+                  - generic [ref=e252]: rev 1
+                  - generic [ref=e253]: 131d ago
+                - img [ref=e255]
+              - generic [ref=e724]:
+                - generic [ref=e725]:
+                  - button "Info" [ref=e726] [cursor=pointer]:
+                    - img [ref=e728]
+                    - text: Info
+                  - button "Values" [ref=e731] [cursor=pointer]:
+                    - img [ref=e733]
+                    - text: Values
+                  - button "Revisions" [ref=e736] [cursor=pointer]:
+                    - img [ref=e738]
+                    - text: Revisions
+                  - button "Resources" [ref=e742] [cursor=pointer]:
+                    - img [ref=e744]
+                    - text: Resources
+                - generic [ref=e751]:
+                  - generic [ref=e752]: Chart
+                  - generic [ref=e753]: keda-2.10.0
+                  - generic [ref=e754]: App Version
+                  - generic [ref=e755]: 2.10.0
+                  - generic [ref=e756]: Namespace
+                  - generic [ref=e757]: keda
+                  - generic [ref=e758]: Revision
+                  - generic [ref=e759]: "1"
+                  - generic [ref=e760]: First Deployed
+                  - generic [ref=e761]: 131d ago
+                  - generic [ref=e762]: Last Deployed
+                  - generic [ref=e763]: 131d ago
+          - generic [ref=e257]:
+            - button "kube-infra 8" [expanded] [ref=e258] [cursor=pointer]:
+              - img [ref=e260]
+              - generic [ref=e262]: kube-infra
+              - generic [ref=e263]: "8"
+            - generic [ref=e265]:
+              - generic [ref=e267]:
+                - button "datashim datashim-0.4.2 deployed rev 1 131d ago" [expanded] [ref=e268] [cursor=pointer]:
+                  - generic [ref=e270]:
+                    - img [ref=e271]
+                    - generic [ref=e275]: datashim
+                    - generic [ref=e276]: datashim-0.4.2
+                    - generic [ref=e277]: deployed
+                    - generic [ref=e278]: rev 1
+                    - generic [ref=e279]: 131d ago
+                  - img [ref=e281]
+                - generic [ref=e766]:
+                  - generic [ref=e767]:
+                    - button "Info" [ref=e768] [cursor=pointer]:
+                      - img [ref=e770]
+                      - text: Info
+                    - button "Values" [ref=e773] [cursor=pointer]:
+                      - img [ref=e775]
+                      - text: Values
+                    - button "Revisions" [ref=e778] [cursor=pointer]:
+                      - img [ref=e780]
+                      - text: Revisions
+                    - button "Resources" [ref=e784] [cursor=pointer]:
+                      - img [ref=e786]
+                      - text: Resources
+                  - generic [ref=e793]:
+                    - generic [ref=e794]: Chart
+                    - generic [ref=e795]: datashim-0.4.2
+                    - generic [ref=e796]: App Version
+                    - generic [ref=e797]: 0.4.0
+                    - generic [ref=e798]: Namespace
+                    - generic [ref=e799]: kube-infra
+                    - generic [ref=e800]: Revision
+                    - generic [ref=e801]: "1"
+                    - generic [ref=e802]: First Deployed
+                    - generic [ref=e803]: 131d ago
+                    - generic [ref=e804]: Last Deployed
+                    - generic [ref=e805]: 131d ago
+              - generic [ref=e284]:
+                - button "external-dns external-dns-6.28.1 deployed rev 1 131d ago" [expanded] [ref=e285] [cursor=pointer]:
+                  - generic [ref=e287]:
+                    - img [ref=e288]
+                    - generic [ref=e292]: external-dns
+                    - generic [ref=e293]: external-dns-6.28.1
+                    - generic [ref=e294]: deployed
+                    - generic [ref=e295]: rev 1
+                    - generic [ref=e296]: 131d ago
+                  - img [ref=e298]
+                - generic [ref=e808]:
+                  - generic [ref=e809]:
+                    - button "Info" [ref=e810] [cursor=pointer]:
+                      - img [ref=e812]
+                      - text: Info
+                    - button "Values" [ref=e815] [cursor=pointer]:
+                      - img [ref=e817]
+                      - text: Values
+                    - button "Revisions" [ref=e820] [cursor=pointer]:
+                      - img [ref=e822]
+                      - text: Revisions
+                    - button "Resources" [ref=e826] [cursor=pointer]:
+                      - img [ref=e828]
+                      - text: Resources
+                  - generic [ref=e834]:
+                    - generic [ref=e835]:
+                      - generic [ref=e836]: Chart
+                      - generic [ref=e837]: external-dns-6.28.1
+                      - generic [ref=e838]: App Version
+                      - generic [ref=e839]: 0.13.6
+                      - generic [ref=e840]: Namespace
+                      - generic [ref=e841]: kube-infra
+                      - generic [ref=e842]: Revision
+                      - generic [ref=e843]: "1"
+                      - generic [ref=e844]: First Deployed
+                      - generic [ref=e845]: 131d ago
+                      - generic [ref=e846]: Last Deployed
+                      - generic [ref=e847]: 131d ago
+                    - generic [ref=e848]:
+                      - paragraph [ref=e849]: Notes
+                      - generic [ref=e850]: "CHART NAME: external-dns CHART VERSION: 6.28.1 APP VERSION: 0.13.6 ** Please be patient while the chart is being deployed ** To verify that external-dns has started, run: kubectl --namespace=kube-infra get pods -l \"app.kubernetes.io/name=external-dns,app.kubernetes.io/instance=external-dns\""
+              - generic [ref=e301]:
+                - button "fluent-bit fluent-bit-2.5.0+3959 deployed rev 3 26d ago" [expanded] [ref=e302] [cursor=pointer]:
+                  - generic [ref=e304]:
+                    - img [ref=e305]
+                    - generic [ref=e309]: fluent-bit
+                    - generic [ref=e310]: fluent-bit-2.5.0+3959
+                    - generic [ref=e311]: deployed
+                    - generic [ref=e312]: rev 3
+                    - generic [ref=e313]: 26d ago
+                  - img [ref=e315]
+                - generic [ref=e853]:
+                  - generic [ref=e854]:
+                    - button "Info" [ref=e855] [cursor=pointer]:
+                      - img [ref=e857]
+                      - text: Info
+                    - button "Values" [ref=e860] [cursor=pointer]:
+                      - img [ref=e862]
+                      - text: Values
+                    - button "Revisions" [ref=e865] [cursor=pointer]:
+                      - img [ref=e867]
+                      - text: Revisions
+                    - button "Resources" [ref=e871] [cursor=pointer]:
+                      - img [ref=e873]
+                      - text: Resources
+                  - generic [ref=e879]:
+                    - generic [ref=e880]:
+                      - generic [ref=e881]: Chart
+                      - generic [ref=e882]: fluent-bit-2.5.0+3959
+                      - generic [ref=e883]: App Version
+                      - generic [ref=e884]: 3.2.5
+                      - generic [ref=e885]: Namespace
+                      - generic [ref=e886]: kube-infra
+                      - generic [ref=e887]: Revision
+                      - generic [ref=e888]: "3"
+                      - generic [ref=e889]: First Deployed
+                      - generic [ref=e890]: 131d ago
+                      - generic [ref=e891]: Last Deployed
+                      - generic [ref=e892]: 26d ago
+                    - generic [ref=e893]:
+                      - paragraph [ref=e894]: Notes
+                      - generic [ref=e895]: "CHART NAME: fluent-bit CHART VERSION: 2.5.0+3959 APP VERSION: 3.2.5 Did you know there are enterprise versions of the Bitnami catalog? For enhanced secure software supply chain features, unlimited pulls from Docker, LTS support, or application customization, see Bitnami Premium or Tanzu Application Catalog. See https://www.arrow.com/globalecs/na/vendors/bitnami for more information. ** Please be patient while the chart is being deployed ** 1. Get the application URL by running these commands: echo \"HTTP port at 127.0.0.1:2020\" kubectl port-forward svc/fluent-bit 2020:2020 & ⚠ SECURITY WARNING: Original containers have been substituted. This Helm chart was designed, tested, and validated on multiple platforms using a specific set of Bitnami and Tanzu Application Catalog containers. Substituting other containers is likely to cause degraded security and performance, broken chart features, and missing environment variables. Substituted images detected: - third-party-images-2.voyagerlabs.co/fluent-bit:3.2.5-3959 ⚠ SECURITY WARNING: Verifying original container images was skipped. Please note this Helm chart was designed, tested, and validated on multiple platforms using a specific set of Bitnami and Bitnami Secure Images containers. Substituting other containers is likely to cause degraded security and performance, broken chart features, and missing environment variables."
+              - generic [ref=e318]:
+                - button "gpu-operator gpu-operator-v24.9.2 deployed rev 1 131d ago" [expanded] [ref=e319] [cursor=pointer]:
+                  - generic [ref=e321]:
+                    - img [ref=e322]
+                    - generic [ref=e326]: gpu-operator
+                    - generic [ref=e327]: gpu-operator-v24.9.2
+                    - generic [ref=e328]: deployed
+                    - generic [ref=e329]: rev 1
+                    - generic [ref=e330]: 131d ago
+                  - img [ref=e332]
+                - generic [ref=e898]:
+                  - generic [ref=e899]:
+                    - button "Info" [ref=e900] [cursor=pointer]:
+                      - img [ref=e902]
+                      - text: Info
+                    - button "Values" [ref=e905] [cursor=pointer]:
+                      - img [ref=e907]
+                      - text: Values
+                    - button "Revisions" [ref=e910] [cursor=pointer]:
+                      - img [ref=e912]
+                      - text: Revisions
+                    - button "Resources" [ref=e916] [cursor=pointer]:
+                      - img [ref=e918]
+                      - text: Resources
+                  - generic [ref=e925]:
+                    - generic [ref=e926]: Chart
+                    - generic [ref=e927]: gpu-operator-v24.9.2
+                    - generic [ref=e928]: App Version
+                    - generic [ref=e929]: v24.9.2
+                    - generic [ref=e930]: Namespace
+                    - generic [ref=e931]: kube-infra
+                    - generic [ref=e932]: Revision
+                    - generic [ref=e933]: "1"
+                    - generic [ref=e934]: First Deployed
+                    - generic [ref=e935]: 131d ago
+                    - generic [ref=e936]: Last Deployed
+                    - generic [ref=e937]: 131d ago
+              - generic [ref=e335]:
+                - button "kube-arangodb-crd kube-arangodb-crd-1.2.50 deployed rev 1 131d ago" [expanded] [ref=e336] [cursor=pointer]:
+                  - generic [ref=e338]:
+                    - img [ref=e339]
+                    - generic [ref=e343]: kube-arangodb-crd
+                    - generic [ref=e344]: kube-arangodb-crd-1.2.50
+                    - generic [ref=e345]: deployed
+                    - generic [ref=e346]: rev 1
+                    - generic [ref=e347]: 131d ago
+                  - img [ref=e349]
+                - generic [ref=e940]:
+                  - generic [ref=e941]:
+                    - button "Info" [ref=e942] [cursor=pointer]:
+                      - img [ref=e944]
+                      - text: Info
+                    - button "Values" [ref=e947] [cursor=pointer]:
+                      - img [ref=e949]
+                      - text: Values
+                    - button "Revisions" [ref=e952] [cursor=pointer]:
+                      - img [ref=e954]
+                      - text: Revisions
+                    - button "Resources" [ref=e958] [cursor=pointer]:
+                      - img [ref=e960]
+                      - text: Resources
+                  - generic [ref=e967]:
+                    - generic [ref=e968]: Chart
+                    - generic [ref=e969]: kube-arangodb-crd-1.2.50
+                    - generic [ref=e970]: App Version
+                    - generic [ref=e971]: 3.5.0
+                    - generic [ref=e972]: Namespace
+                    - generic [ref=e973]: kube-infra
+                    - generic [ref=e974]: Revision
+                    - generic [ref=e975]: "1"
+                    - generic [ref=e976]: First Deployed
+                    - generic [ref=e977]: 131d ago
+                    - generic [ref=e978]: Last Deployed
+                    - generic [ref=e979]: 131d ago
+              - generic [ref=e352]:
+                - button "nginx-external ingress-nginx-4.14.1 deployed rev 5 76d ago" [expanded] [ref=e353] [cursor=pointer]:
+                  - generic [ref=e355]:
+                    - img [ref=e356]
+                    - generic [ref=e360]: nginx-external
+                    - generic [ref=e361]: ingress-nginx-4.14.1
+                    - generic [ref=e362]: deployed
+                    - generic [ref=e363]: rev 5
+                    - generic [ref=e364]: 76d ago
+                  - img [ref=e366]
+                - generic [ref=e982]:
+                  - generic [ref=e983]:
+                    - button "Info" [ref=e984] [cursor=pointer]:
+                      - img [ref=e986]
+                      - text: Info
+                    - button "Values" [ref=e989] [cursor=pointer]:
+                      - img [ref=e991]
+                      - text: Values
+                    - button "Revisions" [ref=e994] [cursor=pointer]:
+                      - img [ref=e996]
+                      - text: Revisions
+                    - button "Resources" [ref=e1000] [cursor=pointer]:
+                      - img [ref=e1002]
+                      - text: Resources
+                  - generic [ref=e1008]:
+                    - generic [ref=e1009]:
+                      - generic [ref=e1010]: Chart
+                      - generic [ref=e1011]: ingress-nginx-4.14.1
+                      - generic [ref=e1012]: App Version
+                      - generic [ref=e1013]: 1.14.1
+                      - generic [ref=e1014]: Namespace
+                      - generic [ref=e1015]: kube-infra
+                      - generic [ref=e1016]: Revision
+                      - generic [ref=e1017]: "5"
+                      - generic [ref=e1018]: First Deployed
+                      - generic [ref=e1019]: 131d ago
+                      - generic [ref=e1020]: Last Deployed
+                      - generic [ref=e1021]: 76d ago
+                    - generic [ref=e1022]:
+                      - paragraph [ref=e1023]: Notes
+                      - generic [ref=e1024]: "The ingress-nginx controller has been installed. It may take a few minutes for the load balancer IP to be available. You can watch the status by running 'kubectl get service --namespace kube-infra nginx-external-ingress-nginx-controller --output wide --watch' An example Ingress that makes use of the controller: apiVersion: networking.k8s.io/v1 kind: Ingress metadata: name: example namespace: foo spec: ingressClassName: nginx-external rules: - host: www.example.com http: paths: - pathType: Prefix backend: service: name: exampleService port: number: 80 path: / # This section is only required if TLS is to be enabled for the Ingress tls: - hosts: - www.example.com secretName: example-tls If TLS is enabled for the Ingress, a Secret containing the certificate and key must also be provided: apiVersion: v1 kind: Secret metadata: name: example-tls namespace: foo data: tls.crt: <base64 encoded cert> tls.key: <base64 encoded key> type: kubernetes.io/tls"
+              - generic [ref=e369]:
+                - button "nginx-ingress ingress-nginx-4.14.3 deployed rev 6 27d ago" [expanded] [ref=e370] [cursor=pointer]:
+                  - generic [ref=e372]:
+                    - img [ref=e373]
+                    - generic [ref=e377]: nginx-ingress
+                    - generic [ref=e378]: ingress-nginx-4.14.3
+                    - generic [ref=e379]: deployed
+                    - generic [ref=e380]: rev 6
+                    - generic [ref=e381]: 27d ago
+                  - img [ref=e383]
+                - generic [ref=e1027]:
+                  - generic [ref=e1028]:
+                    - button "Info" [ref=e1029] [cursor=pointer]:
+                      - img [ref=e1031]
+                      - text: Info
+                    - button "Values" [ref=e1034] [cursor=pointer]:
+                      - img [ref=e1036]
+                      - text: Values
+                    - button "Revisions" [ref=e1039] [cursor=pointer]:
+                      - img [ref=e1041]
+                      - text: Revisions
+                    - button "Resources" [ref=e1045] [cursor=pointer]:
+                      - img [ref=e1047]
+                      - text: Resources
+                  - generic [ref=e1053]:
+                    - generic [ref=e1054]:
+                      - generic [ref=e1055]: Chart
+                      - generic [ref=e1056]: ingress-nginx-4.14.3
+                      - generic [ref=e1057]: App Version
+                      - generic [ref=e1058]: 1.14.3
+                      - generic [ref=e1059]: Namespace
+                      - generic [ref=e1060]: kube-infra
+                      - generic [ref=e1061]: Revision
+                      - generic [ref=e1062]: "6"
+                      - generic [ref=e1063]: First Deployed
+                      - generic [ref=e1064]: 76d ago
+                      - generic [ref=e1065]: Last Deployed
+                      - generic [ref=e1066]: 27d ago
+                    - generic [ref=e1067]:
+                      - paragraph [ref=e1068]: Notes
+                      - generic [ref=e1069]: "The ingress-nginx controller has been installed. It may take a few minutes for the load balancer IP to be available. You can watch the status by running 'kubectl get service --namespace kube-infra nginx-ingress-ingress-nginx-controller --output wide --watch' An example Ingress that makes use of the controller: apiVersion: networking.k8s.io/v1 kind: Ingress metadata: name: example namespace: foo spec: ingressClassName: nginx-ingress rules: - host: www.example.com http: paths: - pathType: Prefix backend: service: name: exampleService port: number: 80 path: / # This section is only required if TLS is to be enabled for the Ingress tls: - hosts: - www.example.com secretName: example-tls If TLS is enabled for the Ingress, a Secret containing the certificate and key must also be provided: apiVersion: v1 kind: Secret metadata: name: example-tls namespace: foo data: tls.crt: <base64 encoded cert> tls.key: <base64 encoded key> type: kubernetes.io/tls"
+              - generic [ref=e386]:
+                - button "postgresql postgresql-16.4.6+3656 deployed rev 1 131d ago" [expanded] [ref=e387] [cursor=pointer]:
+                  - generic [ref=e389]:
+                    - img [ref=e390]
+                    - generic [ref=e394]: postgresql
+                    - generic [ref=e395]: postgresql-16.4.6+3656
+                    - generic [ref=e396]: deployed
+                    - generic [ref=e397]: rev 1
+                    - generic [ref=e398]: 131d ago
+                  - img [ref=e400]
+                - generic [ref=e1072]:
+                  - generic [ref=e1073]:
+                    - button "Info" [ref=e1074] [cursor=pointer]:
+                      - img [ref=e1076]
+                      - text: Info
+                    - button "Values" [ref=e1079] [cursor=pointer]:
+                      - img [ref=e1081]
+                      - text: Values
+                    - button "Revisions" [ref=e1084] [cursor=pointer]:
+                      - img [ref=e1086]
+                      - text: Revisions
+                    - button "Resources" [ref=e1090] [cursor=pointer]:
+                      - img [ref=e1092]
+                      - text: Resources
+                  - generic [ref=e1098]:
+                    - generic [ref=e1099]:
+                      - generic [ref=e1100]: Chart
+                      - generic [ref=e1101]: postgresql-16.4.6+3656
+                      - generic [ref=e1102]: App Version
+                      - generic [ref=e1103]: 17.2.0
+                      - generic [ref=e1104]: Namespace
+                      - generic [ref=e1105]: kube-infra
+                      - generic [ref=e1106]: Revision
+                      - generic [ref=e1107]: "1"
+                      - generic [ref=e1108]: First Deployed
+                      - generic [ref=e1109]: 131d ago
+                      - generic [ref=e1110]: Last Deployed
+                      - generic [ref=e1111]: 131d ago
+                    - generic [ref=e1112]:
+                      - paragraph [ref=e1113]: Notes
+                      - generic [ref=e1114]: "CHART NAME: postgresql CHART VERSION: 16.4.6+3656 APP VERSION: 17.2.0 Did you know there are enterprise versions of the Bitnami catalog? For enhanced secure software supply chain features, unlimited pulls from Docker, LTS support, or application customization, see Bitnami Premium or Tanzu Application Catalog. See https://www.arrow.com/globalecs/na/vendors/bitnami for more information. ** Please be patient while the chart is being deployed ** PostgreSQL can be accessed via port 5432 on the following DNS names from within your cluster: postgresql-primary.kube-infra.svc.cluster.local - Read/Write connection To get the password for \"postgres\" run: export POSTGRES_PASSWORD=$(kubectl get secret --namespace kube-infra postgresql-primary -o jsonpath=\"{.data.postgres-password}\" | base64 -d) To connect to your database run the following command: kubectl run postgresql-primary-client --rm --tty -i --restart='Never' --namespace kube-infra --image third-party-images-2.voyagerlabs.co/postgres:17.2.0-3656 --env=\"PGPASSWORD=$POSTGRES_PASSWORD\" \\ --command -- psql --host postgresql-primary -U postgres -d postgres -p 5432 > NOTE: If you access the container using bash, make sure that you execute \"/opt/bitnami/scripts/postgresql/entrypoint.sh /bin/bash\" in order to avoid the error \"psql: local user with ID 1001} does not exist\" To connect to your database from outside the cluster execute the following commands: kubectl port-forward --namespace kube-infra svc/postgresql-primary 5432:5432 & PGPASSWORD=\"$POSTGRES_PASSWORD\" psql --host 127.0.0.1 -U postgres -d postgres -p 5432 WARNING: The configured password will be ignored on new installation in case when previous PostgreSQL release was deleted through the helm command. In that case, old PVC will have an old password, and setting it through helm won't take effect. Deleting persistent volumes (PVs) will solve the issue. ⚠ SECURITY WARNING: Original containers have been substituted. This Helm chart was designed, tested, and validated on multiple platforms using a specific set of Bitnami and Tanzu Application Catalog containers. Substituting other containers is likely to cause degraded security and performance, broken chart features, and missing environment variables. Substituted images detected: - third-party-images-2.voyagerlabs.co/postgres:17.2.0-3656 - third-party-images-2.voyagerlabs.co/postgres-exporter:0.16.0-3656 ⚠ SECURITY WARNING: Verifying original container images was skipped. Please note this Helm chart was designed, tested, and validated on multiple platforms using a specific set of Bitnami and Bitnami Secure Images containers. Substituting other containers is likely to cause degraded security and performance, broken chart features, and missing environment variables."
+          - generic [ref=e402]:
+            - button "kube-system 4" [expanded] [ref=e403] [cursor=pointer]:
+              - img [ref=e405]
+              - generic [ref=e407]: kube-system
+              - generic [ref=e408]: "4"
+            - generic [ref=e410]:
+              - generic [ref=e412]:
+                - button "aws-ebs-csi-driver aws-ebs-csi-driver-2.17.1 deployed rev 3 125d ago" [expanded] [ref=e413] [cursor=pointer]:
+                  - generic [ref=e415]:
+                    - img [ref=e416]
+                    - generic [ref=e420]: aws-ebs-csi-driver
+                    - generic [ref=e421]: aws-ebs-csi-driver-2.17.1
+                    - generic [ref=e422]: deployed
+                    - generic [ref=e423]: rev 3
+                    - generic [ref=e424]: 125d ago
+                  - img [ref=e426]
+                - generic [ref=e1117]:
+                  - generic [ref=e1118]:
+                    - button "Info" [ref=e1119] [cursor=pointer]:
+                      - img [ref=e1121]
+                      - text: Info
+                    - button "Values" [ref=e1124] [cursor=pointer]:
+                      - img [ref=e1126]
+                      - text: Values
+                    - button "Revisions" [ref=e1129] [cursor=pointer]:
+                      - img [ref=e1131]
+                      - text: Revisions
+                    - button "Resources" [ref=e1135] [cursor=pointer]:
+                      - img [ref=e1137]
+                      - text: Resources
+                  - generic [ref=e1143]:
+                    - generic [ref=e1144]:
+                      - generic [ref=e1145]: Chart
+                      - generic [ref=e1146]: aws-ebs-csi-driver-2.17.1
+                      - generic [ref=e1147]: App Version
+                      - generic [ref=e1148]: 1.16.1
+                      - generic [ref=e1149]: Namespace
+                      - generic [ref=e1150]: kube-system
+                      - generic [ref=e1151]: Revision
+                      - generic [ref=e1152]: "3"
+                      - generic [ref=e1153]: First Deployed
+                      - generic [ref=e1154]: 131d ago
+                      - generic [ref=e1155]: Last Deployed
+                      - generic [ref=e1156]: 125d ago
+                    - generic [ref=e1157]:
+                      - paragraph [ref=e1158]: Notes
+                      - generic [ref=e1159]: "To verify that aws-ebs-csi-driver has started, run: kubectl get pod -n kube-system -l \"app.kubernetes.io/name=aws-ebs-csi-driver,app.kubernetes.io/instance=aws-ebs-csi-driver\" NOTE: The [CSI Snapshotter](https://github.com/kubernetes-csi/external-snapshotter) controller and CRDs will no longer be installed as part of this chart and moving forward will be a prerequisite of using the snap shotting functionality."
+              - generic [ref=e429]:
+                - button "aws-efs-csi-driver aws-efs-csi-driver-2.4.0 deployed rev 1 131d ago" [expanded] [ref=e430] [cursor=pointer]:
+                  - generic [ref=e432]:
+                    - img [ref=e433]
+                    - generic [ref=e437]: aws-efs-csi-driver
+                    - generic [ref=e438]: aws-efs-csi-driver-2.4.0
+                    - generic [ref=e439]: deployed
+                    - generic [ref=e440]: rev 1
+                    - generic [ref=e441]: 131d ago
+                  - img [ref=e443]
+                - generic [ref=e1162]:
+                  - generic [ref=e1163]:
+                    - button "Info" [ref=e1164] [cursor=pointer]:
+                      - img [ref=e1166]
+                      - text: Info
+                    - button "Values" [ref=e1169] [cursor=pointer]:
+                      - img [ref=e1171]
+                      - text: Values
+                    - button "Revisions" [ref=e1174] [cursor=pointer]:
+                      - img [ref=e1176]
+                      - text: Revisions
+                    - button "Resources" [ref=e1180] [cursor=pointer]:
+                      - img [ref=e1182]
+                      - text: Resources
+                  - generic [ref=e1188]:
+                    - generic [ref=e1189]:
+                      - generic [ref=e1190]: Chart
+                      - generic [ref=e1191]: aws-efs-csi-driver-2.4.0
+                      - generic [ref=e1192]: App Version
+                      - generic [ref=e1193]: 1.5.3
+                      - generic [ref=e1194]: Namespace
+                      - generic [ref=e1195]: kube-system
+                      - generic [ref=e1196]: Revision
+                      - generic [ref=e1197]: "1"
+                      - generic [ref=e1198]: First Deployed
+                      - generic [ref=e1199]: 131d ago
+                      - generic [ref=e1200]: Last Deployed
+                      - generic [ref=e1201]: 131d ago
+                    - generic [ref=e1202]:
+                      - paragraph [ref=e1203]: Notes
+                      - generic [ref=e1204]: "To verify that aws-efs-csi-driver has started, run: kubectl get pod -n kube-system -l \"app.kubernetes.io/name=aws-efs-csi-driver,app.kubernetes.io/instance=aws-efs-csi-driver\""
+              - generic [ref=e446]:
+                - button "kube-downscaler py-kube-downscaler-0.3.9 deployed rev 3 54d ago" [expanded] [ref=e447] [cursor=pointer]:
+                  - generic [ref=e449]:
+                    - img [ref=e450]
+                    - generic [ref=e454]: kube-downscaler
+                    - generic [ref=e455]: py-kube-downscaler-0.3.9
+                    - generic [ref=e456]: deployed
+                    - generic [ref=e457]: rev 3
+                    - generic [ref=e458]: 54d ago
+                  - img [ref=e460]
+                - generic [ref=e1207]:
+                  - generic [ref=e1208]:
+                    - button "Info" [ref=e1209] [cursor=pointer]:
+                      - img [ref=e1211]
+                      - text: Info
+                    - button "Values" [ref=e1214] [cursor=pointer]:
+                      - img [ref=e1216]
+                      - text: Values
+                    - button "Revisions" [ref=e1219] [cursor=pointer]:
+                      - img [ref=e1221]
+                      - text: Revisions
+                    - button "Resources" [ref=e1225] [cursor=pointer]:
+                      - img [ref=e1227]
+                      - text: Resources
+                  - generic [ref=e1234]:
+                    - generic [ref=e1235]: Chart
+                    - generic [ref=e1236]: py-kube-downscaler-0.3.9
+                    - generic [ref=e1237]: App Version
+                    - generic [ref=e1238]: 26.1.0
+                    - generic [ref=e1239]: Namespace
+                    - generic [ref=e1240]: kube-system
+                    - generic [ref=e1241]: Revision
+                    - generic [ref=e1242]: "3"
+                    - generic [ref=e1243]: First Deployed
+                    - generic [ref=e1244]: 74d ago
+                    - generic [ref=e1245]: Last Deployed
+                    - generic [ref=e1246]: 54d ago
+              - generic [ref=e463]:
+                - button "voyager-monitor voyager-monitor-1.1.1+3968 deployed rev 40 13d ago" [expanded] [ref=e464] [cursor=pointer]:
+                  - generic [ref=e466]:
+                    - img [ref=e467]
+                    - generic [ref=e471]: voyager-monitor
+                    - generic [ref=e472]: voyager-monitor-1.1.1+3968
+                    - generic [ref=e473]: deployed
+                    - generic [ref=e474]: rev 40
+                    - generic [ref=e475]: 13d ago
+                  - img [ref=e477]
+                - generic [ref=e1249]:
+                  - generic [ref=e1250]:
+                    - button "Info" [ref=e1251] [cursor=pointer]:
+                      - img [ref=e1253]
+                      - text: Info
+                    - button "Values" [ref=e1256] [cursor=pointer]:
+                      - img [ref=e1258]
+                      - text: Values
+                    - button "Revisions" [ref=e1261] [cursor=pointer]:
+                      - img [ref=e1263]
+                      - text: Revisions
+                    - button "Resources" [ref=e1267] [cursor=pointer]:
+                      - img [ref=e1269]
+                      - text: Resources
+                  - generic [ref=e1276]:
+                    - generic [ref=e1277]: Chart
+                    - generic [ref=e1278]: voyager-monitor-1.1.1+3968
+                    - generic [ref=e1279]: App Version
+                    - generic [ref=e1280]: 1.0.0
+                    - generic [ref=e1281]: Namespace
+                    - generic [ref=e1282]: kube-system
+                    - generic [ref=e1283]: Revision
+                    - generic [ref=e1284]: "40"
+                    - generic [ref=e1285]: First Deployed
+                    - generic [ref=e1286]: 76d ago
+                    - generic [ref=e1287]: Last Deployed
+                    - generic [ref=e1288]: 13d ago
+          - generic [ref=e479]:
+            - button "local-dev-036-voyager-new 1" [expanded] [ref=e480] [cursor=pointer]:
+              - img [ref=e482]
+              - generic [ref=e484]: local-dev-036-voyager-new
+              - generic [ref=e485]: "1"
+            - generic [ref=e489]:
+              - button "jenkins-voyager-new-test jenkins-voyager-new-5.8.116+36 deployed rev 1 36m ago" [expanded] [ref=e678] [cursor=pointer]:
+                - generic [ref=e492]:
+                  - img [ref=e493]
+                  - generic [ref=e497]: jenkins-voyager-new-test
+                  - generic [ref=e498]: jenkins-voyager-new-5.8.116+36
+                  - generic [ref=e499]: deployed
+                  - generic [ref=e500]: rev 1
+                  - generic [ref=e501]: 36m ago
+                - img [ref=e503]
+              - generic [ref=e1291]:
+                - generic [ref=e1292]:
+                  - button "Info" [ref=e1293] [cursor=pointer]:
+                    - img [ref=e1295]
+                    - text: Info
+                  - button "Values" [ref=e1298] [cursor=pointer]:
+                    - img [ref=e1300]
+                    - text: Values
+                  - button "Revisions" [ref=e1303] [cursor=pointer]:
+                    - img [ref=e1305]
+                    - text: Revisions
+                  - button "Resources" [ref=e1309] [cursor=pointer]:
+                    - img [ref=e1311]
+                    - text: Resources
+                - generic [ref=e1317]:
+                  - generic [ref=e1318]:
+                    - generic [ref=e1319]: Chart
+                    - generic [ref=e1320]: jenkins-voyager-new-5.8.116+36
+                    - generic [ref=e1321]: App Version
+                    - generic [ref=e1322]: 2.528.3
+                    - generic [ref=e1323]: Namespace
+                    - generic [ref=e1324]: local-dev-036-voyager-new
+                    - generic [ref=e1325]: Revision
+                    - generic [ref=e1326]: "1"
+                    - generic [ref=e1327]: First Deployed
+                    - generic [ref=e1328]: 36m ago
+                    - generic [ref=e1329]: Last Deployed
+                    - generic [ref=e1330]: 36m ago
+                  - generic [ref=e1331]:
+                    - paragraph [ref=e1332]: Notes
+                    - generic [ref=e1333]: "1. Get your 'admin' user password by running: kubectl exec --namespace local-dev-036-voyager-new -it svc/jenkins-voyager-new-test -c jenkins -- /bin/cat /run/secrets/additional/chart-admin-password && echo 2. Visit https://jenkins-voyager-new.voyagerlabs.co 3. Login with the password from step 1 and the username: admin 4. Configure security realm and authorization strategy 5. Use Jenkins Configuration as Code by specifying configScripts in your values.yaml file, see documentation: https://jenkins-voyager-new.voyagerlabs.co/configuration-as-code and examples: https://github.com/jenkinsci/configuration-as-code-plugin/tree/master/demos For more information on running Jenkins on Kubernetes, visit: https://cloud.google.com/solutions/jenkins-on-container-engine For more information about Jenkins Configuration as Code, visit: https://jenkins.io/projects/jcasc/ NOTE: Consider disabling `installPlugins` if your image already contains plugins."
+          - generic [ref=e505]:
+            - button "monitoring 2" [expanded] [ref=e506] [cursor=pointer]:
+              - img [ref=e508]
+              - generic [ref=e510]: monitoring
+              - generic [ref=e511]: "2"
+            - generic [ref=e513]:
+              - generic [ref=e515]:
+                - button "prometheus kube-prometheus-stack-70.0.2+3248 deployed rev 2 26d ago" [expanded] [ref=e516] [cursor=pointer]:
+                  - generic [ref=e518]:
+                    - img [ref=e519]
+                    - generic [ref=e523]: prometheus
+                    - generic [ref=e524]: kube-prometheus-stack-70.0.2+3248
+                    - generic [ref=e525]: deployed
+                    - generic [ref=e526]: rev 2
+                    - generic [ref=e527]: 26d ago
+                  - img [ref=e529]
+                - generic [ref=e1336]:
+                  - generic [ref=e1337]:
+                    - button "Info" [ref=e1338] [cursor=pointer]:
+                      - img [ref=e1340]
+                      - text: Info
+                    - button "Values" [ref=e1343] [cursor=pointer]:
+                      - img [ref=e1345]
+                      - text: Values
+                    - button "Revisions" [ref=e1348] [cursor=pointer]:
+                      - img [ref=e1350]
+                      - text: Revisions
+                    - button "Resources" [ref=e1354] [cursor=pointer]:
+                      - img [ref=e1356]
+                      - text: Resources
+                  - generic [ref=e1362]:
+                    - generic [ref=e1363]:
+                      - generic [ref=e1364]: Chart
+                      - generic [ref=e1365]: kube-prometheus-stack-70.0.2+3248
+                      - generic [ref=e1366]: App Version
+                      - generic [ref=e1367]: v0.81.0
+                      - generic [ref=e1368]: Namespace
+                      - generic [ref=e1369]: monitoring
+                      - generic [ref=e1370]: Revision
+                      - generic [ref=e1371]: "2"
+                      - generic [ref=e1372]: First Deployed
+                      - generic [ref=e1373]: 26d ago
+                      - generic [ref=e1374]: Last Deployed
+                      - generic [ref=e1375]: 26d ago
+                    - generic [ref=e1376]:
+                      - paragraph [ref=e1377]: Notes
+                      - generic [ref=e1378]: "kube-prometheus-stack has been installed. Check its status by running: kubectl --namespace monitoring get pods -l \"release=prometheus\" Get Grafana 'admin' user password by running: kubectl --namespace monitoring get secrets prometheus-grafana -o jsonpath=\"{.data.admin-password}\" | base64 -d ; echo Access Grafana local instance: export POD_NAME=$(kubectl --namespace monitoring get pod -l \"app.kubernetes.io/name=grafana,app.kubernetes.io/instance=prometheus\" -oname) kubectl --namespace monitoring port-forward $POD_NAME 3000 Visit https://github.com/prometheus-operator/kube-prometheus for instructions on how to create & configure Alertmanager and Prometheus instances using the Operator."
+              - generic [ref=e532]:
+                - button "volume-autoscaler volume-autoscaler-1.0.8+3132 deployed rev 1 131d ago" [expanded] [ref=e533] [cursor=pointer]:
+                  - generic [ref=e535]:
+                    - img [ref=e536]
+                    - generic [ref=e540]: volume-autoscaler
+                    - generic [ref=e541]: volume-autoscaler-1.0.8+3132
+                    - generic [ref=e542]: deployed
+                    - generic [ref=e543]: rev 1
+                    - generic [ref=e544]: 131d ago
+                  - img [ref=e546]
+                - generic [ref=e1381]:
+                  - generic [ref=e1382]:
+                    - button "Info" [ref=e1383] [cursor=pointer]:
+                      - img [ref=e1385]
+                      - text: Info
+                    - button "Values" [ref=e1388] [cursor=pointer]:
+                      - img [ref=e1390]
+                      - text: Values
+                    - button "Revisions" [ref=e1393] [cursor=pointer]:
+                      - img [ref=e1395]
+                      - text: Revisions
+                    - button "Resources" [ref=e1399] [cursor=pointer]:
+                      - img [ref=e1401]
+                      - text: Resources
+                  - generic [ref=e1408]:
+                    - generic [ref=e1409]: Chart
+                    - generic [ref=e1410]: volume-autoscaler-1.0.8+3132
+                    - generic [ref=e1411]: App Version
+                    - generic [ref=e1412]: 1.0.8
+                    - generic [ref=e1413]: Namespace
+                    - generic [ref=e1414]: monitoring
+                    - generic [ref=e1415]: Revision
+                    - generic [ref=e1416]: "1"
+                    - generic [ref=e1417]: First Deployed
+                    - generic [ref=e1418]: 131d ago
+                    - generic [ref=e1419]: Last Deployed
+                    - generic [ref=e1420]: 131d ago
+          - generic [ref=e548]:
+            - button "va 4" [expanded] [ref=e549] [cursor=pointer]:
+              - img [ref=e551]
+              - generic [ref=e553]: va
+              - generic [ref=e554]: "4"
+            - generic [ref=e556]:
+              - generic [ref=e558]:
+                - button "jfile kfile-1.5.3+125362 deployed rev 1 7d ago" [expanded] [ref=e559] [cursor=pointer]:
+                  - generic [ref=e561]:
+                    - img [ref=e562]
+                    - generic [ref=e566]: jfile
+                    - generic [ref=e567]: kfile-1.5.3+125362
+                    - generic [ref=e568]: deployed
+                    - generic [ref=e569]: rev 1
+                    - generic [ref=e570]: 7d ago
+                  - img [ref=e572]
+                - generic [ref=e1423]:
+                  - generic [ref=e1424]:
+                    - button "Info" [ref=e1425] [cursor=pointer]:
+                      - img [ref=e1427]
+                      - text: Info
+                    - button "Values" [ref=e1430] [cursor=pointer]:
+                      - img [ref=e1432]
+                      - text: Values
+                    - button "Revisions" [ref=e1435] [cursor=pointer]:
+                      - img [ref=e1437]
+                      - text: Revisions
+                    - button "Resources" [ref=e1441] [cursor=pointer]:
+                      - img [ref=e1443]
+                      - text: Resources
+                  - generic [ref=e1450]:
+                    - generic [ref=e1451]: Chart
+                    - generic [ref=e1452]: kfile-1.5.3+125362
+                    - generic [ref=e1453]: App Version
+                    - generic [ref=e1454]: 1.5.3-SNAPSHOT
+                    - generic [ref=e1455]: Namespace
+                    - generic [ref=e1456]: va
+                    - generic [ref=e1457]: Revision
+                    - generic [ref=e1458]: "1"
+                    - generic [ref=e1459]: First Deployed
+                    - generic [ref=e1460]: 7d ago
+                    - generic [ref=e1461]: Last Deployed
+                    - generic [ref=e1462]: 7d ago
+              - button "kback kback-6.17.0+137747 deployed rev 1 10h ago" [expanded] [ref=e576] [cursor=pointer]:
+                - generic [ref=e578]:
+                  - img [ref=e579]
+                  - generic [ref=e583]: kback
+                  - generic [ref=e584]: kback-6.17.0+137747
+                  - generic [ref=e585]: deployed
+                  - generic [ref=e586]: rev 1
+                  - generic [ref=e587]: 10h ago
+                - img [ref=e589]
+              - button "solr-migrator solr-migrator-1.8.2+137759 deployed rev 1 10h ago" [expanded] [ref=e593] [cursor=pointer]:
+                - generic [ref=e595]:
+                  - img [ref=e596]
+                  - generic [ref=e600]: solr-migrator
+                  - generic [ref=e601]: solr-migrator-1.8.2+137759
+                  - generic [ref=e602]: deployed
+                  - generic [ref=e603]: rev 1
+                  - generic [ref=e604]: 10h ago
+                - img [ref=e606]
+              - button "voyager-search voyager-search-1.7.2+131175 deployed rev 1 5d ago" [expanded] [ref=e610] [cursor=pointer]:
+                - generic [ref=e612]:
+                  - img [ref=e613]
+                  - generic [ref=e617]: voyager-search
+                  - generic [ref=e618]: voyager-search-1.7.2+131175
+                  - generic [ref=e619]: deployed
+                  - generic [ref=e620]: rev 1
+                  - generic [ref=e621]: 5d ago
+                - img [ref=e623]
+          - generic [ref=e625]:
+            - button "va2 2" [expanded] [ref=e626] [cursor=pointer]:
+              - img [ref=e628]
+              - generic [ref=e630]: va2
+              - generic [ref=e631]: "2"
+            - generic [ref=e633]:
+              - button "kfile kfile-2.0.0-SNAPSHOT deployed rev 2 6d ago" [expanded] [ref=e636] [cursor=pointer]:
+                - generic [ref=e638]:
+                  - img [ref=e639]
+                  - generic [ref=e643]: kfile
+                  - generic [ref=e644]: kfile-2.0.0-SNAPSHOT
+                  - generic [ref=e645]: deployed
+                  - generic [ref=e646]: rev 2
+                  - generic [ref=e647]: 6d ago
+                - img [ref=e649]
+              - button "voyager-search voyager-search-1.8.2+137525 deployed rev 1 10h ago" [expanded] [ref=e653] [cursor=pointer]:
+                - generic [ref=e655]:
+                  - img [ref=e656]
+                  - generic [ref=e660]: voyager-search
+                  - generic [ref=e661]: voyager-search-1.8.2+137525
+                  - generic [ref=e662]: deployed
+                  - generic [ref=e663]: rev 1
+                  - generic [ref=e664]: 10h ago
+                - img [ref=e666]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e673] [cursor=pointer]:
+    - img [ref=e674]
+  - alert [ref=e677]

@@ -1,0 +1,1574 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e555] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=e556]:
+    - generic [ref=e557]:
+      - img [ref=e558]
+      - generic [ref=e559]: VOYAGER
+    - generic [ref=e560]:
+      - combobox "Active cluster" [ref=e562]:
+        - option "Select Cluster" [selected]
+        - option "🟢 eks-devops-separate-us-east-1"
+        - option "🟢 test-cluster-minikube"
+        - option "⚪ prod-cluster-eks"
+      - generic [ref=e563]:
+        - generic [ref=e564]: 1.8%
+        - generic [ref=e565]: CPU
+    - generic [ref=e566]:
+      - generic [ref=e567]: Voyager Admin
+      - button "Open command palette" [ref=e568] [cursor=pointer]:
+        - img [ref=e569]
+        - generic [ref=e572]: ⌘K
+      - button "Change theme" [ref=e574] [cursor=pointer]:
+        - img [ref=e575]
+      - button "8" [ref=e578] [cursor=pointer]:
+        - img [ref=e579]
+        - generic [ref=e582]: "8"
+      - button "Logout" [ref=e583] [cursor=pointer]:
+        - img [ref=e584]
+        - generic [ref=e587]: Logout
+      - generic "Connected · Synced just now" [ref=e588]:
+        - generic [ref=e590]: Live
+  - complementary [ref=e591]:
+    - navigation "Main navigation" [ref=e592]:
+      - link [ref=e594] [cursor=pointer]:
+        - /url: /
+        - img [ref=e595]
+      - link [expanded] [ref=e601] [cursor=pointer]:
+        - /url: /clusters
+        - img [ref=e603]
+      - link "12" [ref=e607] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e608]
+        - generic [ref=e611]: "12"
+      - link [ref=e613] [cursor=pointer]:
+        - /url: /events
+        - img [ref=e614]
+      - link [ref=e617] [cursor=pointer]:
+        - /url: /logs
+        - img [ref=e618]
+      - link [ref=e622] [cursor=pointer]:
+        - /url: /settings
+        - img [ref=e623]
+    - button "Expand sidebar" [ref=e626] [cursor=pointer]:
+      - img [ref=e627]
+  - main [ref=e629]:
+    - generic [ref=e630]:
+      - generic "1 user online" [ref=e631]:
+        - generic [ref=e635]: "1"
+      - img "Voyager Admin is online" [ref=e638]:
+        - text: VA
+        - generic: Voyager Admin · /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce
+    - generic [ref=e640]:
+      - navigation [ref=e641]:
+        - link "Dashboard" [ref=e643] [cursor=pointer]:
+          - /url: /
+          - img [ref=e644]
+        - generic [ref=e647]:
+          - img [ref=e648]
+          - link "Clusters" [ref=e650] [cursor=pointer]:
+            - /url: /clusters
+        - generic [ref=e651]:
+          - img [ref=e652]
+          - generic "eks-devops-separate-us-east-1" [ref=e654]
+      - generic [ref=e656]:
+        - generic:
+          - img
+        - generic [ref=e657]:
+          - heading "eks-devops-separate-us-east-1" [level=1] [ref=e658]
+          - generic [ref=e659]:
+            - generic [ref=e660]: kubeconfig
+            - generic [ref=e661]: active
+            - status [ref=e662]:
+              - generic [ref=e664]: Live
+      - navigation "Cluster tabs" [ref=e666]:
+        - link "Overview" [ref=e667] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1
+          - img [ref=e668]
+          - text: Overview
+        - link "Nodes" [ref=e673] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/nodes
+          - img [ref=e674]
+          - text: Nodes
+        - link "Events" [ref=e677] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/events
+          - img [ref=e678]
+          - text: Events
+        - link "Logs" [ref=e680] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/logs
+          - img [ref=e681]
+          - text: Logs
+        - link "Metrics" [ref=e684] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/metrics
+          - img [ref=e685]
+          - text: Metrics
+        - button "Workloads" [ref=e688] [cursor=pointer]:
+          - img [ref=e689]
+          - text: Workloads
+          - img [ref=e693]
+        - button "Networking" [ref=e696] [cursor=pointer]:
+          - img [ref=e697]
+          - text: Networking
+          - img [ref=e703]
+        - button "Config" [ref=e706] [cursor=pointer]:
+          - img [ref=e707]
+          - text: Config
+          - img [ref=e711]
+        - button "Storage" [ref=e714] [cursor=pointer]:
+          - img [ref=e715]
+          - text: Storage
+          - img [ref=e718]
+        - button "Scaling" [ref=e721] [cursor=pointer]:
+          - img [ref=e722]
+          - text: Scaling
+          - img [ref=e726]
+        - button "Cluster Ops" [ref=e729] [cursor=pointer]:
+          - img [ref=e730]
+          - text: Cluster Ops
+          - img [ref=e733]
+      - generic [ref=e735]:
+        - generic [ref=e736]:
+          - generic [ref=e737]:
+            - generic [ref=e738]:
+              - img [ref=e739]
+              - generic [ref=e742]: Nodes
+            - text: "4"
+          - generic [ref=e743]:
+            - generic [ref=e744]:
+              - img [ref=e745]
+              - generic [ref=e748]: Pods
+            - generic [ref=e749]: 44 / 45
+          - generic [ref=e750]:
+            - generic [ref=e751]:
+              - img [ref=e752]
+              - generic [ref=e755]: Namespaces
+            - text: "19"
+          - generic [ref=e756]:
+            - generic [ref=e757]:
+              - img [ref=e758]
+              - generic [ref=e761]: Version
+            - text: v1.33
+        - generic [ref=e763]:
+          - generic [ref=e764]:
+            - heading "Resource Metrics" [level=3] [ref=e766]
+            - tablist "Metrics time range" [ref=e768]:
+              - tab "5m" [ref=e769] [cursor=pointer]
+              - tab "15m" [ref=e770] [cursor=pointer]
+              - tab "30m" [ref=e771] [cursor=pointer]
+              - tab "1h" [ref=e772] [cursor=pointer]
+              - tab "3h" [ref=e773] [cursor=pointer]
+              - tab "6h" [selected] [ref=e774] [cursor=pointer]
+              - tab "12h" [ref=e775] [cursor=pointer]
+              - tab "24h" [ref=e776] [cursor=pointer]
+              - tab "2d" [ref=e777] [cursor=pointer]
+              - tab "7d" [ref=e778] [cursor=pointer]
+              - tab "Custom" [ref=e779] [cursor=pointer]
+          - generic [ref=e780]:
+            - button "CPU %" [pressed] [ref=e781] [cursor=pointer]: CPU %
+            - button "Memory %" [pressed] [ref=e783] [cursor=pointer]: Memory %
+            - button "Net In" [pressed] [ref=e785] [cursor=pointer]: Net In
+            - button "Net Out" [pressed] [ref=e787] [cursor=pointer]: Net Out
+            - button "Pods" [pressed] [ref=e789] [cursor=pointer]: Pods
+          - generic [ref=e791]:
+            - generic [ref=e792]:
+              - generic [ref=e794]:
+                - heading "CPU Utilization" [level=4] [ref=e795]
+                - paragraph [ref=e796]: Cluster CPU usage percentage over time.
+              - img "CPU % chart" [ref=e797]:
+                - application [ref=e800]:
+                  - generic [ref=e810]:
+                    - generic [ref=e811]:
+                      - generic [ref=e813]: 02:24 AM
+                      - generic [ref=e815]: 03:36 AM
+                      - generic [ref=e817]: 04:48 AM
+                      - generic [ref=e819]: 06:00 AM
+                      - generic [ref=e821]: 07:12 AM
+                    - generic [ref=e822]:
+                      - generic [ref=e824]: 0%
+                      - generic [ref=e826]: 25%
+                      - generic [ref=e828]: 50%
+                      - generic [ref=e830]: 75%
+                      - generic [ref=e832]: 100%
+                - generic [ref=e833]:
+                  - paragraph [ref=e834]: "Current bucket: Mar 31 08:00:00 AM → Mar 31 08:12:00 AM"
+                  - generic "Current CPU %" [ref=e836]:
+                    - text: "CPU %:"
+                    - strong [ref=e838]: 2.0%
+            - generic [ref=e839]:
+              - generic [ref=e841]:
+                - heading "Memory Utilization" [level=4] [ref=e842]
+                - paragraph [ref=e843]: Cluster memory usage percentage over time.
+              - img "Memory % chart" [ref=e844]:
+                - application [ref=e847]:
+                  - generic [ref=e857]:
+                    - generic [ref=e858]:
+                      - generic [ref=e860]: 02:24 AM
+                      - generic [ref=e862]: 03:36 AM
+                      - generic [ref=e864]: 04:48 AM
+                      - generic [ref=e866]: 06:00 AM
+                      - generic [ref=e868]: 07:12 AM
+                    - generic [ref=e869]:
+                      - generic [ref=e871]: 0%
+                      - generic [ref=e873]: 25%
+                      - generic [ref=e875]: 50%
+                      - generic [ref=e877]: 75%
+                      - generic [ref=e879]: 100%
+                - generic [ref=e880]:
+                  - paragraph [ref=e881]: "Current bucket: Mar 31 08:00:00 AM → Mar 31 08:12:00 AM"
+                  - generic "Current Memory %" [ref=e883]:
+                    - text: "Memory %:"
+                    - strong [ref=e885]: 35.4%
+            - generic [ref=e886]:
+              - generic [ref=e888]:
+                - heading "Network I/O" [level=4] [ref=e889]
+                - paragraph [ref=e890]: Inbound and outbound traffic rendered on a bytes scale.
+              - img "Net In, Net Out chart" [ref=e891]:
+                - application [ref=e894]:
+                  - generic [ref=e898]:
+                    - generic [ref=e899]:
+                      - generic [ref=e901]: 02:24 AM
+                      - generic [ref=e903]: 03:36 AM
+                      - generic [ref=e905]: 04:48 AM
+                      - generic [ref=e907]: 06:00 AM
+                      - generic [ref=e909]: 07:12 AM
+                    - generic [ref=e910]:
+                      - generic [ref=e912]: 0 B
+                      - generic [ref=e914]: 1 B
+                      - generic [ref=e916]: 2 B
+                      - generic [ref=e918]: 3 B
+                      - generic [ref=e920]: 4 B
+                - generic [ref=e921]:
+                  - paragraph [ref=e922]: "Current bucket: Mar 31 08:00:00 AM → Mar 31 08:12:00 AM"
+                  - generic [ref=e923]:
+                    - generic "Current Net In" [ref=e924]:
+                      - text: "Net In:"
+                      - strong [ref=e926]: 0 B
+                    - generic "Current Net Out" [ref=e927]:
+                      - text: "Net Out:"
+                      - strong [ref=e929]: 0 B
+            - generic [ref=e930]:
+              - generic [ref=e932]:
+                - heading "Pods" [level=4] [ref=e933]
+                - paragraph [ref=e934]: Observed pod count over time.
+              - img "Pods chart" [ref=e935]:
+                - application [ref=e938]:
+                  - generic [ref=e947]:
+                    - generic [ref=e948]:
+                      - generic [ref=e950]: 02:24 AM
+                      - generic [ref=e952]: 03:36 AM
+                      - generic [ref=e954]: 04:48 AM
+                      - generic [ref=e956]: 06:00 AM
+                      - generic [ref=e958]: 07:12 AM
+                    - generic [ref=e959]:
+                      - generic [ref=e961]: "0"
+                      - generic [ref=e963]: "15"
+                      - generic [ref=e965]: "30"
+                      - generic [ref=e967]: "45"
+                      - generic [ref=e969]: "60"
+                - generic [ref=e970]:
+                  - paragraph [ref=e971]: "Current bucket: Mar 31 08:00:00 AM → Mar 31 08:12:00 AM"
+                  - generic "Current Pods" [ref=e973]:
+                    - text: "Pods:"
+                    - strong [ref=e975]: "45"
+        - generic [ref=e977]:
+          - generic [ref=e978]:
+            - combobox [ref=e979]:
+              - option "All Namespaces" [selected]
+              - option "default"
+              - option "dmitryp"
+              - option "karpenter"
+              - option "keda"
+              - option "kube-infra"
+              - option "kube-system"
+              - option "local-dev-039-voyager-new"
+              - option "monitoring"
+              - option "va"
+              - option "va2"
+            - generic [ref=e980]:
+              - img [ref=e981]
+              - textbox "Search resources..." [ref=e984]
+          - application [ref=e986]:
+            - generic [ref=e988]:
+              - generic:
+                - generic:
+                  - img:
+                    - group "Edge from pod:karpenter/karpenter-5d9775c944-9ljn9 to node:fargate-ip-10-0-235-136.ec2.internal"
+                  - img:
+                    - group "Edge from deployment:karpenter/karpenter to pod:karpenter/karpenter-5d9775c944-9ljn9" [ref=e989] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:karpenter/karpenter-5d9775c944-pxjzc to node:fargate-ip-10-0-234-191.ec2.internal"
+                  - img:
+                    - group "Edge from deployment:karpenter/karpenter to pod:karpenter/karpenter-5d9775c944-pxjzc" [ref=e992] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:keda/keda-operator-metrics-apiserver-6c6f9b69c4-mrqjk to node:ip-10-0-255-123.ec2.internal" [ref=e995] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:keda/keda-operator-metrics-apiserver to pod:keda/keda-operator-metrics-apiserver-6c6f9b69c4-mrqjk" [ref=e998] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/csi-attacher-s3-0 to node:ip-10-0-247-248.ec2.internal" [ref=e1001] [cursor=pointer]
+                  - img:
+                    - group "Edge from statefulset:kube-infra/csi-attacher-s3 to pod:kube-infra/csi-attacher-s3-0" [ref=e1004] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/csi-provisioner-s3-0 to node:ip-10-0-255-123.ec2.internal" [ref=e1007] [cursor=pointer]
+                  - img:
+                    - group "Edge from statefulset:kube-infra/csi-provisioner-s3 to pod:kube-infra/csi-provisioner-s3-0" [ref=e1010] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/csi-s3-cbvzv to node:ip-10-0-247-248.ec2.internal" [ref=e1013] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-infra/csi-s3 to pod:kube-infra/csi-s3-cbvzv" [ref=e1016] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/csi-s3-lddn2 to node:ip-10-0-255-123.ec2.internal" [ref=e1019] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-infra/csi-s3 to pod:kube-infra/csi-s3-lddn2" [ref=e1022] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/dataset-operator-5bfd48b945-tgtsl to node:ip-10-0-247-248.ec2.internal" [ref=e1025] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-infra/dataset-operator to pod:kube-infra/dataset-operator-5bfd48b945-tgtsl" [ref=e1028] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/external-dns-84ff8cc99b-mlsk5 to node:ip-10-0-255-123.ec2.internal" [ref=e1031] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-infra/external-dns to pod:kube-infra/external-dns-84ff8cc99b-mlsk5" [ref=e1034] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/fluent-bit-bsl9c to node:ip-10-0-255-123.ec2.internal" [ref=e1037] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-infra/fluent-bit to pod:kube-infra/fluent-bit-bsl9c" [ref=e1040] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/fluent-bit-gv6mc to node:ip-10-0-247-248.ec2.internal" [ref=e1043] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-infra/fluent-bit to pod:kube-infra/fluent-bit-gv6mc" [ref=e1046] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/gpu-operator-785554d7b6-6d694 to node:ip-10-0-247-248.ec2.internal" [ref=e1049] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-infra/gpu-operator to pod:kube-infra/gpu-operator-785554d7b6-6d694" [ref=e1052] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/gpu-operator-node-feature-discovery-master-565d545778-tvkp4 to node:ip-10-0-255-123.ec2.internal" [ref=e1055] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-infra/gpu-operator-node-feature-discovery-master to pod:kube-infra/gpu-operator-node-feature-discovery-master-565d545778-tvkp4" [ref=e1058] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/nginx-external-ingress-nginx-controller-7d5c6bb9cc-djgv9 to node:ip-10-0-247-248.ec2.internal" [ref=e1061] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-infra/nginx-external-ingress-nginx-controller to pod:kube-infra/nginx-external-ingress-nginx-controller-7d5c6bb9cc-djgv9" [ref=e1064] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/nginx-ingress-ingress-nginx-controller-798bffcf48-5hkdj to node:ip-10-0-247-248.ec2.internal" [ref=e1067] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-infra/nginx-ingress-ingress-nginx-controller to pod:kube-infra/nginx-ingress-ingress-nginx-controller-798bffcf48-5hkdj" [ref=e1070] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/postgresql-primary-0 to node:ip-10-0-247-248.ec2.internal" [ref=e1073] [cursor=pointer]
+                  - img:
+                    - group "Edge from statefulset:kube-infra/postgresql-primary to pod:kube-infra/postgresql-primary-0" [ref=e1076] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-infra/postgresql-primary-backup-29582101-lxftf to node:ip-10-0-247-248.ec2.internal" [ref=e1079] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/aws-node-65cbn to node:ip-10-0-255-123.ec2.internal" [ref=e1082] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-system/aws-node to pod:kube-system/aws-node-65cbn" [ref=e1085] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/aws-node-brnm4 to node:ip-10-0-247-248.ec2.internal" [ref=e1088] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-system/aws-node to pod:kube-system/aws-node-brnm4" [ref=e1091] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/claude-presentation-6c44974b5c-r2dgg to node:ip-10-0-255-123.ec2.internal" [ref=e1094] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-system/claude-presentation to pod:kube-system/claude-presentation-6c44974b5c-r2dgg" [ref=e1097] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/coredns-86c5974c48-bhl86 to node:ip-10-0-247-248.ec2.internal" [ref=e1100] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-system/coredns to pod:kube-system/coredns-86c5974c48-bhl86" [ref=e1103] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/coredns-86c5974c48-q6pf7 to node:ip-10-0-255-123.ec2.internal" [ref=e1106] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-system/coredns to pod:kube-system/coredns-86c5974c48-q6pf7" [ref=e1109] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/ebs-csi-controller-6fd7856c66-9swqr to node:ip-10-0-255-123.ec2.internal" [ref=e1112] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-system/ebs-csi-controller to pod:kube-system/ebs-csi-controller-6fd7856c66-9swqr" [ref=e1115] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/ebs-csi-controller-6fd7856c66-p6x7t to node:ip-10-0-247-248.ec2.internal" [ref=e1118] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-system/ebs-csi-controller to pod:kube-system/ebs-csi-controller-6fd7856c66-p6x7t" [ref=e1121] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/ebs-csi-node-d7dr8 to node:ip-10-0-247-248.ec2.internal" [ref=e1124] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-system/ebs-csi-node to pod:kube-system/ebs-csi-node-d7dr8" [ref=e1127] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/ebs-csi-node-wm76q to node:ip-10-0-255-123.ec2.internal" [ref=e1130] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-system/ebs-csi-node to pod:kube-system/ebs-csi-node-wm76q" [ref=e1133] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/efs-csi-controller-7fcf98959c-xw66v to node:ip-10-0-247-248.ec2.internal" [ref=e1136] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-system/efs-csi-controller to pod:kube-system/efs-csi-controller-7fcf98959c-xw66v" [ref=e1139] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/efs-csi-controller-7fcf98959c-zn8ft to node:ip-10-0-247-248.ec2.internal" [ref=e1142] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-system/efs-csi-controller to pod:kube-system/efs-csi-controller-7fcf98959c-zn8ft" [ref=e1145] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/efs-csi-node-btxpj to node:ip-10-0-255-123.ec2.internal" [ref=e1148] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-system/efs-csi-node to pod:kube-system/efs-csi-node-btxpj" [ref=e1151] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/efs-csi-node-vstqs to node:ip-10-0-247-248.ec2.internal" [ref=e1154] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-system/efs-csi-node to pod:kube-system/efs-csi-node-vstqs" [ref=e1157] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/kube-downscaler-py-kube-downscaler-774bcc696c-jxdvr to node:ip-10-0-255-123.ec2.internal" [ref=e1160] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-system/kube-downscaler-py-kube-downscaler to pod:kube-system/kube-downscaler-py-kube-downscaler-774bcc696c-jxdvr" [ref=e1163] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/kube-proxy-7v69l to node:ip-10-0-247-248.ec2.internal" [ref=e1166] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-system/kube-proxy to pod:kube-system/kube-proxy-7v69l" [ref=e1169] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/kube-proxy-lx7zf to node:ip-10-0-255-123.ec2.internal" [ref=e1172] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:kube-system/kube-proxy to pod:kube-system/kube-proxy-lx7zf" [ref=e1175] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/metrics-server-7cbd59cb7c-b79m7 to node:ip-10-0-255-123.ec2.internal" [ref=e1178] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-system/metrics-server to pod:kube-system/metrics-server-7cbd59cb7c-b79m7" [ref=e1181] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/metrics-server-7cbd59cb7c-xzjp9 to node:ip-10-0-247-248.ec2.internal" [ref=e1184] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-system/metrics-server to pod:kube-system/metrics-server-7cbd59cb7c-xzjp9" [ref=e1187] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:kube-system/voyager-monitor-665494cb49-sdsfv to node:ip-10-0-247-248.ec2.internal" [ref=e1190] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:kube-system/voyager-monitor to pod:kube-system/voyager-monitor-665494cb49-sdsfv" [ref=e1193] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:local-dev-039-voyager-new/jenkins-voyager-new-test-0 to node:ip-10-0-255-123.ec2.internal" [ref=e1196] [cursor=pointer]
+                  - img:
+                    - group "Edge from statefulset:local-dev-039-voyager-new/jenkins-voyager-new-test to pod:local-dev-039-voyager-new/jenkins-voyager-new-test-0" [ref=e1199] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:monitoring/alertmanager-prometheus-prometheus-oper-alertmanager-0 to node:ip-10-0-255-123.ec2.internal" [ref=e1202] [cursor=pointer]
+                  - img:
+                    - group "Edge from statefulset:monitoring/alertmanager-prometheus-prometheus-oper-alertmanager to pod:monitoring/alertmanager-prometheus-prometheus-oper-alertmanager-0" [ref=e1205] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:monitoring/prometheus-grafana-6dc8c94b5d-nrw7c to node:ip-10-0-255-123.ec2.internal" [ref=e1208] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:monitoring/prometheus-grafana to pod:monitoring/prometheus-grafana-6dc8c94b5d-nrw7c" [ref=e1211] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:monitoring/prometheus-kube-state-metrics-5bc7f89f46-x6m6b to node:ip-10-0-247-248.ec2.internal" [ref=e1214] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:monitoring/prometheus-kube-state-metrics to pod:monitoring/prometheus-kube-state-metrics-5bc7f89f46-x6m6b" [ref=e1217] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:monitoring/prometheus-prometheus-node-exporter-sn9s6 to node:ip-10-0-247-248.ec2.internal" [ref=e1220] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:monitoring/prometheus-prometheus-node-exporter to pod:monitoring/prometheus-prometheus-node-exporter-sn9s6" [ref=e1223] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:monitoring/prometheus-prometheus-node-exporter-vc8cq to node:ip-10-0-255-123.ec2.internal" [ref=e1226] [cursor=pointer]
+                  - img:
+                    - group "Edge from daemonset:monitoring/prometheus-prometheus-node-exporter to pod:monitoring/prometheus-prometheus-node-exporter-vc8cq" [ref=e1229] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:monitoring/prometheus-prometheus-oper-operator-5848b4fdc5-2zjxq to node:ip-10-0-247-248.ec2.internal" [ref=e1232] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:monitoring/prometheus-prometheus-oper-operator to pod:monitoring/prometheus-prometheus-oper-operator-5848b4fdc5-2zjxq" [ref=e1235] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:monitoring/prometheus-prometheus-prometheus-oper-prometheus-0 to node:ip-10-0-247-248.ec2.internal" [ref=e1238] [cursor=pointer]
+                  - img:
+                    - group "Edge from statefulset:monitoring/prometheus-prometheus-prometheus-oper-prometheus to pod:monitoring/prometheus-prometheus-prometheus-oper-prometheus-0" [ref=e1241] [cursor=pointer]
+                  - img:
+                    - group "Edge from pod:monitoring/volume-autoscaler-65d677dffd-q8rrf to node:ip-10-0-247-248.ec2.internal" [ref=e1244] [cursor=pointer]
+                  - img:
+                    - group "Edge from deployment:monitoring/volume-autoscaler to pod:monitoring/volume-autoscaler-65d677dffd-q8rrf" [ref=e1247] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:karpenter/karpenter to pod:karpenter/karpenter-5d9775c944-9ljn9" [ref=e1250] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:karpenter/karpenter to pod:karpenter/karpenter-5d9775c944-pxjzc" [ref=e1253] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:keda/keda-operator-metrics-apiserver to pod:keda/keda-operator-metrics-apiserver-6c6f9b69c4-mrqjk" [ref=e1256] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/csi-attacher-s3 to pod:kube-infra/csi-attacher-s3-0" [ref=e1259] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/csi-provisioner-s3 to pod:kube-infra/csi-provisioner-s3-0" [ref=e1262] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/external-dns to pod:kube-infra/external-dns-84ff8cc99b-mlsk5" [ref=e1265] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/fluent-bit to pod:kube-infra/fluent-bit-bsl9c" [ref=e1268] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/fluent-bit to pod:kube-infra/fluent-bit-gv6mc" [ref=e1271] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/fluent-bit-metrics to pod:kube-infra/fluent-bit-bsl9c" [ref=e1274] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/fluent-bit-metrics to pod:kube-infra/fluent-bit-gv6mc" [ref=e1277] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/gpu-operator to pod:kube-infra/gpu-operator-785554d7b6-6d694" [ref=e1280] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/nginx-external-ingress-nginx-controller to pod:kube-infra/nginx-external-ingress-nginx-controller-7d5c6bb9cc-djgv9" [ref=e1283] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/nginx-external-ingress-nginx-controller-admission to pod:kube-infra/nginx-external-ingress-nginx-controller-7d5c6bb9cc-djgv9" [ref=e1286] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/nginx-external-ingress-nginx-controller-metrics to pod:kube-infra/nginx-external-ingress-nginx-controller-7d5c6bb9cc-djgv9" [ref=e1289] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/nginx-ingress-ingress-nginx-controller to pod:kube-infra/nginx-ingress-ingress-nginx-controller-798bffcf48-5hkdj" [ref=e1292] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/nginx-ingress-ingress-nginx-controller-admission to pod:kube-infra/nginx-ingress-ingress-nginx-controller-798bffcf48-5hkdj" [ref=e1295] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/nginx-ingress-ingress-nginx-controller-metrics to pod:kube-infra/nginx-ingress-ingress-nginx-controller-798bffcf48-5hkdj" [ref=e1298] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/postgresql-primary to pod:kube-infra/postgresql-primary-0" [ref=e1301] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/postgresql-primary-hl to pod:kube-infra/postgresql-primary-0" [ref=e1304] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-infra/webhook-server to pod:kube-infra/dataset-operator-5bfd48b945-tgtsl" [ref=e1307] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-system/claude-presentation to pod:kube-system/claude-presentation-6c44974b5c-r2dgg" [ref=e1310] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-system/kube-dns to pod:kube-system/coredns-86c5974c48-bhl86" [ref=e1313] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-system/kube-dns to pod:kube-system/coredns-86c5974c48-q6pf7" [ref=e1316] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-system/metrics-server to pod:kube-system/metrics-server-7cbd59cb7c-b79m7" [ref=e1319] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-system/metrics-server to pod:kube-system/metrics-server-7cbd59cb7c-xzjp9" [ref=e1322] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-system/prometheus-prometheus-oper-coredns to pod:kube-system/coredns-86c5974c48-bhl86" [ref=e1325] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-system/prometheus-prometheus-oper-coredns to pod:kube-system/coredns-86c5974c48-q6pf7" [ref=e1328] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-system/prometheus-prometheus-oper-kube-proxy to pod:kube-system/kube-proxy-7v69l" [ref=e1331] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:kube-system/prometheus-prometheus-oper-kube-proxy to pod:kube-system/kube-proxy-lx7zf" [ref=e1334] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:local-dev-039-voyager-new/jenkins-voyager-new-test to pod:local-dev-039-voyager-new/jenkins-voyager-new-test-0" [ref=e1337] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:local-dev-039-voyager-new/jenkins-voyager-new-test-agent to pod:local-dev-039-voyager-new/jenkins-voyager-new-test-0" [ref=e1340] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:monitoring/alertmanager-operated to pod:monitoring/alertmanager-prometheus-prometheus-oper-alertmanager-0" [ref=e1343] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:monitoring/prometheus-grafana to pod:monitoring/prometheus-grafana-6dc8c94b5d-nrw7c" [ref=e1346] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:monitoring/prometheus-kube-state-metrics to pod:monitoring/prometheus-kube-state-metrics-5bc7f89f46-x6m6b" [ref=e1349] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:monitoring/prometheus-operated to pod:monitoring/prometheus-prometheus-prometheus-oper-prometheus-0" [ref=e1352] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:monitoring/prometheus-prometheus-node-exporter to pod:monitoring/prometheus-prometheus-node-exporter-sn9s6" [ref=e1355] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:monitoring/prometheus-prometheus-node-exporter to pod:monitoring/prometheus-prometheus-node-exporter-vc8cq" [ref=e1358] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:monitoring/prometheus-prometheus-oper-alertmanager to pod:monitoring/alertmanager-prometheus-prometheus-oper-alertmanager-0" [ref=e1361] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:monitoring/prometheus-prometheus-oper-operator to pod:monitoring/prometheus-prometheus-oper-operator-5848b4fdc5-2zjxq" [ref=e1364] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:monitoring/prometheus-prometheus-oper-prometheus to pod:monitoring/prometheus-prometheus-prometheus-oper-prometheus-0" [ref=e1367] [cursor=pointer]
+                  - img:
+                    - group "Edge from service:monitoring/volume-autoscaler to pod:monitoring/volume-autoscaler-65d677dffd-q8rrf" [ref=e1370] [cursor=pointer]
+                  - img:
+                    - group "Edge from ingress:dmitryp/eg-entities-graph-ws0 to service:dmitryp/eg-entities-graph" [ref=e1373] [cursor=pointer]:
+                      - generic [ref=e1374]: /
+                  - img:
+                    - group "Edge from ingress:dmitryp/jenkins to service:dmitryp/jenkins" [ref=e1375] [cursor=pointer]:
+                      - generic [ref=e1376]: /
+                  - img:
+                    - group "Edge from ingress:kube-system/claude-presentation to service:kube-system/claude-presentation" [ref=e1377] [cursor=pointer]:
+                      - generic [ref=e1378]: /
+                  - img:
+                    - group "Edge from ingress:local-dev-039-voyager-new/jenkins-voyager-new-test to service:local-dev-039-voyager-new/jenkins-voyager-new-test" [ref=e1379] [cursor=pointer]:
+                      - generic [ref=e1380]: /
+                  - img:
+                    - group "Edge from ingress:monitoring/prometheus-grafana to service:monitoring/prometheus-grafana" [ref=e1381] [cursor=pointer]:
+                      - generic [ref=e1382]: /grafana/?(.*)
+                  - img:
+                    - group "Edge from ingress:monitoring/prometheus-prometheus-oper-alertmanager to service:monitoring/prometheus-prometheus-oper-alertmanager" [ref=e1383] [cursor=pointer]:
+                      - generic [ref=e1384]: /alertmanager(/|$)(.*)
+                  - img:
+                    - group "Edge from ingress:monitoring/prometheus-prometheus-oper-prometheus to service:monitoring/prometheus-prometheus-oper-prometheus" [ref=e1385] [cursor=pointer]:
+                      - generic [ref=e1386]: /prometheus(/|$)(.*)
+                  - img:
+                    - group "Edge from ingress:va/jfile-kfile to service:va/jfile-kfile" [ref=e1387] [cursor=pointer]:
+                      - generic [ref=e1390]: /
+                  - img:
+                    - group "Edge from ingress:va/kback to service:va/kback" [ref=e1391] [cursor=pointer]:
+                      - generic [ref=e1392]: /
+                  - img:
+                    - group "Edge from ingress:va/kfile-external to service:va/jfile-kfile" [ref=e1393] [cursor=pointer]:
+                      - generic [ref=e1396]: /
+                  - img:
+                    - group "Edge from ingress:va2/kfile to service:va2/kfile" [ref=e1397] [cursor=pointer]:
+                      - generic [ref=e1400]: /
+                  - img:
+                    - group "Edge from ingress:va2/kfile-external to service:va2/kfile" [ref=e1401] [cursor=pointer]:
+                      - generic [ref=e1404]: /
+                  - img:
+                    - group "Edge from ingress:va2/voyager-search to service:va2/voyager-search" [ref=e1405] [cursor=pointer]:
+                      - generic [ref=e1406]: /
+                - generic:
+                  - group [ref=e1407]:
+                    - button "NODE fargate-ip-10-0-234-191.ec2.internal" [ref=e1410] [cursor=pointer]:
+                      - generic [ref=e1412]:
+                        - generic [ref=e1413]: NODE
+                        - generic [ref=e1414]: fargate-ip-10-0-234-191.ec2.internal
+                  - group [ref=e1416]:
+                    - button "NODE fargate-ip-10-0-235-136.ec2.internal" [ref=e1419] [cursor=pointer]:
+                      - generic [ref=e1421]:
+                        - generic [ref=e1422]: NODE
+                        - generic [ref=e1423]: fargate-ip-10-0-235-136.ec2.internal
+                  - group [ref=e1425]:
+                    - button "NODE ip-10-0-247-248.ec2.internal" [ref=e1428] [cursor=pointer]:
+                      - generic [ref=e1430]:
+                        - generic [ref=e1431]: NODE
+                        - generic [ref=e1432]: ip-10-0-247-248.ec2.internal
+                  - group [ref=e1434]:
+                    - button "NODE ip-10-0-255-123.ec2.internal" [ref=e1437] [cursor=pointer]:
+                      - generic [ref=e1439]:
+                        - generic [ref=e1440]: NODE
+                        - generic [ref=e1441]: ip-10-0-255-123.ec2.internal
+                  - group [ref=e1443]:
+                    - button "DEPLOY karpenter 2" [ref=e1446] [cursor=pointer]:
+                      - generic [ref=e1448]:
+                        - generic [ref=e1449]: DEPLOY
+                        - generic [ref=e1450]: karpenter
+                      - generic [ref=e1451]: "2"
+                  - group [ref=e1453]:
+                    - button "DEPLOY keda-operator" [ref=e1456] [cursor=pointer]:
+                      - generic [ref=e1458]:
+                        - generic [ref=e1459]: DEPLOY
+                        - generic [ref=e1460]: keda-operator
+                  - group [ref=e1462]:
+                    - button "DEPLOY keda-operator-metrics-apiserver 1" [ref=e1465] [cursor=pointer]:
+                      - generic [ref=e1467]:
+                        - generic [ref=e1468]: DEPLOY
+                        - generic [ref=e1469]: keda-operator-metrics-apiserver
+                      - generic [ref=e1470]: "1"
+                  - group [ref=e1472]:
+                    - button "DEPLOY dataset-operator 1" [ref=e1475] [cursor=pointer]:
+                      - generic [ref=e1477]:
+                        - generic [ref=e1478]: DEPLOY
+                        - generic [ref=e1479]: dataset-operator
+                      - generic [ref=e1480]: "1"
+                  - group [ref=e1482]:
+                    - button "DEPLOY external-dns 1" [ref=e1485] [cursor=pointer]:
+                      - generic [ref=e1487]:
+                        - generic [ref=e1488]: DEPLOY
+                        - generic [ref=e1489]: external-dns
+                      - generic [ref=e1490]: "1"
+                  - group [ref=e1492]:
+                    - button "DEPLOY gpu-operator 1" [ref=e1495] [cursor=pointer]:
+                      - generic [ref=e1497]:
+                        - generic [ref=e1498]: DEPLOY
+                        - generic [ref=e1499]: gpu-operator
+                      - generic [ref=e1500]: "1"
+                  - group [ref=e1502]:
+                    - button "DEPLOY gpu-operator-node-feature-discovery-master 1" [ref=e1505] [cursor=pointer]:
+                      - generic [ref=e1507]:
+                        - generic [ref=e1508]: DEPLOY
+                        - generic [ref=e1509]: gpu-operator-node-feature-discovery-master
+                      - generic [ref=e1510]: "1"
+                  - group [ref=e1512]:
+                    - button "DEPLOY nginx-external-ingress-nginx-controller 1" [ref=e1515] [cursor=pointer]:
+                      - generic [ref=e1517]:
+                        - generic [ref=e1518]: DEPLOY
+                        - generic [ref=e1519]: nginx-external-ingress-nginx-controller
+                      - generic [ref=e1520]: "1"
+                  - group [ref=e1522]:
+                    - button "DEPLOY nginx-ingress-ingress-nginx-controller 1" [ref=e1525] [cursor=pointer]:
+                      - generic [ref=e1527]:
+                        - generic [ref=e1528]: DEPLOY
+                        - generic [ref=e1529]: nginx-ingress-ingress-nginx-controller
+                      - generic [ref=e1530]: "1"
+                  - group [ref=e1532]:
+                    - button "DEPLOY claude-presentation 1" [ref=e1535] [cursor=pointer]:
+                      - generic [ref=e1537]:
+                        - generic [ref=e1538]: DEPLOY
+                        - generic [ref=e1539]: claude-presentation
+                      - generic [ref=e1540]: "1"
+                  - group [ref=e1542]:
+                    - button "DEPLOY coredns 2" [ref=e1545] [cursor=pointer]:
+                      - generic [ref=e1547]:
+                        - generic [ref=e1548]: DEPLOY
+                        - generic [ref=e1549]: coredns
+                      - generic [ref=e1550]: "2"
+                  - group [ref=e1552]:
+                    - button "DEPLOY ebs-csi-controller 2" [ref=e1555] [cursor=pointer]:
+                      - generic [ref=e1557]:
+                        - generic [ref=e1558]: DEPLOY
+                        - generic [ref=e1559]: ebs-csi-controller
+                      - generic [ref=e1560]: "2"
+                  - group [ref=e1562]:
+                    - button "DEPLOY efs-csi-controller 2" [ref=e1565] [cursor=pointer]:
+                      - generic [ref=e1567]:
+                        - generic [ref=e1568]: DEPLOY
+                        - generic [ref=e1569]: efs-csi-controller
+                      - generic [ref=e1570]: "2"
+                  - group [ref=e1572]:
+                    - button "DEPLOY kube-downscaler-py-kube-downscaler 1" [ref=e1575] [cursor=pointer]:
+                      - generic [ref=e1577]:
+                        - generic [ref=e1578]: DEPLOY
+                        - generic [ref=e1579]: kube-downscaler-py-kube-downscaler
+                      - generic [ref=e1580]: "1"
+                  - group [ref=e1582]:
+                    - button "DEPLOY metrics-server 2" [ref=e1585] [cursor=pointer]:
+                      - generic [ref=e1587]:
+                        - generic [ref=e1588]: DEPLOY
+                        - generic [ref=e1589]: metrics-server
+                      - generic [ref=e1590]: "2"
+                  - group [ref=e1592]:
+                    - button "DEPLOY voyager-monitor 1" [ref=e1595] [cursor=pointer]:
+                      - generic [ref=e1597]:
+                        - generic [ref=e1598]: DEPLOY
+                        - generic [ref=e1599]: voyager-monitor
+                      - generic [ref=e1600]: "1"
+                  - group [ref=e1602]:
+                    - button "DEPLOY prometheus-grafana 1" [ref=e1605] [cursor=pointer]:
+                      - generic [ref=e1607]:
+                        - generic [ref=e1608]: DEPLOY
+                        - generic [ref=e1609]: prometheus-grafana
+                      - generic [ref=e1610]: "1"
+                  - group [ref=e1612]:
+                    - button "DEPLOY prometheus-kube-state-metrics 1" [ref=e1615] [cursor=pointer]:
+                      - generic [ref=e1617]:
+                        - generic [ref=e1618]: DEPLOY
+                        - generic [ref=e1619]: prometheus-kube-state-metrics
+                      - generic [ref=e1620]: "1"
+                  - group [ref=e1622]:
+                    - button "DEPLOY prometheus-prometheus-oper-operator 1" [ref=e1625] [cursor=pointer]:
+                      - generic [ref=e1627]:
+                        - generic [ref=e1628]: DEPLOY
+                        - generic [ref=e1629]: prometheus-prometheus-oper-operator
+                      - generic [ref=e1630]: "1"
+                  - group [ref=e1632]:
+                    - button "DEPLOY volume-autoscaler 1" [ref=e1635] [cursor=pointer]:
+                      - generic [ref=e1637]:
+                        - generic [ref=e1638]: DEPLOY
+                        - generic [ref=e1639]: volume-autoscaler
+                      - generic [ref=e1640]: "1"
+                  - group [ref=e1642]:
+                    - button "DEPLOY kback" [ref=e1645] [cursor=pointer]:
+                      - generic [ref=e1647]:
+                        - generic [ref=e1648]: DEPLOY
+                        - generic [ref=e1649]: kback
+                  - group [ref=e1651]:
+                    - button "STS csi-attacher-s3 1" [ref=e1654] [cursor=pointer]:
+                      - generic [ref=e1656]:
+                        - generic [ref=e1657]: STS
+                        - generic [ref=e1658]: csi-attacher-s3
+                      - generic [ref=e1659]: "1"
+                  - group [ref=e1661]:
+                    - button "STS csi-provisioner-s3 1" [ref=e1664] [cursor=pointer]:
+                      - generic [ref=e1666]:
+                        - generic [ref=e1667]: STS
+                        - generic [ref=e1668]: csi-provisioner-s3
+                      - generic [ref=e1669]: "1"
+                  - group [ref=e1671]:
+                    - button "STS postgresql-primary 1" [ref=e1674] [cursor=pointer]:
+                      - generic [ref=e1676]:
+                        - generic [ref=e1677]: STS
+                        - generic [ref=e1678]: postgresql-primary
+                      - generic [ref=e1679]: "1"
+                  - group [ref=e1681]:
+                    - button "STS jenkins-voyager-new-test 1" [ref=e1684] [cursor=pointer]:
+                      - generic [ref=e1686]:
+                        - generic [ref=e1687]: STS
+                        - generic [ref=e1688]: jenkins-voyager-new-test
+                      - generic [ref=e1689]: "1"
+                  - group [ref=e1691]:
+                    - button "STS alertmanager-prometheus-prometheus-oper-alertmanager 1" [ref=e1694] [cursor=pointer]:
+                      - generic [ref=e1696]:
+                        - generic [ref=e1697]: STS
+                        - generic [ref=e1698]: alertmanager-prometheus-prometheus-oper-alertmanager
+                      - generic [ref=e1699]: "1"
+                  - group [ref=e1701]:
+                    - button "STS prometheus-prometheus-prometheus-oper-prometheus 1" [ref=e1704] [cursor=pointer]:
+                      - generic [ref=e1706]:
+                        - generic [ref=e1707]: STS
+                        - generic [ref=e1708]: prometheus-prometheus-prometheus-oper-prometheus
+                      - generic [ref=e1709]: "1"
+                  - group [ref=e1711]:
+                    - button "STS jfile-kfile" [ref=e1714] [cursor=pointer]:
+                      - generic [ref=e1716]:
+                        - generic [ref=e1717]: STS
+                        - generic [ref=e1718]: jfile-kfile
+                  - group [ref=e1720]:
+                    - button "STS solr-migrator" [ref=e1723] [cursor=pointer]:
+                      - generic [ref=e1725]:
+                        - generic [ref=e1726]: STS
+                        - generic [ref=e1727]: solr-migrator
+                  - group [ref=e1729]:
+                    - button "STS va-rabbitmq" [ref=e1732] [cursor=pointer]:
+                      - generic [ref=e1734]:
+                        - generic [ref=e1735]: STS
+                        - generic [ref=e1736]: va-rabbitmq
+                  - group [ref=e1738]:
+                    - button "STS va-redis-master" [ref=e1741] [cursor=pointer]:
+                      - generic [ref=e1743]:
+                        - generic [ref=e1744]: STS
+                        - generic [ref=e1745]: va-redis-master
+                  - group [ref=e1747]:
+                    - button "STS va-redis-replicas" [ref=e1750] [cursor=pointer]:
+                      - generic [ref=e1752]:
+                        - generic [ref=e1753]: STS
+                        - generic [ref=e1754]: va-redis-replicas
+                  - group [ref=e1756]:
+                    - button "STS voyager-search" [ref=e1759] [cursor=pointer]:
+                      - generic [ref=e1761]:
+                        - generic [ref=e1762]: STS
+                        - generic [ref=e1763]: voyager-search
+                  - group [ref=e1765]:
+                    - button "STS voyager-search-solr" [ref=e1768] [cursor=pointer]:
+                      - generic [ref=e1770]:
+                        - generic [ref=e1771]: STS
+                        - generic [ref=e1772]: voyager-search-solr
+                  - group [ref=e1774]:
+                    - button "STS voyager-search-solr-zookeeper" [ref=e1777] [cursor=pointer]:
+                      - generic [ref=e1779]:
+                        - generic [ref=e1780]: STS
+                        - generic [ref=e1781]: voyager-search-solr-zookeeper
+                  - group [ref=e1783]:
+                    - button "STS kfile" [ref=e1786] [cursor=pointer]:
+                      - generic [ref=e1788]:
+                        - generic [ref=e1789]: STS
+                        - generic [ref=e1790]: kfile
+                  - group [ref=e1792]:
+                    - button "STS voyager-search" [ref=e1795] [cursor=pointer]:
+                      - generic [ref=e1797]:
+                        - generic [ref=e1798]: STS
+                        - generic [ref=e1799]: voyager-search
+                  - group [ref=e1801]:
+                    - button "STS voyager-search-solr" [ref=e1804] [cursor=pointer]:
+                      - generic [ref=e1806]:
+                        - generic [ref=e1807]: STS
+                        - generic [ref=e1808]: voyager-search-solr
+                  - group [ref=e1810]:
+                    - button "STS voyager-search-solr-zookeeper" [ref=e1813] [cursor=pointer]:
+                      - generic [ref=e1815]:
+                        - generic [ref=e1816]: STS
+                        - generic [ref=e1817]: voyager-search-solr-zookeeper
+                  - group [ref=e1819]:
+                    - button "DS csi-s3 2" [ref=e1822] [cursor=pointer]:
+                      - generic [ref=e1824]:
+                        - generic [ref=e1825]: DS
+                        - generic [ref=e1826]: csi-s3
+                      - generic [ref=e1827]: "2"
+                  - group [ref=e1829]:
+                    - button "DS fluent-bit 2" [ref=e1832] [cursor=pointer]:
+                      - generic [ref=e1834]:
+                        - generic [ref=e1835]: DS
+                        - generic [ref=e1836]: fluent-bit
+                      - generic [ref=e1837]: "2"
+                  - group [ref=e1839]:
+                    - button "DS gpu-operator-node-feature-discovery-worker" [ref=e1842] [cursor=pointer]:
+                      - generic [ref=e1844]:
+                        - generic [ref=e1845]: DS
+                        - generic [ref=e1846]: gpu-operator-node-feature-discovery-worker
+                  - group [ref=e1848]:
+                    - button "DS aws-node 2" [ref=e1851] [cursor=pointer]:
+                      - generic [ref=e1853]:
+                        - generic [ref=e1854]: DS
+                        - generic [ref=e1855]: aws-node
+                      - generic [ref=e1856]: "2"
+                  - group [ref=e1858]:
+                    - button "DS ebs-csi-node 2" [ref=e1861] [cursor=pointer]:
+                      - generic [ref=e1863]:
+                        - generic [ref=e1864]: DS
+                        - generic [ref=e1865]: ebs-csi-node
+                      - generic [ref=e1866]: "2"
+                  - group [ref=e1868]:
+                    - button "DS efs-csi-node 2" [ref=e1871] [cursor=pointer]:
+                      - generic [ref=e1873]:
+                        - generic [ref=e1874]: DS
+                        - generic [ref=e1875]: efs-csi-node
+                      - generic [ref=e1876]: "2"
+                  - group [ref=e1878]:
+                    - button "DS kube-proxy 2" [ref=e1881] [cursor=pointer]:
+                      - generic [ref=e1883]:
+                        - generic [ref=e1884]: DS
+                        - generic [ref=e1885]: kube-proxy
+                      - generic [ref=e1886]: "2"
+                  - group [ref=e1888]:
+                    - button "DS prometheus-prometheus-node-exporter 2" [ref=e1891] [cursor=pointer]:
+                      - generic [ref=e1893]:
+                        - generic [ref=e1894]: DS
+                        - generic [ref=e1895]: prometheus-prometheus-node-exporter
+                      - generic [ref=e1896]: "2"
+                  - group [ref=e1898]:
+                    - button "POD karpenter-5d9775c944-9ljn9" [ref=e1901] [cursor=pointer]:
+                      - generic [ref=e1903]:
+                        - generic [ref=e1904]: POD
+                        - generic [ref=e1905]: karpenter-5d9775c944-9ljn9
+                  - group [ref=e1907]:
+                    - button "POD karpenter-5d9775c944-pxjzc" [ref=e1910] [cursor=pointer]:
+                      - generic [ref=e1912]:
+                        - generic [ref=e1913]: POD
+                        - generic [ref=e1914]: karpenter-5d9775c944-pxjzc
+                  - group [ref=e1916]:
+                    - button "POD keda-operator-metrics-apiserver-6c6f9b69c4-mrqjk" [ref=e1919] [cursor=pointer]:
+                      - generic [ref=e1921]:
+                        - generic [ref=e1922]: POD
+                        - generic [ref=e1923]: keda-operator-metrics-apiserver-6c6f9b69c4-mrqjk
+                  - group [ref=e1925]:
+                    - button "POD csi-attacher-s3-0" [ref=e1928] [cursor=pointer]:
+                      - generic [ref=e1930]:
+                        - generic [ref=e1931]: POD
+                        - generic [ref=e1932]: csi-attacher-s3-0
+                  - group [ref=e1934]:
+                    - button "POD csi-provisioner-s3-0" [ref=e1937] [cursor=pointer]:
+                      - generic [ref=e1939]:
+                        - generic [ref=e1940]: POD
+                        - generic [ref=e1941]: csi-provisioner-s3-0
+                  - group [ref=e1943]:
+                    - button "POD csi-s3-cbvzv" [ref=e1946] [cursor=pointer]:
+                      - generic [ref=e1948]:
+                        - generic [ref=e1949]: POD
+                        - generic [ref=e1950]: csi-s3-cbvzv
+                  - group [ref=e1952]:
+                    - button "POD csi-s3-lddn2" [ref=e1955] [cursor=pointer]:
+                      - generic [ref=e1957]:
+                        - generic [ref=e1958]: POD
+                        - generic [ref=e1959]: csi-s3-lddn2
+                  - group [ref=e1961]:
+                    - button "POD dataset-operator-5bfd48b945-tgtsl" [ref=e1964] [cursor=pointer]:
+                      - generic [ref=e1966]:
+                        - generic [ref=e1967]: POD
+                        - generic [ref=e1968]: dataset-operator-5bfd48b945-tgtsl
+                  - group [ref=e1970]:
+                    - button "POD external-dns-84ff8cc99b-mlsk5" [ref=e1973] [cursor=pointer]:
+                      - generic [ref=e1975]:
+                        - generic [ref=e1976]: POD
+                        - generic [ref=e1977]: external-dns-84ff8cc99b-mlsk5
+                  - group [ref=e1979]:
+                    - button "POD fluent-bit-bsl9c" [ref=e1982] [cursor=pointer]:
+                      - generic [ref=e1984]:
+                        - generic [ref=e1985]: POD
+                        - generic [ref=e1986]: fluent-bit-bsl9c
+                  - group [ref=e1988]:
+                    - button "POD fluent-bit-gv6mc" [ref=e1991] [cursor=pointer]:
+                      - generic [ref=e1993]:
+                        - generic [ref=e1994]: POD
+                        - generic [ref=e1995]: fluent-bit-gv6mc
+                  - group [ref=e1997]:
+                    - button "POD gpu-operator-785554d7b6-6d694" [ref=e2000] [cursor=pointer]:
+                      - generic [ref=e2002]:
+                        - generic [ref=e2003]: POD
+                        - generic [ref=e2004]: gpu-operator-785554d7b6-6d694
+                  - group [ref=e2006]:
+                    - button "POD gpu-operator-node-feature-discovery-master-565d545778-tvkp4" [ref=e2009] [cursor=pointer]:
+                      - generic [ref=e2011]:
+                        - generic [ref=e2012]: POD
+                        - generic [ref=e2013]: gpu-operator-node-feature-discovery-master-565d545778-tvkp4
+                  - group [ref=e2015]:
+                    - button "POD nginx-external-ingress-nginx-controller-7d5c6bb9cc-djgv9" [ref=e2018] [cursor=pointer]:
+                      - generic [ref=e2020]:
+                        - generic [ref=e2021]: POD
+                        - generic [ref=e2022]: nginx-external-ingress-nginx-controller-7d5c6bb9cc-djgv9
+                  - group [ref=e2024]:
+                    - button "POD nginx-ingress-ingress-nginx-controller-798bffcf48-5hkdj" [ref=e2027] [cursor=pointer]:
+                      - generic [ref=e2029]:
+                        - generic [ref=e2030]: POD
+                        - generic [ref=e2031]: nginx-ingress-ingress-nginx-controller-798bffcf48-5hkdj
+                  - group [ref=e2033]:
+                    - button "POD postgresql-primary-0" [ref=e2036] [cursor=pointer]:
+                      - generic [ref=e2038]:
+                        - generic [ref=e2039]: POD
+                        - generic [ref=e2040]: postgresql-primary-0
+                  - group [ref=e2042]:
+                    - button "POD postgresql-primary-backup-29582101-lxftf" [ref=e2045] [cursor=pointer]:
+                      - generic [ref=e2047]:
+                        - generic [ref=e2048]: POD
+                        - generic [ref=e2049]: postgresql-primary-backup-29582101-lxftf
+                  - group [ref=e2051]:
+                    - button "POD aws-node-65cbn" [ref=e2054] [cursor=pointer]:
+                      - generic [ref=e2056]:
+                        - generic [ref=e2057]: POD
+                        - generic [ref=e2058]: aws-node-65cbn
+                  - group [ref=e2060]:
+                    - button "POD aws-node-brnm4" [ref=e2063] [cursor=pointer]:
+                      - generic [ref=e2065]:
+                        - generic [ref=e2066]: POD
+                        - generic [ref=e2067]: aws-node-brnm4
+                  - group [ref=e2069]:
+                    - button "POD claude-presentation-6c44974b5c-r2dgg" [ref=e2072] [cursor=pointer]:
+                      - generic [ref=e2074]:
+                        - generic [ref=e2075]: POD
+                        - generic [ref=e2076]: claude-presentation-6c44974b5c-r2dgg
+                  - group [ref=e2078]:
+                    - button "POD coredns-86c5974c48-bhl86" [ref=e2081] [cursor=pointer]:
+                      - generic [ref=e2083]:
+                        - generic [ref=e2084]: POD
+                        - generic [ref=e2085]: coredns-86c5974c48-bhl86
+                  - group [ref=e2087]:
+                    - button "POD coredns-86c5974c48-q6pf7" [ref=e2090] [cursor=pointer]:
+                      - generic [ref=e2092]:
+                        - generic [ref=e2093]: POD
+                        - generic [ref=e2094]: coredns-86c5974c48-q6pf7
+                  - group [ref=e2096]:
+                    - button "POD ebs-csi-controller-6fd7856c66-9swqr" [ref=e2099] [cursor=pointer]:
+                      - generic [ref=e2101]:
+                        - generic [ref=e2102]: POD
+                        - generic [ref=e2103]: ebs-csi-controller-6fd7856c66-9swqr
+                  - group [ref=e2105]:
+                    - button "POD ebs-csi-controller-6fd7856c66-p6x7t" [ref=e2108] [cursor=pointer]:
+                      - generic [ref=e2110]:
+                        - generic [ref=e2111]: POD
+                        - generic [ref=e2112]: ebs-csi-controller-6fd7856c66-p6x7t
+                  - group [ref=e2114]:
+                    - button "POD ebs-csi-node-d7dr8" [ref=e2117] [cursor=pointer]:
+                      - generic [ref=e2119]:
+                        - generic [ref=e2120]: POD
+                        - generic [ref=e2121]: ebs-csi-node-d7dr8
+                  - group [ref=e2123]:
+                    - button "POD ebs-csi-node-wm76q" [ref=e2126] [cursor=pointer]:
+                      - generic [ref=e2128]:
+                        - generic [ref=e2129]: POD
+                        - generic [ref=e2130]: ebs-csi-node-wm76q
+                  - group [ref=e2132]:
+                    - button "POD efs-csi-controller-7fcf98959c-xw66v" [ref=e2135] [cursor=pointer]:
+                      - generic [ref=e2137]:
+                        - generic [ref=e2138]: POD
+                        - generic [ref=e2139]: efs-csi-controller-7fcf98959c-xw66v
+                  - group [ref=e2141]:
+                    - button "POD efs-csi-controller-7fcf98959c-zn8ft" [ref=e2144] [cursor=pointer]:
+                      - generic [ref=e2146]:
+                        - generic [ref=e2147]: POD
+                        - generic [ref=e2148]: efs-csi-controller-7fcf98959c-zn8ft
+                  - group [ref=e2150]:
+                    - button "POD efs-csi-node-btxpj" [ref=e2153] [cursor=pointer]:
+                      - generic [ref=e2155]:
+                        - generic [ref=e2156]: POD
+                        - generic [ref=e2157]: efs-csi-node-btxpj
+                  - group [ref=e2159]:
+                    - button "POD efs-csi-node-vstqs" [ref=e2162] [cursor=pointer]:
+                      - generic [ref=e2164]:
+                        - generic [ref=e2165]: POD
+                        - generic [ref=e2166]: efs-csi-node-vstqs
+                  - group [ref=e2168]:
+                    - button "POD kube-downscaler-py-kube-downscaler-774bcc696c-jxdvr" [ref=e2171] [cursor=pointer]:
+                      - generic [ref=e2173]:
+                        - generic [ref=e2174]: POD
+                        - generic [ref=e2175]: kube-downscaler-py-kube-downscaler-774bcc696c-jxdvr
+                  - group [ref=e2177]:
+                    - button "POD kube-proxy-7v69l" [ref=e2180] [cursor=pointer]:
+                      - generic [ref=e2182]:
+                        - generic [ref=e2183]: POD
+                        - generic [ref=e2184]: kube-proxy-7v69l
+                  - group [ref=e2186]:
+                    - button "POD kube-proxy-lx7zf" [ref=e2189] [cursor=pointer]:
+                      - generic [ref=e2191]:
+                        - generic [ref=e2192]: POD
+                        - generic [ref=e2193]: kube-proxy-lx7zf
+                  - group [ref=e2195]:
+                    - button "POD metrics-server-7cbd59cb7c-b79m7" [ref=e2198] [cursor=pointer]:
+                      - generic [ref=e2200]:
+                        - generic [ref=e2201]: POD
+                        - generic [ref=e2202]: metrics-server-7cbd59cb7c-b79m7
+                  - group [ref=e2204]:
+                    - button "POD metrics-server-7cbd59cb7c-xzjp9" [ref=e2207] [cursor=pointer]:
+                      - generic [ref=e2209]:
+                        - generic [ref=e2210]: POD
+                        - generic [ref=e2211]: metrics-server-7cbd59cb7c-xzjp9
+                  - group [ref=e2213]:
+                    - button "POD voyager-monitor-665494cb49-sdsfv" [ref=e2216] [cursor=pointer]:
+                      - generic [ref=e2218]:
+                        - generic [ref=e2219]: POD
+                        - generic [ref=e2220]: voyager-monitor-665494cb49-sdsfv
+                  - group [ref=e2222]:
+                    - button "POD jenkins-voyager-new-test-0" [ref=e2225] [cursor=pointer]:
+                      - generic [ref=e2227]:
+                        - generic [ref=e2228]: POD
+                        - generic [ref=e2229]: jenkins-voyager-new-test-0
+                  - group [ref=e2231]:
+                    - button "POD alertmanager-prometheus-prometheus-oper-alertmanager-0" [ref=e2234] [cursor=pointer]:
+                      - generic [ref=e2236]:
+                        - generic [ref=e2237]: POD
+                        - generic [ref=e2238]: alertmanager-prometheus-prometheus-oper-alertmanager-0
+                  - group [ref=e2240]:
+                    - button "POD prometheus-grafana-6dc8c94b5d-nrw7c" [ref=e2243] [cursor=pointer]:
+                      - generic [ref=e2245]:
+                        - generic [ref=e2246]: POD
+                        - generic [ref=e2247]: prometheus-grafana-6dc8c94b5d-nrw7c
+                  - group [ref=e2249]:
+                    - button "POD prometheus-kube-state-metrics-5bc7f89f46-x6m6b" [ref=e2252] [cursor=pointer]:
+                      - generic [ref=e2254]:
+                        - generic [ref=e2255]: POD
+                        - generic [ref=e2256]: prometheus-kube-state-metrics-5bc7f89f46-x6m6b
+                  - group [ref=e2258]:
+                    - button "POD prometheus-prometheus-node-exporter-sn9s6" [ref=e2261] [cursor=pointer]:
+                      - generic [ref=e2263]:
+                        - generic [ref=e2264]: POD
+                        - generic [ref=e2265]: prometheus-prometheus-node-exporter-sn9s6
+                  - group [ref=e2267]:
+                    - button "POD prometheus-prometheus-node-exporter-vc8cq" [ref=e2270] [cursor=pointer]:
+                      - generic [ref=e2272]:
+                        - generic [ref=e2273]: POD
+                        - generic [ref=e2274]: prometheus-prometheus-node-exporter-vc8cq
+                  - group [ref=e2276]:
+                    - button "POD prometheus-prometheus-oper-operator-5848b4fdc5-2zjxq" [ref=e2279] [cursor=pointer]:
+                      - generic [ref=e2281]:
+                        - generic [ref=e2282]: POD
+                        - generic [ref=e2283]: prometheus-prometheus-oper-operator-5848b4fdc5-2zjxq
+                  - group [ref=e2285]:
+                    - button "POD prometheus-prometheus-prometheus-oper-prometheus-0" [ref=e2288] [cursor=pointer]:
+                      - generic [ref=e2290]:
+                        - generic [ref=e2291]: POD
+                        - generic [ref=e2292]: prometheus-prometheus-prometheus-oper-prometheus-0
+                  - group [ref=e2294]:
+                    - button "POD volume-autoscaler-65d677dffd-q8rrf" [ref=e2297] [cursor=pointer]:
+                      - generic [ref=e2299]:
+                        - generic [ref=e2300]: POD
+                        - generic [ref=e2301]: volume-autoscaler-65d677dffd-q8rrf
+                  - group [ref=e2303]:
+                    - button "SVC kubernetes" [ref=e2306] [cursor=pointer]:
+                      - generic [ref=e2308]:
+                        - generic [ref=e2309]: SVC
+                        - generic [ref=e2310]: kubernetes
+                  - group [ref=e2312]:
+                    - button "SVC eg-entities-graph" [ref=e2315] [cursor=pointer]:
+                      - generic [ref=e2317]:
+                        - generic [ref=e2318]: SVC
+                        - generic [ref=e2319]: eg-entities-graph
+                  - group [ref=e2321]:
+                    - button "SVC eg-entities-graph-headless" [ref=e2324] [cursor=pointer]:
+                      - generic [ref=e2326]:
+                        - generic [ref=e2327]: SVC
+                        - generic [ref=e2328]: eg-entities-graph-headless
+                  - group [ref=e2330]:
+                    - button "SVC eg-postgresql" [ref=e2333] [cursor=pointer]:
+                      - generic [ref=e2335]:
+                        - generic [ref=e2336]: SVC
+                        - generic [ref=e2337]: eg-postgresql
+                  - group [ref=e2339]:
+                    - button "SVC eg-postgresql-hl" [ref=e2342] [cursor=pointer]:
+                      - generic [ref=e2344]:
+                        - generic [ref=e2345]: SVC
+                        - generic [ref=e2346]: eg-postgresql-hl
+                  - group [ref=e2348]:
+                    - button "SVC jenkins" [ref=e2351] [cursor=pointer]:
+                      - generic [ref=e2353]:
+                        - generic [ref=e2354]: SVC
+                        - generic [ref=e2355]: jenkins
+                  - group [ref=e2357]:
+                    - button "SVC jenkins-agent" [ref=e2360] [cursor=pointer]:
+                      - generic [ref=e2362]:
+                        - generic [ref=e2363]: SVC
+                        - generic [ref=e2364]: jenkins-agent
+                  - group [ref=e2366]:
+                    - button "SVC karpenter" [ref=e2369] [cursor=pointer]:
+                      - generic [ref=e2371]:
+                        - generic [ref=e2372]: SVC
+                        - generic [ref=e2373]: karpenter
+                  - group [ref=e2375]:
+                    - button "SVC keda-operator" [ref=e2378] [cursor=pointer]:
+                      - generic [ref=e2380]:
+                        - generic [ref=e2381]: SVC
+                        - generic [ref=e2382]: keda-operator
+                  - group [ref=e2384]:
+                    - button "SVC keda-operator-metrics-apiserver" [ref=e2387] [cursor=pointer]:
+                      - generic [ref=e2389]:
+                        - generic [ref=e2390]: SVC
+                        - generic [ref=e2391]: keda-operator-metrics-apiserver
+                  - group [ref=e2393]:
+                    - button "SVC csi-attacher-s3" [ref=e2396] [cursor=pointer]:
+                      - generic [ref=e2398]:
+                        - generic [ref=e2399]: SVC
+                        - generic [ref=e2400]: csi-attacher-s3
+                  - group [ref=e2402]:
+                    - button "SVC csi-provisioner-s3" [ref=e2405] [cursor=pointer]:
+                      - generic [ref=e2407]:
+                        - generic [ref=e2408]: SVC
+                        - generic [ref=e2409]: csi-provisioner-s3
+                  - group [ref=e2411]:
+                    - button "SVC external-dns" [ref=e2414] [cursor=pointer]:
+                      - generic [ref=e2416]:
+                        - generic [ref=e2417]: SVC
+                        - generic [ref=e2418]: external-dns
+                  - group [ref=e2420]:
+                    - button "SVC fluent-bit" [ref=e2423] [cursor=pointer]:
+                      - generic [ref=e2425]:
+                        - generic [ref=e2426]: SVC
+                        - generic [ref=e2427]: fluent-bit
+                  - group [ref=e2429]:
+                    - button "SVC fluent-bit-metrics" [ref=e2432] [cursor=pointer]:
+                      - generic [ref=e2434]:
+                        - generic [ref=e2435]: SVC
+                        - generic [ref=e2436]: fluent-bit-metrics
+                  - group [ref=e2438]:
+                    - button "SVC gpu-operator" [ref=e2441] [cursor=pointer]:
+                      - generic [ref=e2443]:
+                        - generic [ref=e2444]: SVC
+                        - generic [ref=e2445]: gpu-operator
+                  - group [ref=e2447]:
+                    - button "SVC nginx-external-ingress-nginx-controller" [ref=e2450] [cursor=pointer]:
+                      - generic [ref=e2452]:
+                        - generic [ref=e2453]: SVC
+                        - generic [ref=e2454]: nginx-external-ingress-nginx-controller
+                  - group [ref=e2456]:
+                    - button "SVC nginx-external-ingress-nginx-controller-admission" [ref=e2459] [cursor=pointer]:
+                      - generic [ref=e2461]:
+                        - generic [ref=e2462]: SVC
+                        - generic [ref=e2463]: nginx-external-ingress-nginx-controller-admission
+                  - group [ref=e2465]:
+                    - button "SVC nginx-external-ingress-nginx-controller-metrics" [ref=e2468] [cursor=pointer]:
+                      - generic [ref=e2470]:
+                        - generic [ref=e2471]: SVC
+                        - generic [ref=e2472]: nginx-external-ingress-nginx-controller-metrics
+                  - group [ref=e2474]:
+                    - button "SVC nginx-ingress-ingress-nginx-controller" [ref=e2477] [cursor=pointer]:
+                      - generic [ref=e2479]:
+                        - generic [ref=e2480]: SVC
+                        - generic [ref=e2481]: nginx-ingress-ingress-nginx-controller
+                  - group [ref=e2483]:
+                    - button "SVC nginx-ingress-ingress-nginx-controller-admission" [ref=e2486] [cursor=pointer]:
+                      - generic [ref=e2488]:
+                        - generic [ref=e2489]: SVC
+                        - generic [ref=e2490]: nginx-ingress-ingress-nginx-controller-admission
+                  - group [ref=e2492]:
+                    - button "SVC nginx-ingress-ingress-nginx-controller-metrics" [ref=e2495] [cursor=pointer]:
+                      - generic [ref=e2497]:
+                        - generic [ref=e2498]: SVC
+                        - generic [ref=e2499]: nginx-ingress-ingress-nginx-controller-metrics
+                  - group [ref=e2501]:
+                    - button "SVC nvidia-dcgm-exporter" [ref=e2504] [cursor=pointer]:
+                      - generic [ref=e2506]:
+                        - generic [ref=e2507]: SVC
+                        - generic [ref=e2508]: nvidia-dcgm-exporter
+                  - group [ref=e2510]:
+                    - button "SVC postgresql-primary" [ref=e2513] [cursor=pointer]:
+                      - generic [ref=e2515]:
+                        - generic [ref=e2516]: SVC
+                        - generic [ref=e2517]: postgresql-primary
+                  - group [ref=e2519]:
+                    - button "SVC postgresql-primary-hl" [ref=e2522] [cursor=pointer]:
+                      - generic [ref=e2524]:
+                        - generic [ref=e2525]: SVC
+                        - generic [ref=e2526]: postgresql-primary-hl
+                  - group [ref=e2528]:
+                    - button "SVC webhook-server" [ref=e2531] [cursor=pointer]:
+                      - generic [ref=e2533]:
+                        - generic [ref=e2534]: SVC
+                        - generic [ref=e2535]: webhook-server
+                  - group [ref=e2537]:
+                    - button "SVC claude-presentation" [ref=e2540] [cursor=pointer]:
+                      - generic [ref=e2542]:
+                        - generic [ref=e2543]: SVC
+                        - generic [ref=e2544]: claude-presentation
+                  - group [ref=e2546]:
+                    - button "SVC eks-extension-metrics-api" [ref=e2549] [cursor=pointer]:
+                      - generic [ref=e2551]:
+                        - generic [ref=e2552]: SVC
+                        - generic [ref=e2553]: eks-extension-metrics-api
+                  - group [ref=e2555]:
+                    - button "SVC kube-dns" [ref=e2558] [cursor=pointer]:
+                      - generic [ref=e2560]:
+                        - generic [ref=e2561]: SVC
+                        - generic [ref=e2562]: kube-dns
+                  - group [ref=e2564]:
+                    - button "SVC metrics-server" [ref=e2567] [cursor=pointer]:
+                      - generic [ref=e2569]:
+                        - generic [ref=e2570]: SVC
+                        - generic [ref=e2571]: metrics-server
+                  - group [ref=e2573]:
+                    - button "SVC prometheus-prometheus-oper-coredns" [ref=e2576] [cursor=pointer]:
+                      - generic [ref=e2578]:
+                        - generic [ref=e2579]: SVC
+                        - generic [ref=e2580]: prometheus-prometheus-oper-coredns
+                  - group [ref=e2582]:
+                    - button "SVC prometheus-prometheus-oper-kube-controller-manager" [ref=e2585] [cursor=pointer]:
+                      - generic [ref=e2587]:
+                        - generic [ref=e2588]: SVC
+                        - generic [ref=e2589]: prometheus-prometheus-oper-kube-controller-manager
+                  - group [ref=e2591]:
+                    - button "SVC prometheus-prometheus-oper-kube-etcd" [ref=e2594] [cursor=pointer]:
+                      - generic [ref=e2596]:
+                        - generic [ref=e2597]: SVC
+                        - generic [ref=e2598]: prometheus-prometheus-oper-kube-etcd
+                  - group [ref=e2600]:
+                    - button "SVC prometheus-prometheus-oper-kube-proxy" [ref=e2603] [cursor=pointer]:
+                      - generic [ref=e2605]:
+                        - generic [ref=e2606]: SVC
+                        - generic [ref=e2607]: prometheus-prometheus-oper-kube-proxy
+                  - group [ref=e2609]:
+                    - button "SVC prometheus-prometheus-oper-kube-scheduler" [ref=e2612] [cursor=pointer]:
+                      - generic [ref=e2614]:
+                        - generic [ref=e2615]: SVC
+                        - generic [ref=e2616]: prometheus-prometheus-oper-kube-scheduler
+                  - group [ref=e2618]:
+                    - button "SVC prometheus-prometheus-oper-kubelet" [ref=e2621] [cursor=pointer]:
+                      - generic [ref=e2623]:
+                        - generic [ref=e2624]: SVC
+                        - generic [ref=e2625]: prometheus-prometheus-oper-kubelet
+                  - group [ref=e2627]:
+                    - button "SVC jenkins-voyager-new-test" [ref=e2630] [cursor=pointer]:
+                      - generic [ref=e2632]:
+                        - generic [ref=e2633]: SVC
+                        - generic [ref=e2634]: jenkins-voyager-new-test
+                  - group [ref=e2636]:
+                    - button "SVC jenkins-voyager-new-test-agent" [ref=e2639] [cursor=pointer]:
+                      - generic [ref=e2641]:
+                        - generic [ref=e2642]: SVC
+                        - generic [ref=e2643]: jenkins-voyager-new-test-agent
+                  - group [ref=e2645]:
+                    - button "SVC alertmanager-operated" [ref=e2648] [cursor=pointer]:
+                      - generic [ref=e2650]:
+                        - generic [ref=e2651]: SVC
+                        - generic [ref=e2652]: alertmanager-operated
+                  - group [ref=e2654]:
+                    - button "SVC prometheus-grafana" [ref=e2657] [cursor=pointer]:
+                      - generic [ref=e2659]:
+                        - generic [ref=e2660]: SVC
+                        - generic [ref=e2661]: prometheus-grafana
+                  - group [ref=e2663]:
+                    - button "SVC prometheus-kube-state-metrics" [ref=e2666] [cursor=pointer]:
+                      - generic [ref=e2668]:
+                        - generic [ref=e2669]: SVC
+                        - generic [ref=e2670]: prometheus-kube-state-metrics
+                  - group [ref=e2672]:
+                    - button "SVC prometheus-operated" [ref=e2675] [cursor=pointer]:
+                      - generic [ref=e2677]:
+                        - generic [ref=e2678]: SVC
+                        - generic [ref=e2679]: prometheus-operated
+                  - group [ref=e2681]:
+                    - button "SVC prometheus-prometheus-node-exporter" [ref=e2684] [cursor=pointer]:
+                      - generic [ref=e2686]:
+                        - generic [ref=e2687]: SVC
+                        - generic [ref=e2688]: prometheus-prometheus-node-exporter
+                  - group [ref=e2690]:
+                    - button "SVC prometheus-prometheus-oper-alertmanager" [ref=e2693] [cursor=pointer]:
+                      - generic [ref=e2695]:
+                        - generic [ref=e2696]: SVC
+                        - generic [ref=e2697]: prometheus-prometheus-oper-alertmanager
+                  - group [ref=e2699]:
+                    - button "SVC prometheus-prometheus-oper-operator" [ref=e2702] [cursor=pointer]:
+                      - generic [ref=e2704]:
+                        - generic [ref=e2705]: SVC
+                        - generic [ref=e2706]: prometheus-prometheus-oper-operator
+                  - group [ref=e2708]:
+                    - button "SVC prometheus-prometheus-oper-prometheus" [ref=e2711] [cursor=pointer]:
+                      - generic [ref=e2713]:
+                        - generic [ref=e2714]: SVC
+                        - generic [ref=e2715]: prometheus-prometheus-oper-prometheus
+                  - group [ref=e2717]:
+                    - button "SVC volume-autoscaler" [ref=e2720] [cursor=pointer]:
+                      - generic [ref=e2722]:
+                        - generic [ref=e2723]: SVC
+                        - generic [ref=e2724]: volume-autoscaler
+                  - group [ref=e2726]:
+                    - button "SVC jfile-kfile" [ref=e2729] [cursor=pointer]:
+                      - generic [ref=e2731]:
+                        - generic [ref=e2732]: SVC
+                        - generic [ref=e2733]: jfile-kfile
+                  - group [ref=e2735]:
+                    - button "SVC jfile-kfile-headless" [ref=e2738] [cursor=pointer]:
+                      - generic [ref=e2740]:
+                        - generic [ref=e2741]: SVC
+                        - generic [ref=e2742]: jfile-kfile-headless
+                  - group [ref=e2744]:
+                    - button "SVC kback" [ref=e2747] [cursor=pointer]:
+                      - generic [ref=e2749]:
+                        - generic [ref=e2750]: SVC
+                        - generic [ref=e2751]: kback
+                  - group [ref=e2753]:
+                    - button "SVC solr-migrator" [ref=e2756] [cursor=pointer]:
+                      - generic [ref=e2758]:
+                        - generic [ref=e2759]: SVC
+                        - generic [ref=e2760]: solr-migrator
+                  - group [ref=e2762]:
+                    - button "SVC solr-migrator-solr-migrator-headless" [ref=e2765] [cursor=pointer]:
+                      - generic [ref=e2767]:
+                        - generic [ref=e2768]: SVC
+                        - generic [ref=e2769]: solr-migrator-solr-migrator-headless
+                  - group [ref=e2771]:
+                    - button "SVC va-rabbitmq" [ref=e2774] [cursor=pointer]:
+                      - generic [ref=e2776]:
+                        - generic [ref=e2777]: SVC
+                        - generic [ref=e2778]: va-rabbitmq
+                  - group [ref=e2780]:
+                    - button "SVC va-rabbitmq-headless" [ref=e2783] [cursor=pointer]:
+                      - generic [ref=e2785]:
+                        - generic [ref=e2786]: SVC
+                        - generic [ref=e2787]: va-rabbitmq-headless
+                  - group [ref=e2789]:
+                    - button "SVC va-redis-headless" [ref=e2792] [cursor=pointer]:
+                      - generic [ref=e2794]:
+                        - generic [ref=e2795]: SVC
+                        - generic [ref=e2796]: va-redis-headless
+                  - group [ref=e2798]:
+                    - button "SVC va-redis-master" [ref=e2801] [cursor=pointer]:
+                      - generic [ref=e2803]:
+                        - generic [ref=e2804]: SVC
+                        - generic [ref=e2805]: va-redis-master
+                  - group [ref=e2807]:
+                    - button "SVC va-redis-metrics" [ref=e2810] [cursor=pointer]:
+                      - generic [ref=e2812]:
+                        - generic [ref=e2813]: SVC
+                        - generic [ref=e2814]: va-redis-metrics
+                  - group [ref=e2816]:
+                    - button "SVC va-redis-replicas" [ref=e2819] [cursor=pointer]:
+                      - generic [ref=e2821]:
+                        - generic [ref=e2822]: SVC
+                        - generic [ref=e2823]: va-redis-replicas
+                  - group [ref=e2825]:
+                    - button "SVC voyager-search" [ref=e2828] [cursor=pointer]:
+                      - generic [ref=e2830]:
+                        - generic [ref=e2831]: SVC
+                        - generic [ref=e2832]: voyager-search
+                  - group [ref=e2834]:
+                    - button "SVC voyager-search-solr" [ref=e2837] [cursor=pointer]:
+                      - generic [ref=e2839]:
+                        - generic [ref=e2840]: SVC
+                        - generic [ref=e2841]: voyager-search-solr
+                  - group [ref=e2843]:
+                    - button "SVC voyager-search-solr-headless" [ref=e2846] [cursor=pointer]:
+                      - generic [ref=e2848]:
+                        - generic [ref=e2849]: SVC
+                        - generic [ref=e2850]: voyager-search-solr-headless
+                  - group [ref=e2852]:
+                    - button "SVC voyager-search-solr-zookeeper" [ref=e2855] [cursor=pointer]:
+                      - generic [ref=e2857]:
+                        - generic [ref=e2858]: SVC
+                        - generic [ref=e2859]: voyager-search-solr-zookeeper
+                  - group [ref=e2861]:
+                    - button "SVC voyager-search-solr-zookeeper-headless" [ref=e2864] [cursor=pointer]:
+                      - generic [ref=e2866]:
+                        - generic [ref=e2867]: SVC
+                        - generic [ref=e2868]: voyager-search-solr-zookeeper-headless
+                  - group [ref=e2870]:
+                    - button "SVC voyager-search-voyager-search-headless" [ref=e2873] [cursor=pointer]:
+                      - generic [ref=e2875]:
+                        - generic [ref=e2876]: SVC
+                        - generic [ref=e2877]: voyager-search-voyager-search-headless
+                  - group [ref=e2879]:
+                    - button "SVC kfile" [ref=e2882] [cursor=pointer]:
+                      - generic [ref=e2884]:
+                        - generic [ref=e2885]: SVC
+                        - generic [ref=e2886]: kfile
+                  - group [ref=e2888]:
+                    - button "SVC kfile-kfile-headless" [ref=e2891] [cursor=pointer]:
+                      - generic [ref=e2893]:
+                        - generic [ref=e2894]: SVC
+                        - generic [ref=e2895]: kfile-kfile-headless
+                  - group [ref=e2897]:
+                    - button "SVC voyager-search" [ref=e2900] [cursor=pointer]:
+                      - generic [ref=e2902]:
+                        - generic [ref=e2903]: SVC
+                        - generic [ref=e2904]: voyager-search
+                  - group [ref=e2906]:
+                    - button "SVC voyager-search-solr" [ref=e2909] [cursor=pointer]:
+                      - generic [ref=e2911]:
+                        - generic [ref=e2912]: SVC
+                        - generic [ref=e2913]: voyager-search-solr
+                  - group [ref=e2915]:
+                    - button "SVC voyager-search-solr-headless" [ref=e2918] [cursor=pointer]:
+                      - generic [ref=e2920]:
+                        - generic [ref=e2921]: SVC
+                        - generic [ref=e2922]: voyager-search-solr-headless
+                  - group [ref=e2924]:
+                    - button "SVC voyager-search-solr-zookeeper" [ref=e2927] [cursor=pointer]:
+                      - generic [ref=e2929]:
+                        - generic [ref=e2930]: SVC
+                        - generic [ref=e2931]: voyager-search-solr-zookeeper
+                  - group [ref=e2933]:
+                    - button "SVC voyager-search-solr-zookeeper-headless" [ref=e2936] [cursor=pointer]:
+                      - generic [ref=e2938]:
+                        - generic [ref=e2939]: SVC
+                        - generic [ref=e2940]: voyager-search-solr-zookeeper-headless
+                  - group [ref=e2942]:
+                    - button "SVC voyager-search-voyager-search-headless" [ref=e2945] [cursor=pointer]:
+                      - generic [ref=e2947]:
+                        - generic [ref=e2948]: SVC
+                        - generic [ref=e2949]: voyager-search-voyager-search-headless
+                  - group [ref=e2951]:
+                    - button "ING eg-entities-graph-ws0" [ref=e2954] [cursor=pointer]:
+                      - generic [ref=e2956]:
+                        - generic [ref=e2957]: ING
+                        - generic [ref=e2958]: eg-entities-graph-ws0
+                  - group [ref=e2960]:
+                    - button "ING jenkins" [ref=e2963] [cursor=pointer]:
+                      - generic [ref=e2965]:
+                        - generic [ref=e2966]: ING
+                        - generic [ref=e2967]: jenkins
+                  - group [ref=e2969]:
+                    - button "ING claude-presentation" [ref=e2972] [cursor=pointer]:
+                      - generic [ref=e2974]:
+                        - generic [ref=e2975]: ING
+                        - generic [ref=e2976]: claude-presentation
+                  - group [ref=e2978]:
+                    - button "ING jenkins-voyager-new-test" [ref=e2981] [cursor=pointer]:
+                      - generic [ref=e2983]:
+                        - generic [ref=e2984]: ING
+                        - generic [ref=e2985]: jenkins-voyager-new-test
+                  - group [ref=e2987]:
+                    - button "ING prometheus-grafana" [ref=e2990] [cursor=pointer]:
+                      - generic [ref=e2992]:
+                        - generic [ref=e2993]: ING
+                        - generic [ref=e2994]: prometheus-grafana
+                  - group [ref=e2996]:
+                    - button "ING prometheus-prometheus-oper-alertmanager" [ref=e2999] [cursor=pointer]:
+                      - generic [ref=e3001]:
+                        - generic [ref=e3002]: ING
+                        - generic [ref=e3003]: prometheus-prometheus-oper-alertmanager
+                  - group [ref=e3005]:
+                    - button "ING prometheus-prometheus-oper-prometheus" [ref=e3008] [cursor=pointer]:
+                      - generic [ref=e3010]:
+                        - generic [ref=e3011]: ING
+                        - generic [ref=e3012]: prometheus-prometheus-oper-prometheus
+                  - group [ref=e3014]:
+                    - button "ING jfile-kfile" [ref=e3017] [cursor=pointer]:
+                      - generic [ref=e3019]:
+                        - generic [ref=e3020]: ING
+                        - generic [ref=e3021]: jfile-kfile
+                  - group [ref=e3023]:
+                    - button "ING kback" [ref=e3026] [cursor=pointer]:
+                      - generic [ref=e3028]:
+                        - generic [ref=e3029]: ING
+                        - generic [ref=e3030]: kback
+                  - group [ref=e3032]:
+                    - button "ING kfile-external" [ref=e3035] [cursor=pointer]:
+                      - generic [ref=e3037]:
+                        - generic [ref=e3038]: ING
+                        - generic [ref=e3039]: kfile-external
+                  - group [ref=e3041]:
+                    - button "ING kfile" [ref=e3044] [cursor=pointer]:
+                      - generic [ref=e3046]:
+                        - generic [ref=e3047]: ING
+                        - generic [ref=e3048]: kfile
+                  - group [ref=e3050]:
+                    - button "ING kfile-external" [ref=e3053] [cursor=pointer]:
+                      - generic [ref=e3055]:
+                        - generic [ref=e3056]: ING
+                        - generic [ref=e3057]: kfile-external
+                  - group [ref=e3059]:
+                    - button "ING voyager-search" [ref=e3062] [cursor=pointer]:
+                      - generic [ref=e3064]:
+                        - generic [ref=e3065]: ING
+                        - generic [ref=e3066]: voyager-search
+            - img [ref=e3068]
+            - generic "Control Panel" [ref=e3069]:
+              - button "Zoom In" [ref=e3070] [cursor=pointer]:
+                - img [ref=e3071]
+              - button "Zoom Out" [disabled]:
+                - img
+              - button "Fit View" [ref=e3073] [cursor=pointer]:
+                - img [ref=e3074]
+              - button "Toggle Interactivity" [ref=e3076] [cursor=pointer]:
+                - img [ref=e3077]
+            - img "Mini Map" [ref=e3080]
+            - img
+        - generic [ref=e3263]:
+          - heading "Recent Events" [level=3] [ref=e3264]
+          - generic [ref=e3265]:
+            - generic [ref=e3266]: Normal
+            - generic [ref=e3267]: Unconsolidatable
+            - generic [ref=e3268]: SpotToSpotConsolidation requires 15 cheaper instance type options than the current candidate to consolidate, got 4
+            - generic [ref=e3269]: —
+          - generic [ref=e3270]:
+            - generic [ref=e3271]: Normal
+            - generic [ref=e3272]: Unconsolidatable
+            - generic [ref=e3273]: SpotToSpotConsolidation requires 15 cheaper instance type options than the current candidate to consolidate, got 2
+            - generic [ref=e3274]: —
+          - generic [ref=e3275]:
+            - generic [ref=e3276]: Normal
+            - generic [ref=e3277]: Unconsolidatable
+            - generic [ref=e3278]: SpotToSpotConsolidation requires 15 cheaper instance type options than the current candidate to consolidate, got 4
+            - generic [ref=e3279]: —
+          - generic [ref=e3280]:
+            - generic [ref=e3281]: Normal
+            - generic [ref=e3282]: Unconsolidatable
+            - generic [ref=e3283]: SpotToSpotConsolidation requires 15 cheaper instance type options than the current candidate to consolidate, got 2
+            - generic [ref=e3284]: —
+          - generic [ref=e3285]:
+            - generic [ref=e3286]: Normal
+            - generic [ref=e3287]: NoCompatibleInstanceTypes
+            - generic [ref=e3288]: NodePool requirements filtered out all compatible available instance types
+            - generic [ref=e3289]: —
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e81] [cursor=pointer]:
+    - img [ref=e82]
+  - alert [ref=e85]: Voyager Platform
+  - generic [ref=e3290]: "0"

@@ -1,0 +1,398 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e3] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e6]
+      - generic [ref=e7]: VOYAGER
+    - generic [ref=e8]:
+      - combobox "Active cluster" [ref=e10]:
+        - option "Select Cluster" [selected]
+        - option "🟢 test-cluster-minikube"
+        - option "⚪ prod-cluster-eks"
+        - option "🟢 eks-devops-separate-us-east-1"
+      - generic [ref=e11]:
+        - generic [ref=e12]: …
+        - generic [ref=e13]: CPU
+    - generic [ref=e14]:
+      - generic [ref=e15]: Voyager Admin
+      - button "Open command palette" [ref=e16] [cursor=pointer]:
+        - img [ref=e17]
+        - generic [ref=e20]: ⌘K
+      - button "Change theme" [ref=e22] [cursor=pointer]:
+        - img [ref=e23]
+      - button "8" [ref=e26] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e30]: "8"
+      - button "Logout" [ref=e31] [cursor=pointer]:
+        - img [ref=e32]
+        - generic [ref=e35]: Logout
+      - generic "Connected · Synced just now" [ref=e36]:
+        - generic [ref=e38]: Live
+  - complementary [ref=e39]:
+    - navigation "Main navigation" [ref=e40]:
+      - link [ref=e42] [cursor=pointer]:
+        - /url: /
+        - img [ref=e43]
+      - link [expanded] [ref=e49] [cursor=pointer]:
+        - /url: /clusters
+        - img [ref=e51]
+      - link "12" [ref=e55] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e56]
+        - generic [ref=e59]: "12"
+      - link [ref=e61] [cursor=pointer]:
+        - /url: /events
+        - img [ref=e62]
+      - link [ref=e65] [cursor=pointer]:
+        - /url: /logs
+        - img [ref=e66]
+      - link [ref=e70] [cursor=pointer]:
+        - /url: /settings
+        - img [ref=e71]
+    - button "Expand sidebar" [ref=e74] [cursor=pointer]:
+      - img [ref=e75]
+  - main [ref=e77]:
+    - generic "1 user online" [ref=e79]:
+      - generic [ref=e83]: "1"
+    - generic [ref=e84]:
+      - navigation [ref=e85]:
+        - link "Dashboard" [ref=e87] [cursor=pointer]:
+          - /url: /
+          - img [ref=e88]
+        - generic [ref=e91]:
+          - img [ref=e92]
+          - link "Clusters" [ref=e94] [cursor=pointer]:
+            - /url: /clusters
+        - generic [ref=e95]:
+          - img [ref=e96]
+          - link "eks-devops-separate-us-east-1" [ref=e98] [cursor=pointer]:
+            - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1
+        - generic [ref=e99]:
+          - img [ref=e100]
+          - generic "helm" [ref=e102]
+      - generic [ref=e104]:
+        - generic:
+          - img
+        - generic [ref=e105]:
+          - heading "eks-devops-separate-us-east-1" [level=1] [ref=e106]
+          - generic [ref=e107]:
+            - generic [ref=e108]: kubeconfig
+            - generic [ref=e109]: active
+            - status [ref=e110]:
+              - generic [ref=e112]: Live
+      - navigation "Cluster tabs" [ref=e114]:
+        - link "Overview" [ref=e115] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1
+          - img [ref=e116]
+          - text: Overview
+        - link "Nodes" [ref=e121] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/nodes
+          - img [ref=e122]
+          - text: Nodes
+        - link "Events" [ref=e125] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/events
+          - img [ref=e126]
+          - text: Events
+        - link "Logs" [ref=e128] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/logs
+          - img [ref=e129]
+          - text: Logs
+        - link "Metrics" [ref=e132] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/metrics
+          - img [ref=e133]
+          - text: Metrics
+        - button "Workloads" [ref=e136] [cursor=pointer]:
+          - img [ref=e137]
+          - text: Workloads
+          - img [ref=e141]
+        - button "Networking" [ref=e144] [cursor=pointer]:
+          - img [ref=e145]
+          - text: Networking
+          - img [ref=e151]
+        - button "Config" [ref=e154] [cursor=pointer]:
+          - img [ref=e155]
+          - text: Config
+          - img [ref=e159]
+        - button "Storage" [ref=e162] [cursor=pointer]:
+          - img [ref=e163]
+          - text: Storage
+          - img [ref=e166]
+        - button "Scaling" [ref=e169] [cursor=pointer]:
+          - img [ref=e170]
+          - text: Scaling
+          - img [ref=e174]
+        - button "Helm" [ref=e177] [cursor=pointer]:
+          - img [ref=e178]
+          - text: Helm
+          - img [ref=e181]
+      - generic [ref=e184]:
+        - heading "Helm Releases" [level=1] [ref=e185]
+        - generic [ref=e186]:
+          - generic [ref=e187]:
+            - img [ref=e188]
+            - textbox "Search resources" [ref=e191]:
+              - /placeholder: Search releases by name or status...
+          - button "Fold NS" [ref=e192] [cursor=pointer]:
+            - img [ref=e193]
+            - text: Fold NS
+          - button "Expand All" [ref=e196] [cursor=pointer]:
+            - img [ref=e197]
+            - text: Expand All
+        - generic [ref=e200]:
+          - generic [ref=e201]:
+            - button "karpenter 1" [expanded] [ref=e202] [cursor=pointer]:
+              - img [ref=e204]
+              - generic [ref=e206]: karpenter
+              - generic [ref=e207]: "1"
+            - button "karpenter 1.5.1 deployed rev 1 131d ago" [ref=e212] [cursor=pointer]:
+              - generic [ref=e214]:
+                - img [ref=e215]
+                - generic [ref=e219]: karpenter
+                - generic [ref=e220]: 1.5.1
+                - generic [ref=e221]: deployed
+                - generic [ref=e222]: rev 1
+                - generic [ref=e223]: 131d ago
+              - img [ref=e225]
+          - generic [ref=e227]:
+            - button "keda 1" [expanded] [ref=e228] [cursor=pointer]:
+              - img [ref=e230]
+              - generic [ref=e232]: keda
+              - generic [ref=e233]: "1"
+            - button "keda 2.10.0 deployed rev 1 131d ago" [ref=e238] [cursor=pointer]:
+              - generic [ref=e240]:
+                - img [ref=e241]
+                - generic [ref=e245]: keda
+                - generic [ref=e246]: 2.10.0
+                - generic [ref=e247]: deployed
+                - generic [ref=e248]: rev 1
+                - generic [ref=e249]: 131d ago
+              - img [ref=e251]
+          - generic [ref=e253]:
+            - button "kube-infra 8" [expanded] [ref=e254] [cursor=pointer]:
+              - img [ref=e256]
+              - generic [ref=e258]: kube-infra
+              - generic [ref=e259]: "8"
+            - generic [ref=e261]:
+              - button "datashim 0.4.2 deployed rev 1 131d ago" [ref=e264] [cursor=pointer]:
+                - generic [ref=e266]:
+                  - img [ref=e267]
+                  - generic [ref=e271]: datashim
+                  - generic [ref=e272]: 0.4.2
+                  - generic [ref=e273]: deployed
+                  - generic [ref=e274]: rev 1
+                  - generic [ref=e275]: 131d ago
+                - img [ref=e277]
+              - button "external-dns 6.28.1 deployed rev 1 131d ago" [ref=e281] [cursor=pointer]:
+                - generic [ref=e283]:
+                  - img [ref=e284]
+                  - generic [ref=e288]: external-dns
+                  - generic [ref=e289]: 6.28.1
+                  - generic [ref=e290]: deployed
+                  - generic [ref=e291]: rev 1
+                  - generic [ref=e292]: 131d ago
+                - img [ref=e294]
+              - button "fluent-bit 2.5.0+3959 deployed rev 3 26d ago" [ref=e298] [cursor=pointer]:
+                - generic [ref=e300]:
+                  - img [ref=e301]
+                  - generic [ref=e305]: fluent-bit
+                  - generic [ref=e306]: 2.5.0+3959
+                  - generic [ref=e307]: deployed
+                  - generic [ref=e308]: rev 3
+                  - generic [ref=e309]: 26d ago
+                - img [ref=e311]
+              - button "gpu-operator v24.9.2 deployed rev 1 131d ago" [ref=e315] [cursor=pointer]:
+                - generic [ref=e317]:
+                  - img [ref=e318]
+                  - generic [ref=e322]: gpu-operator
+                  - generic [ref=e323]: v24.9.2
+                  - generic [ref=e324]: deployed
+                  - generic [ref=e325]: rev 1
+                  - generic [ref=e326]: 131d ago
+                - img [ref=e328]
+              - button "kube-arangodb-crd 1.2.50 deployed rev 1 131d ago" [ref=e332] [cursor=pointer]:
+                - generic [ref=e334]:
+                  - img [ref=e335]
+                  - generic [ref=e339]: kube-arangodb-crd
+                  - generic [ref=e340]: 1.2.50
+                  - generic [ref=e341]: deployed
+                  - generic [ref=e342]: rev 1
+                  - generic [ref=e343]: 131d ago
+                - img [ref=e345]
+              - button "nginx-external 4.14.1 deployed rev 5 76d ago" [ref=e349] [cursor=pointer]:
+                - generic [ref=e351]:
+                  - img [ref=e352]
+                  - generic [ref=e356]: nginx-external
+                  - generic [ref=e357]: 4.14.1
+                  - generic [ref=e358]: deployed
+                  - generic [ref=e359]: rev 5
+                  - generic [ref=e360]: 76d ago
+                - img [ref=e362]
+              - button "nginx-ingress 4.14.3 deployed rev 6 27d ago" [ref=e366] [cursor=pointer]:
+                - generic [ref=e368]:
+                  - img [ref=e369]
+                  - generic [ref=e373]: nginx-ingress
+                  - generic [ref=e374]: 4.14.3
+                  - generic [ref=e375]: deployed
+                  - generic [ref=e376]: rev 6
+                  - generic [ref=e377]: 27d ago
+                - img [ref=e379]
+              - button "postgresql 16.4.6+3656 deployed rev 1 131d ago" [ref=e383] [cursor=pointer]:
+                - generic [ref=e385]:
+                  - img [ref=e386]
+                  - generic [ref=e390]: postgresql
+                  - generic [ref=e391]: 16.4.6+3656
+                  - generic [ref=e392]: deployed
+                  - generic [ref=e393]: rev 1
+                  - generic [ref=e394]: 131d ago
+                - img [ref=e396]
+          - generic [ref=e398]:
+            - button "kube-system 4" [expanded] [ref=e399] [cursor=pointer]:
+              - img [ref=e401]
+              - generic [ref=e403]: kube-system
+              - generic [ref=e404]: "4"
+            - generic [ref=e406]:
+              - button "aws-ebs-csi-driver 2.17.1 deployed rev 3 125d ago" [ref=e409] [cursor=pointer]:
+                - generic [ref=e411]:
+                  - img [ref=e412]
+                  - generic [ref=e416]: aws-ebs-csi-driver
+                  - generic [ref=e417]: 2.17.1
+                  - generic [ref=e418]: deployed
+                  - generic [ref=e419]: rev 3
+                  - generic [ref=e420]: 125d ago
+                - img [ref=e422]
+              - button "aws-efs-csi-driver 2.4.0 deployed rev 1 131d ago" [ref=e426] [cursor=pointer]:
+                - generic [ref=e428]:
+                  - img [ref=e429]
+                  - generic [ref=e433]: aws-efs-csi-driver
+                  - generic [ref=e434]: 2.4.0
+                  - generic [ref=e435]: deployed
+                  - generic [ref=e436]: rev 1
+                  - generic [ref=e437]: 131d ago
+                - img [ref=e439]
+              - button "kube-downscaler 0.3.9 deployed rev 3 54d ago" [ref=e443] [cursor=pointer]:
+                - generic [ref=e445]:
+                  - img [ref=e446]
+                  - generic [ref=e450]: kube-downscaler
+                  - generic [ref=e451]: 0.3.9
+                  - generic [ref=e452]: deployed
+                  - generic [ref=e453]: rev 3
+                  - generic [ref=e454]: 54d ago
+                - img [ref=e456]
+              - button "voyager-monitor 1.1.1+3968 deployed rev 40 13d ago" [ref=e460] [cursor=pointer]:
+                - generic [ref=e462]:
+                  - img [ref=e463]
+                  - generic [ref=e467]: voyager-monitor
+                  - generic [ref=e468]: 1.1.1+3968
+                  - generic [ref=e469]: deployed
+                  - generic [ref=e470]: rev 40
+                  - generic [ref=e471]: 13d ago
+                - img [ref=e473]
+          - generic [ref=e475]:
+            - button "local-dev-036-voyager-new 1" [expanded] [ref=e476] [cursor=pointer]:
+              - img [ref=e478]
+              - generic [ref=e480]: local-dev-036-voyager-new
+              - generic [ref=e481]: "1"
+            - button "jenkins-voyager-new-test 5.8.116+36 deployed rev 1 37m ago" [ref=e486] [cursor=pointer]:
+              - generic [ref=e488]:
+                - img [ref=e489]
+                - generic [ref=e493]: jenkins-voyager-new-test
+                - generic [ref=e494]: 5.8.116+36
+                - generic [ref=e495]: deployed
+                - generic [ref=e496]: rev 1
+                - generic [ref=e497]: 37m ago
+              - img [ref=e499]
+          - generic [ref=e501]:
+            - button "monitoring 2" [expanded] [ref=e502] [cursor=pointer]:
+              - img [ref=e504]
+              - generic [ref=e506]: monitoring
+              - generic [ref=e507]: "2"
+            - generic [ref=e509]:
+              - button "prometheus 70.0.2+3248 deployed rev 2 26d ago" [ref=e512] [cursor=pointer]:
+                - generic [ref=e514]:
+                  - img [ref=e515]
+                  - generic [ref=e519]: prometheus
+                  - generic [ref=e520]: 70.0.2+3248
+                  - generic [ref=e521]: deployed
+                  - generic [ref=e522]: rev 2
+                  - generic [ref=e523]: 26d ago
+                - img [ref=e525]
+              - button "volume-autoscaler 1.0.8+3132 deployed rev 1 131d ago" [ref=e529] [cursor=pointer]:
+                - generic [ref=e531]:
+                  - img [ref=e532]
+                  - generic [ref=e536]: volume-autoscaler
+                  - generic [ref=e537]: 1.0.8+3132
+                  - generic [ref=e538]: deployed
+                  - generic [ref=e539]: rev 1
+                  - generic [ref=e540]: 131d ago
+                - img [ref=e542]
+          - generic [ref=e544]:
+            - button "va 4" [expanded] [ref=e545] [cursor=pointer]:
+              - img [ref=e547]
+              - generic [ref=e549]: va
+              - generic [ref=e550]: "4"
+            - generic [ref=e552]:
+              - button "jfile 1.5.3+125362 deployed rev 1 7d ago" [ref=e555] [cursor=pointer]:
+                - generic [ref=e557]:
+                  - img [ref=e558]
+                  - generic [ref=e562]: jfile
+                  - generic [ref=e563]: 1.5.3+125362
+                  - generic [ref=e564]: deployed
+                  - generic [ref=e565]: rev 1
+                  - generic [ref=e566]: 7d ago
+                - img [ref=e568]
+              - button "kback 6.17.0+137747 deployed rev 1 10h ago" [ref=e572] [cursor=pointer]:
+                - generic [ref=e574]:
+                  - img [ref=e575]
+                  - generic [ref=e579]: kback
+                  - generic [ref=e580]: 6.17.0+137747
+                  - generic [ref=e581]: deployed
+                  - generic [ref=e582]: rev 1
+                  - generic [ref=e583]: 10h ago
+                - img [ref=e585]
+              - button "solr-migrator 1.8.2+137759 deployed rev 1 10h ago" [ref=e589] [cursor=pointer]:
+                - generic [ref=e591]:
+                  - img [ref=e592]
+                  - generic [ref=e596]: solr-migrator
+                  - generic [ref=e597]: 1.8.2+137759
+                  - generic [ref=e598]: deployed
+                  - generic [ref=e599]: rev 1
+                  - generic [ref=e600]: 10h ago
+                - img [ref=e602]
+              - button "voyager-search 1.7.2+131175 deployed rev 1 5d ago" [ref=e606] [cursor=pointer]:
+                - generic [ref=e608]:
+                  - img [ref=e609]
+                  - generic [ref=e613]: voyager-search
+                  - generic [ref=e614]: 1.7.2+131175
+                  - generic [ref=e615]: deployed
+                  - generic [ref=e616]: rev 1
+                  - generic [ref=e617]: 5d ago
+                - img [ref=e619]
+          - generic [ref=e621]:
+            - button "va2 2" [expanded] [ref=e622] [cursor=pointer]:
+              - img [ref=e624]
+              - generic [ref=e626]: va2
+              - generic [ref=e627]: "2"
+            - generic [ref=e629]:
+              - button "kfile 2.0.0-SNAPSHOT deployed rev 2 6d ago" [ref=e632] [cursor=pointer]:
+                - generic [ref=e634]:
+                  - img [ref=e635]
+                  - generic [ref=e639]: kfile
+                  - generic [ref=e640]: 2.0.0-SNAPSHOT
+                  - generic [ref=e641]: deployed
+                  - generic [ref=e642]: rev 2
+                  - generic [ref=e643]: 6d ago
+                - img [ref=e645]
+              - button "voyager-search 1.8.2+137525 deployed rev 1 10h ago" [ref=e649] [cursor=pointer]:
+                - generic [ref=e651]:
+                  - img [ref=e652]
+                  - generic [ref=e656]: voyager-search
+                  - generic [ref=e657]: 1.8.2+137525
+                  - generic [ref=e658]: deployed
+                  - generic [ref=e659]: rev 1
+                  - generic [ref=e660]: 10h ago
+                - img [ref=e662]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e669] [cursor=pointer]:
+    - img [ref=e670]
+  - alert [ref=e673]

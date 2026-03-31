@@ -136,7 +136,7 @@ Issues affecting stability, performance, and security hardening. Should be fixed
 
 ### API Stability
 
-- [ ] **[HIGH] Add forced shutdown timeout** -- Effort: **S**
+- [x] **[HIGH] Add forced shutdown timeout** -- Effort: **S**
   - **Files:** `apps/api/src/server.ts` lines 299-320
   - **Fix:** Add at the start of the shutdown handler:
     ```typescript
@@ -149,45 +149,45 @@ Issues affecting stability, performance, and security hardening. Should be fixed
   - **Verify:** If Sentry flush hangs, process still exits within 25s (not stuck).
   - **Refs:** API-ISSUE-21
 
-- [ ] **[HIGH] Fix AI stream error handling** -- Effort: **S**
+- [x] **[HIGH] Fix AI stream error handling** -- Effort: **S**
   - **Files:** `apps/api/src/routes/ai-stream.ts` lines 91-96
   - **Fix:** Wrap both `reply.raw.write()` calls in `writeEvent` with try/catch, matching the pattern in `resource-stream.ts` lines 103-106.
   - **Verify:** Kill a client mid-AI-stream; server logs a warning but no uncaught exception.
   - **Refs:** API-ISSUE-01
 
-- [ ] **[HIGH] Add `request.raw.on('close')` to AI stream** -- Effort: **S**
+- [x] **[HIGH] Add `request.raw.on('close')` to AI stream** -- Effort: **S**
   - **Files:** `apps/api/src/routes/ai-stream.ts` lines 67-141
   - **Fix:** Add `request.raw.on('close', () => { clearInterval(heartbeat); /* abort AI stream if possible */ })` after heartbeat setup, matching pattern in `resource-stream.ts:195`.
   - **Verify:** Disconnect mid-AI-stream; heartbeat interval is cleared immediately, not after stream resolves.
   - **Depends on:** Pairs with AI stream write fix above.
   - **Refs:** API-ISSUE-02
 
-- [ ] **[HIGH] Increase EventEmitter maxListeners** -- Effort: **S**
+- [x] **[HIGH] Increase EventEmitter maxListeners** -- Effort: **S**
   - **Files:** `apps/api/src/lib/event-emitter.ts` line 64
   - **Fix:** Change `setMaxListeners(100)` to `setMaxListeners(200)`. Calculation: (50 resource * 2) + (50 metrics * 1) + (20 clusters * 1 db-writer) + presence + deploy = ~170.
   - **Verify:** No `MaxListenersExceededWarning` in server logs under full load.
   - **Refs:** API-ISSUE-10
 
-- [ ] **[HIGH] Add `maxOutputLength` to Helm gunzipSync** -- Effort: **S**
+- [x] **[HIGH] Add `maxOutputLength` to Helm gunzipSync** -- Effort: **S**
   - **Files:** `apps/api/src/routers/helm.ts` lines 47-58
   - **Fix:** Change `gunzipSync(compressed)` to `gunzipSync(compressed, { maxOutputLength: 50 * 1024 * 1024 })`.
   - **Verify:** Corrupted Helm secret data triggers a caught error instead of OOM.
   - **Refs:** API-ISSUE-18
 
-- [ ] **[HIGH] Stop presence sweep timer on shutdown** -- Effort: **S**
+- [x] **[HIGH] Stop presence sweep timer on shutdown** -- Effort: **S**
   - **Files:** `apps/api/src/lib/presence.ts` lines 82-84, `apps/api/src/server.ts` (shutdown handler)
   - **Fix:** Export `stopPresenceSweep()` from `presence.ts` that calls `clearInterval(sweepTimer)`. Call it in the shutdown handler.
   - **Verify:** After shutdown signal, sweep timer stops firing (check with log statement).
   - **Refs:** API-ISSUE-09
 
-- [ ] **[HIGH] Close PostgreSQL pool on shutdown** -- Effort: **S**
+- [x] **[HIGH] Close PostgreSQL pool on shutdown** -- Effort: **S**
   - **Files:** `packages/db/src/client.ts`, `apps/api/src/server.ts` lines 299-320
   - **Fix:** Export `closeDatabase()` from `@voyager/db` that calls `await pool.end()`. Call it in shutdown handler after stopping all jobs but before `app.close()`.
   - **Verify:** After shutdown, `pg_stat_activity` shows 0 connections from voyager.
   - **Depends on:** Pool configuration from Phase 1.
   - **Refs:** API-ISSUE-22, DB-4.2
 
-- [ ] **[HIGH] Close Redis client on shutdown** -- Effort: **S**
+- [x] **[HIGH] Close Redis client on shutdown** -- Effort: **S**
   - **Files:** `apps/api/src/lib/cache.ts`, `apps/api/src/server.ts`
   - **Fix:** Export `closeRedis()` from `cache.ts` that calls `await client?.quit()`. Call it in the shutdown handler.
   - **Verify:** After shutdown, Redis `CLIENT LIST` shows no connections from API.
@@ -195,25 +195,25 @@ Issues affecting stability, performance, and security hardening. Should be fixed
 
 ### Frontend Performance
 
-- [ ] **[HIGH/CRITICAL] Fix 1-second re-render storm in useClusterResources** -- Effort: **M**
+- [x] **[HIGH/CRITICAL] Fix 1-second re-render storm in useClusterResources** -- Effort: **M**
   - **Files:** `apps/web/src/hooks/useResources.ts` line 24
   - **Fix:** Remove the per-hook `setInterval(() => setTick(t => t + 1), 1_000)`. Instead, subscribe to the global `useResourceStore(s => s.tick)` selector (the global tick already runs at 5s in the cluster layout via `useResourceTick()`). Memoize resource data separately with `useCallback`.
   - **Verify:** In React DevTools Profiler, cluster detail page shows ~5x fewer renders. No visible jank on a 200-pod cluster.
   - **Refs:** FE-P-01
 
-- [ ] **[HIGH] Fix DashboardGrid ResizeObserver memory leak** -- Effort: **S**
+- [x] **[HIGH] Fix DashboardGrid ResizeObserver memory leak** -- Effort: **S**
   - **Files:** `apps/web/src/components/dashboard/DashboardGrid.tsx` lines 77-85
   - **Fix:** Callback ref return values are silently ignored by React. Use a `useRef<ResizeObserver | null>(null)` pattern: disconnect previous observer in the `!node` branch, create new observer in the `node` branch.
   - **Verify:** Mount/unmount dashboard 10 times; Chrome DevTools Performance Monitor shows no growth in Observers count.
   - **Refs:** FE-M-01
 
-- [ ] **[HIGH] Add ErrorBoundary to cluster layout children** -- Effort: **S**
+- [x] **[HIGH] Add ErrorBoundary to cluster layout children** -- Effort: **S**
   - **Files:** `apps/web/src/app/clusters/[id]/layout.tsx`
   - **Fix:** Wrap `{children}` with `<ErrorBoundary fallback={<div className="p-8 text-center">Tab failed to render. <button onClick={() => window.location.reload()}>Reload</button></div>}>`.
   - **Verify:** Throw an error in any cluster tab component; only that tab shows fallback, sidebar and tabs remain interactive.
   - **Refs:** FE-E-01
 
-- [ ] **[HIGH] Cap LogViewer sseLines array** -- Effort: **S**
+- [x] **[HIGH] Cap LogViewer sseLines array** -- Effort: **S**
   - **Files:** `apps/web/src/components/logs/LogViewer.tsx` line 113
   - **Fix:** Change `setSseLines(prev => [...prev, line])` to:
     ```tsx
@@ -225,13 +225,13 @@ Issues affecting stability, performance, and security hardening. Should be fixed
   - **Verify:** Follow a verbose pod for 5 minutes; array length plateaus at 10,000.
   - **Refs:** FE-P-05
 
-- [ ] **[HIGH] Lazy-load react-diff-viewer-continued** -- Effort: **S**
+- [x] **[HIGH] Lazy-load react-diff-viewer-continued** -- Effort: **S**
   - **Files:** `apps/web/src/components/resource/ResourceDiff.tsx` line 7, `apps/web/src/components/helm/HelmRevisionDiff.tsx` line 7
   - **Fix:** Replace `import ReactDiffViewer from 'react-diff-viewer-continued'` with `const ReactDiffViewer = dynamic(() => import('react-diff-viewer-continued'), { ssr: false })`.
   - **Verify:** `next build` shows diff-viewer in a separate chunk, not in shared/page bundles.
   - **Refs:** FE-P-03, FE-B-01
 
-- [ ] **[HIGH] Replace 5s topology polling with SSE-derived data or longer interval** -- Effort: **M**
+- [x] **[HIGH] Replace 5s topology polling with SSE-derived data or longer interval** -- Effort: **M**
   - **Files:** `apps/web/src/components/topology/TopologyMap.tsx` line 68, `apps/web/src/components/network/NetworkPolicyGraph.tsx` line 108
   - **Fix:** Increase `refetchInterval` from `5000` to `30_000` (30 seconds). Add a manual refresh button. If server-side graph building is not needed, derive from `useClusterResources` instead.
   - **Verify:** Network tab shows topology requests every 30s, not every 5s. Dagre layout recalculations drop from 12/min to 2/min.
@@ -239,19 +239,19 @@ Issues affecting stability, performance, and security hardening. Should be fixed
 
 ### Database Optimization
 
-- [ ] **[HIGH] Add cache stampede protection (singleflight)** -- Effort: **M**
+- [x] **[HIGH] Add cache stampede protection (singleflight)** -- Effort: **M**
   - **Files:** `apps/api/src/lib/cache.ts` lines 21-36
   - **Fix:** Add an `inflight` Map that deduplicates concurrent calls to the same cache key. When a cache miss occurs, check `inflight.get(key)` before calling `fn()`. Set `inflight.set(key, promise)` and clean up in `.finally()`.
   - **Verify:** Fire 50 concurrent requests for the same uncached resource; K8s API receives only 1 call (check via request logs or Prometheus counter).
   - **Refs:** DB-3.2
 
-- [ ] **[HIGH] Fix Redis client error handling** -- Effort: **S**
+- [x] **[HIGH] Fix Redis client error handling** -- Effort: **S**
   - **Files:** `apps/api/src/lib/cache.ts` lines 10-12
   - **Fix:** Remove `client = null` from the error handler. Instead, configure the Redis client with `socket.reconnectStrategy: (retries) => Math.min(retries * 100, 5000)`. Let the client's built-in reconnection handle transient errors.
   - **Verify:** Kill Redis briefly; API logs reconnection attempts but continues working (falls back to no-cache). No connection churn in Redis `CLIENT LIST`.
   - **Refs:** DB-3.3
 
-- [ ] **[HIGH] Add data retention cleanup** -- Effort: **M**
+- [x] **[HIGH] Add data retention cleanup** -- Effort: **M**
   - **Files:** `apps/api/src/jobs/` (new file: `data-retention.ts`), `apps/api/src/server.ts` (register job)
   - **Fix:** Create a background job that runs daily and deletes old rows:
     - `health_history` older than 30 days
@@ -262,13 +262,13 @@ Issues affecting stability, performance, and security hardening. Should be fixed
   - **Depends on:** For `metrics_history`, `node_metrics_history`, `events` -- use TimescaleDB retention policies from Phase 1 instead.
   - **Refs:** DB-1.5
 
-- [ ] **[HIGH] Fix N+1 in webhooks list** -- Effort: **M**
+- [x] **[HIGH] Fix N+1 in webhooks list** -- Effort: **M**
   - **Files:** `apps/api/src/routers/webhooks.ts` lines 51-69
   - **Fix:** Replace the per-webhook delivery query loop with a single JOIN query or use `Promise.all()` with the existing queries. Prefer the JOIN approach for fewer round-trips.
   - **Verify:** Webhooks list endpoint makes 1 SQL query instead of N+1 (check with `log_min_duration_statement`).
   - **Refs:** DB-2.3
 
-- [ ] **[HIGH] Push health bucketing to SQL** -- Effort: **M**
+- [x] **[HIGH] Push health bucketing to SQL** -- Effort: **M**
   - **Files:** `apps/api/src/routers/metrics.ts` lines 147-149, 193-199, 278-282
   - **Fix:** Replace the JS-side aggregation with a SQL query using `time_bucket()`:
     ```sql
@@ -280,7 +280,7 @@ Issues affecting stability, performance, and security hardening. Should be fixed
   - **Verify:** For a 7-day range, the endpoint returns in <100ms instead of loading 20K+ rows into Node.js.
   - **Refs:** DB-2.4
 
-- [ ] **[HIGH] Add UNIQUE constraint on nodes(cluster_id, name)** -- Effort: **S**
+- [x] **[HIGH] Add UNIQUE constraint on nodes(cluster_id, name)** -- Effort: **S**
   - **Files:** `charts/voyager/sql/init.sql` (nodes table section)
   - **Fix:** Add `ALTER TABLE nodes ADD CONSTRAINT nodes_cluster_name_unique UNIQUE (cluster_id, name);` or change the existing index to `CREATE UNIQUE INDEX`.
   - **Verify:** `\d nodes` in psql shows unique constraint. Duplicate node inserts raise conflict errors.
@@ -289,7 +289,7 @@ Issues affecting stability, performance, and security hardening. Should be fixed
 
 ### Security Hardening
 
-- [ ] **[HIGH] Reject insecure defaults in production** -- Effort: **S**
+- [x] **[HIGH] Reject insecure defaults in production** -- Effort: **S**
   - **Files:** `apps/api/src/server.ts` (startup section)
   - **Fix:** Add production-mode checks:
     ```typescript
@@ -302,25 +302,25 @@ Issues affecting stability, performance, and security hardening. Should be fixed
   - **Verify:** Starting with default `.env.example` values and `NODE_ENV=production` fails immediately.
   - **Refs:** INFRA-48, DB-5.2
 
-- [ ] **[HIGH] Remove duplicate root dependencies** -- Effort: **S**
+- [x] **[HIGH] Remove duplicate root dependencies** -- Effort: **S**
   - **Files:** `package.json` (root)
   - **Fix:** Remove `@aws-crypto/sha256-js`, `@aws-sdk/client-sts`, `@aws-sdk/util-format-url`, `@azure/arm-containerservice`, `@azure/identity`, `@google-cloud/container`, `@smithy/protocol-http`, `@smithy/signature-v4` from root package.json. They are already in `apps/api/package.json`.
   - **Verify:** `pnpm install` succeeds. `pnpm --filter api build` succeeds. Root `node_modules` is smaller.
   - **Refs:** INFRA-7
 
-- [ ] **[HIGH] Fix Helm values.yaml plaintext passwords** -- Effort: **S**
+- [x] **[HIGH] Fix Helm values.yaml plaintext passwords** -- Effort: **S**
   - **Files:** `charts/voyager/values.yaml`, `charts/voyager/values-production.yaml`
   - **Fix:** (1) In the secret template, use `required` function: `{{ required "DATABASE_URL must be set" .Values.config.databaseUrl }}`. Add a check that rejects URLs containing `changeme`. (2) Remove plaintext passwords from committed values files; use `values-local.yaml` (gitignored) for dev.
   - **Verify:** `helm template charts/voyager -f values-production.yaml` fails if password is `changeme`.
   - **Refs:** INFRA-33, INFRA-34
 
-- [ ] **[HIGH] Remove `POSTGRES_HOST_AUTH_METHOD: trust` from docker-compose** -- Effort: **S**
+- [x] **[HIGH] Remove `POSTGRES_HOST_AUTH_METHOD: trust` from docker-compose** -- Effort: **S**
   - **Files:** `docker-compose.yml`
   - **Fix:** Remove `POSTGRES_HOST_AUTH_METHOD: trust`. The `POSTGRES_PASSWORD` env var already enables `md5` auth by default.
   - **Verify:** `docker compose down -v && docker compose up -d` -- connecting without password fails. `.env` DATABASE_URL with correct password works.
   - **Refs:** INFRA-28
 
-- [ ] **[HIGH] Deduplicate `env.NODE_ENV` in values.yaml** -- Effort: **S**
+- [x] **[HIGH] Deduplicate `env.NODE_ENV` in values.yaml** -- Effort: **S**
   - **Files:** `charts/voyager/values.yaml` (lines 3-4 and 35-36)
   - **Fix:** Remove the duplicate `env` block. Keep one at the top level.
   - **Verify:** `yq '.env.NODE_ENV' charts/voyager/values.yaml` returns exactly one value.
@@ -334,19 +334,19 @@ Code quality, best practices, and non-critical improvements.
 
 ### Testing
 
-- [ ] **[HIGH] Add unit tests for tRPC routers** -- Effort: **L**
+- [x] **[HIGH] Add unit tests for tRPC routers** -- Effort: **L**
   - **Files:** `apps/api/src/__tests__/` (new files)
   - **Fix:** Add vitest tests for critical routers using mocked K8s client. Priority order: `clusters`, `metrics.history`, `helm`, `pods`, `deployments`.
   - **Verify:** `pnpm --filter api test` runs at least 5 new router test files. Coverage for routers goes from 0% to >50%.
   - **Refs:** INFRA-14
 
-- [ ] **[HIGH] Add unit tests for watch-manager and resource-mappers** -- Effort: **L**
+- [x] **[HIGH] Add unit tests for watch-manager and resource-mappers** -- Effort: **L**
   - **Files:** `apps/api/src/__tests__/` (new files)
   - **Fix:** Test resource mapper pure functions (easy, high value). Test watch-manager lifecycle (subscribe, error, teardown, generation checks) with mocked informers.
   - **Verify:** `pnpm --filter api test` covers watch lifecycle and all 17 resource type mappers.
   - **Refs:** INFRA-15
 
-- [ ] **[HIGH] Add unit tests for credential-crypto** -- Effort: **S**
+- [x] **[HIGH] Add unit tests for credential-crypto** -- Effort: **S**
   - **Files:** `apps/api/src/__tests__/credential-crypto.test.ts` (new)
   - **Fix:** Test: encrypt/decrypt round-trip, invalid key rejection, tampered ciphertext detection, format validation.
   - **Verify:** `pnpm --filter api test -- credential-crypto` passes all cases.

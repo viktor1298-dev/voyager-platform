@@ -1,0 +1,115 @@
+[     144ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     156ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     303ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     303ms] [LOG] [Fast Refresh] done in 122ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[    6766ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[    6775ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   37877ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   37887ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   63314ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=gcEA0tXkMlOaHWdxyf1ts' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[   64317ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=gcEA0tXkMlOaHWdxyf1ts' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[   65319ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=gcEA0tXkMlOaHWdxyf1ts' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[   66590ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   68519ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   68540ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   68622ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[   68648ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[   68734ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0
+[   68838ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   68990ms] [LOG] [Fast Refresh] done in 253ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   77140ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   77150ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  161069ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  161108ms] [LOG] [Fast Refresh] done in 140ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  175712ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  175786ms] [LOG] [Fast Refresh] done in 174ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  219448ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  221171ms] [LOG] [Fast Refresh] done in 1824ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  287172ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  292172ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  297172ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  302172ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  307173ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  312172ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  317173ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  322171ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  327172ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  332173ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  337171ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  342173ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  347173ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  352173ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  357172ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  362173ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  367172ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  372172ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  375629ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=pd_-1oF5fiL3d32U81I0n' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  376631ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=pd_-1oF5fiL3d32U81I0n' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  377173ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  377634ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=pd_-1oF5fiL3d32U81I0n' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  378637ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=pd_-1oF5fiL3d32U81I0n' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  379641ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=pd_-1oF5fiL3d32U81I0n' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  382172ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  384648ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  385904ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  385930ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  385973ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  386020ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[  386030ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0
+[  386089ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  386093ms] [LOG] [Fast Refresh] done in 105ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  698162ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed:  @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  699165ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  700167ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  700967ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  701169ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  702171ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  703176ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  705968ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  708181ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  710968ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  713194ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  715968ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  718211ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  720969ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  723244ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  725968ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  728283ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  730969ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  733379ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  735968ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  738599ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=QxoT9m5r0dPUpW2wdeE0m' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  774916ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  774925ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  865456ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=uOjkTkqwKb82AiaKoiBKb' failed:  @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  866463ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=uOjkTkqwKb82AiaKoiBKb' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  867465ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=uOjkTkqwKb82AiaKoiBKb' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  868468ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=uOjkTkqwKb82AiaKoiBKb' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  869470ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=uOjkTkqwKb82AiaKoiBKb' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  869953ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  870474ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=uOjkTkqwKb82AiaKoiBKb' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  874952ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  875481ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=uOjkTkqwKb82AiaKoiBKb' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  879952ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  880488ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=uOjkTkqwKb82AiaKoiBKb' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[  884950ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  885520ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  886388ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  886400ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  886455ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/health:0
+[  886488ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/auth/get-session:0
+[  886564ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/sso.getProviders:0
+[ 1882324ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1882875ms] [LOG] [Fast Refresh] done in 617ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1913696ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1915192ms] [LOG] [Fast Refresh] done in 1597ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1916534ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1916542ms] [LOG] [Fast Refresh] done in 108ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1916655ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1916681ms] [LOG] [Fast Refresh] done in 126ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1916786ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1916814ms] [LOG] [Fast Refresh] done in 128ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1917063ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1917262ms] [LOG] [Fast Refresh] done in 300ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1917446ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1917907ms] [LOG] [Fast Refresh] done in 562ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431

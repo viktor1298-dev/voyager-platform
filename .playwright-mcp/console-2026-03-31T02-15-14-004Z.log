@@ -1,0 +1,33 @@
+[     129ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     136ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  621137ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  622488ms] [LOG] [Fast Refresh] done in 1453ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  637762ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  638231ms] [LOG] [Fast Refresh] done in 571ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  663637ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  663900ms] [LOG] [Fast Refresh] done in 365ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  697196ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  697335ms] [LOG] [Fast Refresh] done in 240ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  709577ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  709607ms] [LOG] [Fast Refresh] done in 130ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  737525ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  737594ms] [LOG] [Fast Refresh] done in 169ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  739459ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[  739481ms] [LOG] [Fast Refresh] done in 122ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1078338ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1078563ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1078577ms] [LOG] [Fast Refresh] done in 115ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1079316ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1079322ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1090051ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1166259ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1166324ms] [LOG] [Fast Refresh] done in 139ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1173601ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1173629ms] [LOG] [Fast Refresh] done in 45ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1193446ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1193633ms] [LOG] [Fast Refresh] done in 215ms @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[ 1236461ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1237443ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1239445ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4001/api/resources/stream?clusterId=be3ed763-7a2b-4172-a5a6-01dcd27de1ce:0
+[ 1239452ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0
+[ 1240461ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/trpc/metrics.currentStats:0

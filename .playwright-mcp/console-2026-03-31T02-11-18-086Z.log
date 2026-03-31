@@ -1,0 +1,8 @@
+[     132ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[     139ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   52154ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:3000/trpc/presence.subscribe:0
+[   53162ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=4Zqh0IgtyC3rxINHwO7QV' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[   54164ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=4Zqh0IgtyC3rxINHwO7QV' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/05sp_next_dist_client_0qd03un._.js:13299
+[   55996ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   57536ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431
+[   57547ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/05sp_next_dist_06nhzes._.js:2431

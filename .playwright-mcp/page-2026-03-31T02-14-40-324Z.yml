@@ -1,0 +1,125 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e3] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e6]
+      - generic [ref=e7]: VOYAGER
+    - generic [ref=e8]:
+      - combobox "Active cluster" [disabled] [ref=e10]:
+        - option "Select Cluster" [selected]
+      - generic [ref=e11]:
+        - generic [ref=e12]: …
+        - generic [ref=e13]: CPU
+    - generic [ref=e14]:
+      - generic [ref=e15]: Voyager Admin
+      - button "Open command palette" [ref=e16] [cursor=pointer]:
+        - img [ref=e17]
+        - generic [ref=e20]: ⌘K
+      - button "Change theme" [ref=e22] [cursor=pointer]:
+        - img [ref=e23]
+      - button [ref=e26] [cursor=pointer]:
+        - img [ref=e27]
+      - button "Logout" [ref=e30] [cursor=pointer]:
+        - img [ref=e31]
+        - generic [ref=e34]: Logout
+      - generic "Connected · Synced just now" [ref=e35]:
+        - generic [ref=e37]: Live
+  - complementary [ref=e38]:
+    - navigation "Main navigation" [ref=e39]:
+      - link [ref=e41] [cursor=pointer]:
+        - /url: /
+        - img [ref=e42]
+      - link [expanded] [ref=e48] [cursor=pointer]:
+        - /url: /clusters
+        - img [ref=e50]
+      - link "12" [ref=e54] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e55]
+        - generic [ref=e58]: "12"
+      - link [ref=e60] [cursor=pointer]:
+        - /url: /events
+        - img [ref=e61]
+      - link [ref=e64] [cursor=pointer]:
+        - /url: /logs
+        - img [ref=e65]
+      - link [ref=e69] [cursor=pointer]:
+        - /url: /settings
+        - img [ref=e70]
+    - button "Expand sidebar" [ref=e73] [cursor=pointer]:
+      - img [ref=e74]
+  - main [ref=e76]:
+    - generic "1 user online" [ref=e78]:
+      - generic [ref=e82]: "1"
+    - generic [ref=e83]:
+      - navigation [ref=e84]:
+        - link "Dashboard" [ref=e86] [cursor=pointer]:
+          - /url: /
+          - img [ref=e87]
+        - generic [ref=e90]:
+          - img [ref=e91]
+          - link "Clusters" [ref=e93] [cursor=pointer]:
+            - /url: /clusters
+        - generic [ref=e94]:
+          - img [ref=e95]
+          - link "Loading..." [ref=e97] [cursor=pointer]:
+            - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1
+        - generic [ref=e98]:
+          - img [ref=e99]
+          - generic "helm" [ref=e101]
+      - generic [ref=e103]:
+        - generic:
+          - img
+      - navigation "Cluster tabs" [ref=e109]:
+        - link "Overview" [ref=e110] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1
+          - img [ref=e111]
+          - text: Overview
+        - link "Nodes" [ref=e116] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/nodes
+          - img [ref=e117]
+          - text: Nodes
+        - link "Events" [ref=e120] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/events
+          - img [ref=e121]
+          - text: Events
+        - link "Logs" [ref=e123] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/logs
+          - img [ref=e124]
+          - text: Logs
+        - link "Metrics" [ref=e127] [cursor=pointer]:
+          - /url: /clusters/be3ed763-7a2b-4172-a5a6-01dcd27de1ce--eks-devops-separate-us-east-1/metrics
+          - img [ref=e128]
+          - text: Metrics
+        - button "Workloads" [ref=e131] [cursor=pointer]:
+          - img [ref=e132]
+          - text: Workloads
+          - img [ref=e136]
+        - button "Networking" [ref=e139] [cursor=pointer]:
+          - img [ref=e140]
+          - text: Networking
+          - img [ref=e146]
+        - button "Config" [ref=e149] [cursor=pointer]:
+          - img [ref=e150]
+          - text: Config
+          - img [ref=e154]
+        - button "Storage" [ref=e157] [cursor=pointer]:
+          - img [ref=e158]
+          - text: Storage
+          - img [ref=e161]
+        - button "Scaling" [ref=e164] [cursor=pointer]:
+          - img [ref=e165]
+          - text: Scaling
+          - img [ref=e169]
+        - button "Helm" [ref=e172] [cursor=pointer]:
+          - img [ref=e173]
+          - text: Helm
+          - img [ref=e176]
+      - generic [ref=e180]:
+        - img [ref=e182]
+        - paragraph [ref=e186]: No Helm Releases
+        - paragraph [ref=e187]: No Helm releases found in this cluster. Deploy a Helm chart to see releases here.
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e193] [cursor=pointer]:
+    - img [ref=e194]
+  - alert [ref=e197]
