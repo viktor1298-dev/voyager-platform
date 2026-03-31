@@ -13,6 +13,9 @@ const pool = new pg.Pool({
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
   allowExitOnIdle: true,
+  // statement_timeout is a Postgres session parameter, not a pg.Pool option.
+  // Pass it via the options string (libpq-style) to set it on every connection.
+  options: '-c statement_timeout=30000',
 })
 
 pool.on('error', (err) => console.error('[pg-pool] Unexpected error on idle client', err))

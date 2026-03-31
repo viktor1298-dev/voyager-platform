@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { AI_CONFIG } from '@voyager/config'
 import { db } from '@voyager/db'
+import { trackConnection } from '../lib/connection-tracker.js'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { auth } from '../lib/auth.js'
@@ -87,6 +88,7 @@ export async function registerAiStreamRoute(app: FastifyInstance): Promise<void>
       'cache-control': 'no-cache, no-transform',
       connection: 'keep-alive',
     })
+    trackConnection(reply.raw)
 
     const writeEvent = (event: string, payload: Record<string, unknown>) => {
       try {

@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import { SSE_HEARTBEAT_INTERVAL_MS } from '@voyager/config'
+import { trackConnection } from '../lib/connection-tracker.js'
 import { clusters, db } from '@voyager/db'
 import type { MetricsStreamEvent } from '@voyager/types'
 import { eq } from 'drizzle-orm'
@@ -88,6 +89,7 @@ export async function registerMetricsStreamRoute(app: FastifyInstance): Promise<
         'access-control-allow-origin': corsOrigin,
         'access-control-allow-credentials': 'true',
       })
+      trackConnection(reply.raw)
       reply.raw.write(':connected\n\n')
 
       const connectionId = crypto.randomUUID()

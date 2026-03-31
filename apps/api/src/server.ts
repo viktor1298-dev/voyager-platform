@@ -37,6 +37,7 @@ import { registerMetricsStreamRoute } from './routes/metrics-stream.js'
 import { registerPodTerminalRoute } from './routes/pod-terminal.js'
 import { registerResourceStreamRoute } from './routes/resource-stream.js'
 import { registerWatchHealthRoute } from './routes/watch-health.js'
+import { drainConnections } from './lib/connection-tracker.js'
 import { createContext } from './trpc.js'
 
 // Validate CLUSTER_CRED_ENCRYPTION_KEY (64-char hex = 32 bytes AES-256 key)
@@ -313,6 +314,7 @@ const start = async () => {
 
         app.log.info(`${signal} received, shutting down gracefully`)
         try {
+          drainConnections()
           watchManager.stopAll()
           stopWatchDbWriter()
           stopAlertEvaluator()

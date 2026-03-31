@@ -15,6 +15,7 @@ import {
   SSE_EVENT_BUFFER_SIZE,
   SSE_HEARTBEAT_INTERVAL_MS,
 } from '@voyager/config/sse'
+import { trackConnection } from '../lib/connection-tracker.js'
 import { clusters, db } from '@voyager/db'
 import type { WatchEvent, WatchEventBatch, WatchStatusEvent } from '@voyager/types'
 import { eq } from 'drizzle-orm'
@@ -121,6 +122,7 @@ export async function handleResourceStream(
     'access-control-allow-origin': corsOrigin,
     'access-control-allow-credentials': 'true',
   })
+  trackConnection(reply.raw)
   // Flush immediately so proxies/EventSource receive headers + initial data
   reply.raw.write(':connected\n\n')
 

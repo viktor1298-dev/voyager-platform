@@ -1,6 +1,7 @@
 import { PassThrough } from 'node:stream'
 import { Log } from '@kubernetes/client-node'
 import { SSE_HEARTBEAT_INTERVAL_MS } from '@voyager/config'
+import { trackConnection } from '../lib/connection-tracker.js'
 import { clusters, db } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
@@ -104,6 +105,7 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
         'access-control-allow-origin': corsOrigin,
         'access-control-allow-credentials': 'true',
       })
+      trackConnection(reply.raw)
       reply.raw.write(':connected\n\n')
 
       let lineCount = 0
