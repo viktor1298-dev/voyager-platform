@@ -2,7 +2,7 @@
   "name": "voyager-platform",
   "private": true,
   "scripts": {
-    "predev": "lsof -ti:4001 | xargs kill 2>/dev/null; lsof -ti:3000 | xargs kill 2>/dev/null; pkill -f 'turbo dev' 2>/dev/null; sleep 1; echo '✓ Ports cleared'",
+    "predev": "pkill -f 'tsx watch.*server\\.ts' 2>/dev/null; pkill -f 'turbo dev' 2>/dev/null; pkill -f 'next dev.*port 3000' 2>/dev/null; lsof -ti:4001 | xargs kill 2>/dev/null; lsof -ti:3000 | xargs kill 2>/dev/null; sleep 1; echo '✓ Dev cleanup done'",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
