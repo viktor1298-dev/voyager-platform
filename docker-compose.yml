@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-voyager}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-voyager_dev}
       POSTGRES_DB: ${POSTGRES_DB:-voyager_dev}
-      POSTGRES_HOST_AUTH_METHOD: trust
+
     command: ["-c", "listen_addresses=*"]
     ports:
       - "5432:5432"

@@ -4,7 +4,8 @@ import { Check, Copy, GitCompare, Info } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { stringify } from 'yaml'
-import ReactDiffViewer from 'react-diff-viewer-continued'
+import dynamic from 'next/dynamic'
+const ReactDiffViewer = dynamic(() => import('react-diff-viewer-continued'), { ssr: false })
 import { trpc } from '@/lib/trpc'
 
 const YAML_RESOURCE_TYPES = [

@@ -109,7 +109,10 @@ export function LogViewer({
     es.addEventListener('log', (event: MessageEvent) => {
       try {
         const { line } = JSON.parse(event.data) as { line: string; timestamp: number }
-        setSseLines((prev) => [...prev, line])
+        setSseLines((prev) => {
+          const next = [...prev, line]
+          return next.length > 10_000 ? next.slice(-10_000) : next
+        })
 
         if (isPausedRef.current) {
           setNewLineCount((c) => c + 1)

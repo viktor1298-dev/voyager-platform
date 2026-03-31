@@ -1,8 +1,5 @@
 namespace: voyager
 
-env:
-  NODE_ENV: development
-
 web:
   replicaCount: 1
   image:
@@ -37,7 +34,7 @@ env:
 config:
   apiUrl: "http://voyager-api:4000"
   redisUrl: "redis://redis:6379"
-  databaseUrl: "postgresql://voyager:voyager_dev@postgres:5432/voyager"
+  databaseUrl: "postgresql://voyager:voyager_dev@postgres:5432/voyager"  # WARNING: change password in production
   allowedOrigins: "http://localhost:3000,http://localhost:9000,http://100.90.102.90:9000,http://voyager-platform.voyagerlabs.co"
   sentryEnvironment: "production"
   sentryTracesSampleRate: "0.1"

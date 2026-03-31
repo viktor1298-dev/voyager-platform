@@ -5,6 +5,7 @@ import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { getClusterIdFromRouteSegment, getClusterRouteSegment } from '@/components/cluster-route'
 import { GroupedTabBar } from '@/components/clusters/GroupedTabBar'
@@ -198,17 +199,34 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
       <GroupedTabBar clusterRouteSegment={clusterRouteSegment} activeTab={activeTab} />
 
       {/* Tab Content with AnimatePresence */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={pathname}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-        >
-          {children}
-        </motion.div>
-      </AnimatePresence>
+      <ErrorBoundary
+        fallback={
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="text-sm text-[var(--color-text-muted)] mb-4">
+              This tab encountered an error.
+            </p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              Reload Page
+            </button>
+          </div>
+        }
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
+      </ErrorBoundary>
     </AppLayout>
   )
 }
