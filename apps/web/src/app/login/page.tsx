@@ -15,6 +15,7 @@ import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
 import { toast } from 'sonner'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useApiHealth } from '@/hooks/useApiHealth'
 
 const loginSchema = z.object({
   email: z
@@ -56,6 +57,7 @@ function LoginPageContent() {
   const [shouldBypassLoggedOutRedirect, setShouldBypassLoggedOutRedirect] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
   const [formMounted, setFormMounted] = useState(false)
+  const apiHealth = useApiHealth()
   const { data: session, isPending } = authClient.useSession()
   const providersQuery = trpc.sso.getProviders.useQuery(undefined, { retry: false })
 
@@ -477,6 +479,28 @@ function LoginPageContent() {
             {/* Footer */}
             <p className="mt-6 text-center text-xs text-[var(--color-text-dim)]">
               Voyager Platform · Kubernetes Operations Dashboard
+            </p>
+            <p
+              className={`mt-2 text-center text-xs flex items-center justify-center gap-1.5 transition-colors duration-300 ${
+                apiHealth === 'connected'
+                  ? 'text-emerald-500/70'
+                  : apiHealth === 'unreachable'
+                    ? 'text-red-400'
+                    : 'text-[var(--color-text-dim)]'
+              }`}
+            >
+              <span
+                className={`inline-block h-1.5 w-1.5 rounded-full transition-colors duration-300 ${
+                  apiHealth === 'connected'
+                    ? 'bg-emerald-500'
+                    : apiHealth === 'unreachable'
+                      ? 'bg-red-400'
+                      : 'bg-[var(--color-text-dim)]'
+                }`}
+              />
+              {apiHealth === 'connected' && 'API Connected'}
+              {apiHealth === 'unreachable' && 'API Unreachable'}
+              {apiHealth === 'checking' && 'Checking API...'}
             </p>
           </div>
         </div>
