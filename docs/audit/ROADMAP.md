@@ -352,13 +352,13 @@ Code quality, best practices, and non-critical improvements.
   - **Verify:** `pnpm --filter api test -- credential-crypto` passes all cases.
   - **Refs:** INFRA-16
 
-- [ ] **[MEDIUM] Add vitest config for web app** -- Effort: **S**
+- [x] **[MEDIUM] Add vitest config for web app** -- Effort: **S**
   - **Files:** `apps/web/vitest.config.ts` (new)
   - **Fix:** Create vitest config with `environment: 'jsdom'`, path alias support, and setup file.
   - **Verify:** `pnpm --filter web test` runs successfully.
   - **Refs:** INFRA-18
 
-- [ ] **[MEDIUM] Add unit tests for frontend pure functions** -- Effort: **M**
+- [x] **[MEDIUM] Add unit tests for frontend pure functions** -- Effort: **M**
   - **Files:** `apps/web/src/lib/__tests__/` (new files)
   - **Fix:** Test: `formatters.ts`, `lttb.ts`, `metrics-buffer.ts`. These are pure functions, easily testable.
   - **Verify:** `pnpm --filter web test` passes with coverage for utility functions.
@@ -366,185 +366,185 @@ Code quality, best practices, and non-critical improvements.
 
 ### Error Handling
 
-- [ ] **[MEDIUM] Add `reply.raw.end()` to MCP SSE close handler** -- Effort: **S**
+- [x] **[MEDIUM] Add `reply.raw.end()` to MCP SSE close handler** -- Effort: **S**
   - **Files:** `apps/api/src/routes/mcp.ts` lines 153-174
   - **Fix:** Add `try { reply.raw.end() } catch { /* already ended */ }` in the `request.raw.on('close')` handler.
   - **Refs:** API-ISSUE-03
 
-- [ ] **[MEDIUM] Add try/catch to `deployments.list` for missing clusters** -- Effort: **S**
+- [x] **[MEDIUM] Add try/catch to `deployments.list` for missing clusters** -- Effort: **S**
   - **Files:** `apps/api/src/routers/deployments.ts` lines 148-216
   - **Fix:** Wrap in try/catch with `handleK8sError` or return empty array when no clusters exist.
   - **Refs:** API-ISSUE-04
 
-- [ ] **[MEDIUM] Add try/catch to `logs.get` K8s API call** -- Effort: **S**
+- [x] **[MEDIUM] Add try/catch to `logs.get` K8s API call** -- Effort: **S**
   - **Files:** `apps/api/src/routers/logs.ts` lines 361-390
   - **Fix:** Wrap the `coreApi.readNamespacedPodLog()` call in try/catch using `handleK8sError(error, 'get pod logs')`.
   - **Refs:** API-ISSUE-05
 
-- [ ] **[MEDIUM] Add error handlers to pod-terminal PassThrough streams** -- Effort: **S**
+- [x] **[MEDIUM] Add error handlers to pod-terminal PassThrough streams** -- Effort: **S**
   - **Files:** `apps/api/src/routes/pod-terminal.ts` lines 48-58
   - **Fix:** Add `.on('error', (err) => { app.log.error({ err }, 'stream error'); socket.close(1011, 'Stream error') })` to both `stdout` and `stderr`.
   - **Refs:** API-ISSUE-06
 
-- [ ] **[MEDIUM] Add ErrorBoundary to dashboard widgets** -- Effort: **S**
+- [x] **[MEDIUM] Add ErrorBoundary to dashboard widgets** -- Effort: **S**
   - **Files:** `apps/web/src/components/dashboard/DashboardGrid.tsx` line 133
   - **Fix:** Wrap each widget render in `<ErrorBoundary>` with a per-widget fallback showing "Widget failed to load".
   - **Refs:** FE-E-02
 
-- [ ] **[MEDIUM] Add ErrorBoundary to topology/network graphs** -- Effort: **S**
+- [x] **[MEDIUM] Add ErrorBoundary to topology/network graphs** -- Effort: **S**
   - **Files:** `apps/web/src/components/topology/TopologyMap.tsx`, `apps/web/src/components/network/NetworkPolicyGraph.tsx`
   - **Fix:** Wrap `<ReactFlow>` in `<ErrorBoundary>` with graph-specific fallback.
   - **Refs:** FE-E-03
 
-- [ ] **[MEDIUM] Fix FilterBar debounce cleanup on unmount** -- Effort: **S**
+- [x] **[MEDIUM] Fix FilterBar debounce cleanup on unmount** -- Effort: **S**
   - **Files:** `apps/web/src/components/FilterBar.tsx` lines 54, 137
   - **Fix:** Add `useEffect(() => () => clearTimeout(debounceRef.current), [])`.
   - **Refs:** FE-M-02
 
 ### Performance
 
-- [ ] **[MEDIUM] Clean up orphaned watch-db-writer listeners** -- Effort: **M**
+- [x] **[MEDIUM] Clean up orphaned watch-db-writer listeners** -- Effort: **M**
   - **Files:** `apps/api/src/lib/watch-db-writer.ts` lines 238-250
   - **Fix:** Listen for `watch-status` disconnected events to remove per-cluster listeners from the `listeners` Map and the emitter.
   - **Refs:** API-ISSUE-11
 
-- [ ] **[MEDIUM] Parallelize `metrics.currentStats` cluster loop** -- Effort: **S**
+- [x] **[MEDIUM] Parallelize `metrics.currentStats` cluster loop** -- Effort: **S**
   - **Files:** `apps/api/src/routers/metrics.ts` lines 330-391
   - **Fix:** Replace `for (const cluster of allClusters)` with `Promise.allSettled(allClusters.map(...))`.
   - **Verify:** With 10 clusters, endpoint responds in ~15s (worst single cluster) instead of ~150s.
   - **Refs:** DB-2.5
 
-- [ ] **[MEDIUM] Use column-specific selects for clusters.list** -- Effort: **S**
+- [x] **[MEDIUM] Use column-specific selects for clusters.list** -- Effort: **S**
   - **Files:** `apps/api/src/routers/clusters.ts` line 185
   - **Fix:** Replace `select().from(clusters)` with specific columns, excluding `connectionConfig`. Currently the code fetches it then strips it.
   - **Refs:** DB-2.6
 
-- [ ] **[MEDIUM] Centralize inline cache keys** -- Effort: **S**
+- [x] **[MEDIUM] Centralize inline cache keys** -- Effort: **S**
   - **Files:** `apps/api/src/lib/cache-keys.ts`, 9 routers (`ingresses.ts`, `cronjobs.ts`, `daemonsets.ts`, `jobs.ts`, `hpa.ts`, `secrets.ts`, `pvcs.ts`, `statefulsets.ts`, `configmaps.ts`)
   - **Fix:** Add missing entries to `cache-keys.ts` (e.g., `k8sIngresses`, `k8sCronjobs`, etc.) and replace inline template literals in all 9 routers.
   - **Refs:** DB-3.4
 
-- [ ] **[MEDIUM] Add missing FK indexes** -- Effort: **S**
+- [x] **[MEDIUM] Add missing FK indexes** -- Effort: **S**
   - **Files:** `charts/voyager/sql/init.sql`
   - **Fix:** Add indexes on: `session.user_id`, `account.user_id`, `ai_conversations.user_id`, `ai_conversations.cluster_id`, `ai_recommendations.cluster_id`, `webhook_deliveries.webhook_id`, `user_tokens.user_id`, `shared_dashboards.created_by`, `audit_log.user_id`.
   - **Verify:** `\di` in psql shows the new indexes.
   - **Refs:** DB-1.2, DB-1.3
 
-- [ ] **[MEDIUM] Split barrel file to avoid heavy re-exports** -- Effort: **S**
+- [x] **[MEDIUM] Split barrel file to avoid heavy re-exports** -- Effort: **S**
   - **Files:** `apps/web/src/components/resource/index.ts`
   - **Fix:** Remove `ResourceDiff` and `YamlViewer` from the barrel file. Import heavy components directly from their files at consumption points.
   - **Refs:** FE-P-07
 
-- [ ] **[MEDIUM] Reconsider AnimatePresence mode on tab switches** -- Effort: **S**
+- [x] **[MEDIUM] Reconsider AnimatePresence mode on tab switches** -- Effort: **S**
   - **Files:** `apps/web/src/app/clusters/[id]/layout.tsx` lines 201-211
   - **Fix:** Change `mode="wait"` to `mode="sync"` for crossfade, or remove AnimatePresence entirely for instant tab switches. The `mode="wait"` pattern forces the old tab to fully exit before the new tab mounts.
   - **Refs:** FE-P-08
 
-- [ ] **[MEDIUM] Pause presence heartbeat when tab is hidden** -- Effort: **S**
+- [x] **[MEDIUM] Pause presence heartbeat when tab is hidden** -- Effort: **S**
   - **Files:** `apps/web/src/hooks/usePresence.ts` lines 230-246
   - **Fix:** Add `if (document.hidden) return` at the top of the heartbeat callback.
   - **Refs:** FE-K-04
 
 ### DX Improvements
 
-- [ ] **[MEDIUM] Add `.gitignore` entries for test artifacts** -- Effort: **S**
+- [x] **[MEDIUM] Add `.gitignore` entries for test artifacts** -- Effort: **S**
   - **Files:** `.gitignore`
   - **Fix:** Add `test-results/`, `.playwright-mcp/`, `playwright/.auth/`.
   - **Refs:** INFRA-60
 
-- [ ] **[MEDIUM] Add HEALTHCHECK to Dockerfiles** -- Effort: **S**
+- [x] **[MEDIUM] Add HEALTHCHECK to Dockerfiles** -- Effort: **S**
   - **Files:** `docker/Dockerfile.api`, `docker/Dockerfile.web`
   - **Fix:** Add `HEALTHCHECK --interval=30s --timeout=5s CMD wget -qO- http://localhost:4000/health || exit 1` to API. Similar for web on port 3000.
   - **Refs:** INFRA-22, INFRA-25
 
-- [ ] **[MEDIUM] Make /health endpoint check backends** -- Effort: **M**
+- [x] **[MEDIUM] Make /health endpoint check backends** -- Effort: **M**
   - **Files:** `apps/api/src/server.ts` (`/health` route)
   - **Fix:** Add `SELECT 1` on Postgres and `PING` on Redis. Return `{ status: 'ok', db: true, redis: true }` or `{ status: 'degraded', ... }` with appropriate HTTP status.
   - **Refs:** INFRA-71
 
-- [ ] **[MEDIUM] Add security headers** -- Effort: **S**
+- [x] **[MEDIUM] Add security headers** -- Effort: **S**
   - **Files:** `apps/api/src/server.ts`, `apps/web/next.config.ts`
   - **Fix:** Add `@fastify/helmet` to API. Add `headers()` config to Next.js with `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`.
   - **Refs:** INFRA-56, INFRA-57
 
-- [ ] **[MEDIUM] Add securityContext to Helm deployments** -- Effort: **M**
+- [x] **[MEDIUM] Add securityContext to Helm deployments** -- Effort: **M**
   - **Files:** `charts/voyager/templates/deployment-api.yaml`, `charts/voyager/templates/deployment-web.yaml`, `charts/voyager/templates/deployment-db.yaml`, `charts/voyager/templates/deployment-redis.yaml`
   - **Fix:** Add to all containers: `securityContext: { runAsNonRoot: true, readOnlyRootFilesystem: true, allowPrivilegeEscalation: false }`.
   - **Refs:** INFRA-36
 
-- [ ] **[MEDIUM] Add startupProbe to API deployment** -- Effort: **S**
+- [x] **[MEDIUM] Add startupProbe to API deployment** -- Effort: **S**
   - **Files:** `charts/voyager/templates/deployment-api.yaml`
   - **Fix:** Add `startupProbe: { httpGet: { path: /health, port: 4000 }, failureThreshold: 30, periodSeconds: 10 }`.
   - **Refs:** INFRA-37
 
-- [ ] **[MEDIUM] Add rate limiting to auth routes** -- Effort: **S**
+- [x] **[MEDIUM] Add rate limiting to auth routes** -- Effort: **S**
   - **Files:** `apps/api/src/server.ts` (auth route registration)
   - **Fix:** Apply rate limit of 10 req/min to `/api/auth/sign-in/*` instead of `rateLimit: false`.
   - **Refs:** INFRA-51
 
-- [ ] **[MEDIUM] Remove `/trpc` from rate limit bypass** -- Effort: **S**
+- [x] **[MEDIUM] Remove `/trpc` from rate limit bypass** -- Effort: **S**
   - **Files:** `packages/config/src/routes.ts`
   - **Fix:** Remove `/trpc` from `RATE_LIMIT_BYPASS_PATHS`. Apply a higher limit (1000 req/min) to tRPC routes.
   - **Refs:** INFRA-52
 
-- [ ] **[MEDIUM] Standardize secret key names across values files** -- Effort: **S**
+- [x] **[MEDIUM] Standardize secret key names across values files** -- Effort: **S**
   - **Files:** `charts/voyager/values.yaml`, `charts/voyager/values-production.yaml`, `charts/voyager/values-dev.yaml`, `charts/voyager/templates/secret.yaml`
   - **Fix:** Pick one name (`jwtSecret` or `betterAuthSecret`) and use it consistently everywhere.
   - **Refs:** INFRA-35
 
-- [ ] **[MEDIUM] Add NetworkPolicy to Helm chart** -- Effort: **M**
+- [x] **[MEDIUM] Add NetworkPolicy to Helm chart** -- Effort: **M**
   - **Files:** `charts/voyager/templates/network-policy.yaml` (new)
   - **Fix:** Only API can talk to postgres/redis, only web can talk to API, only ingress can talk to web/API.
   - **Refs:** INFRA-38
 
-- [ ] **[MEDIUM] Add PodDisruptionBudget** -- Effort: **S**
+- [x] **[MEDIUM] Add PodDisruptionBudget** -- Effort: **S**
   - **Files:** `charts/voyager/templates/pdb.yaml` (new)
   - **Fix:** `minAvailable: 1` for API and web when `replicaCount >= 2`.
   - **Refs:** INFRA-39
 
-- [ ] **[MEDIUM] Add missing RBAC rules to ClusterRole** -- Effort: **S**
+- [x] **[MEDIUM] Add missing RBAC rules to ClusterRole** -- Effort: **S**
   - **Files:** `charts/voyager/templates/rbac.yaml`
   - **Fix:** Add rules for: `configmaps`, `secrets`, `persistentvolumeclaims`, `ingresses`, `cronjobs`, `jobs`, `horizontalpodautoscalers`, `networkpolicies`, `resourcequotas`, `customresourcedefinitions`.
   - **Refs:** INFRA-42
 
-- [ ] **[MEDIUM] Fix web app tsconfig to extend base** -- Effort: **S**
+- [x] **[MEDIUM] Fix web app tsconfig to extend base** -- Effort: **S**
   - **Files:** `apps/web/tsconfig.json`
   - **Fix:** Extend `../../packages/config/tsconfig.base.json` and override only Next.js-specific options. Align `target` to `ES2022`.
   - **Refs:** INFRA-11
 
-- [ ] **[MEDIUM] OTel SDK should be conditional** -- Effort: **S**
+- [x] **[MEDIUM] OTel SDK should be conditional** -- Effort: **S**
   - **Files:** `apps/api/src/lib/telemetry.ts` line 39
   - **Fix:** Only call `sdk.start()` when `OTEL_EXPORTER_OTLP_ENDPOINT` is set. Wrap in try/catch.
   - **Refs:** INFRA-63, API-ISSUE-19
 
-- [ ] **[MEDIUM] Fix Sentry `as never` type casts** -- Effort: **S**
+- [x] **[MEDIUM] Fix Sentry `as never` type casts** -- Effort: **S**
   - **Files:** `apps/api/src/lib/sentry.ts`
   - **Fix:** Fix types properly or upgrade `@sentry/node` to a version where types align.
   - **Refs:** INFRA-66
 
-- [ ] **[MEDIUM] Add `corepack enable` to Dockerfile.api** -- Effort: **S**
+- [x] **[MEDIUM] Add `corepack enable` to Dockerfile.api** -- Effort: **S**
   - **Files:** `docker/Dockerfile.api`
   - **Fix:** Add `RUN corepack enable` in deps stage, matching Dockerfile.web.
   - **Refs:** INFRA-21
 
-- [ ] **[MEDIUM] Add hot-reload for feature flags** -- Effort: **M**
+- [x] **[MEDIUM] Add hot-reload for feature flags** -- Effort: **M**
   - **Files:** `apps/api/src/lib/feature-flags.ts`
   - **Fix:** Add a file watcher or periodic 60s reload for `feature-flags.json`.
   - **Refs:** INFRA-69
 
 ### Accessibility
 
-- [ ] **[MEDIUM] Add aria-labels to select elements** -- Effort: **S**
+- [x] **[MEDIUM] Add aria-labels to select elements** -- Effort: **S**
   - **Files:** `apps/web/src/components/topology/TopologyMap.tsx` line 178, `apps/web/src/components/network/NetworkPolicyGraph.tsx` line 389
   - **Fix:** Add `aria-label="Filter by namespace"` to both `<select>` elements.
   - **Refs:** FE-A-01
 
-- [ ] **[MEDIUM] Add focus management after tab navigation** -- Effort: **M**
+- [x] **[MEDIUM] Add focus management after tab navigation** -- Effort: **M**
   - **Files:** `apps/web/src/app/clusters/[id]/layout.tsx`
   - **Fix:** After tab navigation, programmatically set focus to main content area.
   - **Refs:** FE-A-03
 
-- [ ] **[MEDIUM] Add focus trap to terminal drawer** -- Effort: **M**
+- [x] **[MEDIUM] Add focus trap to terminal drawer** -- Effort: **M**
   - **Files:** `apps/web/src/components/terminal/TerminalDrawer.tsx`
   - **Fix:** When drawer opens, move focus into it. Provide visible "Close" button. When closed, return focus to the element that opened it.
   - **Refs:** FE-A-05
