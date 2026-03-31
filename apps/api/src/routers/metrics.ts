@@ -10,6 +10,7 @@ import {
 import { and, eq, gte, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { watchManager } from '../lib/watch-manager.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
 import { protectedProcedure, router } from '../trpc.js'
 
@@ -355,6 +356,16 @@ export const metricsRouter = router({
         (async () => {
           const allClusters = await db.select({ id: clustersTable.id }).from(clustersTable)
 
+          // Skip clusters without active WatchManager connections — they are
+          // unreachable (seeded/misconfigured) and each failed K8s API call
+          // wastes 300-600ms, causing UI freezes on every dashboard load.
+          const activeIds = new Set(watchManager.getActiveClusterIds())
+          const connectedIds = new Set(
+            allClusters
+              .map((c) => c.id)
+              .filter((id) => activeIds.has(id) || watchManager.isConnected(id)),
+          )
+
           let totalCpuNano = 0
           let totalMemBytes = 0
           let totalCpuAllocatable = 0
@@ -363,8 +374,10 @@ export const metricsRouter = router({
           let hasData = false
           const errors: string[] = []
 
+          const reachableClusters = allClusters.filter((c) => connectedIds.has(c.id))
+
           const results = await Promise.allSettled(
-            allClusters.map(async (cluster) => {
+            reachableClusters.map(async (cluster) => {
               const kc = await clusterClientPool.getClient(cluster.id)
               const coreApi = kc.makeApiClient(k8s.CoreV1Api)
               const metricsClient = new k8s.Metrics(kc)
@@ -421,7 +434,7 @@ export const metricsRouter = router({
               totalPodCount += result.value.podCount
               hasData = true
             } else {
-              const cluster = allClusters[i]!
+              const cluster = reachableClusters[i]!
               const message =
                 result.reason instanceof Error ? result.reason.message : String(result.reason)
               if (message.includes('403')) {
