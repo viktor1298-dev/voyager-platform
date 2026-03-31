@@ -367,17 +367,16 @@ export class WatchManager {
             this.handleInformerError(clusterId, def.type, err)
           })
 
-          // Connect handler — mark ready, defer backoff reset until stable
+          // Connect handler — mark ready, defer backoff reset until stable.
+          // Individual informer reconnects are silent — no status event emitted.
+          // This prevents per-informer error/reconnect oscillation from flashing
+          // "Reconnecting..." in the browser every few seconds.
           informer.on('connect', () => {
             const c = this.clusters.get(clusterId)
             if (c) {
-              const wasReconnecting = (c.reconnectAttempts.get(def.type) ?? 0) > 0
               c.ready.add(def.type)
               this.resetHeartbeat(clusterId, def.type)
 
-              // Don't reset backoff immediately — wait for stable connection.
-              // This prevents backoff from resetting on brief connect-then-error
-              // cycles that flood the SSE stream with status events.
               const stableKey = `${clusterId}:${def.type}`
               const existingStable = this.stableTimers.get(stableKey)
               if (existingStable) clearTimeout(existingStable)
@@ -389,10 +388,6 @@ export class WatchManager {
                   if (current) current.reconnectAttempts.set(def.type, 0)
                 }, STABLE_CONNECTION_MS),
               )
-
-              if (wasReconnecting) {
-                this.emitThrottledStatus({ clusterId, state: 'connected' })
-              }
             }
           })
 
@@ -580,15 +575,15 @@ export class WatchManager {
     const delay = Math.min(WATCH_RECONNECT_BASE_MS * 2 ** (attempt - 1), WATCH_RECONNECT_MAX_MS)
     const jitter = delay * WATCH_RECONNECT_JITTER_RATIO * Math.random()
 
-    console.warn(
-      `[WatchManager] Informer error for ${type} on cluster ${clusterId}, reconnecting in ${Math.round(delay + jitter)}ms (attempt ${attempt})`,
-    )
-
-    this.emitThrottledStatus({
-      clusterId,
-      state: 'reconnecting',
-      error: err instanceof Error ? err.message : String(err),
-    })
+    // Log but don't emit status events — individual informer reconnects are silent.
+    // Only cluster-level disconnected (all informers failed) or the initial connected
+    // status on subscribe are emitted. This prevents the browser from flashing
+    // "Reconnecting..." every few seconds due to normal informer error/reconnect cycles.
+    if (attempt <= 3) {
+      console.warn(
+        `[WatchManager] Informer error for ${type} on cluster ${clusterId}, reconnecting in ${Math.round(delay + jitter)}ms (attempt ${attempt})`,
+      )
+    }
 
     setTimeout(() => {
       const current = this.clusters.get(clusterId)
