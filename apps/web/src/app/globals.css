@@ -157,6 +157,7 @@
   --color-status-error: #ff4d6a;
   --color-status-warning: #f6c042;
   --color-status-healthy: #10b981;
+  --color-status-info: #a78bfa;
   --color-track: rgba(255, 255, 255, 0.08);
   --color-gauge-track: rgba(255, 255, 255, 0.12);
   --color-chart-cpu: #6366f1;
@@ -306,6 +307,11 @@ html.light {
   --color-table-separator: rgba(0, 0, 0, 0.4);
   --color-badge-label: #0d1e37;
   --color-status-healthy: #047857;
+  --color-status-active: #059669;
+  --color-status-error: #dc2626;
+  --color-status-warning: #d97706;
+  --color-status-idle: #64748b;
+  --color-status-info: #7c3aed;
   --color-track: rgba(0, 0, 0, 0.08);
   --color-gauge-track: rgba(0, 0, 0, 0.10);
   --color-chart-cpu: #6366f1;

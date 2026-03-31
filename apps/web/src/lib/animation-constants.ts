@@ -158,6 +158,27 @@ export const glowVariants = {
   },
 }
 
+// Resource status badge glow (Critical / Fatal)
+export const resourceStatusGlow = {
+  idle: { boxShadow: '0 0 0 rgba(0,0,0,0)' },
+  critical: {
+    boxShadow: [
+      '0 0 0 rgba(255,77,106,0)',
+      '0 0 12px rgba(255,77,106,0.3)',
+      '0 0 0 rgba(255,77,106,0)',
+    ],
+    transition: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const },
+  },
+  fatal: {
+    boxShadow: [
+      '0 0 0 rgba(239,68,68,0)',
+      '0 0 14px rgba(239,68,68,0.35)',
+      '0 0 0 rgba(239,68,68,0)',
+    ],
+    transition: { duration: 1.2, repeat: Infinity, ease: 'easeInOut' as const },
+  },
+}
+
 // Badge pop-in (bouncy spring)
 export const badgePopVariants = {
   hidden: { scale: 0, opacity: 0 },
