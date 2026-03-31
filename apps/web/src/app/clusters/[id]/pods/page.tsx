@@ -32,6 +32,7 @@ import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/ho
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
+import { resolveResourceStatus } from '@/lib/resource-status'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -358,13 +359,26 @@ function PodSummary({
       <span className="flex-1 min-w-0 text-[13px] font-mono text-[var(--color-text-primary)] truncate">
         {pod.name}
       </span>
-      {pod.ready && (
-        <span
-          className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 ${pod.ready.split('/')[0] === pod.ready.split('/')[1] ? 'bg-[var(--color-status-active)]/15 text-[var(--color-status-active)]' : 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)]'}`}
-        >
-          {pod.ready}
-        </span>
-      )}
+      {pod.ready &&
+        (() => {
+          const { colorVar } = resolveResourceStatus(pod.status)
+          const allReady = pod.ready.split('/')[0] === pod.ready.split('/')[1]
+          const isHealthy = pod.status === 'Running' || pod.status === 'Succeeded'
+          // Use status color when pod isn't healthy; green/yellow for healthy pods based on ready count
+          const color = isHealthy
+            ? allReady
+              ? 'var(--color-status-active)'
+              : 'var(--color-status-warning)'
+            : colorVar
+          return (
+            <span
+              className="text-xs font-mono px-1.5 py-0.5 rounded shrink-0"
+              style={{ color, backgroundColor: `color-mix(in srgb, ${color} 15%, transparent)` }}
+            >
+              {pod.ready}
+            </span>
+          )
+        })()}
       {pod.restartCount > 0 && (
         <span
           className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 ${pod.restartCount >= 5 ? 'bg-red-500/15 text-red-400' : 'bg-[var(--color-status-warning)]/15 text-[var(--color-status-warning)]'}`}
