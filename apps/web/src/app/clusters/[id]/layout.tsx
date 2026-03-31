@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'motion/react'
 import { useParams, usePathname, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { AppLayout } from '@/components/AppLayout'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -26,6 +26,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
 
   const pathname = usePathname()
   const router = useRouter()
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId }, { staleTime: 30000 })
   const clusterRouteSegment = dbCluster.data
@@ -83,6 +84,11 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [clusterRouteSegment, activeTab, router])
+
+  // Focus main content area after tab navigation for accessibility
+  useEffect(() => {
+    contentRef.current?.focus({ preventScroll: true })
+  }, [activeTab])
 
   // Show "Cluster not found" page when cluster doesn't exist
   if (isNotFound) {
@@ -215,13 +221,16 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
           </div>
         }
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="sync">
           <motion.div
+            ref={contentRef}
+            tabIndex={-1}
             key={pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+            className="outline-none"
           >
             {children}
           </motion.div>

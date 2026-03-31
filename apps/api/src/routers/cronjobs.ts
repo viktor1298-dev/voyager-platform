@@ -1,6 +1,7 @@
 import * as k8s from '@kubernetes/client-node'
 import { z } from 'zod'
 import { cached } from '../lib/cache.js'
+import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
 import { mapCronJob } from '../lib/resource-mappers.js'
@@ -22,7 +23,7 @@ export const cronJobsRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const batchV1 = kc.makeApiClient(k8s.BatchV1Api)
 
-        const response = await cached(`k8s:${input.clusterId}:cronjobs`, 15, () =>
+        const response = await cached(CACHE_KEYS.k8sCronJobs(input.clusterId), 15, () =>
           batchV1.listCronJobForAllNamespaces(),
         )
 

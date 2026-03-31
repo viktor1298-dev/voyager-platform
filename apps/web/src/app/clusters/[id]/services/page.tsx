@@ -4,12 +4,9 @@ import { Box, Globe, Settings, Tag } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
-import {
-  RelatedPodsList,
-  ResourceDiff,
-  ResourcePageScaffold,
-  YamlViewer,
-} from '@/components/resource'
+import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
+import { ResourceDiff } from '@/components/resource/ResourceDiff'
+import { YamlViewer } from '@/components/resource/YamlViewer'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'

@@ -58,6 +58,24 @@ export const CACHE_KEYS = {
   k8sCrdInstances: (clusterId: string, group: string, plural: string) =>
     `k8s:crds:instances:${clusterId}:${group}:${plural}`,
 
+  k8sIngresses: (clusterId: string) => `k8s:${clusterId}:ingresses`,
+
+  k8sCronJobs: (clusterId: string) => `k8s:${clusterId}:cronjobs`,
+
+  k8sDaemonSets: (clusterId: string) => `k8s:${clusterId}:daemonsets`,
+
+  k8sJobs: (clusterId: string) => `k8s:${clusterId}:jobs`,
+
+  k8sHpa: (clusterId: string) => `k8s:${clusterId}:hpa`,
+
+  k8sSecrets: (clusterId: string) => `k8s:${clusterId}:secrets`,
+
+  k8sPvcs: (clusterId: string) => `k8s:${clusterId}:pvcs`,
+
+  k8sStatefulSets: (clusterId: string) => `k8s:${clusterId}:statefulsets`,
+
+  k8sConfigMaps: (clusterId: string) => `k8s:${clusterId}:configmaps`,
+
   /** Global prefix for all k8s cache keys (used by SCAN invalidation) */
   K8S_GLOBAL_PREFIX: 'k8s:',
 } as const

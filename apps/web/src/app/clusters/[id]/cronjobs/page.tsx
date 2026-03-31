@@ -4,12 +4,9 @@ import { Clock, List, Play, Settings } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs } from '@/components/expandable'
-import {
-  RelatedResourceLink,
-  ResourceDiff,
-  ResourcePageScaffold,
-  YamlViewer,
-} from '@/components/resource'
+import { RelatedResourceLink, ResourcePageScaffold } from '@/components/resource'
+import { ResourceDiff } from '@/components/resource/ResourceDiff'
+import { YamlViewer } from '@/components/resource/YamlViewer'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'

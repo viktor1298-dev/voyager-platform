@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { cached, getRedisClient } from '../lib/cache.js'
+import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
 import { mapStatefulSet } from '../lib/resource-mappers.js'
@@ -24,7 +25,7 @@ export const statefulSetsRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const appsV1 = kc.makeApiClient(k8s.AppsV1Api)
 
-        const response = await cached(`k8s:${input.clusterId}:statefulsets`, 15, () =>
+        const response = await cached(CACHE_KEYS.k8sStatefulSets(input.clusterId), 15, () =>
           appsV1.listStatefulSetForAllNamespaces(),
         )
 
@@ -61,7 +62,7 @@ export const statefulSetsRouter = router({
           },
         })
         const redis = await getRedisClient()
-        if (redis) await redis.del(`k8s:${input.clusterId}:statefulsets`)
+        if (redis) await redis.del(CACHE_KEYS.k8sStatefulSets(input.clusterId))
         await logAudit(
           ctx,
           'statefulset.restart',
@@ -97,7 +98,7 @@ export const statefulSetsRouter = router({
           body: { spec: { replicas: input.replicas } },
         })
         const redis = await getRedisClient()
-        if (redis) await redis.del(`k8s:${input.clusterId}:statefulsets`)
+        if (redis) await redis.del(CACHE_KEYS.k8sStatefulSets(input.clusterId))
         await logAudit(
           ctx,
           'statefulset.scale',
@@ -131,7 +132,7 @@ export const statefulSetsRouter = router({
           namespace: input.namespace,
         })
         const redis = await getRedisClient()
-        if (redis) await redis.del(`k8s:${input.clusterId}:statefulsets`)
+        if (redis) await redis.del(CACHE_KEYS.k8sStatefulSets(input.clusterId))
         await logAudit(
           ctx,
           'statefulset.delete',

@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { cached, getRedisClient } from '../lib/cache.js'
+import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
 import { mapDaemonSet } from '../lib/resource-mappers.js'
@@ -24,7 +25,7 @@ export const daemonSetsRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const appsV1 = kc.makeApiClient(k8s.AppsV1Api)
 
-        const response = await cached(`k8s:${input.clusterId}:daemonsets`, 15, () =>
+        const response = await cached(CACHE_KEYS.k8sDaemonSets(input.clusterId), 15, () =>
           appsV1.listDaemonSetForAllNamespaces(),
         )
 
@@ -61,7 +62,7 @@ export const daemonSetsRouter = router({
           },
         })
         const redis = await getRedisClient()
-        if (redis) await redis.del(`k8s:${input.clusterId}:daemonsets`)
+        if (redis) await redis.del(CACHE_KEYS.k8sDaemonSets(input.clusterId))
         await logAudit(ctx, 'daemonset.restart', 'daemonset', `${input.namespace}/${input.name}`, {
           clusterId: input.clusterId,
           namespace: input.namespace,
@@ -92,7 +93,7 @@ export const daemonSetsRouter = router({
           namespace: input.namespace,
         })
         const redis = await getRedisClient()
-        if (redis) await redis.del(`k8s:${input.clusterId}:daemonsets`)
+        if (redis) await redis.del(CACHE_KEYS.k8sDaemonSets(input.clusterId))
         await logAudit(ctx, 'daemonset.delete', 'daemonset', `${input.namespace}/${input.name}`, {
           clusterId: input.clusterId,
           namespace: input.namespace,

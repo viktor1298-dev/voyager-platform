@@ -2,7 +2,7 @@ import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
 import { CACHE_TTL, LIMITS } from '@voyager/config'
 import { clusters, nodes } from '@voyager/db'
-import { count, eq } from 'drizzle-orm'
+import { count, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { K8S_CONFIG } from '../config/k8s.js'
 import { logAudit } from '../lib/audit.js'
@@ -182,7 +182,30 @@ export const clustersRouter = router({
     )
     .query(async ({ ctx }) => {
       const authz = createAuthorizationService(ctx.db)
-      const allClusters = await ctx.db.select().from(clusters)
+      const allClusters = await ctx.db
+        .select({
+          id: clusters.id,
+          name: clusters.name,
+          provider: clusters.provider,
+          environment: clusters.environment,
+          endpoint: clusters.endpoint,
+          status: clusters.status,
+          healthStatus: clusters.healthStatus,
+          lastHealthCheck: clusters.lastHealthCheck,
+          version: clusters.version,
+          nodesCount: clusters.nodesCount,
+          credentialRef: clusters.credentialRef,
+          isActive: clusters.isActive,
+          lastConnectedAt: clusters.lastConnectedAt,
+          createdAt: clusters.createdAt,
+          updatedAt: clusters.updatedAt,
+          // Only fetch whether connectionConfig is non-empty, not the full JSONB blob
+          hasCredentials:
+            sql<boolean>`(connection_config IS NOT NULL AND connection_config != '{}'::jsonb)`.as(
+              'has_credentials',
+            ),
+        })
+        .from(clusters)
       const allowedClusterIds =
         ctx.user.role === 'admin'
           ? null
@@ -207,14 +230,10 @@ export const clustersRouter = router({
         .groupBy(nodes.clusterId)
       const countMap = new Map(nodeCounts.map((n) => [n.clusterId, n.count]))
 
-      return visibleClusters.map((c) => {
-        const { connectionConfig, ...rest } = c
-        return {
-          ...rest,
-          hasCredentials: connectionConfig != null && Object.keys(connectionConfig).length > 0,
-          nodeCount: countMap.get(c.id) ?? 0,
-        }
-      })
+      return visibleClusters.map((c) => ({
+        ...c,
+        nodeCount: countMap.get(c.id) ?? 0,
+      }))
     }),
 
   get: authorizedProcedure('cluster', 'viewer')

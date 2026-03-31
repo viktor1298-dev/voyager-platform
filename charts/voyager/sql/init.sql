@@ -628,6 +628,17 @@ CREATE TABLE IF NOT EXISTS "node_metrics_history" (
 CREATE INDEX IF NOT EXISTS "idx_node_metrics_cluster_ts" ON "node_metrics_history" ("cluster_id", "timestamp");
 CREATE INDEX IF NOT EXISTS "idx_node_metrics_node" ON "node_metrics_history" ("cluster_id", "node_name", "timestamp");
 
+-- Foreign key indexes for JOIN/lookup performance
+CREATE INDEX IF NOT EXISTS "idx_session_user_id" ON "session" ("user_id");
+CREATE INDEX IF NOT EXISTS "idx_account_user_id" ON "account" ("user_id");
+CREATE INDEX IF NOT EXISTS "idx_ai_conversations_user_id" ON "ai_conversations" ("user_id");
+CREATE INDEX IF NOT EXISTS "idx_ai_conversations_cluster_id" ON "ai_conversations" ("cluster_id");
+CREATE INDEX IF NOT EXISTS "idx_ai_recommendations_cluster_id" ON "ai_recommendations" ("cluster_id");
+CREATE INDEX IF NOT EXISTS "idx_webhook_deliveries_webhook_id" ON "webhook_deliveries" ("webhook_id");
+CREATE INDEX IF NOT EXISTS "idx_user_tokens_user_id" ON "user_tokens" ("user_id");
+CREATE INDEX IF NOT EXISTS "idx_shared_dashboards_created_by" ON "shared_dashboards" ("created_by");
+CREATE INDEX IF NOT EXISTS "idx_audit_log_user_id" ON "audit_log" ("user_id");
+
 -- TimescaleDB hypertables for time-series data
 SELECT create_hypertable('metrics_history', 'timestamp', if_not_exists => TRUE, migrate_data => TRUE);
 SELECT create_hypertable('node_metrics_history', 'timestamp', if_not_exists => TRUE, migrate_data => TRUE);

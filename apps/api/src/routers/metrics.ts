@@ -363,8 +363,8 @@ export const metricsRouter = router({
           let hasData = false
           const errors: string[] = []
 
-          for (const cluster of allClusters) {
-            try {
+          const results = await Promise.allSettled(
+            allClusters.map(async (cluster) => {
               const kc = await clusterClientPool.getClient(cluster.id)
               const coreApi = kc.makeApiClient(k8s.CoreV1Api)
               const metricsClient = new k8s.Metrics(kc)
@@ -385,26 +385,45 @@ export const metricsRouter = router({
                 }
               }
 
+              let cpuNano = 0
+              let memBytes = 0
+              let cpuAlloc = 0
+              let memAlloc = 0
               for (const node of nodeMetrics.items) {
-                totalCpuNano += parseCpuToNano(node.usage?.cpu ?? '0')
-                totalMemBytes += parseMemToBytes(node.usage?.memory ?? '0')
+                cpuNano += parseCpuToNano(node.usage?.cpu ?? '0')
+                memBytes += parseMemToBytes(node.usage?.memory ?? '0')
                 const capacity = capacityMap.get(node.metadata?.name ?? '')
                 if (capacity) {
-                  totalCpuAllocatable += capacity.cpuNano
-                  totalMemAllocatable += capacity.memBytes
+                  cpuAlloc += capacity.cpuNano
+                  memAlloc += capacity.memBytes
                 }
               }
 
+              let podCount = 0
               try {
                 const pods = await coreApi.listPodForAllNamespaces()
-                totalPodCount += pods.items?.length ?? 0
+                podCount = pods.items?.length ?? 0
               } catch {
                 // ignore pod count failures
               }
 
+              return { cpuNano, memBytes, cpuAlloc, memAlloc, podCount }
+            }),
+          )
+
+          for (let i = 0; i < results.length; i++) {
+            const result = results[i]!
+            if (result.status === 'fulfilled') {
+              totalCpuNano += result.value.cpuNano
+              totalMemBytes += result.value.memBytes
+              totalCpuAllocatable += result.value.cpuAlloc
+              totalMemAllocatable += result.value.memAlloc
+              totalPodCount += result.value.podCount
               hasData = true
-            } catch (err) {
-              const message = err instanceof Error ? err.message : String(err)
+            } else {
+              const cluster = allClusters[i]!
+              const message =
+                result.reason instanceof Error ? result.reason.message : String(result.reason)
               if (message.includes('403')) {
                 errors.push(`Cluster ${cluster.id}: metrics-server access denied (RBAC)`)
               } else if (message.includes('Zod')) {

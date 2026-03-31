@@ -229,6 +229,7 @@ export function usePresence() {
 
   useEffect(() => {
     const sendHeartbeat = () => {
+      if (document.hidden) return
       heartbeatRef.current.mutate(
         { currentPage: pathname, avatar: null },
         {
@@ -262,7 +263,10 @@ export function usePresence() {
     () =>
       onlineUsers.map((user) => ({
         ...user,
-        status: Date.now() - new Date(user.lastSeen).getTime() > AWAY_AFTER_MS ? ('away' as const) : ('online' as const),
+        status:
+          Date.now() - new Date(user.lastSeen).getTime() > AWAY_AFTER_MS
+            ? ('away' as const)
+            : ('online' as const),
       })),
     [onlineUsers],
   )

@@ -10,6 +10,7 @@ import { clusters, db, events, nodes } from '@voyager/db'
 import { and, eq, notInArray, sql } from 'drizzle-orm'
 import { WATCH_DB_SYNC_INTERVAL_MS } from '@voyager/config/sse'
 import type { WatchEvent } from '@voyager/types'
+import type { WatchStatusEvent } from '@voyager/types'
 import { voyagerEmitter } from './event-emitter.js'
 import { watchManager } from './watch-manager.js'
 import { parseCpuToNano, parseMemToBytes } from './k8s-units.js'
@@ -260,8 +261,46 @@ export function startWatchDbWriter(): void {
     runSync().catch((err) => console.error('[watch-db-writer] Periodic sync failed:', err))
   }, WATCH_DB_SYNC_INTERVAL_MS)
 
-  // Store the newListener handler reference for cleanup
+  // Clean up orphaned listeners when a cluster's watch disconnects
+  const onWatchStatus = (event: WatchStatusEvent) => {
+    if (event.state !== 'disconnected') return
+    const clusterId = event.clusterId
+    const listener = listeners.get(clusterId)
+    if (listener) {
+      voyagerEmitter.off(`watch-event:${clusterId}`, listener)
+      listeners.delete(clusterId)
+      // Remove any pending dirty entries for this cluster
+      for (const entry of dirtySet) {
+        if (entry.startsWith(`${clusterId}:`)) dirtySet.delete(entry)
+      }
+      console.log(`[watch-db-writer] Removed orphaned listener for cluster ${clusterId}`)
+    }
+  }
+
+  // Listen for watch-status events on all clusters (wildcard via newListener pattern)
+  const existingStatusChannels = voyagerEmitter
+    .eventNames()
+    .filter((name): name is string => typeof name === 'string' && name.startsWith('watch-status:'))
+  for (const channel of existingStatusChannels) {
+    voyagerEmitter.on(channel, onWatchStatus)
+  }
+
+  // Also subscribe to future watch-status channels
+  const onNewStatusListener = (eventName: string | symbol) => {
+    if (typeof eventName !== 'string') return
+    if (!eventName.startsWith('watch-status:')) return
+    // Attach our cleanup handler to this cluster's status channel
+    voyagerEmitter.on(eventName, onWatchStatus)
+  }
+  voyagerEmitter.on('newListener', onNewStatusListener)
+
+  // Store handler references for cleanup
   listeners.set('__newListener', onNewListener as unknown as (event: WatchEvent) => void)
+  listeners.set(
+    '__newStatusListener',
+    onNewStatusListener as unknown as (event: WatchEvent) => void,
+  )
+  listeners.set('__onWatchStatus', onWatchStatus as unknown as (event: WatchEvent) => void)
 
   console.log(`[watch-db-writer] Started (sync every ${WATCH_DB_SYNC_INTERVAL_MS / 1000}s)`)
 }
@@ -272,11 +311,30 @@ export function stopWatchDbWriter(): void {
     syncInterval = null
   }
 
-  // Remove newListener handler
+  // Remove newListener handlers
   const newListenerHandler = listeners.get('__newListener')
   if (newListenerHandler) {
     voyagerEmitter.off('newListener', newListenerHandler as (...args: unknown[]) => void)
     listeners.delete('__newListener')
+  }
+  const newStatusListenerHandler = listeners.get('__newStatusListener')
+  if (newStatusListenerHandler) {
+    voyagerEmitter.off('newListener', newStatusListenerHandler as (...args: unknown[]) => void)
+    listeners.delete('__newStatusListener')
+  }
+
+  // Remove watch-status listeners
+  const onWatchStatusHandler = listeners.get('__onWatchStatus')
+  if (onWatchStatusHandler) {
+    const statusChannels = voyagerEmitter
+      .eventNames()
+      .filter(
+        (name): name is string => typeof name === 'string' && name.startsWith('watch-status:'),
+      )
+    for (const channel of statusChannels) {
+      voyagerEmitter.off(channel, onWatchStatusHandler as (...args: unknown[]) => void)
+    }
+    listeners.delete('__onWatchStatus')
   }
 
   // Remove all per-cluster listeners

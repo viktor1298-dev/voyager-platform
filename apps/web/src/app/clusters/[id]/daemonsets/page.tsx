@@ -11,11 +11,11 @@ import {
   ActionToolbar,
   DeleteConfirmDialog,
   RelatedPodsList,
-  ResourceDiff,
   ResourcePageScaffold,
   RestartConfirmDialog,
-  YamlViewer,
 } from '@/components/resource'
+import { ResourceDiff } from '@/components/resource/ResourceDiff'
+import { YamlViewer } from '@/components/resource/YamlViewer'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'

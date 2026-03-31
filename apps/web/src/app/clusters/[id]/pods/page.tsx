@@ -21,9 +21,9 @@ import {
   RelatedResourceLink,
   ResourceLoadingSkeleton,
   SearchFilterBar,
-  YamlViewer,
-  ResourceDiff,
 } from '@/components/resource'
+import { ResourceDiff } from '@/components/resource/ResourceDiff'
+import { YamlViewer } from '@/components/resource/YamlViewer'
 import { useTerminal } from '@/components/terminal/terminal-context'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
