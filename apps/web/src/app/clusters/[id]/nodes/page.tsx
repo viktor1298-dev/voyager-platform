@@ -282,7 +282,7 @@ export default function NodesPage() {
     <>
       <h1 className="sr-only">Cluster Nodes</h1>
 
-      {isLoading && <TableLoadingSkeleton rows={4} cols={7} />}
+      {isLoading && <TableLoadingSkeleton rows={4} cols={7} label="Loading nodes..." />}
 
       {!isLoading && isEmpty && (
         <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">

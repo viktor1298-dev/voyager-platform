@@ -1,5 +1,6 @@
 'use client'
 
+import { Loader2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { DURATION, EASING, STAGGER } from '@/lib/animation-constants'
 
@@ -22,7 +23,7 @@ const itemVariants = {
 }
 
 /** Shimmer skeleton that mirrors the ResourcePageScaffold layout */
-export function ResourceLoadingSkeleton() {
+export function ResourceLoadingSkeleton({ label }: { label?: string }) {
   return (
     <motion.div
       className="space-y-3"
@@ -32,6 +33,16 @@ export function ResourceLoadingSkeleton() {
       role="status"
       aria-label="Loading resources"
     >
+      {/* Loading indicator */}
+      <motion.div variants={itemVariants} className="flex items-center justify-center gap-2.5 py-4">
+        <Loader2
+          className="h-5 w-5 animate-spin"
+          style={{ color: 'var(--color-accent)', animationDuration: '1.5s' }}
+        />
+        <span className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+          {label ?? 'Loading resources...'}
+        </span>
+      </motion.div>
       {/* Search bar */}
       <motion.div variants={itemVariants} className="flex items-center gap-3">
         <div className="flex-1 h-10 rounded-xl skeleton-shimmer" />
@@ -94,56 +105,84 @@ export function ResourceLoadingSkeleton() {
 }
 
 /** Table-style loading skeleton for Nodes and similar table pages */
-export function TableLoadingSkeleton({ rows = 5, cols = 7 }: { rows?: number; cols?: number }) {
+export function TableLoadingSkeleton({
+  rows = 5,
+  cols = 7,
+  label,
+}: {
+  rows?: number
+  cols?: number
+  label?: string
+}) {
   const colWidths = [160, 70, 70, 100, 90, 80, 90]
   return (
     <motion.div
-      className="rounded-xl border border-[var(--color-border)] overflow-hidden"
-      style={{ background: 'var(--color-bg-card)' }}
+      className="space-y-3"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
       role="status"
       aria-label="Loading table"
     >
-      {/* Table header */}
-      <motion.div
-        variants={itemVariants}
-        className="flex items-center gap-4 px-4 py-3 border-b border-[var(--color-border)]"
-      >
-        {Array.from({ length: Math.min(cols, colWidths.length) }).map((_, i) => (
-          <div
-            key={i}
-            className="h-3.5 rounded skeleton-shimmer"
-            style={{ width: `${colWidths[i % colWidths.length]}px` }}
-          />
-        ))}
+      {/* Loading indicator */}
+      <motion.div variants={itemVariants} className="flex items-center justify-center gap-2.5 py-4">
+        <Loader2
+          className="h-5 w-5 animate-spin"
+          style={{ color: 'var(--color-accent)', animationDuration: '1.5s' }}
+        />
+        <span className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+          {label ?? 'Loading resources...'}
+        </span>
       </motion.div>
-
-      {/* Table rows */}
-      {Array.from({ length: rows }).map((_, i) => (
+      <div
+        className="rounded-xl border border-[var(--color-border)] overflow-hidden"
+        style={{ background: 'var(--color-bg-card)' }}
+      >
+        {/* Table header */}
         <motion.div
-          key={i}
           variants={itemVariants}
-          className="flex items-center gap-4 px-4 py-3.5 border-b border-[var(--color-border)]/30 last:border-0"
+          className="flex items-center gap-4 px-4 py-3 border-b border-[var(--color-border)]"
         >
-          {Array.from({ length: Math.min(cols, colWidths.length) }).map((_, j) => (
+          {Array.from({ length: Math.min(cols, colWidths.length) }).map((_, i) => (
             <div
-              key={j}
-              className="h-4 rounded skeleton-shimmer"
-              style={{
-                width: `${colWidths[j % colWidths.length] * (0.7 + Math.random() * 0.3)}px`,
-              }}
+              key={i}
+              className="h-3.5 rounded skeleton-shimmer"
+              style={{ width: `${colWidths[i % colWidths.length]}px` }}
             />
           ))}
         </motion.div>
-      ))}
+
+        {/* Table rows */}
+        {Array.from({ length: rows }).map((_, i) => (
+          <motion.div
+            key={i}
+            variants={itemVariants}
+            className="flex items-center gap-4 px-4 py-3.5 border-b border-[var(--color-border)]/30 last:border-0"
+          >
+            {Array.from({ length: Math.min(cols, colWidths.length) }).map((_, j) => (
+              <div
+                key={j}
+                className="h-4 rounded skeleton-shimmer"
+                style={{
+                  width: `${colWidths[j % colWidths.length] * (0.7 + Math.random() * 0.3)}px`,
+                }}
+              />
+            ))}
+          </motion.div>
+        ))}
+      </div>
     </motion.div>
   )
 }
 
 /** Section-based loading skeleton for pages like Autoscaling, CRDs, RBAC */
-export function SectionLoadingSkeleton({ sections = 3 }: { sections?: number }) {
+export function SectionLoadingSkeleton({
+  sections = 3,
+  label,
+}: {
+  sections?: number
+  label?: string
+}) {
   return (
     <motion.div
       className="space-y-6"
@@ -153,6 +192,16 @@ export function SectionLoadingSkeleton({ sections = 3 }: { sections?: number }) 
       role="status"
       aria-label="Loading sections"
     >
+      {/* Loading indicator */}
+      <motion.div variants={itemVariants} className="flex items-center justify-center gap-2.5 py-4">
+        <Loader2
+          className="h-5 w-5 animate-spin"
+          style={{ color: 'var(--color-accent)', animationDuration: '1.5s' }}
+        />
+        <span className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+          {label ?? 'Loading resources...'}
+        </span>
+      </motion.div>
       {/* Metric cards row */}
       <motion.div variants={itemVariants} className="grid grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (

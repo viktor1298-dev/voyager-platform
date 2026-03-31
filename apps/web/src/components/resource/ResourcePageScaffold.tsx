@@ -95,7 +95,7 @@ export function ResourcePageScaffold<T>({
 
   // Loading state — show skeleton when explicitly loading OR when data hasn't arrived yet
   if (queryResult.isLoading || queryResult.data === undefined) {
-    return <ResourceLoadingSkeleton />
+    return <ResourceLoadingSkeleton label={`Loading ${title.toLowerCase()}...`} />
   }
 
   // Empty state

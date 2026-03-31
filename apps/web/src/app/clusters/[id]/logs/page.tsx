@@ -80,7 +80,7 @@ export default function LogsPage() {
   const logLines = useMemo(() => logText.split('\n').filter(Boolean), [logText])
 
   if (dbCluster.isLoading) {
-    return <ResourceLoadingSkeleton />
+    return <ResourceLoadingSkeleton label="Loading logs..." />
   }
 
   if (!hasCredentials) {

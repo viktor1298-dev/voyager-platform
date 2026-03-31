@@ -629,7 +629,7 @@ export default function PodsPage() {
 
       {/* Pod list */}
       {isLoading ? (
-        <ResourceLoadingSkeleton />
+        <ResourceLoadingSkeleton label="Loading pods..." />
       ) : filteredPods.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-14 border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-card)] text-center">
           <div className="rounded-full bg-white/[0.04] p-3 mb-3">
