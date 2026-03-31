@@ -49,9 +49,7 @@ export function ThemeToggle() {
   const Icon = current.icon
 
   if (!mounted) {
-    return (
-      <div className="h-11 w-11 rounded-xl border border-[var(--color-border)] bg-[var(--glass-bg)]" />
-    )
+    return <div className="h-9 w-9 rounded-lg" />
   }
 
   return (
@@ -63,9 +61,9 @@ export function ThemeToggle() {
         aria-expanded={open}
         aria-haspopup="listbox"
         title={`Theme: ${current.label}${theme === 'system' ? ` (${resolvedTheme === 'dark' ? 'Dark' : 'Light'})` : ''}`}
-        className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--glass-bg)] transition-all duration-200 hover:border-[var(--color-border-hover)] hover:bg-[var(--color-bg-card-hover)]"
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-text-muted)] transition-colors duration-150 hover:text-[var(--color-text-primary)]"
       >
-        <Icon className="h-4 w-4 text-[var(--color-text-secondary)]" />
+        <Icon className="h-[18px] w-[18px]" />
       </button>
 
       {open && (

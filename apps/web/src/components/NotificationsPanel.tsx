@@ -161,11 +161,11 @@ export function NotificationsPanel() {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="relative flex items-center justify-center h-11 w-11 rounded-xl border border-[var(--color-border)] hover:bg-white/[0.04] transition-colors"
+        className="group relative flex items-center justify-center h-9 w-9 rounded-lg text-[var(--color-text-muted)] transition-colors duration-150 hover:text-[var(--color-text-primary)]"
       >
-        <Bell className="h-4 w-4 text-[var(--color-text-muted)]" />
+        <Bell className="h-[18px] w-[18px]" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold leading-none">
+          <span className="absolute top-0.5 right-0.5 h-[15px] min-w-[15px] px-1 flex items-center justify-center rounded-full bg-[var(--color-text-muted)] text-[var(--color-bg-primary)] text-[9px] font-bold leading-none border-2 border-[var(--color-bg-primary)] transition-colors duration-150 group-hover:bg-[var(--color-accent)]">
             {unreadCount}
           </span>
         )}
