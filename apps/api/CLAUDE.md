@@ -18,7 +18,7 @@ pnpm seed:admin       # seed admin user
 src/
 ├── server.ts              # Entry point (DO NOT add migrate() here — Iron Rule #1)
 ├── trpc.ts                # Context, procedure definitions (public/protected/admin/authorized)
-├── routers/               # 43 tRPC routers (index.ts = registry)
+├── routers/               # 45 tRPC routers (index.ts = registry)
 ├── routes/                # Non-tRPC: ai-stream (SSE), mcp, metrics-stream (SSE), log-stream (SSE), pod-terminal (WebSocket), resource-stream (SSE), watch-health
 ├── jobs/                  # Background: alert-evaluator, metrics-history-collector, deploy-smoke-test, metrics-stream-job, data-retention
 ├── config/                # Backend-only config (jobs.ts intervals, k8s.ts client pool)
@@ -53,6 +53,7 @@ src/
     ├── openapi.ts               # OpenAPI/Swagger spec generation
     ├── presence.ts              # User presence tracking + periodic sweep
     ├── providers.ts             # Cloud provider utilities
+    ├── relation-resolver.ts      # Resource family graph walker (resolveRelations — used by relations router)
     ├── resource-mappers.ts      # 17 shared mapper functions (K8s objects → frontend shapes)
     ├── sentry.ts                # Error tracking (skip client-caused errors)
     ├── sso.ts                   # SSO provider integration
