@@ -2,7 +2,7 @@
 
 import { ChevronDown } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { chevronVariants } from '@/lib/animation-constants'
@@ -25,10 +25,11 @@ export function NamespaceGroup({
   forceOpen,
 }: NamespaceGroupProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen)
-  const open = forceOpen !== undefined ? forceOpen : internalOpen
-  const setOpen = (v: boolean) => {
-    if (forceOpen === undefined) setInternalOpen(v)
-  }
+
+  // Sync forceOpen → internalOpen (fold/unfold all is a command, not a lock)
+  useEffect(() => {
+    setInternalOpen(forceOpen ?? true)
+  }, [forceOpen])
   const reducedMotion = useReducedMotion()
 
   const springTransition = reducedMotion
@@ -36,11 +37,11 @@ export function NamespaceGroup({
     : { type: 'spring' as const, stiffness: 350, damping: 24 }
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
+    <Collapsible open={internalOpen} onOpenChange={setInternalOpen}>
       <CollapsibleTrigger className="flex w-full items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
         <motion.div
           variants={chevronVariants}
-          animate={open ? 'expanded' : 'collapsed'}
+          animate={internalOpen ? 'expanded' : 'collapsed'}
           transition={springTransition}
         >
           <ChevronDown className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
