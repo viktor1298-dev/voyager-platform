@@ -121,12 +121,26 @@ The bridge element uses `position: fixed` inside a static-positioned wrapper. Th
 
 **No other files modified.** No new dependencies. No config changes.
 
-## Skills
+## Skills & Execution Strategy
 
 | Skill | Purpose |
 |---|---|
 | `ui-ux-pro-max` | UX guidelines for hover interactions, animation timing, accessibility patterns |
 | `frontend-design` | Production-grade implementation quality, polished interaction design |
+| `dispatching-parallel-agents` | Run independent implementation tasks concurrently via agent teams |
+| `subagent-driven-development` | Coordinate parallel agents for implementation + review |
+
+### Parallel Agent Execution
+
+Use agent teams to parallelize independent work. Launch multiple foreground agents in a single message for concurrent execution.
+
+| Agent | Task | Dependencies |
+|---|---|---|
+| **Agent 1: Implementer** | Modify `GroupedTabBar.tsx` — hover handlers, click→navigate, bridge element | None |
+| **Agent 2: Reviewer** | Review implementation against spec + DESIGN.md standards | Waits for Agent 1 |
+| **Agent 3: QA Runner** | Run `pnpm typecheck` + `pnpm build` + functional QA loop | Waits for Agent 1 |
+
+Agents 2 and 3 run in parallel after Agent 1 completes. If either finds issues, fix and re-run both.
 
 ## Testing Checklist
 
