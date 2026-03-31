@@ -7,6 +7,7 @@ import { motion } from 'motion/react'
 import { useParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatedStatCount } from '@/components/AnimatedStatCount'
+import { listContainerVariants, listItemVariants } from '@/lib/animation-constants'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DataTable } from '@/components/DataTable'
 import { QueryError } from '@/components/ErrorBoundary'
@@ -442,8 +443,13 @@ export default function ClusterOverviewPage() {
         )
       })()}
 
-      {/* Overview Stats — single set, no duplicates (BUG-RD-005 fixed) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      {/* Overview Stats — inline strip with staggered entrance */}
+      <motion.div
+        className="flex flex-wrap items-center mb-4"
+        variants={listContainerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {[
           { icon: Server, label: 'Nodes', value: String(cluster.nodeCount) },
           {
@@ -455,37 +461,31 @@ export default function ClusterOverviewPage() {
           },
           { icon: Globe, label: 'Namespaces', value: String(cluster.namespaceCount || '—') },
           { icon: Cpu, label: 'Version', value: cluster.version },
-        ].map((stat) => (
-          // P3-008: Card hover lift
-          <motion.div
-            key={stat.label}
-            whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="rounded-xl bg-white/[0.03] border border-[var(--color-border)] p-3.5"
-          >
-            <div className="flex items-center gap-2 mb-1">
+        ].map((stat, i, arr) => (
+          <motion.div key={stat.label} variants={listItemVariants} className="contents">
+            <div className="flex items-center gap-2 px-4 py-2.5 shrink-0">
               <stat.icon className="h-3.5 w-3.5 text-[var(--color-text-dim)]" />
-              <span className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-wider">
+              <AnimatedStatCount
+                value={stat.value}
+                className={`text-[15px] font-bold font-mono tabular-nums ${
+                  stat.value === '—' || stat.value === '0' || stat.value === '0 / 0'
+                    ? 'text-[var(--color-text-dim)] opacity-60'
+                    : 'text-[var(--color-text-primary)]'
+                }`}
+              />
+              <span className="text-[10px] text-[var(--color-text-dim)] uppercase tracking-wider">
                 {stat.label}
               </span>
               {isUnreachable && (
-                <span className="text-xs font-mono px-1 py-0.5 rounded bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)] ml-auto">
+                <span className="text-[10px] font-mono px-1 py-0.5 rounded bg-[var(--color-status-warning)]/10 text-[var(--color-status-warning)]">
                   STALE
                 </span>
               )}
             </div>
-            {/* P3-006: Animated stat count-up */}
-            <AnimatedStatCount
-              value={stat.value}
-              className={`text-lg font-bold font-mono tabular-nums ${
-                stat.value === '—' || stat.value === '0' || stat.value === '0 / 0'
-                  ? 'text-[var(--color-text-dim)] opacity-60'
-                  : 'text-[var(--color-text-primary)]'
-              }`}
-            />
+            {i < arr.length - 1 && <div className="w-px h-4 bg-[var(--color-border)] shrink-0" />}
           </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Real-time time-series charts */}
       <div className="mb-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">

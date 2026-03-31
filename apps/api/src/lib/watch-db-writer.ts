@@ -5,12 +5,14 @@
  * Uses debounced periodic sync (not per-event writes) to avoid overwhelming the DB
  * during rolling deployments.
  */
-import * as k8s from '@kubernetes/client-node'
+import { VersionApi } from '@kubernetes/client-node'
+import type * as k8s from '@kubernetes/client-node'
 import { clusters, db, events, nodes } from '@voyager/db'
 import { and, eq, notInArray, sql } from 'drizzle-orm'
 import { WATCH_DB_SYNC_INTERVAL_MS } from '@voyager/config/sse'
 import type { WatchEvent } from '@voyager/types'
 import type { WatchStatusEvent } from '@voyager/types'
+import { clusterClientPool } from './cluster-client-pool.js'
 import { voyagerEmitter } from './event-emitter.js'
 import { watchManager } from './watch-manager.js'
 import { parseCpuToNano, parseMemToBytes } from './k8s-units.js'
@@ -175,6 +177,16 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
     currentCluster.status === 'unreachable' ||
     currentCluster.status === 'unknown'
 
+  // Fetch K8s server version (best-effort, never blocks health sync)
+  let version: string | undefined
+  try {
+    const kc = await clusterClientPool.getClient(clusterId)
+    const versionInfo = await kc.makeApiClient(VersionApi).getCode()
+    version = `v${versionInfo.major}.${versionInfo.minor}`
+  } catch {
+    // Version fetch is non-critical — skip silently
+  }
+
   const updatePayload: Record<string, unknown> = {
     healthStatus,
     nodesCount: totalNodes,
@@ -183,6 +195,9 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
   }
   if (shouldActivate) {
     updatePayload.status = 'active'
+  }
+  if (version) {
+    updatePayload.version = version
   }
 
   await db.update(clusters).set(updatePayload).where(eq(clusters.id, clusterId))

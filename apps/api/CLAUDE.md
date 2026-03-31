@@ -57,7 +57,7 @@ src/
     ├── sentry.ts                # Error tracking (skip client-caused errors)
     ├── sso.ts                   # SSO provider integration
     ├── telemetry.ts             # OpenTelemetry setup
-    ├── watch-db-writer.ts       # Debounced PostgreSQL sync from watch events
+    ├── watch-db-writer.ts       # Debounced PostgreSQL sync from watch events (health, nodes, events, K8s version)
     └── watch-manager.ts         # Unified K8s informers — in-memory ObjectCache for all 17 resource types
 ```
 
@@ -90,7 +90,7 @@ All Redis cache keys are centralized in `lib/cache-keys.ts`. **Never construct c
 | **Unified WatchManager** | `lib/watch-manager.ts` | Single manager for all 17 K8s resource types. Informer ObjectCache = in-memory store. Per-cluster persistent lifecycle with reference counting. `getResources()` returns null until informer initial list completes (prevents race condition). Exponential backoff reconnect on errors. **60s grace period** on last subscriber disconnect — prevents cold cache on browser refresh. |
 | **Resources Router** | `routers/resources.ts` | Generic `resources.snapshot` endpoint — returns all cached WatchManager data in one HTTP response for instant page load |
 | **Resource Mappers** | `lib/resource-mappers.ts` | 17 shared mapper functions (K8s raw → frontend shape). Used by both tRPC routers and SSE events to guarantee identical data shapes. |
-| **Watch DB Writer** | `lib/watch-db-writer.ts` | Debounced periodic PostgreSQL sync from watch events. |
+| **Watch DB Writer** | `lib/watch-db-writer.ts` | Debounced periodic PostgreSQL sync from watch events. Syncs health status, node counts, events, and K8s server version (via VersionApi) to clusters table. |
 | **Cluster Client Pool** | `lib/cluster-client-pool.ts` | Lazy-loaded per-cluster K8s clients; caches KubeConfig, handles credential decryption |
 | **Resource Stream Route** | `routes/resource-stream.ts` | SSE `/api/resources/stream` — immediate flush (no batching), per-cluster persistent watches with shared replay buffer, socket-tracked connection limits |
 | **Event Emitter** | `lib/event-emitter.ts` | Decouples watchers from SSE (one watch, many consumers) |

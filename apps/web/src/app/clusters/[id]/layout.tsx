@@ -1,6 +1,8 @@
 'use client'
 
 import { AnimatePresence, motion } from 'motion/react'
+import { ChevronRight, Home } from 'lucide-react'
+import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 import { AppLayout } from '@/components/AppLayout'
@@ -131,75 +133,82 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
 
   return (
     <AppLayout>
-      <Breadcrumbs segmentLabels={{ [routeSegment]: clusterName ?? 'Loading...' }} />
-
-      {/* Cluster Header */}
-      <div
-        className="rounded-2xl bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-secondary)] border border-[var(--color-border)] p-4 mb-3"
-        style={{ boxShadow: 'var(--shadow-card)' }}
-      >
-        <div className="flex items-center gap-3 min-w-0">
+      {/* Breadcrumb-fused cluster header — zero extra height */}
+      <nav className="mb-4 flex flex-wrap items-center justify-between gap-1.5 text-xs font-mono">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Link
+            href="/"
+            className="text-[var(--color-text-muted)] transition-colors duration-150 hover:text-[var(--color-accent)]"
+          >
+            <Home className="h-3 w-3" />
+          </Link>
+          <ChevronRight className="h-3 w-3 text-[var(--color-text-dim)]" />
+          <Link
+            href="/clusters"
+            className="text-[var(--color-text-muted)] transition-colors duration-150 hover:text-[var(--color-accent)]"
+          >
+            Clusters
+          </Link>
+          <ChevronRight className="h-3 w-3 text-[var(--color-text-dim)]" />
           {/* P3-010: Shared element transition from cluster list icon */}
           <ProviderLogo
             provider={
               ((dbCluster.data as Record<string, unknown> | undefined)?.provider as string) ??
               'kubernetes'
             }
-            size={20}
+            size={14}
             layoutId={`cluster-icon-${clusterId}`}
           />
-          <div className="min-w-0 flex-1">
-            {isClusterLoading ? (
-              <div className="space-y-1.5">
-                <div className="h-6 w-48 rounded-md bg-white/[0.06] animate-pulse" />
-                <div className="h-4 w-24 rounded-md bg-white/[0.04] animate-pulse" />
-              </div>
-            ) : (
-              <>
-                <h1 className="text-xl font-extrabold tracking-tight text-[var(--color-text-primary)] truncate">
-                  {clusterName ?? 'Unknown Cluster'}
-                </h1>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="text-xs font-mono text-[var(--color-text-muted)]">
-                    {((dbCluster.data as Record<string, unknown> | undefined)
-                      ?.provider as string) ?? '—'}
-                  </span>
-                  {(dbCluster.data?.status as string | undefined) &&
-                    (() => {
-                      const status = dbCluster.data?.status as string
-                      const isDisconnected = /disconnected|unreachable|error/i.test(status)
-                      return (
-                        <>
-                          <span
-                            className={`text-xs font-mono px-2 py-0.5 rounded-md border ${
-                              isDisconnected
-                                ? 'bg-[var(--color-status-error)]/10 text-[var(--color-status-error)] border-[var(--color-status-error)]/30'
-                                : 'bg-white/[0.05] text-[var(--color-text-secondary)] border-[var(--color-border)]'
-                            }`}
-                          >
-                            {status}
-                          </span>
-                          {isDisconnected && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                router.push(`/clusters/${clusterRouteSegment}/settings`)
-                              }
-                              className="text-xs font-medium px-2 py-0.5 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/20 transition-colors"
-                            >
-                              Reconnect
-                            </button>
-                          )}
-                        </>
-                      )
-                    })()}
-                  <ConnectionStatusBadge state={connectionState} />
-                </div>
-              </>
-            )}
-          </div>
+          {isClusterLoading ? (
+            <div className="h-4 w-48 rounded bg-white/[0.06] animate-pulse" />
+          ) : (
+            <span
+              className="font-bold text-[var(--color-text-primary)] truncate max-w-[min(48vw,20rem)]"
+              title={clusterName ?? undefined}
+            >
+              {clusterName ?? 'Unknown Cluster'}
+            </span>
+          )}
         </div>
-      </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {!isClusterLoading && (
+            <>
+              <span className="text-[var(--color-text-dim)]">
+                {((dbCluster.data as Record<string, unknown> | undefined)?.provider as string) ??
+                  '—'}
+              </span>
+              {(dbCluster.data?.status as string | undefined) &&
+                (() => {
+                  const status = dbCluster.data?.status as string
+                  const isDisconnected = /disconnected|unreachable|error/i.test(status)
+                  return (
+                    <>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-md border ${
+                          isDisconnected
+                            ? 'bg-[var(--color-status-error)]/10 text-[var(--color-status-error)] border-[var(--color-status-error)]/30'
+                            : 'bg-white/[0.05] text-[var(--color-text-secondary)] border-[var(--color-border)]'
+                        }`}
+                      >
+                        {status}
+                      </span>
+                      {isDisconnected && (
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/clusters/${clusterRouteSegment}/settings`)}
+                          className="font-medium px-2 py-0.5 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/20 transition-colors cursor-pointer"
+                        >
+                          Reconnect
+                        </button>
+                      )}
+                    </>
+                  )
+                })()}
+              <ConnectionStatusBadge state={connectionState} />
+            </>
+          )}
+        </div>
+      </nav>
 
       {/* Grouped Tab Bar */}
       <GroupedTabBar clusterRouteSegment={clusterRouteSegment} activeTab={activeTab} />
