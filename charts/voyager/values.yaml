@@ -71,6 +71,6 @@ pdb:
 
 secret:
   dbPassword: ""  # Override per environment
-  betterAuthSecret: ""   # Override per environment
+  jwtSecret: ""   # Override per environment
   adminEmail: ""  # Override per environment
   adminPassword: ""  # Override per environment

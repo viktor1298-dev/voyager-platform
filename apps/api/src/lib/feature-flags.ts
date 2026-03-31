@@ -7,6 +7,8 @@ import {
   OpenFeature,
 } from '@openfeature/server-sdk'
 
+const RELOAD_INTERVAL_MS = 60_000
+
 type PrimitiveFlag = boolean | string | number | JsonValue
 
 type RawFlags = Record<string, PrimitiveFlag>
@@ -99,6 +101,35 @@ providerConfigPromise
   })
 
 const client = OpenFeature.getClient('voyager-api')
+
+let reloadTimer: ReturnType<typeof setInterval> | undefined
+
+async function reloadFlags(): Promise<void> {
+  try {
+    const providerConfig = await buildProviderConfig()
+    await OpenFeature.setProviderAndWait(new InMemoryProvider(providerConfig))
+  } catch (error) {
+    console.error('[feature-flags] Failed to reload flags, keeping previous values', error)
+  }
+}
+
+export function startFlagReloader(): void {
+  if (reloadTimer) return
+  reloadTimer = setInterval(() => {
+    reloadFlags().catch(() => {})
+  }, RELOAD_INTERVAL_MS)
+  // Allow process to exit even if timer is active
+  reloadTimer.unref()
+  console.log(`[feature-flags] Hot-reload enabled (every ${RELOAD_INTERVAL_MS / 1000}s)`)
+}
+
+export function stopFlagReloader(): void {
+  if (reloadTimer) {
+    clearInterval(reloadTimer)
+    reloadTimer = undefined
+    console.log('[feature-flags] Hot-reload stopped')
+  }
+}
 
 export async function getFeatureFlag<T extends PrimitiveFlag>(
   flagName: string,

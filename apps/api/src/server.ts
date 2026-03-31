@@ -32,6 +32,7 @@ import { ensureViewerUser } from './lib/ensure-viewer-user.js'
 import { watchManager } from './lib/watch-manager.js'
 import { startWatchDbWriter, stopWatchDbWriter } from './lib/watch-db-writer.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
+import { startFlagReloader, stopFlagReloader } from './lib/feature-flags.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
 import { shutdownTelemetry } from './lib/telemetry.js'
 import { type AppRouter, appRouter } from './routers/index.js'
@@ -338,6 +339,7 @@ const start = async () => {
     startAlertEvaluator()
     startMetricsHistoryCollector()
     startDataRetention()
+    startFlagReloader()
 
     if (k8sEnabled) {
       startDeploySmokeTest()
@@ -372,6 +374,7 @@ const start = async () => {
             stopDeploySmokeTest()
           }
           stopPresenceSweep()
+          stopFlagReloader()
           await closeDatabase()
           await closeRedis()
           await flushSentry()

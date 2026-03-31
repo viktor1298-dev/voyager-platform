@@ -1,4 +1,5 @@
 {
+  "extends": "../../packages/config/tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -6,6 +7,9 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
