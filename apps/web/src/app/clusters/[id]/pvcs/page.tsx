@@ -5,8 +5,10 @@ import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
 import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
+import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
+import { resolveResourceStatus } from '@/lib/resource-status.js'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface PVCData {
@@ -32,30 +34,14 @@ interface PVCData {
   }[]
 }
 
-function phaseColor(phase: string) {
-  if (phase === 'Bound') return 'var(--color-status-active)'
-  if (phase === 'Pending') return 'var(--color-status-warning)'
-  return 'var(--color-status-error)'
-}
-
 function PVCSummary({ pvc }: { pvc: PVCData }) {
-  const color = phaseColor(pvc.phase)
-
   return (
     <div className="flex items-center gap-3 w-full min-w-0">
       <HardDrive className="h-4 w-4 text-[var(--color-accent)] shrink-0" />
       <span className="flex-1 min-w-0 text-[13px] font-mono font-medium text-[var(--color-text-primary)] truncate">
         {pvc.name}
       </span>
-      <span
-        className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
-        style={{
-          color,
-          background: `color-mix(in srgb, ${color} 15%, transparent)`,
-        }}
-      >
-        {pvc.phase}
-      </span>
+      <ResourceStatusBadge status={pvc.phase} size="sm" />
       <span className="text-xs font-mono text-[var(--color-accent)] shrink-0">{pvc.capacity}</span>
       <span className="text-xs font-mono text-[var(--color-text-secondary)] shrink-0">
         {pvc.storageClass}
@@ -97,7 +83,10 @@ function PVCExpandedDetail({ pvc, clusterId }: { pvc: PVCData; clusterId: string
         <div className="space-y-3">
           <div className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-1.5 text-[11px] font-mono">
             <span className="text-[var(--color-text-muted)]">Phase</span>
-            <span style={{ color: phaseColor(pvc.phase) }} className="font-bold">
+            <span
+              style={{ color: resolveResourceStatus(pvc.phase).colorVar }}
+              className="font-bold"
+            >
               {pvc.phase}
             </span>
             <span className="text-[var(--color-text-muted)]">Access Modes</span>

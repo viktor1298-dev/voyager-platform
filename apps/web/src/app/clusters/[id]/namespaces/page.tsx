@@ -5,8 +5,10 @@ import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { DetailTabs, TagPills } from '@/components/expandable'
 import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/resource'
+import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
+import { resolveResourceStatus } from '@/lib/resource-status.js'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -24,30 +26,14 @@ interface NamespaceData {
   } | null
 }
 
-function statusColor(status: string | null): string {
-  if (status === 'Active') return 'var(--color-status-active)'
-  if (status === 'Terminating') return 'var(--color-status-error)'
-  return 'var(--color-text-dim)'
-}
-
 function NamespaceSummary({ ns }: { ns: NamespaceData }) {
-  const color = statusColor(ns.status)
-
   return (
     <div className="flex items-center gap-3 w-full min-w-0">
       <FolderOpen className="h-4 w-4 text-[var(--color-accent)] shrink-0" />
       <span className="flex-1 min-w-0 text-[13px] font-mono font-medium text-[var(--color-text-primary)] truncate">
         {ns.name}
       </span>
-      <span
-        className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
-        style={{
-          color,
-          background: `color-mix(in srgb, ${color} 15%, transparent)`,
-        }}
-      >
-        {ns.status ?? '—'}
-      </span>
+      <ResourceStatusBadge status={ns.status ?? 'Unknown'} size="sm" />
       <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
         {ns.createdAt ? timeAgo(ns.createdAt) : '—'}
       </span>
@@ -65,7 +51,10 @@ function NamespaceExpandedDetail({ ns, clusterId }: { ns: NamespaceData; cluster
         <div className="space-y-3">
           <div className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1.5 text-[11px] font-mono">
             <span className="text-[var(--color-text-muted)]">Status</span>
-            <span style={{ color: statusColor(ns.status) }} className="font-bold">
+            <span
+              style={{ color: resolveResourceStatus(ns.status ?? 'Unknown').colorVar }}
+              className="font-bold"
+            >
               {ns.status ?? '—'}
             </span>
             <span className="text-[var(--color-text-muted)]">Created</span>

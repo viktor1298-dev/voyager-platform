@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs, TagPills } from '@/components/expandable'
+import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import {
   ActionToolbar,
   DeleteConfirmDialog,
@@ -58,15 +59,7 @@ function DaemonSetSummary({ ds }: { ds: DaemonSetData }) {
         >
           {ds.ready}/{ds.desired}
         </span>
-        <span
-          className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded"
-          style={{
-            color: isReady ? 'var(--color-status-active)' : 'var(--color-status-warning)',
-            background: `color-mix(in srgb, ${isReady ? 'var(--color-status-active)' : 'var(--color-status-warning)'} 10%, transparent)`,
-          }}
-        >
-          {isReady ? 'Ready' : 'Updating'}
-        </span>
+        <ResourceStatusBadge status={isReady ? 'Ready' : 'Pending'} size="sm" />
       </div>
       <span className="ml-auto text-[11px] font-mono text-[var(--color-text-dim)] shrink-0">
         {ds.age}

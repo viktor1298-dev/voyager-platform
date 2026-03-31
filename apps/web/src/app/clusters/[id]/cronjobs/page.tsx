@@ -10,6 +10,7 @@ import {
   ResourcePageScaffold,
   YamlViewer,
 } from '@/components/resource'
+import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
@@ -40,16 +41,8 @@ function CronJobSummary({ cj }: { cj: CronJobData }) {
       <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/[0.04] text-[var(--color-accent)] shrink-0">
         {cj.schedule}
       </span>
-      {cj.suspend && (
-        <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-red-500/15 text-red-400 shrink-0">
-          Suspended
-        </span>
-      )}
-      {cj.activeJobs > 0 && (
-        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 shrink-0">
-          {cj.activeJobs} active
-        </span>
-      )}
+      {cj.suspend && <ResourceStatusBadge status="Suspended" size="sm" />}
+      {cj.activeJobs > 0 && <ResourceStatusBadge status="Running" size="sm" />}
       <span className="text-[11px] font-mono text-[var(--color-text-secondary)] shrink-0">
         {cj.lastScheduleTime ? timeAgo(cj.lastScheduleTime) : '---'}
       </span>

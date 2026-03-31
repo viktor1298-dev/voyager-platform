@@ -10,6 +10,7 @@ import {
   ResourcePageScaffold,
   YamlViewer,
 } from '@/components/resource'
+import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -40,13 +41,6 @@ interface JobData {
   }[]
 }
 
-function statusColor(s: string) {
-  if (s === 'Complete') return 'var(--color-status-active)'
-  if (s === 'Failed') return 'var(--color-status-error)'
-  if (s === 'Running') return 'var(--color-status-warning)'
-  return 'var(--color-text-dim)'
-}
-
 function JobSummary({ job }: { job: JobData }) {
   return (
     <div className="flex items-center gap-3 min-w-0">
@@ -57,15 +51,7 @@ function JobSummary({ job }: { job: JobData }) {
         <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/[0.04] text-[var(--color-text-secondary)]">
           {job.completions}
         </span>
-        <span
-          className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded"
-          style={{
-            color: statusColor(job.status),
-            background: `color-mix(in srgb, ${statusColor(job.status)} 15%, transparent)`,
-          }}
-        >
-          {job.status}
-        </span>
+        <ResourceStatusBadge status={job.status} size="sm" />
       </div>
       {job.duration && (
         <span className="text-[11px] font-mono text-[var(--color-text-secondary)] shrink-0">

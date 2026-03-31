@@ -12,7 +12,7 @@ import {
   TagPills,
 } from '@/components/expandable'
 import { TableLoadingSkeleton } from '@/components/resource'
-import { nodeStatusColor } from '@/lib/status-utils'
+import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -332,12 +332,7 @@ export default function NodesPage() {
                         </span>
                       </td>
                       <td className="px-3 py-3">
-                        <span className="inline-flex items-center gap-1.5">
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${nodeStatusColor(node.status)}`}
-                          />
-                          <span className="text-[var(--color-text-secondary)]">{node.status}</span>
-                        </span>
+                        <ResourceStatusBadge status={node.status} size="sm" />
                       </td>
                       <td className="px-3 py-3 text-[var(--color-text-muted)]">{node.role}</td>
                       <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
