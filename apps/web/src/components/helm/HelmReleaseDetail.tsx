@@ -1,12 +1,14 @@
 'use client'
 
-import { Clock, Copy, FileText, GitBranch, Info, Package } from 'lucide-react'
+import { ChevronDown, Clock, Copy, FileText, GitBranch, Info, Package } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { stringify } from 'yaml'
 import { DetailGrid, DetailTabs, ExpandableCard } from '@/components/expandable'
 import { RelatedResourceLink } from '@/components/resource'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
+import { AnimatePresence, motion } from 'motion/react'
+import { expandVariants, chevronVariants, DURATION, EASING } from '@/lib/animation-constants'
 
 interface HelmReleaseDetailProps {
   clusterId: string
@@ -172,6 +174,16 @@ export function HelmReleaseDetail({ clusterId, releaseName, namespace }: HelmRel
   }
   const revisions = (revisionsQuery.data ?? []) as RevisionData[]
 
+  const [expandedRevision, setExpandedRevision] = useState<number | null>(null)
+
+  const revisionValuesQuery = trpc.helm.revisionValues.useQuery(
+    { clusterId, releaseName, namespace, revision: expandedRevision! },
+    {
+      enabled: expandedRevision !== null,
+      staleTime: 30_000,
+    },
+  )
+
   if (releaseQuery.isLoading) {
     return (
       <div className="p-4 space-y-2">
@@ -259,29 +271,78 @@ export function HelmReleaseDetail({ clusterId, releaseName, namespace }: HelmRel
             <p className="text-[11px] text-[var(--color-text-muted)]">No revision history.</p>
           ) : (
             revisions.map((rev) => (
-              <div
-                key={rev.revision}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg border border-[var(--color-border)]/40 bg-white/[0.01]"
-              >
-                <span className="text-[12px] font-bold font-mono text-[var(--color-accent)] w-8 shrink-0">
-                  #{rev.revision}
-                </span>
-                <span
-                  className={`text-[10px] font-medium px-2 py-0.5 rounded border ${statusColor(rev.status)}`}
+              <div key={rev.revision}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpandedRevision(expandedRevision === rev.revision ? null : rev.revision)
+                  }
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg border border-[var(--color-border)]/40 bg-white/[0.01] w-full text-left cursor-pointer hover:bg-white/[0.03] transition-colors duration-150"
                 >
-                  {rev.status}
-                </span>
-                {rev.updatedAt && (
-                  <span className="text-[11px] font-mono text-[var(--color-text-dim)] flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {timeAgo(rev.updatedAt)}
+                  <span className="text-[12px] font-bold font-mono text-[var(--color-accent)] w-8 shrink-0">
+                    #{rev.revision}
                   </span>
-                )}
-                {rev.description && (
-                  <span className="text-[11px] text-[var(--color-text-muted)] truncate flex-1">
-                    {rev.description}
+                  <span
+                    className={`text-[10px] font-medium px-2 py-0.5 rounded border ${statusColor(rev.status)}`}
+                  >
+                    {rev.status}
                   </span>
-                )}
+                  {rev.updatedAt && (
+                    <span className="text-[11px] font-mono text-[var(--color-text-dim)] flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {timeAgo(rev.updatedAt)}
+                    </span>
+                  )}
+                  {rev.description && (
+                    <span className="text-[11px] text-[var(--color-text-muted)] truncate flex-1">
+                      {rev.description}
+                    </span>
+                  )}
+                  <motion.span
+                    variants={chevronVariants}
+                    animate={expandedRevision === rev.revision ? 'expanded' : 'collapsed'}
+                    transition={{ duration: DURATION.fast, ease: EASING.default }}
+                    className="shrink-0 text-[var(--color-text-dim)]"
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </motion.span>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {expandedRevision === rev.revision && (
+                    <motion.div
+                      key={`values-${rev.revision}`}
+                      variants={expandVariants}
+                      initial="collapsed"
+                      animate="expanded"
+                      exit="exit"
+                      className="overflow-hidden"
+                    >
+                      <div className="ml-1 border-l-2 border-emerald-500/60 bg-black/20 rounded-r-lg mt-1 mb-2">
+                        <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.04]">
+                          <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
+                            Values — Revision #{rev.revision}
+                          </span>
+                        </div>
+                        <div className="px-4 py-3">
+                          {revisionValuesQuery.isLoading ? (
+                            <div className="space-y-2">
+                              <div className="h-3 w-48 rounded bg-white/[0.06] animate-pulse" />
+                              <div className="h-3 w-64 rounded bg-white/[0.04] animate-pulse" />
+                              <div className="h-3 w-40 rounded bg-white/[0.04] animate-pulse" />
+                            </div>
+                          ) : (
+                            <ValuesViewer
+                              values={
+                                (revisionValuesQuery.data?.values as Record<string, unknown>) ?? {}
+                              }
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ))
           )}
