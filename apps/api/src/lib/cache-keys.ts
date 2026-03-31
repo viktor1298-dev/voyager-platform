@@ -50,6 +50,9 @@ export const CACHE_KEYS = {
   k8sHelmRevisions: (clusterId: string, name: string, ns: string) =>
     `k8s:helm:revisions:${clusterId}:${ns}:${name}`,
 
+  k8sHelmRevisionValues: (clusterId: string, name: string, ns: string, revision: number) =>
+    `k8s:helm:revision-values:${clusterId}:${ns}:${name}:${revision}`,
+
   k8sCrds: (clusterId: string) => `k8s:crds:${clusterId}`,
 
   k8sCrdInstances: (clusterId: string, group: string, plural: string) =>

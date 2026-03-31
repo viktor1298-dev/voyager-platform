@@ -272,4 +272,52 @@ export const helmRouter = router({
         handleK8sError(err, 'list helm revisions')
       }
     }),
+
+  revisionValues: protectedProcedure
+    .input(
+      z.object({
+        clusterId: z.string().uuid(),
+        releaseName: z.string(),
+        namespace: z.string(),
+        revision: z.number().int().min(1),
+      }),
+    )
+    .query(async ({ input }) => {
+      try {
+        const kc = await clusterClientPool.getClient(input.clusterId)
+        const coreV1 = kc.makeApiClient(k8s.CoreV1Api)
+
+        const values = await cached(
+          CACHE_KEYS.k8sHelmRevisionValues(
+            input.clusterId,
+            input.releaseName,
+            input.namespace,
+            input.revision,
+          ),
+          30,
+          async () => {
+            const response = await coreV1.listNamespacedSecret({
+              namespace: input.namespace,
+              labelSelector: `owner=helm,name=${input.releaseName},version=${input.revision}`,
+            })
+
+            const secret = response.items.find((s) => s.type === 'helm.sh/release.v1')
+            if (!secret?.data?.release) {
+              return {}
+            }
+
+            try {
+              const release = decodeHelmRelease(secret.data.release)
+              return (release.config as Record<string, unknown>) ?? {}
+            } catch {
+              return {}
+            }
+          },
+        )
+
+        return { values: values ?? {} }
+      } catch (err) {
+        handleK8sError(err, 'get helm revision values')
+      }
+    }),
 })
