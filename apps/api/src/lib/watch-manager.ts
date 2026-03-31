@@ -217,9 +217,14 @@ function mapK8sEventToWatchType(k8sEvent: 'add' | 'update' | 'delete'): WatchEve
   return map[k8sEvent] ?? 'MODIFIED'
 }
 
+/** Grace period before tearing down informers after last subscriber leaves (ms).
+ *  Prevents cold cache on browser refresh — informers stay warm for 60s. */
+const UNSUBSCRIBE_GRACE_MS = 60_000
+
 export class WatchManager {
   private clusters = new Map<string, ClusterWatches>()
   private heartbeatTimers = new Map<string, NodeJS.Timeout>()
+  private graceTimers = new Map<string, NodeJS.Timeout>()
   private generationCounter = 0
 
   private resetHeartbeat(clusterId: string, type: ResourceType): void {
@@ -257,6 +262,13 @@ export class WatchManager {
   }
 
   async subscribe(clusterId: string): Promise<void> {
+    // Cancel pending grace-period teardown if a new subscriber arrives
+    const pendingGrace = this.graceTimers.get(clusterId)
+    if (pendingGrace) {
+      clearTimeout(pendingGrace)
+      this.graceTimers.delete(clusterId)
+    }
+
     let cluster = this.clusters.get(clusterId)
     if (cluster) {
       cluster.subscriberCount++
@@ -376,30 +388,49 @@ export class WatchManager {
 
     cluster.subscriberCount--
     if (cluster.subscriberCount <= 0) {
-      // Delete entry FIRST so stale error handlers see no cluster
-      this.clusters.delete(clusterId)
-
-      // Clear heartbeat timers before stopping informers
-      for (const [type] of cluster.informers) {
-        this.clearHeartbeat(clusterId, type)
-      }
-
-      // Stop all informers — abort in-flight HTTP requests
-      for (const [, informer] of cluster.informers) {
-        try {
-          informer.stop()
-        } catch {
-          // Ignore stop errors
-        }
-      }
-
-      // Invalidate cached KubeConfig so next subscribe gets a fresh HTTP agent.
-      // informer.stop() may corrupt the shared agent's connection pool.
-      clusterClientPool.invalidate(clusterId)
-
-      voyagerEmitter.emitWatchStatus({ clusterId, state: 'disconnected' })
-      console.log(`[WatchManager] Stopped all informers for cluster ${clusterId}`)
+      // Grace period: keep informers warm for 60s so browser refresh gets instant cache.
+      // If a new subscriber arrives within the window, subscribe() cancels this timer.
+      console.log(
+        `[WatchManager] Last subscriber left for ${clusterId}, grace period ${UNSUBSCRIBE_GRACE_MS / 1000}s`,
+      )
+      const timer = setTimeout(() => {
+        this.graceTimers.delete(clusterId)
+        this.teardownCluster(clusterId)
+      }, UNSUBSCRIBE_GRACE_MS)
+      this.graceTimers.set(clusterId, timer)
     }
+  }
+
+  /** Immediately stop all informers for a cluster and clean up. */
+  private teardownCluster(clusterId: string): void {
+    const cluster = this.clusters.get(clusterId)
+    if (!cluster) return
+    // If someone re-subscribed during grace period, don't tear down
+    if (cluster.subscriberCount > 0) return
+
+    // Delete entry FIRST so stale error handlers see no cluster
+    this.clusters.delete(clusterId)
+
+    // Clear heartbeat timers before stopping informers
+    for (const [type] of cluster.informers) {
+      this.clearHeartbeat(clusterId, type)
+    }
+
+    // Stop all informers — abort in-flight HTTP requests
+    for (const [, informer] of cluster.informers) {
+      try {
+        informer.stop()
+      } catch {
+        // Ignore stop errors
+      }
+    }
+
+    // Invalidate cached KubeConfig so next subscribe gets a fresh HTTP agent.
+    // informer.stop() may corrupt the shared agent's connection pool.
+    clusterClientPool.invalidate(clusterId)
+
+    voyagerEmitter.emitWatchStatus({ clusterId, state: 'disconnected' })
+    console.log(`[WatchManager] Stopped all informers for cluster ${clusterId} (grace expired)`)
   }
 
   /**
@@ -462,6 +493,10 @@ export class WatchManager {
       clearTimeout(timer)
     }
     this.heartbeatTimers.clear()
+    for (const timer of this.graceTimers.values()) {
+      clearTimeout(timer)
+    }
+    this.graceTimers.clear()
     console.log('[WatchManager] Stopped all informers for all clusters')
   }
 
