@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { dropdownVariants, dropdownItemVariants, STAGGER, EASING } from '@/lib/animation-constants'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
@@ -78,7 +79,7 @@ export function GroupedTabBar({ clusterRouteSegment, activeTab }: GroupedTabBarP
               basePath={basePath}
               activeChild={getActiveChild(entry)}
               isOpen={openGroupId === entry.id}
-              onToggle={() => setOpenGroupId(openGroupId === entry.id ? null : entry.id)}
+              onOpen={() => setOpenGroupId(entry.id)}
               onClose={() => setOpenGroupId(null)}
               setRef={(el) => setGroupRef(entry.id, el)}
               reduced={reduced}
@@ -138,7 +139,7 @@ function GroupTabItem({
   basePath,
   activeChild,
   isOpen,
-  onToggle,
+  onOpen,
   onClose,
   setRef,
   reduced,
@@ -147,7 +148,7 @@ function GroupTabItem({
   basePath: string
   activeChild: { id: string; label: string; path: string } | null
   isOpen: boolean
-  onToggle: () => void
+  onOpen: () => void
   onClose: () => void
   setRef: (el: HTMLDivElement | null) => void
   reduced: boolean
@@ -156,6 +157,7 @@ function GroupTabItem({
   const isActive = !!activeChild
   const displayLabel = activeChild ? activeChild.label : group.label
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const router = useRouter()
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 })
 
   // Calculate fixed position from button's viewport rect when dropdown opens
@@ -167,11 +169,11 @@ function GroupTabItem({
   }, [isOpen])
 
   return (
-    <div ref={setRef}>
+    <div ref={setRef} onMouseEnter={onOpen} onMouseLeave={onClose}>
       <button
         ref={buttonRef}
         type="button"
-        onClick={onToggle}
+        onClick={() => router.push(`${basePath}${group.children[0].path}`)}
         data-testid={`cluster-tab-group-${group.id}`}
         className={`relative flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
           isActive
