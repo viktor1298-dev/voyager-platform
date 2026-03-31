@@ -53,8 +53,14 @@ export async function registerPodTerminalRoute(app: FastifyInstance): Promise<vo
     stdout.on('data', (data: Buffer) => {
       if (socket.readyState === 1) socket.send(data)
     })
+    stdout.on('error', (err) => {
+      app.log.error({ err }, 'terminal stream error')
+    })
     stderr.on('data', (data: Buffer) => {
       if (socket.readyState === 1) socket.send(data)
+    })
+    stderr.on('error', (err) => {
+      app.log.error({ err }, 'terminal stream error')
     })
 
     // 6. Forward WebSocket messages to stdin

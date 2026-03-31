@@ -170,6 +170,11 @@ export async function registerMcpRoute(app: FastifyInstance) {
 
     request.raw.on('close', () => {
       clearInterval(interval)
+      try {
+        reply.raw.end()
+      } catch {
+        /* already ended */
+      }
     })
   })
 

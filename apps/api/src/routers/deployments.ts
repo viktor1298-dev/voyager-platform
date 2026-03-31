@@ -6,6 +6,7 @@ import { logAudit } from '../lib/audit.js'
 import { cached, getRedisClient } from '../lib/cache.js'
 import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { handleK8sError } from '../lib/error-handler.js'
 import { mapDeployment } from '../lib/resource-mappers.js'
 import { watchManager } from '../lib/watch-manager.js'
 import { adminProcedure, protectedProcedure, router } from '../trpc.js'
@@ -147,71 +148,80 @@ export const deploymentsRouter = router({
     .output(z.array(deploymentInfoSchema))
     .query(async ({ input }): Promise<DeploymentInfo[]> => {
       return cached(CACHE_KEYS.k8sDeploymentsListGlobal(), K8S_DEPLOYMENTS_CACHE_TTL, async () => {
-        const { kc, clusterId, clusterName } = await getClusterContextFromPool(input?.clusterId)
-        const api = kc.makeApiClient(k8s.AppsV1Api)
-        const [{ items: deployments }, { items: replicaSets }] = await Promise.all([
-          api.listDeploymentForAllNamespaces(),
-          api.listReplicaSetForAllNamespaces(),
-        ])
+        try {
+          const { kc, clusterId, clusterName } = await getClusterContextFromPool(input?.clusterId)
+          const api = kc.makeApiClient(k8s.AppsV1Api)
+          const [{ items: deployments }, { items: replicaSets }] = await Promise.all([
+            api.listDeploymentForAllNamespaces(),
+            api.listReplicaSetForAllNamespaces(),
+          ])
 
-        const rolloutMap = new Map<string, RolloutInfo[]>()
+          const rolloutMap = new Map<string, RolloutInfo[]>()
 
-        for (const rs of replicaSets ?? []) {
-          const namespace = rs.metadata?.namespace ?? 'default'
-          const owners = rs.metadata?.ownerReferences ?? []
-          const deploymentOwner = owners.find((owner) => owner.kind === 'Deployment' && owner.name)
-          if (!deploymentOwner?.name) continue
+          for (const rs of replicaSets ?? []) {
+            const namespace = rs.metadata?.namespace ?? 'default'
+            const owners = rs.metadata?.ownerReferences ?? []
+            const deploymentOwner = owners.find(
+              (owner) => owner.kind === 'Deployment' && owner.name,
+            )
+            if (!deploymentOwner?.name) continue
 
-          const key = `${namespace}/${deploymentOwner.name}`
-          const image = rs.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
-          const revision = rs.metadata?.annotations?.['deployment.kubernetes.io/revision'] ?? 'n/a'
-          const updatedAt = rs.metadata?.creationTimestamp
-            ? new Date(rs.metadata.creationTimestamp).toISOString()
-            : new Date(0).toISOString()
+            const key = `${namespace}/${deploymentOwner.name}`
+            const image = rs.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
+            const revision =
+              rs.metadata?.annotations?.['deployment.kubernetes.io/revision'] ?? 'n/a'
+            const updatedAt = rs.metadata?.creationTimestamp
+              ? new Date(rs.metadata.creationTimestamp).toISOString()
+              : new Date(0).toISOString()
 
-          const existing = rolloutMap.get(key) ?? []
-          existing.push({ revision, image, updatedAt })
-          rolloutMap.set(key, existing)
-        }
-
-        for (const [key, history] of rolloutMap.entries()) {
-          history.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-          rolloutMap.set(key, history.slice(0, 3))
-        }
-
-        return (deployments ?? []).map((deployment) => {
-          const name = deployment.metadata?.name ?? 'unknown'
-          const namespace = deployment.metadata?.namespace ?? 'default'
-          const replicas = deployment.spec?.replicas ?? 0
-          const ready = deployment.status?.readyReplicas ?? 0
-          const available = deployment.status?.availableReplicas ?? 0
-          const unavailable =
-            deployment.status?.unavailableReplicas ?? Math.max(replicas - ready, 0)
-          const image = deployment.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
-          const key = `${namespace}/${name}`
-
-          return {
-            clusterId,
-            clusterName,
-            name,
-            namespace,
-            replicas,
-            ready,
-            image,
-            imageVersion: deriveImageVersion(image),
-            status: deriveStatus({
-              ready,
-              replicas,
-              available,
-              unavailable,
-              generation: deployment.metadata?.generation,
-              observedGeneration: deployment.status?.observedGeneration,
-            }),
-            lastUpdated: findLastUpdated(deployment),
-            age: computeAge(deployment.metadata?.creationTimestamp),
-            rolloutHistory: rolloutMap.get(key) ?? [],
+            const existing = rolloutMap.get(key) ?? []
+            existing.push({ revision, image, updatedAt })
+            rolloutMap.set(key, existing)
           }
-        })
+
+          for (const [key, history] of rolloutMap.entries()) {
+            history.sort(
+              (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+            )
+            rolloutMap.set(key, history.slice(0, 3))
+          }
+
+          return (deployments ?? []).map((deployment) => {
+            const name = deployment.metadata?.name ?? 'unknown'
+            const namespace = deployment.metadata?.namespace ?? 'default'
+            const replicas = deployment.spec?.replicas ?? 0
+            const ready = deployment.status?.readyReplicas ?? 0
+            const available = deployment.status?.availableReplicas ?? 0
+            const unavailable =
+              deployment.status?.unavailableReplicas ?? Math.max(replicas - ready, 0)
+            const image = deployment.spec?.template?.spec?.containers?.[0]?.image ?? 'unknown'
+            const key = `${namespace}/${name}`
+
+            return {
+              clusterId,
+              clusterName,
+              name,
+              namespace,
+              replicas,
+              ready,
+              image,
+              imageVersion: deriveImageVersion(image),
+              status: deriveStatus({
+                ready,
+                replicas,
+                available,
+                unavailable,
+                generation: deployment.metadata?.generation,
+                observedGeneration: deployment.status?.observedGeneration,
+              }),
+              lastUpdated: findLastUpdated(deployment),
+              age: computeAge(deployment.metadata?.creationTimestamp),
+              rolloutHistory: rolloutMap.get(key) ?? [],
+            }
+          })
+        } catch (err) {
+          throw handleK8sError(err, 'list deployments')
+        }
       })
     }),
 

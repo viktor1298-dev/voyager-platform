@@ -377,15 +377,19 @@ export const logsRouter = router({
         })
       }
 
-      const coreApi = await getCoreApiForCluster(input.clusterId)
-      const raw = await coreApi.readNamespacedPodLog({
-        name: input.podName,
-        namespace: input.namespace,
-        container: input.container,
-        tailLines: input.tailLines,
-        timestamps: true,
-      })
+      try {
+        const coreApi = await getCoreApiForCluster(input.clusterId)
+        const raw = await coreApi.readNamespacedPodLog({
+          name: input.podName,
+          namespace: input.namespace,
+          container: input.container,
+          tailLines: input.tailLines,
+          timestamps: true,
+        })
 
-      return { logs: normalizeLogResponse(raw) }
+        return { logs: normalizeLogResponse(raw) }
+      } catch (error) {
+        throw handleK8sError(error, 'get pod logs')
+      }
     }),
 })

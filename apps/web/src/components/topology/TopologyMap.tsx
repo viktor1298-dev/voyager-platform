@@ -15,6 +15,7 @@ import {
 import '@xyflow/react/dist/style.css'
 import dagre from '@dagrejs/dagre'
 import { Search } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { trpc } from '@/lib/trpc'
 import { TopologyNodeComponent, type TopologyNodeData } from './TopologyNode'
 import { TopologyEdgeComponent, type TopologyEdgeData } from './TopologyEdge'
@@ -198,52 +199,60 @@ export function TopologyMap({ clusterId }: TopologyMapProps) {
 
       {/* Graph */}
       <div className="h-[460px] rounded-lg border border-[var(--color-border)] overflow-hidden bg-[var(--color-bg-card)]">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          fitView
-          minZoom={0.2}
-          maxZoom={2}
-          proOptions={{ hideAttribution: true }}
+        <ErrorBoundary
+          fallback={
+            <div className="flex items-center justify-center h-full text-sm text-[var(--color-text-muted)]">
+              Topology graph failed to render.
+            </div>
+          }
         >
-          <svg>
-            <defs>
-              <marker
-                id="topology-arrow"
-                viewBox="0 0 10 10"
-                refX="8"
-                refY="5"
-                markerWidth="8"
-                markerHeight="8"
-                orient="auto-start-reverse"
-              >
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--color-border-hover)" />
-              </marker>
-            </defs>
-          </svg>
-          <Controls className="!bg-[var(--color-bg-card)] !border-[var(--color-border)] !shadow-lg [&_button]:!bg-[var(--color-bg-card)] [&_button]:!border-[var(--color-border)] [&_button]:!text-[var(--color-text-primary)] [&_button:hover]:!bg-[var(--color-bg-card-hover)]" />
-          <MiniMap
-            style={{
-              width: 150,
-              height: 100,
-              backgroundColor: 'var(--color-bg-card)',
-              border: '1px solid var(--color-border)',
-              borderRadius: '8px',
-            }}
-            maskColor="rgba(0,0,0,0.3)"
-            nodeColor="var(--color-accent)"
-          />
-          <Background
-            variant={BackgroundVariant.Dots}
-            gap={16}
-            size={1}
-            color="var(--color-border)"
-          />
-        </ReactFlow>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            fitView
+            minZoom={0.2}
+            maxZoom={2}
+            proOptions={{ hideAttribution: true }}
+          >
+            <svg>
+              <defs>
+                <marker
+                  id="topology-arrow"
+                  viewBox="0 0 10 10"
+                  refX="8"
+                  refY="5"
+                  markerWidth="8"
+                  markerHeight="8"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--color-border-hover)" />
+                </marker>
+              </defs>
+            </svg>
+            <Controls className="!bg-[var(--color-bg-card)] !border-[var(--color-border)] !shadow-lg [&_button]:!bg-[var(--color-bg-card)] [&_button]:!border-[var(--color-border)] [&_button]:!text-[var(--color-text-primary)] [&_button:hover]:!bg-[var(--color-bg-card-hover)]" />
+            <MiniMap
+              style={{
+                width: 150,
+                height: 100,
+                backgroundColor: 'var(--color-bg-card)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+              }}
+              maskColor="rgba(0,0,0,0.3)"
+              nodeColor="var(--color-accent)"
+            />
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={16}
+              size={1}
+              color="var(--color-border)"
+            />
+          </ReactFlow>
+        </ErrorBoundary>
       </div>
     </div>
   )

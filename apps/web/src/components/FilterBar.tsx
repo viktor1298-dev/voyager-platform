@@ -64,6 +64,8 @@ export function FilterBar({
     setLocalSearch(parsed.q)
   }, [parsed, onChange])
 
+  useEffect(() => () => clearTimeout(debounceRef.current), [])
+
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.key !== '/') return

@@ -5,6 +5,7 @@ import { motion } from 'motion/react'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { slideUpVariants, STAGGER } from '@/lib/animation-constants'
 import { useDashboardLayout, type Widget, type WidgetType } from '@/stores/dashboard-layout'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { DashboardRefreshProvider } from './DashboardRefreshContext'
 import type { RefreshIntervalMs } from '@/hooks/useRefreshInterval'
 import { WidgetWrapper } from './WidgetWrapper'
@@ -32,23 +33,38 @@ type ResponsiveLayouts = Record<string, LayoutItem[]>
 type AnyResponsiveGridLayout = React.ComponentType<any>
 
 function renderWidget(widget: Widget) {
+  const widgetFallback = (
+    <div className="p-4 text-center text-sm text-[var(--color-text-muted)]">
+      Widget failed to load
+    </div>
+  )
+
+  let content: React.ReactNode
   switch (widget.type as WidgetType) {
     case 'stat-cards':
-      return <StatCardsWidget />
+      content = <StatCardsWidget />
+      break
     case 'cluster-health':
-      return <ClusterHealthWidget />
+      content = <ClusterHealthWidget />
+      break
     case 'anomaly-timeline':
-      return <AnomalyTimelineWidget />
+      content = <AnomalyTimelineWidget />
+      break
     case 'resource-charts':
-      return <ResourceChartsWidget />
+      content = <ResourceChartsWidget />
+      break
     case 'alert-feed':
-      return <AlertFeedWidget />
+      content = <AlertFeedWidget />
+      break
     case 'deployment-list':
-      return <DeploymentListWidget />
+      content = <DeploymentListWidget />
+      break
     case 'log-tail':
-      return <LogTailWidget widget={widget} />
+      content = <LogTailWidget widget={widget} />
+      break
     case 'pod-status':
-      return <PodStatusWidget />
+      content = <PodStatusWidget />
+      break
     default:
       return (
         <div className="p-4 text-xs text-[var(--color-text-dim)]">
@@ -56,6 +72,8 @@ function renderWidget(widget: Widget) {
         </div>
       )
   }
+
+  return <ErrorBoundary fallback={widgetFallback}>{content}</ErrorBoundary>
 }
 
 export function DashboardGrid({
