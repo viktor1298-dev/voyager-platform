@@ -22,6 +22,9 @@ export async function getRedisClient() {
   return client
 }
 
+/** In-flight promise map — deduplicates concurrent cache misses for the same key */
+const inflight = new Map<string, Promise<unknown>>()
+
 export async function cached<T>(key: string, ttl: number, fn: () => Promise<T>): Promise<T> {
   const redis = await getRedisClient()
   if (redis) {
@@ -30,13 +33,26 @@ export async function cached<T>(key: string, ttl: number, fn: () => Promise<T>):
       if (hit) return JSON.parse(hit)
     } catch {}
   }
-  const result = await fn()
-  if (redis) {
-    try {
-      await redis.setEx(key, ttl, JSON.stringify(result))
-    } catch {}
-  }
-  return result
+
+  // Singleflight: if another caller is already computing this key, reuse its promise
+  const existing = inflight.get(key)
+  if (existing) return existing as Promise<T>
+
+  const promise = fn()
+    .then(async (result) => {
+      if (redis) {
+        try {
+          await redis.setEx(key, ttl, JSON.stringify(result))
+        } catch {}
+      }
+      return result
+    })
+    .finally(() => {
+      inflight.delete(key)
+    })
+
+  inflight.set(key, promise)
+  return promise
 }
 
 export async function invalidateKey(key: string): Promise<void> {

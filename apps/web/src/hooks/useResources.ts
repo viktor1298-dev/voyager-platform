@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import type { ResourceType } from '@voyager/types'
 import { useResourceStore, type ConnectionState } from '@/stores/resource-store'
 
@@ -10,20 +10,20 @@ const EMPTY: unknown[] = []
 /**
  * Read resources for a specific cluster + type from the Zustand store.
  *
- * Includes a local 5-second tick that forces the consuming component to
- * re-render so relative time labels ("3s ago" → "8s ago") stay current
- * even when no SSE events arrive. The tick uses React local state (useState)
- * because Zustand's subscribeWithSelector suppresses re-renders when
- * the selected slice hasn't changed.
+ * Re-renders are driven by the global `tick` counter in the Zustand store,
+ * which is incremented every 5 seconds by `useResourceTick()` (placed once
+ * in the cluster layout). This keeps relative time labels ("3s ago" → "8s ago")
+ * current without each hook instance running its own setInterval.
+ *
+ * Previous implementation: each call site had a local 1-second setInterval,
+ * causing 46+ timer callbacks/second and massive unnecessary re-renders.
+ * Now all consumers share a single 5-second global tick.
  */
 export function useClusterResources<T>(clusterId: string, type: ResourceType): T[] {
-  // Local tick forces periodic re-renders for relative time updates.
-  // useState + setInterval is immune to Zustand's selector equality checks.
-  const [, setTick] = useState(0)
-  useEffect(() => {
-    const timer = setInterval(() => setTick((t) => t + 1), 1_000)
-    return () => clearInterval(timer)
-  }, [])
+  // Subscribe to global tick — forces re-render for relative time updates
+  // without each hook instance running its own setInterval.
+  // The tick is incremented every 5s by useResourceTick() in the cluster layout.
+  useResourceStore((s) => s.tick)
 
   return useResourceStore(
     useCallback(

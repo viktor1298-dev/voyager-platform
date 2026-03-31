@@ -4,7 +4,7 @@ import net from 'node:net'
 import { TRPCError } from '@trpc/server'
 import { LIMITS } from '@voyager/config'
 import { webhookDeliveries, webhooks } from '@voyager/db'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { logAudit } from '../lib/audit.js'
 import { adminProcedure, router } from '../trpc.js'
@@ -50,26 +50,38 @@ async function validateWebhookUrl(url: string): Promise<void> {
 export const webhooksRouter = router({
   list: adminProcedure.query(async ({ ctx }) => {
     const rows = await ctx.db.select().from(webhooks).orderBy(desc(webhooks.createdAt))
-    const result = await Promise.all(
-      rows.map(async (w) => {
-        const deliveries = await ctx.db
-          .select()
-          .from(webhookDeliveries)
-          .where(eq(webhookDeliveries.webhookId, w.id))
-          .orderBy(desc(webhookDeliveries.deliveredAt))
-          .limit(10)
-        const total = deliveries.length
-        const successes = deliveries.filter((d) => d.success).length
-        const { secret: _secret, ...safeWebhook } = w
-        return {
-          ...safeWebhook,
-          secret: w.secret ? 'wh_****' : null,
-          deliveries,
-          successRate: total > 0 ? Math.round((successes / total) * 100) : 100,
-        }
-      }),
-    )
-    return result
+
+    // Batch-fetch all deliveries in a single query instead of N+1
+    const webhookIds = rows.map((w) => w.id)
+    const allDeliveries =
+      webhookIds.length > 0
+        ? await ctx.db
+            .select()
+            .from(webhookDeliveries)
+            .where(inArray(webhookDeliveries.webhookId, webhookIds))
+            .orderBy(desc(webhookDeliveries.deliveredAt))
+        : []
+
+    // Group deliveries by webhookId, keeping only last 10 per webhook
+    const deliveryMap = new Map<string, (typeof allDeliveries)[number][]>()
+    for (const d of allDeliveries) {
+      const list = deliveryMap.get(d.webhookId) ?? []
+      if (list.length < 10) list.push(d)
+      deliveryMap.set(d.webhookId, list)
+    }
+
+    return rows.map((w) => {
+      const deliveries = deliveryMap.get(w.id) ?? []
+      const total = deliveries.length
+      const successes = deliveries.filter((d) => d.success).length
+      const { secret: _secret, ...safeWebhook } = w
+      return {
+        ...safeWebhook,
+        secret: w.secret ? 'wh_****' : null,
+        deliveries,
+        successRate: total > 0 ? Math.round((successes / total) * 100) : 100,
+      }
+    })
   }),
 
   create: adminProcedure
