@@ -90,7 +90,8 @@ export default function HelmReleasesPage() {
       filterFn={(r, q) =>
         r.name.toLowerCase().includes(q) ||
         r.namespace.toLowerCase().includes(q) ||
-        r.status.toLowerCase().includes(q)
+        r.status.toLowerCase().includes(q) ||
+        r.chartName.toLowerCase().includes(q)
       }
       renderSummary={(r) => <ReleaseSummary release={r} />}
       renderDetail={(r) => <ReleaseDetail release={r} clusterId={clusterId} />}
