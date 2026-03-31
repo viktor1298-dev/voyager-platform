@@ -94,14 +94,22 @@ export async function registerMetricsStreamRoute(app: FastifyInstance): Promise<
 
       // 6. Subscribe to metrics events for this cluster
       const handler = (event: MetricsStreamEvent) => {
-        reply.raw.write(`event: metrics\ndata: ${JSON.stringify(event)}\n\n`)
+        try {
+          reply.raw.write(`event: metrics\ndata: ${JSON.stringify(event)}\n\n`)
+        } catch {
+          /* connection closed */
+        }
       }
       voyagerEmitter.on(`metrics-stream:${clusterId}`, handler)
       metricsStreamJob.subscribe(clusterId, connectionId)
 
       // 7. Heartbeat keepalive
       const heartbeat = setInterval(() => {
-        reply.raw.write(':keepalive\n\n')
+        try {
+          reply.raw.write(':keepalive\n\n')
+        } catch {
+          /* connection closed */
+        }
       }, SSE_HEARTBEAT_INTERVAL_MS)
 
       // 8. Cleanup on disconnect
@@ -110,7 +118,11 @@ export async function registerMetricsStreamRoute(app: FastifyInstance): Promise<
         voyagerEmitter.off(`metrics-stream:${clusterId}`, handler)
         metricsStreamJob.unsubscribe(clusterId, connectionId)
         decrementConnections(clusterId)
-        reply.raw.end()
+        try {
+          reply.raw.end()
+        } catch {
+          /* already ended */
+        }
       })
     },
   )

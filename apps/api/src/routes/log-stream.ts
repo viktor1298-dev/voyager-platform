@@ -112,6 +112,14 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
 
       // 7. Pipe K8s log data to SSE events
       let buffer = ''
+      const safeWrite = (data: string) => {
+        try {
+          reply.raw.write(data)
+        } catch {
+          /* connection closed */
+        }
+      }
+
       logStream.on('data', (chunk: Buffer) => {
         buffer += chunk.toString()
         const lines = buffer.split('\n')
@@ -122,12 +130,10 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
           if (!line) continue
           lineCount++
 
-          reply.raw.write(
-            `event: log\ndata: ${JSON.stringify({ line, timestamp: Date.now() })}\n\n`,
-          )
+          safeWrite(`event: log\ndata: ${JSON.stringify({ line, timestamp: Date.now() })}\n\n`)
 
           if (lineCount >= MAX_LOG_LINES) {
-            reply.raw.write(
+            safeWrite(
               `event: error\ndata: ${JSON.stringify({ message: 'Maximum log lines reached', code: 'MAX_LINES' })}\n\n`,
             )
             logStream.destroy()
@@ -137,7 +143,7 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
       })
 
       logStream.on('error', (err) => {
-        reply.raw.write(
+        safeWrite(
           `event: error\ndata: ${JSON.stringify({ message: err.message || 'Log stream error', code: 'STREAM_ERROR' })}\n\n`,
         )
         cleanup()
@@ -146,18 +152,18 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
       logStream.on('end', () => {
         // Flush remaining buffer
         if (buffer) {
-          reply.raw.write(
+          safeWrite(
             `event: log\ndata: ${JSON.stringify({ line: buffer, timestamp: Date.now() })}\n\n`,
           )
         }
-        reply.raw.write(
+        safeWrite(
           `event: error\ndata: ${JSON.stringify({ message: 'Log stream ended', code: 'STREAM_END' })}\n\n`,
         )
       })
 
       // 8. Heartbeat keepalive
       const heartbeat = setInterval(() => {
-        reply.raw.write(':heartbeat\n\n')
+        safeWrite(':heartbeat\n\n')
       }, SSE_HEARTBEAT_INTERVAL_MS)
 
       // 9. Cleanup function
@@ -172,7 +178,11 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
           }
         }
         decrementConnections(clusterId)
-        reply.raw.end()
+        try {
+          reply.raw.end()
+        } catch {
+          /* already ended */
+        }
       }
 
       // 10. Cleanup on client disconnect
@@ -191,7 +201,7 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
         })
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to start log stream'
-        reply.raw.write(
+        safeWrite(
           `event: error\ndata: ${JSON.stringify({ message: errorMessage, code: 'START_ERROR' })}\n\n`,
         )
         cleanup()

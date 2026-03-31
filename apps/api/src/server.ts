@@ -300,17 +300,21 @@ const start = async () => {
     for (const signal of signals) {
       process.on(signal, async () => {
         app.log.info(`${signal} received, shutting down gracefully`)
-        watchManager.stopAll()
-        stopWatchDbWriter()
-        stopAlertEvaluator()
-        stopMetricsHistoryCollector()
-        metricsStreamJob.stopAll()
-        if (k8sEnabled) {
-          stopDeploySmokeTest()
+        try {
+          watchManager.stopAll()
+          stopWatchDbWriter()
+          stopAlertEvaluator()
+          stopMetricsHistoryCollector()
+          metricsStreamJob.stopAll()
+          if (k8sEnabled) {
+            stopDeploySmokeTest()
+          }
+          await flushSentry()
+          await shutdownTelemetry()
+          await app.close()
+        } catch (shutdownErr) {
+          app.log.error(shutdownErr, 'Error during graceful shutdown')
         }
-        await flushSentry()
-        await shutdownTelemetry()
-        await app.close()
         process.exit(0)
       })
     }
@@ -319,5 +323,18 @@ const start = async () => {
     process.exit(1)
   }
 }
+
+// Global error handlers — prevent unhandled errors from silently crashing the process
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] Unhandled promise rejection:', reason)
+  captureException(reason instanceof Error ? reason : new Error(String(reason)))
+})
+
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught exception:', err)
+  captureException(err)
+  // Give Sentry time to flush, then exit
+  setTimeout(() => process.exit(1), 2000)
+})
 
 start()
