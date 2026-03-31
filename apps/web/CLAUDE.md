@@ -18,7 +18,7 @@ pnpm lint             # biome check src/
 src/
 ├── app/                   # App Router pages (~55 routes)
 │   ├── clusters/[id]/     # Cluster detail (29 tabs via GroupedTabBar: 5 standalone + 24 grouped across 7 groups)
-│   ├── api/               # Route Handlers for SSE proxying (resources, metrics, logs)
+│   ├── api/               # (reserved — SSE connects directly to API via NEXT_PUBLIC_API_URL)
 │   ├── settings/          # Settings hub
 │   └── login/             # Auth page
 ├── components/
@@ -44,7 +44,7 @@ src/
 ├── hooks/
 │   ├── useMetricsData.ts      # Unified metrics — SSE for ≤15m, tRPC for ≥30m
 │   ├── useMetricsSSE.ts       # SSE connection with exponential backoff + visibility-aware
-│   └── useResourceSSE.ts      # K8s Watch → rAF-batched TanStack Query refetch
+│   └── useResourceSSE.ts      # K8s Watch → 1s timer-batched Zustand store updates
 ├── lib/
 │   ├── trpc.ts                # tRPC client (httpLink, NOT httpBatchLink) + handleTRPCError
 │   ├── animation-constants.ts # Motion v12 timing/easing (B-style)
@@ -111,8 +111,7 @@ src/
 
 | Abstraction | File | Pattern |
 |-------------|------|---------|
-| **SSE Route Handler Proxies** | `app/api/{resources,metrics,logs}/stream/route.ts` | `node:http` streaming proxy — Next.js rewrites can't handle SSE |
-| **useResourceSSE** | `hooks/useResourceSSE.ts` | K8s Watch events → rAF-batched TanStack Query refetch |
+| **useResourceSSE** | `hooks/useResourceSSE.ts` | Direct EventSource to API (`NEXT_PUBLIC_API_URL`), 1s timer-batched Zustand store updates, exponential backoff reconnect, client heartbeat dead-connection detection |
 | **useMetricsData** | `hooks/useMetricsData.ts` | SSE for ≤15m, tRPC for ≥30m — seamless switching |
 | **CrosshairProvider** | `components/metrics/CrosshairProvider.tsx` | RAF-throttled shared crosshair across 4 metric panels |
 | **Metrics Buffer** | `lib/metrics-buffer.ts` | Circular buffer (65 points) with time-based eviction |
@@ -170,5 +169,5 @@ Groups: standalone (Overview, Nodes, Events, Logs, Metrics), Workloads, Networki
 ### TerminalDrawer Must Be Mounted in providers.tsx
 `<TerminalDrawer />` must be inside `<TerminalProvider>` in `providers.tsx`. It renders as fixed-position outside page tree. If missing, clicking Exec does nothing — no error, no drawer.
 
-### SSE Through Next.js Rewrites — Socket Hang Up
-Next.js `rewrites()` cannot proxy SSE — buffers and drops connection. SSE endpoints use dedicated Route Handlers in `app/api/*/stream/route.ts` via `node:http`. **Never add SSE endpoints to rewrites.**
+### SSE Connects Directly to API — Not Through Next.js
+`useResourceSSE` builds the EventSource URL from `NEXT_PUBLIC_API_URL` (e.g., `http://localhost:4001/api/resources/stream`). SSE bypasses Next.js entirely — no rewrites, no Route Handlers. The `next.config.ts` rewrites use a negative lookahead to exclude SSE paths (`resources/stream`, `metrics/stream`, `logs/stream`). **Never add SSE endpoints to Next.js rewrites** — they buffer and drop the connection.

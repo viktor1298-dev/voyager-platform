@@ -20,7 +20,7 @@ src/
 ├── trpc.ts                # Context, procedure definitions (public/protected/admin/authorized)
 ├── routers/               # 43 tRPC routers (index.ts = registry)
 ├── routes/                # Non-tRPC: ai-stream (SSE), mcp, metrics-stream (SSE), log-stream (SSE), pod-terminal (WebSocket), resource-stream (SSE), watch-health
-├── jobs/                  # Background: alert-evaluator, metrics-history-collector, deploy-smoke-test, metrics-stream-job
+├── jobs/                  # Background: alert-evaluator, metrics-history-collector, deploy-smoke-test, metrics-stream-job, data-retention
 ├── config/                # Backend-only config (jobs.ts intervals, k8s.ts client pool)
 ├── services/              # Business logic (AI, anomaly detection)
 └── lib/                   # Core modules (no deps on routers/services)
@@ -38,6 +38,7 @@ src/
     ├── health-checks.ts         # Log scanner, startup probe, page smoke, result assessment
     ├── k8s-client-factory.ts    # KubeConfig factory for all providers
     ├── feature-flags.ts         # OpenFeature + flagd
+    ├── connection-tracker.ts    # SSE connection tracking + ConnectionLimiter (socket-based limits)
     ├── sentry.ts                # Error tracking (skip client-caused errors)
     └── telemetry.ts             # OpenTelemetry setup
 ```
@@ -49,7 +50,7 @@ src/
 - **Multi-cloud K8s:** Cluster client pool handles AWS EKS, Azure AKS, GCP GKE credential types
 - **Redis failures:** Always catch and fall through — never crash the request
 - **Audit logging:** `try { logAudit(...) } catch { console.error(...) }` — never break the main operation
-- **Rate limiting:** 200 req/min per IP; whitelist: `/api/auth/`, `/health`, `/trpc`
+- **Rate limiting:** 200 req/min per IP; whitelist: `/api/auth/`, `/health`, `/api/resources/stream`, `/api/metrics/stream`, `/api/logs/stream`
 - **Health endpoints:** `/health` (always up), `/health/metrics-collector` (collector status)
 
 ### Error Handling
@@ -73,7 +74,7 @@ All Redis cache keys are centralized in `lib/cache-keys.ts`. **Never construct c
 | **Resource Mappers** | `lib/resource-mappers.ts` | 17 shared mapper functions (K8s raw → frontend shape). Used by both tRPC routers and SSE events to guarantee identical data shapes. |
 | **Watch DB Writer** | `lib/watch-db-writer.ts` | Debounced periodic PostgreSQL sync from watch events. |
 | **Cluster Client Pool** | `lib/cluster-client-pool.ts` | Lazy-loaded per-cluster K8s clients; caches KubeConfig, handles credential decryption |
-| **Resource Stream Route** | `routes/resource-stream.ts` | SSE `/api/resources/stream` — sends `event: watch` with full transformed objects (WatchEventBatch), 1s server-side batching, per-cluster persistent watches |
+| **Resource Stream Route** | `routes/resource-stream.ts` | SSE `/api/resources/stream` — immediate flush (no batching), per-cluster persistent watches with shared replay buffer, socket-tracked connection limits |
 | **Event Emitter** | `lib/event-emitter.ts` | Decouples watchers from SSE (one watch, many consumers) |
 | **Metrics Stream Job** | `jobs/metrics-stream-job.ts` | Reference-counted K8s metrics polling — starts on first SSE subscriber |
 | **Metrics SSE Route** | `routes/metrics-stream.ts` | `/api/metrics/stream?clusterId=<uuid>` — live K8s metrics at 10-15s resolution |
@@ -122,3 +123,12 @@ Helm v3 stores releases as K8s Secrets (`type=helm.sh/release.v1`). Decode: `Buf
 
 ### SSE Endpoints Must Flush Immediately
 SSE endpoints must write data immediately after `writeHead()` — e.g., `reply.raw.write(':connected\n\n')`. Without this, the proxy and browser hang in CONNECTING state waiting for the first byte.
+
+### SSE Routes Require `reply.hijack()` Before `writeHead()`
+All SSE routes must call `reply.hijack()` before `reply.raw.writeHead()`. Without it, Fastify 5 tries to send its own response after the async handler completes → "invalid payload type" error → SSE connection killed immediately after `:connected`. All 5 SSE routes (resource-stream, metrics-stream, log-stream, ai-stream, mcp) follow this pattern.
+
+### WatchManager Status Events Are Silent for Individual Informers
+Individual informer error/reconnect cycles do NOT emit SSE status events. Only cluster-level `connected` (on initial subscribe) and `disconnected` (all informers failed) are sent to clients. This prevents the browser from showing "Reconnecting..." due to normal informer churn. The `watch-db-writer.ts` `newListener` handler uses a re-entrancy guard flag (`addingStatusListener`) to prevent infinite recursion when subscribing to new `watch-status:*` channels.
+
+### SSE Connection Limits Use Socket-Tracking, Not Counters
+`ConnectionLimiter` in `connection-tracker.ts` tracks actual `ServerResponse` references and auto-purges destroyed/ended sockets before checking limits. Never use simple increment/decrement counters for SSE — they leak under rapid EventSource reconnections.

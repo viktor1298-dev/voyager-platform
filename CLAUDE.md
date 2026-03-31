@@ -57,7 +57,7 @@ docker compose up -d
 
 # From monorepo root
 pnpm dev                    # Start all (turbo) — API loads .env via --env-file
-pnpm dev:restart            # Kill zombie processes on ports 4001/3000 + restart
+                            # predev script auto-kills zombie tsx/next processes first
 pnpm build                  # Build all
 pnpm --filter api dev       # Backend only (tsx watch, port from .env)
 pnpm --filter web dev       # Frontend only (next dev, port 3000)
@@ -129,7 +129,7 @@ pnpm db:seed                  # Optional: seed mock clusters/nodes/events
 ### Data Flow
 
 ```
-Browser → Next.js (SSR/CSR) → tRPC Client
+Browser → Next.js (SSR/CSR) → tRPC Client (rewritten to API)
                                     ↓
                               tRPC Server (Fastify)
                               ↙        ↘
@@ -142,12 +142,12 @@ Browser → Next.js (SSR/CSR) → tRPC Client
                                               ↓
                                      SSE /api/resources/stream
                                               ↓
-                                     Next.js Route Handler proxy
+                              Browser EventSource (direct to API via NEXT_PUBLIC_API_URL)
                                               ↓
-                                     useResourceSSE → TanStack Query refetch
+                                     useResourceSSE → Zustand store
 ```
 
-**Live data pipeline (Lens-style):** K8s Watch API → unified WatchManager (informer ObjectCache = in-memory store) → SSE pushes full transformed objects (`event: watch`) → `useResourceSSE` applies directly to TanStack Query cache via `setQueryData()` → components re-render. No polling, no refetch round-trips. 17 resource types. Update latency: <2s. Fallback to K8s API via `cached()` when watches not ready.
+**Live data pipeline (Lens-style):** K8s Watch API → unified WatchManager (informer ObjectCache = in-memory store) → SSE pushes full transformed objects (`event: watch`) → `useResourceSSE` applies directly to Zustand resource store → components re-render. No polling, no refetch round-trips. 17 resource types. Update latency: <2s. Fallback to K8s API via `cached()` when watches not ready. Browser connects SSE **directly to API** (`NEXT_PUBLIC_API_URL`) — no Next.js proxy for SSE.
 
 **Instant load (Rancher-style):** On cluster page mount, `useCachedResources` calls `resources.snapshot` tRPC endpoint to seed Zustand store from WatchManager cache before SSE connects (~50ms). WatchManager keeps informers alive for 60s after last subscriber disconnects (grace period), so browser refresh gets instant cached data instead of cold start.
 
@@ -188,8 +188,8 @@ Correct value: `http://voyager-platform.voyagerlabs.co`. Wrong BASE_URL is the #
 ### `killall node` Kills Docker + MCP Servers
 Never use `killall node` to clean up dev servers — it also kills Docker port forwarding (Postgres/Redis become unreachable) and MCP servers (Playwright, context7). Use `pnpm dev:restart` to safely restart dev servers.
 
-### Dev Server Restart — Always Use `pnpm dev:restart`
-**Never** run `pnpm dev` while another instance is running. Turbo spawns child processes (`tsx watch`, `next dev`) that survive parent kills. Running `pkill -f "tsx watch"` only kills the child — turbo respawns it. Running `pnpm dev` again creates a second turbo, and both fight over ports 4001/3000 → `EADDRINUSE` → API crash. **Always use `pnpm dev:restart`** which kills by port number first, ensuring a clean start.
+### Dev Server Restart — `predev` Handles Zombie Cleanup
+`pnpm dev` runs a `predev` lifecycle script that kills zombie `tsx watch`, `turbo dev`, and `next dev` processes by name + port before starting. If you still hit `EADDRINUSE`, run `lsof -ti:4001 | xargs kill; lsof -ti:3000 | xargs kill` then `pnpm dev`.
 
 ### E2E: Check URL Before Fixing Selectors
 When E2E tests fail on "element not found" — first verify the test navigates to the correct URL. Fix the URL before touching selectors or timeouts.
@@ -202,6 +202,9 @@ Tab group dropdowns render with `position: fixed` + `getBoundingClientRect()`. T
 
 ### Helm `useHelmReleases` — Hybrid SSE + tRPC
 SSE provides live presence (status, revision), tRPC `helm.list` provides decoded metadata (chartVersion, updatedAt). Merged by `namespace/name` key. **Never** remove the tRPC query — SSE can't decode Helm's base64+gzip binary.
+
+### SSE Routes Require `reply.hijack()` in Fastify 5
+All SSE endpoints (resource-stream, metrics-stream, log-stream, ai-stream, mcp) must call `reply.hijack()` before `reply.raw.writeHead()`. Without it, Fastify tries to send its own response after the handler completes, causing "invalid payload type" errors that kill the SSE connection. The `ConnectionLimiter` class in `connection-tracker.ts` handles per-cluster connection limits with auto-purging of destroyed sockets.
 
 ## 🚨 QA Gate Rules — MANDATORY
 
