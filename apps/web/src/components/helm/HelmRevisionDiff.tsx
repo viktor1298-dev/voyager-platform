@@ -153,7 +153,8 @@ export function HelmRevisionDiff({
               onChange={(e) => setFromRev(Number(e.target.value))}
               className="px-2.5 py-1.5 rounded-lg text-[11px] font-mono
                 bg-white/[0.04] border border-[var(--color-border)]/40 text-[var(--color-text-secondary)]
-                hover:border-[var(--color-accent)]/40 transition-colors cursor-pointer"
+                hover:border-[var(--color-accent)]/40 transition-colors cursor-pointer max-h-[200px] overflow-y-auto"
+              size={revisions.length > 10 ? 12 : undefined}
             >
               {revisions
                 .filter((r) => r.revision !== toRev)
@@ -169,7 +170,8 @@ export function HelmRevisionDiff({
               onChange={(e) => setToRev(Number(e.target.value))}
               className="px-2.5 py-1.5 rounded-lg text-[11px] font-mono
                 bg-white/[0.04] border border-[var(--color-border)]/40 text-[var(--color-text-secondary)]
-                hover:border-[var(--color-accent)]/40 transition-colors cursor-pointer"
+                hover:border-[var(--color-accent)]/40 transition-colors cursor-pointer max-h-[200px] overflow-y-auto"
+              size={revisions.length > 10 ? 12 : undefined}
             >
               {revisions
                 .filter((r) => r.revision !== fromRev)
