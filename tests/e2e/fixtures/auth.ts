@@ -1,16 +1,16 @@
-import { test as base, Page } from '@playwright/test';
+import { test as base, Page } from '@playwright/test'
 
-type AuthFixtures = { authenticatedPage: Page };
+const authFile = 'playwright/.auth/user.json'
+
+type AuthFixtures = { authenticatedPage: Page }
 
 export const test = base.extend<AuthFixtures>({
-  authenticatedPage: async ({ page }, use) => {
-    await page.goto('/login');
-    await page.fill('[data-testid="login-email"]', process.env.TEST_USER ?? 'admin@voyager.local');
-    await page.fill('[data-testid="login-password"]', process.env.TEST_PASS ?? 'admin123');
-    await page.click('button[type="submit"]');
-    await page.waitForURL('/');
-    await use(page);
+  authenticatedPage: async ({ browser }, use) => {
+    const context = await browser.newContext({ storageStatePath: authFile })
+    const page = await context.newPage()
+    await use(page)
+    await context.close()
   },
-});
+})
 
-export { expect } from '@playwright/test';
+export { expect } from '@playwright/test'

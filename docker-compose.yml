@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: timescale/timescaledb:latest-pg17
+    image: timescale/timescaledb:2.17.0-pg17
     container_name: voyager-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-voyager}

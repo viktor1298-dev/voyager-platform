@@ -56,8 +56,6 @@ COPY --from=builder /app/pruned/node_modules ./node_modules
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package.json ./
 COPY --from=builder /app/charts/voyager/sql ./sql
-COPY --from=builder /app/packages/db/drizzle.config.ts ./drizzle.config.ts
-COPY --from=builder /app/packages/db/drizzle ./drizzle
 ENV HIDE_STACK_TRACES=true
 USER voyager
 EXPOSE 4000

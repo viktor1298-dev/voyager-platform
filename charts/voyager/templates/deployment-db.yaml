@@ -37,6 +37,12 @@ spec:
               value: voyager
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
           {{- if .Values.db.persistence.enabled }}
           volumeMounts:
             - name: db-data

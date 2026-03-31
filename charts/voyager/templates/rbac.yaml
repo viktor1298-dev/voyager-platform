@@ -2,7 +2,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: voyager-api-reader
+  name: voyager-api
   labels:
     {{- include "voyager.labels" . | nindent 4 }}
 rules:
@@ -34,13 +34,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: voyager-api-reader-binding
+  name: voyager-api-binding
   labels:
     {{- include "voyager.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: voyager-api-reader
+  name: voyager-api
 subjects:
   - kind: ServiceAccount
     name: voyager-api

@@ -25,7 +25,13 @@ spec:
             allowPrivilegeEscalation: false
           ports:
             - containerPort: {{ .Values.redis.port }}
-          command: ["redis-server", "--appendonly", "yes", "--dir", "/data"]
+          command: ["redis-server", "--appendonly", "yes", "--dir", "/data", "--requirepass", "$(REDIS_PASSWORD)"]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: voyager-secret
+                  key: REDIS_PASSWORD
           {{- if .Values.redis.persistence.enabled }}
           volumeMounts:
             - name: redis-data
@@ -33,12 +39,12 @@ spec:
           {{- end }}
           readinessProbe:
             exec:
-              command: ["redis-cli", "ping"]
+              command: ["redis-cli", "-a", "$(REDIS_PASSWORD)", "ping"]
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ["redis-cli", "ping"]
+              command: ["redis-cli", "-a", "$(REDIS_PASSWORD)", "ping"]
             initialDelaySeconds: 15
             periodSeconds: 20
       {{- if .Values.redis.persistence.enabled }}
