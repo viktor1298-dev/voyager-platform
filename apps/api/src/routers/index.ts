@@ -40,6 +40,7 @@ import { tokensRouter } from './tokens.js'
 import { topologyRouter } from './topology.js'
 import { usersRouter } from './users.js'
 import { webhooksRouter } from './webhooks.js'
+import { relationsRouter } from './relations.js'
 import { resourcesRouter } from './resources.js'
 import { yamlRouter } from './yaml.js'
 
@@ -86,6 +87,7 @@ export const appRouter = router({
   helm: helmRouter,
   crds: crdsRouter,
   rbac: rbacRouter,
+  relations: relationsRouter,
   resources: resourcesRouter,
   resourceQuotas: resourceQuotasRouter,
 })
