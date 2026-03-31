@@ -557,126 +557,126 @@ Nice-to-have improvements for future maintenance cycles.
 
 ### API
 
-- [ ] **[LOW] Handle `stdin.write()` backpressure in pod-terminal** -- Effort: **S**
+- [x] **[LOW] Handle `stdin.write()` backpressure in pod-terminal** -- Effort: **S**
   - **Files:** `apps/api/src/routes/pod-terminal.ts` lines 61-64
   - **Fix:** Add `stdin.on('error', ...)` handler at minimum.
   - **Refs:** API-ISSUE-07
 
-- [ ] **[LOW] Call `cleanup()` after MAX_LOG_LINES in log-stream** -- Effort: **S**
+- [x] **[LOW] Call `cleanup()` after MAX_LOG_LINES in log-stream** -- Effort: **S**
   - **Files:** `apps/api/src/routes/log-stream.ts` lines 134-140
   - **Fix:** Call `cleanup()` directly after `logStream.destroy()`.
   - **Refs:** API-ISSUE-12
 
-- [ ] **[LOW] Fix cluster-client-pool eviction to true LRU** -- Effort: **S**
+- [x] **[LOW] Fix cluster-client-pool eviction to true LRU** -- Effort: **S**
   - **Files:** `apps/api/src/lib/cluster-client-pool.ts` lines 64-75
   - **Fix:** Track `lastAccessedAt` and evict by that field.
   - **Refs:** API-ISSUE-24
 
-- [ ] **[LOW] Add hard cap to presenceStore** -- Effort: **S**
+- [x] **[LOW] Add hard cap to presenceStore** -- Effort: **S**
   - **Files:** `apps/api/src/lib/presence.ts` line 37
   - **Fix:** Reject heartbeats when Map exceeds 1000 users.
   - **Refs:** API-ISSUE-25
 
-- [ ] **[LOW] Make replay buffer per-cluster (shared)** -- Effort: **M**
+- [x] **[LOW] Make replay buffer per-cluster (shared)** -- Effort: **M**
   - **Files:** `apps/api/src/routes/resource-stream.ts` lines 95-96
   - **Fix:** Move replay buffer to a per-cluster shared Map so reconnecting clients benefit from events buffered during absence.
   - **Refs:** API-ISSUE-26
 
 ### Frontend
 
-- [ ] **[LOW] Fix PodLogStream mock timer** -- Effort: **S**
+- [x] **[LOW] Fix PodLogStream mock timer** -- Effort: **S**
   - **Files:** `apps/web/src/components/PodLogStream.tsx` lines 63-65
   - **Refs:** FE-P-06
 
-- [ ] **[LOW] Remove 1s settings page sync timer** -- Effort: **S**
+- [x] **[LOW] Remove 1s settings page sync timer** -- Effort: **S**
   - **Files:** `apps/web/src/app/settings/page.tsx` line 231
   - **Refs:** FE-P-09
 
-- [ ] **[LOW] Cancel rAF on CrosshairProvider unmount** -- Effort: **S**
+- [x] **[LOW] Cancel rAF on CrosshairProvider unmount** -- Effort: **S**
   - **Files:** `apps/web/src/components/metrics/CrosshairProvider.tsx` line 29
   - **Refs:** FE-M-04
 
-- [ ] **[LOW] Add max messages to AI assistant store** -- Effort: **S**
+- [x] **[LOW] Add max messages to AI assistant store** -- Effort: **S**
   - **Files:** `apps/web/src/stores/ai-assistant.ts`
   - **Fix:** Cap at 100 messages per cluster, trim old messages during `appendMessage`.
   - **Refs:** FE-M-03
 
-- [ ] **[LOW] Add jitter to SSE reconnection backoff** -- Effort: **S**
+- [x] **[LOW] Add jitter to SSE reconnection backoff** -- Effort: **S**
   - **Files:** `apps/web/src/hooks/useResourceSSE.ts` lines 84-90, `apps/web/src/hooks/useMetricsSSE.ts` lines 103-108
   - **Fix:** Add `const jitter = Math.random() * 1000` to reconnect delay.
   - **Refs:** FE-K-02
 
-- [ ] **[LOW] Add aria-hidden to ConstellationLoader canvas** -- Effort: **S**
+- [x] **[LOW] Add aria-hidden to ConstellationLoader canvas** -- Effort: **S**
   - **Files:** `apps/web/src/components/animations/ConstellationLoader.tsx`
   - **Refs:** FE-A-02
 
-- [ ] **[LOW] Add aria-live region to DataTable** -- Effort: **S**
+- [x] **[LOW] Add aria-live region to DataTable** -- Effort: **S**
   - **Files:** `apps/web/src/components/DataTable.tsx`
   - **Refs:** FE-A-04
 
-- [ ] **[LOW] Standardize error UI across cluster tab pages** -- Effort: **M**
+- [x] **[LOW] Standardize error UI across cluster tab pages** -- Effort: **M**
   - **Files:** ~15 cluster tab pages
   - **Fix:** Use `QueryError` component or `ResourcePageScaffold` consistently.
   - **Refs:** FE-E-05
 
 ### Infrastructure
 
-- [ ] **[LOW] Pin TimescaleDB image version** -- Effort: **S**
+- [x] **[LOW] Pin TimescaleDB image version** -- Effort: **S**
   - **Files:** `docker-compose.yml`
   - **Fix:** Change `timescale/timescaledb:latest-pg17` to `timescale/timescaledb:2.17.0-pg17`.
   - **Refs:** INFRA-29
 
-- [ ] **[LOW] Pin corepack pnpm version in Dockerfile.web** -- Effort: **S**
+- [x] **[LOW] Pin corepack pnpm version in Dockerfile.web** -- Effort: **S**
   - **Files:** `docker/Dockerfile.web`
   - **Fix:** Change `pnpm@latest` to `pnpm@10.6.2`.
   - **Refs:** INFRA-26
 
-- [ ] **[LOW] Remove drizzle files from runner stage** -- Effort: **S**
+- [x] **[LOW] Remove drizzle files from runner stage** -- Effort: **S**
   - **Files:** `docker/Dockerfile.api`
   - **Refs:** INFRA-23
 
-- [ ] **[LOW] Enable reactStrictMode** -- Effort: **S**
+- [x] **[LOW] Enable reactStrictMode** -- Effort: **S**
   - **Files:** `apps/web/next.config.ts`
   - **Fix:** Set `reactStrictMode: true`. Fix any issues this reveals.
   - **Refs:** INFRA-12
 
-- [ ] **[LOW] Remove stale type packages** -- Effort: **S**
+- [x] **[LOW] Remove stale type packages** -- Effort: **S**
   - **Files:** `apps/web/package.json`
   - **Fix:** Remove `@types/js-yaml` and `@types/dagre` from devDependencies.
   - **Refs:** INFRA-9, INFRA-10
 
-- [ ] **[LOW] Consolidate E2E auth fixtures** -- Effort: **S**
+- [x] **[LOW] Consolidate E2E auth fixtures** -- Effort: **S**
   - **Files:** `tests/e2e/auth.setup.ts`, `tests/e2e/fixtures/auth.ts`
   - **Fix:** Use one auth strategy with consistent selectors.
   - **Refs:** INFRA-19
 
-- [ ] **[LOW] Add redis authentication** -- Effort: **S**
+- [x] **[LOW] Add redis authentication** -- Effort: **S**
   - **Files:** `charts/voyager/templates/deployment-redis.yaml`, `charts/voyager/templates/secret.yaml`
   - **Fix:** Add `--requirepass` to Redis command, store password in secret.
   - **Refs:** INFRA-45
 
-- [ ] **[LOW] Add resource limits to postgres deployment** -- Effort: **S**
+- [x] **[LOW] Add resource limits to postgres deployment** -- Effort: **S**
   - **Files:** `charts/voyager/templates/deployment-db.yaml`
   - **Refs:** INFRA-46
 
-- [ ] **[LOW] Rename misleading ClusterRole** -- Effort: **S**
+- [x] **[LOW] Rename misleading ClusterRole** -- Effort: **S**
   - **Files:** `charts/voyager/templates/rbac.yaml`
   - **Fix:** Rename `voyager-api-reader` to `voyager-api` since it has write permissions.
   - **Refs:** INFRA-41
 
 ### Database
 
-- [ ] **[LOW] Add partial index for enabled alerts** -- Effort: **S**
+- [x] **[LOW] Add partial index for enabled alerts** -- Effort: **S**
   - **Files:** `charts/voyager/sql/init.sql`
   - **Fix:** `CREATE INDEX IF NOT EXISTS "idx_alerts_enabled" ON "alerts" ("enabled") WHERE "enabled" = true;`
   - **Refs:** DB-6.4
 
-- [ ] **[LOW] Add encryption key version prefix** -- Effort: **M**
+- [x] **[LOW] Add encryption key version prefix** -- Effort: **M**
   - **Files:** `apps/api/src/lib/credential-crypto.ts`
   - **Fix:** Prefix ciphertext with `v1:` for future key rotation support.
   - **Refs:** DB-5.3
 
-- [ ] **[LOW] Make audit_log.user_email NOT NULL** -- Effort: **S**
+- [x] **[LOW] Make audit_log.user_email NOT NULL** -- Effort: **S**
   - **Files:** `charts/voyager/sql/init.sql` line 412
   - **Refs:** DB-1.4
 
