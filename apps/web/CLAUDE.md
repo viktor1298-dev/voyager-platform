@@ -125,6 +125,9 @@ src/
 | **TopologyMap** | `components/topology/TopologyMap.tsx` | React Flow — Ingress→Service→Pod→Node with dagre layout |
 | **RbacMatrix** | `components/rbac/RbacMatrix.tsx` | Permission grid — users×resources with CRUD letter cells |
 | **EventsTimeline** | `components/events/EventsTimeline.tsx` | Horizontal swim lanes with resource-type grouping |
+| **ResourceStatusBadge** | `components/shared/ResourceStatusBadge.tsx` | Icon + bordered badge for K8s resource status — 8 categories (healthy/completed/transitional/draining/error/critical/fatal/unknown) with unique icons and animations |
+| **resource-status** | `lib/resource-status.ts` | Centralized status config map + `resolveResourceStatus()` resolver — single source of truth for status → color/icon/animation mapping |
+| **useCachedResources** | `hooks/useCachedResources.ts` | Rancher-style tRPC prefetch — seeds Zustand store from WatchManager cache before SSE connects |
 
 ## Adding a New Page
 

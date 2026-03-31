@@ -68,7 +68,8 @@ All Redis cache keys are centralized in `lib/cache-keys.ts`. **Never construct c
 | Abstraction | File | Pattern |
 |-------------|------|---------|
 | **K8s Resource Routers** | `routers/{resource}.ts` | `watchManager.getResources()` for in-memory data (returns null if not ready → fallback to `cached()` K8s API call). 17 watched types + topology + clusters. Non-watched: yaml, helm, crds, rbac |
-| **Unified WatchManager** | `lib/watch-manager.ts` | Single manager for all 17 K8s resource types. Informer ObjectCache = in-memory store. Per-cluster persistent lifecycle with reference counting. `getResources()` returns null until informer initial list completes (prevents race condition). Exponential backoff reconnect on errors. |
+| **Unified WatchManager** | `lib/watch-manager.ts` | Single manager for all 17 K8s resource types. Informer ObjectCache = in-memory store. Per-cluster persistent lifecycle with reference counting. `getResources()` returns null until informer initial list completes (prevents race condition). Exponential backoff reconnect on errors. **60s grace period** on last subscriber disconnect — prevents cold cache on browser refresh. |
+| **Resources Router** | `routers/resources.ts` | Generic `resources.snapshot` endpoint — returns all cached WatchManager data in one HTTP response for instant page load |
 | **Resource Mappers** | `lib/resource-mappers.ts` | 17 shared mapper functions (K8s raw → frontend shape). Used by both tRPC routers and SSE events to guarantee identical data shapes. |
 | **Watch DB Writer** | `lib/watch-db-writer.ts` | Debounced periodic PostgreSQL sync from watch events. |
 | **Cluster Client Pool** | `lib/cluster-client-pool.ts` | Lazy-loaded per-cluster K8s clients; caches KubeConfig, handles credential decryption |

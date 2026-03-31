@@ -101,6 +101,7 @@ pnpm db:seed                  # Optional: seed mock clusters/nodes/events
 
 - 2-space indent, 100-char line width, single quotes, semicolons as-needed
 - All packages are ESM (`"type": "module"`) — use `.js` extensions in imports even for `.ts` files
+- **Exception:** `@/` path alias imports in `apps/web/` do NOT use `.js` extensions. Next.js webpack doesn't resolve `.js` → `.ts` for path aliases. Only `@voyager/*` workspace imports use `.js`.
 - Workspace packages use `@voyager/` prefix: `@voyager/db`, `@voyager/types`, `@voyager/config`
 - Zod v4 (^4.3.6): `z.record()` requires TWO arguments — `z.record(z.string(), z.unknown())`, not `z.record(z.unknown())`
 
@@ -147,6 +148,8 @@ Browser → Next.js (SSR/CSR) → tRPC Client
 
 **Live data pipeline (Lens-style):** K8s Watch API → unified WatchManager (informer ObjectCache = in-memory store) → SSE pushes full transformed objects (`event: watch`) → `useResourceSSE` applies directly to TanStack Query cache via `setQueryData()` → components re-render. No polling, no refetch round-trips. 17 resource types. Update latency: <2s. Fallback to K8s API via `cached()` when watches not ready.
 
+**Instant load (Rancher-style):** On cluster page mount, `useCachedResources` calls `resources.snapshot` tRPC endpoint to seed Zustand store from WatchManager cache before SSE connects (~50ms). WatchManager keeps informers alive for 60s after last subscriber disconnects (grace period), so browser refresh gets instant cached data instead of cold start.
+
 ### Centralized Config
 
 Configuration is split between shared (API + Web) and backend-only:
@@ -180,6 +183,9 @@ Exactly 10 ranges: `5m`, `15m`, `30m`, `1h`, `3h`, `6h`, `12h`, `24h`, `2d`, `7d
 
 ### E2E: BASE_URL
 Correct value: `http://voyager-platform.voyagerlabs.co`. Wrong BASE_URL is the #1 cause of E2E login failures.
+
+### `killall node` Kills Docker + MCP Servers
+Never use `killall node` to clean up dev servers — it also kills Docker port forwarding (Postgres/Redis become unreachable) and MCP servers (Playwright, context7). Use `pkill -f "tsx watch"; pkill -f "next dev"` to target only the dev processes.
 
 ### E2E: Check URL Before Fixing Selectors
 When E2E tests fail on "element not found" — first verify the test navigates to the correct URL. Fix the URL before touching selectors or timeouts.
