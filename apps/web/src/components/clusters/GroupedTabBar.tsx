@@ -22,7 +22,6 @@ export function GroupedTabBar({ clusterRouteSegment, activeTab }: GroupedTabBarP
   const reduced = useReducedMotion()
   const [openGroupId, setOpenGroupId] = useState<string | null>(null)
   const groupRefs = useRef<Map<string, HTMLDivElement>>(new Map())
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -55,26 +54,13 @@ export function GroupedTabBar({ clusterRouteSegment, activeTab }: GroupedTabBarP
     }
   }, [])
 
-  // Preserve scroll position when toggling overflow (overflow-visible resets scrollLeft to 0)
-  const toggleGroup = useCallback((groupId: string) => {
-    const container = scrollContainerRef.current
-    const savedScroll = container?.scrollLeft ?? 0
-    setOpenGroupId((prev) => (prev === groupId ? null : groupId))
-    requestAnimationFrame(() => {
-      if (container) container.scrollLeft = savedScroll
-    })
-  }, [])
-
   const basePath = `/clusters/${clusterRouteSegment}`
 
   /** Check if a group contains the active tab */
   const getActiveChild = (group: TabGroup) => group.children.find((c) => c.id === activeTab) ?? null
 
   return (
-    <div
-      ref={scrollContainerRef}
-      className={`mb-3 border-b border-[var(--color-border)] ${openGroupId ? 'overflow-visible' : 'overflow-x-auto'}`}
-    >
+    <div className="mb-3 border-b border-[var(--color-border)] overflow-x-auto">
       <nav className="flex items-end gap-0 min-w-max" aria-label="Cluster tabs">
         {CLUSTER_TAB_ENTRIES.map((entry) =>
           entry.type === 'standalone' ? (
@@ -92,7 +78,7 @@ export function GroupedTabBar({ clusterRouteSegment, activeTab }: GroupedTabBarP
               basePath={basePath}
               activeChild={getActiveChild(entry)}
               isOpen={openGroupId === entry.id}
-              onToggle={() => toggleGroup(entry.id)}
+              onToggle={() => setOpenGroupId(openGroupId === entry.id ? null : entry.id)}
               onClose={() => setOpenGroupId(null)}
               setRef={(el) => setGroupRef(entry.id, el)}
               reduced={reduced}
@@ -169,10 +155,21 @@ function GroupTabItem({
   const Icon = group.icon
   const isActive = !!activeChild
   const displayLabel = activeChild ? activeChild.label : group.label
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 })
+
+  // Calculate fixed position from button's viewport rect when dropdown opens
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left })
+    }
+  }, [isOpen])
 
   return (
-    <div ref={setRef} className="relative">
+    <div ref={setRef}>
       <button
+        ref={buttonRef}
         type="button"
         onClick={onToggle}
         data-testid={`cluster-tab-group-${group.id}`}
@@ -207,7 +204,8 @@ function GroupTabItem({
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute top-full left-0 mt-1 z-50 min-w-[180px] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-sm overflow-hidden"
+            style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left }}
+            className="z-50 min-w-[180px] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-sm overflow-hidden"
           >
             <motion.div
               variants={
