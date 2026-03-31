@@ -31,6 +31,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
+import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -352,16 +353,8 @@ function PodSummary({
   onDeletePod: (pod: PodData) => void
   onExecPod: (pod: PodData) => void
 }) {
-  const statusColor =
-    pod.status === 'Running' || pod.status === 'Succeeded'
-      ? 'bg-[var(--color-status-active)]'
-      : pod.status === 'Pending'
-        ? 'bg-[var(--color-status-warning)]'
-        : 'bg-[var(--color-status-error)]'
-
   return (
     <div className="flex items-center gap-3 w-full min-w-0">
-      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusColor}`} />
       <span className="flex-1 min-w-0 text-[13px] font-mono text-[var(--color-text-primary)] truncate">
         {pod.name}
       </span>
@@ -379,7 +372,7 @@ function PodSummary({
           ↻{pod.restartCount}
         </span>
       )}
-      <span className="text-xs text-[var(--color-text-secondary)] shrink-0">{pod.status}</span>
+      <ResourceStatusBadge status={pod.status} size="sm" />
       <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
         {pod.createdAt ? timeAgo(pod.createdAt) : '—'}
       </span>

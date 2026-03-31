@@ -27,6 +27,7 @@ import {
 } from '@/components/resource'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
+import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface DeploymentDetail {
@@ -53,13 +54,6 @@ interface DeploymentDetail {
   }[]
 }
 
-function statusColor(status: string): string {
-  if (status === 'Running') return 'var(--color-status-active)'
-  if (status === 'Scaling') return 'var(--color-status-warning)'
-  if (status === 'Failed') return 'var(--color-status-error)'
-  return 'var(--color-text-dim)'
-}
-
 function DeploymentSummary({ d }: { d: DeploymentDetail }) {
   const allReady = d.readyReplicas === d.replicas && d.replicas > 0
   return (
@@ -76,15 +70,7 @@ function DeploymentSummary({ d }: { d: DeploymentDetail }) {
       >
         {d.readyReplicas}/{d.replicas}
       </span>
-      <span
-        className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
-        style={{
-          color: statusColor(d.status),
-          background: `color-mix(in srgb, ${statusColor(d.status)} 15%, transparent)`,
-        }}
-      >
-        {d.status}
-      </span>
+      <ResourceStatusBadge status={d.status} size="sm" />
       <span
         className="text-xs font-mono text-[var(--color-text-muted)] max-w-[180px] truncate shrink-0"
         title={d.image}

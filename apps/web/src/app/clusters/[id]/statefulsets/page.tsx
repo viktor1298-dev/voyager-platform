@@ -27,6 +27,7 @@ import {
 } from '@/components/resource'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
+import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface StatefulSetData {
@@ -57,11 +58,6 @@ interface StatefulSetData {
 function StatefulSetSummary({ ss }: { ss: StatefulSetData }) {
   const allReady = ss.readyReplicas === ss.replicas && ss.replicas > 0
   const statusLabel = allReady ? 'Running' : ss.readyReplicas === 0 ? 'Pending' : 'Scaling'
-  const statusClr = allReady
-    ? 'var(--color-status-active)'
-    : ss.readyReplicas === 0
-      ? 'var(--color-status-error)'
-      : 'var(--color-status-warning)'
 
   return (
     <div className="flex items-center gap-3 w-full min-w-0">
@@ -77,15 +73,7 @@ function StatefulSetSummary({ ss }: { ss: StatefulSetData }) {
       >
         {ss.readyReplicas}/{ss.replicas}
       </span>
-      <span
-        className="text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
-        style={{
-          color: statusClr,
-          background: `color-mix(in srgb, ${statusClr} 15%, transparent)`,
-        }}
-      >
-        {statusLabel}
-      </span>
+      <ResourceStatusBadge status={statusLabel} size="sm" />
       <span
         className="text-xs font-mono text-[var(--color-text-muted)] max-w-[180px] truncate shrink-0"
         title={ss.image}
