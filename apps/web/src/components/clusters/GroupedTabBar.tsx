@@ -205,7 +205,7 @@ function GroupTabItem({
             position: 'fixed',
             top: dropdownPos.top - 4,
             left: dropdownPos.left,
-            width: 180,
+            width: 300,
             height: 4,
           }}
           aria-hidden="true"
