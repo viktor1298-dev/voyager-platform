@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "turbo dev",
+    "dev:restart": "lsof -ti:4001 | xargs kill 2>/dev/null; lsof -ti:3000 | xargs kill 2>/dev/null; pkill -f 'turbo dev' 2>/dev/null; sleep 1; turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",

@@ -57,6 +57,7 @@ docker compose up -d
 
 # From monorepo root
 pnpm dev                    # Start all (turbo) — API loads .env via --env-file
+pnpm dev:restart            # Kill zombie processes on ports 4001/3000 + restart
 pnpm build                  # Build all
 pnpm --filter api dev       # Backend only (tsx watch, port from .env)
 pnpm --filter web dev       # Frontend only (next dev, port 3000)
@@ -185,7 +186,10 @@ Exactly 10 ranges: `5m`, `15m`, `30m`, `1h`, `3h`, `6h`, `12h`, `24h`, `2d`, `7d
 Correct value: `http://voyager-platform.voyagerlabs.co`. Wrong BASE_URL is the #1 cause of E2E login failures.
 
 ### `killall node` Kills Docker + MCP Servers
-Never use `killall node` to clean up dev servers — it also kills Docker port forwarding (Postgres/Redis become unreachable) and MCP servers (Playwright, context7). Use `pkill -f "tsx watch"; pkill -f "next dev"` to target only the dev processes.
+Never use `killall node` to clean up dev servers — it also kills Docker port forwarding (Postgres/Redis become unreachable) and MCP servers (Playwright, context7). Use `pnpm dev:restart` to safely restart dev servers.
+
+### Dev Server Restart — Always Use `pnpm dev:restart`
+**Never** run `pnpm dev` while another instance is running. Turbo spawns child processes (`tsx watch`, `next dev`) that survive parent kills. Running `pkill -f "tsx watch"` only kills the child — turbo respawns it. Running `pnpm dev` again creates a second turbo, and both fight over ports 4001/3000 → `EADDRINUSE` → API crash. **Always use `pnpm dev:restart`** which kills by port number first, ensuring a clean start.
 
 ### E2E: Check URL Before Fixing Selectors
 When E2E tests fail on "element not found" — first verify the test navigates to the correct URL. Fix the URL before touching selectors or timeouts.
