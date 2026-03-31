@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useClusterResources, useConnectionState } from './useResources'
 import type { ConnectionState } from './useResources'
+import { trpc } from '@/lib/trpc'
 
 interface SecretData {
   name: string
@@ -31,6 +32,16 @@ export function useHelmReleases(clusterId: string): {
   const secrets = useClusterResources<SecretData>(clusterId, 'secrets')
   const connectionState = useConnectionState(clusterId)
 
+  const { data: trpcReleases } = trpc.helm.list.useQuery(
+    { clusterId },
+    {
+      enabled: !!clusterId,
+      staleTime: 60_000, // backend caches 30s; chart metadata changes infrequently
+      refetchInterval: 60_000,
+      refetchOnWindowFocus: false,
+    },
+  )
+
   const releases = useMemo(() => {
     // Filter for Helm release secrets
     const helmSecrets = secrets.filter(
@@ -48,19 +59,53 @@ export function useHelmReleases(clusterId: string): {
       if (rev > existingRev) releaseMap.set(key, s)
     }
 
-    return [...releaseMap.values()].map((s) => ({
-      name: s.labels?.name ?? s.name,
-      namespace: s.namespace,
-      status: s.labels?.status ?? 'unknown',
-      revision: parseInt(s.labels?.version ?? '0', 10),
-      // Chart details are not in labels -- these require server-side decode
-      // They will be empty in the list view; HelmReleaseDetail fetches via tRPC
-      chartName: '',
-      chartVersion: '',
-      appVersion: '',
-      updatedAt: s.createdAt,
-    }))
-  }, [secrets])
+    // Build tRPC lookup for decoded metadata (chartName, chartVersion, updatedAt)
+    const trpcMap = new Map<string, NonNullable<typeof trpcReleases>[number]>()
+    if (trpcReleases) {
+      for (const r of trpcReleases) {
+        trpcMap.set(`${r.namespace}/${r.name}`, r)
+      }
+    }
+
+    // SSE-derived releases enriched with tRPC decoded metadata
+    const merged: HelmRelease[] = [...releaseMap.values()].map((s) => {
+      const name = s.labels?.name ?? s.name
+      const ns = s.namespace
+      const trpcData = trpcMap.get(`${ns}/${name}`)
+
+      return {
+        name,
+        namespace: ns,
+        status: s.labels?.status ?? 'unknown',
+        revision: parseInt(s.labels?.version ?? '0', 10),
+        chartName: trpcData?.chartName ?? '',
+        chartVersion: trpcData?.chartVersion ?? '',
+        appVersion: trpcData?.appVersion ?? '',
+        updatedAt: trpcData?.updatedAt ?? s.createdAt,
+      }
+    })
+
+    // Union: add tRPC-only releases not in SSE (rare, during watch reconnect)
+    if (trpcReleases) {
+      const sseKeys = new Set(merged.map((r) => `${r.namespace}/${r.name}`))
+      for (const r of trpcReleases) {
+        if (!sseKeys.has(`${r.namespace}/${r.name}`)) {
+          merged.push({
+            name: r.name,
+            namespace: r.namespace,
+            status: r.status,
+            revision: r.revision,
+            chartName: r.chartName,
+            chartVersion: r.chartVersion,
+            appVersion: r.appVersion,
+            updatedAt: r.updatedAt,
+          })
+        }
+      }
+    }
+
+    return merged
+  }, [secrets, trpcReleases])
 
   return { releases, connectionState }
 }
