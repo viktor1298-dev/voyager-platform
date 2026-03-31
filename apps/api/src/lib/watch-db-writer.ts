@@ -285,12 +285,17 @@ export function startWatchDbWriter(): void {
     voyagerEmitter.on(channel, onWatchStatus)
   }
 
-  // Also subscribe to future watch-status channels
+  // Also subscribe to future watch-status channels.
+  // Guard flag prevents infinite recursion: 'newListener' fires before the listener
+  // is actually added, so .on() inside the handler triggers 'newListener' again.
+  let addingStatusListener = false
   const onNewStatusListener = (eventName: string | symbol) => {
+    if (addingStatusListener) return
     if (typeof eventName !== 'string') return
     if (!eventName.startsWith('watch-status:')) return
-    // Attach our cleanup handler to this cluster's status channel
+    addingStatusListener = true
     voyagerEmitter.on(eventName, onWatchStatus)
+    addingStatusListener = false
   }
   voyagerEmitter.on('newListener', onNewStatusListener)
 

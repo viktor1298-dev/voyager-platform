@@ -157,6 +157,8 @@ export async function registerMcpRoute(app: FastifyInstance) {
       return
     }
 
+    reply.hijack()
+
     reply.raw.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',

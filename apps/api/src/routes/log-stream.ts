@@ -1,7 +1,7 @@
 import { PassThrough } from 'node:stream'
 import { Log } from '@kubernetes/client-node'
 import { SSE_HEARTBEAT_INTERVAL_MS } from '@voyager/config'
-import { trackConnection } from '../lib/connection-tracker.js'
+import { ConnectionLimiter, trackConnection } from '../lib/connection-tracker.js'
 import { clusters, db } from '@voyager/db'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
@@ -17,30 +17,10 @@ const querySchema = z.object({
   tailLines: z.coerce.number().int().min(1).max(10000).optional().default(100),
 })
 
-/** Per-cluster and global connection limits to prevent resource exhaustion */
-const MAX_CONNECTIONS_PER_CLUSTER = 10
-const MAX_CONNECTIONS_GLOBAL = 50
-const connectionCounts = new Map<string, number>()
-let globalConnections = 0
+const connectionLimiter = new ConnectionLimiter(10, 50)
 
 /** Maximum log lines before auto-closing stream to prevent memory exhaustion */
 const MAX_LOG_LINES = 10_000
-
-function incrementConnections(clusterId: string): boolean {
-  if (globalConnections >= MAX_CONNECTIONS_GLOBAL) return false
-  const current = connectionCounts.get(clusterId) ?? 0
-  if (current >= MAX_CONNECTIONS_PER_CLUSTER) return false
-  connectionCounts.set(clusterId, current + 1)
-  globalConnections++
-  return true
-}
-
-function decrementConnections(clusterId: string): void {
-  const current = connectionCounts.get(clusterId) ?? 0
-  if (current > 0) connectionCounts.set(clusterId, current - 1)
-  if (current <= 1) connectionCounts.delete(clusterId)
-  if (globalConnections > 0) globalConnections--
-}
 
 export async function registerLogStreamRoute(app: FastifyInstance): Promise<void> {
   app.get(
@@ -76,8 +56,8 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
         return
       }
 
-      // 4. Check connection limits
-      if (!incrementConnections(clusterId)) {
+      // 4. Check connection limits (auto-purges destroyed sockets)
+      if (!connectionLimiter.add(clusterId, reply.raw)) {
         reply.code(429).send({ error: 'Too many log stream connections' })
         return
       }
@@ -87,7 +67,7 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
       try {
         kc = await clusterClientPool.getClient(clusterId)
       } catch (err) {
-        decrementConnections(clusterId)
+        connectionLimiter.remove(clusterId, reply.raw)
         reply.code(502).send({ error: 'Failed to connect to cluster' })
         return
       }
@@ -96,6 +76,8 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
       const origin = request.headers.origin
       const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
       const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
+
+      reply.hijack()
 
       reply.raw.writeHead(200, {
         'content-type': 'text/event-stream; charset=utf-8',
@@ -180,7 +162,7 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
             // Ignore abort errors
           }
         }
-        decrementConnections(clusterId)
+        connectionLimiter.remove(clusterId, reply.raw)
         try {
           reply.raw.end()
         } catch {

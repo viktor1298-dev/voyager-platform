@@ -14,7 +14,7 @@ import {
   MAX_RESOURCE_CONNECTIONS_PER_CLUSTER,
   SSE_HEARTBEAT_INTERVAL_MS,
 } from '@voyager/config/sse'
-import { trackConnection } from '../lib/connection-tracker.js'
+import { ConnectionLimiter, trackConnection } from '../lib/connection-tracker.js'
 import { clusters, db } from '@voyager/db'
 import type { WatchEvent, WatchEventBatch, WatchStatusEvent } from '@voyager/types'
 import { eq } from 'drizzle-orm'
@@ -28,26 +28,10 @@ const querySchema = z.object({
   clusterId: z.string().uuid(),
 })
 
-// ── Connection Limits ────────────────────────────────────────
-
-const connectionCounts = new Map<string, number>()
-let globalConnections = 0
-
-function incrementConnections(clusterId: string): boolean {
-  if (globalConnections >= MAX_RESOURCE_CONNECTIONS_GLOBAL) return false
-  const current = connectionCounts.get(clusterId) ?? 0
-  if (current >= MAX_RESOURCE_CONNECTIONS_PER_CLUSTER) return false
-  connectionCounts.set(clusterId, current + 1)
-  globalConnections++
-  return true
-}
-
-function decrementConnections(clusterId: string): void {
-  const current = connectionCounts.get(clusterId) ?? 0
-  if (current > 0) connectionCounts.set(clusterId, current - 1)
-  if (current <= 1) connectionCounts.delete(clusterId)
-  if (globalConnections > 0) globalConnections--
-}
+const connectionLimiter = new ConnectionLimiter(
+  MAX_RESOURCE_CONNECTIONS_PER_CLUSTER,
+  MAX_RESOURCE_CONNECTIONS_GLOBAL,
+)
 
 // ── Per-Cluster Shared Replay Buffer ────────────────────────
 // Shared across connections so reconnecting clients get events buffered
@@ -107,8 +91,8 @@ export async function handleResourceStream(
     return
   }
 
-  // 4. Check connection limits
-  if (!incrementConnections(clusterId)) {
+  // 4. Check connection limits (auto-purges destroyed sockets before checking)
+  if (!connectionLimiter.add(clusterId, reply.raw)) {
     reply.code(429).send({ error: 'Too many connections' })
     return
   }
@@ -135,6 +119,11 @@ export async function handleResourceStream(
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
   const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
 
+  // Tell Fastify we're handling the response ourselves — without this,
+  // Fastify tries to send its own response after the handler completes,
+  // causing "invalid payload type" errors that kill the SSE connection.
+  reply.hijack()
+
   reply.raw.writeHead(200, {
     'content-type': 'text/event-stream; charset=utf-8',
     'cache-control': 'no-cache, no-transform',
@@ -154,7 +143,19 @@ export async function handleResourceStream(
   voyagerEmitter.on(`watch-status:${clusterId}`, onWatchStatus)
 
   // 7. Subscribe to unified WatchManager (reference-counted informers)
-  await watchManager.subscribe(clusterId)
+  try {
+    await watchManager.subscribe(clusterId)
+  } catch (err) {
+    // subscribe() can throw if credential decryption or client creation fails.
+    // Headers are already sent, so write an error status event and let the
+    // client's reconnect logic handle it.
+    const errorMsg = err instanceof Error ? err.message : 'Unknown error'
+    writeEventWithId(
+      'status',
+      JSON.stringify({ clusterId, state: 'disconnected', error: errorMsg }),
+    )
+    console.error(`[resource-stream] WatchManager subscribe failed for ${clusterId}:`, errorMsg)
+  }
 
   // 8. Check Last-Event-ID for reconnect replay (CONN-01)
   const lastEventIdHeader = request.headers['last-event-id']
@@ -220,7 +221,7 @@ export async function handleResourceStream(
     voyagerEmitter.off(`watch-event:${clusterId}`, onWatchEvent)
     voyagerEmitter.off(`watch-status:${clusterId}`, onWatchStatus)
     watchManager.unsubscribe(clusterId)
-    decrementConnections(clusterId)
+    connectionLimiter.remove(clusterId, reply.raw)
     try {
       reply.raw.end()
     } catch {

@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { SSE_HEARTBEAT_INTERVAL_MS } from '@voyager/config'
-import { trackConnection } from '../lib/connection-tracker.js'
+import { ConnectionLimiter, trackConnection } from '../lib/connection-tracker.js'
 import { clusters, db } from '@voyager/db'
 import type { MetricsStreamEvent } from '@voyager/types'
 import { eq } from 'drizzle-orm'
@@ -14,27 +14,7 @@ const querySchema = z.object({
   clusterId: z.string().uuid(),
 })
 
-/** Per-cluster and global connection limits to prevent resource exhaustion */
-const MAX_CONNECTIONS_PER_CLUSTER = 10
-const MAX_CONNECTIONS_GLOBAL = 50
-const connectionCounts = new Map<string, number>()
-let globalConnections = 0
-
-function incrementConnections(clusterId: string): boolean {
-  if (globalConnections >= MAX_CONNECTIONS_GLOBAL) return false
-  const current = connectionCounts.get(clusterId) ?? 0
-  if (current >= MAX_CONNECTIONS_PER_CLUSTER) return false
-  connectionCounts.set(clusterId, current + 1)
-  globalConnections++
-  return true
-}
-
-function decrementConnections(clusterId: string): void {
-  const current = connectionCounts.get(clusterId) ?? 0
-  if (current > 0) connectionCounts.set(clusterId, current - 1)
-  if (current <= 1) connectionCounts.delete(clusterId)
-  if (globalConnections > 0) globalConnections--
-}
+const connectionLimiter = new ConnectionLimiter(10, 50)
 
 export async function registerMetricsStreamRoute(app: FastifyInstance): Promise<void> {
   app.get(
@@ -70,8 +50,8 @@ export async function registerMetricsStreamRoute(app: FastifyInstance): Promise<
         return
       }
 
-      // 4. Check connection limits
-      if (!incrementConnections(clusterId)) {
+      // 4. Check connection limits (auto-purges destroyed sockets)
+      if (!connectionLimiter.add(clusterId, reply.raw)) {
         reply.code(429).send({ error: 'Too many connections' })
         return
       }
@@ -80,6 +60,8 @@ export async function registerMetricsStreamRoute(app: FastifyInstance): Promise<
       const origin = request.headers.origin
       const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
       const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
+
+      reply.hijack()
 
       reply.raw.writeHead(200, {
         'content-type': 'text/event-stream; charset=utf-8',
@@ -119,7 +101,7 @@ export async function registerMetricsStreamRoute(app: FastifyInstance): Promise<
         clearInterval(heartbeat)
         voyagerEmitter.off(`metrics-stream:${clusterId}`, handler)
         metricsStreamJob.unsubscribe(clusterId, connectionId)
-        decrementConnections(clusterId)
+        connectionLimiter.remove(clusterId, reply.raw)
         try {
           reply.raw.end()
         } catch {

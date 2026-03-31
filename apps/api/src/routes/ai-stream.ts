@@ -83,6 +83,8 @@ export async function registerAiStreamRoute(app: FastifyInstance): Promise<void>
       return
     }
 
+    reply.hijack()
+
     reply.raw.writeHead(200, {
       'content-type': 'text/event-stream; charset=utf-8',
       'cache-control': 'no-cache, no-transform',
