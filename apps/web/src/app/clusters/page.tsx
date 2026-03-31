@@ -472,14 +472,18 @@ export default function ClustersPage() {
                 source: 'db',
               })
               return (
-                <button
+                <div
                   key={row.id}
-                  type="button"
+                  className="relative w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 cursor-pointer hover:border-[var(--color-accent)]/40 hover:bg-white/[0.02] transition-colors space-y-3 text-left"
                   onClick={() => router.push(`/clusters/${getClusterRouteSegment(row)}`)}
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 cursor-pointer hover:border-[var(--color-accent)]/40 hover:bg-white/[0.02] transition-colors space-y-3 text-left"
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' && router.push(`/clusters/${getClusterRouteSegment(row)}`)
+                  }
+                  role="button"
+                  tabIndex={0}
                   aria-label={`View cluster ${row.name}`}
                 >
-                  {/* Top: Provider + Name + Health */}
+                  {/* Top: Provider + Name + Health + Delete */}
                   <div className="flex items-center gap-2.5">
                     <ProviderLogo
                       provider={row.provider ?? 'default'}
@@ -493,6 +497,12 @@ export default function ClustersPage() {
                     <Badge variant={healthBadgeVariant(liveStatus)}>
                       {healthBadgeLabel(liveStatus)}
                     </Badge>
+                    <ClusterActions
+                      clusterId={row.id}
+                      clusterName={row.name}
+                      clusterRouteSegment={getClusterRouteSegment(row)}
+                      onDelete={() => setDeleteTarget({ id: row.id, name: row.name })}
+                    />
                   </div>
 
                   {/* Metrics grid */}
@@ -538,7 +548,7 @@ export default function ClustersPage() {
                       {formatLastSeen(row.updatedAt, isClient)}
                     </span>
                   </div>
-                </button>
+                </div>
               )
             })}
           </div>
