@@ -190,6 +190,15 @@ Never use `killall node` to clean up dev servers — it also kills Docker port f
 ### E2E: Check URL Before Fixing Selectors
 When E2E tests fail on "element not found" — first verify the test navigates to the correct URL. Fix the URL before touching selectors or timeouts.
 
+### NamespaceGroup `forceOpen` — Command, Not Lock
+`NamespaceGroup` uses `forceOpen` to fold/unfold all namespaces. It syncs to internal state via `useEffect` — individual clicks always work. **Never** make `forceOpen` block `onOpenChange` (the old bug made namespaces unclickable after Fold NS).
+
+### GroupedTabBar — Dropdown Uses `position: fixed`
+Tab group dropdowns render with `position: fixed` + `getBoundingClientRect()`. The tab bar always uses `overflow-x: auto`. **Never** toggle overflow to `overflow-visible` for dropdowns — it resets `scrollLeft` to 0, snapping tabs back to the left on narrow screens.
+
+### Helm `useHelmReleases` — Hybrid SSE + tRPC
+SSE provides live presence (status, revision), tRPC `helm.list` provides decoded metadata (chartVersion, updatedAt). Merged by `namespace/name` key. **Never** remove the tRPC query — SSE can't decode Helm's base64+gzip binary.
+
 ## 🚨 QA Gate Rules — MANDATORY
 
 QA validation after code changes **MUST** follow these rules. Violations = QA FAIL regardless of visual appearance.
@@ -266,7 +275,7 @@ Transform Voyager Platform from a read-only K8s dashboard into a full Lens-alter
 - **Design system**: Must follow `docs/DESIGN.md` B-style animation standards
 - **Graph library**: React Flow (@xyflow/react) for topology and network policy graphs — dagre for layout
 - **Terminal**: xterm.js for pod exec, WebSocket bridge to K8s API (first WS in codebase, everything else is SSE)
-- **Helm**: Read-only in Phase 9 (list, view values, revision history). Upgrade/rollback mutations deferred.
+- **Helm**: Read-only (list with chart version/timestamps, per-revision values, revision diff). `useHelmReleases` uses hybrid SSE + tRPC merge (SSE for live status, tRPC `helm.list` for decoded metadata). Upgrade/rollback mutations deferred.
 - **Port forwarding**: Copy kubectl command only — no actual proxy from web app
 <!-- GSD:project-end -->
 
