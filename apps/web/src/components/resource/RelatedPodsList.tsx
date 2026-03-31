@@ -4,6 +4,7 @@ import { Box } from 'lucide-react'
 import { useMemo } from 'react'
 import { useClusterResources } from '@/hooks/useResources'
 import { RelatedResourceLink } from './RelatedResourceLink'
+import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 
 interface PodItem {
   name: string
@@ -16,12 +17,6 @@ interface RelatedPodsListProps {
   clusterId: string
   matchLabels: Record<string, string>
   title?: string
-}
-
-function statusDot(status: string): string {
-  if (status === 'Running' || status === 'Succeeded') return 'bg-[var(--color-status-active)]'
-  if (status === 'Pending') return 'bg-[var(--color-status-warning)]'
-  return 'bg-[var(--color-status-error)]'
 }
 
 /**
@@ -59,32 +54,12 @@ export function RelatedPodsList({
       </p>
       {matchingPods.map((pod) => (
         <div key={`${pod.namespace}/${pod.name}`} className="flex items-center gap-2">
-          <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusDot(pod.status)}`} />
           <RelatedResourceLink
             tab="pods"
             resourceKey={`${pod.namespace}/${pod.name}`}
             label={pod.name}
           />
-          <span
-            className="text-[10px] font-mono px-1 py-0.5 rounded shrink-0"
-            style={{
-              color:
-                pod.status === 'Running' || pod.status === 'Succeeded'
-                  ? 'var(--color-status-active)'
-                  : pod.status === 'Pending'
-                    ? 'var(--color-status-warning)'
-                    : 'var(--color-status-error)',
-              background: `color-mix(in srgb, ${
-                pod.status === 'Running' || pod.status === 'Succeeded'
-                  ? 'var(--color-status-active)'
-                  : pod.status === 'Pending'
-                    ? 'var(--color-status-warning)'
-                    : 'var(--color-status-error)'
-              } 12%, transparent)`,
-            }}
-          >
-            {pod.status}
-          </span>
+          <ResourceStatusBadge status={pod.status} size="sm" />
         </div>
       ))}
     </div>

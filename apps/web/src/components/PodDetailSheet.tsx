@@ -9,6 +9,7 @@ import { PodLogStream } from '@/components/PodLogStream'
 import { timeAgo } from '@/lib/time-utils'
 import { InlineAiTrigger } from '@/components/ai/InlineAiTrigger'
 import { InlineAiPanel } from '@/components/ai/InlineAiPanel'
+import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 
 interface ContainerInfo {
   name: string
@@ -56,28 +57,11 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const color =
-    status === 'Running' || status === 'Succeeded'
-      ? 'var(--color-status-active)'
-      : status === 'Pending'
-        ? 'var(--color-status-warning)'
-        : 'var(--color-status-error)'
-  return (
-    <span className="inline-flex items-center gap-2">
-      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-      <span style={{ color }} className="text-[13px] font-semibold">
-        {status}
-      </span>
-    </span>
-  )
-}
-
 function OverviewTab({ pod }: { pod: PodInfo }) {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--surface,#14141f)]">
-        <InfoRow label="Status" value={<StatusBadge status={pod.status} />} />
+        <InfoRow label="Status" value={<ResourceStatusBadge status={pod.status} />} />
         <InfoRow
           label="Namespace"
           value={<span className="font-mono text-xs">{pod.namespace}</span>}
