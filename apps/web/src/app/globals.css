@@ -277,6 +277,13 @@
   --color-terminal-fg: #c0caf5;
   --color-terminal-cursor: #c0caf5;
   --color-terminal-selection: rgba(99, 110, 123, 0.4);
+
+  /* Diff viewer */
+  --color-diff-added-bg: rgba(16, 185, 129, 0.08);
+  --color-diff-added-text: #86efac;
+  --color-diff-removed-bg: rgba(248, 113, 113, 0.08);
+  --color-diff-removed-text: #fca5a5;
+  --color-diff-modified-bg: rgba(96, 165, 250, 0.08);
 }
 
 /* Light theme overrides */
@@ -398,6 +405,13 @@ html.light {
   --color-terminal-fg: #d4d4d4;
   --color-terminal-cursor: #d4d4d4;
   --color-terminal-selection: rgba(99, 110, 123, 0.5);
+
+  /* Diff viewer */
+  --color-diff-added-bg: rgba(16, 185, 129, 0.1);
+  --color-diff-added-text: #059669;
+  --color-diff-removed-bg: rgba(239, 68, 68, 0.1);
+  --color-diff-removed-text: #dc2626;
+  --color-diff-modified-bg: rgba(59, 130, 246, 0.1);
 }
 
 @media (max-width: 768px) {
