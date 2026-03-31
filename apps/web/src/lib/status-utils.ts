@@ -1,3 +1,5 @@
+import { resolveResourceStatus } from './resource-status.js'
+
 /** Returns a CSS color variable string for cluster status */
 export function getStatusColor(status: string): string {
   if (status === 'healthy') return 'var(--color-status-active)'
@@ -38,4 +40,9 @@ export function severityColor(kind: string): string {
   if (kind === 'Warning') return 'var(--color-status-warning)'
   if (kind === 'Error') return 'var(--color-status-error)'
   return 'var(--color-accent)'
+}
+
+/** Returns a CSS variable string for any K8s resource status */
+export function getResourceStatusColor(status: string): string {
+  return resolveResourceStatus(status).colorVar
 }
