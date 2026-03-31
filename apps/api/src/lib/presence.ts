@@ -4,6 +4,8 @@ import { CACHE_TTL } from '@voyager/config'
 const PRESENCE_SWEEP_INTERVAL_MS = 15_000
 /** Send a keepalive every 25s to prevent proxy/LB idle-connection timeouts (typically 60s) */
 const PRESENCE_KEEPALIVE_INTERVAL_MS = 25_000
+/** Hard cap on concurrent tracked users to prevent unbounded memory growth */
+const MAX_PRESENCE_USERS = 1000
 
 export interface OnlinePresenceUser {
   id: string
@@ -97,6 +99,17 @@ export function heartbeatPresence(input: {
 }): OnlinePresenceUser {
   const existing = presenceStore.get(input.id)
   const ts = nowTs()
+
+  // Hard cap: reject new users when store is full (existing users can still update)
+  if (!existing && presenceStore.size >= MAX_PRESENCE_USERS) {
+    return toOnlineUser({
+      id: input.id,
+      name: input.name,
+      avatar: input.avatar,
+      currentPage: input.currentPage,
+      lastSeenTs: ts,
+    })
+  }
 
   const nextEntry: PresenceEntry = {
     id: input.id,

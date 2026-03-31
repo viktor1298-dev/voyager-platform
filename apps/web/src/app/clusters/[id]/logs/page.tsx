@@ -3,6 +3,7 @@
 import { RefreshCw } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
+import { QueryError } from '@/components/ErrorBoundary'
 import { LogViewer } from '@/components/logs'
 import { useEffect, useMemo, useState } from 'react'
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from 'react-resizable-panels'
@@ -201,11 +202,10 @@ export default function LogsPage() {
 
           {/* Log output — beautified via LogViewer */}
           {logsQuery.isError ? (
-            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-log-bg)] p-4 flex-1">
-              <p className="text-xs font-mono" style={{ color: 'var(--color-status-error)' }}>
-                Error: {logsQuery.error?.message ?? 'Failed to fetch logs'}
-              </p>
-            </div>
+            <QueryError
+              message={logsQuery.error?.message ?? 'Failed to fetch logs'}
+              onRetry={() => logsQuery.refetch()}
+            />
           ) : (
             <LogViewer
               lines={logLines}

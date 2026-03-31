@@ -21,6 +21,7 @@ interface CacheEntry {
   clusterId: string
   tokenExpiresAt: number | null // IP3-006: token expiry tracking
   connectionConfig: Record<string, unknown>
+  lastAccessedAt: number // True LRU eviction timestamp
 }
 
 export class ClusterClientPool {
@@ -43,6 +44,7 @@ export class ClusterClientPool {
       }
 
       if (cached.expiresAt > now) {
+        cached.lastAccessedAt = now
         return cached.kc
       }
     }
@@ -63,15 +65,15 @@ export class ClusterClientPool {
     const kc = await createKubeConfigForCluster(cluster.provider, config as ClusterConnectionConfig)
 
     if (this.cache.size >= K8S_CONFIG.CLIENT_POOL_MAX) {
-      let oldestKey: string | undefined
-      let oldestTime = Number.POSITIVE_INFINITY
+      let lruKey: string | undefined
+      let lruTime = Number.POSITIVE_INFINITY
       for (const [key, entry] of this.cache) {
-        if (entry.expiresAt < oldestTime) {
-          oldestTime = entry.expiresAt
-          oldestKey = key
+        if (entry.lastAccessedAt < lruTime) {
+          lruTime = entry.lastAccessedAt
+          lruKey = key
         }
       }
-      if (oldestKey) this.cache.delete(oldestKey)
+      if (lruKey) this.cache.delete(lruKey)
     }
 
     // IP3-006: Calculate token expiry based on provider
@@ -85,6 +87,7 @@ export class ClusterClientPool {
       clusterId,
       tokenExpiresAt,
       connectionConfig: config,
+      lastAccessedAt: now,
     })
     return kc
   }

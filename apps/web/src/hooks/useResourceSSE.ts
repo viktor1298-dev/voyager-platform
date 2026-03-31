@@ -80,11 +80,13 @@ export function useResourceSSE(clusterId: string | null): { connectionState: Con
       }, 10_000) // Check every 10 seconds
     }
 
-    /** Schedule a reconnect with exponential backoff (CONN-03) */
+    /** Schedule a reconnect with exponential backoff + jitter (CONN-03) */
     function scheduleReconnect() {
-      const delay = reconnectDelayRef.current
+      const baseDelay = reconnectDelayRef.current
+      const jitter = Math.random() * 1000
+      const delay = baseDelay + jitter
       reconnectDelayRef.current = Math.min(
-        delay * SSE_RECONNECT_BACKOFF_MULTIPLIER,
+        baseDelay * SSE_RECONNECT_BACKOFF_MULTIPLIER,
         SSE_MAX_RECONNECT_DELAY_MS,
       )
       reconnectTimeoutRef.current = setTimeout(connect, delay)

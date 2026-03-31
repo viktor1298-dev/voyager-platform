@@ -160,7 +160,7 @@ export function ConstellationLoader({ label = 'Loading resources...' }: Constell
       aria-busy="true"
       aria-label={label}
     >
-      <canvas ref={canvasRef} className="absolute inset-0" />
+      <canvas ref={canvasRef} className="absolute inset-0" aria-hidden="true" />
       <div className="relative z-10 flex flex-col items-center gap-2">
         <span className="text-sm font-medium text-[var(--color-text-secondary)]">{label}</span>
         <span className="text-xs text-[var(--color-text-dim)]">Connecting to cluster</span>

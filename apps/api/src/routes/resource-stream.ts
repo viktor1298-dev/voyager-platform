@@ -12,7 +12,6 @@
 import {
   MAX_RESOURCE_CONNECTIONS_GLOBAL,
   MAX_RESOURCE_CONNECTIONS_PER_CLUSTER,
-  SSE_EVENT_BUFFER_SIZE,
   SSE_HEARTBEAT_INTERVAL_MS,
 } from '@voyager/config/sse'
 import { trackConnection } from '../lib/connection-tracker.js'
@@ -48,6 +47,29 @@ function decrementConnections(clusterId: string): void {
   if (current > 0) connectionCounts.set(clusterId, current - 1)
   if (current <= 1) connectionCounts.delete(clusterId)
   if (globalConnections > 0) globalConnections--
+}
+
+// ── Per-Cluster Shared Replay Buffer ────────────────────────
+// Shared across connections so reconnecting clients get events buffered
+// during their absence. Capped at 100 events per cluster.
+const REPLAY_BUFFER_MAX = 100
+const clusterReplayBuffers = new Map<string, Array<{ id: number; raw: string }>>()
+const clusterEventCounters = new Map<string, number>()
+
+function getClusterReplayBuffer(clusterId: string): Array<{ id: number; raw: string }> {
+  let buf = clusterReplayBuffers.get(clusterId)
+  if (!buf) {
+    buf = []
+    clusterReplayBuffers.set(clusterId, buf)
+  }
+  return buf
+}
+
+function getNextEventId(clusterId: string): number {
+  const current = clusterEventCounters.get(clusterId) ?? 0
+  const next = current + 1
+  clusterEventCounters.set(clusterId, next)
+  return next
 }
 
 // ── Route Handler ────────────────────────────────────────────
@@ -91,15 +113,14 @@ export async function handleResourceStream(
     return
   }
 
-  // Per-connection event ID counter and replay buffer (CONN-01)
-  let eventCounter = 0
-  const replayBuffer: Array<{ id: number; raw: string }> = []
+  // Per-cluster shared replay buffer so reconnecting clients get missed events
+  const replayBuffer = getClusterReplayBuffer(clusterId)
 
   function writeEventWithId(eventType: string, data: string): void {
-    eventCounter++
-    const raw = `event: ${eventType}\nid: ${eventCounter}\ndata: ${data}\n\n`
-    replayBuffer.push({ id: eventCounter, raw })
-    if (replayBuffer.length > SSE_EVENT_BUFFER_SIZE) replayBuffer.shift()
+    const id = getNextEventId(clusterId)
+    const raw = `event: ${eventType}\nid: ${id}\ndata: ${data}\n\n`
+    replayBuffer.push({ id, raw })
+    if (replayBuffer.length > REPLAY_BUFFER_MAX) replayBuffer.shift()
     try {
       reply.raw.write(raw)
     } catch {

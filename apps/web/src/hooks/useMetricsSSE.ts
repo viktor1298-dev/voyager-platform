@@ -99,10 +99,12 @@ export function useMetricsSSE(
       eventSourceRef.current = null
       setConnectionState('reconnecting')
 
-      // Schedule reconnect with exponential backoff
-      const delay = reconnectDelayRef.current
+      // Schedule reconnect with exponential backoff + jitter
+      const baseDelay = reconnectDelayRef.current
+      const jitter = Math.random() * 1000
+      const delay = baseDelay + jitter
       reconnectDelayRef.current = Math.min(
-        delay * SSE_RECONNECT_BACKOFF_MULTIPLIER,
+        baseDelay * SSE_RECONNECT_BACKOFF_MULTIPLIER,
         SSE_MAX_RECONNECT_DELAY_MS,
       )
       reconnectTimeoutRef.current = setTimeout(connect, delay)

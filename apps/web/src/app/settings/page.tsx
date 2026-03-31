@@ -230,7 +230,7 @@ export default function SettingsGeneralPage() {
     setLastSyncLabel(formatSyncTime())
     const timer = window.setInterval(() => {
       setLastSyncLabel(formatSyncTime())
-    }, 1_000)
+    }, 30_000)
 
     return () => window.clearInterval(timer)
   }, [isConnected, isHydrated])

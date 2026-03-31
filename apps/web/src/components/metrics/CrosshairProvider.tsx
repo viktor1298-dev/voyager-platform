@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useRef, useCallback, useMemo, useState } from 'react'
+import { createContext, useContext, useRef, useCallback, useEffect, useMemo, useState } from 'react'
 
 interface CrosshairState {
   /** The active timestamp (ISO string) being hovered, or null when not hovering */
@@ -45,6 +45,16 @@ export function CrosshairProvider({ children }: { children: React.ReactNode }) {
     pendingRef.current = null
     setActiveTimestamp(null)
     setActiveX(null)
+  }, [])
+
+  // Cancel any pending rAF on unmount to avoid state updates after unmount
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
+    }
   }, [])
 
   const value = useMemo(

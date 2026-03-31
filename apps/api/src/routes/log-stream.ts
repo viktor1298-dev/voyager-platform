@@ -139,6 +139,7 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
               `event: error\ndata: ${JSON.stringify({ message: 'Maximum log lines reached', code: 'MAX_LINES' })}\n\n`,
             )
             logStream.destroy()
+            cleanup()
             return
           }
         }

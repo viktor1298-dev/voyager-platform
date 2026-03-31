@@ -64,6 +64,9 @@ export async function registerPodTerminalRoute(app: FastifyInstance): Promise<vo
     })
 
     // 6. Forward WebSocket messages to stdin
+    stdin.on('error', (err) => {
+      app.log.error({ err }, 'stdin write error')
+    })
     socket.on('message', (data: Buffer | ArrayBuffer | Buffer[]) => {
       const buf = Buffer.isBuffer(data) ? data : Buffer.from(data as ArrayBuffer)
       stdin.write(buf)

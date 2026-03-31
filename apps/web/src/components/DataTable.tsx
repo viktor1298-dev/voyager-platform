@@ -283,6 +283,7 @@ export function DataTable<TData>({
 
       {/* Table Container */}
       <div
+        aria-live="polite"
         className="w-full max-w-full rounded-xl border border-[var(--color-border)] overflow-hidden"
         style={{
           background: 'var(--glass-bg)',

@@ -163,6 +163,8 @@ CREATE TABLE IF NOT EXISTS alerts (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS idx_alerts_enabled ON alerts (enabled) WHERE enabled = true;
+
 CREATE TABLE IF NOT EXISTS alert_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   alert_id UUID NOT NULL REFERENCES alerts(id) ON DELETE CASCADE,
@@ -415,7 +417,7 @@ CREATE INDEX IF NOT EXISTS "idx_anomaly_rules_cluster" ON "anomaly_rules" ("clus
 CREATE TABLE IF NOT EXISTS "audit_log" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "user_id" text NOT NULL,
-  "user_email" text,
+  "user_email" text NOT NULL DEFAULT '',
   "action" varchar(100) NOT NULL,
   "resource" varchar(100) NOT NULL,
   "resource_id" text,

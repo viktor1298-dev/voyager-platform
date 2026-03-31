@@ -48,12 +48,16 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       queueQuickPrompt: (prompt) => set({ quickPrompt: prompt }),
       clearQuickPrompt: () => set({ quickPrompt: null }),
       appendMessage: (clusterId, message) =>
-        set((state) => ({
-          chatByCluster: {
-            ...state.chatByCluster,
-            [clusterId]: [...(state.chatByCluster[clusterId] ?? []), message],
-          },
-        })),
+        set((state) => {
+          const current = state.chatByCluster[clusterId] ?? []
+          const updated = [...current, message]
+          return {
+            chatByCluster: {
+              ...state.chatByCluster,
+              [clusterId]: updated.length > 100 ? updated.slice(-100) : updated,
+            },
+          }
+        }),
       setClusterMessages: (clusterId, messages) =>
         set((state) => {
           const current = state.chatByCluster[clusterId] ?? []
