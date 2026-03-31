@@ -2,6 +2,7 @@
 export * from './sse.js'
 export * from './karpenter.js'
 export * from './ai-keys-contract.js'
+export * from './relations.js'
 
 export interface ClusterInfo {
   name: string
