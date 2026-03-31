@@ -13,6 +13,7 @@ const updateSetMock = vi.fn(() => ({ where: updateWhereMock }))
 const updateMock = vi.fn(() => ({ set: updateSetMock }))
 
 const setRoleMock = vi.fn()
+const signInEmailMock = vi.fn()
 const createBootstrapUserMock = vi.fn()
 
 vi.mock('@voyager/db', () => ({
@@ -37,6 +38,7 @@ vi.mock('../lib/auth.js', () => ({
   auth: {
     api: {
       setRole: setRoleMock,
+      signInEmail: signInEmailMock,
     },
   },
 }))
@@ -97,6 +99,7 @@ describe('ensureBootstrapUser', () => {
       .mockResolvedValueOnce([
         { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
       ])
+    signInEmailMock.mockResolvedValueOnce({ user: { id: 'viewer-existing' } })
 
     const { ensureBootstrapUser } = await import('../lib/ensure-bootstrap-user.js')
     const userId = await ensureBootstrapUser({
@@ -119,6 +122,7 @@ describe('ensureBootstrapUser', () => {
       .mockResolvedValueOnce([
         { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
       ])
+    signInEmailMock.mockResolvedValueOnce({ user: { id: 'viewer-existing' } })
     setRoleMock.mockResolvedValueOnce({})
 
     const { ensureBootstrapUser } = await import('../lib/ensure-bootstrap-user.js')
@@ -144,6 +148,7 @@ describe('ensureBootstrapUser', () => {
         { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
       ])
       .mockResolvedValueOnce([{ role: 'viewer' }])
+    signInEmailMock.mockResolvedValueOnce({ user: { id: 'viewer-existing' } })
     setRoleMock.mockRejectedValueOnce({ statusCode: 401 })
 
     const { ensureBootstrapUser } = await import('../lib/ensure-bootstrap-user.js')

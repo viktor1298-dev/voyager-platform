@@ -49,7 +49,24 @@ function createCaller(user: Context['user'] = null) {
       from: vi.fn().mockImplementation(() => {
         // Return a thenable that also has groupBy for node counts query
         const result = Promise.resolve([
-          { id: '1', name: 'test', provider: 'minikube', environment: 'development' },
+          {
+            id: '1',
+            name: 'test',
+            provider: 'minikube',
+            environment: 'development',
+            endpoint: null,
+            status: null,
+            healthStatus: null,
+            lastHealthCheck: null,
+            version: null,
+            nodesCount: null,
+            credentialRef: null,
+            isActive: true,
+            lastConnectedAt: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            hasCredentials: false,
+          },
         ])
         ;(result as any).groupBy = vi.fn().mockResolvedValue([{ clusterId: '1', count: 2 }])
         ;(result as any).where = vi.fn().mockResolvedValue([])
@@ -88,16 +105,15 @@ describe('clusters.list', () => {
   it('returns clusters with node counts', async () => {
     const caller = createCaller({ id: 'u1', email: 'a@b.com', name: 'Admin', role: 'admin' })
     const result = await caller.clusters.list()
-    expect(result).toEqual([
-      {
-        id: '1',
-        name: 'test',
-        provider: 'minikube',
-        environment: 'development',
-        nodeCount: 2,
-        hasCredentials: false,
-      },
-    ])
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({
+      id: '1',
+      name: 'test',
+      provider: 'minikube',
+      environment: 'development',
+      nodeCount: 2,
+      hasCredentials: false,
+    })
   })
 })
 

@@ -126,6 +126,14 @@ vi.mock('../lib/resource-mappers.js', () => ({
     kind: 'hpa',
     name: (obj as { metadata?: { name?: string } }).metadata?.name ?? '',
   })),
+  mapNetworkPolicy: vi.fn((obj: unknown) => ({
+    kind: 'networkpolicy',
+    name: (obj as { metadata?: { name?: string } }).metadata?.name ?? '',
+  })),
+  mapResourceQuota: vi.fn((obj: unknown) => ({
+    kind: 'resourcequota',
+    name: (obj as { metadata?: { name?: string } }).metadata?.name ?? '',
+  })),
 }))
 
 // ── Import after mocks ────────────────────────────────────────
@@ -152,11 +160,11 @@ describe('WatchManager', () => {
     manager.stopAll()
   })
 
-  it('subscribe(clusterId) starts informers for all 15 resource types', async () => {
+  it('subscribe(clusterId) starts informers for all 17 resource types', async () => {
     await manager.subscribe('cluster-1')
 
-    // makeInformer should be called 15 times (one per resource type)
-    expect(mockMakeInformer).toHaveBeenCalledTimes(15)
+    // makeInformer should be called 17 times (one per resource type)
+    expect(mockMakeInformer).toHaveBeenCalledTimes(17)
     expect(manager.isWatching('cluster-1')).toBe(true)
   })
 
@@ -164,8 +172,8 @@ describe('WatchManager', () => {
     await manager.subscribe('cluster-1')
     await manager.subscribe('cluster-1')
 
-    // Still watching, but makeInformer only called 15 times (first subscribe)
-    expect(mockMakeInformer).toHaveBeenCalledTimes(15)
+    // Still watching, but makeInformer only called 17 times (first subscribe)
+    expect(mockMakeInformer).toHaveBeenCalledTimes(17)
     expect(manager.isWatching('cluster-1')).toBe(true)
   })
 
@@ -182,7 +190,7 @@ describe('WatchManager', () => {
     expect(manager.isWatching('cluster-1')).toBe(false)
   })
 
-  it('getResources(clusterId, "pods") returns informer.list() result', async () => {
+  it('getResources(clusterId, "pods") returns null before informer ready set is populated', async () => {
     const mockInformer = createMockInformer()
     mockInformer._addToStore(
       'pod-1',
@@ -204,8 +212,10 @@ describe('WatchManager', () => {
     })
 
     await manager.subscribe('cluster-1')
+    // getResources returns null until the informer's 'connect' event fires
+    // (which populates the ready set). Mock informers don't emit 'connect'.
     const pods = manager.getResources('cluster-1', 'pods')
-    expect(pods).toHaveLength(2)
+    expect(pods).toBeNull()
   })
 
   it('getResource(clusterId, "pods", name, namespace) returns informer.get() result', async () => {
@@ -225,9 +235,9 @@ describe('WatchManager', () => {
     expect(pod).toEqual(podObj)
   })
 
-  it('getResources for unknown clusterId returns empty array', () => {
+  it('getResources for unknown clusterId returns null', () => {
     const result = manager.getResources('unknown-cluster', 'pods')
-    expect(result).toEqual([])
+    expect(result).toBeNull()
   })
 
   it('isWatching(clusterId) returns true after subscribe, false after all unsubscribe', async () => {

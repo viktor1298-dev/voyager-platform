@@ -13,6 +13,7 @@ const updateSetMock = vi.fn(() => ({ where: updateWhereMock }))
 const updateMock = vi.fn(() => ({ set: updateSetMock }))
 
 const setRoleMock = vi.fn()
+const signInEmailMock = vi.fn()
 const createBootstrapUserMock = vi.fn()
 
 vi.mock('@voyager/db', () => ({
@@ -37,6 +38,7 @@ vi.mock('../lib/auth.js', () => ({
   auth: {
     api: {
       setRole: setRoleMock,
+      signInEmail: signInEmailMock,
     },
   },
 }))
@@ -91,6 +93,7 @@ describe('ensureAdminUser', () => {
       .mockResolvedValueOnce([
         { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
       ])
+    signInEmailMock.mockResolvedValueOnce({ user: { id: 'admin-001' } })
 
     const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
     await ensureAdminUser()
@@ -130,6 +133,7 @@ describe('ensureAdminUser', () => {
         { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
       ])
       .mockResolvedValueOnce([{ role: 'admin' }])
+    signInEmailMock.mockResolvedValueOnce({ user: { id: 'admin-existing' } })
     setRoleMock.mockRejectedValueOnce({ statusCode: 401, status: 'UNAUTHORIZED' })
 
     const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
@@ -171,6 +175,7 @@ describe('ensureAdminUser', () => {
         { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
       ])
       .mockResolvedValueOnce([{ role: 'user' }])
+    signInEmailMock.mockResolvedValueOnce({ user: { id: 'admin-existing' } })
     setRoleMock.mockRejectedValueOnce({ statusCode: 401 })
 
     const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')
@@ -185,6 +190,7 @@ describe('ensureAdminUser', () => {
       .mockResolvedValueOnce([
         { providerId: 'credential', password: 'scrypt:ln=14,r=8,p=1$abc$def' },
       ])
+    signInEmailMock.mockResolvedValueOnce({ user: { id: 'admin-existing' } })
     setRoleMock.mockRejectedValueOnce(new Error('boom'))
 
     const { ensureAdminUser } = await import('../lib/ensure-admin-user.js')

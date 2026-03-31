@@ -1,6 +1,28 @@
 import type * as k8s from '@kubernetes/client-node'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+// Mock DB and auth to prevent real DB connections
+vi.mock('@voyager/db', () => ({
+  db: {},
+  clusters: { id: 'id' },
+  healthHistory: { clusterId: 'clusterId' },
+}))
+
+vi.mock('../lib/auth.js', () => ({
+  auth: {
+    api: { getSession: vi.fn().mockResolvedValue(null) },
+    handler: vi.fn(),
+  },
+}))
+
+vi.mock('../lib/sentry.js', () => ({
+  captureException: vi.fn(),
+}))
+
+vi.mock('../lib/authorization.js', () => ({
+  createAuthorizationService: vi.fn(),
+}))
+
 // Mock cluster-client-pool
 const mockGetClient = vi.fn()
 vi.mock('../lib/cluster-client-pool.js', () => ({

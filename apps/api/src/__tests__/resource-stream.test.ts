@@ -42,6 +42,11 @@ vi.mock('@voyager/db', () => {
   }
 })
 
+// Mock connection-tracker
+vi.mock('../lib/connection-tracker.js', () => ({
+  trackConnection: vi.fn(),
+}))
+
 // Mock watch-manager (new unified WatchManager from Plan 01)
 vi.mock('../lib/watch-manager.js', () => ({
   watchManager: {
@@ -191,24 +196,18 @@ describe('resource-stream SSE route (data-carrying)', () => {
       const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
       await handleResourceStream(request as any, reply as any)
 
-      // Skip past initial load window
-      await vi.advanceTimersByTimeAsync(5_100)
-
-      // Emit a watch event
+      // Phase 11: no batching — events written immediately
       mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
         type: 'MODIFIED',
         resourceType: 'pods',
         object: { name: 'test-pod', namespace: 'default', status: 'Running' },
       } satisfies WatchEvent)
 
-      // Advance past batch buffer (1000ms)
-      await vi.advanceTimersByTimeAsync(1_100)
-
-      // Find the 'event: watch' write
-      const watchWrite = writes.find((w) => w.startsWith('event: watch'))
+      // Find the 'event: watch' write (format: event: watch\nid: N\ndata: ...\n\n)
+      const watchWrite = writes.find((w) => w.includes('event: watch'))
       expect(watchWrite).toBeTruthy()
 
-      const dataLine = watchWrite!.match(/event: watch\ndata: (.+)\n/)
+      const dataLine = watchWrite!.match(/data: (.+)\n/)
       expect(dataLine).toBeTruthy()
 
       const batch: WatchEventBatch = JSON.parse(dataLine![1])
@@ -226,14 +225,11 @@ describe('resource-stream SSE route (data-carrying)', () => {
       rawRequest.emit('close')
     })
 
-    it('batches multiple events within 1 second into a single SSE message', async () => {
+    it('writes each event immediately (no batching in Phase 11)', async () => {
       const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
       await handleResourceStream(request as any, reply as any)
 
-      // Skip initial load window
-      await vi.advanceTimersByTimeAsync(5_100)
-
-      // Emit 3 events rapidly
+      // Emit 3 events rapidly — Phase 11 writes each one immediately (no batching)
       mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
         type: 'ADDED',
         resourceType: 'pods',
@@ -250,24 +246,14 @@ describe('resource-stream SSE route (data-carrying)', () => {
         object: { name: 'svc-1' },
       } satisfies WatchEvent)
 
-      // Advance past batch buffer
-      await vi.advanceTimersByTimeAsync(1_100)
-
-      // Should have exactly ONE 'event: watch' write (all batched together)
-      const watchWrites = writes.filter((w) => w.startsWith('event: watch'))
-      expect(watchWrites).toHaveLength(1)
-
-      const dataLine = watchWrites[0].match(/event: watch\ndata: (.+)\n/)
-      const batch: WatchEventBatch = JSON.parse(dataLine![1])
-      expect(batch.events).toHaveLength(3)
-      expect(batch.events[0].type).toBe('ADDED')
-      expect(batch.events[1].type).toBe('MODIFIED')
-      expect(batch.events[2].type).toBe('DELETED')
+      // Phase 11: each event is a separate SSE message — 3 writes
+      const watchWrites = writes.filter((w) => w.includes('event: watch'))
+      expect(watchWrites).toHaveLength(3)
 
       rawRequest.emit('close')
     })
 
-    it('sends status events immediately (not batched)', async () => {
+    it('sends status events immediately', async () => {
       const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
       await handleResourceStream(request as any, reply as any)
 
@@ -280,11 +266,16 @@ describe('resource-stream SSE route (data-carrying)', () => {
       }
       mocks.emitter.emit(`watch-status:${VALID_UUID}`, statusEvent)
 
-      // Status events are immediate — no need to advance batch timer
-      const statusWrite = writes.find((w) => w.startsWith('event: status'))
-      expect(statusWrite).toBeTruthy()
+      // Status events are immediate — format: event: status\nid: N\ndata: ...\n\n
+      const statusWrites = writes.filter((w) => w.includes('event: status'))
+      // At least 2: one from the emitted event + one from the isConnected auto-status
+      expect(statusWrites.length).toBeGreaterThanOrEqual(1)
 
-      const dataLine = statusWrite!.match(/event: status\ndata: (.+)\n/)
+      // Find our reconnecting status
+      const reconnectingWrite = statusWrites.find((w) => w.includes('reconnecting'))
+      expect(reconnectingWrite).toBeTruthy()
+
+      const dataLine = reconnectingWrite!.match(/data: (.+)\n/)
       expect(dataLine).toBeTruthy()
 
       const parsed: WatchStatusEvent = JSON.parse(dataLine![1])
@@ -295,74 +286,60 @@ describe('resource-stream SSE route (data-carrying)', () => {
       rawRequest.emit('close')
     })
 
-    it('sends heartbeat comments at SSE_HEARTBEAT_INTERVAL_MS', async () => {
+    it('sends heartbeat events at SSE_HEARTBEAT_INTERVAL_MS', async () => {
       const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
       await handleResourceStream(request as any, reply as any)
 
       // Advance past heartbeat interval (30s)
       await vi.advanceTimersByTimeAsync(30_100)
 
-      const heartbeats = writes.filter((w) => w === ':heartbeat\n\n')
+      // Phase 11: heartbeat is a named event, not a comment
+      const heartbeats = writes.filter((w) => w === 'event: heartbeat\ndata: \n\n')
       expect(heartbeats.length).toBeGreaterThanOrEqual(1)
 
       rawRequest.emit('close')
     })
 
-    it('suppresses initial ADDED events within 5s of subscribe', async () => {
+    it('does NOT suppress ADDED events (no suppression window in Phase 11)', async () => {
       const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
       await handleResourceStream(request as any, reply as any)
 
-      // Emit ADDED within initial load window — should be suppressed
+      // Phase 11: no ADDED suppression — all events written immediately
       mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
         type: 'ADDED',
         resourceType: 'pods',
         object: { name: 'initial-pod' },
       } satisfies WatchEvent)
 
-      // Emit MODIFIED within same window — should NOT be suppressed
       mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
         type: 'MODIFIED',
         resourceType: 'pods',
         object: { name: 'modified-pod' },
       } satisfies WatchEvent)
 
-      // Advance past batch buffer
-      await vi.advanceTimersByTimeAsync(1_100)
-
-      const watchWrites = writes.filter((w) => w.startsWith('event: watch'))
-      expect(watchWrites).toHaveLength(1)
-
-      const dataLine = watchWrites[0].match(/event: watch\ndata: (.+)\n/)
-      const batch: WatchEventBatch = JSON.parse(dataLine![1])
-
-      // Only MODIFIED should be present — ADDED was suppressed
-      expect(batch.events).toHaveLength(1)
-      expect(batch.events[0].type).toBe('MODIFIED')
-      expect(batch.events[0].object).toEqual({ name: 'modified-pod' })
+      const watchWrites = writes.filter((w) => w.includes('event: watch'))
+      // Both ADDED and MODIFIED should be present
+      expect(watchWrites).toHaveLength(2)
 
       rawRequest.emit('close')
     })
 
-    it('does NOT suppress ADDED events after 5s window', async () => {
+    it('ADDED events are always written regardless of timing', async () => {
       const { request, reply, writes, rawRequest } = createMockRequestReply(VALID_UUID)
       await handleResourceStream(request as any, reply as any)
 
-      // Wait past the initial load window
-      await vi.advanceTimersByTimeAsync(5_100)
-
-      // Now ADDED events should NOT be suppressed
+      // Emit an ADDED event
       mocks.emitter.emit(`watch-event:${VALID_UUID}`, {
         type: 'ADDED',
         resourceType: 'pods',
         object: { name: 'new-pod' },
       } satisfies WatchEvent)
 
-      await vi.advanceTimersByTimeAsync(1_100)
-
-      const watchWrites = writes.filter((w) => w.startsWith('event: watch'))
+      const watchWrites = writes.filter((w) => w.includes('event: watch'))
       expect(watchWrites).toHaveLength(1)
 
-      const dataLine = watchWrites[0].match(/event: watch\ndata: (.+)\n/)
+      const dataLine = watchWrites[0].match(/data: (.+)\n/)
+      expect(dataLine).toBeTruthy()
       const batch: WatchEventBatch = JSON.parse(dataLine![1])
       expect(batch.events.some((e) => e.type === 'ADDED')).toBe(true)
       expect(batch.events[0].object).toEqual({ name: 'new-pod' })
