@@ -101,7 +101,7 @@ export const rbacRouter = router({
 
         const [clusterRoles, clusterRoleBindings, roles, roleBindings] = await cached(
           CACHE_KEYS.k8sRbac(input.clusterId),
-          60_000,
+          60,
           () =>
             Promise.all([
               rbacApi.listClusterRole(),
@@ -190,7 +190,7 @@ export const rbacRouter = router({
 
         const [clusterRoles, clusterRoleBindings, roles, roleBindings] = await cached(
           CACHE_KEYS.k8sRbac(input.clusterId),
-          60_000,
+          60,
           () =>
             Promise.all([
               rbacApi.listClusterRole(),

@@ -111,7 +111,7 @@ export const helmRouter = router({
 
         const secretsResponse = await cached(
           CACHE_KEYS.k8sHelmReleases(input.clusterId),
-          30_000,
+          30,
           async () => {
             // Use label selector for Helm secrets (more reliable across K8s versions)
             const response = await coreV1.listSecretForAllNamespaces({
@@ -166,7 +166,7 @@ export const helmRouter = router({
 
         const detail = await cached(
           CACHE_KEYS.k8sHelmRelease(input.clusterId, input.releaseName, input.namespace),
-          30_000,
+          30,
           async () => {
             // Find latest revision for this release
             const response = await coreV1.listNamespacedSecret({
@@ -231,7 +231,7 @@ export const helmRouter = router({
 
         const revisions = await cached(
           CACHE_KEYS.k8sHelmRevisions(input.clusterId, input.releaseName, input.namespace),
-          30_000,
+          30,
           async () => {
             const response = await coreV1.listNamespacedSecret({
               namespace: input.namespace,

@@ -74,7 +74,15 @@ export const topologyRouter = router({
         const watchedPodsT = watchManager.getResources(input.clusterId, 'pods')
         const watchedNodesT = watchManager.getResources(input.clusterId, 'nodes')
 
-        if (watchedIngresses && watchedServicesT && watchedDeploys && watchedSts && watchedDs && watchedPodsT && watchedNodesT) {
+        if (
+          watchedIngresses &&
+          watchedServicesT &&
+          watchedDeploys &&
+          watchedSts &&
+          watchedDs &&
+          watchedPodsT &&
+          watchedNodesT
+        ) {
           ingressItems = watchedIngresses as k8s.V1Ingress[]
           serviceItems = watchedServicesT as k8s.V1Service[]
           deployItems = watchedDeploys as k8s.V1Deployment[]
@@ -91,7 +99,7 @@ export const topologyRouter = router({
 
           const [ingressRes, serviceRes, deployRes, stsRes, dsRes, podRes, nodeRes] = await cached(
             CACHE_KEYS.k8sTopology(input.clusterId),
-            15_000,
+            15,
             () =>
               Promise.all([
                 networkingV1.listIngressForAllNamespaces(),

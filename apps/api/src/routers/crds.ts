@@ -56,7 +56,7 @@ export const crdsRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const apiExt = kc.makeApiClient(k8s.ApiextensionsV1Api)
 
-        const crds = await cached(CACHE_KEYS.k8sCrds(input.clusterId), 30_000, async () => {
+        const crds = await cached(CACHE_KEYS.k8sCrds(input.clusterId), 30, async () => {
           const response = await apiExt.listCustomResourceDefinition()
           return response.items.map((crd): CrdSummary => {
             const servedVersion = crd.spec?.versions?.find((v) => v.served)
@@ -94,7 +94,7 @@ export const crdsRouter = router({
 
         const instances = await cached(
           CACHE_KEYS.k8sCrdInstances(input.clusterId, input.group, input.plural),
-          15_000,
+          15,
           async () => {
             let rawResponse: unknown
 

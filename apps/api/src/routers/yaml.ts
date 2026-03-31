@@ -98,7 +98,7 @@ export const yamlRouter = router({
         const kc = await clusterClientPool.getClient(input.clusterId)
         const resource = await cached(
           CACHE_KEYS.k8sYaml(input.clusterId, input.resourceType, input.name, input.namespace),
-          15_000,
+          15,
           () => fetchResource(kc, input.resourceType, input.name, input.namespace),
         )
         // Strip managedFields — noise in YAML view, not useful for operators
