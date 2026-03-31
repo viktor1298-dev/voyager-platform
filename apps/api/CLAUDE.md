@@ -22,25 +22,43 @@ src/
 ├── routes/                # Non-tRPC: ai-stream (SSE), mcp, metrics-stream (SSE), log-stream (SSE), pod-terminal (WebSocket), resource-stream (SSE), watch-health
 ├── jobs/                  # Background: alert-evaluator, metrics-history-collector, deploy-smoke-test, metrics-stream-job, data-retention
 ├── config/                # Backend-only config (jobs.ts intervals, k8s.ts client pool)
-├── services/              # Business logic (AI, anomaly detection)
+├── services/              # Business logic (ai-service, ai-provider, ai-key-crypto, ai-key-settings-service, ai-conversation-store, anomaly-service)
 └── lib/                   # Core modules (no deps on routers/services)
-    ├── cluster-client-pool.ts   # Lazy per-cluster K8s clients (AWS/Azure/GKE)
-    ├── event-emitter.ts         # Decouples watchers from SSE consumers
     ├── auth.ts                  # Better-Auth handler (/api/auth/*)
+    ├── auth-bootstrap.ts        # Auth system initialization
+    ├── auth-error-mapping.ts    # Auth error → HTTP status/body mapping
+    ├── auth-guard.ts            # Request authentication gate (shouldRequireAuth)
+    ├── auth-origins.ts          # CORS allowed origins
+    ├── auth-request.ts          # External request URL resolution
     ├── authorization.ts         # DB-backed RBAC
-    ├── credential-crypto.ts     # Cluster credential encryption/decryption
-    ├── error-handler.ts         # handleK8sError() — shared across all K8s routers
-    ├── watch-manager.ts         # Unified K8s informers — in-memory ObjectCache for all 17 resource types
-    ├── watch-db-writer.ts       # Debounced PostgreSQL sync from watch events (replaces former health-sync/node-sync/event-sync jobs)
-    ├── resource-mappers.ts      # 17 shared mapper functions (K8s objects → frontend shapes)
-    ├── cache-keys.ts            # Centralized Redis cache key builders (fallback path only)
+    ├── audit.ts                 # Audit trail logging
     ├── cache.ts                 # Redis cache (failures are non-fatal, used as fallback when watches not ready)
-    ├── health-checks.ts         # Log scanner, startup probe, page smoke, result assessment
-    ├── k8s-client-factory.ts    # KubeConfig factory for all providers
-    ├── feature-flags.ts         # OpenFeature + flagd
+    ├── cache-keys.ts            # Centralized Redis cache key builders (fallback path only)
+    ├── cluster-client-pool.ts   # Lazy per-cluster K8s clients (AWS/Azure/GKE)
+    ├── connection-config.ts     # Connection configuration constants
     ├── connection-tracker.ts    # SSE connection tracking + ConnectionLimiter (socket-based limits)
+    ├── credential-crypto.ts     # Cluster credential encryption/decryption
+    ├── ensure-admin-user.ts     # Bootstrap admin user on startup
+    ├── ensure-bootstrap-user.ts # Bootstrap system user on startup
+    ├── ensure-viewer-user.ts    # Bootstrap viewer user on startup
+    ├── error-handler.ts         # handleK8sError() — shared across all K8s routers
+    ├── event-emitter.ts         # Decouples watchers from SSE consumers
+    ├── feature-flags.ts         # OpenFeature + flagd
+    ├── health-checks.ts         # Log scanner, startup probe, page smoke, result assessment
+    ├── k8s.ts                   # K8s utility helpers
+    ├── k8s-client-factory.ts    # KubeConfig factory for all providers
+    ├── k8s-units.ts             # K8s resource unit parsing (CPU/memory)
+    ├── karpenter-constants.ts   # Karpenter resource type constants
+    ├── karpenter-service.ts     # Karpenter business logic
+    ├── openapi.ts               # OpenAPI/Swagger spec generation
+    ├── presence.ts              # User presence tracking + periodic sweep
+    ├── providers.ts             # Cloud provider utilities
+    ├── resource-mappers.ts      # 17 shared mapper functions (K8s objects → frontend shapes)
     ├── sentry.ts                # Error tracking (skip client-caused errors)
-    └── telemetry.ts             # OpenTelemetry setup
+    ├── sso.ts                   # SSO provider integration
+    ├── telemetry.ts             # OpenTelemetry setup
+    ├── watch-db-writer.ts       # Debounced PostgreSQL sync from watch events
+    └── watch-manager.ts         # Unified K8s informers — in-memory ObjectCache for all 17 resource types
 ```
 
 ## Key Patterns

@@ -13,7 +13,7 @@ charts/voyager/
 ├── values-local.example.yaml     # Template for local secrets (gitignored after copy)
 ├── sql/
 │   └── init.sql                  # 🔴 DB schema source of truth (NOT Drizzle files)
-└── templates/                    # K8s manifests (deployments, services, configmaps, etc.)
+└── templates/                    # 20 K8s manifests (deployments, services, configmaps, ingress, pdb, rbac, network-policy, jaeger, drizzle-migrate-job, etc.)
 ```
 
 ## Deploy Pattern
@@ -43,3 +43,14 @@ cp charts/voyager/values-local.example.yaml charts/voyager/values-local.yaml
 The file is fully idempotent (CREATE IF NOT EXISTS, ON CONFLICT DO NOTHING). The Drizzle ORM schema in `packages/db/` mirrors this file for TypeScript types but is NOT the source of truth.
 
 **NEVER add `migrate()` or schema init to `server.ts`** — this is Iron Rule #1.
+
+## Gotchas
+
+### Always Validate Before Deploy
+Run `helm template voyager ./charts/voyager -n voyager -f charts/voyager/values-local.yaml` to catch template errors before deploy.
+
+### values-dev vs values-production
+`values-dev.yaml`: single replica, debug logging, relaxed resource limits. `values-production.yaml`: HA replicas, production logging, strict limits, PDB enabled.
+
+### init.sql Must Stay Idempotent
+Every statement in `sql/init.sql` must use `IF NOT EXISTS` / `ON CONFLICT DO NOTHING`. Non-idempotent SQL breaks `helm install` since the ConfigMap re-runs on every fresh install.

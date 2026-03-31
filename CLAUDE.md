@@ -16,14 +16,14 @@ voyager-platform/
 ├── packages/
 │   ├── db/                     # Drizzle ORM schema — see packages/db/CLAUDE.md
 │   ├── config/                 # Shared config (SSE, AI, routes, cache TTLs, validation limits)
-│   ├── types/                  # Shared TypeScript types (SSE events, AI contracts)
+│   ├── types/                  # Shared TypeScript types (SSE events, AI key contracts, Karpenter)
 │   └── ui/                     # Shared UI components (shadcn/ui)
 ├── charts/voyager/             # Helm chart — see charts/voyager/CLAUDE.md
 ├── docker/                     # Dockerfile.api, Dockerfile.web
 ├── tests/
 │   ├── e2e/                    # Playwright E2E tests
 │   └── visual/                 # Visual regression tests
-└── scripts/                    # Utility scripts (health-check.ts)
+└── scripts/                    # health-check.ts, e2e-preflight-lint.sh, screenshot.mjs
 ```
 
 Each major directory has its own `CLAUDE.md` with domain-specific details — always read it when working in that area.

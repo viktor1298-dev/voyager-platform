@@ -32,6 +32,13 @@ src/schema/
 └── user-tokens.ts        # API tokens
 ```
 
+## Adding a Table
+
+1. Add `CREATE TABLE` to `charts/voyager/sql/init.sql` (source of truth)
+2. Create matching Drizzle schema file in `src/schema/`
+3. Re-export from `src/schema/index.ts`
+4. Run `pnpm db:generate` to sync migrations
+
 ## Commands
 
 ```bash

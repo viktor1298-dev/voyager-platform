@@ -17,7 +17,7 @@ pnpm lint             # biome check src/
 ```
 src/
 ├── app/                   # App Router pages (~55 routes)
-│   ├── clusters/[id]/     # Cluster detail (29 tabs via GroupedTabBar: 5 standalone + 24 grouped across 7 groups)
+│   ├── clusters/[id]/     # Cluster detail (24 tabs via GroupedTabBar: 5 standalone + 19 grouped across 6 groups)
 │   ├── api/               # (reserved — SSE connects directly to API via NEXT_PUBLIC_API_URL)
 │   ├── settings/          # Settings hub
 │   └── login/             # Auth page
@@ -44,15 +44,42 @@ src/
 ├── hooks/
 │   ├── useMetricsData.ts      # Unified metrics — SSE for ≤15m, tRPC for ≥30m
 │   ├── useMetricsSSE.ts       # SSE connection with exponential backoff + visibility-aware
-│   └── useResourceSSE.ts      # K8s Watch → 1s timer-batched Zustand store updates
+│   ├── useResourceSSE.ts      # K8s Watch → 1s timer-batched Zustand store updates
+│   ├── useCachedResources.ts  # Rancher-style tRPC prefetch → seeds Zustand before SSE
+│   ├── useHelmReleases.ts     # Hybrid SSE + tRPC merge for Helm releases
+│   ├── useResources.ts        # Resource data access hook
+│   ├── useSSEConnection.ts    # Generic SSE connection management
+│   ├── usePresence.ts         # User presence tracking
+│   ├── useIsAdmin.ts          # Admin role check
+│   ├── usePermission.ts       # RBAC permission check
+│   ├── useKeyboardShortcuts.ts # Global keyboard shortcuts
+│   ├── useOptimisticMutation.ts # Optimistic UI update wrapper
+│   ├── usePageTitle.ts        # Dynamic page title
+│   ├── useReducedMotion.ts    # Respects prefers-reduced-motion
+│   ├── useRefreshInterval.ts  # Configurable polling interval
+│   ├── useApiHealth.ts        # API health status
+│   └── useAnomalyCount.ts     # Anomaly badge count
 ├── lib/
 │   ├── trpc.ts                # tRPC client (httpLink, NOT httpBatchLink) + handleTRPCError
 │   ├── animation-constants.ts # Motion v12 timing/easing (B-style)
 │   ├── metrics-buffer.ts      # Circular buffer for SSE live data (65 points)
 │   ├── lttb.ts                # LTTB downsampling (~50 LOC) — 500+ → ~200 points
-│   └── formatters.ts          # Display formatters
+│   ├── formatters.ts          # Display formatters
+│   ├── resource-status.ts     # Status config map + resolveResourceStatus() — single source of truth
+│   ├── status-utils.ts        # Status helper utilities
+│   ├── auth-client.ts         # Better-Auth client-side setup
+│   ├── auth-constants.ts      # Auth-related constants
+│   ├── ai-keys-client.ts      # AI key management client
+│   ├── ai-keys-contract.ts    # AI key contract types (shared with API)
+│   ├── cluster-constants.ts   # Cluster-related constants
+│   ├── cluster-meta.ts        # Cluster metadata helpers
+│   ├── cluster-status.ts      # Cluster status utilities
+│   ├── time-utils.ts          # Time/date formatting utilities
+│   ├── anomalies.ts           # Anomaly detection helpers
+│   └── utils.ts               # General utilities
 └── config/
-    └── navigation.ts          # Sidebar nav config (6 items)
+    ├── navigation.ts          # Sidebar nav config (6 items)
+    └── constants.ts           # App-wide constants
 ```
 
 ## Key Patterns
@@ -164,7 +191,7 @@ Short ranges (≤15m) use SSE from K8s metrics-server. Historical ranges (≥30m
 `@xyflow/react` re-renders entire graph when `nodeTypes` reference changes. Define outside component or `useMemo`. Failing = infinite re-renders.
 
 ### GroupedTabBar — 7 Groups
-Groups: standalone (Overview, Nodes, Events, Logs, Metrics), Workloads, Networking, Config, Storage, Scaling, Cluster Ops (Helm, CRDs, RBAC). Config in `cluster-tabs-config.ts`. Active child tab shows **child's label** (e.g., "Helm") not group label.
+6 groups: Workloads (6 tabs), Networking (3), Config (4), Storage (1), Scaling (2), Cluster Ops (3). Config in `cluster-tabs-config.ts`. Active child tab shows **child's label** (e.g., "Helm") not group label.
 
 ### TerminalDrawer Must Be Mounted in providers.tsx
 `<TerminalDrawer />` must be inside `<TerminalProvider>` in `providers.tsx`. It renders as fixed-position outside page tree. If missing, clicking Exec does nothing — no error, no drawer.
