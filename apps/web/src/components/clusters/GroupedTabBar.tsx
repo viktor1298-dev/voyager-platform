@@ -199,6 +199,19 @@ function GroupTabItem({
         )}
       </button>
 
+      {isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: dropdownPos.top - 4,
+            left: dropdownPos.left,
+            width: 180,
+            height: 4,
+          }}
+          aria-hidden="true"
+        />
+      )}
+
       <AnimatePresence>
         {isOpen && (
           <motion.div
