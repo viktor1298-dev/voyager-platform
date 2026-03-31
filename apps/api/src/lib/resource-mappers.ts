@@ -141,6 +141,23 @@ function findLastUpdated(deployment: {
     : new Date(0).toISOString()
 }
 
+/** Extract ConfigMap and Secret names referenced by containers via env/envFrom */
+function collectContainerRefs(containers: k8s.V1Container[]) {
+  const configMapRefs = new Set<string>()
+  const secretRefs = new Set<string>()
+  for (const c of containers) {
+    for (const e of c.envFrom ?? []) {
+      if (e.configMapRef?.name) configMapRefs.add(e.configMapRef.name)
+      if (e.secretRef?.name) secretRefs.add(e.secretRef.name)
+    }
+    for (const e of c.env ?? []) {
+      if (e.valueFrom?.configMapKeyRef?.name) configMapRefs.add(e.valueFrom.configMapKeyRef.name)
+      if (e.valueFrom?.secretKeyRef?.name) secretRefs.add(e.valueFrom.secretKeyRef.name)
+    }
+  }
+  return { configMapRefs, secretRefs }
+}
+
 // ── Pod Mapper ────────────────────────────────────────────────
 
 export function mapPod(
@@ -178,6 +195,24 @@ export function mapPod(
   const conditions = mapConditions(p.status?.conditions)
   const containers = (p.spec?.containers ?? []).map(mapContainer)
 
+  const allContainers = [...(p.spec?.containers ?? []), ...(p.spec?.initContainers ?? [])]
+  const { configMapRefs, secretRefs } = collectContainerRefs(allContainers)
+
+  for (const v of p.spec?.volumes ?? []) {
+    if (v.configMap?.name) configMapRefs.add(v.configMap.name)
+    if (v.secret?.secretName) secretRefs.add(v.secret.secretName)
+    if (v.projected?.sources) {
+      for (const s of v.projected.sources) {
+        if (s.configMap?.name) configMapRefs.add(s.configMap.name)
+        if (s.secret?.name) secretRefs.add(s.secret.name)
+      }
+    }
+  }
+
+  const pvcRefs = (p.spec?.volumes ?? [])
+    .filter((v) => v.persistentVolumeClaim)
+    .map((v) => v.persistentVolumeClaim!.claimName)
+
   return {
     name: p.metadata?.name ?? '',
     namespace: p.metadata?.namespace ?? '',
@@ -202,6 +237,9 @@ export function mapPod(
     containers,
     conditions,
     labels: (p.metadata?.labels as Record<string, string>) ?? {},
+    configMapRefs: [...configMapRefs],
+    secretRefs: [...secretRefs],
+    pvcRefs,
   }
 }
 
@@ -555,6 +593,9 @@ export function mapStatefulSet(ss: k8s.V1StatefulSet) {
     volumeClaimTemplates: vcts,
     conditions,
     selector,
+    volumeClaimTemplateNames: (ss.spec?.volumeClaimTemplates ?? [])
+      .map((vct) => vct.metadata?.name ?? '')
+      .filter(Boolean),
   }
 }
 
