@@ -48,7 +48,10 @@ vi.mock('../lib/watch-manager.js', () => ({
     subscribe: mocks.watchSubscribe,
     unsubscribe: mocks.watchUnsubscribe,
     isWatching: mocks.watchIsWatching,
+    getResources: vi.fn().mockReturnValue(null),
+    isConnected: vi.fn().mockReturnValue(true),
   },
+  RESOURCE_DEFS: [],
 }))
 
 // Mock event-emitter with a real EventEmitter (hoisted)
