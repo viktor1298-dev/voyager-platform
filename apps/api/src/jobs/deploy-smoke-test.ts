@@ -217,6 +217,7 @@ async function handleDeploymentEvent(event: DeploymentEvent): Promise<void> {
   const lastSeen = seenGenerations.get(key)
   if (lastSeen !== undefined && lastSeen >= generation) return
   seenGenerations.set(key, generation)
+  setTimeout(() => seenGenerations.delete(key), 5 * 60_000).unref()
 
   console.log(
     `[deploy-smoke-test] New rollout detected: ${depName} in ${namespace} (cluster ${event.clusterId}, gen ${generation})`,

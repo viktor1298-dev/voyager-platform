@@ -85,6 +85,10 @@ const sweepTimer = setInterval(() => {
 
 sweepTimer.unref()
 
+export function stopPresenceSweep(): void {
+  clearInterval(sweepTimer)
+}
+
 export function heartbeatPresence(input: {
   id: string
   name: string

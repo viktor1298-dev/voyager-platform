@@ -89,15 +89,27 @@ export async function registerAiStreamRoute(app: FastifyInstance): Promise<void>
     })
 
     const writeEvent = (event: string, payload: Record<string, unknown>) => {
-      reply.raw.write(`event: ${event}\n`)
-      reply.raw.write(
-        `data: ${JSON.stringify({ ...payload, protocolVersion: SSE_PROTOCOL_VERSION })}\n\n`,
-      )
+      try {
+        reply.raw.write(`event: ${event}\n`)
+        reply.raw.write(
+          `data: ${JSON.stringify({ ...payload, protocolVersion: SSE_PROTOCOL_VERSION })}\n\n`,
+        )
+      } catch {
+        /* connection closed */
+      }
     }
 
     const heartbeat = setInterval(() => {
-      reply.raw.write(':keepalive\n\n')
+      try {
+        reply.raw.write(':keepalive\n\n')
+      } catch {
+        /* connection closed */
+      }
     }, AI_CONFIG.STREAM_HEARTBEAT_MS)
+
+    request.raw.on('close', () => {
+      clearInterval(heartbeat)
+    })
 
     try {
       const aiService = new AIService({ db })

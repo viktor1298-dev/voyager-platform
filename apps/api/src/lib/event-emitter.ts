@@ -59,7 +59,7 @@ class VoyagerEventEmitter extends EventEmitter {
 }
 
 // Prevent listener leak warnings for many concurrent subscribers
-const MAX_LISTENERS = 100
+const MAX_LISTENERS = 200
 
 export const voyagerEmitter = new VoyagerEventEmitter()
 voyagerEmitter.setMaxListeners(MAX_LISTENERS)

@@ -53,7 +53,7 @@ function decodeHelmRelease(releaseData: string): Record<string, unknown> {
   const helmEncoded = Buffer.from(releaseData, 'base64').toString('utf-8')
   // Second base64 decode: Helm's own base64 layer wrapping the gzip
   const compressed = Buffer.from(helmEncoded, 'base64')
-  const jsonBuffer = gunzipSync(compressed)
+  const jsonBuffer = gunzipSync(compressed, { maxOutputLength: 50 * 1024 * 1024 })
   return JSON.parse(jsonBuffer.toString('utf-8')) as Record<string, unknown>
 }
 

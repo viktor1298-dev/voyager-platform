@@ -22,6 +22,7 @@ import { mapAuthRouteErrorToBody, mapAuthRouteErrorToStatus } from './lib/auth-e
 import { shouldRequireAuth, UNAUTHORIZED_RESPONSE } from './lib/auth-guard.js'
 import { resolveExternalRequestUrl } from './lib/auth-request.js'
 import { ensureAdminUser } from './lib/ensure-admin-user.js'
+import { stopPresenceSweep } from './lib/presence.js'
 import { ensureViewerUser } from './lib/ensure-viewer-user.js'
 import { watchManager } from './lib/watch-manager.js'
 import { startWatchDbWriter, stopWatchDbWriter } from './lib/watch-db-writer.js'
@@ -43,6 +44,11 @@ const CLUSTER_CRED_ENCRYPTION_KEY = process.env.CLUSTER_CRED_ENCRYPTION_KEY ?? '
 if (!/^[0-9a-fA-F]{64}$/.test(CLUSTER_CRED_ENCRYPTION_KEY)) {
   console.warn(
     '⚠️  CLUSTER_CRED_ENCRYPTION_KEY is missing or invalid (expected 64-char hex string). Credential encryption will fail.',
+  )
+}
+if (CLUSTER_CRED_ENCRYPTION_KEY === '0'.repeat(64)) {
+  throw new Error(
+    'CLUSTER_CRED_ENCRYPTION_KEY must not be all zeros — generate with: openssl rand -hex 32',
   )
 }
 
@@ -299,6 +305,12 @@ const start = async () => {
     const signals = ['SIGTERM', 'SIGINT'] as const
     for (const signal of signals) {
       process.on(signal, async () => {
+        const forceExitTimer = setTimeout(() => {
+          console.error('[shutdown] Force exit after 25s timeout')
+          process.exit(1)
+        }, 25_000)
+        forceExitTimer.unref()
+
         app.log.info(`${signal} received, shutting down gracefully`)
         try {
           watchManager.stopAll()
@@ -309,6 +321,7 @@ const start = async () => {
           if (k8sEnabled) {
             stopDeploySmokeTest()
           }
+          stopPresenceSweep()
           await flushSentry()
           await shutdownTelemetry()
           await app.close()
