@@ -6,4 +6,5 @@ export const JOB_INTERVALS = {
   METRICS_COLLECT_MS: 60 * 1000,
   DEPLOY_SMOKE_DELAY_MS: 30 * 1000, // Wait 30s after rollout before checking
   METRICS_STREAM_POLL_MS: 15 * 1000, // Live metrics SSE polling interval
+  DATA_RETENTION_MS: 24 * 60 * 60 * 1000, // Daily cleanup of old rows
 } as const

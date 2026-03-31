@@ -11,6 +11,7 @@ import { RATE_LIMIT_BYPASS_PATHS } from '@voyager/config'
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify'
 import { fastifyTRPCOpenApiPlugin } from 'trpc-to-openapi'
 import { startAlertEvaluator, stopAlertEvaluator } from './jobs/alert-evaluator.js'
+import { startDataRetention, stopDataRetention } from './jobs/data-retention.js'
 import { startDeploySmokeTest, stopDeploySmokeTest } from './jobs/deploy-smoke-test.js'
 import {
   startMetricsHistoryCollector,
@@ -299,9 +300,10 @@ const start = async () => {
     startWatchDbWriter()
     console.log('[server] WatchDbWriter started')
 
-    // Start remaining background jobs (alert evaluator, metrics collector)
+    // Start remaining background jobs (alert evaluator, metrics collector, data retention)
     startAlertEvaluator()
     startMetricsHistoryCollector()
+    startDataRetention()
 
     if (k8sEnabled) {
       startDeploySmokeTest()
@@ -330,6 +332,7 @@ const start = async () => {
           stopWatchDbWriter()
           stopAlertEvaluator()
           stopMetricsHistoryCollector()
+          stopDataRetention()
           metricsStreamJob.stopAll()
           if (k8sEnabled) {
             stopDeploySmokeTest()

@@ -135,48 +135,73 @@ function _buildSeries<T>(
 
 export const metricsRouter = router({
   /** IP2-003: Cluster health timeline from healthHistory table.
+   *  Uses TimescaleDB time_bucket() SQL aggregation.
    *  Returns FULL time range with null-filled gaps (Grafana-style). */
   clusterHealth: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
     .query(async ({ input }) => {
-      const timeline = getBucketTimeline(input.range)
-      const { bucketMs } = TIME_RANGE_CONFIG[input.range]
-      const startMs = timeline.start.getTime()
-      const bucketCount = timeline.buckets.length
+      const config = TIME_RANGE_CONFIG[input.range]
+      const now = new Date()
+      const effectiveBucketMs = Math.max(config.bucketMs, 60_000)
+      const bucketSec = effectiveBucketMs / 1000
+      const intervalStr = `${bucketSec} seconds`
+      const startTime = new Date(now.getTime() - config.rangeMs)
 
-      const rows = await db
-        .select()
-        .from(healthHistory)
-        .where(gte(healthHistory.checkedAt, timeline.start))
-        .orderBy(healthHistory.checkedAt)
+      // SQL aggregation with time_bucket — counts healthy/degraded/offline per bucket
+      const result = await db.execute(sql`
+        SELECT
+          time_bucket(${intervalStr}::interval, checked_at) AS bucket,
+          count(*) FILTER (WHERE status = 'healthy') AS healthy,
+          count(*) FILTER (WHERE status = 'degraded') AS degraded,
+          count(*) FILTER (WHERE status NOT IN ('healthy', 'degraded')) AS offline,
+          count(*)::int AS total
+        FROM health_history
+        WHERE checked_at >= ${startTime}
+        GROUP BY bucket
+        ORDER BY bucket
+      `)
 
-      const bucketStats = Array.from({ length: bucketCount }, () => ({
-        healthy: 0,
-        degraded: 0,
-        offline: 0,
-        total: 0,
-      }))
+      // Generate expected timeline for null-fill (Grafana-style)
+      const endMs = alignFloor(now.getTime(), effectiveBucketMs) + effectiveBucketMs
+      const startMs = endMs - config.rangeMs
+      const bucketCount = Math.ceil(config.rangeMs / effectiveBucketMs)
+      const expectedBuckets = Array.from({ length: bucketCount }, (_, i) => {
+        return new Date(startMs + i * effectiveBucketMs)
+      })
 
+      // Map SQL rows by aligned bucket key
+      const rows = (result.rows ?? []) as Array<Record<string, unknown>>
+      const dataMap = new Map<string, (typeof rows)[0]>()
       for (const row of rows) {
-        const bucketIndex = getBucketIndex(new Date(row.checkedAt), startMs, bucketMs, bucketCount)
-        if (bucketIndex === -1) continue
-
-        const bucket = bucketStats[bucketIndex]!
-        bucket.total++
-        if (row.status === 'healthy') bucket.healthy++
-        else if (row.status === 'degraded') bucket.degraded++
-        else bucket.offline++
+        const bucketDate = new Date(row.bucket as string)
+        const key = alignFloor(bucketDate.getTime(), effectiveBucketMs).toString()
+        dataMap.set(key, row)
       }
 
-      return timeline.buckets.map((bucket, index) => {
-        const stats = bucketStats[index]!
+      return expectedBuckets.map((bucket) => {
+        const key = bucket.getTime().toString()
+        const row = dataMap.get(key)
+        const bucketEndMs = bucket.getTime() + effectiveBucketMs
+
+        if (!row || Number(row.total) === 0) {
+          return {
+            timestamp: new Date(bucketEndMs).toISOString(),
+            bucketStart: bucket.toISOString(),
+            bucketEnd: new Date(bucketEndMs).toISOString(),
+            healthy: null,
+            degraded: null,
+            offline: null,
+          }
+        }
+
+        const total = Number(row.total)
         return {
-          timestamp: bucket.timestamp,
-          bucketStart: bucket.bucketStart,
-          bucketEnd: bucket.bucketEnd,
-          healthy: stats.total > 0 ? Math.round((stats.healthy / stats.total) * 100) : null,
-          degraded: stats.total > 0 ? Math.round((stats.degraded / stats.total) * 100) : null,
-          offline: stats.total > 0 ? Math.round((stats.offline / stats.total) * 100) : null,
+          timestamp: new Date(bucketEndMs).toISOString(),
+          bucketStart: bucket.toISOString(),
+          bucketEnd: new Date(bucketEndMs).toISOString(),
+          healthy: Math.round((Number(row.healthy) / total) * 100),
+          degraded: Math.round((Number(row.degraded) / total) * 100),
+          offline: Math.round((Number(row.offline) / total) * 100),
         }
       })
     }),
