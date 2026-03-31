@@ -1,4 +1,4 @@
-import { resolveResourceStatus } from './resource-status.js'
+import { resolveResourceStatus } from './resource-status'
 
 /** Returns a CSS color variable string for cluster status */
 export function getStatusColor(status: string): string {

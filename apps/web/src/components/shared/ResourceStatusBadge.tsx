@@ -2,8 +2,8 @@
 
 import { motion, useReducedMotion } from 'motion/react'
 import { cn } from '@/lib/utils'
-import { resolveResourceStatus } from '@/lib/resource-status.js'
-import { resourceStatusGlow } from '@/lib/animation-constants.js'
+import { resolveResourceStatus } from '@/lib/resource-status'
+import { resourceStatusGlow } from '@/lib/animation-constants'
 
 interface ResourceStatusBadgeProps {
   status: string

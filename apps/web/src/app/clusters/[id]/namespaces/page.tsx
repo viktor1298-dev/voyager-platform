@@ -8,7 +8,7 @@ import { ResourceDiff, ResourcePageScaffold, YamlViewer } from '@/components/res
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
-import { resolveResourceStatus } from '@/lib/resource-status.js'
+import { resolveResourceStatus } from '@/lib/resource-status'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
