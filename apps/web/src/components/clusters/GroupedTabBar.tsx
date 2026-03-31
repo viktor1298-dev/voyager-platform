@@ -22,6 +22,7 @@ export function GroupedTabBar({ clusterRouteSegment, activeTab }: GroupedTabBarP
   const reduced = useReducedMotion()
   const [openGroupId, setOpenGroupId] = useState<string | null>(null)
   const groupRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -54,6 +55,16 @@ export function GroupedTabBar({ clusterRouteSegment, activeTab }: GroupedTabBarP
     }
   }, [])
 
+  // Preserve scroll position when toggling overflow (overflow-visible resets scrollLeft to 0)
+  const toggleGroup = useCallback((groupId: string) => {
+    const container = scrollContainerRef.current
+    const savedScroll = container?.scrollLeft ?? 0
+    setOpenGroupId((prev) => (prev === groupId ? null : groupId))
+    requestAnimationFrame(() => {
+      if (container) container.scrollLeft = savedScroll
+    })
+  }, [])
+
   const basePath = `/clusters/${clusterRouteSegment}`
 
   /** Check if a group contains the active tab */
@@ -61,6 +72,7 @@ export function GroupedTabBar({ clusterRouteSegment, activeTab }: GroupedTabBarP
 
   return (
     <div
+      ref={scrollContainerRef}
       className={`mb-3 border-b border-[var(--color-border)] ${openGroupId ? 'overflow-visible' : 'overflow-x-auto'}`}
     >
       <nav className="flex items-end gap-0 min-w-max" aria-label="Cluster tabs">
@@ -80,7 +92,7 @@ export function GroupedTabBar({ clusterRouteSegment, activeTab }: GroupedTabBarP
               basePath={basePath}
               activeChild={getActiveChild(entry)}
               isOpen={openGroupId === entry.id}
-              onToggle={() => setOpenGroupId(openGroupId === entry.id ? null : entry.id)}
+              onToggle={() => toggleGroup(entry.id)}
               onClose={() => setOpenGroupId(null)}
               setRef={(el) => setGroupRef(entry.id, el)}
               reduced={reduced}
