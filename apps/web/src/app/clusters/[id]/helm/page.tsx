@@ -39,10 +39,9 @@ function ReleaseSummary({ release }: { release: HelmRelease }) {
       <span className="text-[14px] font-semibold text-[var(--color-text-primary)] truncate">
         {release.name}
       </span>
-      {release.chartName && (
-        <span className="text-[12px] font-mono text-[var(--color-text-muted)] truncate">
-          {release.chartName}
-          {release.chartVersion ? `-${release.chartVersion}` : ''}
+      {release.chartVersion && (
+        <span className="text-[12px] font-mono text-[var(--color-text-muted)] shrink-0">
+          v{release.chartVersion}
         </span>
       )}
       {statusBadge(release.status)}
