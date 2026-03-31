@@ -28,40 +28,40 @@ All issues that could cause data corruption, crashes, stale data, or security vu
 
 ### Crash Prevention
 
-- [ ] **[CRITICAL] Fix cache TTL in `helm.ts`** -- Effort: **S**
+- [x] **[CRITICAL] Fix cache TTL in `helm.ts`** -- Effort: **S**
   - **Files:** `apps/api/src/routers/helm.ts` lines 113, 167-168, 233, 291
   - **Fix:** Change all `30_000` to `30` in `cached()` calls. The function passes TTL to `redis.setEx()` which expects seconds, not milliseconds.
   - **Verify:** After fix, `redis-cli TTL k8s:helm:*` returns ~30, not ~30000.
   - **Refs:** API-ISSUE-13, DB-3.1
 
-- [ ] **[CRITICAL] Fix cache TTL in `topology.ts`** -- Effort: **S**
+- [x] **[CRITICAL] Fix cache TTL in `topology.ts`** -- Effort: **S**
   - **Files:** `apps/api/src/routers/topology.ts` line 93
   - **Fix:** Change `15_000` to `15`.
   - **Verify:** Same as above with topology cache keys.
   - **Refs:** API-ISSUE-14, DB-3.1
 
-- [ ] **[CRITICAL] Fix cache TTL in `crds.ts`** -- Effort: **S**
+- [x] **[CRITICAL] Fix cache TTL in `crds.ts`** -- Effort: **S**
   - **Files:** `apps/api/src/routers/crds.ts` lines 59, 96
   - **Fix:** Change `30_000` to `30` and `15_000` to `15`.
   - **Refs:** API-ISSUE-15, DB-3.1
 
-- [ ] **[CRITICAL] Fix cache TTL in `rbac.ts`** -- Effort: **S**
+- [x] **[CRITICAL] Fix cache TTL in `rbac.ts`** -- Effort: **S**
   - **Files:** `apps/api/src/routers/rbac.ts` lines 103, 191
   - **Fix:** Change `60_000` to `60`.
   - **Refs:** API-ISSUE-16, DB-3.1
 
-- [ ] **[CRITICAL] Fix cache TTL in `yaml.ts`** -- Effort: **S**
+- [x] **[CRITICAL] Fix cache TTL in `yaml.ts`** -- Effort: **S**
   - **Files:** `apps/api/src/routers/yaml.ts` line 100
   - **Fix:** Change `15_000` to `15`.
   - **Refs:** API-ISSUE-17, DB-3.1
 
-- [ ] **[CRITICAL] Drain SSE/WS connections on shutdown** -- Effort: **M**
+- [x] **[CRITICAL] Drain SSE/WS connections on shutdown** -- Effort: **M**
   - **Files:** `apps/api/src/server.ts` lines 299-320, `apps/api/src/routes/resource-stream.ts`, `apps/api/src/routes/metrics-stream.ts`, `apps/api/src/routes/log-stream.ts`, `apps/api/src/routes/ai-stream.ts`, `apps/api/src/routes/pod-terminal.ts`
   - **Fix:** Track active SSE connections in a `Set<ServerResponse>`. On shutdown, send `event: shutdown\n\n` to each, then `reply.raw.end()`. Track active WebSockets in a separate `Set<WebSocket>` and close with code 1012 (Service Restart).
   - **Verify:** During a rolling deploy, browser reconnects cleanly without error toasts. `globalConnections` counter resets to 0.
   - **Refs:** API-ISSUE-20
 
-- [ ] **[CRITICAL] Add `seenGenerations` TTL eviction** -- Effort: **S**
+- [x] **[CRITICAL] Add `seenGenerations` TTL eviction** -- Effort: **S**
   - **Files:** `apps/api/src/jobs/deploy-smoke-test.ts` line 21
   - **Fix:** After adding an entry to `seenGenerations`, schedule `setTimeout(() => seenGenerations.delete(key), 5 * 60_000)`. Alternatively use a bounded LRU Map with max 1000 entries.
   - **Verify:** After 10 minutes of runtime, `seenGenerations.size` stays bounded (not monotonically increasing).
@@ -69,7 +69,7 @@ All issues that could cause data corruption, crashes, stale data, or security vu
 
 ### Data Integrity
 
-- [ ] **[CRITICAL] Create TimescaleDB hypertables** -- Effort: **M**
+- [x] **[CRITICAL] Create TimescaleDB hypertables** -- Effort: **M**
   - **Files:** `charts/voyager/sql/init.sql` (end of file)
   - **Fix:** Add after table creation:
     ```sql
@@ -83,14 +83,14 @@ All issues that could cause data corruption, crashes, stale data, or security vu
   - **Verify:** `SELECT * FROM timescaledb_information.hypertables;` returns 3 rows. `SELECT * FROM timescaledb_information.jobs WHERE proc_name = 'policy_retention';` returns 3 rows.
   - **Refs:** DB-1.1
 
-- [ ] **[CRITICAL] Fix Helm chart DB image -- use TimescaleDB** -- Effort: **S**
+- [x] **[CRITICAL] Fix Helm chart DB image -- use TimescaleDB** -- Effort: **S**
   - **Files:** `charts/voyager/values.yaml` (db image section)
   - **Fix:** Change `postgres:17-alpine` to `timescale/timescaledb:latest-pg17` (or a pinned version like `2.17.0-pg17`). The init.sql requires TimescaleDB extensions which are not available in vanilla postgres.
   - **Verify:** `helm template charts/voyager | grep 'image:' | grep timescale`. After deploy, `SELECT default_version FROM pg_available_extensions WHERE name = 'timescaledb';` returns a version.
   - **Refs:** INFRA-31
   - **Depends on:** None, but coordinate with hypertable creation above.
 
-- [ ] **[CRITICAL] Configure PostgreSQL connection pool** -- Effort: **S**
+- [x] **[CRITICAL] Configure PostgreSQL connection pool** -- Effort: **S**
   - **Files:** `packages/db/src/client.ts` lines 8-10
   - **Fix:** Replace `new pg.Pool({ connectionString })` with:
     ```typescript
@@ -107,14 +107,14 @@ All issues that could cause data corruption, crashes, stale data, or security vu
   - **Verify:** Under load, `SELECT count(*) FROM pg_stat_activity WHERE usename = 'voyager';` stays at or below 20.
   - **Refs:** DB-4.1
 
-- [ ] **[CRITICAL] Batch upsert nodes in watch-db-writer** -- Effort: **M**
+- [x] **[CRITICAL] Batch upsert nodes in watch-db-writer** -- Effort: **M**
   - **Files:** `apps/api/src/lib/watch-db-writer.ts` lines 54-111, `charts/voyager/sql/init.sql` (nodes table)
   - **Fix:** (1) Add `UNIQUE (cluster_id, name)` constraint to `nodes` table in init.sql. (2) Replace the per-node SELECT+INSERT loop with a single `db.insert(nodes).values(nodeValues).onConflictDoUpdate({ target: [nodes.clusterId, nodes.name], set: { ... } })`.
   - **Verify:** For a 100-node cluster, the sync generates 1 SQL statement instead of 200. Check with `log_min_duration_statement = 0` in Postgres.
   - **Depends on:** Unique constraint must be added first (init.sql change).
   - **Refs:** DB-2.1, DB-5.1
 
-- [ ] **[CRITICAL] Batch insert events in watch-db-writer** -- Effort: **M**
+- [x] **[CRITICAL] Batch insert events in watch-db-writer** -- Effort: **M**
   - **Files:** `apps/api/src/lib/watch-db-writer.ts` lines 122-161
   - **Fix:** Replace per-event SELECT+INSERT loop with `db.insert(events).values(eventValues).onConflictDoNothing()`. The events table PK already prevents duplicates.
   - **Verify:** For 500 events, generates 1 SQL statement instead of 1000.
@@ -122,7 +122,7 @@ All issues that could cause data corruption, crashes, stale data, or security vu
 
 ### Security
 
-- [ ] **[CRITICAL] Reject all-zeros encryption key on startup** -- Effort: **S** (depends on: none)
+- [x] **[CRITICAL] Reject all-zeros encryption key on startup** -- Effort: **S** (depends on: none)
   - **Files:** `apps/api/src/server.ts` (startup validation section), `.env.example`
   - **Fix:** (1) In server.ts, after the existing encryption key validation, add: `if (key === '0'.repeat(64)) throw new Error('CLUSTER_CRED_ENCRYPTION_KEY must not be all zeros')`. (2) In `.env.example`, replace the all-zeros key with `<generate-with-openssl-rand-hex-32>`.
   - **Verify:** Starting the API with all-zeros key exits with error. `.env.example` no longer contains a valid hex key.
