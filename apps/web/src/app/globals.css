@@ -217,6 +217,8 @@
   --glass-border-hover: rgba(255, 255, 255, 0.12);
   --glass-blur: 12px;
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --color-accent-glow: rgba(139, 92, 246, 0.25);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(139, 92, 246, 0.1);
   --color-log-bg: #0d1117;
   --color-log-header: #161b22;
   --color-log-text: #d1d5db;
@@ -347,6 +349,8 @@ html.light {
   --glass-border: rgba(0, 0, 0, 0.06);
   --glass-border-hover: rgba(0, 0, 0, 0.1);
   --shadow-card: 0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.06);
+  --color-accent-glow: rgba(79, 70, 229, 0.2);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(79, 70, 229, 0.08);
   --color-log-bg: #f8fafc;
   --color-log-header: #f1f5f9;
   --color-log-text: #334155;

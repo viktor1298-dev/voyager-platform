@@ -12,6 +12,8 @@ export const DURATION = {
   page: 0.25,
   counter: 0.8,
   counterLarge: 1.2,
+  statusPulse: 2,
+  statusPulseCrit: 1.5,
 } as const
 
 // Easings
@@ -110,6 +112,20 @@ export const cardHover = {
 
 export const cardTap = {
   scale: 0.98,
+} as const
+
+export const dashboardCardVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: DURATION.slow,
+      delay: i * STAGGER.slow,
+      ease: EASING.default,
+    },
+  }),
+  exit: { opacity: 0, scale: 0.96, transition: { duration: DURATION.fast, ease: EASING.exit } },
 } as const
 
 // IA-010: Dashboard IA Redesign animation constants
