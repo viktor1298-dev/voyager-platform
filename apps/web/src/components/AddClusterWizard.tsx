@@ -5,6 +5,11 @@ import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { AnimatePresence, motion } from 'motion/react'
 import { CheckCircle2, Loader2, UploadCloud } from 'lucide-react'
 import { useEffect, useMemo, useState, type DragEvent } from 'react'
+import {
+  detectProviderFromKubeconfig,
+  PROVIDER_LABELS,
+  type DetectionResult,
+} from '@voyager/config/providers'
 
 type ClusterProviderOption = {
   id: 'kubeconfig' | 'aws' | 'azure' | 'gke' | 'minikube'
@@ -201,16 +206,11 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
     return ''
   }, [effectiveKubeYaml])
 
-  // Detect cloud provider from kubeconfig server URL
-  const kubeDetectedProvider = useMemo(() => {
+  // Detect cloud provider from kubeconfig content (multi-signal)
+  const detectionResult = useMemo((): DetectionResult | null => {
     if (!effectiveKubeYaml) return null
-    const serverMatch = effectiveKubeYaml.match(/server:\s*(https?:\/\/\S+)/)
-    const server = serverMatch?.[1] ?? ''
-    if (server.includes('.eks.amazonaws.com')) return 'AWS EKS'
-    if (server.includes('.azmk8s.io') || server.includes('.azure.com')) return 'Azure AKS'
-    if (server.includes('.googleapis.com') || server.includes('container.cloud.google.com'))
-      return 'Google GKE'
-    return null
+    const result = detectProviderFromKubeconfig(effectiveKubeYaml)
+    return result.confidence !== 'none' ? result : null
   }, [effectiveKubeYaml])
 
   const suggestedName = useMemo(
@@ -438,7 +438,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
     const connectionConfig = await buildConnectionConfig()
     onSubmit({
       name: finalName,
-      provider,
+      provider: (detectionResult?.provider as ProviderId) ?? provider,
       environment,
       endpoint: computedEndpoint,
       connectionConfig,
@@ -764,7 +764,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                 <p className="text-[var(--color-text-secondary)]">
                   Provider:{' '}
                   <span className="text-[var(--color-text-primary)]">
-                    {kubeDetectedProvider ?? currentProvider.label}
+                    {detectionResult?.label ?? currentProvider.label}
                   </span>
                 </p>
                 <p className="text-[var(--color-text-secondary)]">
