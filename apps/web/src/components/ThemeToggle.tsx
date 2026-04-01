@@ -70,7 +70,7 @@ export function ThemeToggle() {
         <div
           role="listbox"
           aria-label="Theme options"
-          className="absolute right-0 top-full mt-2 z-50 min-w-[160px] rounded-xl border border-[var(--color-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-lg overflow-hidden animate-fade-in"
+          className="absolute right-0 top-full mt-2 z-50 min-w-[160px] rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-lg overflow-hidden animate-fade-in"
         >
           {themes.map((t) => {
             const ThemeIcon = t.icon
