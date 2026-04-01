@@ -109,33 +109,40 @@ export async function createKubeConfigForCluster(
   provider: ClusterProvider,
   connectionConfig: ClusterConnectionConfig,
 ): Promise<k8s.KubeConfig> {
+  // Kubeconfig-first: if connectionConfig has a kubeconfig field, use loadFromString
+  // regardless of provider. Provider (aws/azure/gke/minikube) tells us WHERE the
+  // cluster lives; the kubeconfig field tells us HOW to authenticate. Users can add
+  // an EKS cluster via kubeconfig — provider is 'aws' but auth uses the kubeconfig.
+  const configRecord = connectionConfig as Record<string, unknown>
+  if (typeof configRecord.kubeconfig === 'string' && configRecord.kubeconfig.trim().length > 0) {
+    // Use strip() (not strict) — config may have extra fields from provider-specific storage
+    const config = kubeconfigConnectionConfigSchema.strip().parse(connectionConfig)
+    const kc = new k8s.KubeConfig()
+    try {
+      kc.loadFromString(config.kubeconfig)
+    } catch (error) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: `Invalid kubeconfig content: ${error instanceof Error ? error.message : 'unknown parse error'}`,
+      })
+    }
+
+    if (config.context) {
+      kc.setCurrentContext(config.context)
+    } else if (!kc.getCurrentContext() && kc.contexts.length > 0) {
+      kc.setCurrentContext(kc.contexts[0].name)
+    }
+
+    return kc
+  }
+
+  // No kubeconfig field — use provider-specific auth flows
   switch (provider) {
     case 'kubeconfig': {
-      const config = kubeconfigConnectionConfigSchema.parse(connectionConfig)
-      if (!config.kubeconfig || config.kubeconfig.trim().length === 0) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'kubeconfig is required for kubeconfig provider',
-        })
-      }
-
-      const kc = new k8s.KubeConfig()
-      try {
-        kc.loadFromString(config.kubeconfig)
-      } catch (error) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: `Invalid kubeconfig content: ${error instanceof Error ? error.message : 'unknown parse error'}`,
-        })
-      }
-
-      if (config.context) {
-        kc.setCurrentContext(config.context)
-      } else if (!kc.getCurrentContext() && kc.contexts.length > 0) {
-        kc.setCurrentContext(kc.contexts[0].name)
-      }
-
-      return kc
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'kubeconfig content is required for kubeconfig provider',
+      })
     }
 
     case 'minikube': {

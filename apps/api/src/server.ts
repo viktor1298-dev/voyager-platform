@@ -54,9 +54,12 @@ if (!/^[0-9a-fA-F]{64}$/.test(CLUSTER_CRED_ENCRYPTION_KEY)) {
   )
 }
 if (CLUSTER_CRED_ENCRYPTION_KEY === '0'.repeat(64)) {
-  throw new Error(
-    'CLUSTER_CRED_ENCRYPTION_KEY must not be all zeros — generate with: openssl rand -hex 32',
-  )
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'CLUSTER_CRED_ENCRYPTION_KEY must not be all zeros — generate with: openssl rand -hex 32',
+    )
+  }
+  console.warn('⚠️  CLUSTER_CRED_ENCRYPTION_KEY is all zeros — acceptable for dev only')
 }
 
 if (process.env.NODE_ENV === 'production') {

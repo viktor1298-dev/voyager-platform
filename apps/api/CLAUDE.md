@@ -116,6 +116,9 @@ All Redis cache keys are centralized in `lib/cache-keys.ts`. **Never construct c
 ### K8S_ENABLED=false Does NOT Disable All Jobs
 `K8S_ENABLED=false` only disables K8s watchers (informers) and deploy-smoke-test. Remaining jobs (metrics-history-collector, alert-evaluator) **always run**. They handle per-cluster errors gracefully and are required for remotely-added clusters with embedded credentials.
 
+### Provider ≠ Auth Mechanism — Kubeconfig-First in Client Factory
+`provider` (aws/azure/gke/minikube/kubeconfig) tells us WHERE the cluster lives — for display (logos, labels). The `connectionConfig` shape determines HOW to authenticate. `createKubeConfigForCluster` checks for a `kubeconfig` field first — if present, uses `kc.loadFromString()` regardless of provider. Provider-specific auth (AWS STS, Azure credential, GKE service account) is only used when native credentials are provided. **Never assume `provider: 'aws'` means AWS access keys** — it can be a kubeconfig for an EKS cluster.
+
 ### Kubeconfig Provider — Context Fallback
 When loading a kubeconfig via `loadFromString()`, if no explicit `context` param is provided, the factory falls back to `current-context` from the YAML, then to the first context. Without this, the KubeConfig object may have no context selected, causing API calls to fail silently.
 
