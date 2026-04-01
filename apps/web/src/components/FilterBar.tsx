@@ -52,6 +52,7 @@ export function FilterBar({
   const router = useRouter()
   const searchRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const isTypingRef = useRef(false)
   const [localSearch, setLocalSearch] = useState('')
 
   const parsed = useMemo(
@@ -62,6 +63,11 @@ export function FilterBar({
   useEffect(() => {
     onChange(parsed)
     setLocalSearch(parsed.q)
+    // Restore focus to search input after URL-driven re-render while user is typing
+    if (isTypingRef.current) {
+      isTypingRef.current = false
+      setTimeout(() => searchRef.current?.focus(), 0)
+    }
   }, [parsed, onChange])
 
   useEffect(() => () => clearTimeout(debounceRef.current), [])
@@ -135,6 +141,7 @@ export function FilterBar({
             onChange={(e) => {
               const value = e.target.value
               setLocalSearch(value)
+              isTypingRef.current = true
               clearTimeout(debounceRef.current)
               debounceRef.current = setTimeout(() => {
                 updateParams((params) => {

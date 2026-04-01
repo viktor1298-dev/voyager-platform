@@ -73,7 +73,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <AuthGuard>
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[var(--color-accent)] focus:text-white focus:rounded-lg focus:text-sm focus:font-medium"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-[var(--color-accent)] focus-visible:text-white focus-visible:rounded-lg focus-visible:text-sm focus-visible:font-medium"
       >
         Skip to content
       </a>

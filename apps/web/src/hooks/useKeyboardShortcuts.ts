@@ -84,6 +84,10 @@ export function useKeyboardShortcuts(shortcuts?: ShortcutConfig[]) {
           const skipOnInput = shortcut.skipOnInput !== false
           if (skipOnInput && isInputFocused) continue
 
+          // Don't intercept browser shortcuts (Cmd/Ctrl+key) unless explicitly required
+          if (!modifiers.includes('meta') && e.metaKey) continue
+          if (!modifiers.includes('ctrl') && e.ctrlKey) continue
+
           const modMatch =
             (!modifiers.includes('meta') || e.metaKey) &&
             (!modifiers.includes('ctrl') || e.ctrlKey) &&

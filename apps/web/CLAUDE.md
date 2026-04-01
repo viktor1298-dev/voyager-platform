@@ -199,5 +199,11 @@ Short ranges (≤15m) use SSE from K8s metrics-server. Historical ranges (≥30m
 ### TerminalDrawer Must Be Mounted in providers.tsx
 `<TerminalDrawer />` must be inside `<TerminalProvider>` in `providers.tsx`. It renders as fixed-position outside page tree. If missing, clicking Exec does nothing — no error, no drawer.
 
+### useKeyboardShortcuts — Bare Keys Must Not Catch Modifier Combos
+When registering bare-key shortcuts (e.g., `['r']`, `['n']`), the modifier match logic in `useKeyboardShortcuts.ts` guards against Cmd/Ctrl being pressed. **Never remove these guards** — without them, bare `r` catches Cmd+R (browser refresh), bare `c` catches Cmd+C (copy), etc. If adding a shortcut that requires Cmd/Ctrl, include `'meta'`/`'ctrl'` in the `keys` array.
+
+### FilterBar Search — `router.replace()` Steals Focus
+`FilterBar.tsx` syncs search text to URL via `router.replace()`. This triggers a Next.js re-render that resets `document.activeElement`. The `isTypingRef` + `useEffect` refocus pattern restores focus after the URL update. **Never remove the refocus logic** — without it, every keystroke in the search bar loses focus.
+
 ### SSE Connects Directly to API — Not Through Next.js
 `useResourceSSE` builds the EventSource URL from `NEXT_PUBLIC_API_URL` (e.g., `http://localhost:4001/api/resources/stream`). SSE bypasses Next.js entirely — no rewrites, no Route Handlers. The `next.config.ts` rewrites use a negative lookahead to exclude SSE paths (`resources/stream`, `metrics/stream`, `logs/stream`). **Never add SSE endpoints to Next.js rewrites** — they buffer and drop the connection.

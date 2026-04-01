@@ -10,12 +10,15 @@ import type * as k8s from '@kubernetes/client-node'
 import { clusters, db, events, nodes } from '@voyager/db'
 import { and, eq, notInArray, sql } from 'drizzle-orm'
 import { WATCH_DB_SYNC_INTERVAL_MS } from '@voyager/config/sse'
+import { detectProviderFromKubeconfig } from '@voyager/config/providers'
 import type { WatchEvent } from '@voyager/types'
 import type { WatchStatusEvent } from '@voyager/types'
 import { clusterClientPool } from './cluster-client-pool.js'
+import { decryptCredential } from './credential-crypto.js'
 import { voyagerEmitter } from './event-emitter.js'
 import { watchManager } from './watch-manager.js'
 import { parseCpuToNano, parseMemToBytes } from './k8s-units.js'
+import { K8S_CONFIG } from '../config/k8s.js'
 
 // ── Dirty Tracking ────────────────────────────────────────────
 
@@ -168,7 +171,11 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
 
   // Only update status to 'active' if currently 'unreachable' or 'unknown'
   const [currentCluster] = await db
-    .select({ status: clusters.status })
+    .select({
+      status: clusters.status,
+      provider: clusters.provider,
+      connectionConfig: clusters.connectionConfig,
+    })
     .from(clusters)
     .where(eq(clusters.id, clusterId))
 
@@ -198,6 +205,30 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
   }
   if (version) {
     updatePayload.version = version
+  }
+
+  // Auto-fix: detect real provider for clusters stored as 'kubeconfig'
+  if (currentCluster?.provider === 'kubeconfig' && currentCluster.connectionConfig) {
+    try {
+      let config = currentCluster.connectionConfig as Record<string, unknown>
+      if (
+        typeof config.__encrypted === 'string' &&
+        /^[0-9a-fA-F]{64}$/.test(K8S_CONFIG.ENCRYPTION_KEY)
+      ) {
+        config = JSON.parse(decryptCredential(config.__encrypted, K8S_CONFIG.ENCRYPTION_KEY))
+      }
+      if (typeof config.kubeconfig === 'string') {
+        const detection = detectProviderFromKubeconfig(config.kubeconfig)
+        if (detection.confidence !== 'none') {
+          updatePayload.provider = detection.provider
+          console.info(
+            `[watch-db-writer] Auto-detected provider for cluster ${clusterId}: ${detection.provider} (${detection.signal}, ${detection.confidence})`,
+          )
+        }
+      }
+    } catch {
+      // Detection is best-effort — never block health sync
+    }
   }
 
   await db.update(clusters).set(updatePayload).where(eq(clusters.id, clusterId))
