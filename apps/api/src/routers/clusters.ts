@@ -1,6 +1,7 @@
 import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
 import { CACHE_TTL, LIMITS } from '@voyager/config'
+import { detectProviderFromKubeconfig } from '@voyager/config/providers'
 import { clusters, nodes } from '@voyager/db'
 import { count, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
@@ -828,13 +829,28 @@ export const clustersRouter = router({
         }
       }
 
+      // Auto-detect provider from kubeconfig content
+      let effectiveProvider = input.provider
+      if (
+        input.provider === 'kubeconfig' &&
+        input.connectionConfig &&
+        'kubeconfig' in input.connectionConfig
+      ) {
+        const detection = detectProviderFromKubeconfig(
+          (input.connectionConfig as { kubeconfig: string }).kubeconfig,
+        )
+        if (detection.confidence !== 'none') {
+          effectiveProvider = detection.provider
+        }
+      }
+
       const parsedLastHealthCheck = parseOptionalDateInput(input.lastHealthCheck, 'lastHealthCheck')
 
       const [created] = await ctx.db
         .insert(clusters)
         .values({
           name: input.name,
-          provider: normalizeProvider(input.provider),
+          provider: normalizeProvider(effectiveProvider),
           environment: input.environment ?? 'development',
           endpoint: effectiveEndpoint,
           connectionConfig: encryptConnectionConfig(input.connectionConfig ?? {}),
