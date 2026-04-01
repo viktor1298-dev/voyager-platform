@@ -10,6 +10,7 @@ import {
   PROVIDER_LABELS,
   type DetectionResult,
 } from '@voyager/config/providers'
+import { ProviderLogo, PROVIDER_ICONS } from '@/components/ProviderLogo'
 
 type ClusterProviderOption = {
   id: 'kubeconfig' | 'aws' | 'azure' | 'gke' | 'minikube'
@@ -538,6 +539,33 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
                 </>
               )}
 
+              {provider === 'kubeconfig' && detectionResult && (
+                <div
+                  className="flex items-center gap-3 rounded-lg p-3 border text-sm"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, ${PROVIDER_ICONS[detectionResult.provider]?.color ?? '#9CA3AF'} 8%, transparent)`,
+                    borderColor: `color-mix(in srgb, ${PROVIDER_ICONS[detectionResult.provider]?.color ?? '#9CA3AF'} 20%, transparent)`,
+                  }}
+                >
+                  <ProviderLogo provider={detectionResult.provider} size={24} />
+                  <div className="min-w-0">
+                    <div className="text-[var(--color-text-primary)] font-medium text-sm">
+                      {detectionResult.label} Cluster Detected
+                    </div>
+                    {detectionResult.context && (
+                      <div className="text-[var(--color-text-muted)] text-xs truncate">
+                        Context: {detectionResult.context}
+                      </div>
+                    )}
+                    {detectionResult.endpoint && (
+                      <div className="text-[var(--color-text-muted)] text-xs truncate">
+                        Endpoint: {detectionResult.endpoint}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {provider === 'aws' && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
@@ -761,12 +789,13 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
           {step === 4 && (
             <div className="space-y-3">
               <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 text-sm">
-                <p className="text-[var(--color-text-secondary)]">
+                <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
                   Provider:{' '}
+                  <ProviderLogo provider={detectionResult?.provider ?? provider} size={16} />
                   <span className="text-[var(--color-text-primary)]">
                     {detectionResult?.label ?? currentProvider.label}
                   </span>
-                </p>
+                </div>
                 <p className="text-[var(--color-text-secondary)]">
                   Endpoint:{' '}
                   <span className="text-[var(--color-text-primary)] break-all">
