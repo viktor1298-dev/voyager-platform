@@ -15,11 +15,12 @@ voyager-platform/
 │   └── web/                    # Next.js 16 frontend — see apps/web/CLAUDE.md
 ├── packages/
 │   ├── db/                     # Drizzle ORM schema — see packages/db/CLAUDE.md
-│   ├── config/                 # Shared config (SSE, AI, routes, cache TTLs, validation limits)
+│   ├── config/                 # Shared config (SSE, AI, routes, cache TTLs, validation limits, provider detection)
 │   ├── types/                  # Shared TypeScript types (SSE events, AI key contracts, Karpenter)
 │   └── ui/                     # Shared UI components (shadcn/ui)
 ├── charts/voyager/             # Helm chart — see charts/voyager/CLAUDE.md
 ├── docker/                     # Dockerfile.api, Dockerfile.web
+├── docs/                       # DESIGN.md (animation/interaction), superpowers/specs/ (design specs)
 ├── tests/
 │   ├── e2e/                    # Playwright E2E tests
 │   └── visual/                 # Visual regression tests
@@ -162,6 +163,7 @@ Configuration is split between shared (API + Web) and backend-only:
 | `packages/config/src/validation.ts` | `LIMITS` (NAME_MAX, LIST_MAX, etc.) | All tRPC routers with Zod schemas |
 | `packages/config/src/sse.ts` | SSE heartbeat/reconnect constants | SSE subscriptions |
 | `packages/config/src/ai.ts` | `AI_CONFIG` | AI service |
+| `packages/config/src/providers.ts` | `PROVIDER_DETECTION_RULES`, `detectProviderFromKubeconfig()`, `PROVIDER_LABELS` | clusters router, watch-db-writer, AddClusterWizard |
 | `apps/api/src/config/jobs.ts` | `JOB_INTERVALS` | All background jobs |
 | `apps/api/src/config/k8s.ts` | `K8S_CONFIG` (CLIENT_POOL_MAX, ENCRYPTION_KEY getter) | cluster-client-pool, clusters router |
 
