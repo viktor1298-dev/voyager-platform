@@ -7,7 +7,7 @@ const PROVIDER_ALIASES: Record<string, string> = {
   gke: 'gcp',
 }
 
-const PROVIDER_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
+export const PROVIDER_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
   minikube: {
     icon: 'simple-icons:kubernetes',
     color: '#326CE5',
