@@ -15,6 +15,7 @@ import { getAllTabPaths } from '@/components/clusters/cluster-tabs-config'
 import { ConnectionStatusBadge } from '@/components/ConnectionStatusBadge'
 import { useCachedResources } from '@/hooks/useCachedResources'
 import { useResourceSSE } from '@/hooks/useResourceSSE'
+import { useResourceTick } from '@/hooks/useResources'
 import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 
@@ -26,6 +27,8 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
   useCachedResources(clusterId)
   // Real-time resource updates — SSE connection covers ALL tabs
   const { connectionState } = useResourceSSE(clusterId)
+  // Drive the global 5s tick that keeps relative time labels current
+  useResourceTick()
 
   const pathname = usePathname()
   const router = useRouter()
