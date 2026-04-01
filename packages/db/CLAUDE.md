@@ -21,7 +21,6 @@ src/schema/
 ├── metrics-history.ts    # TimescaleDB hypertable for cluster metrics
 ├── node-metrics-history.ts # TimescaleDB hypertable for node metrics
 ├── dashboards.ts         # Custom dashboards
-├── dashboard-layouts.ts  # Dashboard widget layouts
 ├── webhooks.ts           # Webhook configurations
 ├── feature-flags.ts      # Feature flag overrides
 ├── ai.ts                 # AI conversation history

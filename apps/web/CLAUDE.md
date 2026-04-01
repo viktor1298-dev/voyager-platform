@@ -27,6 +27,7 @@ src/
 │   ├── providers.tsx      # All providers (tRPC, theme, LazyMotion, TerminalProvider + TerminalDrawer, CommandPalette)
 │   ├── DataTable.tsx      # Reusable table component
 │   ├── CommandPalette.tsx # cmdk (dynamically imported, ~20KB savings)
+│   ├── dashboard/         # KpiStrip, ClusterCard, EnvironmentGroup, DashboardFilterChips, DashboardSkeleton
 │   ├── animations/        # FadeIn, SlideIn, AnimatedList, PageTransition, SuccessCheck
 │   ├── charts/            # chart-theme.ts (CSS var colors), metric panels
 │   ├── metrics/           # CrosshairProvider, DataFreshnessBadge, MetricsPanelSkeleton, DebouncedResponsiveContainer
@@ -97,13 +98,13 @@ src/
 - **QueryClient:** Global `staleTime: 30s` to prevent unnecessary refetches
 - **Polling intervals:** Use `SYNC_INTERVAL_MS` (30s) from `config/constants.ts` for staleTime/refetchInterval. Use `DB_CLUSTER_REFETCH_MS` / `HEALTH_STATUS_REFETCH_MS` (60s) from `lib/cluster-constants.ts` for slower-polling data. **Never hardcode 30000/60000 — import the constant.**
 - **K8s units:** Use `parseCpuMillicores()` / `parseMemoryMi()` from `lib/k8s-units.ts` — never define local copies
-- **Container queries:** `WidgetWrapper.tsx` uses `@container` for responsive dashboard widgets
+- **Dashboard page:** Compact Rancher-style layout — KpiStrip (36px) → DashboardFilterChips (32px) → EnvironmentGroup (collapsible) → ClusterCard grid. No widget mode. All values from centralized CSS variables and `animation-constants.ts` tokens.
 
 ### State Management
 
 - **Server state (DB):** Clusters, nodes, alerts, users, webhooks — PostgreSQL via tRPC queries
 - **Real-time state (SSE):** Pod updates, deployment progress, metrics — EventEmitter → SSE → useResourceSSE/useMetricsSSE
-- **Client state:** UI filters, sidebar collapse, dashboard layout — Zustand stores
+- **Client state:** UI filters, sidebar collapse — Zustand stores
 - **Session:** Better-Auth cookie session (secure, httpOnly, sameSite=strict) — no JWT
 - **Cache:** tRPC useQuery with `staleTime` and `refetchInterval` per endpoint
 
@@ -131,7 +132,6 @@ src/
 - `cmdk` — command palette
 - `nuqs` — URL query state management
 - `recharts` — charts/graphs
-- `react-grid-layout` — dashboard layouts
 - `vaul` — drawer component
 - `sonner` — toast notifications
 - `@xyflow/react` — React Flow for topology and network policy graphs
