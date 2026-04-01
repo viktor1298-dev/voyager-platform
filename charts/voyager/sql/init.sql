@@ -457,13 +457,7 @@ CREATE TABLE IF NOT EXISTS "feature_flags" (
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
--- Dashboard layouts (missing table — added v190)
-CREATE TABLE IF NOT EXISTS "dashboard_layouts" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "user_id" text NOT NULL UNIQUE REFERENCES "user"("id") ON DELETE CASCADE,
-  "layout" jsonb NOT NULL,
-  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
-);
+DROP TABLE IF EXISTS "dashboard_layouts";
 
 -- Shared dashboards (missing table — added v190)
 DO $$ BEGIN

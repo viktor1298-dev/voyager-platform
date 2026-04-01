@@ -11,7 +11,6 @@ import { configMapsRouter } from './configmaps.js'
 import { cronJobsRouter } from './cronjobs.js'
 import { daemonSetsRouter } from './daemonsets.js'
 import { dashboardRouter } from './dashboard.js'
-import { dashboardLayoutRouter } from './dashboard-layout.js'
 import { deploymentsRouter } from './deployments.js'
 import { eventsRouter } from './events.js'
 import { ingressesRouter } from './ingresses.js'
@@ -82,7 +81,6 @@ export const appRouter = router({
   statefulSets: statefulSetsRouter,
   namespaces: namespacesRouter,
   networkPolicies: networkPoliciesRouter,
-  dashboardLayout: dashboardLayoutRouter,
   yaml: yamlRouter,
   helm: helmRouter,
   crds: crdsRouter,
