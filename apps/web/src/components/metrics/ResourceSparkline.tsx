@@ -8,6 +8,7 @@
 
 import { useMemo } from 'react'
 import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts'
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 
 interface SparklinePoint {
@@ -51,8 +52,8 @@ export function ResourceSparkline({
   const { data, isLoading } = trpc.metrics.history.useQuery(
     { clusterId, range: '1h' },
     {
-      refetchInterval: 30_000,
-      staleTime: 30_000,
+      refetchInterval: SYNC_INTERVAL_MS,
+      staleTime: SYNC_INTERVAL_MS,
     },
   )
 

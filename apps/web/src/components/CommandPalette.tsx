@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { navItems } from '@/config/navigation'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
 import { AiCommandPaletteProvider } from '@/components/ai/AiCommandPaletteProvider'
@@ -62,22 +63,25 @@ export function CommandPalette() {
   const currentClusterId = clusterRouteMatch ? clusterRouteMatch[1] : null
 
   // Fetch resource data for fuzzy search
-  const clustersQuery = trpc.clusters.list.useQuery(undefined, { enabled: open, staleTime: 30000 })
+  const clustersQuery = trpc.clusters.list.useQuery(undefined, {
+    enabled: open,
+    staleTime: SYNC_INTERVAL_MS,
+  })
   const deploymentsQuery = trpc.deployments.list.useQuery(
     { clusterId: activeClusterId ?? '' },
-    { enabled: open && !!activeClusterId, staleTime: 30000 },
+    { enabled: open && !!activeClusterId, staleTime: SYNC_INTERVAL_MS },
   )
   const servicesQuery = trpc.services.list.useQuery(
     { clusterId: activeClusterId ?? '' },
-    { enabled: open && !!activeClusterId, staleTime: 30000 },
+    { enabled: open && !!activeClusterId, staleTime: SYNC_INTERVAL_MS },
   )
   const podsQuery = trpc.pods.list.useQuery(
     { clusterId: activeClusterId ?? '' },
-    { enabled: open && !!activeClusterId, staleTime: 30000 },
+    { enabled: open && !!activeClusterId, staleTime: SYNC_INTERVAL_MS },
   )
   const namespacesQuery = trpc.namespaces.list.useQuery(
     { clusterId: activeClusterId ?? '' },
-    { enabled: open && !!activeClusterId, staleTime: 30000 },
+    { enabled: open && !!activeClusterId, staleTime: SYNC_INTERVAL_MS },
   )
 
   useEffect(() => {

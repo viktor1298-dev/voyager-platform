@@ -6,6 +6,7 @@ import { ExpandableCard } from '@/components/expandable'
 import { CrdInstanceList } from './CrdInstanceList'
 import { SearchFilterBar } from '@/components/resource'
 import { SectionLoadingSkeleton } from '@/components/resource'
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 
 interface CrdSummaryData {
@@ -53,7 +54,7 @@ interface CrdBrowserProps {
 }
 
 export function CrdBrowser({ clusterId }: CrdBrowserProps) {
-  const crdsQuery = trpc.crds.list.useQuery({ clusterId }, { staleTime: 30_000 })
+  const crdsQuery = trpc.crds.list.useQuery({ clusterId }, { staleTime: SYNC_INTERVAL_MS })
 
   const [searchQuery, setSearchQuery] = useState('')
   const [expandAll, setExpandAll] = useState(false)

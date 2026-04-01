@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes'
 import { stringify } from 'yaml'
 import dynamic from 'next/dynamic'
 const ReactDiffViewer = dynamic(() => import('react-diff-viewer-continued'), { ssr: false })
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 
@@ -42,11 +43,11 @@ export function HelmRevisionDiff({
 
   const fromQuery = trpc.helm.revisionValues.useQuery(
     { clusterId, releaseName, namespace, revision: fromRev },
-    { staleTime: 30_000 },
+    { staleTime: SYNC_INTERVAL_MS },
   )
   const toQuery = trpc.helm.revisionValues.useQuery(
     { clusterId, releaseName, namespace, revision: toRev },
-    { staleTime: 30_000 },
+    { staleTime: SYNC_INTERVAL_MS },
   )
 
   const { fromYaml, toYaml } = useMemo(() => {

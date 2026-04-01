@@ -15,6 +15,7 @@ import { getAllTabPaths } from '@/components/clusters/cluster-tabs-config'
 import { ConnectionStatusBadge } from '@/components/ConnectionStatusBadge'
 import { useCachedResources } from '@/hooks/useCachedResources'
 import { useResourceSSE } from '@/hooks/useResourceSSE'
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 
 export default function ClusterLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +31,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
   const router = useRouter()
   const contentRef = useRef<HTMLDivElement>(null)
 
-  const dbCluster = trpc.clusters.get.useQuery({ id: clusterId }, { staleTime: 30000 })
+  const dbCluster = trpc.clusters.get.useQuery({ id: clusterId }, { staleTime: SYNC_INTERVAL_MS })
   const clusterRouteSegment = dbCluster.data
     ? getClusterRouteSegment({ id: dbCluster.data.id, name: dbCluster.data.name })
     : routeSegment

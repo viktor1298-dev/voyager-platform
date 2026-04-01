@@ -16,6 +16,7 @@ import '@xyflow/react/dist/style.css'
 import dagre from '@dagrejs/dagre'
 import { Search } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 import { TopologyNodeComponent, type TopologyNodeData } from './TopologyNode'
 import { TopologyEdgeComponent, type TopologyEdgeData } from './TopologyEdge'
@@ -66,7 +67,7 @@ export function TopologyMap({ clusterId }: TopologyMapProps) {
 
   const graphQuery = trpc.topology.graph.useQuery(
     { clusterId, namespace: namespace || undefined },
-    { staleTime: 30_000, refetchInterval: 30_000 },
+    { staleTime: SYNC_INTERVAL_MS, refetchInterval: SYNC_INTERVAL_MS },
   )
 
   const graphData = graphQuery.data as

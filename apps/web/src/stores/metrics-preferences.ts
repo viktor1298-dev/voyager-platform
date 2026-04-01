@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { MetricsRange } from '@/components/metrics/TimeRangeSelector'
 import type { RefreshInterval } from '@/components/metrics/AutoRefreshToggle'
+import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 
 interface MetricsPreferencesState {
   range: MetricsRange
@@ -36,7 +37,7 @@ export const useMetricsPreferences = create<MetricsPreferencesState>()(
       customFrom: null,
       customTo: null,
       autoRefresh: true,
-      refreshInterval: 60000,
+      refreshInterval: DB_CLUSTER_REFETCH_MS as RefreshInterval,
       setRange: (range) => set({ range }),
       setCustomRange: (from, to) =>
         set({ range: 'custom', customFrom: from, customTo: to, autoRefresh: false }),

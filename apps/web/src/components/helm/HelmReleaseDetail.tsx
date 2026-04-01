@@ -14,6 +14,7 @@ import { useMemo, useState } from 'react'
 import { stringify } from 'yaml'
 import { DetailGrid, DetailTabs, ExpandableCard } from '@/components/expandable'
 import { RelatedResourceLink } from '@/components/resource'
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { AnimatePresence, motion } from 'motion/react'
@@ -153,12 +154,12 @@ function kindToTab(kind: string): string | null {
 export function HelmReleaseDetail({ clusterId, releaseName, namespace }: HelmReleaseDetailProps) {
   const releaseQuery = trpc.helm.get.useQuery(
     { clusterId, releaseName, namespace },
-    { staleTime: 30_000 },
+    { staleTime: SYNC_INTERVAL_MS },
   )
 
   const revisionsQuery = trpc.helm.revisions.useQuery(
     { clusterId, releaseName, namespace },
-    { staleTime: 30_000 },
+    { staleTime: SYNC_INTERVAL_MS },
   )
 
   type ReleaseData = {
@@ -185,7 +186,7 @@ export function HelmReleaseDetail({ clusterId, releaseName, namespace }: HelmRel
     { clusterId, releaseName, namespace, revision: expandedRevision! },
     {
       enabled: expandedRevision !== null,
-      staleTime: 30_000,
+      staleTime: SYNC_INTERVAL_MS,
     },
   )
 

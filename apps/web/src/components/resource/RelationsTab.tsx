@@ -19,6 +19,7 @@ import {
   Zap,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 import { RelatedResourceLink } from './RelatedResourceLink'
 
@@ -136,7 +137,7 @@ interface RelationsTabProps {
 export function RelationsTab({ clusterId, kind, namespace, name }: RelationsTabProps) {
   const { data, isLoading } = trpc.relations.forResource.useQuery(
     { clusterId, kind, namespace, name },
-    { staleTime: 30_000, refetchOnWindowFocus: true },
+    { staleTime: SYNC_INTERVAL_MS, refetchOnWindowFocus: true },
   )
 
   if (isLoading) {

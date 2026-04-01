@@ -6,7 +6,7 @@ import { motion } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { DataTable } from '@/components/DataTable'
-import { APP_VERSION } from '@/config/constants'
+import { APP_VERSION, SYNC_INTERVAL_MS } from '@/config/constants'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { cardHover, cardTap } from '@/lib/animation-constants'
 import {
@@ -16,6 +16,7 @@ import {
   testAiKeyConnection,
   upsertAiKeySettings,
 } from '@/lib/ai-keys-client'
+import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { trpc } from '@/lib/trpc'
 import { useClusterContext } from '@/stores/cluster-context'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -166,11 +167,11 @@ export default function SettingsGeneralPage() {
     { clusterId: activeClusterId ?? '' },
     {
       enabled: Boolean(activeClusterId),
-      refetchInterval: 30000,
+      refetchInterval: SYNC_INTERVAL_MS,
     },
   )
   const listQuery = trpc.clusters.list.useQuery(undefined, {
-    refetchInterval: 60000,
+    refetchInterval: DB_CLUSTER_REFETCH_MS,
   })
 
   const [provider, setProvider] = useState<AiProvider>('anthropic')

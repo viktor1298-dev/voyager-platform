@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react'
 import type { SSEConnectionState } from '@voyager/types'
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 import type { MetricsRange, ApiMetricsRange } from '@/components/metrics/TimeRangeSelector'
 import type { MetricsDataPoint } from '@/components/metrics/MetricsAreaChart'
@@ -57,7 +58,7 @@ export function useMetricsData(clusterId: string, range: MetricsRange): UseMetri
     { clusterId, range: apiRange },
     {
       enabled: !isLive && !isCustom,
-      staleTime: 30_000,
+      staleTime: SYNC_INTERVAL_MS,
       retry: 2,
     },
   )

@@ -1,5 +1,6 @@
 import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
+import { LIMITS } from '@voyager/config'
 import { clusters, db } from '@voyager/db'
 import { z } from 'zod'
 import { createAuthorizationService } from '../lib/authorization.js'
@@ -160,7 +161,12 @@ export const logsRouter = router({
     .input(
       z.object({
         targets: z.array(logTargetSchema).min(1),
-        tailLines: z.number().int().positive().max(5000).default(200),
+        tailLines: z
+          .number()
+          .int()
+          .positive()
+          .max(LIMITS.LOG_TAIL_MAX)
+          .default(LIMITS.LOG_TAIL_DEFAULT),
         search: z.string().optional(),
         levels: z.array(z.enum(LOG_LEVELS)).optional(),
       }),
@@ -302,7 +308,7 @@ export const logsRouter = router({
         podName: z.string().min(1),
         namespace: z.string().min(1),
         container: z.string().optional(),
-        tailLines: z.number().int().positive().max(5000).default(500),
+        tailLines: z.number().int().positive().max(LIMITS.LOG_TAIL_MAX).default(500),
       }),
     )
     .output(

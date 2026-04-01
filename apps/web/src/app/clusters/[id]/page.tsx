@@ -19,6 +19,7 @@ import { TopologyMap } from '@/components/topology/TopologyMap'
 import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
+import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -267,7 +268,7 @@ export default function ClusterOverviewPage() {
   // M-P3-003: Fetch anomalies for AI insight chips
   const anomaliesQuery = trpc.anomalies.list.useQuery(
     { clusterId: resolvedId, page: 1, pageSize: 50 },
-    { staleTime: 60000 },
+    { staleTime: DB_CLUSTER_REFETCH_MS },
   )
 
   const isLoading = !snapshotsReady && liveNodes.length === 0 && dbCluster.isLoading

@@ -5,10 +5,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { APP_VERSION } from '@/config/constants'
+import { APP_VERSION, SYNC_INTERVAL_MS } from '@/config/constants'
 import { navItems } from '@/config/navigation'
 import { badgePopVariants, EASING } from '@/lib/animation-constants'
 import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
+import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { trpc } from '@/lib/trpc'
 import { useAnomalyCount } from '@/hooks/useAnomalyCount'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -27,11 +28,13 @@ export function Sidebar({
   isDesktop: boolean
 }) {
   const pathname = usePathname()
-  const clustersQuery = trpc.clusters.list.useQuery(undefined, { refetchInterval: 60000 })
+  const clustersQuery = trpc.clusters.list.useQuery(undefined, {
+    refetchInterval: DB_CLUSTER_REFETCH_MS,
+  })
   const sidebarClusters = (clustersQuery.data ?? []).slice(0, 6)
 
   const { data: unacknowledgedCount = 0 } = trpc.alerts.unacknowledgedCount.useQuery(undefined, {
-    refetchInterval: 30000,
+    refetchInterval: SYNC_INTERVAL_MS,
   })
 
   // DB-003: anomaly count for Alerts badge

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 import { TimeRangeSelector, type ApiMetricsRange } from './TimeRangeSelector'
 import { AutoRefreshToggle } from './AutoRefreshToggle'
@@ -88,7 +89,7 @@ export function MetricsTimeSeriesPanel({
     { clusterId, range: apiRange },
     {
       refetchInterval,
-      staleTime: 30_000,
+      staleTime: SYNC_INTERVAL_MS,
       retry: 2,
       retryDelay: 3000,
     },
@@ -98,7 +99,7 @@ export function MetricsTimeSeriesPanel({
     { clusterId },
     {
       refetchInterval,
-      staleTime: 30_000,
+      staleTime: SYNC_INTERVAL_MS,
       enabled: isLive,
       retry: 1,
     },

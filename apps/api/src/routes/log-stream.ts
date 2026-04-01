@@ -1,6 +1,10 @@
 import { PassThrough } from 'node:stream'
 import { Log } from '@kubernetes/client-node'
-import { SSE_HEARTBEAT_INTERVAL_MS } from '@voyager/config'
+import {
+  MAX_RESOURCE_CONNECTIONS_GLOBAL,
+  MAX_RESOURCE_CONNECTIONS_PER_CLUSTER,
+  SSE_HEARTBEAT_INTERVAL_MS,
+} from '@voyager/config'
 import { ConnectionLimiter, trackConnection } from '../lib/connection-tracker.js'
 import { clusters, db } from '@voyager/db'
 import { eq } from 'drizzle-orm'
@@ -17,7 +21,10 @@ const querySchema = z.object({
   tailLines: z.coerce.number().int().min(1).max(10000).optional().default(100),
 })
 
-const connectionLimiter = new ConnectionLimiter(10, 50)
+const connectionLimiter = new ConnectionLimiter(
+  MAX_RESOURCE_CONNECTIONS_PER_CLUSTER,
+  MAX_RESOURCE_CONNECTIONS_GLOBAL,
+)
 
 /** Maximum log lines before auto-closing stream to prevent memory exhaustion */
 const MAX_LOG_LINES = 10_000

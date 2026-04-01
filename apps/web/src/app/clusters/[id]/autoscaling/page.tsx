@@ -29,28 +29,8 @@ import {
 import { SectionLoadingSkeleton } from '@/components/resource'
 import type { KarpenterEC2NodeClass, KarpenterNodeClaim, KarpenterNodePool } from '@voyager/types'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { parseCpuMillicores, parseMemoryMi } from '@/lib/k8s-units'
 import { trpc } from '@/lib/trpc'
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Parse K8s CPU resource string to millicores */
-function parseCpuMillicores(value: string): number {
-  if (value.endsWith('m')) return Number.parseInt(value, 10) || 0
-  const cores = Number.parseFloat(value)
-  return Number.isNaN(cores) ? 0 : Math.round(cores * 1000)
-}
-
-/** Parse K8s memory resource string to MiB */
-function parseMemoryMi(value: string): number {
-  if (value.endsWith('Mi')) return Number.parseInt(value, 10) || 0
-  if (value.endsWith('Gi')) return (Number.parseFloat(value) || 0) * 1024
-  if (value.endsWith('Ki')) return Math.round((Number.parseInt(value, 10) || 0) / 1024)
-  // Assume raw bytes
-  const bytes = Number.parseInt(value, 10)
-  return Number.isNaN(bytes) ? 0 : Math.round(bytes / 1048576)
-}
 
 /** Extract instance ID from providerID (e.g. "aws:///us-east-1a/i-0abc...") */
 function parseInstanceId(providerID: string | null): string | null {

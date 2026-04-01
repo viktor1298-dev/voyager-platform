@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import type { ResourceType } from '@voyager/types'
+import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
 import { useResourceStore } from '@/stores/resource-store'
 
@@ -20,7 +21,7 @@ export function useCachedResources(clusterId: string | null) {
     { clusterId: clusterId! },
     {
       enabled: !!clusterId,
-      staleTime: 30_000,
+      staleTime: SYNC_INTERVAL_MS,
       refetchOnWindowFocus: false,
     },
   )

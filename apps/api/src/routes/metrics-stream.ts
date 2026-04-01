@@ -1,5 +1,9 @@
 import crypto from 'node:crypto'
-import { SSE_HEARTBEAT_INTERVAL_MS } from '@voyager/config'
+import {
+  MAX_RESOURCE_CONNECTIONS_GLOBAL,
+  MAX_RESOURCE_CONNECTIONS_PER_CLUSTER,
+  SSE_HEARTBEAT_INTERVAL_MS,
+} from '@voyager/config'
 import { ConnectionLimiter, trackConnection } from '../lib/connection-tracker.js'
 import { clusters, db } from '@voyager/db'
 import type { MetricsStreamEvent } from '@voyager/types'
@@ -14,7 +18,10 @@ const querySchema = z.object({
   clusterId: z.string().uuid(),
 })
 
-const connectionLimiter = new ConnectionLimiter(10, 50)
+const connectionLimiter = new ConnectionLimiter(
+  MAX_RESOURCE_CONNECTIONS_PER_CLUSTER,
+  MAX_RESOURCE_CONNECTIONS_GLOBAL,
+)
 
 export async function registerMetricsStreamRoute(app: FastifyInstance): Promise<void> {
   app.get(
