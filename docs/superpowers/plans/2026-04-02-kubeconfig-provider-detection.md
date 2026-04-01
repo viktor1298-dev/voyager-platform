@@ -524,8 +524,7 @@ users:
     const result = detectProviderFromKubeconfig(privateLink)
     expect(result.provider).toBe('aws')
     expect(result.confidence).not.toBe('none')
-    // vpce URL still contains '.eks.amazonaws.com' substring → matches URL pattern
-    // If it didn't, would fall through to context name 'eks-' prefix
+    // vpce URL doesn't contain '.eks.amazonaws.com' — falls through to context name 'eks-' prefix
     expect(['url', 'context']).toContain(result.signal)
   })
 })
