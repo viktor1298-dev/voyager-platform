@@ -4,11 +4,24 @@ import { Search } from 'lucide-react'
 import { NotificationsPanel } from './NotificationsPanel'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
+import { usePathname } from 'next/navigation'
+
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'Dashboard',
+  '/clusters': 'Clusters',
+  '/alerts': 'Alerts',
+  '/events': 'Events',
+  '/logs': 'Logs',
+  '/settings': 'Settings',
+}
 
 export function TopBar() {
+  const pathname = usePathname()
+  const pageTitle = PAGE_TITLES[pathname] ?? PAGE_TITLES[`/${pathname.split('/')[1]}`] ?? ''
+
   return (
     <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-3 sm:px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">
-      {/* Left — Logo */}
+      {/* Left — Logo + Page Title */}
       <div className="flex items-center gap-2.5 group">
         <img
           src="/logo-mark.svg"
@@ -19,11 +32,18 @@ export function TopBar() {
         <span className="text-[13px] font-bold tracking-widest text-[var(--color-text-secondary)] transition-colors duration-200 group-hover:text-[var(--color-text-primary)]">
           VOYAGER
         </span>
+        {pageTitle && (
+          <>
+            <span className="hidden sm:block text-[var(--color-border)] text-xs">/</span>
+            <span className="hidden sm:block text-[13px] font-semibold text-[var(--color-text-primary)]">
+              {pageTitle}
+            </span>
+          </>
+        )}
       </div>
 
       {/* Right — Controls */}
       <div className="flex items-center gap-1.5">
-        {/* Command palette trigger */}
         <button
           type="button"
           onClick={() =>
@@ -38,7 +58,6 @@ export function TopBar() {
             ⌘K
           </kbd>
         </button>
-
         <ThemeToggle />
         <NotificationsPanel />
         <UserMenu />
