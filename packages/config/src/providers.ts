@@ -105,8 +105,7 @@ function parseKubeconfig(yaml: string): {
     const userBlockRe = new RegExp(
       `-\\s+name:\\s*${escapeRegex(userRef)}\\s*\\n` +
         `\\s+user:\\s*\\n` +
-        `[\\s\\S]*?(?=\\n-\\s+name:|$)`,
-      'm',
+        `[\\s\\S]*?(?=\\n-\\s+name:|\\s*$)`,
     )
     const userBlock = yaml.match(userBlockRe)?.[0] ?? ''
     const execCmd = userBlock.match(/command:\s*(\S+)/)?.[1] ?? ''
