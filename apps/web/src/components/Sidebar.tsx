@@ -258,25 +258,29 @@ export function Sidebar({
                       </motion.span>
                     )}
                   </AnimatePresence>
-                  <AnimatePresence>
-                    {showAlertsBadge && showLabels && (
-                      <motion.span
-                        key="alerts-badge"
-                        variants={badgePopVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        data-testid="alerts-badge"
-                        className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[10px] font-bold px-1 relative z-10"
-                        style={{
-                          background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                          boxShadow: 'var(--sidebar-badge-glow)',
-                        }}
-                      >
-                        {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
+                  {/* Expanded badge — unmounts instantly on collapse (no exit animation)
+                       to prevent ml-auto + min-w-[18px] from pushing icon left in w-10 container */}
+                  {showLabels && (
+                    <AnimatePresence>
+                      {showAlertsBadge && (
+                        <motion.span
+                          key="alerts-badge"
+                          variants={badgePopVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                          data-testid="alerts-badge"
+                          className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[10px] font-bold px-1 relative z-10"
+                          style={{
+                            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                            boxShadow: 'var(--sidebar-badge-glow)',
+                          }}
+                        >
+                          {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  )}
                   {/* Show small indicator dot when collapsed with alerts */}
                   <AnimatePresence>
                     {showAlertsBadge && !showLabels && (
@@ -293,27 +297,29 @@ export function Sidebar({
                       />
                     )}
                   </AnimatePresence>
-                  {/* DB-003: anomaly badge — shown when there are open anomalies and no unacknowledged alerts */}
-                  <AnimatePresence>
-                    {showAnomalyBadge && (
-                      <motion.span
-                        key="anomaly-badge"
-                        variants={badgePopVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        data-testid="anomaly-badge"
-                        className={[
-                          'ml-auto min-w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold px-1 relative z-10',
-                          anomalyCount.critical > 0
-                            ? 'bg-red-500 text-white'
-                            : 'bg-amber-500 text-white',
-                        ].join(' ')}
-                      >
-                        {anomalyCount.total > 99 ? '99+' : anomalyCount.total}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
+                  {/* DB-003: anomaly badge — same instant-unmount pattern on collapse */}
+                  {showLabels && (
+                    <AnimatePresence>
+                      {showAnomalyBadge && (
+                        <motion.span
+                          key="anomaly-badge"
+                          variants={badgePopVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                          data-testid="anomaly-badge"
+                          className={[
+                            'ml-auto min-w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold px-1 relative z-10',
+                            anomalyCount.critical > 0
+                              ? 'bg-red-500 text-white'
+                              : 'bg-amber-500 text-white',
+                          ].join(' ')}
+                        >
+                          {anomalyCount.total > 99 ? '99+' : anomalyCount.total}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  )}
                   {/* SB-005: ChevronDown for clusters accordion — toggles independently from nav link */}
                   {isClustersItem && showLabels && (
                     <motion.button
