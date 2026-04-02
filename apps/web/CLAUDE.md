@@ -45,7 +45,7 @@ src/
 ├── hooks/
 │   ├── useMetricsData.ts      # Unified metrics — SSE for ≤15m, tRPC for ≥30m
 │   ├── useMetricsSSE.ts       # SSE connection with exponential backoff + visibility-aware
-│   ├── useResourceSSE.ts      # K8s Watch → 1s timer-batched Zustand store updates
+│   ├── useResourceSSE.ts      # K8s Watch → adaptive-batched Zustand store updates (flush on 20 events OR 1s timer)
 │   ├── useCachedResources.ts  # Rancher-style tRPC prefetch → seeds Zustand before SSE
 │   ├── useHelmReleases.ts     # Hybrid SSE + tRPC merge for Helm releases
 │   ├── useResources.ts        # Resource data access hook
@@ -141,7 +141,7 @@ src/
 
 | Abstraction | File | Pattern |
 |-------------|------|---------|
-| **useResourceSSE** | `hooks/useResourceSSE.ts` | Direct EventSource to API (`NEXT_PUBLIC_API_URL`), 1s timer-batched Zustand store updates, exponential backoff reconnect, client heartbeat dead-connection detection |
+| **useResourceSSE** | `hooks/useResourceSSE.ts` | Direct EventSource to API (`NEXT_PUBLIC_API_URL`), adaptive-batched Zustand store updates (flush on 20 events OR 1s timer), exponential backoff reconnect, client heartbeat dead-connection detection |
 | **useMetricsData** | `hooks/useMetricsData.ts` | SSE for ≤15m, tRPC for ≥30m — seamless switching |
 | **CrosshairProvider** | `components/metrics/CrosshairProvider.tsx` | RAF-throttled shared crosshair across 4 metric panels |
 | **Metrics Buffer** | `lib/metrics-buffer.ts` | Circular buffer (65 points) with time-based eviction |
@@ -220,6 +220,9 @@ The sidebar uses a single `layoutId="sidebar-active-bar"` for the accent bar spr
 
 ### Sidebar Badges — `showLabels` Guards AnimatePresence, Not Just Content
 Expanded badges (`ml-auto min-w-[18px]`) must wrap their `<AnimatePresence>` inside the `showLabels` conditional, not just the badge element. If `AnimatePresence` wraps the condition (`showBadge && showLabels`), the exit animation keeps the badge in the DOM for 150ms with `ml-auto` still taking flex space — pushing the icon left in the `w-10` collapsed container. Pattern: `{showLabels && (<AnimatePresence>{showBadge && (...)}</AnimatePresence>)}`. The collapsed dot uses `position: absolute` so it never affects icon centering.
+
+### Sidebar Clusters Query — `enabled` Guard on Accordion State
+The `clusters.list` query in `Sidebar.tsx` uses `enabled: clustersOpen || isClustersRoute` to skip fetching when the clusters accordion is collapsed. This saves a DB round-trip every 60s. **Never remove the `enabled` guard** — it prevents unnecessary polling on every page.
 
 ### Sidebar CSS Tokens — Centralized in globals.css
 All sidebar visual values (active gradient, bar glow, icon glow, badge glow, hover backgrounds) use `--sidebar-*` CSS custom properties defined in `:root` (dark) and `html.light` (light). Motion variants for hover/tap are in `animation-constants.ts` (`sidebarCollapsedIconHover`, `sidebarTapFeedback`, `sidebarTapFeedbackCollapsed`). **Never hardcode sidebar colors or shadows inline** — add them to the centralized tokens.

@@ -32,7 +32,7 @@ src/
     ├── auth-request.ts          # External request URL resolution
     ├── authorization.ts         # DB-backed RBAC
     ├── audit.ts                 # Audit trail logging
-    ├── cache.ts                 # Redis cache (failures are non-fatal, used as fallback when watches not ready)
+    ├── cache.ts                 # Redis cache with singleflight + TTL jitter (failures are non-fatal, fallback when watches not ready)
     ├── cache-keys.ts            # Centralized Redis cache key builders (fallback path only)
     ├── cluster-client-pool.ts   # Lazy per-cluster K8s clients (AWS/Azure/GKE)
     ├── connection-config.ts     # Connection configuration constants
@@ -123,7 +123,7 @@ All Redis cache keys are centralized in `lib/cache-keys.ts`. **Never construct c
 When loading a kubeconfig via `loadFromString()`, if no explicit `context` param is provided, the factory falls back to `current-context` from the YAML, then to the first context. Without this, the KubeConfig object may have no context selected, causing API calls to fail silently.
 
 ### Cluster List Node Count Comes from `nodes` Table
-The cluster list page gets `nodeCount` by counting rows in the `nodes` table (populated by node-sync), NOT from `clusters.nodesCount`. If node-sync isn't running, cluster cards show 0 nodes.
+The `clusters.list` query gets `nodeCount` via a correlated subquery `(SELECT count(*) FROM nodes WHERE cluster_id = clusters.id)`, NOT from `clusters.nodesCount`. This is a single query (no separate round-trip). If node-sync isn't running, cluster cards show 0 nodes.
 
 ### Metrics Response Shape — Wrapped Object
 `metrics.history` returns `{ data: MetricsDataPoint[], serverTime: string, intervalMs: number }`, NOT a flat array. All consumers must access `.data` property.
@@ -138,7 +138,10 @@ Routers using `handleK8sError(err, op)` in catch blocks infer return type as `vo
 Helm v3 stores releases as K8s Secrets (`type=helm.sh/release.v1`). Decode: `Buffer.from(b64, 'base64')` → `zlib.gunzipSync()` → `JSON.parse()`. List metadata-only first, decode on-demand to avoid OOM.
 
 ### Redis `cached()` TTL Is in SECONDS, Not Milliseconds
-`cached(key, ttl, fn)` passes `ttl` to `redis.setEx()` which expects **seconds**. `cached(key, 15_000, fn)` = 15,000 seconds (4.1 hours), not 15 seconds. Always use plain integers.
+`cached(key, ttl, fn)` passes `ttl` to `redis.setEx()` which expects **seconds**. `cached(key, 15_000, fn)` = 15,000 seconds (4.1 hours), not 15 seconds. Always use plain integers. TTL has ±20% jitter applied automatically to prevent cache stampede — **do not add extra jitter at call sites**.
+
+### Background Jobs Are Parallelized Per Cluster
+`alert-evaluator.ts` uses `Promise.allSettled()` to evaluate all clusters in parallel. `metrics-history-collector.ts` uses batched `Promise.allSettled()` with a concurrency limit of 5. Individual cluster failures are caught and logged without aborting the batch. **Never revert to sequential loops** — at 10+ clusters, sequential collection can exceed the job interval.
 
 ### K8s Informers Do NOT Auto-Reconnect
 `makeInformer()` does not reconnect on error. **Always call `informer.start()` in the error handler** with a delay (5s). Both watch managers implement this. Without it, all live data stops after first network hiccup.
