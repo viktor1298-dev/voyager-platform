@@ -35,8 +35,14 @@ export function Sidebar({
   isDesktop: boolean
 }) {
   const pathname = usePathname()
+  // SB-010: Clusters accordion open state — open when on any /clusters/* route
+  const isClustersRoute = pathname.startsWith('/clusters')
+  const [clustersOpen, setClustersOpen] = useState(isClustersRoute)
+
+  // Only fetch clusters when the accordion is open or on a clusters route
   const clustersQuery = trpc.clusters.list.useQuery(undefined, {
     refetchInterval: DB_CLUSTER_REFETCH_MS,
+    enabled: clustersOpen || isClustersRoute,
   })
   const sidebarClusters = (clustersQuery.data ?? []).slice(0, 6)
 
@@ -47,10 +53,6 @@ export function Sidebar({
   // DB-003: anomaly count for Alerts badge
   const anomalyCount = useAnomalyCount()
   const reducedMotion = useReducedMotion()
-
-  // SB-010: Clusters accordion open state — open when on any /clusters/* route
-  const isClustersRoute = pathname.startsWith('/clusters')
-  const [clustersOpen, setClustersOpen] = useState(isClustersRoute)
 
   // Keep accordion open when navigating into clusters
   useEffect(() => {

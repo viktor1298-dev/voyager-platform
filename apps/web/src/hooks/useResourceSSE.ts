@@ -125,13 +125,22 @@ export function useResourceSSE(clusterId: string | null): { connectionState: Con
         }
       })
 
-      // Buffered watch handler (PERF-01): accumulate events, flush every 1 second
+      // Adaptive buffered watch handler (PERF-01): flush on size threshold OR 1s timer
+      // Under low volume: timer fires first (1s batches). Under high volume: size
+      // threshold fires early (reduces perceived lag from 1s to near-instant).
+      const FLUSH_SIZE_THRESHOLD = 20
       es.addEventListener('watch', (e: MessageEvent) => {
         lastDataRef.current = Date.now()
         try {
           const batch: WatchEventBatch = JSON.parse(e.data)
           bufferRef.current.push(...batch.events)
-          if (!flushTimerRef.current) {
+          if (bufferRef.current.length >= FLUSH_SIZE_THRESHOLD) {
+            if (flushTimerRef.current) {
+              clearTimeout(flushTimerRef.current)
+              flushTimerRef.current = null
+            }
+            flushBuffer()
+          } else if (!flushTimerRef.current) {
             flushTimerRef.current = setTimeout(flushBuffer, 1000)
           }
         } catch {

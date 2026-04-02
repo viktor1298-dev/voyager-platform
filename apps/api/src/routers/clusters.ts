@@ -183,6 +183,8 @@ export const clustersRouter = router({
     )
     .query(async ({ ctx }) => {
       const authz = createAuthorizationService(ctx.db)
+      // Single query: fetch clusters with node count via correlated subquery
+      // (uses idx_nodes_cluster index, avoids separate round-trip)
       const allClusters = await ctx.db
         .select({
           id: clusters.id,
@@ -205,6 +207,10 @@ export const clustersRouter = router({
             sql<boolean>`(connection_config IS NOT NULL AND connection_config != '{}'::jsonb)`.as(
               'has_credentials',
             ),
+          nodeCount:
+            sql<number>`(SELECT count(*)::int FROM nodes WHERE nodes.cluster_id = clusters.id)`.as(
+              'node_count_live',
+            ),
         })
         .from(clusters)
       const allowedClusterIds =
@@ -222,18 +228,9 @@ export const clustersRouter = router({
           ? allClusters
           : allClusters.filter((cluster) => allowedClusterIds?.has(cluster.id))
 
-      const nodeCounts = await ctx.db
-        .select({
-          clusterId: nodes.clusterId,
-          count: count().as('count'),
-        })
-        .from(nodes)
-        .groupBy(nodes.clusterId)
-      const countMap = new Map(nodeCounts.map((n) => [n.clusterId, n.count]))
-
       return visibleClusters.map((c) => ({
         ...c,
-        nodeCount: countMap.get(c.id) ?? 0,
+        nodeCount: c.nodeCount ?? 0,
       }))
     }),
 
