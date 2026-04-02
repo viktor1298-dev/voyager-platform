@@ -11,7 +11,7 @@ import { YamlViewer } from '@/components/resource/YamlViewer'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
-import { timeAgo } from '@/lib/time-utils'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface CronJobData {
@@ -42,7 +42,7 @@ function CronJobSummary({ cj }: { cj: CronJobData }) {
       {cj.suspend && <ResourceStatusBadge status="Suspended" size="sm" />}
       {cj.activeJobs > 0 && <ResourceStatusBadge status="Running" size="sm" />}
       <span className="text-[11px] font-mono text-[var(--color-text-secondary)] shrink-0">
-        {cj.lastScheduleTime ? timeAgo(cj.lastScheduleTime) : '---'}
+        <LiveTimeAgo date={cj.lastScheduleTime} />
       </span>
       <span className="ml-auto text-[11px] font-mono text-[var(--color-text-dim)] shrink-0">
         {cj.age}
@@ -64,11 +64,11 @@ function CronJobExpandedDetail({ cj, clusterId }: { cj: CronJobData; clusterId: 
             <span className="text-[var(--color-text-primary)]">{cj.activeJobs}</span>
             <span className="text-[var(--color-text-muted)]">Last Scheduled</span>
             <span className="text-[var(--color-text-primary)]">
-              {cj.lastScheduleTime ? timeAgo(cj.lastScheduleTime) : '---'}
+              <LiveTimeAgo date={cj.lastScheduleTime} />
             </span>
             <span className="text-[var(--color-text-muted)]">Last Successful</span>
             <span className="text-[var(--color-text-primary)]">
-              {cj.lastSuccessfulTime ? timeAgo(cj.lastSuccessfulTime) : '---'}
+              <LiveTimeAgo date={cj.lastSuccessfulTime} />
             </span>
           </div>
           <div className="pt-2 border-t border-[var(--color-border)]/30">

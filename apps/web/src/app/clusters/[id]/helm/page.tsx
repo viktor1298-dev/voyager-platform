@@ -8,7 +8,7 @@ import { ResourcePageScaffold } from '@/components/resource'
 import { useHelmReleases, type HelmRelease } from '@/hooks/useHelmReleases'
 import { useSnapshotsReady } from '@/hooks/useResources'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { timeAgo } from '@/lib/time-utils'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 
 function statusBadge(status: string) {
   let colorClasses: string
@@ -49,7 +49,7 @@ function ReleaseSummary({ release }: { release: HelmRelease }) {
         rev {release.revision}
       </span>
       <span className="text-[11px] text-[var(--color-text-dim)] font-mono shrink-0 ml-auto">
-        {release.updatedAt ? timeAgo(release.updatedAt) : '—'}
+        <LiveTimeAgo date={release.updatedAt} />
       </span>
     </div>
   )

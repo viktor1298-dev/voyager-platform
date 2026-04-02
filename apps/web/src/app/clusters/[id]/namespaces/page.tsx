@@ -11,7 +11,7 @@ import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { resolveResourceStatus } from '@/lib/resource-status'
-import { timeAgo } from '@/lib/time-utils'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface NamespaceData {
@@ -37,7 +37,7 @@ function NamespaceSummary({ ns }: { ns: NamespaceData }) {
       </span>
       <ResourceStatusBadge status={ns.status ?? 'Unknown'} size="sm" />
       <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
-        {ns.createdAt ? timeAgo(ns.createdAt) : '—'}
+        <LiveTimeAgo date={ns.createdAt} />
       </span>
     </div>
   )
@@ -61,7 +61,7 @@ function NamespaceExpandedDetail({ ns, clusterId }: { ns: NamespaceData; cluster
             </span>
             <span className="text-[var(--color-text-muted)]">Created</span>
             <span className="text-[var(--color-text-primary)]">
-              {ns.createdAt ? timeAgo(ns.createdAt) : '—'}
+              <LiveTimeAgo date={ns.createdAt} />
             </span>
           </div>
           {ns.resourceQuota && (

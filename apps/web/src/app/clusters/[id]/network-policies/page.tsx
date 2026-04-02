@@ -8,7 +8,7 @@ import { NetworkPolicyGraph } from '@/components/network/NetworkPolicyGraph'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { SectionLoadingSkeleton } from '@/components/resource'
-import { timeAgo } from '@/lib/time-utils'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 
 type ViewMode = 'list' | 'graph'
 
@@ -144,7 +144,9 @@ export default function NetworkPoliciesPage() {
                       Target: <span className="font-mono">{selectorLabel(policy.podSelector)}</span>
                     </span>
                     {policy.createdAt && (
-                      <span className="ml-auto font-mono">{timeAgo(policy.createdAt)}</span>
+                      <span className="ml-auto font-mono">
+                        <LiveTimeAgo date={policy.createdAt} />
+                      </span>
                     )}
                   </div>
 

@@ -6,7 +6,7 @@ import { Check, Copy, Package } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Progress } from '@/components/ui/progress'
 import { PodLogStream } from '@/components/PodLogStream'
-import { timeAgo } from '@/lib/time-utils'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { InlineAiTrigger } from '@/components/ai/InlineAiTrigger'
 import { InlineAiPanel } from '@/components/ai/InlineAiPanel'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
@@ -70,7 +70,7 @@ function OverviewTab({ pod }: { pod: PodInfo }) {
           label="Node"
           value={<span className="font-mono text-xs">{pod.nodeName ?? '—'}</span>}
         />
-        <InfoRow label="Age" value={pod.createdAt ? timeAgo(pod.createdAt) : '—'} />
+        <InfoRow label="Age" value={<LiveTimeAgo date={pod.createdAt} />} />
         {pod.restartCount != null && (
           <InfoRow
             label="Restarts"
@@ -283,7 +283,7 @@ function EventsTab({
             </span>
             {evt.timestamp && (
               <span className="text-xs text-[var(--color-text-dim)] font-mono">
-                {timeAgo(evt.timestamp)}
+                <LiveTimeAgo date={evt.timestamp} />
               </span>
             )}
           </div>

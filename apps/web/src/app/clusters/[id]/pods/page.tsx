@@ -33,8 +33,8 @@ import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { parseCpuMillicores, parseMemoryMi } from '@/lib/k8s-units'
 import { trpc } from '@/lib/trpc'
-import { timeAgo } from '@/lib/time-utils'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { resolveResourceStatus } from '@/lib/resource-status'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -382,7 +382,7 @@ function PodSummary({
       )}
       <ResourceStatusBadge status={pod.status} size="sm" />
       <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
-        {pod.createdAt ? timeAgo(pod.createdAt) : '—'}
+        <LiveTimeAgo date={pod.createdAt} />
       </span>
       {pod.status === 'Running' && (
         <TooltipProvider>
@@ -728,9 +728,15 @@ function DeletePodDialog({
       onClick={onClose}
       role="presentation"
     >
-      <div
+      <form
         className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-5 w-[420px] max-w-[calc(100vw-2rem)] shadow-xl"
         onClick={(e) => e.stopPropagation()}
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (isConfirmed && !deleteMutation.isPending) {
+            deleteMutation.mutate({ clusterId, namespace: pod.namespace, podName: pod.name })
+          }
+        }}
         role="alertdialog"
         aria-labelledby="delete-pod-title"
         aria-describedby="delete-pod-desc"
@@ -791,17 +797,14 @@ function DeletePodDialog({
             Cancel
           </button>
           <button
-            type="button"
-            onClick={() =>
-              deleteMutation.mutate({ clusterId, namespace: pod.namespace, podName: pod.name })
-            }
+            type="submit"
             disabled={!isConfirmed || deleteMutation.isPending}
             className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-600 text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {deleteMutation.isPending ? 'Deleting...' : 'Delete Pod'}
           </button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }

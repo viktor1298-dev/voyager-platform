@@ -22,6 +22,7 @@ import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/ho
 import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 function asText(value: unknown, fallback = '—'): string {
@@ -198,7 +199,7 @@ const eventColumns: ColumnDef<EventRow, unknown>[] = [
       const ts = getValue<string | null>()
       return (
         <span className="text-[var(--color-text-dim)] font-mono text-xs whitespace-nowrap">
-          {ts ? timeAgo(ts) : '—'}
+          <LiveTimeAgo date={ts} />
         </span>
       )
     },
@@ -536,7 +537,7 @@ export default function ClusterOverviewPage() {
               {event.message}
             </span>
             <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
-              {event.timestamp ? timeAgo(event.timestamp) : '—'}
+              <LiveTimeAgo date={event.timestamp} />
             </span>
           </div>
         ))}

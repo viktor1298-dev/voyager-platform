@@ -16,7 +16,7 @@ import { DetailGrid, DetailTabs, ExpandableCard } from '@/components/expandable'
 import { RelatedResourceLink } from '@/components/resource'
 import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
-import { timeAgo } from '@/lib/time-utils'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { AnimatePresence, motion } from 'motion/react'
 import { expandVariants, chevronVariants, DURATION, EASING } from '@/lib/animation-constants'
 import { HelmRevisionDiff, type RevisionData } from './HelmRevisionDiff'
@@ -233,7 +233,7 @@ export function HelmReleaseDetail({ clusterId, releaseName, namespace }: HelmRel
               <>
                 <span className="text-[var(--color-text-muted)]">First Deployed</span>
                 <span className="text-[var(--color-text-secondary)]">
-                  {timeAgo(release.firstDeployed)}
+                  <LiveTimeAgo date={release.firstDeployed} />
                 </span>
               </>
             )}
@@ -241,7 +241,7 @@ export function HelmReleaseDetail({ clusterId, releaseName, namespace }: HelmRel
               <>
                 <span className="text-[var(--color-text-muted)]">Last Deployed</span>
                 <span className="text-[var(--color-text-secondary)]">
-                  {timeAgo(release.lastDeployed)}
+                  <LiveTimeAgo date={release.lastDeployed} />
                 </span>
               </>
             )}
@@ -319,7 +319,7 @@ export function HelmReleaseDetail({ clusterId, releaseName, namespace }: HelmRel
                     {rev.updatedAt && (
                       <span className="text-[11px] font-mono text-[var(--color-text-dim)] flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {timeAgo(rev.updatedAt)}
+                        <LiveTimeAgo date={rev.updatedAt} />
                       </span>
                     )}
                     {rev.description && (

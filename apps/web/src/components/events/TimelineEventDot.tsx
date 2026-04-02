@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { timeAgo } from '@/lib/time-utils'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 
 interface EventLike {
   type: string
@@ -127,7 +127,7 @@ export function TimelineEventDot({
                   <>
                     <span className="text-[var(--color-text-dim)]">Last seen</span>
                     <span className="text-[var(--color-text-secondary)]">
-                      {timeAgo(event.lastTimestamp)}
+                      <LiveTimeAgo date={event.lastTimestamp} />
                     </span>
                   </>
                 )}

@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import { DetailTabs, ExpandableCard } from '@/components/expandable'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trpc } from '@/lib/trpc'
-import { timeAgo } from '@/lib/time-utils'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 
 interface CrdInstanceListProps {
   clusterId: string
@@ -148,7 +148,7 @@ function InstanceSummary({ instance }: { instance: CrdInstanceData }) {
         </span>
       )}
       <span className="text-[11px] text-[var(--color-text-dim)] font-mono shrink-0 ml-auto">
-        {instance.createdAt ? timeAgo(instance.createdAt) : '—'}
+        <LiveTimeAgo date={instance.createdAt} />
       </span>
     </div>
   )

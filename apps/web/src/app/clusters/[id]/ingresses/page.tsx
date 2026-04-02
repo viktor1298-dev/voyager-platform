@@ -10,7 +10,7 @@ import { ResourceDiff } from '@/components/resource/ResourceDiff'
 import { YamlViewer } from '@/components/resource/YamlViewer'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
-import { timeAgo } from '@/lib/time-utils'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface IngressData {
@@ -53,7 +53,7 @@ function IngressSummary({ ing }: { ing: IngressData }) {
         </span>
       )}
       <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
-        {ing.createdAt ? timeAgo(ing.createdAt) : '--'}
+        <LiveTimeAgo date={ing.createdAt} />
       </span>
     </div>
   )
