@@ -86,37 +86,39 @@ function RelationItem({ resource, kind }: { resource: RelationResource; kind: st
 
   if (resource.isCurrent) {
     return (
-      <div className="flex items-center gap-1.5 rounded-md bg-[var(--color-accent)]/[0.06] border-l-2 border-[var(--color-accent)] px-2 py-1 -ml-2">
+      <div className="flex items-center gap-1.5 rounded-md bg-[var(--color-accent)]/[0.06] border-l-2 border-[var(--color-accent)] px-2 py-1 -ml-2 min-w-0">
         <span className="text-[var(--color-accent)] shrink-0">{KIND_ICONS[kind]}</span>
-        <span className="text-sm font-medium text-[var(--color-text-primary)]">
+        <span className="text-sm font-medium text-[var(--color-text-primary)] truncate">
           {resource.name}
         </span>
         <StatusBadge status={resource.status} category={resource.statusCategory} />
-        <span className="text-[10px] italic text-[var(--color-accent)]">← current</span>
+        <span className="text-[10px] italic text-[var(--color-accent)] shrink-0">← current</span>
       </div>
     )
   }
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 min-w-0">
       <RelatedResourceLink
         tab={tab}
         resourceKey={resource.namespace ? `${resource.namespace}/${resource.name}` : resource.name}
         label={resource.name}
         icon={KIND_ICONS[kind]}
       />
-      <StatusBadge status={resource.status} category={resource.statusCategory} />
+      <span className="shrink-0">
+        <StatusBadge status={resource.status} category={resource.statusCategory} />
+      </span>
     </div>
   )
 }
 
 function RelationGroupSection({ group }: { group: RelationGroup }) {
   return (
-    <div>
+    <div className="min-w-0 overflow-hidden">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
         {group.displayName}
       </p>
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1">
         {group.resources.map((r) => (
           <RelationItem key={`${r.namespace}/${r.name}`} resource={r} kind={group.kind} />
         ))}
@@ -142,7 +144,7 @@ export function RelationsTab({ clusterId, kind, namespace, name }: RelationsTabP
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 p-3">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-5 p-3">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="space-y-2">
             <div className="h-3 w-20 rounded bg-white/[0.04] animate-pulse" />
@@ -165,7 +167,7 @@ export function RelationsTab({ clusterId, kind, namespace, name }: RelationsTabP
   }
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 p-3">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-5 p-3">
       {groups.map((group) => (
         <RelationGroupSection key={group.kind} group={group} />
       ))}

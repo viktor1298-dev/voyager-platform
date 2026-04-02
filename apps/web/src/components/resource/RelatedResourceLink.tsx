@@ -21,10 +21,10 @@ export function RelatedResourceLink({ tab, resourceKey, label, icon }: RelatedRe
     <button
       type="button"
       onClick={() => navigateToResource(tab, resourceKey)}
-      className="inline-flex items-center gap-1.5 text-sm text-[var(--color-accent)] hover:text-[var(--color-accent)]/80 hover:underline transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1.5 text-sm text-[var(--color-accent)] hover:text-[var(--color-accent)]/80 hover:underline transition-colors cursor-pointer min-w-0"
     >
-      {icon}
-      {label}
+      <span className="shrink-0">{icon}</span>
+      <span className="truncate">{label}</span>
     </button>
   )
 }

@@ -191,7 +191,7 @@ export function resolveRelations(wm: WatchManager, input: ResolverInput): Relati
 
   const allOfKind = getAll(watchType)
   const target = allOfKind.find(
-    (r) => r.metadata?.name === name && r.metadata?.namespace === namespace,
+    (r) => r.metadata?.name === name && (r.metadata?.namespace ?? '') === namespace,
   )
   if (!target) return []
 
@@ -332,6 +332,23 @@ export function resolveRelations(wm: WatchManager, input: ResolverInput): Relati
         }
       }
     }
+  }
+
+  // Node relations: only show pods on the node, skip workload/service walking
+  if (kind === 'Node') {
+    const groups: RelationGroup[] = []
+    for (const kindDef of RELATION_KINDS) {
+      const resources = results.get(kindDef.kind)
+      if (!resources || resources.length === 0) continue
+      resources.sort((a, b) => a.name.localeCompare(b.name))
+      groups.push({
+        kind: kindDef.kind,
+        displayName: kindDef.displayName,
+        order: kindDef.order,
+        resources,
+      })
+    }
+    return groups
   }
 
   // ── Step 3: From pods, walk UP to find parent workloads ───
