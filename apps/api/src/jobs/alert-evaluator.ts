@@ -1,6 +1,6 @@
 import * as k8s from '@kubernetes/client-node'
 import { alertHistory, alerts, clusters, db } from '@voyager/db'
-import { and, eq, gte } from 'drizzle-orm'
+import { and, eq, gte, inArray } from 'drizzle-orm'
 import { JOB_INTERVALS } from '../config/jobs.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 
@@ -76,33 +76,38 @@ function compareValue(value: number, operator: Operator, threshold: number): boo
   }
 }
 
-async function isDuplicate(alertId: string): Promise<boolean> {
-  const cutoff = new Date(Date.now() - JOB_INTERVALS.ALERT_DEDUP_WINDOW_MS)
-  const recent = await db
-    .select({ id: alertHistory.id })
-    .from(alertHistory)
-    .where(and(eq(alertHistory.alertId, alertId), gte(alertHistory.triggeredAt, cutoff)))
-    .limit(1)
-  return recent.length > 0
-}
-
 async function evaluateAlerts(): Promise<void> {
   const allAlerts = await db.select().from(alerts).where(eq(alerts.enabled, true))
+  if (allAlerts.length === 0) return
+
+  // Batch: fetch all active clusters once (used by alerts without clusterFilter)
+  const activeClusters = await db
+    .select({ id: clusters.id })
+    .from(clusters)
+    .where(eq(clusters.isActive, true))
+  const activeClusterIds = activeClusters.map((c) => c.id)
+
+  // Batch: fetch recent alert history for ALL alert IDs in one query
+  const cutoff = new Date(Date.now() - JOB_INTERVALS.ALERT_DEDUP_WINDOW_MS)
+  const recentHistory = await db
+    .select({ alertId: alertHistory.alertId })
+    .from(alertHistory)
+    .where(
+      and(
+        inArray(
+          alertHistory.alertId,
+          allAlerts.map((a) => a.id),
+        ),
+        gte(alertHistory.triggeredAt, cutoff),
+      ),
+    )
+  const recentAlertIds = new Set(recentHistory.map((r) => r.alertId))
 
   for (const alert of allAlerts) {
     try {
-      if (await isDuplicate(alert.id)) continue
+      if (recentAlertIds.has(alert.id)) continue
 
-      const clusterIds: string[] = []
-      if (alert.clusterFilter) {
-        clusterIds.push(alert.clusterFilter)
-      } else {
-        const allClusters = await db
-          .select({ id: clusters.id })
-          .from(clusters)
-          .where(eq(clusters.isActive, true))
-        clusterIds.push(...allClusters.map((c) => c.id))
-      }
+      const clusterIds: string[] = alert.clusterFilter ? [alert.clusterFilter] : activeClusterIds
 
       const results = await Promise.allSettled(
         clusterIds.map((clusterId) => gatherMetric(clusterId, alert.metric as MetricType)),
