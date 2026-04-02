@@ -7,7 +7,14 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { APP_VERSION, SYNC_INTERVAL_MS } from '@/config/constants'
 import { navItems } from '@/config/navigation'
-import { badgePopVariants, EASING } from '@/lib/animation-constants'
+import {
+  badgePopVariants,
+  EASING,
+  sidebarCollapsedIconHover,
+  sidebarTapFeedback,
+  sidebarTapFeedbackCollapsed,
+} from '@/lib/animation-constants'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { ENV_META, getClusterEnvironment } from '@/lib/cluster-meta'
 import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { trpc } from '@/lib/trpc'
@@ -39,6 +46,7 @@ export function Sidebar({
 
   // DB-003: anomaly count for Alerts badge
   const anomalyCount = useAnomalyCount()
+  const reducedMotion = useReducedMotion()
 
   // SB-010: Clusters accordion open state — open when on any /clusters/* route
   const isClustersRoute = pathname.startsWith('/clusters')
@@ -168,8 +176,7 @@ export function Sidebar({
                   aria-current={isNavActive ? 'page' : undefined}
                   aria-expanded={isClustersItem ? clustersOpen : undefined}
                   className={[
-                    'relative flex items-center py-2.5 rounded-lg',
-                    // SB-002: respond to data-collapsible via group selectors
+                    'group/navitem relative flex items-center py-2.5 rounded-lg',
                     'gap-3 px-3',
                     'group-data-[collapsible=icon]:gap-0',
                     'group-data-[collapsible=icon]:justify-center',
@@ -179,28 +186,61 @@ export function Sidebar({
                     'group-data-[collapsible=icon]:h-10',
                     isNavActive
                       ? 'text-[var(--color-text-primary)]'
-                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
+                      : [
+                          'text-[var(--color-text-secondary)]',
+                          'hover:text-[var(--color-text-primary)]',
+                          isDesktop && collapsed
+                            ? 'hover:bg-[var(--sidebar-hover-bg-collapsed)]'
+                            : 'hover:bg-[var(--sidebar-hover-bg)]',
+                        ].join(' '),
                   ].join(' ')}
-                  style={{ transition: 'color 150ms ease' }}
+                  style={{ transition: 'color 150ms ease, background-color 150ms ease' }}
                 >
-                  {/* P3-002 / SB-007: Active background with layoutId spring + left accent border */}
+                  {/* Neon Depth: CSS-only gradient background (no layoutId — fixes selection bug) */}
                   {isNavActive && (
-                    <motion.div
-                      layoutId="sidebar-active-bg"
-                      className="absolute inset-0 bg-[var(--color-accent)]/10 rounded-lg sidebar-active-bar"
-                      transition={EASING.snappy}
+                    <div
+                      className={[
+                        'absolute inset-0 rounded-lg',
+                        isDesktop && collapsed
+                          ? 'bg-[var(--sidebar-active-bg-collapsed)]'
+                          : 'bg-[image:var(--sidebar-active-gradient)]',
+                      ].join(' ')}
+                      aria-hidden="true"
                     />
                   )}
-                  {/* SB-008: Reduce active border bar from 3px -> 2px */}
+                  {/* Neon Depth: Single layoutId accent bar with CSS glow pulse */}
                   {isNavActive && (
                     <motion.div
-                      layoutId="sidebar-active-border"
-                      className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full bg-[var(--color-accent)]"
-                      transition={EASING.snappy}
+                      layoutId="sidebar-active-bar"
+                      className="absolute left-0 top-[15%] bottom-[15%] w-[2.5px] rounded-r-full bg-[var(--color-accent)]"
+                      style={{
+                        boxShadow: 'var(--sidebar-bar-glow)',
+                        animation: reducedMotion
+                          ? 'none'
+                          : 'sidebar-bar-pulse 2.5s ease-in-out infinite',
+                      }}
+                      transition={reducedMotion ? { duration: 0.01 } : EASING.snappy}
+                      aria-hidden="true"
                     />
                   )}
 
-                  <Icon className="sidebar-icon h-4 w-4 shrink-0 relative z-10" />
+                  <Icon
+                    className={[
+                      'h-4 w-4 shrink-0 relative z-10 transition-[color,filter,transform] duration-200',
+                      !isNavActive &&
+                        'group-hover/navitem:text-[var(--color-accent)] group-hover/navitem:translate-x-0.5',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    style={
+                      isNavActive
+                        ? {
+                            color: 'var(--color-accent)',
+                            filter: 'var(--sidebar-icon-glow)',
+                          }
+                        : undefined
+                    }
+                  />
                   <AnimatePresence initial={false}>
                     {showLabels && (
                       <motion.span
@@ -209,7 +249,10 @@ export function Sidebar({
                         animate={{ opacity: 1, width: 'auto' }}
                         exit={{ opacity: 0, width: 0 }}
                         transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
-                        className="sidebar-label text-[13px] font-medium relative z-10 overflow-hidden whitespace-nowrap flex-1"
+                        className={[
+                          'text-[13px] relative z-10 overflow-hidden whitespace-nowrap flex-1',
+                          isNavActive ? 'font-semibold' : 'font-medium',
+                        ].join(' ')}
                       >
                         {item.label}
                       </motion.span>
@@ -224,7 +267,11 @@ export function Sidebar({
                         animate="visible"
                         exit="exit"
                         data-testid="alerts-badge"
-                        className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 relative z-10"
+                        className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[10px] font-bold px-1 relative z-10"
+                        style={{
+                          background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                          boxShadow: 'var(--sidebar-badge-glow)',
+                        }}
                       >
                         {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
                       </motion.span>
@@ -241,6 +288,7 @@ export function Sidebar({
                         exit="exit"
                         data-testid="alerts-badge"
                         className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 z-10"
+                        style={{ boxShadow: 'var(--sidebar-badge-glow-collapsed)' }}
                         aria-label={`${unacknowledgedCount} unacknowledged alerts`}
                       />
                     )}
@@ -289,14 +337,27 @@ export function Sidebar({
               // SB-003: Wrap in Tooltip when collapsed (desktop icon mode)
               const wrappedNavLink =
                 isDesktop && collapsed ? (
-                  <Tooltip key={item.id}>
-                    <TooltipTrigger asChild>{navLink}</TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={8} className="text-xs">
-                      {item.label}
-                    </TooltipContent>
-                  </Tooltip>
+                  <motion.div
+                    key={item.id}
+                    whileHover={
+                      !isNavActive && !reducedMotion ? sidebarCollapsedIconHover : undefined
+                    }
+                    whileTap={!reducedMotion ? sidebarTapFeedbackCollapsed : undefined}
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>{navLink}</TooltipTrigger>
+                      <TooltipContent side="right" sideOffset={8} className="text-xs">
+                        {item.label}
+                      </TooltipContent>
+                    </Tooltip>
+                  </motion.div>
                 ) : (
-                  <div key={item.id}>{navLink}</div>
+                  <motion.div
+                    key={item.id}
+                    whileTap={!reducedMotion ? sidebarTapFeedback : undefined}
+                  >
+                    {navLink}
+                  </motion.div>
                 )
 
               return (
