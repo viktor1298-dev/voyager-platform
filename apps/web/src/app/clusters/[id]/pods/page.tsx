@@ -490,7 +490,8 @@ function NamespacePodGroup({
                 }
               >
                 <ExpandableCard
-                  expanded={expandAll || isHighlighted || undefined}
+                  defaultExpanded={isHighlighted}
+                  expanded={expandAll || undefined}
                   summary={
                     <PodSummary
                       pod={pod}
