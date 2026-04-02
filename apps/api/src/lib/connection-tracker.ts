@@ -71,4 +71,9 @@ export class ConnectionLimiter {
       if (set.size === 0) this.sockets.delete(key)
     }
   }
+
+  /** Returns true if any active connections exist for the given key. */
+  has(key: string): boolean {
+    return this.sockets.has(key)
+  }
 }

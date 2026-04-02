@@ -184,6 +184,7 @@ export async function handleResourceStream(
   if (!replayed) {
     // Send full snapshot — either first connect or buffer overflow
     for (const def of RESOURCE_DEFS) {
+      await new Promise((resolve) => setImmediate(resolve)) // yield event loop between snapshots
       const resources = watchManager.getResources(clusterId, def.type)
       if (resources && resources.length > 0) {
         const mapped = resources.map((obj) => def.mapper(obj, clusterId))
@@ -226,6 +227,11 @@ export async function handleResourceStream(
     voyagerEmitter.off(`watch-status:${clusterId}`, onWatchStatus)
     watchManager.unsubscribe(clusterId)
     connectionLimiter.remove(clusterId, reply.raw)
+    // D7: Clean up replay buffers when no more SSE connections exist for this cluster
+    if (!connectionLimiter.has(clusterId)) {
+      clusterReplayBuffers.delete(clusterId)
+      clusterEventCounters.delete(clusterId)
+    }
     try {
       reply.raw.end()
     } catch {
