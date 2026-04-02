@@ -12,6 +12,7 @@ import { z } from 'zod'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { watchManager } from '../lib/watch-manager.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
+import { cached } from '../lib/cache.js'
 import { protectedProcedure, router } from '../trpc.js'
 
 /** Shared constant for health-check polling interval (minutes) */
@@ -208,45 +209,57 @@ export const metricsRouter = router({
     }),
 
   /** IP2-004: Resource usage timeline from metricsHistory table.
+   *  Uses TimescaleDB time_bucket() SQL aggregation (C4 — replaces 50K-row JS bucketing).
    *  Returns FULL time range with null-filled gaps (Grafana-style). */
   resourceUsage: protectedProcedure
     .input(z.object({ range: timeRangeSchema }))
     .query(async ({ input }) => {
-      const timeline = getBucketTimeline(input.range)
-      const { bucketMs } = TIME_RANGE_CONFIG[input.range]
-      const startMs = timeline.start.getTime()
-      const bucketCount = timeline.buckets.length
+      const config = TIME_RANGE_CONFIG[input.range]
+      const now = new Date()
+      const effectiveBucketMs = Math.max(config.bucketMs, 60_000)
+      const bucketSec = effectiveBucketMs / 1000
+      const intervalStr = `${bucketSec} seconds`
+      const startTime = new Date(now.getTime() - config.rangeMs)
 
-      const rows = await db
-        .select()
-        .from(metricsHistory)
-        .where(gte(metricsHistory.timestamp, timeline.start))
-        .orderBy(metricsHistory.timestamp)
+      // SQL aggregation with time_bucket — avg CPU/memory per bucket
+      const result = await db.execute(sql`
+        SELECT
+          time_bucket(${intervalStr}::interval, "timestamp") AS bucket,
+          round(avg(cpu_percent)::numeric, 1)::real AS cpu,
+          round(avg(mem_percent)::numeric, 1)::real AS memory
+        FROM metrics_history
+        WHERE "timestamp" >= ${startTime}
+        GROUP BY bucket
+        ORDER BY bucket
+      `)
 
-      const bucketStats = Array.from({ length: bucketCount }, () => ({
-        cpuSum: 0,
-        memSum: 0,
-        count: 0,
-      }))
+      // Generate expected timeline for null-fill (Grafana-style)
+      const endMs = alignFloor(now.getTime(), effectiveBucketMs) + effectiveBucketMs
+      const startMs = endMs - config.rangeMs
+      const bucketCount = Math.ceil(config.rangeMs / effectiveBucketMs)
+      const expectedBuckets = Array.from({ length: bucketCount }, (_, i) => {
+        return new Date(startMs + i * effectiveBucketMs)
+      })
 
+      // Map SQL rows by aligned bucket key, null-fill gaps
+      const rows = (result.rows ?? []) as Array<Record<string, unknown>>
+      const dataMap = new Map<string, (typeof rows)[0]>()
       for (const row of rows) {
-        const bucketIndex = getBucketIndex(new Date(row.timestamp), startMs, bucketMs, bucketCount)
-        if (bucketIndex === -1) continue
-
-        const bucket = bucketStats[bucketIndex]!
-        bucket.cpuSum += row.cpuPercent
-        bucket.memSum += row.memPercent
-        bucket.count++
+        const bucketDate = new Date(row.bucket as string)
+        const key = alignFloor(bucketDate.getTime(), effectiveBucketMs).toString()
+        dataMap.set(key, row)
       }
 
-      return timeline.buckets.map((bucket, index) => {
-        const stats = bucketStats[index]!
+      return expectedBuckets.map((bucket) => {
+        const key = bucket.getTime().toString()
+        const row = dataMap.get(key)
+        const bucketEndMs = bucket.getTime() + effectiveBucketMs
         return {
-          timestamp: bucket.timestamp,
-          bucketStart: bucket.bucketStart,
-          bucketEnd: bucket.bucketEnd,
-          cpu: stats.count > 0 ? Math.round((stats.cpuSum / stats.count) * 10) / 10 : null,
-          memory: stats.count > 0 ? Math.round((stats.memSum / stats.count) * 10) / 10 : null,
+          timestamp: new Date(bucketEndMs).toISOString(),
+          bucketStart: bucket.toISOString(),
+          bucketEnd: new Date(bucketEndMs).toISOString(),
+          cpu: row ? Number(row.cpu) : null,
+          memory: row ? Number(row.memory) : null,
         }
       })
     }),
