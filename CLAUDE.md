@@ -190,6 +190,9 @@ Correct value: `http://voyager-platform.voyagerlabs.co`. Wrong BASE_URL is the #
 ### `killall node` Kills Docker + MCP Servers
 Never use `killall node` to clean up dev servers — it also kills Docker port forwarding (Postgres/Redis become unreachable) and MCP servers (Playwright, context7). Use `pnpm dev:restart` to safely restart dev servers.
 
+### Never Kill MCP Server Processes
+**Never use `pkill`, `kill`, or any process termination command targeting MCP server processes** (Playwright, context7, Docker MCP, etc.). MCP servers are managed by Claude Code via stdio pipes — killing the process severs the connection permanently for the session. Claude Code cannot re-establish the pipe from within the conversation; it requires `/mcp` restart or a session restart. If an MCP tool errors (e.g., "Browser is already in use"), troubleshoot the specific issue (delete lock files, close stale browsers) instead of killing the MCP process itself.
+
 ### Dev Server Restart — `predev` Handles Zombie Cleanup
 `pnpm dev` runs a `predev` lifecycle script that kills zombie `tsx watch`, `turbo dev`, and `next dev` processes by name + port before starting. If you still hit `EADDRINUSE`, run `lsof -ti:4001 | xargs kill; lsof -ti:3000 | xargs kill` then `pnpm dev`.
 
@@ -207,6 +210,9 @@ SSE provides live presence (status, revision), tRPC `helm.list` provides decoded
 
 ### SSE Routes Require `reply.hijack()` in Fastify 5
 All SSE endpoints (resource-stream, metrics-stream, log-stream, ai-stream, mcp) must call `reply.hijack()` before `reply.raw.writeHead()`. Without it, Fastify tries to send its own response after the handler completes, causing "invalid payload type" errors that kill the SSE connection. The `ConnectionLimiter` class in `connection-tracker.ts` handles per-cluster connection limits with auto-purging of destroyed sockets.
+
+### Live Age Labels — `<LiveTimeAgo>`, Not Inline `timeAgo()`
+Relative time labels ("3s ago") in SSE-driven pages must use `<LiveTimeAgo date={...} />` (self-updates every 1s). Inline `timeAgo()` freezes between K8s events because Zustand correctly skips re-renders when data hasn't changed. **Never** revert to inline calls, global tick hacks, or `subscribeWithSelector` middleware. This bug regressed twice — see `apps/web/CLAUDE.md` for full details.
 
 ## 🚨 QA Gate Rules — MANDATORY
 

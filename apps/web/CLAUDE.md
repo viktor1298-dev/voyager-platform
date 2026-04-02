@@ -157,6 +157,7 @@ src/
 | **ResourceStatusBadge** | `components/shared/ResourceStatusBadge.tsx` | Icon + bordered badge for K8s resource status — 8 categories (healthy/completed/transitional/draining/error/critical/fatal/unknown) with unique icons and animations |
 | **resource-status** | `lib/resource-status.ts` | Centralized status config map + `resolveResourceStatus()` resolver — single source of truth for status → color/icon/animation mapping |
 | **useCachedResources** | `hooks/useCachedResources.ts` | Rancher-style tRPC prefetch — seeds Zustand store from WatchManager cache before SSE connects |
+| **LiveTimeAgo** | `components/shared/LiveTimeAgo.tsx` | Self-updating age label (1s interval) — decouples time display from resource store re-renders |
 
 ## Adding a New Page
 
@@ -207,3 +208,9 @@ When registering bare-key shortcuts (e.g., `['r']`, `['n']`), the modifier match
 
 ### SSE Connects Directly to API — Not Through Next.js
 `useResourceSSE` builds the EventSource URL from `NEXT_PUBLIC_API_URL` (e.g., `http://localhost:4001/api/resources/stream`). SSE bypasses Next.js entirely — no rewrites, no Route Handlers. The `next.config.ts` rewrites use a negative lookahead to exclude SSE paths (`resources/stream`, `metrics/stream`, `logs/stream`). **Never add SSE endpoints to Next.js rewrites** — they buffer and drop the connection.
+
+### Age Labels Must Use `<LiveTimeAgo>` — Never Inline `timeAgo()`
+Relative time labels ("3s ago", "2d ago") must use the `<LiveTimeAgo date={...} />` component (`components/shared/LiveTimeAgo.tsx`), **never** inline `timeAgo(date)` calls. `timeAgo()` is a pure function that only produces fresh output on re-render — but Zustand correctly skips re-renders when resource data hasn't changed (no K8s events between status transitions). Inline calls freeze at whatever value they had on last render. `LiveTimeAgo` self-updates every 1 second via its own internal `useState` interval, independent of the resource store. This bug has regressed twice — do not revert to inline calls or global tick hacks.
+
+### Zustand Resource Store — No `subscribeWithSelector` Middleware
+The resource store (`stores/resource-store.ts`) must NOT use `subscribeWithSelector` middleware. It wraps `api.subscribe()` and interferes with `useSyncExternalStore` change detection for Map-based state. Nobody uses selector-based external subscriptions — the middleware is dead weight that breaks SSE-driven re-renders.
