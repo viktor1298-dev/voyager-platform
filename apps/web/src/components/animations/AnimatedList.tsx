@@ -20,7 +20,7 @@ export function AnimatedList<T>({
   renderItem,
   className,
   itemClassName,
-  layout = true,
+  layout = false,
 }: AnimatedListProps<T>) {
   const reduced = useReducedMotion()
 
