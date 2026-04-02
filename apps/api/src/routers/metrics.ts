@@ -273,28 +273,24 @@ export const metricsRouter = router({
       const rows = await db
         .select({
           clusterId: healthHistory.clusterId,
+          clusterName: clustersTable.name,
           status: healthHistory.status,
         })
         .from(healthHistory)
+        .innerJoin(clustersTable, eq(healthHistory.clusterId, clustersTable.id))
         .where(gte(healthHistory.checkedAt, timeline.start))
 
       if (rows.length === 0) return []
 
       // Group by cluster
-      const clusterStats = new Map<string, { total: number; healthy: number }>()
+      const clusterStats = new Map<string, { name: string; total: number; healthy: number }>()
       for (const row of rows) {
         if (!clusterStats.has(row.clusterId))
-          clusterStats.set(row.clusterId, { total: 0, healthy: 0 })
+          clusterStats.set(row.clusterId, { name: row.clusterName, total: 0, healthy: 0 })
         const stats = clusterStats.get(row.clusterId)!
         stats.total++
         if (row.status === 'healthy') stats.healthy++
       }
-
-      const clusterList = await db
-        .select({ id: clustersTable.id, name: clustersTable.name })
-        .from(clustersTable)
-
-      const nameMap = new Map(clusterList.map((cluster) => [cluster.id, cluster.name]))
 
       return Array.from(clusterStats.entries()).map(([clusterId, stats]) => {
         const uptime = +((stats.healthy / stats.total) * 100).toFixed(2)
@@ -302,7 +298,7 @@ export const metricsRouter = router({
           (stats.total - stats.healthy) * HEALTH_CHECK_INTERVAL_MINUTES,
         )
         return {
-          cluster: nameMap.get(clusterId) ?? clusterId,
+          cluster: stats.name ?? clusterId,
           uptime,
           downtime: downMinutes,
         }
@@ -683,23 +679,20 @@ export const metricsRouter = router({
       const rows = await db
         .select({
           clusterId: metricsHistory.clusterId,
+          clusterName: clustersTable.name,
           avgCpu: sql<number>`avg(${metricsHistory.cpuPercent})`.as('avg_cpu'),
           avgMem: sql<number>`avg(${metricsHistory.memPercent})`.as('avg_mem'),
           totalPods: sql<number>`max(${metricsHistory.podCount})`.as('total_pods'),
           totalNodes: sql<number>`max(${metricsHistory.nodeCount})`.as('total_nodes'),
         })
         .from(metricsHistory)
+        .innerJoin(clustersTable, eq(metricsHistory.clusterId, clustersTable.id))
         .where(gte(metricsHistory.timestamp, timeline.start))
-        .groupBy(metricsHistory.clusterId)
-
-      const clusterList = await db
-        .select({ id: clustersTable.id, name: clustersTable.name })
-        .from(clustersTable)
-      const nameMap = new Map(clusterList.map((cluster) => [cluster.id, cluster.name]))
+        .groupBy(metricsHistory.clusterId, clustersTable.name)
 
       const perCluster = rows.map((row) => ({
         clusterId: row.clusterId,
-        clusterName: nameMap.get(row.clusterId) ?? row.clusterId,
+        clusterName: row.clusterName ?? row.clusterId,
         avgCpu: Math.round(Number(row.avgCpu) * 10) / 10,
         avgMem: Math.round(Number(row.avgMem) * 10) / 10,
         totalPods: Number(row.totalPods),
