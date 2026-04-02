@@ -4,7 +4,17 @@ import { useParams } from 'next/navigation'
 import { useState } from 'react'
 import { LayoutGrid, Network } from 'lucide-react'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { NetworkPolicyGraph } from '@/components/network/NetworkPolicyGraph'
+import dynamic from 'next/dynamic'
+const NetworkPolicyGraph = dynamic(
+  () =>
+    import('@/components/network/NetworkPolicyGraph').then((m) => ({
+      default: m.NetworkPolicyGraph,
+    })),
+  {
+    ssr: false,
+    loading: () => <div className="h-[600px] animate-pulse rounded-xl bg-[var(--color-bg-card)]" />,
+  },
+)
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { SectionLoadingSkeleton } from '@/components/resource'

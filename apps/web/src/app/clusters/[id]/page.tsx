@@ -15,7 +15,14 @@ import { LoadingState } from '@/components/LoadingState'
 import { AiContextCard } from '@/components/AiContextCard'
 import { AiInsightBanner } from '@/components/ai/AiInsightBanner'
 import { MetricsTimeSeriesPanel } from '@/components/metrics/MetricsTimeSeriesPanel'
-import { TopologyMap } from '@/components/topology/TopologyMap'
+import dynamic from 'next/dynamic'
+const TopologyMap = dynamic(
+  () => import('@/components/topology/TopologyMap').then((m) => ({ default: m.TopologyMap })),
+  {
+    ssr: false,
+    loading: () => <div className="h-[500px] animate-pulse rounded-xl bg-[var(--color-bg-card)]" />,
+  },
+)
 import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
