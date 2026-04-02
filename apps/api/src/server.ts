@@ -156,6 +156,21 @@ app.addHook('onSend', async (request, reply, payload) => {
   return payload
 })
 
+// D11: Cache-Control headers for read-only tRPC GET responses (query procedures).
+// Allows browsers and intermediary proxies to cache GET results briefly,
+// reducing redundant round-trips for data that SSE will update in real time.
+app.addHook('onSend', (_request, reply, payload, done) => {
+  if (
+    _request.method === 'GET' &&
+    _request.url.startsWith('/trpc/') &&
+    !/\.subscribe(\?|$)/.test(_request.url)
+  ) {
+    reply.header('cache-control', 'private, max-age=10, stale-while-revalidate=30')
+    reply.header('vary', 'Cookie')
+  }
+  done()
+})
+
 app.register(fastifyTRPCOpenApiPlugin, {
   basePath: '/api',
   router: appRouter,
