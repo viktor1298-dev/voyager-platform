@@ -45,7 +45,14 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         {process.env.NEXT_PUBLIC_API_URL && (
-          <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_URL} />
+          <>
+            <link
+              rel="preconnect"
+              href={process.env.NEXT_PUBLIC_API_URL}
+              crossOrigin="use-credentials"
+            />
+            <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_API_URL} />
+          </>
         )}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>

@@ -385,44 +385,40 @@ function PodSummary({
         <LiveTimeAgo date={pod.createdAt} />
       </span>
       {pod.status === 'Running' && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onExecPod(pod)
-                }}
-                className="p-1 rounded hover:bg-[var(--color-accent)]/10 text-[var(--color-text-dim)] hover:text-[var(--color-accent)] transition-colors shrink-0"
-                aria-label={`Exec into pod ${pod.name}`}
-              >
-                <Terminal className="h-3.5 w-3.5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Exec into pod</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onExecPod(pod)
+              }}
+              className="p-1 rounded hover:bg-[var(--color-accent)]/10 text-[var(--color-text-dim)] hover:text-[var(--color-accent)] transition-colors shrink-0"
+              aria-label={`Exec into pod ${pod.name}`}
+            >
+              <Terminal className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Exec into pod</TooltipContent>
+        </Tooltip>
       )}
       {isAdmin && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDeletePod(pod)
-                }}
-                className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hover:text-red-400 transition-colors shrink-0"
-                aria-label={`Delete pod ${pod.name}`}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Delete pod</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDeletePod(pod)
+              }}
+              className="p-1 rounded hover:bg-red-500/10 text-[var(--color-text-dim)] hover:text-red-400 transition-colors shrink-0"
+              aria-label={`Delete pod ${pod.name}`}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Delete pod</TooltipContent>
+        </Tooltip>
       )}
     </div>
   )
@@ -601,7 +597,7 @@ export default function PodsPage() {
   }
 
   return (
-    <>
+    <TooltipProvider delayDuration={200}>
       <h1 className="sr-only">Cluster Pods</h1>
 
       {/* Reconnecting warning banner */}
@@ -671,7 +667,7 @@ export default function PodsPage() {
           onClose={() => setDeletePodTarget(null)}
         />
       )}
-    </>
+    </TooltipProvider>
   )
 }
 

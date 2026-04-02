@@ -139,7 +139,7 @@ interface RelationsTabProps {
 export function RelationsTab({ clusterId, kind, namespace, name }: RelationsTabProps) {
   const { data, isLoading } = trpc.relations.forResource.useQuery(
     { clusterId, kind, namespace, name },
-    { staleTime: SYNC_INTERVAL_MS, refetchOnWindowFocus: true },
+    { staleTime: SYNC_INTERVAL_MS, refetchOnWindowFocus: false },
   )
 
   if (isLoading) {
