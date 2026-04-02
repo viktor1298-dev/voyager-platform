@@ -355,165 +355,167 @@ export const metricsRouter = router({
    * Includes error/status info so frontend can display meaningful messages.
    */
   currentStats: protectedProcedure.query(async () => {
-    const TIMEOUT_MS = 20_000
-    let timeoutHandle: NodeJS.Timeout | null = null
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutHandle = setTimeout(
-        () => reject(new Error('Metrics collection timed out')),
-        TIMEOUT_MS,
-      )
-    })
+    return cached('metrics:currentStats', 15, async () => {
+      const TIMEOUT_MS = 20_000
+      let timeoutHandle: NodeJS.Timeout | null = null
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(
+          () => reject(new Error('Metrics collection timed out')),
+          TIMEOUT_MS,
+        )
+      })
 
-    try {
-      const result = await Promise.race([
-        (async () => {
-          const allClusters = await db.select({ id: clustersTable.id }).from(clustersTable)
+      try {
+        const result = await Promise.race([
+          (async () => {
+            const allClusters = await db.select({ id: clustersTable.id }).from(clustersTable)
 
-          // Skip clusters without active WatchManager connections — they are
-          // unreachable (seeded/misconfigured) and each failed K8s API call
-          // wastes 300-600ms, causing UI freezes on every dashboard load.
-          const activeIds = new Set(watchManager.getActiveClusterIds())
-          const connectedIds = new Set(
-            allClusters
-              .map((c) => c.id)
-              .filter((id) => activeIds.has(id) || watchManager.isConnected(id)),
-          )
+            // Skip clusters without active WatchManager connections — they are
+            // unreachable (seeded/misconfigured) and each failed K8s API call
+            // wastes 300-600ms, causing UI freezes on every dashboard load.
+            const activeIds = new Set(watchManager.getActiveClusterIds())
+            const connectedIds = new Set(
+              allClusters
+                .map((c) => c.id)
+                .filter((id) => activeIds.has(id) || watchManager.isConnected(id)),
+            )
 
-          let totalCpuNano = 0
-          let totalMemBytes = 0
-          let totalCpuAllocatable = 0
-          let totalMemAllocatable = 0
-          let totalPodCount = 0
-          let hasData = false
-          const errors: string[] = []
+            let totalCpuNano = 0
+            let totalMemBytes = 0
+            let totalCpuAllocatable = 0
+            let totalMemAllocatable = 0
+            let totalPodCount = 0
+            let hasData = false
+            const errors: string[] = []
 
-          const reachableClusters = allClusters.filter((c) => connectedIds.has(c.id))
+            const reachableClusters = allClusters.filter((c) => connectedIds.has(c.id))
 
-          const results = await Promise.allSettled(
-            reachableClusters.map(async (cluster) => {
-              const kc = await clusterClientPool.getClient(cluster.id)
-              const coreApi = kc.makeApiClient(k8s.CoreV1Api)
-              const metricsClient = new k8s.Metrics(kc)
+            const results = await Promise.allSettled(
+              reachableClusters.map(async (cluster) => {
+                const kc = await clusterClientPool.getClient(cluster.id)
+                const coreApi = kc.makeApiClient(k8s.CoreV1Api)
+                const metricsClient = new k8s.Metrics(kc)
 
-              const [nodeMetrics, nodesResponse] = await Promise.all([
-                metricsClient.getNodeMetrics(),
-                coreApi.listNode(),
-              ])
+                const [nodeMetrics, nodesResponse] = await Promise.all([
+                  metricsClient.getNodeMetrics(),
+                  coreApi.listNode(),
+                ])
 
-              const capacityMap = new Map<string, { cpuNano: number; memBytes: number }>()
-              for (const node of nodesResponse.items) {
-                const name = node.metadata?.name
-                if (name) {
-                  capacityMap.set(name, {
-                    cpuNano: parseCpuToNano(node.status?.allocatable?.cpu ?? '0'),
-                    memBytes: parseMemToBytes(node.status?.allocatable?.memory ?? '0'),
-                  })
+                const capacityMap = new Map<string, { cpuNano: number; memBytes: number }>()
+                for (const node of nodesResponse.items) {
+                  const name = node.metadata?.name
+                  if (name) {
+                    capacityMap.set(name, {
+                      cpuNano: parseCpuToNano(node.status?.allocatable?.cpu ?? '0'),
+                      memBytes: parseMemToBytes(node.status?.allocatable?.memory ?? '0'),
+                    })
+                  }
                 }
-              }
 
-              let cpuNano = 0
-              let memBytes = 0
-              let cpuAlloc = 0
-              let memAlloc = 0
-              for (const node of nodeMetrics.items) {
-                cpuNano += parseCpuToNano(node.usage?.cpu ?? '0')
-                memBytes += parseMemToBytes(node.usage?.memory ?? '0')
-                const capacity = capacityMap.get(node.metadata?.name ?? '')
-                if (capacity) {
-                  cpuAlloc += capacity.cpuNano
-                  memAlloc += capacity.memBytes
+                let cpuNano = 0
+                let memBytes = 0
+                let cpuAlloc = 0
+                let memAlloc = 0
+                for (const node of nodeMetrics.items) {
+                  cpuNano += parseCpuToNano(node.usage?.cpu ?? '0')
+                  memBytes += parseMemToBytes(node.usage?.memory ?? '0')
+                  const capacity = capacityMap.get(node.metadata?.name ?? '')
+                  if (capacity) {
+                    cpuAlloc += capacity.cpuNano
+                    memAlloc += capacity.memBytes
+                  }
                 }
-              }
 
-              let podCount = 0
-              try {
-                const pods = await coreApi.listPodForAllNamespaces()
-                podCount = pods.items?.length ?? 0
-              } catch {
-                // ignore pod count failures
-              }
+                let podCount = 0
+                try {
+                  const pods = await coreApi.listPodForAllNamespaces()
+                  podCount = pods.items?.length ?? 0
+                } catch {
+                  // ignore pod count failures
+                }
 
-              return { cpuNano, memBytes, cpuAlloc, memAlloc, podCount }
-            }),
-          )
+                return { cpuNano, memBytes, cpuAlloc, memAlloc, podCount }
+              }),
+            )
 
-          for (let i = 0; i < results.length; i++) {
-            const result = results[i]!
-            if (result.status === 'fulfilled') {
-              totalCpuNano += result.value.cpuNano
-              totalMemBytes += result.value.memBytes
-              totalCpuAllocatable += result.value.cpuAlloc
-              totalMemAllocatable += result.value.memAlloc
-              totalPodCount += result.value.podCount
-              hasData = true
-            } else {
-              const cluster = reachableClusters[i]!
-              const message =
-                result.reason instanceof Error ? result.reason.message : String(result.reason)
-              if (message.includes('403')) {
-                errors.push(`Cluster ${cluster.id}: metrics-server access denied (RBAC)`)
-              } else if (message.includes('Zod')) {
-                errors.push(`Cluster ${cluster.id}: invalid credentials`)
+            for (let i = 0; i < results.length; i++) {
+              const result = results[i]!
+              if (result.status === 'fulfilled') {
+                totalCpuNano += result.value.cpuNano
+                totalMemBytes += result.value.memBytes
+                totalCpuAllocatable += result.value.cpuAlloc
+                totalMemAllocatable += result.value.memAlloc
+                totalPodCount += result.value.podCount
+                hasData = true
               } else {
-                errors.push(`Cluster ${cluster.id}: ${message.slice(0, 100)}`)
+                const cluster = reachableClusters[i]!
+                const message =
+                  result.reason instanceof Error ? result.reason.message : String(result.reason)
+                if (message.includes('403')) {
+                  errors.push(`Cluster ${cluster.id}: metrics-server access denied (RBAC)`)
+                } else if (message.includes('Zod')) {
+                  errors.push(`Cluster ${cluster.id}: invalid credentials`)
+                } else {
+                  errors.push(`Cluster ${cluster.id}: ${message.slice(0, 100)}`)
+                }
               }
             }
-          }
 
-          if (!hasData) {
-            return {
-              cpuPercent: null,
-              memoryPercent: null,
-              cpuCores: null,
-              memoryBytes: null,
-              podCount: 0,
-              timestamp: new Date().toISOString(),
-              status: 'unavailable' as const,
-              message:
-                errors.length > 0
-                  ? `Metrics unavailable: ${errors.join('; ')}`
-                  : 'No clusters returned metrics data. Metrics server may not be available.',
+            if (!hasData) {
+              return {
+                cpuPercent: null,
+                memoryPercent: null,
+                cpuCores: null,
+                memoryBytes: null,
+                podCount: 0,
+                timestamp: new Date().toISOString(),
+                status: 'unavailable' as const,
+                message:
+                  errors.length > 0
+                    ? `Metrics unavailable: ${errors.join('; ')}`
+                    : 'No clusters returned metrics data. Metrics server may not be available.',
+              }
             }
-          }
 
-          return {
-            cpuPercent:
-              totalCpuAllocatable > 0
-                ? Math.round((totalCpuNano / totalCpuAllocatable) * 1000) / 10
-                : null,
-            memoryPercent:
-              totalMemAllocatable > 0
-                ? Math.round((totalMemBytes / totalMemAllocatable) * 1000) / 10
-                : null,
-            cpuCores: totalCpuNano / 1e9,
-            memoryBytes: totalMemBytes,
-            podCount: totalPodCount,
-            timestamp: new Date().toISOString(),
-            status: 'ok' as const,
-            message: errors.length > 0 ? `Partial: ${errors.join('; ')}` : null,
-          }
-        })(),
-        timeoutPromise,
-      ])
+            return {
+              cpuPercent:
+                totalCpuAllocatable > 0
+                  ? Math.round((totalCpuNano / totalCpuAllocatable) * 1000) / 10
+                  : null,
+              memoryPercent:
+                totalMemAllocatable > 0
+                  ? Math.round((totalMemBytes / totalMemAllocatable) * 1000) / 10
+                  : null,
+              cpuCores: totalCpuNano / 1e9,
+              memoryBytes: totalMemBytes,
+              podCount: totalPodCount,
+              timestamp: new Date().toISOString(),
+              status: 'ok' as const,
+              message: errors.length > 0 ? `Partial: ${errors.join('; ')}` : null,
+            }
+          })(),
+          timeoutPromise,
+        ])
 
-      return result
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error'
-      return {
-        cpuPercent: null,
-        memoryPercent: null,
-        cpuCores: null,
-        memoryBytes: null,
-        podCount: 0,
-        timestamp: new Date().toISOString(),
-        status: 'error' as const,
-        message: message.includes('timed out')
-          ? 'Metrics collection timed out. Metrics server may not be responding.'
-          : `Metrics error: ${message}`,
+        return result
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error'
+        return {
+          cpuPercent: null,
+          memoryPercent: null,
+          cpuCores: null,
+          memoryBytes: null,
+          podCount: 0,
+          timestamp: new Date().toISOString(),
+          status: 'error' as const,
+          message: message.includes('timed out')
+            ? 'Metrics collection timed out. Metrics server may not be responding.'
+            : `Metrics error: ${message}`,
+        }
+      } finally {
+        if (timeoutHandle) clearTimeout(timeoutHandle)
       }
-    } finally {
-      if (timeoutHandle) clearTimeout(timeoutHandle)
-    }
+    })
   }),
 
   /** Per-cluster time-series from metricsHistory, bucketed by range.
