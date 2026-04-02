@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import type { ResourceType } from '@voyager/types'
 import { useResourceStore, type ConnectionState } from '@/stores/resource-store'
 
@@ -10,14 +10,13 @@ const EMPTY: unknown[] = []
 /**
  * Read resources for a specific cluster + type from the Zustand store.
  *
- * Re-renders are driven by the global `tick` counter in the Zustand store,
- * which is incremented every 5 seconds by `useResourceTick()` (placed once
- * in the cluster layout). This keeps relative time labels ("3s ago" → "8s ago")
- * current without each hook instance running its own setInterval.
+ * The store holds Map-of-Maps internally (outer key → inner Map keyed by
+ * namespace/name). This selector converts inner Map values to an array,
+ * caching the result by inner Map reference to avoid creating a new array
+ * on every selector call (which would cause infinite re-renders).
  *
- * Previous implementation: each call site had a local 1-second setInterval,
- * causing 46+ timer callbacks/second and massive unnecessary re-renders.
- * Now all consumers share a single 5-second global tick.
+ * Re-renders are additionally driven by the global `tick` counter (incremented
+ * every 5s by `useResourceTick()`) for relative time label freshness.
  */
 export function useClusterResources<T>(clusterId: string, type: ResourceType): T[] {
   // Subscribe to global tick — forces re-render for relative time updates
@@ -25,9 +24,22 @@ export function useClusterResources<T>(clusterId: string, type: ResourceType): T
   // The tick is incremented every 5s by useResourceTick() in the cluster layout.
   useResourceStore((s) => s.tick)
 
+  const prevRef = useRef<{ map: Map<string, unknown> | undefined; arr: unknown[] }>({
+    map: undefined,
+    arr: EMPTY,
+  })
+
   return useResourceStore(
     useCallback(
-      (s) => (s.resources.get(`${clusterId}:${type}`) ?? EMPTY) as T[],
+      (s) => {
+        const inner = s.resources.get(`${clusterId}:${type}`)
+        if (!inner || inner.size === 0) return EMPTY as T[]
+        // Only rebuild array if the inner Map reference changed
+        if (inner === prevRef.current.map) return prevRef.current.arr as T[]
+        const arr = [...inner.values()] as T[]
+        prevRef.current = { map: inner, arr }
+        return arr
+      },
       [clusterId, type],
     ),
   )

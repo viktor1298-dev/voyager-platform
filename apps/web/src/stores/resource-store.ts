@@ -3,9 +3,14 @@ import type { ResourceType, WatchEvent } from '@voyager/types'
 
 export type ConnectionState = 'initializing' | 'connected' | 'reconnecting' | 'disconnected'
 
+/** Derive a stable key from a K8s resource object (namespace/name or just name) */
+function resourceKey(obj: { name: string; namespace?: string | null }): string {
+  return obj.namespace ? `${obj.namespace}/${obj.name}` : obj.name
+}
+
 interface ResourceStoreState {
-  /** Keyed by `${clusterId}:${resourceType}` */
-  resources: Map<string, unknown[]>
+  /** Keyed by `${clusterId}:${resourceType}` → inner Map keyed by `namespace/name` */
+  resources: Map<string, Map<string, unknown>>
   /** Per-cluster connection state */
   connectionState: Record<string, ConnectionState>
   /** Clusters that have received at least one snapshot — used to distinguish
@@ -15,9 +20,9 @@ interface ResourceStoreState {
    *  even when no SSE events arrive. Without this, "3s ago" freezes until the next K8s event. */
   tick: number
 
-  /** Replace entire array for a (clusterId, resourceType) key (used by snapshot event) */
+  /** Replace entire resource set for a (clusterId, resourceType) key (used by snapshot event) */
   setResources: (clusterId: string, type: ResourceType, items: unknown[]) => void
-  /** Apply ADDED/MODIFIED/DELETED to the array for event.resourceType */
+  /** Apply ADDED/MODIFIED/DELETED via O(1) Map operations */
   applyEvent: (clusterId: string, event: WatchEvent) => void
   /** Apply multiple events in a single state update (batch flush from 1s buffer) */
   applyEvents: (clusterId: string, events: WatchEvent[]) => void
@@ -38,8 +43,13 @@ export const useResourceStore = create<ResourceStoreState>()((set) => ({
   setResources: (clusterId, type, items) =>
     set((state) => {
       const key = `${clusterId}:${type}`
+      const innerMap = new Map<string, unknown>()
+      for (const item of items) {
+        const obj = item as { name: string; namespace?: string | null }
+        innerMap.set(resourceKey(obj), item)
+      }
       const next = new Map(state.resources)
-      next.set(key, items)
+      next.set(key, innerMap)
       // Mark cluster as having received snapshots
       if (!state.snapshotsReady.has(clusterId)) {
         const ready = new Set(state.snapshotsReady)
@@ -56,36 +66,17 @@ export const useResourceStore = create<ResourceStoreState>()((set) => ({
       if (!current) return state
 
       const obj = event.object as { name: string; namespace?: string | null }
-      let updated: unknown[]
+      const rk = resourceKey(obj)
+      const updated = new Map(current) // clone inner Map for Zustand detection
 
       switch (event.type) {
-        case 'ADDED': {
-          const idx = current.findIndex((item) => {
-            const i = item as { name: string; namespace?: string | null }
-            return i.name === obj.name && i.namespace === obj.namespace
-          })
-          if (idx >= 0) {
-            updated = [...current]
-            updated[idx] = event.object
-          } else {
-            updated = [...current, event.object]
-          }
+        case 'ADDED':
+        case 'MODIFIED':
+          updated.set(rk, event.object)
           break
-        }
-        case 'MODIFIED': {
-          updated = current.map((item) => {
-            const i = item as { name: string; namespace?: string | null }
-            return i.name === obj.name && i.namespace === obj.namespace ? event.object : item
-          })
+        case 'DELETED':
+          updated.delete(rk)
           break
-        }
-        case 'DELETED': {
-          updated = current.filter((item) => {
-            const i = item as { name: string; namespace?: string | null }
-            return !(i.name === obj.name && i.namespace === obj.namespace)
-          })
-          break
-        }
       }
 
       const next = new Map(state.resources)
@@ -99,46 +90,25 @@ export const useResourceStore = create<ResourceStoreState>()((set) => ({
 
       for (const event of events) {
         const key = `${clusterId}:${event.resourceType}`
-        const current = next.get(key)
-        if (!current) continue
+        let inner = next.get(key)
+        if (!inner) continue
+        // Clone inner map only once per resource type per batch
+        if (inner === state.resources.get(key)) {
+          inner = new Map(inner)
+          next.set(key, inner)
+        }
 
         const obj = event.object as { name: string; namespace?: string | null }
+        const rk = resourceKey(obj)
 
         switch (event.type) {
-          case 'ADDED': {
-            const idx = current.findIndex((item) => {
-              const i = item as { name: string; namespace?: string | null }
-              return i.name === obj.name && i.namespace === obj.namespace
-            })
-            if (idx >= 0) {
-              const updated = [...current]
-              updated[idx] = event.object
-              next.set(key, updated)
-            } else {
-              next.set(key, [...current, event.object])
-            }
+          case 'ADDED':
+          case 'MODIFIED':
+            inner.set(rk, event.object)
             break
-          }
-          case 'MODIFIED': {
-            next.set(
-              key,
-              current.map((item) => {
-                const i = item as { name: string; namespace?: string | null }
-                return i.name === obj.name && i.namespace === obj.namespace ? event.object : item
-              }),
-            )
+          case 'DELETED':
+            inner.delete(rk)
             break
-          }
-          case 'DELETED': {
-            next.set(
-              key,
-              current.filter((item) => {
-                const i = item as { name: string; namespace?: string | null }
-                return !(i.name === obj.name && i.namespace === obj.namespace)
-              }),
-            )
-            break
-          }
         }
       }
 
