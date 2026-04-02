@@ -6,8 +6,15 @@ import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { ConditionsList, DetailTabs } from '@/components/expandable'
 import { RelatedPodsList, ResourcePageScaffold } from '@/components/resource'
 import { RelationsTab } from '@/components/resource/RelationsTab'
-import { ResourceDiff } from '@/components/resource/ResourceDiff'
-import { YamlViewer } from '@/components/resource/YamlViewer'
+import dynamic from 'next/dynamic'
+const ResourceDiff = dynamic(
+  () => import('@/components/resource/ResourceDiff').then((m) => ({ default: m.ResourceDiff })),
+  { ssr: false },
+)
+const YamlViewer = dynamic(
+  () => import('@/components/resource/YamlViewer').then((m) => ({ default: m.YamlViewer })),
+  { ssr: false },
+)
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'

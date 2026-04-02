@@ -24,8 +24,15 @@ import {
   SearchFilterBar,
 } from '@/components/resource'
 import { RelationsTab } from '@/components/resource/RelationsTab'
-import { ResourceDiff } from '@/components/resource/ResourceDiff'
-import { YamlViewer } from '@/components/resource/YamlViewer'
+import dynamic from 'next/dynamic'
+const ResourceDiff = dynamic(
+  () => import('@/components/resource/ResourceDiff').then((m) => ({ default: m.ResourceDiff })),
+  { ssr: false },
+)
+const YamlViewer = dynamic(
+  () => import('@/components/resource/YamlViewer').then((m) => ({ default: m.YamlViewer })),
+  { ssr: false },
+)
 import { useTerminal } from '@/components/terminal/terminal-context'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
