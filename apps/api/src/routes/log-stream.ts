@@ -121,7 +121,15 @@ export async function registerLogStreamRoute(app: FastifyInstance): Promise<void
           if (!line) continue
           lineCount++
 
-          safeWrite(`event: log\ndata: ${JSON.stringify({ line, timestamp: Date.now() })}\n\n`)
+          const canWrite = reply.raw.write(
+            `event: log\ndata: ${JSON.stringify({ line, timestamp: Date.now() })}\n\n`,
+          )
+
+          // Backpressure: pause K8s log stream when client can't keep up
+          if (!canWrite) {
+            logStream.pause()
+            reply.raw.once('drain', () => logStream.resume())
+          }
 
           if (lineCount >= MAX_LOG_LINES) {
             safeWrite(
