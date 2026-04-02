@@ -15,6 +15,7 @@ const CommandPalette = dynamic(
   { ssr: false },
 )
 import { KeyboardShortcuts } from './KeyboardShortcuts'
+import { TimeAgoProvider } from './shared/TimeAgoProvider'
 import { TerminalDrawer } from './terminal/TerminalDrawer'
 import { TerminalProvider } from './terminal/terminal-context'
 
@@ -83,24 +84,26 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <trpc.Provider client={trpcClient} queryClient={queryClient}>
             <QueryClientProvider client={queryClient}>
               <TerminalProvider>
-                <AuthSessionSync />
-                {children}
-                <Toaster
-                  position="bottom-right"
-                  richColors
-                  closeButton
-                  toastOptions={{
-                    className: 'font-sans',
-                    style: {
-                      background: 'var(--color-bg-card)',
-                      border: '1px solid var(--color-border)',
-                      color: 'var(--color-text-primary)',
-                    },
-                  }}
-                />
-                <CommandPalette />
-                <KeyboardShortcuts />
-                <TerminalDrawer />
+                <TimeAgoProvider>
+                  <AuthSessionSync />
+                  {children}
+                  <Toaster
+                    position="bottom-right"
+                    richColors
+                    closeButton
+                    toastOptions={{
+                      className: 'font-sans',
+                      style: {
+                        background: 'var(--color-bg-card)',
+                        border: '1px solid var(--color-border)',
+                        color: 'var(--color-text-primary)',
+                      },
+                    }}
+                  />
+                  <CommandPalette />
+                  <KeyboardShortcuts />
+                  <TerminalDrawer />
+                </TimeAgoProvider>
               </TerminalProvider>
             </QueryClientProvider>
           </trpc.Provider>

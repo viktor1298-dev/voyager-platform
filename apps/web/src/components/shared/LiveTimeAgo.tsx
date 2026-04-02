@@ -1,26 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { timeAgo } from '@/lib/time-utils'
+import { useTimeAgoTick } from './TimeAgoProvider'
 
 /**
- * Self-updating relative time label — re-renders every second so age
- * labels stay fresh independently of the parent component's render cycle.
+ * Self-updating relative time label — re-renders every second via a shared
+ * global interval (TimeAgoProvider) instead of per-instance setInterval.
  *
- * This replaces inline `timeAgo(date)` calls in SSE-driven resource pages
- * where the parent only re-renders on actual K8s watch events. Without
- * this, age labels freeze between events and only update on the 5s tick.
- *
- * Each instance runs its own 1-second interval. With ~40 pods on screen
- * the cost is ~40 tiny text-span re-renders per second — negligible.
+ * With 200+ instances, one interval + one batched React commit replaces
+ * 200 independent microtasks/second.
  */
 export function LiveTimeAgo({ date }: { date: string | Date | null | undefined }) {
-  const [, tick] = useState(0)
-
-  useEffect(() => {
-    const timer = setInterval(() => tick((t) => t + 1), 1_000)
-    return () => clearInterval(timer)
-  }, [])
-
+  useTimeAgoTick() // subscribe to 1s global tick
   return <>{date ? timeAgo(date) : '—'}</>
 }
