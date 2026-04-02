@@ -170,7 +170,7 @@ function LoginPageContent() {
     setShouldBypassLoggedOutRedirect(true)
     setIsRedirectingAfterLogin(true)
 
-    const maxAttempts = 8
+    const maxAttempts = 4
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       const sessionResult = await authClient.getSession()
       if (sessionResult.data?.user) {
@@ -185,7 +185,7 @@ function LoginPageContent() {
         router.refresh()
         return
       }
-      await new Promise((resolve) => window.setTimeout(resolve, 150 * (attempt + 1)))
+      await new Promise((resolve) => window.setTimeout(resolve, 200))
     }
 
     setIsRedirectingAfterLogin(false)

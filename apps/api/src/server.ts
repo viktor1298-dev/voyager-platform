@@ -43,6 +43,7 @@ import { registerMetricsStreamRoute } from './routes/metrics-stream.js'
 import { registerPodTerminalRoute } from './routes/pod-terminal.js'
 import { registerResourceStreamRoute } from './routes/resource-stream.js'
 import { registerWatchHealthRoute } from './routes/watch-health.js'
+import { clusterClientPool } from './lib/cluster-client-pool.js'
 import { drainConnections } from './lib/connection-tracker.js'
 import { createContext } from './trpc.js'
 
@@ -343,6 +344,9 @@ const start = async () => {
     startMetricsHistoryCollector()
     startDataRetention()
     startFlagReloader()
+
+    // Pre-warm cluster client pool in background (non-blocking)
+    void clusterClientPool.warmUp()
 
     if (k8sEnabled) {
       startDeploySmokeTest()

@@ -108,6 +108,32 @@ export class ClusterClientPool {
   invalidate(clusterId: string): void {
     this.cache.delete(clusterId)
   }
+
+  /** Pre-warm the pool by loading KubeConfigs for all active clusters.
+   *  Best-effort — individual failures are logged and skipped. */
+  async warmUp(): Promise<void> {
+    const activeClusters = await db
+      .select({ id: clusters.id })
+      .from(clusters)
+      .where(eq(clusters.isActive, true))
+
+    if (activeClusters.length === 0) return
+
+    const results = await Promise.allSettled(activeClusters.map((c) => this.getClient(c.id)))
+
+    let warmed = 0
+    for (let i = 0; i < results.length; i++) {
+      if (results[i].status === 'fulfilled') {
+        warmed++
+      } else {
+        console.warn(
+          `[ClusterClientPool] warm-up failed for ${activeClusters[i].id}:`,
+          (results[i] as PromiseRejectedResult).reason?.message ?? results[i],
+        )
+      }
+    }
+    console.log(`[ClusterClientPool] warmed ${warmed}/${activeClusters.length} cluster clients`)
+  }
 }
 
 export const clusterClientPool = new ClusterClientPool()
