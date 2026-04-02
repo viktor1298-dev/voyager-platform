@@ -27,6 +27,9 @@ ingress:
   enabled: true
   className: nginx
   host: voyager-platform.voyagerlabs.co
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 
 env:
   NODE_ENV: development
