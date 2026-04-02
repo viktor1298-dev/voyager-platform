@@ -1,5 +1,6 @@
 'use client'
 
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { ArrowDown, Sparkles, WrapText } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -46,7 +47,6 @@ export function LogViewer({
   const [newLineCount, setNewLineCount] = useState(0)
 
   const scrollRef = useRef<HTMLDivElement>(null)
-  const bottomRef = useRef<HTMLDivElement>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reconnectDelayRef = useRef(SSE_INITIAL_RECONNECT_DELAY_MS)
@@ -64,6 +64,13 @@ export function LogViewer({
     const lower = searchQuery.toLowerCase()
     return lines.filter((line) => line.toLowerCase().includes(lower)).length
   }, [lines, searchQuery])
+
+  const virtualizer = useVirtualizer({
+    count: lines.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 20,
+    overscan: 50,
+  })
 
   const handleSearchChange = useCallback((query: string) => {
     setSearchQuery(query)
@@ -218,12 +225,14 @@ export function LogViewer({
 
   // Auto-scroll to bottom when new lines arrive (only if following and not paused)
   useEffect(() => {
-    if (isFollowing && !isPausedRef.current && bottomRef.current) {
-      bottomRef.current.scrollIntoView({ block: 'end', behavior: 'smooth' })
-    } else if (autoScroll && !isFollowing && bottomRef.current) {
-      bottomRef.current.scrollIntoView({ block: 'end' })
+    if (lines.length === 0) return
+    const lastIndex = lines.length - 1
+    if (isFollowing && !isPausedRef.current) {
+      virtualizer.scrollToIndex(lastIndex, { align: 'end', behavior: 'smooth' })
+    } else if (autoScroll && !isFollowing) {
+      virtualizer.scrollToIndex(lastIndex, { align: 'end' })
     }
-  }, [lines.length, autoScroll, isFollowing])
+  }, [lines.length, autoScroll, isFollowing, virtualizer])
 
   // Pause-on-hover handlers
   const handleMouseEnter = useCallback(() => {
@@ -234,25 +243,23 @@ export function LogViewer({
   }, [isFollowing])
 
   const handleMouseLeave = useCallback(() => {
-    if (isFollowing) {
+    if (isFollowing && lines.length > 0) {
       setIsPaused(false)
       isPausedRef.current = false
       setNewLineCount(0)
       // Resume auto-scroll
-      if (bottomRef.current) {
-        bottomRef.current.scrollIntoView({ block: 'end', behavior: 'smooth' })
-      }
+      virtualizer.scrollToIndex(lines.length - 1, { align: 'end', behavior: 'smooth' })
     }
-  }, [isFollowing])
+  }, [isFollowing, lines.length, virtualizer])
 
   const handleJumpToBottom = useCallback(() => {
     setIsPaused(false)
     isPausedRef.current = false
     setNewLineCount(0)
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ block: 'end', behavior: 'smooth' })
+    if (lines.length > 0) {
+      virtualizer.scrollToIndex(lines.length - 1, { align: 'end', behavior: 'smooth' })
     }
-  }, [])
+  }, [lines.length, virtualizer])
 
   // Check if SSE streaming is possible (has required props)
   const canFollow = Boolean(clusterId && podName && namespace)
@@ -342,19 +349,29 @@ export function LogViewer({
             No log output.
           </p>
         ) : (
-          <>
-            {lines.map((line, i) => (
-              <LogLine
-                key={i}
-                line={line}
-                lineNumber={i + 1}
-                searchQuery={searchQuery}
-                wordWrap={wordWrap}
-                beautify={beautify}
-              />
+          <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+            {virtualizer.getVirtualItems().map((virtualRow) => (
+              <div
+                key={virtualRow.key}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: virtualRow.size,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                <LogLine
+                  line={lines[virtualRow.index]}
+                  lineNumber={virtualRow.index + 1}
+                  searchQuery={searchQuery}
+                  wordWrap={wordWrap}
+                  beautify={beautify}
+                />
+              </div>
             ))}
-            <div ref={bottomRef} />
-          </>
+          </div>
         )}
 
         {/* New lines badge (shown when paused on hover) */}
