@@ -313,3 +313,21 @@ export const resourceBarVariants = {
     transition: { duration: 0.6, ease: EASING.decelerate },
   }),
 } as const
+
+// Sidebar Neon Depth — icon hover scale (collapsed, spring)
+export const sidebarCollapsedIconHover = {
+  scale: 1.1,
+  transition: { type: 'spring' as const, stiffness: 400, damping: 25 },
+}
+
+// Sidebar Neon Depth — tap feedback (expanded)
+export const sidebarTapFeedback = {
+  scale: 0.97,
+  transition: { duration: DURATION.instant },
+}
+
+// Sidebar Neon Depth — tap feedback (collapsed)
+export const sidebarTapFeedbackCollapsed = {
+  scale: 0.95,
+  transition: { duration: DURATION.instant },
+}
