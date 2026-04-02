@@ -15,6 +15,7 @@ const YamlViewer = dynamic(
   () => import('@/components/resource/YamlViewer').then((m) => ({ default: m.YamlViewer })),
   { ssr: false },
 )
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -24,7 +25,7 @@ interface ConfigMapData {
   namespace: string
   dataKeysCount: number
   binaryDataKeysCount: number
-  age: string
+  createdAt: string | null
   labels: Record<string, string>
   dataEntries: { key: string; value: string | null; size: number }[]
 }
@@ -39,7 +40,9 @@ function ConfigMapSummary({ cm }: { cm: ConfigMapData }) {
       <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-[var(--color-accent)]/10 text-[var(--color-accent)] shrink-0">
         {cm.dataKeysCount} key{cm.dataKeysCount !== 1 ? 's' : ''}
       </span>
-      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">{cm.age}</span>
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
+        <LiveTimeAgo date={cm.createdAt} />
+      </span>
     </div>
   )
 }

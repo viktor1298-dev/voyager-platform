@@ -9,7 +9,6 @@ import { CACHE_KEYS } from '../lib/cache-keys.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { handleK8sError } from '../lib/error-handler.js'
 import {
-  computeAge,
   deriveDeploymentStatus,
   deriveImageVersion,
   mapDeployment,
@@ -34,7 +33,7 @@ interface DeploymentInfo {
   imageVersion: string
   status: 'Running' | 'Pending' | 'Failed' | 'Scaling'
   lastUpdated: string
-  age: string
+  createdAt: string | null
   rolloutHistory: RolloutInfo[]
 }
 
@@ -55,7 +54,7 @@ const deploymentInfoSchema = z.object({
   imageVersion: z.string(),
   status: z.enum(['Running', 'Pending', 'Failed', 'Scaling']),
   lastUpdated: z.string(),
-  age: z.string(),
+  createdAt: z.string().nullable(),
   rolloutHistory: z.array(rolloutInfoSchema),
 })
 
@@ -175,7 +174,11 @@ export const deploymentsRouter = router({
                   observedGeneration: deployment.status?.observedGeneration,
                 }),
                 lastUpdated: findLastUpdated(deployment),
-                age: computeAge(deployment.metadata?.creationTimestamp),
+                createdAt: deployment.metadata?.creationTimestamp
+                  ? new Date(
+                      deployment.metadata.creationTimestamp as unknown as string,
+                    ).toISOString()
+                  : null,
                 rolloutHistory: rolloutMap.get(key) ?? [],
               }
             })
@@ -271,7 +274,9 @@ export const deploymentsRouter = router({
               observedGeneration: deployment.status?.observedGeneration,
             }),
             lastUpdated: findLastUpdated(deployment),
-            age: computeAge(deployment.metadata?.creationTimestamp),
+            createdAt: deployment.metadata?.creationTimestamp
+              ? new Date(deployment.metadata.creationTimestamp as unknown as string).toISOString()
+              : null,
             rolloutHistory: rolloutMap.get(key) ?? [],
           }
         })
@@ -322,7 +327,9 @@ export const deploymentsRouter = router({
             generation: d.metadata?.generation,
             observedGeneration: d.status?.observedGeneration,
           }),
-          age: computeAge(d.metadata?.creationTimestamp),
+          createdAt: d.metadata?.creationTimestamp
+            ? new Date(d.metadata.creationTimestamp as unknown as string).toISOString()
+            : null,
           strategyType: strategy?.type ?? 'RollingUpdate',
           maxSurge: strategy?.rollingUpdate?.maxSurge?.toString() ?? null,
           maxUnavailable: strategy?.rollingUpdate?.maxUnavailable?.toString() ?? null,

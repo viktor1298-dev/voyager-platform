@@ -36,6 +36,7 @@ const YamlViewer = dynamic(
 )
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -47,7 +48,7 @@ interface StatefulSetData {
   currentReplicas: number
   updatedReplicas: number
   image: string
-  age: string
+  createdAt: string | null
   volumeClaimTemplates: {
     name: string
     storageClass: string
@@ -89,7 +90,9 @@ function StatefulSetSummary({ ss }: { ss: StatefulSetData }) {
       >
         {ss.image}
       </span>
-      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">{ss.age}</span>
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
+        <LiveTimeAgo date={ss.createdAt} />
+      </span>
     </div>
   )
 }

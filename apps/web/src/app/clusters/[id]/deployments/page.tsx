@@ -36,6 +36,7 @@ const YamlViewer = dynamic(
 )
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -49,7 +50,7 @@ interface DeploymentDetail {
   unavailableReplicas: number
   image: string
   status: string
-  age: string
+  createdAt: string | null
   strategyType: string
   maxSurge: string | null
   maxUnavailable: string | null
@@ -86,7 +87,9 @@ function DeploymentSummary({ d }: { d: DeploymentDetail }) {
       >
         {d.image}
       </span>
-      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">{d.age}</span>
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
+        <LiveTimeAgo date={d.createdAt} />
+      </span>
     </div>
   )
 }

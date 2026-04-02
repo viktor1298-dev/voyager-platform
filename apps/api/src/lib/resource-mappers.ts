@@ -8,19 +8,6 @@ import { parseCpuToNano, parseMemToBytes } from './k8s-units.js'
 
 // ── Shared Helpers ────────────────────────────────────────────
 
-export function computeAge(creationTimestamp: Date | string | undefined): string {
-  if (!creationTimestamp) return 'unknown'
-  const diff = Date.now() - new Date(creationTimestamp).getTime()
-  const seconds = Math.floor(diff / 1000)
-  if (seconds < 60) return `${seconds}s`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h`
-  const days = Math.floor(hours / 24)
-  return `${days}d`
-}
-
 export function deriveImageVersion(image: string): string {
   if (!image || image === 'unknown') return 'unknown'
   const digestIndex = image.indexOf('@')
@@ -289,7 +276,9 @@ export function mapDeployment(
       observedGeneration: deployment.status?.observedGeneration,
     }),
     lastUpdated: findLastUpdated(deployment),
-    age: computeAge(deployment.metadata?.creationTimestamp),
+    createdAt: deployment.metadata?.creationTimestamp
+      ? new Date(deployment.metadata.creationTimestamp as unknown as string).toISOString()
+      : null,
     rolloutHistory: [] as Array<{ revision: string; image: string; updatedAt: string }>,
     selector,
     conditions,
@@ -415,7 +404,9 @@ export function mapConfigMap(cm: k8s.V1ConfigMap) {
     namespace: cm.metadata?.namespace ?? '',
     dataKeysCount: dataKeys.length,
     binaryDataKeysCount: binaryDataKeys.length,
-    age: computeAge(cm.metadata?.creationTimestamp),
+    createdAt: cm.metadata?.creationTimestamp
+      ? new Date(cm.metadata.creationTimestamp as unknown as string).toISOString()
+      : null,
     labels: (cm.metadata?.labels as Record<string, string>) ?? {},
     dataEntries,
   }
@@ -449,7 +440,9 @@ export function mapSecret(secret: k8s.V1Secret) {
     dataKeysCount: dataKeyNames.length,
     dataKeyNames,
     dataEntries,
-    age: computeAge(secret.metadata?.creationTimestamp),
+    createdAt: secret.metadata?.creationTimestamp
+      ? new Date(secret.metadata.creationTimestamp as unknown as string).toISOString()
+      : null,
     labels: (secret.metadata?.labels as Record<string, string>) ?? {},
     annotations,
   }
@@ -468,7 +461,9 @@ export function mapPVC(pvc: k8s.V1PersistentVolumeClaim) {
     accessModes: pvc.spec?.accessModes ?? [],
     volumeName: pvc.spec?.volumeName ?? null,
     volumeMode: pvc.spec?.volumeMode ?? 'Filesystem',
-    age: computeAge(pvc.metadata?.creationTimestamp),
+    createdAt: pvc.metadata?.creationTimestamp
+      ? new Date(pvc.metadata.creationTimestamp as unknown as string).toISOString()
+      : null,
     labels: (pvc.metadata?.labels as Record<string, string>) ?? {},
     annotations: (pvc.metadata?.annotations as Record<string, string>) ?? {},
     finalizers: pvc.metadata?.finalizers ?? [],
@@ -589,7 +584,9 @@ export function mapStatefulSet(ss: k8s.V1StatefulSet) {
     currentReplicas: current,
     updatedReplicas: updated,
     image,
-    age: computeAge(ss.metadata?.creationTimestamp),
+    createdAt: ss.metadata?.creationTimestamp
+      ? new Date(ss.metadata.creationTimestamp as unknown as string).toISOString()
+      : null,
     volumeClaimTemplates: vcts,
     conditions,
     selector,
@@ -629,7 +626,9 @@ export function mapDaemonSet(ds: k8s.V1DaemonSet) {
     updated,
     available,
     unavailable,
-    age: computeAge(ds.metadata?.creationTimestamp),
+    createdAt: ds.metadata?.creationTimestamp
+      ? new Date(ds.metadata.creationTimestamp as unknown as string).toISOString()
+      : null,
     nodeSelector,
     tolerations,
     conditions,
@@ -676,7 +675,9 @@ export function mapJob(job: k8s.V1Job) {
       job.status?.startTime as unknown as string,
       job.status?.completionTime as unknown as string,
     ),
-    age: computeAge(job.metadata?.creationTimestamp),
+    createdAt: job.metadata?.creationTimestamp
+      ? new Date(job.metadata.creationTimestamp as unknown as string).toISOString()
+      : null,
     conditions,
   }
 }
@@ -698,7 +699,9 @@ export function mapCronJob(cj: k8s.V1CronJob) {
     suspend: cj.spec?.suspend ?? false,
     lastScheduleTime: lastSchedule,
     lastSuccessfulTime: lastSuccess,
-    age: computeAge(cj.metadata?.creationTimestamp),
+    createdAt: cj.metadata?.creationTimestamp
+      ? new Date(cj.metadata.creationTimestamp as unknown as string).toISOString()
+      : null,
     timezone: cj.spec?.timeZone ?? null,
     concurrencyPolicy: cj.spec?.concurrencyPolicy ?? 'Allow',
     startingDeadlineSeconds: cj.spec?.startingDeadlineSeconds ?? null,
@@ -820,7 +823,9 @@ export function mapHPA(hpa: k8s.V2HorizontalPodAutoscaler) {
     maxReplicas: hpa.spec?.maxReplicas ?? 0,
     currentReplicas: hpa.status?.currentReplicas ?? 0,
     desiredReplicas: hpa.status?.desiredReplicas ?? 0,
-    age: computeAge(hpa.metadata?.creationTimestamp),
+    createdAt: hpa.metadata?.creationTimestamp
+      ? new Date(hpa.metadata.creationTimestamp as unknown as string).toISOString()
+      : null,
     metrics,
     conditions,
     scaleUpPolicies: scaleUp,

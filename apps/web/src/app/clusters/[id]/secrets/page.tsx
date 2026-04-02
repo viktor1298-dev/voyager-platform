@@ -15,6 +15,7 @@ const YamlViewer = dynamic(
   () => import('@/components/resource/YamlViewer').then((m) => ({ default: m.YamlViewer })),
   { ssr: false },
 )
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -25,7 +26,7 @@ interface SecretData {
   type: string
   dataKeysCount: number
   dataKeyNames: string[]
-  age: string
+  createdAt: string | null
   labels: Record<string, string>
   annotations: Record<string, string>
 }
@@ -59,7 +60,9 @@ function SecretSummary({ secret }: { secret: SecretData }) {
       <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-[var(--color-accent)]/10 text-[var(--color-accent)] shrink-0">
         {secret.dataKeysCount} key{secret.dataKeysCount !== 1 ? 's' : ''}
       </span>
-      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">{secret.age}</span>
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
+        <LiveTimeAgo date={secret.createdAt} />
+      </span>
     </div>
   )
 }

@@ -15,6 +15,7 @@ const YamlViewer = dynamic(
   () => import('@/components/resource/YamlViewer').then((m) => ({ default: m.YamlViewer })),
   { ssr: false },
 )
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
@@ -36,7 +37,7 @@ interface JobData {
   startTime: string | null
   completionTime: string | null
   duration: string | null
-  age: string
+  createdAt: string | null
   conditions: {
     type: string
     status: string
@@ -64,7 +65,7 @@ function JobSummary({ job }: { job: JobData }) {
         </span>
       )}
       <span className="ml-auto text-[11px] font-mono text-[var(--color-text-dim)] shrink-0">
-        {job.age}
+        <LiveTimeAgo date={job.createdAt} />
       </span>
     </div>
   )

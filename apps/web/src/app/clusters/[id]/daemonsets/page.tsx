@@ -24,6 +24,7 @@ const YamlViewer = dynamic(
   () => import('@/components/resource/YamlViewer').then((m) => ({ default: m.YamlViewer })),
   { ssr: false },
 )
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -37,7 +38,7 @@ interface DaemonSetData {
   updated: number
   available: number
   unavailable: number
-  age: string
+  createdAt: string | null
   nodeSelector: Record<string, string>
   tolerations: { key: string; operator: string; value: string; effect: string }[]
   selector: Record<string, string>
@@ -70,7 +71,7 @@ function DaemonSetSummary({ ds }: { ds: DaemonSetData }) {
         <ResourceStatusBadge status={isReady ? 'Ready' : 'Pending'} size="sm" />
       </div>
       <span className="ml-auto text-[11px] font-mono text-[var(--color-text-dim)] shrink-0">
-        {ds.age}
+        <LiveTimeAgo date={ds.createdAt} />
       </span>
     </div>
   )

@@ -28,7 +28,7 @@ interface CronJobData {
   suspend: boolean
   lastScheduleTime: string | null
   lastSuccessfulTime: string | null
-  age: string
+  createdAt: string | null
   timezone: string | null
   concurrencyPolicy: string
   startingDeadlineSeconds: number | null
@@ -52,7 +52,7 @@ function CronJobSummary({ cj }: { cj: CronJobData }) {
         <LiveTimeAgo date={cj.lastScheduleTime} />
       </span>
       <span className="ml-auto text-[11px] font-mono text-[var(--color-text-dim)] shrink-0">
-        {cj.age}
+        <LiveTimeAgo date={cj.createdAt} />
       </span>
     </div>
   )

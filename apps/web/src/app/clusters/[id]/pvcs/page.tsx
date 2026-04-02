@@ -15,6 +15,7 @@ const YamlViewer = dynamic(
   () => import('@/components/resource/YamlViewer').then((m) => ({ default: m.YamlViewer })),
   { ssr: false },
 )
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
@@ -31,7 +32,7 @@ interface PVCData {
   accessModes: string[]
   volumeName: string | null
   volumeMode: string
-  age: string
+  createdAt: string | null
   labels: Record<string, string>
   annotations: Record<string, string>
   finalizers: string[]
@@ -59,7 +60,9 @@ function PVCSummary({ pvc }: { pvc: PVCData }) {
       <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0 hidden sm:inline">
         {pvc.accessModes.join(', ')}
       </span>
-      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">{pvc.age}</span>
+      <span className="text-xs text-[var(--color-text-dim)] font-mono shrink-0">
+        <LiveTimeAgo date={pvc.createdAt} />
+      </span>
     </div>
   )
 }

@@ -15,6 +15,7 @@ const YamlViewer = dynamic(
   () => import('@/components/resource/YamlViewer').then((m) => ({ default: m.YamlViewer })),
   { ssr: false },
 )
+import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -35,7 +36,7 @@ interface HPAData {
   maxReplicas: number
   currentReplicas: number
   desiredReplicas: number
-  age: string
+  createdAt: string | null
   metrics: HPAMetric[]
   conditions: {
     type: string
@@ -77,7 +78,7 @@ function HPASummary({ hpa }: { hpa: HPAData }) {
         </div>
       )}
       <span className="ml-auto text-[11px] font-mono text-[var(--color-text-dim)] shrink-0">
-        {hpa.age}
+        <LiveTimeAgo date={hpa.createdAt} />
       </span>
     </div>
   )

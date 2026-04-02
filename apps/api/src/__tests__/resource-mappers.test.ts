@@ -15,28 +15,11 @@ import {
   mapJob,
   mapCronJob,
   mapHPA,
-  computeAge,
   deriveImageVersion,
   deriveDeploymentStatus,
 } from '../lib/resource-mappers.js'
 
 // ── Helpers ───────────────────────────────────────────────────
-
-describe('computeAge', () => {
-  it('returns "unknown" for undefined', () => {
-    expect(computeAge(undefined)).toBe('unknown')
-  })
-
-  it('returns seconds for recent timestamps', () => {
-    const ts = new Date(Date.now() - 30_000).toISOString()
-    expect(computeAge(ts)).toBe('30s')
-  })
-
-  it('returns days for old timestamps', () => {
-    const ts = new Date(Date.now() - 3 * 24 * 60 * 60_000).toISOString()
-    expect(computeAge(ts)).toBe('3d')
-  })
-})
 
 describe('deriveImageVersion', () => {
   it('extracts tag from image', () => {
@@ -209,7 +192,7 @@ describe('mapDeployment', () => {
     expect(result.imageVersion).toBe('v2.1')
     expect(result.status).toBe('Running')
     expect(result.rolloutHistory).toEqual([])
-    expect(result.age).toMatch(/\d+d/)
+    expect(result.createdAt).toBe('2026-01-01T00:00:00.000Z')
   })
 })
 
