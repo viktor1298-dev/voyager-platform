@@ -169,12 +169,11 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
   const runningPods = rawPods.filter((pod) => pod.status?.phase === 'Running').length
   const healthStatus = deriveHealthStatus(totalNodes, totalPods, runningPods)
 
-  // Only update status to 'active' if currently 'unreachable' or 'unknown'
+  // Narrow SELECT: only fetch status + provider (skip large connectionConfig JSONB)
   const [currentCluster] = await db
     .select({
       status: clusters.status,
       provider: clusters.provider,
-      connectionConfig: clusters.connectionConfig,
     })
     .from(clusters)
     .where(eq(clusters.id, clusterId))
@@ -208,26 +207,34 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
   }
 
   // Auto-fix: detect real provider for clusters stored as 'kubeconfig'
-  if (currentCluster?.provider === 'kubeconfig' && currentCluster.connectionConfig) {
-    try {
-      let config = currentCluster.connectionConfig as Record<string, unknown>
-      if (
-        typeof config.__encrypted === 'string' &&
-        /^[0-9a-fA-F]{64}$/.test(K8S_CONFIG.ENCRYPTION_KEY)
-      ) {
-        config = JSON.parse(decryptCredential(config.__encrypted, K8S_CONFIG.ENCRYPTION_KEY))
-      }
-      if (typeof config.kubeconfig === 'string') {
-        const detection = detectProviderFromKubeconfig(config.kubeconfig)
-        if (detection.confidence !== 'none') {
-          updatePayload.provider = detection.provider
-          console.info(
-            `[watch-db-writer] Auto-detected provider for cluster ${clusterId}: ${detection.provider} (${detection.signal}, ${detection.confidence})`,
-          )
+  // Only fetch connectionConfig when actually needed (provider === 'kubeconfig')
+  if (currentCluster?.provider === 'kubeconfig') {
+    const [fullCluster] = await db
+      .select({ connectionConfig: clusters.connectionConfig })
+      .from(clusters)
+      .where(eq(clusters.id, clusterId))
+
+    if (fullCluster?.connectionConfig) {
+      try {
+        let config = fullCluster.connectionConfig as Record<string, unknown>
+        if (
+          typeof config.__encrypted === 'string' &&
+          /^[0-9a-fA-F]{64}$/.test(K8S_CONFIG.ENCRYPTION_KEY)
+        ) {
+          config = JSON.parse(decryptCredential(config.__encrypted, K8S_CONFIG.ENCRYPTION_KEY))
         }
+        if (typeof config.kubeconfig === 'string') {
+          const detection = detectProviderFromKubeconfig(config.kubeconfig)
+          if (detection.confidence !== 'none') {
+            updatePayload.provider = detection.provider
+            console.info(
+              `[watch-db-writer] Auto-detected provider for cluster ${clusterId}: ${detection.provider} (${detection.signal}, ${detection.confidence})`,
+            )
+          }
+        }
+      } catch {
+        // Detection is best-effort — never block health sync
       }
-    } catch {
-      // Detection is best-effort — never block health sync
     }
   }
 
