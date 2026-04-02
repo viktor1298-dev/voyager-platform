@@ -1,7 +1,9 @@
 'use client'
 
 import { Search } from 'lucide-react'
+import Link from 'next/link'
 import { NotificationsPanel } from './NotificationsPanel'
+import { PresenceCluster } from './PresenceCluster'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { usePathname } from 'next/navigation'
@@ -22,16 +24,18 @@ export function TopBar() {
   return (
     <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-3 sm:px-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-lg">
       {/* Left — Logo + Page Title */}
-      <div className="flex items-center gap-2.5 group">
-        <img
-          src="/logo-mark.svg"
-          alt="Voyager"
-          className="h-8 w-8 object-contain"
-          aria-hidden="true"
-        />
-        <span className="text-[13px] font-bold tracking-widest text-[var(--color-text-secondary)] transition-colors duration-200 group-hover:text-[var(--color-text-primary)]">
-          VOYAGER
-        </span>
+      <div className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <img
+            src="/logo-mark.svg"
+            alt="Voyager"
+            className="h-8 w-8 object-contain"
+            aria-hidden="true"
+          />
+          <span className="text-[13px] font-bold tracking-widest text-[var(--color-text-secondary)] transition-colors duration-200 group-hover:text-[var(--color-text-primary)]">
+            VOYAGER
+          </span>
+        </Link>
         {pageTitle && (
           <>
             <span className="hidden sm:block text-[var(--color-border)] text-xs">/</span>
@@ -44,6 +48,8 @@ export function TopBar() {
 
       {/* Right — Controls */}
       <div className="flex items-center gap-1.5">
+        <PresenceCluster />
+        <div className="hidden sm:block w-px h-5 bg-[var(--color-border)]" />
         <button
           type="button"
           onClick={() =>

@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { AuthGuard } from './AuthGuard'
-import { PresenceBar } from './PresenceBar'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 
@@ -105,7 +104,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="pt-14 min-h-screen overflow-x-clip"
       >
-        <PresenceBar />
         <div key={pathname} className="p-3 sm:p-5 w-full overflow-x-hidden bg-dot-grid min-h-full">
           {children}
         </div>
