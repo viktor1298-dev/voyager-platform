@@ -4,6 +4,7 @@ import { JOB_INTERVALS } from '../config/jobs.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { voyagerEmitter } from '../lib/event-emitter.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
+import { watchManager } from '../lib/watch-manager.js'
 
 interface Poller {
   interval: NodeJS.Timeout
@@ -67,11 +68,13 @@ class MetricsStreamJob {
       const metricsClient = new k8s.Metrics(kc)
       const coreApi = kc.makeApiClient(k8s.CoreV1Api)
 
-      const [nodesRes, nodeMetrics, podsRes] = await Promise.all([
+      const [nodesRes, nodeMetrics] = await Promise.all([
         coreApi.listNode(),
         metricsClient.getNodeMetrics(),
-        coreApi.listPodForAllNamespaces(),
       ])
+
+      // D9: Use WatchManager in-memory cache for pod count instead of extra API call
+      const podCount = watchManager.getResources(clusterId, 'pods')?.length ?? 0
 
       // Build allocatable map
       let totalCpuAllocatable = 0
@@ -123,7 +126,7 @@ class MetricsStreamJob {
         timestamp: new Date().toISOString(),
         cpu: cpuPercent,
         memory: memPercent,
-        pods: podsRes.items.length,
+        pods: podCount,
         networkBytesIn,
         networkBytesOut,
       }

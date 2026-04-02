@@ -314,14 +314,21 @@ export class AuthorizationService {
   }
 
   async check(subject: SubjectRef, relation: Relation, object: ObjectRef): Promise<boolean> {
-    const userRole = subject.type === 'user' ? await this.repo.getUserRole(subject.id) : null
+    // D10: Fetch role and team IDs in parallel instead of sequentially
+    const [userRole, teamIds] =
+      subject.type === 'user'
+        ? await Promise.all([
+            this.repo.getUserRole(subject.id),
+            this.repo.getUserTeamIds(subject.id),
+          ])
+        : ([null, []] as [null, string[]])
 
     if (subject.type === 'user') {
       if (userRole === 'admin') return true
       if (userRole === 'viewer' && relation === 'viewer') return true
     }
 
-    const expandedSubjects = await this.expandSubjects(subject, userRole)
+    const expandedSubjects = await this.expandSubjects(subject, userRole, teamIds)
     const found = await this.repo.listRelationsForSubjects(expandedSubjects, object)
     const requiredLevel = RELATION_LEVEL[relation]
 
@@ -465,11 +472,12 @@ export class AuthorizationService {
   private async expandSubjects(
     subject: SubjectRef,
     userRole?: string | null,
+    prefetchedTeamIds?: string[],
   ): Promise<SubjectRef[]> {
     if (subject.type !== 'user') return [subject]
 
     const subjects: SubjectRef[] = [subject]
-    const teamIds = await this.repo.getUserTeamIds(subject.id)
+    const teamIds = prefetchedTeamIds ?? (await this.repo.getUserTeamIds(subject.id))
     subjects.push(...teamIds.map((teamId) => ({ type: 'team' as const, id: teamId })))
 
     if (userRole) {
