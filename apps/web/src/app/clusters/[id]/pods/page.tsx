@@ -480,15 +480,7 @@ function NamespacePodGroup({
             const podKey = `${pod.namespace}/${pod.name}`
             const isHighlighted = highlightPodKey === podKey
             return (
-              <div
-                key={podKey}
-                ref={isHighlighted ? highlightRef : undefined}
-                className={
-                  isHighlighted
-                    ? 'ring-2 ring-[var(--color-accent)] rounded-lg transition-all duration-500'
-                    : ''
-                }
-              >
+              <div key={podKey} ref={isHighlighted ? highlightRef : undefined} className="">
                 <ExpandableCard
                   defaultExpanded={isHighlighted}
                   expanded={expandAll || undefined}
