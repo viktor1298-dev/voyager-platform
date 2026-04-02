@@ -3,7 +3,6 @@
 import { Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { motion } from 'motion/react'
 import { AuthGuard } from './AuthGuard'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
@@ -97,17 +96,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         setMobileOpen={setMobileOpen}
         isDesktop={isDesktop}
       />
-      {/* P3-001: spring animated main content offset */}
-      <motion.main
+      <main
         id="main"
-        animate={{ marginLeft: isDesktop ? (collapsed ? 56 : 224) : 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="pt-14 min-h-screen overflow-x-clip"
+        className="pt-14 min-h-screen overflow-x-clip transition-[margin-left] duration-200 ease-out"
+        style={{ marginLeft: isDesktop ? (collapsed ? 56 : 224) : 0 }}
       >
         <div key={pathname} className="p-3 sm:p-5 w-full overflow-x-hidden bg-dot-grid min-h-full">
           {children}
         </div>
-      </motion.main>
+      </main>
     </AuthGuard>
   )
 }
