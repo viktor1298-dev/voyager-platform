@@ -98,7 +98,11 @@ export function useResourceSSE(clusterId: string | null): { connectionState: Con
       bufferRef.current = []
       flushTimerRef.current = null
       if (events.length === 0) return
-      useResourceStore.getState().applyEvents(clusterId!, events)
+      const store = useResourceStore.getState()
+      store.applyEvents(clusterId!, events)
+      // Increment tick to guarantee consumer re-renders — Zustand Map-based
+      // selectors don't always trigger re-renders on their own.
+      store.incrementTick()
     }
 
     /** Wire up all SSE event listeners on an EventSource instance */

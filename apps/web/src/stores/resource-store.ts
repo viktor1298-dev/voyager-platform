@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { subscribeWithSelector } from 'zustand/middleware'
 import type { ResourceType, WatchEvent } from '@voyager/types'
 
 export type ConnectionState = 'initializing' | 'connected' | 'reconnecting' | 'disconnected'
@@ -30,35 +29,80 @@ interface ResourceStoreState {
   incrementTick: () => void
 }
 
-export const useResourceStore = create<ResourceStoreState>()(
-  subscribeWithSelector((set) => ({
-    resources: new Map(),
-    connectionState: {},
-    snapshotsReady: new Set(),
-    tick: 0,
+export const useResourceStore = create<ResourceStoreState>()((set) => ({
+  resources: new Map(),
+  connectionState: {},
+  snapshotsReady: new Set(),
+  tick: 0,
 
-    setResources: (clusterId, type, items) =>
-      set((state) => {
-        const key = `${clusterId}:${type}`
-        const next = new Map(state.resources)
-        next.set(key, items)
-        // Mark cluster as having received snapshots
-        if (!state.snapshotsReady.has(clusterId)) {
-          const ready = new Set(state.snapshotsReady)
-          ready.add(clusterId)
-          return { resources: next, snapshotsReady: ready }
+  setResources: (clusterId, type, items) =>
+    set((state) => {
+      const key = `${clusterId}:${type}`
+      const next = new Map(state.resources)
+      next.set(key, items)
+      // Mark cluster as having received snapshots
+      if (!state.snapshotsReady.has(clusterId)) {
+        const ready = new Set(state.snapshotsReady)
+        ready.add(clusterId)
+        return { resources: next, snapshotsReady: ready }
+      }
+      return { resources: next }
+    }),
+
+  applyEvent: (clusterId, event) =>
+    set((state) => {
+      const key = `${clusterId}:${event.resourceType}`
+      const current = state.resources.get(key)
+      if (!current) return state
+
+      const obj = event.object as { name: string; namespace?: string | null }
+      let updated: unknown[]
+
+      switch (event.type) {
+        case 'ADDED': {
+          const idx = current.findIndex((item) => {
+            const i = item as { name: string; namespace?: string | null }
+            return i.name === obj.name && i.namespace === obj.namespace
+          })
+          if (idx >= 0) {
+            updated = [...current]
+            updated[idx] = event.object
+          } else {
+            updated = [...current, event.object]
+          }
+          break
         }
-        return { resources: next }
-      }),
+        case 'MODIFIED': {
+          updated = current.map((item) => {
+            const i = item as { name: string; namespace?: string | null }
+            return i.name === obj.name && i.namespace === obj.namespace ? event.object : item
+          })
+          break
+        }
+        case 'DELETED': {
+          updated = current.filter((item) => {
+            const i = item as { name: string; namespace?: string | null }
+            return !(i.name === obj.name && i.namespace === obj.namespace)
+          })
+          break
+        }
+      }
 
-    applyEvent: (clusterId, event) =>
-      set((state) => {
+      const next = new Map(state.resources)
+      next.set(key, updated)
+      return { resources: next }
+    }),
+
+  applyEvents: (clusterId, events) =>
+    set((state) => {
+      const next = new Map(state.resources)
+
+      for (const event of events) {
         const key = `${clusterId}:${event.resourceType}`
-        const current = state.resources.get(key)
-        if (!current) return state
+        const current = next.get(key)
+        if (!current) continue
 
         const obj = event.object as { name: string; namespace?: string | null }
-        let updated: unknown[]
 
         switch (event.type) {
           case 'ADDED': {
@@ -67,109 +111,62 @@ export const useResourceStore = create<ResourceStoreState>()(
               return i.name === obj.name && i.namespace === obj.namespace
             })
             if (idx >= 0) {
-              updated = [...current]
+              const updated = [...current]
               updated[idx] = event.object
+              next.set(key, updated)
             } else {
-              updated = [...current, event.object]
+              next.set(key, [...current, event.object])
             }
             break
           }
           case 'MODIFIED': {
-            updated = current.map((item) => {
-              const i = item as { name: string; namespace?: string | null }
-              return i.name === obj.name && i.namespace === obj.namespace ? event.object : item
-            })
+            next.set(
+              key,
+              current.map((item) => {
+                const i = item as { name: string; namespace?: string | null }
+                return i.name === obj.name && i.namespace === obj.namespace ? event.object : item
+              }),
+            )
             break
           }
           case 'DELETED': {
-            updated = current.filter((item) => {
-              const i = item as { name: string; namespace?: string | null }
-              return !(i.name === obj.name && i.namespace === obj.namespace)
-            })
+            next.set(
+              key,
+              current.filter((item) => {
+                const i = item as { name: string; namespace?: string | null }
+                return !(i.name === obj.name && i.namespace === obj.namespace)
+              }),
+            )
             break
           }
         }
+      }
 
-        const next = new Map(state.resources)
-        next.set(key, updated)
-        return { resources: next }
-      }),
+      return { resources: next }
+    }),
 
-    applyEvents: (clusterId, events) =>
-      set((state) => {
-        const next = new Map(state.resources)
+  setConnectionState: (clusterId, connState) =>
+    set((state) => ({
+      connectionState: { ...state.connectionState, [clusterId]: connState },
+    })),
 
-        for (const event of events) {
-          const key = `${clusterId}:${event.resourceType}`
-          const current = next.get(key)
-          if (!current) continue
+  incrementTick: () => set((state) => ({ tick: state.tick + 1 })),
 
-          const obj = event.object as { name: string; namespace?: string | null }
-
-          switch (event.type) {
-            case 'ADDED': {
-              const idx = current.findIndex((item) => {
-                const i = item as { name: string; namespace?: string | null }
-                return i.name === obj.name && i.namespace === obj.namespace
-              })
-              if (idx >= 0) {
-                const updated = [...current]
-                updated[idx] = event.object
-                next.set(key, updated)
-              } else {
-                next.set(key, [...current, event.object])
-              }
-              break
-            }
-            case 'MODIFIED': {
-              next.set(
-                key,
-                current.map((item) => {
-                  const i = item as { name: string; namespace?: string | null }
-                  return i.name === obj.name && i.namespace === obj.namespace ? event.object : item
-                }),
-              )
-              break
-            }
-            case 'DELETED': {
-              next.set(
-                key,
-                current.filter((item) => {
-                  const i = item as { name: string; namespace?: string | null }
-                  return !(i.name === obj.name && i.namespace === obj.namespace)
-                }),
-              )
-              break
-            }
-          }
+  clearCluster: (clusterId) =>
+    set((state) => {
+      const next = new Map(state.resources)
+      const prefix = `${clusterId}:`
+      for (const key of state.resources.keys()) {
+        if (key.startsWith(prefix)) {
+          next.delete(key)
         }
-
-        return { resources: next }
-      }),
-
-    setConnectionState: (clusterId, connState) =>
-      set((state) => ({
-        connectionState: { ...state.connectionState, [clusterId]: connState },
-      })),
-
-    incrementTick: () => set((state) => ({ tick: state.tick + 1 })),
-
-    clearCluster: (clusterId) =>
-      set((state) => {
-        const next = new Map(state.resources)
-        const prefix = `${clusterId}:`
-        for (const key of state.resources.keys()) {
-          if (key.startsWith(prefix)) {
-            next.delete(key)
-          }
-        }
-        const ready = new Set(state.snapshotsReady)
-        ready.delete(clusterId)
-        return {
-          resources: next,
-          snapshotsReady: ready,
-          connectionState: { ...state.connectionState, [clusterId]: 'disconnected' as const },
-        }
-      }),
-  })),
-)
+      }
+      const ready = new Set(state.snapshotsReady)
+      ready.delete(clusterId)
+      return {
+        resources: next,
+        snapshotsReady: ready,
+        connectionState: { ...state.connectionState, [clusterId]: 'disconnected' as const },
+      }
+    }),
+}))
