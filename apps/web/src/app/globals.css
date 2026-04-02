@@ -18,6 +18,7 @@
   --animate-slide-up: slide-up 0.3s ease-out;
   --animate-glow-warning: glow-warning 2s ease-in-out infinite;
   --animate-glow-critical: glow-critical 1.5s ease-in-out infinite;
+  --animate-glow-fatal: glow-fatal 1.2s ease-in-out infinite;
   --animate-success-flash: success-flash 0.6s ease-out;
   --animate-count-up: count-up 0.6s ease-out;
   --color-surface: var(--surface);
@@ -63,6 +64,16 @@
   }
   50% {
     box-shadow: 0 0 16px rgba(239, 68, 68, 0.5);
+  }
+}
+
+@keyframes glow-fatal {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(239, 68, 68, 0);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.35);
   }
 }
 

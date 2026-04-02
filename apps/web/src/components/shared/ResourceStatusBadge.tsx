@@ -1,9 +1,8 @@
 'use client'
 
-import { motion, useReducedMotion } from 'motion/react'
+import { useReducedMotion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { resolveResourceStatus } from '@/lib/resource-status'
-import { resourceStatusGlow } from '@/lib/animation-constants'
 
 interface ResourceStatusBadgeProps {
   status: string
@@ -55,17 +54,14 @@ export function ResourceStatusBadge({ status, size = 'md', className }: Resource
     </span>
   )
 
-  // Wrap in motion.span for glow animation on Critical/Fatal
+  // CSS-driven glow animation (no JS per-frame paint)
   if (isGlow && !shouldReduceMotion) {
     return (
-      <motion.span
-        className="inline-flex rounded-lg"
-        initial="idle"
-        animate={glowKey}
-        variants={resourceStatusGlow}
+      <span
+        className={`inline-flex rounded-lg ${glowKey === 'critical' ? 'animate-glow-critical' : 'animate-glow-fatal'}`}
       >
         {badge}
-      </motion.span>
+      </span>
     )
   }
 
