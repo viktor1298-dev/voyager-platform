@@ -239,8 +239,22 @@
   --color-log-timestamp: oklch(0.55 0.05 250);
   --color-log-highlight: oklch(0.85 0.15 90);
 
-  /* Sidebar micro-interactions */
-  --sidebar-hover-shift: 2px;
+  /* Sidebar Neon Depth tokens */
+  --sidebar-active-gradient: linear-gradient(90deg,
+    color-mix(in srgb, var(--color-accent) 18%, transparent),
+    color-mix(in srgb, var(--color-accent) 3%, transparent));
+  --sidebar-active-bg-collapsed: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  --sidebar-bar-glow: 0 0 16px color-mix(in srgb, var(--color-accent) 60%, transparent),
+    0 0 4px color-mix(in srgb, var(--color-accent) 80%, transparent);
+  --sidebar-bar-glow-pulse-min: 0 0 8px color-mix(in srgb, var(--color-accent) 30%, transparent),
+    0 0 3px color-mix(in srgb, var(--color-accent) 60%, transparent);
+  --sidebar-bar-glow-pulse-max: 0 0 18px color-mix(in srgb, var(--color-accent) 50%, transparent),
+    0 0 5px color-mix(in srgb, var(--color-accent) 90%, transparent);
+  --sidebar-icon-glow: drop-shadow(0 0 6px color-mix(in srgb, var(--color-accent) 40%, transparent));
+  --sidebar-badge-glow: 0 0 8px rgba(239, 68, 68, 0.4);
+  --sidebar-badge-glow-collapsed: 0 0 6px rgba(239, 68, 68, 0.5);
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.03);
+  --sidebar-hover-bg-collapsed: rgba(255, 255, 255, 0.04);
 
   /* Gradient text */
   --gradient-text-default: linear-gradient(135deg, var(--color-text-primary), var(--color-accent));
@@ -397,6 +411,19 @@ html.light {
   --gradient-ai-critical: linear-gradient(135deg, rgb(147 51 234 / 0.5), rgb(220 38 38 / 0.5));
   --gradient-ai-warning: linear-gradient(135deg, rgb(147 51 234 / 0.4), rgb(217 119 6 / 0.4));
   --gradient-ai-info: linear-gradient(135deg, rgb(147 51 234 / 0.3), rgb(13 148 136 / 0.3));
+  /* Sidebar Neon Depth tokens (light) */
+  --sidebar-active-gradient: linear-gradient(90deg,
+    color-mix(in srgb, var(--color-accent) 12%, transparent),
+    color-mix(in srgb, var(--color-accent) 2%, transparent));
+  --sidebar-active-bg-collapsed: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  --sidebar-bar-glow: 0 0 8px color-mix(in srgb, var(--color-accent) 30%, transparent);
+  --sidebar-bar-glow-pulse-min: 0 0 4px color-mix(in srgb, var(--color-accent) 15%, transparent);
+  --sidebar-bar-glow-pulse-max: 0 0 10px color-mix(in srgb, var(--color-accent) 30%, transparent);
+  --sidebar-icon-glow: drop-shadow(0 0 4px color-mix(in srgb, var(--color-accent) 25%, transparent));
+  --sidebar-badge-glow: 0 0 6px rgba(239, 68, 68, 0.25);
+  --sidebar-badge-glow-collapsed: 0 0 4px rgba(239, 68, 68, 0.3);
+  --sidebar-hover-bg: rgba(0, 0, 0, 0.03);
+  --sidebar-hover-bg-collapsed: rgba(0, 0, 0, 0.04);
   --chart-1: #4f46e5;
   --chart-2: #047857;
   --chart-3: #d97706;
@@ -542,20 +569,6 @@ html.light .login-gradient {
   border-radius: 0.5rem;
 }
 
-/* Sidebar hover micro-interactions */
-.sidebar-nav-item .sidebar-icon {
-  transition: transform var(--duration-fast) ease;
-}
-.sidebar-nav-item .sidebar-label {
-  transition: transform var(--duration-fast) ease;
-}
-.sidebar-nav-item:hover .sidebar-icon {
-  transform: translateX(var(--sidebar-hover-shift));
-}
-.sidebar-nav-item:hover .sidebar-label {
-  transform: translateX(1px);
-}
-
 /* Gradient text utility */
 .gradient-text {
   background-clip: text;
@@ -572,6 +585,12 @@ html.light .login-gradient {
   animation: slide-in-right 0.3s ease-out;
 }
 
+/* Sidebar active bar glow pulse — CSS @keyframes, not Motion (var() interpolation) */
+@keyframes sidebar-bar-pulse {
+  0%, 100% { box-shadow: var(--sidebar-bar-glow-pulse-min); }
+  50% { box-shadow: var(--sidebar-bar-glow-pulse-max); }
+}
+
 /* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -580,10 +599,6 @@ html.light .login-gradient {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-  .sidebar-nav-item:hover .sidebar-icon,
-  .sidebar-nav-item:hover .sidebar-label {
-    transform: none !important;
   }
   .skeleton-shimmer {
     animation: none !important;
@@ -711,37 +726,6 @@ html.light .relation-badge--viewer {
   --relation-border: color-mix(in srgb, #059669 52%, transparent);
   --relation-bg: color-mix(in srgb, #059669 24%, transparent);
   --relation-label: #065f46;
-}
-
-/* Sidebar active accent bar */
-.sidebar-active-bar {
-  position: relative;
-}
-.sidebar-active-bar::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 25%;
-  bottom: 25%;
-  width: 3px;
-  background: var(--color-accent);
-  border-radius: 0 3px 3px 0;
-}
-
-/* Sidebar hover bar preview */
-.sidebar-hover-bar {
-  position: relative;
-}
-.sidebar-hover-bar:hover::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 25%;
-  bottom: 25%;
-  width: 3px;
-  background: var(--color-accent);
-  border-radius: 0 3px 3px 0;
-  opacity: 0.3;
 }
 
 /* K0-003: Global focus-visible ring for WCAG 2.2 AA */
