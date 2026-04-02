@@ -214,3 +214,12 @@ Relative time labels ("3s ago", "2d ago") must use the `<LiveTimeAgo date={...} 
 
 ### Zustand Resource Store — No `subscribeWithSelector` Middleware
 The resource store (`stores/resource-store.ts`) must NOT use `subscribeWithSelector` middleware. It wraps `api.subscribe()` and interferes with `useSyncExternalStore` change detection for Map-based state. Nobody uses selector-based external subscriptions — the middleware is dead weight that breaks SSE-driven re-renders.
+
+### Sidebar Active State — Single `layoutId`, CSS-Only Background
+The sidebar uses a single `layoutId="sidebar-active-bar"` for the accent bar spring animation between nav items. The active background is a **plain CSS `<div>`** (no `layoutId`). **Never add a second `layoutId` to the active background** — `absolute inset-0` inside items that change size between expanded (`gap-3 px-3`) and collapsed (`w-10 justify-center`) causes the absolute element to stretch beyond bounds, shifting the icon out of the container. The bar glow pulse uses CSS `@keyframes sidebar-bar-pulse` (not Motion) because Motion v12 cannot interpolate `boxShadow` values containing `var()` CSS custom property references.
+
+### Sidebar Badges — `showLabels` Guards AnimatePresence, Not Just Content
+Expanded badges (`ml-auto min-w-[18px]`) must wrap their `<AnimatePresence>` inside the `showLabels` conditional, not just the badge element. If `AnimatePresence` wraps the condition (`showBadge && showLabels`), the exit animation keeps the badge in the DOM for 150ms with `ml-auto` still taking flex space — pushing the icon left in the `w-10` collapsed container. Pattern: `{showLabels && (<AnimatePresence>{showBadge && (...)}</AnimatePresence>)}`. The collapsed dot uses `position: absolute` so it never affects icon centering.
+
+### Sidebar CSS Tokens — Centralized in globals.css
+All sidebar visual values (active gradient, bar glow, icon glow, badge glow, hover backgrounds) use `--sidebar-*` CSS custom properties defined in `:root` (dark) and `html.light` (light). Motion variants for hover/tap are in `animation-constants.ts` (`sidebarCollapsedIconHover`, `sidebarTapFeedback`, `sidebarTapFeedbackCollapsed`). **Never hardcode sidebar colors or shadows inline** — add them to the centralized tokens.

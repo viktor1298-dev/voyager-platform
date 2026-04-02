@@ -214,6 +214,9 @@ All SSE endpoints (resource-stream, metrics-stream, log-stream, ai-stream, mcp) 
 ### Live Age Labels — `<LiveTimeAgo>`, Not Inline `timeAgo()`
 Relative time labels ("3s ago") in SSE-driven pages must use `<LiveTimeAgo date={...} />` (self-updates every 1s). Inline `timeAgo()` freezes between K8s events because Zustand correctly skips re-renders when data hasn't changed. **Never** revert to inline calls, global tick hacks, or `subscribeWithSelector` middleware. This bug regressed twice — see `apps/web/CLAUDE.md` for full details.
 
+### AnimatePresence Exit + Flex Layout = Ghost Space
+When an element with `ml-auto` or `min-width` exits via `AnimatePresence`, it stays in the DOM during the exit animation and **still takes flex layout space** even at `scale: 0` / `opacity: 0`. In collapsed containers (e.g., `w-10 justify-center`), this pushes siblings off-center. Fix: wrap `<AnimatePresence>` inside the visibility conditional so the entire block unmounts instantly — no exit animation, no layout ghost. See sidebar badge pattern in `apps/web/CLAUDE.md`.
+
 ## 🚨 QA Gate Rules — MANDATORY
 
 QA validation after code changes **MUST** follow these rules. Violations = QA FAIL regardless of visual appearance.
