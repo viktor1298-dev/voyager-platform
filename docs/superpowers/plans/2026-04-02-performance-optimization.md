@@ -102,23 +102,43 @@ git commit -m "perf(A1): LiveTimeAgo shared interval — 200 timers → 1"
 
 ---
 
-### Task 2: Remove Redundant incrementTick from SSE Flush (A2)
+### Task 2: K8s Events Debounce at WatchManager (A3)
 
 **Files:**
-- Modify: `apps/web/src/hooks/useResourceSSE.ts`
+- Modify: `apps/api/src/routes/resource-stream.ts`
 
-- [ ] **Step 1: Remove incrementTick() call from flushBuffer**
+- [ ] **Step 1: Add 500ms debounce for `events` resource type**
 
-In `apps/web/src/hooks/useResourceSSE.ts`, in the `flushBuffer()` function (around line 96-107), remove lines 104-106:
+In `apps/api/src/routes/resource-stream.ts`, in the watch event listener that writes SSE frames, add a debounce buffer specifically for the `events` resource type. Other types (pods, nodes, deployments) remain unbatched:
 
 ```tsx
-// REMOVE these lines:
-      // Increment tick to guarantee consumer re-renders — Zustand Map-based
-      // selectors don't always trigger re-renders on their own.
-      store.incrementTick()
-```
+// Module-level debounce buffer for K8s events
+const eventDebounceBuffers = new Map<string, { timer: ReturnType<typeof setTimeout>; events: WatchEvent[] }>()
+const EVENT_DEBOUNCE_MS = 500
 
-The function should end after `store.applyEvents(clusterId!, events)`.
+// In the watch event handler, before writing to SSE:
+if (event.resourceType === 'events') {
+  const bufferKey = clusterId
+  let buf = eventDebounceBuffers.get(bufferKey)
+  if (!buf) {
+    buf = { timer: null as any, events: [] }
+    eventDebounceBuffers.set(bufferKey, buf)
+  }
+  buf.events.push(event)
+  clearTimeout(buf.timer)
+  buf.timer = setTimeout(() => {
+    const batch = buf!.events
+    buf!.events = []
+    eventDebounceBuffers.delete(bufferKey)
+    // Write batch as single SSE frame
+    for (const evt of batch) {
+      // ... existing SSE write logic
+    }
+  }, EVENT_DEBOUNCE_MS)
+  return // skip immediate write
+}
+// ... existing immediate write for all other types
+```
 
 - [ ] **Step 2: Verify build**
 
@@ -128,8 +148,8 @@ Expected: 0 errors
 - [ ] **Step 3: Commit**
 
 ```bash
-git add apps/web/src/hooks/useResourceSSE.ts
-git commit -m "perf(A2): remove redundant incrementTick from SSE flush — eliminates double re-render"
+git add apps/api/src/routes/resource-stream.ts
+git commit -m "perf(A3): 500ms debounce for K8s events SSE — reduces 10 frames/s to 2 during deployments"
 ```
 
 ---
@@ -575,11 +595,14 @@ git commit -m "perf(B6): lazy-load YamlViewer + ResourceDiff — yaml package de
 
 ## Phase C — Core Performance
 
-### Task 11: Normalize Resource Store to O(1) Mutations (C2)
+### Task 11: Normalize Resource Store to O(1) Mutations + Remove incrementTick (C2 + A2)
 
 **Files:**
 - Modify: `apps/web/src/stores/resource-store.ts`
 - Modify: `apps/web/src/hooks/useResources.ts`
+- Modify: `apps/web/src/hooks/useResourceSSE.ts`
+
+**Note:** A2 (remove incrementTick from SSE flush) is combined with C2 because the tick removal is only safe after the Map-of-Maps rewrite guarantees new references on every mutation. Doing A2 before C2 risks breaking re-renders for subscribers to unaffected resource types.
 
 - [ ] **Step 1: Rewrite resource-store.ts with Map-of-Maps**
 
@@ -719,19 +742,44 @@ export const useResourceStore = create<ResourceStoreState>()((set) => ({
 }))
 ```
 
-- [ ] **Step 2: Update useClusterResources selector to convert Map values to array**
+- [ ] **Step 2: Update useClusterResources selector with shallow equality**
 
-In `apps/web/src/hooks/useResources.ts`, update the `useClusterResources` hook:
+In `apps/web/src/hooks/useResources.ts`, update the hook to use `useShallow` from Zustand to prevent over-rendering (plain `[...inner.values()]` creates a new array on every call, defeating Zustand's `Object.is()` equality):
 
 ```tsx
+import { useCallback, useEffect, useRef } from 'react'
+import type { ResourceType } from '@voyager/types'
+import { useResourceStore, type ConnectionState } from '@/stores/resource-store'
+
+export type { ConnectionState }
+
+const EMPTY: unknown[] = []
+
+/**
+ * Read resources for a specific cluster + type from the Zustand store.
+ * Returns a stable array reference — only creates a new array when the
+ * inner Map contents actually change (tracked via Map size + reference).
+ */
 export function useClusterResources<T>(clusterId: string, type: ResourceType): T[] {
+  // Subscribe to global tick for time label refresh (5s via useResourceTick)
   useResourceStore((s) => s.tick)
+
+  // Cache the previous array to avoid unnecessary re-renders
+  const prevRef = useRef<{ map: Map<string, unknown> | undefined; arr: unknown[] }>({
+    map: undefined,
+    arr: EMPTY,
+  })
 
   return useResourceStore(
     useCallback(
       (s) => {
         const inner = s.resources.get(`${clusterId}:${type}`)
-        return inner ? ([...inner.values()] as T[]) : (EMPTY as T[])
+        if (!inner || inner.size === 0) return EMPTY as T[]
+        // Only rebuild array if the inner Map reference changed
+        if (inner === prevRef.current.map) return prevRef.current.arr as T[]
+        const arr = [...inner.values()] as T[]
+        prevRef.current = { map: inner, arr }
+        return arr
       },
       [clusterId, type],
     ),
@@ -739,7 +787,22 @@ export function useClusterResources<T>(clusterId: string, type: ResourceType): T
 }
 ```
 
-- [ ] **Step 3: Run existing tests**
+This ensures `[...inner.values()]` only runs when the inner Map reference actually changes (which happens on each batch that touches this resource type).
+
+- [ ] **Step 3: Remove incrementTick from SSE flush (A2)**
+
+In `apps/web/src/hooks/useResourceSSE.ts`, in the `flushBuffer()` function, remove lines 104-106:
+
+```tsx
+// REMOVE these lines:
+      // Increment tick to guarantee consumer re-renders — Zustand Map-based
+      // selectors don't always trigger re-renders on their own.
+      store.incrementTick()
+```
+
+This is now safe because: (a) the new store creates new inner Map references on every mutation, (b) the selector uses reference comparison to detect changes, (c) the 5-second `useResourceTick` still handles time label refresh.
+
+- [ ] **Step 4: Run existing tests**
 
 Run: `pnpm test`
 Expected: All resource-store tests pass
@@ -752,8 +815,8 @@ Expected: 0 errors
 - [ ] **Step 5: Commit**
 
 ```bash
-git add apps/web/src/stores/resource-store.ts apps/web/src/hooks/useResources.ts
-git commit -m "perf(C2): normalize resource store to Map-of-Maps — O(1) mutations for SSE events"
+git add apps/web/src/stores/resource-store.ts apps/web/src/hooks/useResources.ts apps/web/src/hooks/useResourceSSE.ts
+git commit -m "perf(C2+A2): normalize resource store to Map-of-Maps + remove redundant incrementTick"
 ```
 
 ---
@@ -916,6 +979,58 @@ git commit -m "perf(C4): port resourceUsage to time_bucket() — DB aggregation 
 
 ---
 
+### Task 15b: Replace computeAge() with createdAt in SSE Payload (C5)
+
+**Files:**
+- Modify: `apps/api/src/lib/resource-mappers.ts` (15 mappers)
+- Modify: ~9 frontend pages in `apps/web/src/app/clusters/[id]/`
+- Modify: Types in `packages/types/` if `age` is in a shared type
+
+**Important:** This is a coordinated cross-layer change. Only 6 of 15 mappers already have `createdAt`. The other 9 need it added.
+
+- [ ] **Step 1: Grep for all `resource.age` render sites**
+
+Run: `grep -rn '\.age\b' apps/web/src/app/clusters/ --include="*.tsx" | grep -v 'page\.' | head -30`
+And: `grep -rn 'resource\.age\|\.age}' apps/web/src/app/clusters/ --include="*.tsx"`
+
+Build the complete list of frontend files that render `.age`.
+
+- [ ] **Step 2: Add createdAt to the 9 mappers that lack it**
+
+In `apps/api/src/lib/resource-mappers.ts`, for each of these mappers: `mapDeployment`, `mapConfigMap`, `mapSecret`, `mapPVC`, `mapStatefulSet`, `mapDaemonSet`, `mapJob`, `mapCronJob`, `mapHPA` — add:
+
+```tsx
+createdAt: metadata?.creationTimestamp ?? null,
+```
+
+to the return object, right next to the existing `age` field.
+
+- [ ] **Step 3: Remove age from ALL 15 mappers**
+
+Remove `age: computeAge(...)` from every mapper's return object. Also remove the `computeAge` import/function if it becomes unused.
+
+- [ ] **Step 4: Update frontend pages — replace {resource.age} with <LiveTimeAgo>**
+
+For each page found in Step 1, replace `{resource.age}` with `<LiveTimeAgo date={resource.createdAt} />`. Add the import if not already present.
+
+- [ ] **Step 5: Update TypeScript types**
+
+Grep for any shared type that defines `age: string` and update to `createdAt: string | null`. Run: `grep -rn 'age.*string' packages/types/src/ --include="*.ts"`
+
+- [ ] **Step 6: Verify build and types**
+
+Run: `pnpm typecheck && pnpm build`
+Expected: 0 errors, no `undefined` renders
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add apps/api/src/lib/resource-mappers.ts apps/web/src/app/clusters/ packages/types/
+git commit -m "perf(C5): replace stale age string with createdAt + LiveTimeAgo — live-updating age labels"
+```
+
+---
+
 ## Phase D — Backend & Infrastructure
 
 ### Task 16: Nginx SSE Proxy Timeout (D1)
@@ -953,21 +1068,90 @@ git commit -m "perf(D1): add nginx SSE proxy timeout 3600s — prevents 60s forc
 
 ---
 
-### Task 17: Backend Quick Fixes (D3, D5, D7, D9, D10)
+### Task 16b: PodDetail Tabs Memoization (D2)
+
+**Files:**
+- Modify: `apps/web/src/app/clusters/[id]/pods/page.tsx`
+
+- [ ] **Step 1: Wrap tabs array in useMemo**
+
+In the `PodDetail` component, wrap the `tabs` array construction in `useMemo`:
+
+```tsx
+const tabs = useMemo(() => [
+  { id: 'containers', label: 'Containers', content: <ContainersTab pod={pod} /> },
+  { id: 'yaml', label: 'YAML', content: <YamlViewer ... /> },
+  // ... rest of tabs
+], [pod, clusterId])
+```
+
+This prevents rebuilding the full tabs array (including all JSX for YAML, Diff, Relations tabs) on every re-render from the 5s tick or SSE events.
+
+- [ ] **Step 2: Verify tabs still work**
+
+Run: `pnpm typecheck`
+Expected: 0 errors. Manually verify pod detail tabs render correctly.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add apps/web/src/app/clusters/[id]/pods/page.tsx
+git commit -m "perf(D2): memoize PodDetail tabs array — skip rebuilding YAML/Diff JSX on every tick"
+```
+
+---
+
+### Task 17: Alert Evaluator N+1 Fix (D3)
 
 **Files:**
 - Modify: `apps/api/src/jobs/alert-evaluator.ts`
+
+- [ ] **Step 1: Hoist queries outside per-alert loop**
+
+In `apps/api/src/jobs/alert-evaluator.ts`, fetch all active clusters once and batch the dedup check using `inArray()`:
+
+```tsx
+// Fetch once before the loop
+const activeClusters = await db.select({ id: clusters.id }).from(clusters).where(eq(clusters.isActive, true))
+const cutoff = new Date(Date.now() - JOB_INTERVALS.ALERT_DEDUP_WINDOW_MS)
+const recentAlertIds = new Set(
+  (await db.select({ alertId: alertHistory.alertId })
+    .from(alertHistory)
+    .where(and(
+      inArray(alertHistory.alertId, allAlerts.map(a => a.id)),
+      gte(alertHistory.triggeredAt, cutoff)
+    ))).map(r => r.alertId)
+)
+
+for (const alert of allAlerts) {
+  if (recentAlertIds.has(alert.id)) continue
+  const clusterIds = alert.clusterFilter ? [alert.clusterFilter] : activeClusters.map(c => c.id)
+  // ... rest
+}
+```
+
+- [ ] **Step 2: Verify build**
+
+Run: `pnpm typecheck`
+Expected: 0 errors
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add apps/api/src/jobs/alert-evaluator.ts
+git commit -m "perf(D3): batch alert evaluator queries — N dedup + N cluster queries → 2 total"
+```
+
+---
+
+### Task 17b: SSE Pipeline Fixes (D5, D7)
+
+**Files:**
 - Modify: `apps/api/src/routes/resource-stream.ts`
-- Modify: `apps/api/src/jobs/metrics-stream-job.ts`
-- Modify: `apps/api/src/lib/authorization.ts`
 
-- [ ] **Step 1: Fix alert evaluator N+1 (D3)**
+- [ ] **Step 1: Add event loop yield between snapshots (D5)**
 
-In `apps/api/src/jobs/alert-evaluator.ts`, hoist the active clusters query and dedup check outside the per-alert loop. Fetch all active clusters once, fetch recent alert history for all alert IDs in one batch query using `inArray()`.
-
-- [ ] **Step 2: Add event loop yield between snapshots (D5)**
-
-In `apps/api/src/routes/resource-stream.ts`, in the loop that sends snapshot events per resource type, add:
+In the loop that sends snapshot events per resource type:
 
 ```tsx
 for (const def of RESOURCE_DEFS) {
@@ -976,17 +1160,45 @@ for (const def of RESOURCE_DEFS) {
 }
 ```
 
-- [ ] **Step 3: Clean up replay buffer on disconnect (D7)**
+- [ ] **Step 2: Clean up replay buffer on disconnect (D7)**
 
-In `apps/api/src/routes/resource-stream.ts`, add a listener to clean up buffers when a cluster disconnects. Export a cleanup function or listen for the watch-status event.
+Add cleanup when a cluster disconnects:
 
-- [ ] **Step 4: Use WatchManager pod cache in metrics job (D9)**
+```tsx
+// Listen for cluster teardown to clean up replay buffers
+voyagerEmitter.on('watch-teardown', (clusterId: string) => {
+  clusterReplayBuffers.delete(clusterId)
+  clusterEventCounters.delete(clusterId)
+})
+```
+
+- [ ] **Step 3: Verify build**
+
+Run: `pnpm typecheck`
+Expected: 0 errors
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add apps/api/src/routes/resource-stream.ts
+git commit -m "perf(D5,D7): event loop yield between snapshots + replay buffer cleanup on disconnect"
+```
+
+---
+
+### Task 17c: Backend One-Liners (D9, D10)
+
+**Files:**
+- Modify: `apps/api/src/jobs/metrics-stream-job.ts`
+- Modify: `apps/api/src/lib/authorization.ts`
+
+- [ ] **Step 1: Use WatchManager pod cache in metrics job (D9)**
 
 In `apps/api/src/jobs/metrics-stream-job.ts`, replace `coreApi.listPodForAllNamespaces()` with `watchManager.getResources(clusterId, 'pods')?.length ?? 0`.
 
-- [ ] **Step 5: Parallelize auth queries (D10)**
+- [ ] **Step 2: Parallelize auth queries (D10)**
 
-In `apps/api/src/lib/authorization.ts`, in the `check()` method, run `getUserRole()` and `getUserTeamIds()` in parallel:
+In `apps/api/src/lib/authorization.ts`, in the `check()` method:
 
 ```tsx
 const [userRole, teamIds] = await Promise.all([
@@ -995,16 +1207,50 @@ const [userRole, teamIds] = await Promise.all([
 ])
 ```
 
-- [ ] **Step 6: Verify build and tests**
+- [ ] **Step 3: Verify build**
 
-Run: `pnpm typecheck && pnpm test`
+Run: `pnpm typecheck`
 Expected: 0 errors
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add apps/api/src/jobs/alert-evaluator.ts apps/api/src/routes/resource-stream.ts apps/api/src/jobs/metrics-stream-job.ts apps/api/src/lib/authorization.ts
-git commit -m "perf(D3,D5,D7,D9,D10): backend batch — N+1 fix, event loop yield, buffer cleanup, parallel auth"
+git add apps/api/src/jobs/metrics-stream-job.ts apps/api/src/lib/authorization.ts
+git commit -m "perf(D9,D10): use WatchManager pod cache + parallelize auth queries"
+```
+
+---
+
+### Task 17d: HTTP Cache Headers on Read-Only tRPC (D11)
+
+**Files:**
+- Modify: `apps/api/src/server.ts`
+
+- [ ] **Step 1: Add onSend hook for tRPC GET requests**
+
+In `apps/api/src/server.ts`, after the tRPC plugin registration, add an `onSend` hook:
+
+```tsx
+app.addHook('onSend', (request, reply, _payload, done) => {
+  // Only cache GET tRPC requests (queries, not mutations)
+  if (request.method === 'GET' && request.url.startsWith('/trpc/')) {
+    reply.header('cache-control', 'private, max-age=10, stale-while-revalidate=30')
+    reply.header('vary', 'Cookie')
+  }
+  done()
+})
+```
+
+- [ ] **Step 2: Verify build**
+
+Run: `pnpm typecheck`
+Expected: 0 errors
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add apps/api/src/server.ts
+git commit -m "perf(D11): add Cache-Control headers to read-only tRPC GET responses"
 ```
 
 ---
