@@ -1,6 +1,5 @@
 'use client'
 
-import { Icon } from '@iconify/react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Box, Cpu, Globe, Server } from 'lucide-react'
 import { motion } from 'motion/react'

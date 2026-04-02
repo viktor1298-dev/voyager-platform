@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     viewTransition: true,
-    optimizePackageImports: ['lucide-react', 'recharts', '@iconify/react', '@xyflow/react'],
+    optimizePackageImports: ['lucide-react', 'recharts', '@xyflow/react'],
   },
   async headers() {
     return [
