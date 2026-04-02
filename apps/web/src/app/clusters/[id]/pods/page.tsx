@@ -126,216 +126,226 @@ function PodLogViewer({
 function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
   const containers = pod.containers ?? []
 
-  const tabs = [
-    {
-      id: 'containers',
-      label: 'Containers',
-      icon: <Package className="h-3.5 w-3.5" />,
-      content: (
-        <div className="space-y-3">
-          {containers.map((c) => (
-            <div
-              key={c.name}
-              className="rounded-lg border border-[var(--color-border)]/40 bg-white/[0.01] p-3 space-y-2"
-            >
-              <div className="flex items-center gap-2">
-                <Package className="h-3.5 w-3.5 text-[var(--color-accent)]" />
-                <span className="text-[12px] font-bold font-mono text-[var(--color-text-primary)]">
-                  {c.name}
-                </span>
+  const tabs = useMemo(
+    () => [
+      {
+        id: 'containers',
+        label: 'Containers',
+        icon: <Package className="h-3.5 w-3.5" />,
+        content: (
+          <div className="space-y-3">
+            {containers.map((c) => (
+              <div
+                key={c.name}
+                className="rounded-lg border border-[var(--color-border)]/40 bg-white/[0.01] p-3 space-y-2"
+              >
+                <div className="flex items-center gap-2">
+                  <Package className="h-3.5 w-3.5 text-[var(--color-accent)]" />
+                  <span className="text-[12px] font-bold font-mono text-[var(--color-text-primary)]">
+                    {c.name}
+                  </span>
+                </div>
+                <div className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[11px] font-mono">
+                  <span className="text-[var(--color-text-muted)]">Image</span>
+                  <span className="text-[var(--color-text-secondary)] truncate" title={c.image}>
+                    {c.image}
+                  </span>
+                  {c.ports.length > 0 && (
+                    <>
+                      <span className="text-[var(--color-text-muted)]">Ports</span>
+                      <span className="text-[var(--color-text-secondary)]">
+                        {c.ports.map((p) => `${p.containerPort}/${p.protocol}`).join(', ')}
+                      </span>
+                    </>
+                  )}
+                  {c.command && (
+                    <>
+                      <span className="text-[var(--color-text-muted)]">Command</span>
+                      <span className="text-[var(--color-text-secondary)] truncate">
+                        {c.command.join(' ')}
+                      </span>
+                    </>
+                  )}
+                  {c.volumeMounts.length > 0 && (
+                    <>
+                      <span className="text-[var(--color-text-muted)]">Mounts</span>
+                      <span className="text-[var(--color-text-secondary)]">
+                        {c.volumeMounts.map((vm) => vm.mountPath).join(', ')}
+                      </span>
+                    </>
+                  )}
+                  {c.envCount > 0 && (
+                    <>
+                      <span className="text-[var(--color-text-muted)]">Env vars</span>
+                      <span className="text-[var(--color-text-secondary)]">{c.envCount}</span>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[11px] font-mono">
-                <span className="text-[var(--color-text-muted)]">Image</span>
-                <span className="text-[var(--color-text-secondary)] truncate" title={c.image}>
-                  {c.image}
-                </span>
-                {c.ports.length > 0 && (
-                  <>
-                    <span className="text-[var(--color-text-muted)]">Ports</span>
-                    <span className="text-[var(--color-text-secondary)]">
-                      {c.ports.map((p) => `${p.containerPort}/${p.protocol}`).join(', ')}
-                    </span>
-                  </>
-                )}
-                {c.command && (
-                  <>
-                    <span className="text-[var(--color-text-muted)]">Command</span>
-                    <span className="text-[var(--color-text-secondary)] truncate">
-                      {c.command.join(' ')}
-                    </span>
-                  </>
-                )}
-                {c.volumeMounts.length > 0 && (
-                  <>
-                    <span className="text-[var(--color-text-muted)]">Mounts</span>
-                    <span className="text-[var(--color-text-secondary)]">
-                      {c.volumeMounts.map((vm) => vm.mountPath).join(', ')}
-                    </span>
-                  </>
-                )}
-                {c.envCount > 0 && (
-                  <>
-                    <span className="text-[var(--color-text-muted)]">Env vars</span>
-                    <span className="text-[var(--color-text-secondary)]">{c.envCount}</span>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-          {containers.length === 0 && (
-            <p className="text-[11px] text-[var(--color-text-muted)]">
-              No container details available.
-            </p>
-          )}
-        </div>
-      ),
-    },
-    {
-      id: 'resources',
-      label: 'Resources',
-      icon: <Box className="h-3.5 w-3.5" />,
-      content: (
-        <div className="space-y-4">
-          {containers.map((c) => {
-            const cpuReq = parseCpuMillicores(c.resources.cpuRequest)
-            const cpuLim = parseCpuMillicores(c.resources.cpuLimit)
-            const memReq = parseMemoryMi(c.resources.memRequest)
-            const memLim = parseMemoryMi(c.resources.memLimit)
-            const hasResources = cpuReq > 0 || cpuLim > 0 || memReq > 0 || memLim > 0
+            ))}
+            {containers.length === 0 && (
+              <p className="text-[11px] text-[var(--color-text-muted)]">
+                No container details available.
+              </p>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: 'resources',
+        label: 'Resources',
+        icon: <Box className="h-3.5 w-3.5" />,
+        content: (
+          <div className="space-y-4">
+            {containers.map((c) => {
+              const cpuReq = parseCpuMillicores(c.resources.cpuRequest)
+              const cpuLim = parseCpuMillicores(c.resources.cpuLimit)
+              const memReq = parseMemoryMi(c.resources.memRequest)
+              const memLim = parseMemoryMi(c.resources.memLimit)
+              const hasResources = cpuReq > 0 || cpuLim > 0 || memReq > 0 || memLim > 0
 
-            return (
-              <div key={c.name} className="space-y-2">
-                <p className="text-[11px] font-bold font-mono text-[var(--color-text-primary)]">
-                  {c.name}
-                </p>
-                {hasResources ? (
-                  <div className="space-y-2">
-                    {cpuLim > 0 && (
-                      <ResourceBar
-                        label="CPU"
-                        icon={<Cpu className="h-3.5 w-3.5" />}
-                        used={cpuReq}
-                        total={cpuLim}
-                        unit="m"
-                      />
-                    )}
-                    {memLim > 0 && (
-                      <ResourceBar
-                        label="Memory"
-                        icon={<HardDrive className="h-3.5 w-3.5" />}
-                        used={memReq}
-                        total={memLim}
-                        unit="Mi"
-                      />
-                    )}
-                    {cpuLim === 0 && cpuReq > 0 && (
-                      <div className="text-[11px] font-mono text-[var(--color-text-muted)]">
-                        CPU request: {cpuReq}m (no limit)
-                      </div>
-                    )}
-                    {memLim === 0 && memReq > 0 && (
-                      <div className="text-[11px] font-mono text-[var(--color-text-muted)]">
-                        Mem request: {memReq}Mi (no limit)
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-[11px] text-[var(--color-text-muted)]">
-                    No resource requests/limits set
+              return (
+                <div key={c.name} className="space-y-2">
+                  <p className="text-[11px] font-bold font-mono text-[var(--color-text-primary)]">
+                    {c.name}
                   </p>
-                )}
+                  {hasResources ? (
+                    <div className="space-y-2">
+                      {cpuLim > 0 && (
+                        <ResourceBar
+                          label="CPU"
+                          icon={<Cpu className="h-3.5 w-3.5" />}
+                          used={cpuReq}
+                          total={cpuLim}
+                          unit="m"
+                        />
+                      )}
+                      {memLim > 0 && (
+                        <ResourceBar
+                          label="Memory"
+                          icon={<HardDrive className="h-3.5 w-3.5" />}
+                          used={memReq}
+                          total={memLim}
+                          unit="Mi"
+                        />
+                      )}
+                      {cpuLim === 0 && cpuReq > 0 && (
+                        <div className="text-[11px] font-mono text-[var(--color-text-muted)]">
+                          CPU request: {cpuReq}m (no limit)
+                        </div>
+                      )}
+                      {memLim === 0 && memReq > 0 && (
+                        <div className="text-[11px] font-mono text-[var(--color-text-muted)]">
+                          Mem request: {memReq}Mi (no limit)
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-[var(--color-text-muted)]">
+                      No resource requests/limits set
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+            {containers.length === 0 && (
+              <p className="text-[11px] text-[var(--color-text-muted)]">
+                No resource data available.
+              </p>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: 'conditions',
+        label: 'Conditions',
+        icon: <CircleCheck className="h-3.5 w-3.5" />,
+        content: (
+          <div className="space-y-3">
+            <ConditionsList conditions={pod.conditions ?? []} />
+            {pod.restartCount > 0 && pod.lastRestartReason && (
+              <div className="mt-2 px-2.5 py-2 rounded-md border border-amber-500/20 bg-amber-500/[0.04] text-[11px]">
+                <span className="font-medium text-amber-400">Last restart reason:</span>{' '}
+                <span className="text-[var(--color-text-secondary)] font-mono">
+                  {pod.lastRestartReason}
+                </span>
               </div>
-            )
-          })}
-          {containers.length === 0 && (
-            <p className="text-[11px] text-[var(--color-text-muted)]">
-              No resource data available.
-            </p>
-          )}
-        </div>
-      ),
-    },
-    {
-      id: 'conditions',
-      label: 'Conditions',
-      icon: <CircleCheck className="h-3.5 w-3.5" />,
-      content: (
-        <div className="space-y-3">
-          <ConditionsList conditions={pod.conditions ?? []} />
-          {pod.restartCount > 0 && pod.lastRestartReason && (
-            <div className="mt-2 px-2.5 py-2 rounded-md border border-amber-500/20 bg-amber-500/[0.04] text-[11px]">
-              <span className="font-medium text-amber-400">Last restart reason:</span>{' '}
-              <span className="text-[var(--color-text-secondary)] font-mono">
-                {pod.lastRestartReason}
-              </span>
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      id: 'logs',
-      label: 'Logs',
-      icon: <FileText className="h-3.5 w-3.5" />,
-      content: <PodLogViewer clusterId={clusterId} podName={pod.name} namespace={pod.namespace} />,
-    },
-    ...(pod.nodeName
-      ? [
-          {
-            id: 'node',
-            label: 'Node',
-            icon: <Server className="h-3.5 w-3.5" />,
-            content: (
-              <div className="space-y-2 p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
-                  Scheduled Node
-                </p>
-                <RelatedResourceLink
-                  tab="nodes"
-                  resourceKey={pod.nodeName}
-                  label={pod.nodeName}
-                  icon={<Server className="h-3.5 w-3.5" />}
-                />
-              </div>
-            ),
-          },
-        ]
-      : []),
-    {
-      id: 'relations',
-      label: 'Relations',
-      icon: <GitFork className="h-3.5 w-3.5" />,
-      content: (
-        <RelationsTab clusterId={clusterId} kind="Pod" namespace={pod.namespace} name={pod.name} />
-      ),
-    },
-    {
-      id: 'yaml',
-      label: 'YAML',
-      icon: <FileText className="h-3.5 w-3.5" />,
-      content: (
-        <YamlViewer
-          clusterId={clusterId}
-          resourceType="pods"
-          resourceName={pod.name}
-          namespace={pod.namespace}
-        />
-      ),
-    },
-    {
-      id: 'diff',
-      label: 'Diff',
-      icon: <FileText className="h-3.5 w-3.5" />,
-      content: (
-        <ResourceDiff
-          clusterId={clusterId}
-          resourceType="pods"
-          resourceName={pod.name}
-          namespace={pod.namespace}
-        />
-      ),
-    },
-  ]
+            )}
+          </div>
+        ),
+      },
+      {
+        id: 'logs',
+        label: 'Logs',
+        icon: <FileText className="h-3.5 w-3.5" />,
+        content: (
+          <PodLogViewer clusterId={clusterId} podName={pod.name} namespace={pod.namespace} />
+        ),
+      },
+      ...(pod.nodeName
+        ? [
+            {
+              id: 'node',
+              label: 'Node',
+              icon: <Server className="h-3.5 w-3.5" />,
+              content: (
+                <div className="space-y-2 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+                    Scheduled Node
+                  </p>
+                  <RelatedResourceLink
+                    tab="nodes"
+                    resourceKey={pod.nodeName}
+                    label={pod.nodeName}
+                    icon={<Server className="h-3.5 w-3.5" />}
+                  />
+                </div>
+              ),
+            },
+          ]
+        : []),
+      {
+        id: 'relations',
+        label: 'Relations',
+        icon: <GitFork className="h-3.5 w-3.5" />,
+        content: (
+          <RelationsTab
+            clusterId={clusterId}
+            kind="Pod"
+            namespace={pod.namespace}
+            name={pod.name}
+          />
+        ),
+      },
+      {
+        id: 'yaml',
+        label: 'YAML',
+        icon: <FileText className="h-3.5 w-3.5" />,
+        content: (
+          <YamlViewer
+            clusterId={clusterId}
+            resourceType="pods"
+            resourceName={pod.name}
+            namespace={pod.namespace}
+          />
+        ),
+      },
+      {
+        id: 'diff',
+        label: 'Diff',
+        icon: <FileText className="h-3.5 w-3.5" />,
+        content: (
+          <ResourceDiff
+            clusterId={clusterId}
+            resourceType="pods"
+            resourceName={pod.name}
+            namespace={pod.namespace}
+          />
+        ),
+      },
+    ],
+    [pod, clusterId, containers],
+  )
 
   return <DetailTabs id={`pod-${pod.namespace}-${pod.name}`} tabs={tabs} />
 }
