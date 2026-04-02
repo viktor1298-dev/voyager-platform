@@ -45,6 +45,15 @@ vi.mock('@voyager/db', () => {
 // Mock connection-tracker
 vi.mock('../lib/connection-tracker.js', () => ({
   trackConnection: vi.fn(),
+  ConnectionLimiter: class {
+    add() {
+      return true
+    }
+    remove() {}
+    has() {
+      return false
+    }
+  },
 }))
 
 // Mock watch-manager (new unified WatchManager from Plan 01)
@@ -85,6 +94,7 @@ function createMockRequestReply(clusterId: string) {
   const reply = {
     code: vi.fn().mockReturnThis(),
     send: vi.fn(),
+    hijack: vi.fn(),
     raw: Object.assign(rawReply, {
       writeHead: vi.fn(),
       write: vi.fn((data: string) => {

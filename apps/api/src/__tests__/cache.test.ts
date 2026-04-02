@@ -38,7 +38,15 @@ describe('cached()', () => {
     const result = await cached('test-key', 60, fn)
     expect(result).toEqual({ data: 'fresh' })
     expect(fn).toHaveBeenCalledOnce()
-    expect(mockSetEx).toHaveBeenCalledWith('test-key', 60, JSON.stringify({ data: 'fresh' }))
+    // TTL has ±20% jitter applied, so check key and value but use a range for TTL
+    expect(mockSetEx).toHaveBeenCalledWith(
+      'test-key',
+      expect.any(Number),
+      JSON.stringify({ data: 'fresh' }),
+    )
+    const actualTtl = mockSetEx.mock.calls[0][1]
+    expect(actualTtl).toBeGreaterThanOrEqual(48) // 60 - 20%
+    expect(actualTtl).toBeLessThanOrEqual(72) // 60 + 20%
   })
 
   it('calls fn when redis.get throws', async () => {

@@ -66,6 +66,7 @@ function createCaller(user: Context['user'] = null) {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             hasCredentials: false,
+            nodeCount: 2,
           },
         ])
         ;(result as any).groupBy = vi.fn().mockResolvedValue([{ clusterId: '1', count: 2 }])
