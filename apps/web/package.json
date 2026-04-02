@@ -25,7 +25,6 @@
     "@tanstack/react-table": "^8.21.3",
     "@trpc/client": "^11.15.1",
     "@trpc/react-query": "^11.15.1",
-    "@voyager/api": "workspace:*",
     "@voyager/config": "workspace:*",
     "@voyager/types": "workspace:*",
     "@xterm/addon-fit": "^0.11.0",
@@ -43,7 +42,6 @@
     "react": "19.2.4",
     "react-diff-viewer-continued": "^4.2.0",
     "react-dom": "19.2.4",
-    "react-grid-layout": "^2.2.3",
     "react-resizable-panels": "^4.7.6",
     "recharts": "^3.8.1",
     "sonner": "^2.0.7",
@@ -54,6 +52,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@voyager/api": "workspace:*",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/dagre": "^0.7.54",
     "@types/node": "^25.5.0",

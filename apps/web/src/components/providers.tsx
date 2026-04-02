@@ -16,7 +16,10 @@ const CommandPalette = dynamic(
 )
 import { KeyboardShortcuts } from './KeyboardShortcuts'
 import { TimeAgoProvider } from './shared/TimeAgoProvider'
-import { TerminalDrawer } from './terminal/TerminalDrawer'
+const TerminalDrawer = dynamic(
+  () => import('./terminal/TerminalDrawer').then((m) => ({ default: m.TerminalDrawer })),
+  { ssr: false },
+)
 import { TerminalProvider } from './terminal/terminal-context'
 
 /**
