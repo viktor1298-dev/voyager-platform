@@ -36,6 +36,7 @@ export function useResourceSSE(clusterId: string | null): { connectionState: Con
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastDataRef = useRef(Date.now())
   const heartbeatCheckRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lastEventIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!clusterId) return
@@ -117,6 +118,7 @@ export function useResourceSSE(clusterId: string | null): { connectionState: Con
 
       es.addEventListener('snapshot', (e: MessageEvent) => {
         lastDataRef.current = Date.now()
+        if (e.lastEventId) lastEventIdRef.current = e.lastEventId
         try {
           const { resourceType, items } = JSON.parse(e.data)
           setResources(clusterId!, resourceType, items)
@@ -131,6 +133,7 @@ export function useResourceSSE(clusterId: string | null): { connectionState: Con
       const FLUSH_SIZE_THRESHOLD = 20
       es.addEventListener('watch', (e: MessageEvent) => {
         lastDataRef.current = Date.now()
+        if (e.lastEventId) lastEventIdRef.current = e.lastEventId
         try {
           const batch: WatchEventBatch = JSON.parse(e.data)
           bufferRef.current.push(...batch.events)
@@ -150,6 +153,7 @@ export function useResourceSSE(clusterId: string | null): { connectionState: Con
 
       es.addEventListener('status', (e: MessageEvent) => {
         lastDataRef.current = Date.now()
+        if (e.lastEventId) lastEventIdRef.current = e.lastEventId
         try {
           const status: WatchStatusEvent = JSON.parse(e.data)
           setConnectionState(clusterId!, status.state as ConnectionState)
@@ -177,11 +181,17 @@ export function useResourceSSE(clusterId: string | null): { connectionState: Con
       }
     }
 
-    /** Create a new EventSource connection */
+    /** Create a new EventSource connection.
+     *  On reconnect, appends lastEventId so the server can replay missed events
+     *  from its buffer instead of sending a full snapshot. */
     function connect() {
       closeConnection()
       setConnectionState(clusterId!, 'reconnecting')
-      const es = new EventSource(url, { withCredentials: true })
+      let connectUrl = url
+      if (lastEventIdRef.current) {
+        connectUrl += `&lastEventId=${lastEventIdRef.current}`
+      }
+      const es = new EventSource(connectUrl, { withCredentials: true })
       eventSourceRef.current = es
       wireHandlers(es)
     }

@@ -26,6 +26,7 @@ import { RESOURCE_DEFS, watchManager } from '../lib/watch-manager.js'
 
 const querySchema = z.object({
   clusterId: z.string().uuid(),
+  lastEventId: z.coerce.number().int().positive().optional(),
 })
 
 const connectionLimiter = new ConnectionLimiter(
@@ -158,8 +159,11 @@ export async function handleResourceStream(
   }
 
   // 8. Check Last-Event-ID for reconnect replay (CONN-01)
+  // Check both header (native EventSource auto-reconnect) and query param (custom reconnect)
   const lastEventIdHeader = request.headers['last-event-id']
-  const lastEventId = lastEventIdHeader ? Number(lastEventIdHeader) : NaN
+  const lastEventId = lastEventIdHeader
+    ? Number(lastEventIdHeader)
+    : (parsed.data.lastEventId ?? NaN)
   let replayed = false
 
   if (!Number.isNaN(lastEventId) && lastEventId > 0) {
