@@ -90,8 +90,9 @@ export function ConstellationLoader({ label = 'Loading resources...' }: Constell
 
     function draw() {
       if (!canvas || !ctx || !container) return
-      const w = container.getBoundingClientRect().width
-      const h = container.getBoundingClientRect().height
+      const rect = container.getBoundingClientRect()
+      const w = rect.width
+      const h = rect.height
 
       ctx.clearRect(0, 0, w, h)
       const dots = dotsRef.current

@@ -104,17 +104,21 @@ async function evaluateAlerts(): Promise<void> {
         clusterIds.push(...allClusters.map((c) => c.id))
       }
 
+      const results = await Promise.allSettled(
+        clusterIds.map((clusterId) => gatherMetric(clusterId, alert.metric as MetricType)),
+      )
+
       let totalValue = 0
       let clusterCount = 0
-      for (const clusterId of clusterIds) {
-        try {
-          const value = await gatherMetric(clusterId, alert.metric as MetricType)
-          totalValue += value
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i]
+        if (result.status === 'fulfilled') {
+          totalValue += result.value
           clusterCount++
-        } catch (err) {
+        } else {
           console.warn(
-            `[alert-evaluator] failed to gather ${alert.metric} from cluster ${clusterId}`,
-            err,
+            `[alert-evaluator] failed to gather ${alert.metric} from cluster ${clusterIds[i]}`,
+            result.reason,
           )
         }
       }

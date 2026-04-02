@@ -5,7 +5,7 @@ import { dashboardCardVariants, cardHover, cardTap, DURATION } from '@/lib/anima
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { motion } from 'motion/react'
 import Link from 'next/link'
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 interface ClusterCardProps {
   id: string
@@ -64,15 +64,25 @@ export function ClusterCard({
 }: ClusterCardProps) {
   const reduced = useReducedMotion()
   const cardRef = useRef<HTMLDivElement>(null)
+  const rafRef = useRef<number>(0)
   const { label: healthLabel, colorVar: healthColor } = getHealthLabel(status)
+
+  useEffect(() => () => cancelAnimationFrame(rafRef.current), [])
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return
-    const rect = cardRef.current.getBoundingClientRect()
-    const x = (((e.clientX - rect.left) / rect.width) * 100).toFixed(1)
-    const y = (((e.clientY - rect.top) / rect.height) * 100).toFixed(1)
-    cardRef.current.style.setProperty('--mouse-x', `${x}%`)
-    cardRef.current.style.setProperty('--mouse-y', `${y}%`)
+    const clientX = e.clientX
+    const clientY = e.clientY
+    cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(() => {
+      const card = cardRef.current
+      if (!card) return
+      const rect = card.getBoundingClientRect()
+      const x = (((clientX - rect.left) / rect.width) * 100).toFixed(1)
+      const y = (((clientY - rect.top) / rect.height) * 100).toFixed(1)
+      card.style.setProperty('--mouse-x', `${x}%`)
+      card.style.setProperty('--mouse-y', `${y}%`)
+    })
   }, [])
 
   return (

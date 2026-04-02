@@ -110,6 +110,8 @@ CREATE TABLE IF NOT EXISTS clusters (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS "idx_clusters_active" ON "clusters" ("is_active") WHERE is_active = true;
+
 CREATE TABLE IF NOT EXISTS nodes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   cluster_id UUID NOT NULL REFERENCES clusters(id) ON DELETE CASCADE,

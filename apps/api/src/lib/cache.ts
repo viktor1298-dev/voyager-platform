@@ -25,6 +25,12 @@ export async function getRedisClient() {
 /** In-flight promise map — deduplicates concurrent cache misses for the same key */
 const inflight = new Map<string, Promise<unknown>>()
 
+/** Add ±20% jitter to TTL to prevent cache stampede (thundering herd) */
+function jitteredTtl(ttl: number): number {
+  const jitter = ttl * 0.2 * (Math.random() * 2 - 1) // ±20%
+  return Math.max(1, Math.round(ttl + jitter))
+}
+
 export async function cached<T>(key: string, ttl: number, fn: () => Promise<T>): Promise<T> {
   const redis = await getRedisClient()
   if (redis) {
@@ -42,7 +48,7 @@ export async function cached<T>(key: string, ttl: number, fn: () => Promise<T>):
     .then(async (result) => {
       if (redis) {
         try {
-          await redis.setEx(key, ttl, JSON.stringify(result))
+          await redis.setEx(key, jitteredTtl(ttl), JSON.stringify(result))
         } catch {}
       }
       return result
