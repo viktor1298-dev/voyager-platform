@@ -57,10 +57,15 @@ export function PresenceCluster() {
           const isOnline = user.status === 'online'
           const tooltipText = `${user.name}${user.currentPage && user.currentPage !== '/' ? ` · ${user.currentPage}` : ''}`
 
+          // Positioning styles go on the wrapper (flex child), not the avatar
+          const wrapperStyle = {
+            zIndex: MAX_VISIBLE - i,
+            marginLeft: i > 0 ? AVATAR_OVERLAP : undefined,
+          }
+
           const avatar = (
             <div
               className={`group relative ${AVATAR_SIZE} rounded-full bg-[var(--color-bg-card)] border-[1.5px] border-[var(--color-border)] text-[10px] font-semibold text-[var(--color-text-muted)] flex items-center justify-center shrink-0 cursor-default hover:border-[var(--color-border-hover)] transition-colors duration-150`}
-              style={{ zIndex: MAX_VISIBLE - i, marginLeft: i > 0 ? AVATAR_OVERLAP : undefined }}
               aria-label={`${user.name} is ${user.status}`}
             >
               {initialsFromName(user.name)}
@@ -82,12 +87,17 @@ export function PresenceCluster() {
           )
 
           if (reduced) {
-            return <div key={user.id}>{avatar}</div>
+            return (
+              <div key={user.id} style={wrapperStyle}>
+                {avatar}
+              </div>
+            )
           }
 
           return (
             <motion.div
               key={user.id}
+              style={wrapperStyle}
               variants={scaleVariants}
               initial="hidden"
               animate="visible"
@@ -100,11 +110,11 @@ export function PresenceCluster() {
 
         {/* +N overflow circle */}
         {overflow.length > 0 &&
-          (reduced ? (
-            <div key="overflow">
+          (() => {
+            const overflowStyle = { zIndex: 0, marginLeft: AVATAR_OVERLAP }
+            const overflowCircle = (
               <div
                 className={`group relative ${AVATAR_SIZE} rounded-full bg-[var(--color-bg-card)] border-[1.5px] border-[var(--color-border)] text-[9px] font-bold font-mono text-[var(--color-text-dim)] flex items-center justify-center shrink-0 cursor-default hover:border-[var(--color-border-hover)] transition-colors duration-150`}
-                style={{ zIndex: 0, marginLeft: AVATAR_OVERLAP }}
                 aria-label={`${overflow.length} more users online`}
               >
                 +{overflow.length}
@@ -112,28 +122,25 @@ export function PresenceCluster() {
                   {overflowTooltip}
                 </span>
               </div>
-            </div>
-          ) : (
-            <motion.div
-              key="overflow"
-              variants={scaleVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
-              <div
-                className={`group relative ${AVATAR_SIZE} rounded-full bg-[var(--color-bg-card)] border-[1.5px] border-[var(--color-border)] text-[9px] font-bold font-mono text-[var(--color-text-dim)] flex items-center justify-center shrink-0 cursor-default hover:border-[var(--color-border-hover)] transition-colors duration-150`}
-                style={{ zIndex: 0, marginLeft: AVATAR_OVERLAP }}
-                aria-label={`${overflow.length} more users online`}
-              >
-                +{overflow.length}
-                {/* Overflow tooltip */}
-                <span className="pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-xs font-medium text-[var(--color-text-primary)] shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
-                  {overflowTooltip}
-                </span>
+            )
+
+            return reduced ? (
+              <div key="overflow" style={overflowStyle}>
+                {overflowCircle}
               </div>
-            </motion.div>
-          ))}
+            ) : (
+              <motion.div
+                key="overflow"
+                style={overflowStyle}
+                variants={scaleVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                {overflowCircle}
+              </motion.div>
+            )
+          })()}
       </AnimatePresence>
     </div>
   )
