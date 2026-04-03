@@ -187,6 +187,15 @@ Exactly 10 ranges: `5m`, `15m`, `30m`, `1h`, `3h`, `6h`, `12h`, `24h`, `2d`, `7d
 ### E2E: BASE_URL
 Correct value: `http://voyager-platform.voyagerlabs.co`. Wrong BASE_URL is the #1 cause of E2E login failures.
 
+### Docker DB User is `voyager`, Not `postgres`
+The docker-compose uses `POSTGRES_USER=voyager`. Any `psql`, `pg_isready`, or `pg_dump` command must use `-U voyager -d voyager_dev`. The default `postgres` user does not exist in the container.
+
+### Health-Check Before Testing
+Before running curl or browser tests, verify services are running:
+- API: `curl -sf http://localhost:4001/health` (check exit code)
+- Web: `curl -sf -o /dev/null http://localhost:3000`
+Never assume services are running from a previous session. Docker containers and dev servers may have stopped.
+
 ### `killall node` Kills Docker + MCP Servers
 Never use `killall node` to clean up dev servers — it also kills Docker port forwarding (Postgres/Redis become unreachable) and MCP servers (Playwright, context7). Use `pnpm dev:restart` to safely restart dev servers.
 
@@ -282,9 +291,9 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**Lens-Inspired Power Features**
+**Rancher/Lens-Inspired Power Features**
 
-Transform Voyager Platform from a read-only K8s dashboard into a full Lens-alternative with interactive operational capabilities. Phase 9 added: pod exec terminal (xterm.js + WebSocket), live log streaming (SSE follow), universal YAML viewer + resource diff, workload management (restart/scale/delete), Helm releases viewer, CRD browser, RBAC permission matrix, network policy visualization (React Flow), resource quotas dashboard, events timeline swim lanes, and resource topology map.
+Transform Voyager Platform from a read-only K8s dashboard into a full Rancher/Lens-alternative with interactive operational capabilities. Phase 9 added: pod exec terminal (xterm.js + WebSocket), live log streaming (SSE follow), universal YAML viewer + resource diff, workload management (restart/scale/delete), Helm releases viewer, CRD browser, RBAC permission matrix, network policy visualization (React Flow), resource quotas dashboard, events timeline swim lanes, and resource topology map.
 
 **Core Value:** Every K8s resource in the dashboard is now actionable — operators can exec into pods, view YAML, compare diffs, restart workloads, browse Helm releases, inspect RBAC, and visualize network policies and resource topology — all without leaving the browser.
 

@@ -2,6 +2,17 @@
   "hooks": {
     "PreToolUse": [
       {
+        "matcher": "mcp__playwright__browser_run_code|mcp__playwright__browser_evaluate",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CODE=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.code // .expression // \"\"' 2>/dev/null); ERRS=''; echo \"$CODE\" | grep -qi 'networkidle' && ERRS=\"${ERRS}BLOCKED: networkidle never resolves on SSE-driven pages. Use browser_snapshot (waits internally) or browser_wait_for with a specific selector.\n\"; echo \"$CODE\" | grep -qE 'require\\(' && ERRS=\"${ERRS}BLOCKED: require() does not exist in browser context. browser_run_code runs in the browser, not Node.js. Use Bash tool for Node.js operations.\n\"; echo \"$CODE\" | grep -qi 'page\\.accessibility' && ERRS=\"${ERRS}BLOCKED: page.accessibility.snapshot() is deprecated in Playwright MCP. Use browser_snapshot tool instead.\n\"; if [ -n \"$ERRS\" ]; then printf \"$ERRS\" >&2; exit 1; fi",
+            "timeout": 5,
+            "statusMessage": "Checking Playwright code safety..."
+          }
+        ]
+      },
+      {
         "matcher": "Edit|Write",
         "hooks": [
           {
@@ -30,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "FILE=$(jq -r '.tool_input.file_path // .tool_response.filePath' 2>/dev/null); [[ \"$FILE\" =~ \\.(ts|tsx|js|jsx|json)$ ]] && npx @biomejs/biome format --write \"$FILE\" 2>/dev/null || true",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // empty' 2>/dev/null); [[ -z \"$FILE\" || ! \"$FILE\" =~ \\.(ts|tsx|js|jsx|json)$ ]] && exit 0; npx @biomejs/biome format --write \"$FILE\" 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Formatting with Biome..."
           }
@@ -41,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "FILE=$(jq -r '.tool_input.file_path // .tool_response.filePath' 2>/dev/null); [[ \"$FILE\" =~ \\.(ts|tsx|js|jsx)$ ]] && npx @biomejs/biome lint --write \"$FILE\" 2>&1 | tail -5 || true",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // empty' 2>/dev/null); [[ -z \"$FILE\" || ! \"$FILE\" =~ \\.(ts|tsx|js|jsx)$ ]] && exit 0; npx @biomejs/biome lint --write \"$FILE\" 2>&1 | tail -5 || true",
             "timeout": 15,
             "statusMessage": "Linting with Biome..."
           }
@@ -52,9 +63,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "FILE=$(jq -r '.tool_input.file_path // .tool_response.filePath' 2>/dev/null); case \"$FILE\" in */packages/types/*|*/packages/config/*|*/packages/db/*) pnpm typecheck 2>&1 | tail -10 ;; esac; exit 0",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // empty' 2>/dev/null); case \"$FILE\" in */packages/types/*|*/packages/config/*|*/packages/db/*) pnpm typecheck 2>&1 | tail -10 ;; *) exit 0 ;; esac",
             "timeout": 30,
             "statusMessage": "Type-checking shared packages..."
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__playwright__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "RESP=$(cat 2>/dev/null || true); if echo \"$RESP\" | grep -qi 'already in use'; then echo 'RECOVERY: Browser lock collision detected. Wait 5s, call browser_close, wait 2s, then retry your last browser_navigate.' >&2; fi; if echo \"$RESP\" | grep -qi 'networkidle'; then echo 'RECOVERY: networkidle timeout — SSE pages never reach network idle. Use browser_snapshot instead.' >&2; fi; exit 0",
+            "timeout": 5,
+            "statusMessage": "Checking Playwright result..."
           }
         ]
       }

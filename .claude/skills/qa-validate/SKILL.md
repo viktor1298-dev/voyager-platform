@@ -220,6 +220,23 @@ Key things to look for:
 
 For a deeper reference on interpreting snapshots, see `references/aria-snapshot-guide.md`.
 
+## Tool Failure Handling
+
+If any browser tool fails during validation, follow this recovery table before marking FAIL:
+
+| Error | Recovery | Resume From |
+|-------|----------|-------------|
+| "Browser is already in use" | Wait 5s → `browser_close` → wait 2s | Re-run the failed layer |
+| "Target page crashed" | `browser_close` → `browser_navigate` to URL | Layer 1 (full restart) |
+| "Execution context destroyed" | `browser_navigate` to URL (page likely navigated away) | Layer 1 |
+| Screenshot timeout | Use `browser_snapshot` first (text is faster than pixels) | Layer 4 |
+| "networkidle" in timeout message | SSE pages never reach network idle — use `browser_snapshot` | Layer 1 |
+
+**Key rules:**
+- A tool failure does NOT mean the page failed QA. Retry before marking FAIL.
+- A tool failure that persists after recovery = report as **BLOCKED**, not FAIL.
+- Never kill the Playwright MCP process — use `browser_close` for recovery.
+
 ## Things That Will Trick You
 
 These are patterns where you've historically declared "PASS" incorrectly:

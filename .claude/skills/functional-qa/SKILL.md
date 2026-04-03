@@ -49,6 +49,22 @@ Before starting ANY QA test:
 [ ] kubectl working (KUBECONFIG=~/.kube/kubeconfig kubectl get nodes)
 ```
 
+## Browser Recovery
+
+If ANY Playwright MCP tool returns **"Browser is already in use"**:
+
+1. Wait 5 seconds (the previous operation may complete)
+2. Call `browser_close` to release the lock
+3. Wait 2 seconds
+4. Resume from your last `browser_navigate` call
+
+**Do NOT:**
+- Call `browser_navigate` while the lock is held (it also needs the lock)
+- Kill the Playwright MCP process (permanently severs stdio pipe for the session)
+- Skip QA steps because the browser is stuck — follow the recovery protocol
+
+If `browser_close` also fails, inform the user and suggest `/mcp` restart.
+
 ## The Three Laws
 
 1. **Every test requires a user action.** Navigate to a page, click something, verify the result.
@@ -310,3 +326,6 @@ doing any of these, STOP and redo the test properly.
 | Batch-testing tabs via HTTP status codes | 200 status != working page | Navigate in browser, interact, verify content |
 | ONE screenshot after pod delete = "live data works" | Data may update once then freeze. Pod shows "3s ago" forever. | Take 4 screenshots at 3s intervals. Check age PROGRESSES across all 4. |
 | "New pod appeared in UI" (single check) | Replacement pod appearing proves one SSE event arrived — NOT that streaming is continuous | 4-screenshot protocol: verify age field changes across ALL snapshots |
+| "Browser is stuck, skipping browser tests" | Skips the most important QA tests | Follow browser recovery protocol (close + retry) |
+| Killing Playwright MCP process | Permanently breaks MCP for the entire session | Use browser_close, never pkill/kill the process |
+| Using `networkidle` in browser_run_code | SSE keeps connections open — 30s timeout every time | Use browser_snapshot (implicit wait) or waitForSelector |
