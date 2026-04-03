@@ -421,6 +421,15 @@ process.on('unhandledRejection', (reason) => {
 })
 
 process.on('uncaughtException', (err) => {
+  // SSE stream write-after-end is expected when clients disconnect — log and continue
+  if (
+    err &&
+    'code' in err &&
+    (err.code === 'ERR_STREAM_WRITE_AFTER_END' || err.code === 'ERR_STREAM_DESTROYED')
+  ) {
+    console.warn('[SSE] Stream write after client disconnect (non-fatal):', err.code)
+    return
+  }
   console.error('[FATAL] Uncaught exception:', err)
   captureException(err)
   // Give Sentry time to flush, then exit
