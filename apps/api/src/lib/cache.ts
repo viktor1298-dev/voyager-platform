@@ -1,4 +1,7 @@
 import { createClient } from 'redis'
+import { createComponentLogger } from './logger.js'
+
+const log = createComponentLogger('cache')
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379'
 
@@ -13,7 +16,7 @@ export async function getRedisClient() {
       },
     })
     client.on('error', (err) => {
-      console.warn('Redis error:', err)
+      log.warn({ err }, 'Redis error')
     })
     await client.connect().catch(() => {
       client = null

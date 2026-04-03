@@ -15,7 +15,10 @@ import {
 import type { ResourceType, WatchEvent, WatchEventType } from '@voyager/types'
 import { clusterClientPool } from './cluster-client-pool.js'
 import { voyagerEmitter } from './event-emitter.js'
+import { createComponentLogger } from './logger.js'
 import * as mappers from './resource-mappers.js'
+
+const log = createComponentLogger('watch-manager')
 
 // ── Resource Definitions ──────────────────────────────────────
 
@@ -274,9 +277,7 @@ export class WatchManager {
     const generation = currentCluster?.generation ?? 0
 
     const timer = setTimeout(() => {
-      console.warn(
-        `[WatchManager] Heartbeat timeout for ${type} on ${clusterId}, restarting informer`,
-      )
+      log.warn({ clusterId, resourceType: type }, 'Heartbeat timeout, restarting informer')
       const cluster = this.clusters.get(clusterId)
       if (!cluster || cluster.generation !== generation) return
       const informer = cluster.informers.get(type)
@@ -314,9 +315,7 @@ export class WatchManager {
 
     // Check limit
     if (this.clusters.size >= MAX_CONCURRENT_CLUSTER_WATCHES) {
-      console.warn(
-        `[WatchManager] Max concurrent watches reached (${MAX_CONCURRENT_CLUSTER_WATCHES}), skipping ${clusterId}`,
-      )
+      log.warn({ clusterId, limit: MAX_CONCURRENT_CLUSTER_WATCHES }, 'Max concurrent watches reached, skipping cluster')
       return
     }
 
@@ -395,18 +394,13 @@ export class WatchManager {
           cluster.informers.set(def.type, informer)
         } catch (err) {
           // Individual informer failure doesn't stop others
-          console.warn(
-            `[WatchManager] Failed to start ${def.type} informer for ${clusterId}:`,
-            err instanceof Error ? err.message : err,
-          )
+          log.warn({ clusterId, resourceType: def.type, err }, 'Failed to start informer')
         }
       }
 
       if (cluster.informers.size > 0) {
         voyagerEmitter.emitWatchStatus({ clusterId, state: 'connected' })
-        console.log(
-          `[WatchManager] Started ${cluster.informers.size}/${RESOURCE_DEFS.length} informers for cluster ${clusterId}`,
-        )
+        log.info({ clusterId, started: cluster.informers.size, total: RESOURCE_DEFS.length }, 'Informers started for cluster')
       } else {
         // No informers started — clean up
         this.clusters.delete(clusterId)
@@ -415,7 +409,7 @@ export class WatchManager {
           state: 'disconnected',
           error: 'No informers started',
         })
-        console.error(`[WatchManager] No informers started for cluster ${clusterId}`)
+        log.error({ clusterId }, 'No informers started for cluster')
       }
     } catch (err) {
       this.clusters.delete(clusterId)
@@ -436,9 +430,7 @@ export class WatchManager {
     if (cluster.subscriberCount <= 0) {
       // Grace period: keep informers warm for 60s so browser refresh gets instant cache.
       // If a new subscriber arrives within the window, subscribe() cancels this timer.
-      console.log(
-        `[WatchManager] Last subscriber left for ${clusterId}, grace period ${UNSUBSCRIBE_GRACE_MS / 1000}s`,
-      )
+      log.info({ clusterId, graceMs: UNSUBSCRIBE_GRACE_MS }, 'Last subscriber left, starting grace period')
       const timer = setTimeout(() => {
         this.graceTimers.delete(clusterId)
         this.teardownCluster(clusterId)
@@ -482,7 +474,7 @@ export class WatchManager {
     clusterClientPool.invalidate(clusterId)
 
     voyagerEmitter.emitWatchStatus({ clusterId, state: 'disconnected' })
-    console.log(`[WatchManager] Stopped all informers for cluster ${clusterId} (grace expired)`)
+    log.info({ clusterId }, 'Stopped all informers for cluster (grace expired)')
   }
 
   /**
@@ -557,7 +549,7 @@ export class WatchManager {
       clearTimeout(timer)
     }
     this.pendingStatusTimers.clear()
-    console.log('[WatchManager] Stopped all informers for all clusters')
+    log.info('Stopped all informers for all clusters')
   }
 
   private handleInformerError(clusterId: string, type: ResourceType, err: unknown): void {
@@ -580,9 +572,7 @@ export class WatchManager {
     // status on subscribe are emitted. This prevents the browser from flashing
     // "Reconnecting..." every few seconds due to normal informer error/reconnect cycles.
     if (attempt <= 3) {
-      console.warn(
-        `[WatchManager] Informer error for ${type} on cluster ${clusterId}, reconnecting in ${Math.round(delay + jitter)}ms (attempt ${attempt})`,
-      )
+      log.warn({ clusterId, resourceType: type, attempt, delayMs: Math.round(delay + jitter), err }, 'Informer error, reconnecting')
     }
 
     setTimeout(() => {

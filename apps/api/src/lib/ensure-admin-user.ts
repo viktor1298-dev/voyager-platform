@@ -1,4 +1,7 @@
 import { ensureBootstrapUser } from './ensure-bootstrap-user.js'
+import { createComponentLogger } from './logger.js'
+
+const log = createComponentLogger('bootstrap')
 
 const DEFAULT_ADMIN_EMAIL = 'admin@voyager.local'
 const DEFAULT_ADMIN_PASSWORD = 'admin123'
@@ -52,9 +55,9 @@ export async function ensureAdminUser(options: EnsureAdminUserOptions = {}): Pro
       legacyUserId: LEGACY_SEEDED_ADMIN_USER_ID,
     })
 
-    console.info('Bootstrap admin user ensured via Better-Auth', { adminEmail, userId })
+    log.info({ email: adminEmail, userId }, 'Bootstrap admin user ensured via Better-Auth')
   } catch (error) {
-    console.error('Failed to ensure admin user', { adminEmail, error })
+    log.error({ email: adminEmail, err: error }, 'Failed to ensure admin user')
     throw error
   }
 }

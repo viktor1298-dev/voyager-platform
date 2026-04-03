@@ -1,6 +1,9 @@
 import { alertHistory, auditLog, db, healthHistory, webhookDeliveries } from '@voyager/db'
 import { lt } from 'drizzle-orm'
 import { JOB_INTERVALS } from '../config/jobs.js'
+import { createComponentLogger } from '../lib/logger.js'
+
+const log = createComponentLogger('data-retention')
 
 const RETENTION_DAYS = {
   HEALTH_HISTORY: 30,
@@ -42,10 +45,10 @@ async function runRetention(): Promise<void> {
       const result = await db.delete(table).where(lt(col, cutoff))
       const count = result.rowCount ?? 0
       if (count > 0) {
-        console.log(`[data-retention] deleted ${count} rows from ${name} older than ${days}d`)
+        log.info({ table: name, deletedRows: count, retentionDays: days }, 'purged expired rows')
       }
     } catch (error) {
-      console.error(`[data-retention] failed to clean ${name}`, error)
+      log.error({ table: name, err: error }, 'failed to clean table')
     }
   }
 }
@@ -62,7 +65,7 @@ export function startDataRetention(): void {
     try {
       await runRetention()
     } catch (error) {
-      console.error('[data-retention] job run failed', error)
+      log.error({ err: error }, 'job run failed')
     } finally {
       isRunning = false
     }

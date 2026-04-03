@@ -1,6 +1,9 @@
 import { z } from 'zod'
 import { getOnlineUsers, heartbeatPresence, subscribeToPresence } from '../lib/presence.js'
+import { createComponentLogger } from '../lib/logger.js'
 import { protectedProcedure, router } from '../trpc.js'
+
+const log = createComponentLogger('presence')
 
 const PRESENCE_ONE_SHOT_ENV_KEYS = ['PLAYWRIGHT', 'E2E'] as const
 
@@ -53,7 +56,7 @@ export const presenceRouter = router({
       // Suppress AbortError — normal SSE disconnect (tab close, navigation)
       if (err instanceof Error && err.name === 'AbortError') return
       // Log unexpected errors but don't crash the server
-      console.error('[presence] subscription error:', err)
+      log.error({ err }, 'Subscription error')
     } finally {
       // Ensure iterator cleanup on any exit path
       await stream.return?.()

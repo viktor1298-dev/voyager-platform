@@ -16,3 +16,4 @@ data:
   SENTRY_TRACES_SAMPLE_RATE: {{ .Values.config.sentryTracesSampleRate | default "0.1" | quote }}
   NEXT_PUBLIC_SENTRY_DSN: {{ .Values.config.sentryDsnWeb | default "" | quote }}
   OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.config.otelExporterOtlpEndpoint | default "" | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | default "info" | quote }}

@@ -1,5 +1,15 @@
 import { createRequire } from 'node:module'
 import * as Sentry from '@sentry/node'
+import { createComponentLogger } from './logger.js'
+
+// Sentry may initialize before Fastify boots, so use a lazy logger
+function log() {
+  try {
+    return createComponentLogger('sentry')
+  } catch {
+    return { info: console.log, warn: console.warn, error: console.error } as never
+  }
+}
 
 type SentryOptions = NonNullable<Parameters<typeof Sentry.init>[0]>
 type SentryIntegration = NonNullable<Exclude<SentryOptions['integrations'], Function>>[number]
@@ -18,7 +28,7 @@ function getProfilingIntegration(): SentryIntegration | undefined {
 
     return sentryProfiling.nodeProfilingIntegration()
   } catch (error) {
-    console.warn('Sentry profiling integration is unavailable, continuing without profiling', error)
+    log().warn({ err: error }, 'Sentry profiling integration is unavailable, continuing without profiling')
     return undefined
   }
 }

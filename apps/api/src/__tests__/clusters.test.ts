@@ -37,6 +37,8 @@ vi.mock('../lib/auth', () => ({
 import { clustersRouter } from '../routers/clusters.js'
 import { type Context, router } from '../trpc.js'
 
+const mockLog = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), fatal: vi.fn(), trace: vi.fn(), child: () => mockLog, silent: vi.fn() } as any
+
 const appRouter = router({ clusters: clustersRouter })
 
 beforeEach(() => {
@@ -95,6 +97,7 @@ function createCaller(user: Context['user'] = null) {
 
   return appRouter.createCaller({
     db: mockDb as unknown as Context['db'],
+    log: mockLog,
     user,
     session: user ? { userId: user.id, expiresAt: new Date(Date.now() + 86400000) } : null,
     ipAddress: '127.0.0.1',

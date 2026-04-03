@@ -3,6 +3,9 @@ import { alertHistory, alerts, clusters, db } from '@voyager/db'
 import { and, eq, gte, inArray } from 'drizzle-orm'
 import { JOB_INTERVALS } from '../config/jobs.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { createComponentLogger } from '../lib/logger.js'
+
+const log = createComponentLogger('alert-evaluator')
 
 type MetricType = 'cpu' | 'memory' | 'pods' | 'restarts'
 type Operator = 'gt' | 'lt' | 'eq'
@@ -121,9 +124,9 @@ async function evaluateAlerts(): Promise<void> {
           totalValue += result.value
           clusterCount++
         } else {
-          console.warn(
-            `[alert-evaluator] failed to gather ${alert.metric} from cluster ${clusterIds[i]}`,
-            result.reason,
+          log.warn(
+            { clusterId: clusterIds[i], alertId: alert.id, metric: alert.metric, err: result.reason },
+            'failed to gather metric from cluster',
           )
         }
       }
@@ -143,10 +146,10 @@ async function evaluateAlerts(): Promise<void> {
           value: String(metricValue),
           message,
         })
-        console.log(`[alert-evaluator] fired: ${message}`)
+        log.info({ alertId: alert.id, metric: alert.metric, metricValue, threshold }, 'alert fired')
       }
     } catch (err) {
-      console.error(`[alert-evaluator] error evaluating alert ${alert.id}`, err)
+      log.error({ alertId: alert.id, err }, 'error evaluating alert')
     }
   }
 }
@@ -163,7 +166,7 @@ export function startAlertEvaluator(): void {
     try {
       await evaluateAlerts()
     } catch (error) {
-      console.error('[alert-evaluator] job run failed', error)
+      log.error({ err: error }, 'job run failed')
     } finally {
       isRunning = false
     }

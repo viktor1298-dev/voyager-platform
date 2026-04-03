@@ -4,7 +4,10 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { admin, genericOAuth, microsoftEntraId } from 'better-auth/plugins'
 import { eq } from 'drizzle-orm'
 import { resolveTrustedOrigins } from './auth-origins.js'
+import { createComponentLogger } from './logger.js'
 import { getEntraAuthProvider, syncEntraGroupMembership } from './sso.js'
+
+const log = createComponentLogger('auth')
 
 const ALLOWED_ORIGINS = resolveTrustedOrigins(process.env)
 const SESSION_EXPIRY_SECONDS = Number.parseInt(process.env.SESSION_EXPIRY_SECONDS || '86400', 10)
@@ -64,7 +67,7 @@ export const auth = betterAuth({
               })
             }
           } catch (err) {
-            console.error('[audit] Failed to log login event:', err)
+            log.error({ err }, 'Failed to log login audit event')
           }
         },
       },

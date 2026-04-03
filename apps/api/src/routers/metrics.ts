@@ -10,10 +10,13 @@ import {
 import { and, eq, gte, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
+import { createComponentLogger } from '../lib/logger.js'
 import { watchManager } from '../lib/watch-manager.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
 import { cached } from '../lib/cache.js'
 import { protectedProcedure, router } from '../trpc.js'
+
+const log = createComponentLogger('metrics')
 
 /** Shared constant for health-check polling interval (minutes) */
 const HEALTH_CHECK_INTERVAL_MINUTES = 5
@@ -660,9 +663,9 @@ export const metricsRouter = router({
         ])
         return result
       } catch (err) {
-        console.warn(
-          `[metrics] nodeBreakdown failed for ${input.clusterId}:`,
-          err instanceof Error ? err.message : err,
+        log.warn(
+          { clusterId: input.clusterId, err },
+          'nodeBreakdown failed',
         )
         return []
       } finally {

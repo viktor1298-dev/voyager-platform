@@ -10,6 +10,7 @@ import swaggerUi from '@fastify/swagger-ui'
 import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
 import { RATE_LIMIT_BYPASS_PATHS } from '@voyager/config'
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify'
+import { initLogger, getLogger } from './lib/logger.js'
 import { fastifyTRPCOpenApiPlugin } from 'trpc-to-openapi'
 import { startAlertEvaluator, stopAlertEvaluator } from './jobs/alert-evaluator.js'
 import { startDataRetention, stopDataRetention } from './jobs/data-retention.js'
@@ -48,10 +49,11 @@ import { drainConnections } from './lib/connection-tracker.js'
 import { createContext } from './trpc.js'
 
 // Validate CLUSTER_CRED_ENCRYPTION_KEY (64-char hex = 32 bytes AES-256 key)
+// These early checks run before Fastify boots — use console.warn (logger not yet available)
 const CLUSTER_CRED_ENCRYPTION_KEY = process.env.CLUSTER_CRED_ENCRYPTION_KEY ?? ''
 if (!/^[0-9a-fA-F]{64}$/.test(CLUSTER_CRED_ENCRYPTION_KEY)) {
   console.warn(
-    '⚠️  CLUSTER_CRED_ENCRYPTION_KEY is missing or invalid (expected 64-char hex string). Credential encryption will fail.',
+    'CLUSTER_CRED_ENCRYPTION_KEY is missing or invalid (expected 64-char hex string). Credential encryption will fail.',
   )
 }
 if (CLUSTER_CRED_ENCRYPTION_KEY === '0'.repeat(64)) {
@@ -60,7 +62,7 @@ if (CLUSTER_CRED_ENCRYPTION_KEY === '0'.repeat(64)) {
       'CLUSTER_CRED_ENCRYPTION_KEY must not be all zeros — generate with: openssl rand -hex 32',
     )
   }
-  console.warn('⚠️  CLUSTER_CRED_ENCRYPTION_KEY is all zeros — acceptable for dev only')
+  console.warn('CLUSTER_CRED_ENCRYPTION_KEY is all zeros — acceptable for dev only')
 }
 
 if (process.env.NODE_ENV === 'production') {
@@ -75,7 +77,32 @@ if (process.env.NODE_ENV === 'production') {
 // Initialize Sentry early
 initSentry()
 
-const app = Fastify({ logger: true })
+const app = Fastify({
+  logger: {
+    level: process.env.LOG_LEVEL || 'info',
+    ...(process.env.NODE_ENV !== 'production' && {
+      transport: {
+        target: 'pino-pretty',
+        options: { colorize: true, translateTime: 'HH:MM:ss.l', ignore: 'pid,hostname' },
+      },
+    }),
+    serializers: {
+      req(request) {
+        return { method: request.method, url: request.url, remoteAddress: request.ip }
+      },
+      res(reply) {
+        return { statusCode: reply.statusCode }
+      },
+    },
+    redact: {
+      paths: ['req.headers.authorization', 'req.headers.cookie'],
+      censor: '[REDACTED]',
+    },
+  },
+  genReqId: () => crypto.randomUUID(),
+})
+
+initLogger(app.log)
 
 app.register(compress, { global: true })
 app.register(helmet, {
@@ -342,17 +369,17 @@ const start = async () => {
     const PORT = Number.parseInt(process.env.PORT || '4000', 10)
     const HOST = process.env.HOST || '0.0.0.0'
     await app.listen({ port: PORT, host: HOST })
-    console.log(`🚀 API server running on http://${HOST}:${PORT}`)
+    app.log.info({ host: HOST, port: PORT }, 'API server running')
 
     const k8sEnabled = process.env.K8S_ENABLED !== 'false'
 
     // Initialize WatchManager (Lens-style live data pipeline)
     // Watches are started on-demand when SSE clients subscribe
-    console.log('[server] WatchManager ready (watches start on first subscriber)')
+    app.log.info('WatchManager ready (watches start on first subscriber)')
 
     // Start watch-db-writer — persists watch data to PostgreSQL (replaces legacy sync jobs)
     startWatchDbWriter()
-    console.log('[server] WatchDbWriter started')
+    app.log.info('WatchDbWriter started')
 
     // Start remaining background jobs (alert evaluator, metrics collector, data retention)
     startAlertEvaluator()
@@ -378,7 +405,7 @@ const start = async () => {
     for (const signal of signals) {
       process.on(signal, async () => {
         const forceExitTimer = setTimeout(() => {
-          console.error('[shutdown] Force exit after 25s timeout')
+          app.log.fatal('Force exit after 25s shutdown timeout')
           process.exit(1)
         }, 25_000)
         forceExitTimer.unref()
@@ -416,21 +443,23 @@ const start = async () => {
 
 // Global error handlers — prevent unhandled errors from silently crashing the process
 process.on('unhandledRejection', (reason) => {
-  console.error('[FATAL] Unhandled promise rejection:', reason)
+  const log = getLogger()
+  log.fatal({ err: reason }, 'Unhandled promise rejection')
   captureException(reason instanceof Error ? reason : new Error(String(reason)))
 })
 
 process.on('uncaughtException', (err) => {
+  const log = getLogger()
   // SSE stream write-after-end is expected when clients disconnect — log and continue
   if (
     err &&
     'code' in err &&
     (err.code === 'ERR_STREAM_WRITE_AFTER_END' || err.code === 'ERR_STREAM_DESTROYED')
   ) {
-    console.warn('[SSE] Stream write after client disconnect (non-fatal):', err.code)
+    log.warn({ code: err.code }, 'SSE stream write after client disconnect (non-fatal)')
     return
   }
-  console.error('[FATAL] Uncaught exception:', err)
+  log.fatal({ err }, 'Uncaught exception')
   captureException(err)
   // Give Sentry time to flush, then exit
   setTimeout(() => process.exit(1), 2000)

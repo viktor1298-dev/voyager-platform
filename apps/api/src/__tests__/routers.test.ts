@@ -18,11 +18,14 @@ vi.mock('../lib/auth', () => ({
 import { authRouter } from '../routers/auth.js'
 import { type Context, router } from '../trpc.js'
 
+const mockLog = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), fatal: vi.fn(), trace: vi.fn(), child: () => mockLog, silent: vi.fn() } as any
+
 const appRouter = router({ auth: authRouter })
 
 function createTestCaller(user: Context['user'] = null, session: Context['session'] = null) {
   return appRouter.createCaller({
     db: {} as any,
+    log: mockLog,
     user,
     session,
     ipAddress: '127.0.0.1',

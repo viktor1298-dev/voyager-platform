@@ -4,7 +4,10 @@ import { AI_CONFIG, type AiProviderName } from '@voyager/config'
 import type { Database } from '@voyager/db'
 import { userAiKeys } from '@voyager/db'
 import { and, desc, eq } from 'drizzle-orm'
+import { createComponentLogger } from '../lib/logger.js'
 import { AiProviderClient } from './ai-provider.js'
+
+const log = createComponentLogger('ai-key-settings')
 
 const KEY_ALGORITHM = 'aes-256-gcm'
 const KEY_IV_BYTES = 12
@@ -340,11 +343,10 @@ export class AiKeySettingsService {
 
       return { ok: true, provider: input.provider, model: input.model }
     } catch (error) {
-      console.error('[ai.byok] Provider validation failed', {
-        provider: input.provider,
-        model: input.model,
-        error: error instanceof Error ? error.message : String(error),
-      })
+      log.error(
+        { provider: input.provider, model: input.model, err: error },
+        'Provider validation failed',
+      )
 
       return {
         ok: false,

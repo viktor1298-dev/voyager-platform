@@ -1,5 +1,6 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
+import type { FastifyBaseLogger } from 'fastify'
 import { type Database, db } from '@voyager/db'
 import type { OpenApiMeta } from 'trpc-to-openapi'
 import { z } from 'zod'
@@ -9,6 +10,7 @@ import { captureException } from './lib/sentry.js'
 
 export interface Context {
   db: Database
+  log: FastifyBaseLogger
   session: { userId: string; expiresAt: Date } | null
   user: { id: string; email: string; name: string; role: string | null } | null
   ipAddress: string | undefined
@@ -34,6 +36,7 @@ export async function createContext({ req, res }: CreateFastifyContextOptions): 
 
   return {
     db,
+    log: req.log,
     session: result?.session ?? null,
     user,
     ipAddress: req.ip,

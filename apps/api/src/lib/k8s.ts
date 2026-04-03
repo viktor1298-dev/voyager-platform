@@ -1,5 +1,8 @@
 import * as k8s from '@kubernetes/client-node'
 import { TRPCError } from '@trpc/server'
+import { createComponentLogger } from './logger.js'
+
+const log = createComponentLogger('k8s')
 
 let _kc: k8s.KubeConfig | null = null
 let _k8sDisabled = false
@@ -11,7 +14,7 @@ export function getKubeConfig(): k8s.KubeConfig {
       _kc.loadFromDefault()
     } catch (_e) {
       _k8sDisabled = true
-      console.warn('No kubeconfig found, K8s features disabled')
+      log.warn('No kubeconfig found, K8s features disabled')
     }
   }
   return _kc

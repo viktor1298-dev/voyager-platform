@@ -64,6 +64,8 @@ import { logAudit } from '../lib/audit.js'
 import { auditRouter } from '../routers/audit.js'
 import { router } from '../trpc.js'
 
+const mockLog = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), fatal: vi.fn(), trace: vi.fn(), child: () => mockLog, silent: vi.fn() } as any
+
 describe('logAudit', () => {
   it('inserts audit record with correct values', async () => {
     const mockDb = createMockDb()
@@ -105,6 +107,7 @@ describe('audit router', () => {
     const mockDb = createMockDb()
     return appRouter.createCaller({
       db: mockDb as any,
+      log: mockLog,
       user: { id: 'u1', email: 'a@a.com', name: 'Admin', role },
       session: { userId: 'u1', expiresAt: new Date(Date.now() + 86400000) },
       ipAddress: '127.0.0.1',

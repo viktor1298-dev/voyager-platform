@@ -5,6 +5,9 @@ import { JOB_INTERVALS } from '../config/jobs.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { voyagerEmitter } from '../lib/event-emitter.js'
 import { type CheckStatus, scanLogsForErrors } from '../lib/health-checks.js'
+import { createComponentLogger } from '../lib/logger.js'
+
+const log = createComponentLogger('deploy-smoke-test')
 
 interface DeploymentEvent {
   type: 'added' | 'modified' | 'deleted'
@@ -219,8 +222,9 @@ async function handleDeploymentEvent(event: DeploymentEvent): Promise<void> {
   seenGenerations.set(key, generation)
   setTimeout(() => seenGenerations.delete(key), 5 * 60_000).unref()
 
-  console.log(
-    `[deploy-smoke-test] New rollout detected: ${depName} in ${namespace} (cluster ${event.clusterId}, gen ${generation})`,
+  log.info(
+    { clusterId: event.clusterId, deployment: depName, namespace, generation },
+    'new rollout detected',
   )
 
   // Wait for pods to stabilize before checking
@@ -230,7 +234,7 @@ async function handleDeploymentEvent(event: DeploymentEvent): Promise<void> {
       const result = await runSmokeChecks(event.clusterId, namespace, depName)
 
       if (result.status === 'pass') {
-        console.log(`[deploy-smoke-test] PASS: ${depName} in ${namespace} — all checks green`)
+        log.info({ clusterId: event.clusterId, deployment: depName, namespace }, 'PASS: all checks green')
         return
       }
 
@@ -256,9 +260,12 @@ async function handleDeploymentEvent(event: DeploymentEvent): Promise<void> {
         triggeredAt: new Date().toISOString(),
       })
 
-      console.log(`[deploy-smoke-test] ${result.status.toUpperCase()}: ${message}`)
+      log.warn(
+        { clusterId: event.clusterId, deployment: depName, namespace, status: result.status, failedChecks: failedChecks.length },
+        message,
+      )
     } catch (err) {
-      console.error(`[deploy-smoke-test] Error checking ${depName} in ${namespace}:`, err)
+      log.error({ clusterId: event.clusterId, deployment: depName, namespace, err }, 'error running smoke checks')
     }
   }, JOB_INTERVALS.DEPLOY_SMOKE_DELAY_MS)
 
@@ -273,7 +280,7 @@ export function startDeploySmokeTest(): void {
   voyagerEmitter.on('deployment-event', (event: DeploymentEvent) => {
     void handleDeploymentEvent(event)
   })
-  console.log('[deploy-smoke-test] Listening for deployment events')
+  log.info('listening for deployment events')
 }
 
 export function stopDeploySmokeTest(): void {

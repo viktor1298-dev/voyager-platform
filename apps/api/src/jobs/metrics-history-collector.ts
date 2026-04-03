@@ -4,6 +4,9 @@ import { eq } from 'drizzle-orm'
 import { JOB_INTERVALS } from '../config/jobs.js'
 import { clusterClientPool } from '../lib/cluster-client-pool.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
+import { createComponentLogger } from '../lib/logger.js'
+
+const log = createComponentLogger('metrics-collector')
 
 let intervalHandle: NodeJS.Timeout | null = null
 let isRunning = false
@@ -70,10 +73,7 @@ async function collectClusterMetrics(clusterId: string): Promise<void> {
       `getClient(${clusterId})`,
     )
   } catch (err) {
-    console.warn(
-      `[metrics-collector] skipping cluster ${clusterId} — cannot create client:`,
-      err instanceof Error ? err.message : err,
-    )
+    log.warn({ clusterId, err }, 'skipping cluster — cannot create client')
     return
   }
   const coreApi = kc.makeApiClient(k8s.CoreV1Api)
@@ -113,9 +113,7 @@ async function collectClusterMetrics(clusterId: string): Promise<void> {
     )
     nodeMetricsItems = nodeMetrics.items
   } catch {
-    console.warn(
-      `[metrics-collector] metrics-server unavailable for cluster ${clusterId} — storing pod/node counts only`,
-    )
+    log.warn({ clusterId }, 'metrics-server unavailable — storing pod/node counts only')
   }
 
   for (const nm of nodeMetricsItems) {
@@ -202,18 +200,16 @@ async function collectMetrics(): Promise<void> {
     )
     for (let j = 0; j < results.length; j++) {
       if (results[j].status === 'rejected') {
-        console.warn(
-          `[metrics-collector] failed for cluster ${batch[j].id}`,
-          (results[j] as PromiseRejectedResult).reason,
+        log.warn(
+          { clusterId: batch[j].id, err: (results[j] as PromiseRejectedResult).reason },
+          'failed to collect metrics for cluster',
         )
       }
     }
   }
 
   lastCollectTime = new Date()
-  console.log(
-    `[metrics-collector] collected at ${lastCollectTime.toISOString()} for ${allClusters.length} clusters`,
-  )
+  log.info({ clusterCount: allClusters.length, collectedAt: lastCollectTime.toISOString() }, 'metrics collection complete')
 }
 
 export function startMetricsHistoryCollector(): void {
@@ -225,7 +221,7 @@ export function startMetricsHistoryCollector(): void {
     try {
       await collectMetrics()
     } catch (error) {
-      console.error('[metrics-collector] job run failed', error)
+      log.error({ err: error }, 'job run failed')
     } finally {
       isRunning = false
     }

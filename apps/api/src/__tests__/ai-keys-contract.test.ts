@@ -26,6 +26,8 @@ import {
 import { aiKeysRouter } from '../routers/ai-keys.js'
 import { type Context, router } from '../trpc.js'
 
+const mockLog = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), fatal: vi.fn(), trace: vi.fn(), child: () => mockLog, silent: vi.fn() } as any
+
 type KeyRecord = {
   userId: string
   provider: 'openai' | 'claude'
@@ -77,6 +79,7 @@ function createTestCaller(db: unknown, user: Context['user']) {
 
   return appRouter.createCaller({
     db: db as never,
+    log: mockLog,
     user,
     session: { userId: user?.id ?? '', expiresAt: new Date(Date.now() + 60_000) },
     ipAddress: '127.0.0.1',

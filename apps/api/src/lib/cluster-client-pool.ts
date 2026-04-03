@@ -6,6 +6,9 @@ import { K8S_CONFIG } from '../config/k8s.js'
 import type { ClusterConnectionConfig } from './connection-config.js'
 import { decryptCredential } from './credential-crypto.js'
 import { createKubeConfigForCluster } from './k8s-client-factory.js'
+import { createComponentLogger } from './logger.js'
+
+const log = createComponentLogger('cluster-client-pool')
 
 // Default token TTL assumptions by provider (ms)
 const DEFAULT_TOKEN_TTL: Record<string, number> = {
@@ -37,7 +40,7 @@ export class ClusterClientPool {
         const ttl = cached.tokenExpiresAt - (cached.expiresAt - CACHE_TTL.CLUSTER_CLIENT_MS)
         const refreshAt = cached.tokenExpiresAt - ttl * (1 - TOKEN_REFRESH_THRESHOLD_RATIO)
         if (now >= refreshAt) {
-          console.log(`[ClusterClientPool] Proactive token refresh for ${clusterId}`)
+          log.info({ clusterId }, 'Proactive token refresh')
           this.cache.delete(clusterId)
           return this.getClient(clusterId)
         }
@@ -126,13 +129,10 @@ export class ClusterClientPool {
       if (results[i].status === 'fulfilled') {
         warmed++
       } else {
-        console.warn(
-          `[ClusterClientPool] warm-up failed for ${activeClusters[i].id}:`,
-          (results[i] as PromiseRejectedResult).reason?.message ?? results[i],
-        )
+        log.warn({ clusterId: activeClusters[i].id, err: (results[i] as PromiseRejectedResult).reason }, 'Warm-up failed for cluster')
       }
     }
-    console.log(`[ClusterClientPool] warmed ${warmed}/${activeClusters.length} cluster clients`)
+    log.info({ warmed, total: activeClusters.length }, 'Cluster client warm-up complete')
   }
 }
 

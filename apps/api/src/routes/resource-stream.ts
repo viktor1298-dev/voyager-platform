@@ -15,6 +15,7 @@ import {
   SSE_HEARTBEAT_INTERVAL_MS,
 } from '@voyager/config/sse'
 import { ConnectionLimiter, trackConnection } from '../lib/connection-tracker.js'
+import { createComponentLogger } from '../lib/logger.js'
 import { clusters, db } from '@voyager/db'
 import type { WatchEvent, WatchEventBatch, WatchStatusEvent } from '@voyager/types'
 import { eq } from 'drizzle-orm'
@@ -28,6 +29,8 @@ const querySchema = z.object({
   clusterId: z.string().uuid(),
   lastEventId: z.coerce.number().int().positive().optional(),
 })
+
+const log = createComponentLogger('resource-stream')
 
 const connectionLimiter = new ConnectionLimiter(
   MAX_RESOURCE_CONNECTIONS_PER_CLUSTER,
@@ -155,7 +158,7 @@ export async function handleResourceStream(
       'status',
       JSON.stringify({ clusterId, state: 'disconnected', error: errorMsg }),
     )
-    console.error(`[resource-stream] WatchManager subscribe failed for ${clusterId}:`, errorMsg)
+    log.error({ clusterId, err }, 'WatchManager subscribe failed')
   }
 
   // 8. Check Last-Event-ID for reconnect replay (CONN-01)

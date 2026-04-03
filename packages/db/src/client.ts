@@ -18,7 +18,13 @@ const pool = new pg.Pool({
   options: '-c statement_timeout=30000',
 })
 
-pool.on('error', (err) => console.error('[pg-pool] Unexpected error on idle client', err))
+pool.on('error', (err) =>
+  console.error('[pg-pool] Unexpected error on idle client — pool may be degraded', {
+    message: err.message,
+    code: (err as NodeJS.ErrnoException).code,
+    stack: err.stack,
+  }),
+)
 
 export const db = drizzle(pool, { schema })
 export type Database = typeof db

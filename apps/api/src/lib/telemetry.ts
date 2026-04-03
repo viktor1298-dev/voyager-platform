@@ -1,5 +1,6 @@
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
+import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino'
 import { resourceFromAttributes } from '@opentelemetry/resources'
 import { NodeSDK } from '@opentelemetry/sdk-node'
 import {
@@ -8,10 +9,21 @@ import {
   SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
   SEMRESATTRS_K8S_NAMESPACE_NAME,
 } from '@opentelemetry/semantic-conventions'
+import { createComponentLogger } from './logger.js'
 
 const OTEL_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
 
 let sdk: NodeSDK | null = null
+
+// Telemetry initializes before Fastify boots, so use a lazy logger
+function log() {
+  try {
+    return createComponentLogger('telemetry')
+  } catch {
+    // Logger not yet initialized — fall back to console for early boot
+    return { info: console.log, warn: console.warn, error: console.error } as never
+  }
+}
 
 if (OTEL_ENDPOINT) {
   try {
@@ -33,16 +45,17 @@ if (OTEL_ENDPOINT) {
           '@opentelemetry/instrumentation-fs': { enabled: false },
           '@opentelemetry/instrumentation-dns': { enabled: false },
         }),
+        new PinoInstrumentation({ enabled: true }),
       ],
     })
     sdk.start()
-    console.log('[telemetry] OpenTelemetry SDK started')
+    log().info({ endpoint: OTEL_ENDPOINT }, 'OpenTelemetry SDK started')
   } catch (err) {
-    console.warn('[telemetry] Failed to start OpenTelemetry SDK:', err)
+    log().warn({ err }, 'Failed to start OpenTelemetry SDK')
     sdk = null
   }
 } else {
-  console.log('[telemetry] OTEL_EXPORTER_OTLP_ENDPOINT not set — telemetry disabled')
+  log().info('OTEL_EXPORTER_OTLP_ENDPOINT not set — telemetry disabled')
 }
 
 export async function shutdownTelemetry(): Promise<void> {

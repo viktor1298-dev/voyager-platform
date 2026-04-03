@@ -94,11 +94,14 @@ vi.mock('../lib/k8s-units.js', () => ({
 import { GRAFANA_RANGES, metricsRouter, TIME_RANGE_CONFIG } from '../routers/metrics.js'
 import { router } from '../trpc.js'
 
+const mockLog = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), fatal: vi.fn(), trace: vi.fn(), child: () => mockLog, silent: vi.fn() } as any
+
 const appRouter = router({ metrics: metricsRouter })
 
 function createTestCaller() {
   return appRouter.createCaller({
     db: {} as any,
+    log: mockLog,
     user: { id: 'test-user', email: 'test@test.com', name: 'Test', role: 'admin' },
     session: { userId: 'test-user', expiresAt: new Date(Date.now() + 86400000) },
     ipAddress: '127.0.0.1',

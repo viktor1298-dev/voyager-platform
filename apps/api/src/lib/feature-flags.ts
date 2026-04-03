@@ -6,6 +6,16 @@ import {
   type JsonValue,
   OpenFeature,
 } from '@openfeature/server-sdk'
+import { createComponentLogger } from './logger.js'
+
+// Feature flags initialize before Fastify boots, so use a lazy logger
+function log() {
+  try {
+    return createComponentLogger('feature-flags')
+  } catch {
+    return { info: console.log, warn: console.warn, error: console.error } as never
+  }
+}
 
 const RELOAD_INTERVAL_MS = 60_000
 
@@ -93,11 +103,8 @@ const providerConfigPromise = buildProviderConfig()
 
 providerConfigPromise
   .then((providerConfig) => OpenFeature.setProviderAndWait(new InMemoryProvider(providerConfig)))
-  .catch((error) => {
-    console.error(
-      '[feature-flags] Failed to initialize OpenFeature provider, falling back to default values',
-      error,
-    )
+  .catch((err) => {
+    log().error({ err }, 'Failed to initialize OpenFeature provider, falling back to default values')
   })
 
 const client = OpenFeature.getClient('voyager-api')
@@ -108,8 +115,8 @@ async function reloadFlags(): Promise<void> {
   try {
     const providerConfig = await buildProviderConfig()
     await OpenFeature.setProviderAndWait(new InMemoryProvider(providerConfig))
-  } catch (error) {
-    console.error('[feature-flags] Failed to reload flags, keeping previous values', error)
+  } catch (err) {
+    log().error({ err }, 'Failed to reload flags, keeping previous values')
   }
 }
 
@@ -120,14 +127,14 @@ export function startFlagReloader(): void {
   }, RELOAD_INTERVAL_MS)
   // Allow process to exit even if timer is active
   reloadTimer.unref()
-  console.log(`[feature-flags] Hot-reload enabled (every ${RELOAD_INTERVAL_MS / 1000}s)`)
+  log().info({ reloadIntervalMs: RELOAD_INTERVAL_MS }, 'Hot-reload enabled')
 }
 
 export function stopFlagReloader(): void {
   if (reloadTimer) {
     clearInterval(reloadTimer)
     reloadTimer = undefined
-    console.log('[feature-flags] Hot-reload stopped')
+    log().info('Hot-reload stopped')
   }
 }
 

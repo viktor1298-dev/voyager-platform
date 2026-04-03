@@ -75,7 +75,7 @@ export const auditRouter = router({
 
         return { items: rows, page, limit, total }
       } catch (err) {
-        console.error('[audit.list] DB query failed:', err)
+        ctx.log.error({ err }, 'DB query failed')
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to load audit entries',
@@ -102,7 +102,7 @@ export const auditRouter = router({
           .where(eq(auditLog.resourceId, input.resourceId))
           .orderBy(desc(auditLog.timestamp))
       } catch (err) {
-        console.error('[audit.getByResource] DB query failed:', err)
+        ctx.log.error({ err }, 'DB query failed')
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to load audit entries',

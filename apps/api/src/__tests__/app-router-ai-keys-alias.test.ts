@@ -22,6 +22,8 @@ vi.mock('../lib/audit.js', () => ({
 import { appRouter } from '../routers/index.js'
 import type { Context } from '../trpc.js'
 
+const mockLog = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), fatal: vi.fn(), trace: vi.fn(), child: () => mockLog, silent: vi.fn() } as any
+
 function createCaller(
   user: Context['user'] = { id: 'user-1', email: 'u@v.test', role: 'user' } as any,
 ) {
@@ -46,6 +48,7 @@ function createCaller(
 
   return appRouter.createCaller({
     db: mockDb as unknown as Context['db'],
+    log: mockLog,
     user,
     session: { userId: 'user-1', expiresAt: new Date(Date.now() + 60_000) } as any,
     ipAddress: '127.0.0.1',

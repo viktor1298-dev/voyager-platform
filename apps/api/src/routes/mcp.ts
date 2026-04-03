@@ -199,6 +199,7 @@ export async function registerMcpRoute(app: FastifyInstance) {
 
       const caller = appRouter.createCaller({
         db,
+        log: request.log,
         ipAddress: request.ip,
         res: reply,
         session: auth.session,

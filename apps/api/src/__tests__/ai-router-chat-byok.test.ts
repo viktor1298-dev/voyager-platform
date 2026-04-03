@@ -18,11 +18,14 @@ import { aiRouter } from '../routers/ai.js'
 import { AIService } from '../services/ai-service.js'
 import { router } from '../trpc.js'
 
+const mockLog = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), fatal: vi.fn(), trace: vi.fn(), child: () => mockLog, silent: vi.fn() } as any
+
 const appRouter = router({ ai: aiRouter })
 
 function createCaller() {
   return appRouter.createCaller({
     db: {} as never,
+    log: mockLog,
     user: { id: 'user-1', email: 'user@test.local', name: 'User', role: 'member' },
     session: { userId: 'user-1', expiresAt: new Date(Date.now() + 60_000) },
     ipAddress: '127.0.0.1',

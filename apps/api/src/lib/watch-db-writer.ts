@@ -16,9 +16,12 @@ import type { WatchStatusEvent } from '@voyager/types'
 import { clusterClientPool } from './cluster-client-pool.js'
 import { decryptCredential } from './credential-crypto.js'
 import { voyagerEmitter } from './event-emitter.js'
-import { watchManager } from './watch-manager.js'
 import { parseCpuToNano, parseMemToBytes } from './k8s-units.js'
+import { createComponentLogger } from './logger.js'
+import { watchManager } from './watch-manager.js'
 import { K8S_CONFIG } from '../config/k8s.js'
+
+const log = createComponentLogger('watch-db-writer')
 
 // ── Dirty Tracking ────────────────────────────────────────────
 
@@ -227,9 +230,7 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
           const detection = detectProviderFromKubeconfig(config.kubeconfig)
           if (detection.confidence !== 'none') {
             updatePayload.provider = detection.provider
-            console.info(
-              `[watch-db-writer] Auto-detected provider for cluster ${clusterId}: ${detection.provider} (${detection.signal}, ${detection.confidence})`,
-            )
+            log.info({ clusterId, provider: detection.provider, signal: detection.signal, confidence: detection.confidence }, 'Auto-detected provider for cluster')
           }
         }
       } catch {
@@ -266,10 +267,7 @@ async function runSync(): Promise<void> {
       }
     } catch (err) {
       // DB write failures must never crash the watch pipeline
-      console.warn(
-        `[watch-db-writer] Sync failed for ${entry}:`,
-        err instanceof Error ? err.message : err,
-      )
+      log.warn({ entry, err }, 'Sync failed')
     }
   }
 }
@@ -324,11 +322,29 @@ export function startWatchDbWriter(): void {
 
   // Start periodic sync
   syncInterval = setInterval(() => {
-    runSync().catch((err) => console.error('[watch-db-writer] Periodic sync failed:', err))
+    runSync().catch((err) => log.error({ err }, 'Periodic sync failed'))
   }, WATCH_DB_SYNC_INTERVAL_MS)
 
   // Clean up orphaned listeners when a cluster's watch disconnects
   const onWatchStatus = (event: WatchStatusEvent) => {
+    // Immediate one-shot sync when watches connect — ensures new clusters
+    // transition from 'unreachable' to 'active' within seconds, not minutes.
+    if (event.state === 'connected') {
+      const cid = event.clusterId
+      setTimeout(() => {
+        syncClusterHealth(cid).catch((err) =>
+          log.warn({ clusterId: cid, err }, 'Immediate health sync failed'),
+        )
+        syncNodes(cid).catch((err) =>
+          log.warn({ clusterId: cid, err }, 'Immediate node sync failed'),
+        )
+        syncEvents(cid).catch((err) =>
+          log.warn({ clusterId: cid, err }, 'Immediate event sync failed'),
+        )
+      }, 3_000)
+      return
+    }
+
     if (event.state !== 'disconnected') return
     const clusterId = event.clusterId
     const listener = listeners.get(clusterId)
@@ -339,7 +355,7 @@ export function startWatchDbWriter(): void {
       for (const entry of dirtySet) {
         if (entry.startsWith(`${clusterId}:`)) dirtySet.delete(entry)
       }
-      console.log(`[watch-db-writer] Removed orphaned listener for cluster ${clusterId}`)
+      log.info({ clusterId }, 'Removed orphaned listener for cluster')
     }
   }
 
@@ -373,7 +389,7 @@ export function startWatchDbWriter(): void {
   )
   listeners.set('__onWatchStatus', onWatchStatus as unknown as (event: WatchEvent) => void)
 
-  console.log(`[watch-db-writer] Started (sync every ${WATCH_DB_SYNC_INTERVAL_MS / 1000}s)`)
+  log.info({ syncIntervalMs: WATCH_DB_SYNC_INTERVAL_MS }, 'Started')
 }
 
 export function stopWatchDbWriter(): void {
@@ -414,5 +430,5 @@ export function stopWatchDbWriter(): void {
   }
   listeners.clear()
 
-  console.log('[watch-db-writer] Stopped')
+  log.info('Stopped')
 }

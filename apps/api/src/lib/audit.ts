@@ -1,5 +1,8 @@
 import type { Database } from '@voyager/db'
 import { auditLog } from '@voyager/db'
+import { createComponentLogger } from './logger.js'
+
+const log = createComponentLogger('audit')
 
 interface AuditContext {
   db: Database
@@ -24,8 +27,8 @@ export async function logAudit(
       details: details ? JSON.stringify(details) : null,
       ipAddress: ctx.ipAddress ?? null,
     })
-  } catch (error) {
+  } catch (err) {
     // Audit logging should never break the main operation
-    console.error('Failed to write audit log:', error)
+    log.error({ err }, 'Failed to write audit log')
   }
 }

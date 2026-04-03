@@ -2,6 +2,9 @@ import { account as accountTable, db, user as userTable } from '@voyager/db'
 import { and, eq } from 'drizzle-orm'
 import { auth } from './auth.js'
 import { createBootstrapUser } from './auth-bootstrap.js'
+import { createComponentLogger } from './logger.js'
+
+const log = createComponentLogger('bootstrap')
 
 export type EnsureBootstrapUserInput = {
   email: string
@@ -119,14 +122,7 @@ async function setBootstrapRoleWithFallback(
       throw error
     }
 
-    console.warn(
-      'Better-Auth setRole unauthorized during bootstrap; applying scoped DB role fallback',
-      {
-        email,
-        userId,
-        desiredRole,
-      },
-    )
+    log.warn({ email, userId, desiredRole }, 'Better-Auth setRole unauthorized during bootstrap; applying scoped DB role fallback')
 
     await db.update(userTable).set({ role: desiredRole }).where(eq(userTable.id, userId))
 
@@ -176,15 +172,7 @@ export async function ensureBootstrapUser(input: EnsureBootstrapUserInput): Prom
     })
 
     if (existingState.shouldReplaceUser) {
-      console.warn(
-        'Detected bootstrap user without a valid Better-Auth credential; replacing record',
-        {
-          email,
-          existingUserId,
-          desiredRole,
-          reason: existingState.reason,
-        },
-      )
+      log.warn({ email, existingUserId, desiredRole, reason: existingState.reason }, 'Detected bootstrap user without valid credential; replacing record')
       await db.delete(userTable).where(eq(userTable.id, existingUserId))
       existingUserId = null
       existingUserRole = null
@@ -197,10 +185,10 @@ export async function ensureBootstrapUser(input: EnsureBootstrapUserInput): Prom
         })
       } catch {
         // Password mismatch — delete and recreate with correct password
-        console.warn('Bootstrap user password mismatch with env var; recreating credential', {
-          email,
-          existingUserId,
-        })
+        log.warn(
+          { email, existingUserId },
+          'Bootstrap user password mismatch with env var; recreating credential',
+        )
         await db.delete(userTable).where(eq(userTable.id, existingUserId))
         existingUserId = null
         existingUserRole = null

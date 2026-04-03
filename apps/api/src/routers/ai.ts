@@ -143,11 +143,10 @@ export const aiRouter = router({
             score: analysis.score,
           })
         } catch (auditError) {
-          console.error('[ai.analyze] Failed to write audit log', {
-            clusterId: input.clusterId,
-            userId: ctx.user.id,
-            error: auditError instanceof Error ? auditError.message : String(auditError),
-          })
+          ctx.log.error(
+            { clusterId: input.clusterId, userId: ctx.user.id, err: auditError },
+            'Failed to write audit log',
+          )
         }
 
         return analysis
@@ -155,11 +154,10 @@ export const aiRouter = router({
         if (error instanceof TRPCError) throw error
 
         if (isTransientAiError(error)) {
-          console.error('[ai.analyze] Analyze request failed due to transient backend error', {
-            clusterId: input.clusterId,
-            userId: ctx.user.id,
-            error: error instanceof Error ? error.message : String(error),
-          })
+          ctx.log.error(
+            { clusterId: input.clusterId, userId: ctx.user.id, err: error },
+            'Analyze request failed due to transient backend error',
+          )
           throw new TRPCError({
             code: 'SERVICE_UNAVAILABLE',
             message: 'Analyze Health is temporarily unavailable. Please retry shortly.',
@@ -274,11 +272,10 @@ export const aiRouter = router({
             provider = persisted.provider
             model = persisted.model
           } catch (persistError) {
-            console.error('[ai.chat] Failed to persist AI exchange', {
-              clusterId: input.clusterId,
-              userId: ctx.user.id,
-              error: persistError instanceof Error ? persistError.message : String(persistError),
-            })
+            ctx.log.error(
+              { clusterId: input.clusterId, userId: ctx.user.id, err: persistError },
+              'Failed to persist AI exchange',
+            )
           }
         }
 
@@ -290,11 +287,10 @@ export const aiRouter = router({
             questionLength: input.question.length,
           })
         } catch (auditError) {
-          console.error('[ai.chat] Failed to write audit log', {
-            clusterId: input.clusterId,
-            userId: ctx.user.id,
-            error: auditError instanceof Error ? auditError.message : String(auditError),
-          })
+          ctx.log.error(
+            { clusterId: input.clusterId, userId: ctx.user.id, err: auditError },
+            'Failed to write audit log',
+          )
         }
 
         return {

@@ -1,4 +1,7 @@
 import { ensureBootstrapUser } from './ensure-bootstrap-user.js'
+import { createComponentLogger } from './logger.js'
+
+const log = createComponentLogger('bootstrap')
 
 const DEFAULT_VIEWER_EMAIL = 'viewer@voyager.local'
 const DEFAULT_VIEWER_PASSWORD = 'viewer123'
@@ -19,9 +22,9 @@ export async function ensureViewerUser(): Promise<void> {
       legacyUserId: LEGACY_SEEDED_VIEWER_USER_ID,
     })
 
-    console.info('Bootstrap viewer user ensured via Better-Auth', { viewerEmail, userId })
+    log.info({ email: viewerEmail, userId }, 'Bootstrap viewer user ensured via Better-Auth')
   } catch (error) {
-    console.error('Failed to ensure viewer user', { viewerEmail, error })
+    log.error({ email: viewerEmail, err: error }, 'Failed to ensure viewer user')
     throw error
   }
 }

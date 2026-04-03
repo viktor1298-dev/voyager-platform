@@ -42,6 +42,7 @@ config:
   sentryEnvironment: "production"
   sentryTracesSampleRate: "0.1"
   otelExporterOtlpEndpoint: ""
+  logLevel: "info"
 
 db:
   image:

@@ -2,6 +2,9 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:
 import { CACHE_TTL } from '@voyager/config'
 import { account, type Database, ssoProviders, teamMembers } from '@voyager/db'
 import { and, eq, inArray } from 'drizzle-orm'
+import { createComponentLogger } from './logger.js'
+
+const log = createComponentLogger('sso')
 
 const MICROSOFT_PROVIDER_TYPE = 'microsoft-entra-id'
 const ENTRA_DISCOVERY_URL =
@@ -26,9 +29,7 @@ function getSsoEncryptionKey(): Buffer {
     throw new Error('SSO_ENCRYPTION_KEY is required in production')
   }
 
-  console.warn(
-    '[SSO] SSO_ENCRYPTION_KEY is not set. Falling back to BETTER_AUTH_SECRET-derived key (dev only).',
-  )
+  log.warn('SSO_ENCRYPTION_KEY is not set, falling back to BETTER_AUTH_SECRET-derived key (dev only)')
   return createHash('sha256').update(fallbackSecret).digest()
 }
 
@@ -228,7 +229,7 @@ export async function syncEntraGroupMembership(db: Database, userId: string) {
   try {
     groupIds = await fetchEntraGroupIds(accessToken)
   } catch (error) {
-    console.warn('[SSO] Failed to fetch Entra group membership via Graph API', error)
+    log.warn({ err: error }, 'Failed to fetch Entra group membership via Graph API')
     return
   }
 
