@@ -1,0 +1,27 @@
+# Grafana — log viewer with auto-provisioned Loki datasource
+# Deploy: helm install grafana grafana/grafana -n voyager -f grafana-values.yaml
+persistence:
+  enabled: true
+  size: 1Gi
+
+adminUser: admin
+adminPassword: admin
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki-gateway.voyager.svc.cluster.local:80
+        isDefault: true
+        jsonData:
+          maxLines: 1000
+          timeout: 60
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hosts:
+    - grafana.voyagerlabs.co

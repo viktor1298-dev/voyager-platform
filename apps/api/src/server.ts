@@ -77,15 +77,41 @@ if (process.env.NODE_ENV === 'production') {
 // Initialize Sentry early
 initSentry()
 
+// Build Pino transport — pino-pretty for dev terminal + pino-loki when LOKI_URL is set
+const LOKI_URL = process.env.LOKI_URL
+function buildTransport() {
+  const targets: Array<{ target: string; options: Record<string, unknown>; level?: string }> = []
+
+  // Pretty console output in non-production
+  if (process.env.NODE_ENV !== 'production') {
+    targets.push({
+      target: 'pino-pretty',
+      options: { colorize: true, translateTime: 'HH:MM:ss.l', ignore: 'pid,hostname' },
+    })
+  }
+
+  // Ship logs to Loki when LOKI_URL is configured
+  if (LOKI_URL) {
+    targets.push({
+      target: 'pino-loki',
+      options: {
+        host: LOKI_URL,
+        batching: true,
+        interval: 2,
+        labels: { app: 'voyager-api', env: process.env.NODE_ENV || 'development' },
+      },
+    })
+  }
+
+  if (targets.length === 0) return undefined
+  if (targets.length === 1) return { target: targets[0].target, options: targets[0].options }
+  return { targets }
+}
+
 const app = Fastify({
   logger: {
     level: process.env.LOG_LEVEL || 'info',
-    ...(process.env.NODE_ENV !== 'production' && {
-      transport: {
-        target: 'pino-pretty',
-        options: { colorize: true, translateTime: 'HH:MM:ss.l', ignore: 'pid,hostname' },
-      },
-    }),
+    transport: buildTransport(),
     serializers: {
       req(request) {
         return { method: request.method, url: request.url, remoteAddress: request.ip }
