@@ -129,6 +129,17 @@
   }
 }
 
+@keyframes wizard-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes wizard-ring-pulse {
+  0% { opacity: 0.4; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.4; transform: scale(0.95); }
+}
+
 :root {
   /* Dark mode 4-level surface scale (L-P2-001) — Ron v182 */
   --surface-0: hsl(230 15% 7%);
@@ -266,6 +277,12 @@
   --sidebar-badge-glow-collapsed: 0 0 6px rgba(239, 68, 68, 0.5);
   --sidebar-hover-bg: rgba(255, 255, 255, 0.03);
   --sidebar-hover-bg-collapsed: rgba(255, 255, 255, 0.04);
+
+  /* Wizard — two-panel layout tokens */
+  --wizard-left-bg: linear-gradient(160deg, var(--elevated) 0%, var(--surface) 50%, color-mix(in srgb, var(--color-accent) 5%, var(--surface)) 100%);
+  --wizard-ring-color: var(--color-accent);
+  --wizard-ring-success: var(--color-status-active);
+  --wizard-ring-error: var(--color-status-error);
 
   /* Gradient text */
   --gradient-text-default: linear-gradient(135deg, var(--color-text-primary), var(--color-accent));
@@ -435,6 +452,7 @@ html.light {
   --sidebar-badge-glow-collapsed: 0 0 4px rgba(239, 68, 68, 0.3);
   --sidebar-hover-bg: rgba(0, 0, 0, 0.03);
   --sidebar-hover-bg-collapsed: rgba(0, 0, 0, 0.04);
+  --wizard-left-bg: linear-gradient(160deg, #f8f8fc 0%, #ffffff 50%, color-mix(in srgb, var(--color-accent) 3%, #ffffff) 100%);
   --chart-1: #4f46e5;
   --chart-2: #047857;
   --chart-3: #d97706;
