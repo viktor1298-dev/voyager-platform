@@ -5,6 +5,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion'
 
 interface ConstellationLoaderProps {
   label?: string
+  subtitle?: string
 }
 
 interface Dot {
@@ -29,7 +30,7 @@ function createDots(width: number, height: number): Dot[] {
   }))
 }
 
-export function ConstellationLoader({ label = 'Loading resources...' }: ConstellationLoaderProps) {
+export function ConstellationLoader({ label = 'Loading resources...', subtitle = 'Connecting to cluster' }: ConstellationLoaderProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const dotsRef = useRef<Dot[]>([])
@@ -164,7 +165,7 @@ export function ConstellationLoader({ label = 'Loading resources...' }: Constell
       <canvas ref={canvasRef} className="absolute inset-0" aria-hidden="true" />
       <div className="relative z-10 flex flex-col items-center gap-2">
         <span className="text-sm font-medium text-[var(--color-text-secondary)]">{label}</span>
-        <span className="text-xs text-[var(--color-text-dim)]">Connecting to cluster</span>
+        <span className="text-xs text-[var(--color-text-dim)]">{subtitle}</span>
       </div>
     </div>
   )

@@ -2,6 +2,7 @@
 
 import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
+import { ConstellationLoader } from '@/components/animations/ConstellationLoader'
 import { ClusterCard } from '@/components/dashboard/ClusterCard'
 import { DashboardFilterChips } from '@/components/dashboard/DashboardFilterChips'
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton'
@@ -177,6 +178,16 @@ function DashboardContent() {
       <AppLayout>
         <PageTransition>
           <DashboardSkeleton />
+        </PageTransition>
+      </AppLayout>
+    )
+  }
+
+  if (clusterList.length === 0) {
+    return (
+      <AppLayout>
+        <PageTransition>
+          <ConstellationLoader label="No clusters yet" subtitle="Add a cluster to get started" />
         </PageTransition>
       </AppLayout>
     )
