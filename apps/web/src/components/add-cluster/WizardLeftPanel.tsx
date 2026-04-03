@@ -15,6 +15,15 @@ import { WizardStepDots } from './WizardStepDots'
 import type { ProviderId, Environment } from './wizard-types'
 import { resolveProviderIconKey } from './wizard-types'
 
+// Short provider names for hero heading
+const PROVIDER_SHORT_LABELS: Record<string, string> = {
+  kubeconfig: 'Kubeconfig',
+  aws: 'AWS EKS',
+  azure: 'Azure AKS',
+  gke: 'Google GKE',
+  minikube: 'Minikube / Local',
+}
+
 // Full provider labels for the hero badge
 const PROVIDER_FULL_LABELS: Record<string, string> = {
   kubeconfig: 'Generic Kubeconfig',
@@ -141,7 +150,7 @@ function Step2Content({ provider }: { provider: string }) {
     <>
       <ProviderLogo provider={provider} size={48} layoutId="wizard-provider-logo" />
       <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mt-3">
-        {iconCfg ? provider.charAt(0).toUpperCase() + provider.slice(1) : 'Kubeconfig'}
+        {PROVIDER_SHORT_LABELS[provider] ?? 'Kubeconfig'}
       </h3>
       <span
         className="text-xs mt-2 px-3 py-1 rounded-full"
