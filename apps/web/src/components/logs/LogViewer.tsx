@@ -353,12 +353,13 @@ export function LogViewer({
             {virtualizer.getVirtualItems().map((virtualRow) => (
               <div
                 key={virtualRow.key}
+                ref={virtualizer.measureElement}
+                data-index={virtualRow.index}
                 style={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
                   right: 0,
-                  height: virtualRow.size,
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
