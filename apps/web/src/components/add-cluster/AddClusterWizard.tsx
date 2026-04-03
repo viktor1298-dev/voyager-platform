@@ -364,7 +364,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
     const connectionConfig = await buildConnectionConfig()
     onSubmit({
       name: finalName,
-      provider: (detectionResult?.provider as ProviderId) ?? provider,
+      provider,
       environment,
       endpoint: computedEndpoint,
       connectionConfig,
@@ -492,6 +492,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-4 mt-4">
           <button
+            data-testid={step === 1 ? 'wizard-cancel-btn' : 'wizard-back-btn'}
             aria-label={step === 1 ? 'Cancel wizard' : 'Go back to previous step'}
             type="button"
             onClick={step === 1 ? onCancel : () => setStep((s) => Math.max(1, s - 1))}
@@ -500,6 +501,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
             {step === 1 ? 'Cancel' : 'Back'}
           </button>
           <motion.button
+            data-testid={step === 4 ? 'wizard-submit-btn' : 'wizard-next-btn'}
             aria-label={step === 4 ? 'Add cluster' : 'Go to next step'}
             type="button"
             disabled={pending || !canGoNext}
