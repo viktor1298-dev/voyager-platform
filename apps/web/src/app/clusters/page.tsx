@@ -4,7 +4,10 @@ import { AppLayout } from '@/components/AppLayout'
 import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-import { AddClusterWizard, type AddClusterWizardPayload } from '@/components/AddClusterWizard'
+import {
+  AddClusterWizard,
+  type AddClusterWizardPayload,
+} from '@/components/add-cluster/AddClusterWizard'
 import { DataTable } from '@/components/DataTable'
 import { FilterBar, type FilterValue } from '@/components/FilterBar'
 import { QueryError } from '@/components/ErrorBoundary'
@@ -640,7 +643,7 @@ export default function ClustersPage() {
         )}
 
         {/* Add Cluster Modal */}
-        <Dialog open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Cluster">
+        <Dialog open={showAddModal} onClose={() => setShowAddModal(false)} size="xl">
           <AddClusterWizard
             pending={createCluster.isPending}
             onCancel={() => setShowAddModal(false)}
