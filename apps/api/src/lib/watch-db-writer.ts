@@ -5,7 +5,7 @@
  * Uses debounced periodic sync (not per-event writes) to avoid overwhelming the DB
  * during rolling deployments.
  */
-import { VersionApi } from '@kubernetes/client-node'
+import { CoreV1Api, VersionApi } from '@kubernetes/client-node'
 import type * as k8s from '@kubernetes/client-node'
 import { clusters, db, events, nodes } from '@voyager/db'
 import { and, eq, notInArray, sql } from 'drizzle-orm'
@@ -431,4 +431,135 @@ export function stopWatchDbWriter(): void {
   listeners.clear()
 
   log.info('Stopped')
+}
+
+// ── Startup Sync ─────────────────────────────────────────────
+// Proactively health-check ALL clusters on API boot so the clusters list
+// page shows correct data immediately — not only after someone visits each
+// cluster's detail page.
+
+export async function runStartupClusterSync(): Promise<void> {
+  const allClusters = await db.select({ id: clusters.id, name: clusters.name }).from(clusters)
+  if (allClusters.length === 0) return
+
+  log.info({ count: allClusters.length }, 'Starting proactive cluster sync')
+
+  const results = await Promise.allSettled(
+    allClusters.map(async (cluster) => {
+      try {
+        const kc = await clusterClientPool.getClient(cluster.id)
+        const coreApi = kc.makeApiClient(CoreV1Api)
+
+        // Fetch version, nodes, pods in parallel
+        const [versionInfo, nodesRes, podsRes] = await Promise.all([
+          kc.makeApiClient(VersionApi).getCode().catch(() => null),
+          coreApi.listNode().catch(() => null),
+          coreApi.listPodForAllNamespaces().catch(() => null),
+        ])
+
+        const totalNodes = nodesRes?.items.length ?? 0
+        const totalPods = podsRes?.items.length ?? 0
+        const runningPods = podsRes?.items.filter((p) => p.status?.phase === 'Running').length ?? 0
+        const healthStatus = deriveHealthStatus(totalNodes, totalPods, runningPods)
+        const version = versionInfo ? `v${versionInfo.major}.${versionInfo.minor}` : undefined
+        const now = new Date()
+
+        const updatePayload: Record<string, unknown> = {
+          healthStatus,
+          nodesCount: totalNodes,
+          lastHealthCheck: now,
+          lastConnectedAt: now,
+          status: 'active',
+        }
+        if (version) updatePayload.version = version
+
+        await db.update(clusters).set(updatePayload).where(eq(clusters.id, cluster.id))
+
+        // Also sync nodes to the nodes table so clusters.list subquery shows correct count
+        if (nodesRes && nodesRes.items.length > 0) {
+          const rawPods = podsRes?.items ?? []
+          const podCountByNode = new Map<string, number>()
+          for (const pod of rawPods) {
+            const nodeName = pod.spec?.nodeName
+            if (nodeName) podCountByNode.set(nodeName, (podCountByNode.get(nodeName) ?? 0) + 1)
+          }
+
+          const nodeValues = nodesRes.items.map((node) => {
+            const name = node.metadata?.name ?? 'unknown'
+            const conditions = node.status?.conditions ?? []
+            const readyCondition = conditions.find((c) => c.type === 'Ready')
+            const status = readyCondition?.status === 'True' ? 'Ready' : 'NotReady'
+            const labels = node.metadata?.labels ?? {}
+            const role =
+              labels['node-role.kubernetes.io/control-plane'] !== undefined
+                ? 'control-plane'
+                : 'worker'
+
+            return {
+              clusterId: cluster.id,
+              name,
+              status,
+              role,
+              cpuCapacity: node.status?.capacity?.cpu
+                ? Math.round(parseCpuToNano(node.status.capacity.cpu) / 1_000_000)
+                : null,
+              cpuAllocatable: node.status?.allocatable?.cpu
+                ? Math.round(parseCpuToNano(node.status.allocatable.cpu) / 1_000_000)
+                : null,
+              memoryCapacity: node.status?.capacity?.memory
+                ? parseMemToBytes(node.status.capacity.memory)
+                : null,
+              memoryAllocatable: node.status?.allocatable?.memory
+                ? parseMemToBytes(node.status.allocatable.memory)
+                : null,
+              podsCount: podCountByNode.get(name) ?? 0,
+              k8sVersion: node.status?.nodeInfo?.kubeletVersion ?? null,
+            }
+          })
+
+          await db
+            .insert(nodes)
+            .values(nodeValues)
+            .onConflictDoUpdate({
+              target: [nodes.clusterId, nodes.name],
+              set: {
+                status: sql`excluded.status`,
+                role: sql`excluded.role`,
+                cpuCapacity: sql`excluded.cpu_capacity`,
+                cpuAllocatable: sql`excluded.cpu_allocatable`,
+                memoryCapacity: sql`excluded.memory_capacity`,
+                memoryAllocatable: sql`excluded.memory_allocatable`,
+                podsCount: sql`excluded.pods_count`,
+                k8sVersion: sql`excluded.k8s_version`,
+              },
+            })
+
+          // Delete stale nodes no longer reported
+          const currentNodeNames = nodesRes.items.map((n) => n.metadata?.name ?? 'unknown')
+          await db
+            .delete(nodes)
+            .where(and(eq(nodes.clusterId, cluster.id), notInArray(nodes.name, currentNodeNames)))
+        }
+
+        log.info(
+          { clusterId: cluster.id, name: cluster.name, healthStatus, version, totalNodes },
+          'Startup sync complete',
+        )
+      } catch (err) {
+        // Mark cluster as unreachable if we can't connect at all
+        await db
+          .update(clusters)
+          .set({ healthStatus: 'unreachable', lastHealthCheck: new Date() })
+          .where(eq(clusters.id, cluster.id))
+        log.warn(
+          { clusterId: cluster.id, name: cluster.name, err: err instanceof Error ? err.message : err },
+          'Startup sync failed — cluster unreachable',
+        )
+      }
+    }),
+  )
+
+  const succeeded = results.filter((r) => r.status === 'fulfilled').length
+  const failed = results.filter((r) => r.status === 'rejected').length
+  log.info({ succeeded, failed, total: allClusters.length }, 'Startup cluster sync finished')
 }

@@ -31,7 +31,7 @@ import { ensureAdminUser } from './lib/ensure-admin-user.js'
 import { stopPresenceSweep } from './lib/presence.js'
 import { ensureViewerUser } from './lib/ensure-viewer-user.js'
 import { watchManager } from './lib/watch-manager.js'
-import { startWatchDbWriter, stopWatchDbWriter } from './lib/watch-db-writer.js'
+import { startWatchDbWriter, stopWatchDbWriter, runStartupClusterSync } from './lib/watch-db-writer.js'
 import { generateOpenApiSpec } from './lib/openapi.js'
 import { startFlagReloader, stopFlagReloader } from './lib/feature-flags.js'
 import { captureException, flushSentry, initSentry } from './lib/sentry.js'
@@ -415,6 +415,10 @@ const start = async () => {
 
     // Pre-warm cluster client pool in background (non-blocking)
     void clusterClientPool.warmUp()
+
+    // Proactive startup sync — health-check all clusters so the clusters page
+    // shows correct data immediately, not only after visiting each cluster's detail page.
+    void runStartupClusterSync()
 
     if (k8sEnabled) {
       startDeploySmokeTest()

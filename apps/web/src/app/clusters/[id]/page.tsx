@@ -254,6 +254,7 @@ export default function ClusterOverviewPage() {
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
 
+  const utils = trpc.useUtils()
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
 
@@ -388,9 +389,8 @@ export default function ClusterOverviewPage() {
       : 'unknown'
 
   const isUnreachable =
-    normalizedStatus === 'error' ||
-    normalizedStatus === 'unknown' ||
-    connectionState === 'disconnected'
+    connectionState === 'disconnected' &&
+    (normalizedStatus === 'error' || normalizedStatus === 'unknown')
   const lastContactAgo = cluster.lastConnectedAt ? timeAgo(cluster.lastConnectedAt) : null
 
   return (
@@ -412,7 +412,10 @@ export default function ClusterOverviewPage() {
           <button
             type="button"
             onClick={() => {
-              dbCluster.refetch()
+              utils.health.check
+                .fetch({ clusterId: resolvedId })
+                .then(() => dbCluster.refetch())
+                .catch(() => dbCluster.refetch())
             }}
             className="shrink-0 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-status-warning)]/30 text-[var(--color-status-warning)] hover:bg-[var(--color-status-warning)]/10 transition-colors cursor-pointer"
           >

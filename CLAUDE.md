@@ -125,6 +125,8 @@ pnpm db:seed                  # Optional: seed mock clusters/nodes/events
 
 8. **Before any UI/animation change, read `docs/DESIGN.md`** — It is the animation and interaction design source of truth. The design style is "Confident & Expressive" (Raycast/Arc Style B).
 
+9. **NEVER commit code changes directly to main** — All code changes MUST happen in a git worktree branch. Read-only operations (exploration, research, reading files) can happen on main. See "Git Worktree Workflow" section below.
+
 ## Architecture
 
 ### Data Flow
@@ -169,17 +171,93 @@ Configuration is split between shared (API + Web) and backend-only:
 
 **Rule:** Do NOT add new hardcoded values to routers or jobs. Add constants to the appropriate config file and import from there.
 
-## Branch Policy
+## Git Worktree Workflow
 
-- **Main branch** is single source of truth — PRs required, force push blocked
-- **v1.0** tagged and complete; post-v1.0 feature milestones built on top
+> **Why worktrees?** Multiple Claude Code sessions may run simultaneously on this project. Without isolation, parallel sessions editing the same files on `main` cause conflicts, lost work, and race conditions. Every code change MUST go through a worktree branch.
+
+### Core Rules
+
+1. **All code changes happen in worktrees, never on main** — `main` is read-only for Claude Code sessions. Only merge commits land on main.
+2. **One task = one worktree** — Never mix unrelated changes in a single worktree. Each feature, bugfix, or chore gets its own.
+3. **Read-only on main is fine** — File reads, exploration, `git log`, research, and planning do NOT require a worktree. Only editing/writing files does.
+
+### Worktree Lifecycle
+
+#### Step 1: Create Worktree
+```bash
+# Branch name follows conventional commits: feat/, fix/, chore/, refactor/
+git worktree add .worktrees/<short-name> -b <type>/<short-description>
+# Example:
+git worktree add .worktrees/add-rbac-page -b feat/add-rbac-page
+```
+
+#### Step 2: Set Up Environment
+```bash
+cd .worktrees/<short-name>
+cp ../../.env .env                    # Copy env vars from main worktree
+pnpm install --frozen-lockfile        # Install dependencies (NOT shared between worktrees)
+```
+
+#### Step 3: Work & Commit
+- All edits happen inside `.worktrees/<short-name>/`
+- Commit frequently with conventional commit messages
+- Do NOT touch files in the main worktree while a worktree is active
+
+#### Step 4: Validate Before Merge
+```bash
+cd .worktrees/<short-name>
+pnpm typecheck                        # Must pass
+pnpm lint                             # Must pass
+pnpm build                            # Must pass (optional for small fixes)
+```
+
+#### Step 5: Merge to Main
+```bash
+cd /path/to/main/worktree             # Back to main checkout
+git merge <type>/<short-description>  # Fast-forward or merge commit
+```
+
+#### Step 6: Cleanup (MANDATORY)
+```bash
+git worktree remove .worktrees/<short-name> --force
+git branch -d <type>/<short-description>    # Delete local branch
+git worktree prune                           # Clean stale metadata
+```
+
+### Branch Naming Convention
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Feature | `feat/<short-name>` | `feat/add-rbac-page` |
+| Bug fix | `fix/<short-name>` | `fix/sse-reconnect` |
+| Chore | `chore/<short-name>` | `chore/update-deps` |
+| Refactor | `refactor/<short-name>` | `refactor/cluster-store` |
+
+### Multi-Session Safety
+
+- Each session creates its own worktree with a unique branch name
+- Parallel sessions work on different branches — no conflicts
+- Only one session should merge to main at a time (coordinate via branch name visibility)
+- If main has advanced since branching: `git rebase main` in the worktree before merging
+
+### Session Startup Hygiene
+
+At the start of each session, clean up any orphaned worktrees:
+```bash
+git worktree prune
+```
+
+### Worktree Gotchas
+
+- **`node_modules/` is NOT shared** — every worktree needs its own `pnpm install --frozen-lockfile`
+- **`.env` is NOT shared** — copy from main worktree root: `cp ../../.env .env`
+- **`pnpm install` from worktrees** — use `--frozen-lockfile` flag, never plain `pnpm install`
+- **Docker services are shared** — Postgres/Redis run on host, all worktrees share them
+- **`.planning/` merge conflicts** — use `git checkout --theirs .planning/` when merging GSD state files
 
 ## Known Gotchas (Cross-Cutting)
 
 > **Domain-specific gotchas live in sub-file CLAUDE.md files:** `apps/api/`, `apps/web/`, `packages/db/`, `charts/voyager/`
-
-### `pnpm install` Fails in Worktrees
-Run `pnpm install --frozen-lockfile` from repo root, not from a git worktree. Node modules may be empty after merge otherwise.
 
 ### Metrics Time Ranges — Grafana Standard Only
 Exactly 10 ranges: `5m`, `15m`, `30m`, `1h`, `3h`, `6h`, `12h`, `24h`, `2d`, `7d`. Sub-minute ranges were removed (60s collector interval makes them empty). `custom` range falls back to `24h`. **Never re-add sub-minute ranges.**

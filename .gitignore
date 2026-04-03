@@ -12,3 +12,4 @@ test-results/
 playwright/.auth/
 charts/voyager/values-local.yaml
 .superpowers/
+.worktrees/

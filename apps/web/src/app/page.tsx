@@ -109,7 +109,12 @@ function DashboardContent() {
         name: c.name,
         provider: typeof c.provider === 'string' ? c.provider : 'unknown',
         version: typeof c.version === 'string' ? c.version : null,
-        status: typeof c.status === 'string' ? c.status : null,
+        status:
+          typeof c.healthStatus === 'string'
+            ? c.healthStatus
+            : typeof c.status === 'string'
+              ? c.status
+              : null,
         nodeCount: c.nodeCount,
         runningPods: 0, // DB-only clusters don't have live pod counts
         totalPods: 0,

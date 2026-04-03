@@ -65,7 +65,7 @@ If ANY Playwright MCP tool returns **"Browser is already in use"**:
 
 If `browser_close` also fails, inform the user and suggest `/mcp` restart.
 
-## The Three Laws
+## The Four Laws
 
 1. **Every test requires a user action.** Navigate to a page, click something, verify the result.
    A page that loads is NOT tested. A page where you clicked an item and saw the expanded content
@@ -78,6 +78,59 @@ If `browser_close` also fails, inform the user and suggest `/mcp` restart.
 3. **Every claim of "working" requires evidence of change.** For live data: delete a resource,
    verify the UI updates. For actions: click a button, verify the result. "It renders" is not
    evidence of "it works".
+
+4. **Every entity on the page must be checked.** If a page shows 4 clusters, ALL 4 must be
+   validated — not just 1. Checking 1 healthy item and ignoring 3 broken ones is the worst
+   kind of false PASS. Extract data for EVERY row/card on the page and report ALL of them.
+   A single unchecked item can hide the exact bug you were supposed to find.
+
+## Fix Validation Protocol
+
+When QA is run to validate a FIX (not general QA), follow this additional protocol BEFORE
+the standard test protocol:
+
+1. **Identify what was broken.** Re-read the user's original bug report. List every specific
+   symptom they described (e.g., "clusters show unreachable", "no nodes", "no version").
+
+2. **Test the broken scenarios FIRST.** Navigate to the EXACT pages/items that were failing.
+   Do NOT start with a working item. If the user said "every new cluster shows Unknown",
+   test ALL new clusters, not just one.
+
+3. **Test ALL affected entities, not a sample.** If the bug affected 4 clusters, test all 4.
+   If 3 were broken and 1 was working, you MUST verify that all 3 previously-broken ones
+   are now fixed AND the 1 working one didn't regress.
+
+4. **Report per-entity results.** The report MUST include a row for EACH entity showing its
+   before/after state. Never aggregate ("most clusters work") — list each one by name.
+
+5. **Declare FAIL if ANY entity still shows the original bug.** A fix that works for 1 out
+   of 4 items is not a fix. It's a partial fix at best, and the verdict is FAIL.
+
+## Multi-Entity Page Protocol (Clusters, Nodes, Deployments, etc.)
+
+When a page shows a LIST of entities (cluster cards, node rows, pod rows), you MUST:
+
+1. **Extract ALL entities from the page.** Use `browser_evaluate` to get data for EVERY
+   row/card, not just the first one. Return an array of all items with their key fields.
+
+2. **Report ALL entities in a table.** The QA report must include a row for each entity:
+   ```
+   | Entity Name | Health | Nodes | Version | Status | Issues |
+   |-------------|--------|-------|---------|--------|--------|
+   | cluster-1   | Healthy| 3     | v1.29   | OK     | —      |
+   | cluster-2   | Unknown| 0     | —       | FAIL   | No nodes, no version |
+   | cluster-3   | Unknown| 0     | —       | FAIL   | No nodes, no version |
+   ```
+
+3. **Cross-reference EACH entity with its source of truth.** For clusters: try connecting
+   to each cluster via kubectl/API and compare. For pods: compare each pod's status with
+   kubectl output.
+
+4. **Flag partial fixes.** If some entities pass and others don't, the verdict is FAIL with
+   a clear list of what still needs fixing. Never report "PASS" when ANY entity fails.
+
+5. **Click into EACH entity that shows problems.** If a cluster shows "0 nodes" or "Unknown",
+   navigate to that cluster's detail page to see if the issue persists there too.
 
 ## Test Protocol Per Page/Tab
 
@@ -329,3 +382,8 @@ doing any of these, STOP and redo the test properly.
 | "Browser is stuck, skipping browser tests" | Skips the most important QA tests | Follow browser recovery protocol (close + retry) |
 | Killing Playwright MCP process | Permanently breaks MCP for the entire session | Use browser_close, never pkill/kill the process |
 | Using `networkidle` in browser_run_code | SSE keeps connections open — 30s timeout every time | Use browser_snapshot (implicit wait) or waitForSelector |
+| Testing 1 entity out of N and declaring PASS | 3 broken items were ignored. 1/4 passing ≠ PASS | Extract and report ALL entities on the page. FAIL if ANY has issues |
+| "0 nodes is expected — watches haven't started" | Rationalized away the exact bug the user reported | If the user said "no nodes showing", 0 nodes = FAIL, full stop |
+| Checking only the healthy cluster | Cherry-picked the one success, ignored all failures | Test broken items FIRST, healthy items second |
+| "Genuinely unreachable" without verifying | Assumed a cluster was unreachable without testing it | Actually connect to it (kubectl/API) before classifying it |
+| Declaring PASS when the user's original symptoms persist | The fix was supposed to fix ALL clusters, not just one | Re-read the bug report. Test every symptom they listed |

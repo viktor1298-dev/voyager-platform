@@ -69,7 +69,7 @@ export const WATCH_RECONNECT_MAX_MS = 30_000
 export const WATCH_RECONNECT_JITTER_RATIO = 0.1
 
 /** How often the watch-db-writer syncs dirty resources to PostgreSQL (ms) */
-export const WATCH_DB_SYNC_INTERVAL_MS = 60_000
+export const WATCH_DB_SYNC_INTERVAL_MS = 15_000
 
 /** Timeout for watch heartbeat — if no data in this window, reconnect (ms) */
 export const WATCH_HEARTBEAT_TIMEOUT_MS = 90_000
