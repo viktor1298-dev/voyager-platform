@@ -1,5 +1,29 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path' 2>/dev/null); case \"$FILE\" in */.env|*/.env.local|*/.env.production|*/.env.development) echo 'BLOCKED: Refusing to edit .env file — may contain secrets' >&2; exit 1 ;; esac",
+            "timeout": 5,
+            "statusMessage": "Checking file safety..."
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path' 2>/dev/null); case \"$FILE\" in */pnpm-lock.yaml|*/package-lock.json|*/yarn.lock) echo 'BLOCKED: Lock files must not be edited directly — use pnpm install' >&2; exit 1 ;; esac",
+            "timeout": 5,
+            "statusMessage": "Checking lock file safety..."
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
@@ -9,6 +33,28 @@
             "command": "FILE=$(jq -r '.tool_input.file_path // .tool_response.filePath' 2>/dev/null); [[ \"$FILE\" =~ \\.(ts|tsx|js|jsx|json)$ ]] && npx @biomejs/biome format --write \"$FILE\" 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Formatting with Biome..."
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path // .tool_response.filePath' 2>/dev/null); [[ \"$FILE\" =~ \\.(ts|tsx|js|jsx)$ ]] && npx @biomejs/biome lint --write \"$FILE\" 2>&1 | tail -5 || true",
+            "timeout": 15,
+            "statusMessage": "Linting with Biome..."
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path // .tool_response.filePath' 2>/dev/null); case \"$FILE\" in */packages/types/*|*/packages/config/*|*/packages/db/*) pnpm typecheck 2>&1 | tail -10 ;; esac; exit 0",
+            "timeout": 30,
+            "statusMessage": "Type-checking shared packages..."
           }
         ]
       }

@@ -33,7 +33,13 @@ export function DeleteConfirmDialog({
 
   return (
     <Dialog open={open} onClose={handleClose} title={`Delete ${resourceType}`}>
-      <div className="space-y-4">
+      <form
+        className="space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (isMatch && !isDeleting) onConfirm()
+        }}
+      >
         <p className="text-sm text-[var(--color-text-secondary)]">
           This action cannot be undone. This will permanently delete the {resourceType}{' '}
           <strong className="text-[var(--color-text-primary)]">{resourceName}</strong> from
@@ -69,8 +75,7 @@ export function DeleteConfirmDialog({
             Keep {resourceType}
           </button>
           <button
-            type="button"
-            onClick={onConfirm}
+            type="submit"
             disabled={!isMatch || isDeleting}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-destructive hover:bg-destructive/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
@@ -78,7 +83,7 @@ export function DeleteConfirmDialog({
             {resourceType}
           </button>
         </div>
-      </div>
+      </form>
     </Dialog>
   )
 }

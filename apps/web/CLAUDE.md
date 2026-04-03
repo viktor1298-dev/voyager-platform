@@ -113,7 +113,7 @@ src/
 **Sidebar navigation (6 items):** `/` Dashboard, `/clusters`, `/alerts`, `/events`, `/logs`, `/settings`
 
 ```
-# Cluster detail (29 tabs via GroupedTabBar, 7 groups)
+# Cluster detail (24 tabs via GroupedTabBar, 6 groups)
 /clusters/[id]                  → Overview (default, includes topology map)
 /clusters/[id]/nodes|pods|deployments|services|namespaces|events|logs|metrics|autoscaling
 /clusters/[id]/ingresses|statefulsets|daemonsets|jobs|cronjobs|hpa|configmaps|secrets|pvcs
@@ -194,8 +194,8 @@ Short ranges (≤15m) use SSE from K8s metrics-server. Historical ranges (≥30m
 ### React Flow — Stable `nodeTypes` Reference Required
 `@xyflow/react` re-renders entire graph when `nodeTypes` reference changes. Define outside component or `useMemo`. Failing = infinite re-renders.
 
-### GroupedTabBar — 7 Groups
-6 groups: Workloads (6 tabs), Networking (3), Config (4), Storage (1), Scaling (2), Cluster Ops (3). Config in `cluster-tabs-config.ts`. Active child tab shows **child's label** (e.g., "Helm") not group label.
+### GroupedTabBar — 6 Groups
+Workloads (6 tabs), Networking (3), Config (4), Storage (1), Scaling (2), Cluster Ops (3). Config in `cluster-tabs-config.ts`. Active child tab shows **child's label** (e.g., "Helm") not group label.
 
 ### TerminalDrawer Must Be Mounted in providers.tsx
 `<TerminalDrawer />` must be inside `<TerminalProvider>` in `providers.tsx`. It renders as fixed-position outside page tree. If missing, clicking Exec does nothing — no error, no drawer.

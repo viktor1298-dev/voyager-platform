@@ -15,7 +15,13 @@ export function ScaleInput({ currentReplicas, onScale, isScaling }: ScaleInputPr
   const isValid = value >= 0 && value <= 100
 
   return (
-    <div className="flex items-center gap-2">
+    <form
+      className="flex items-center gap-2"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (hasChanged && isValid && !isScaling) onScale(value)
+      }}
+    >
       <span className="text-xs text-[var(--color-text-muted)] whitespace-nowrap">
         Current: {currentReplicas}
       </span>
@@ -37,14 +43,13 @@ export function ScaleInput({ currentReplicas, onScale, isScaling }: ScaleInputPr
       />
 
       <button
-        type="button"
-        onClick={() => onScale(value)}
+        type="submit"
         disabled={!hasChanged || !isValid || isScaling}
         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         {isScaling && <Loader2 size={12} className="animate-spin" />}
         Update Replicas
       </button>
-    </div>
+    </form>
   )
 }

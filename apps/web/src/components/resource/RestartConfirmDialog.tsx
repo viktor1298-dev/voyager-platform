@@ -28,7 +28,13 @@ export function RestartConfirmDialog({
 
   return (
     <Dialog open={open} onClose={handleClose} title={`Restart ${resourceType}`}>
-      <div className="space-y-4">
+      <form
+        className="space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (!isRestarting) onConfirm()
+        }}
+      >
         <p className="text-sm text-[var(--color-text-secondary)]">
           This will trigger a rolling restart of{' '}
           <strong className="text-[var(--color-text-primary)]">{podCount} pods</strong> managed by{' '}
@@ -44,8 +50,7 @@ export function RestartConfirmDialog({
             No, don&apos;t restart
           </button>
           <button
-            type="button"
-            onClick={onConfirm}
+            type="submit"
             disabled={isRestarting}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
@@ -53,7 +58,7 @@ export function RestartConfirmDialog({
             Restart
           </button>
         </div>
-      </div>
+      </form>
     </Dialog>
   )
 }
