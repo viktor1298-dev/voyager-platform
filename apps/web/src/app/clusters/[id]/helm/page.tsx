@@ -3,7 +3,12 @@
 import { Package } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
-import { HelmReleaseDetail } from '@/components/helm/HelmReleaseDetail'
+import dynamic from 'next/dynamic'
+const HelmReleaseDetail = dynamic(
+  () =>
+    import('@/components/helm/HelmReleaseDetail').then((m) => ({ default: m.HelmReleaseDetail })),
+  { ssr: false },
+)
 import { ResourcePageScaffold } from '@/components/resource'
 import { useHelmReleases, type HelmRelease } from '@/hooks/useHelmReleases'
 import { useSnapshotsReady } from '@/hooks/useResources'

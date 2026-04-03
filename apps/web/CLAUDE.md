@@ -94,7 +94,7 @@ src/
 - **Navigation:** `router.push()` for cluster links (not `<a>` tags) — tests must use `page.click()` + `waitForURL()`
 - **Chart colors:** CSS custom properties (`--chart-1..5`, `--color-chart-*`) from globals.css — never hardcode
 - **View Transitions:** Enabled via `next.config.ts` experimental flag + CSS `@view-transition`
-- **Package optimization:** `optimizePackageImports` for lucide-react, recharts, @iconify/react, @xyflow/react
+- **Package optimization:** `optimizePackageImports` for lucide-react, recharts, @xyflow/react
 - **QueryClient:** Global `staleTime: 30s` to prevent unnecessary refetches
 - **Polling intervals:** Use `SYNC_INTERVAL_MS` (30s) from `config/constants.ts` for staleTime/refetchInterval. Use `DB_CLUSTER_REFETCH_MS` / `HEALTH_STATUS_REFETCH_MS` (60s) from `lib/cluster-constants.ts` for slower-polling data. **Never hardcode 30000/60000 — import the constant.**
 - **K8s units:** Use `parseCpuMillicores()` / `parseMemoryMi()` from `lib/k8s-units.ts` — never define local copies
