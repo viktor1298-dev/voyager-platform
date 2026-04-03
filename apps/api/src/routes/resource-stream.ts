@@ -193,8 +193,32 @@ export async function handleResourceStream(
     }
   }
 
-  // 9. Listen on watch-event:<clusterId> — immediate write (no batching)
+  // 9. Listen on watch-event:<clusterId> — immediate write for most types,
+  //    500ms debounce for 'events' to reduce SSE flooding during deployments (A3)
+  const EVENTS_DEBOUNCE_MS = 500
+  const eventsBuffer: WatchEvent[] = []
+  let eventsDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
+  function flushEventsBuffer(): void {
+    if (eventsBuffer.length === 0) return
+    const payload: WatchEventBatch = {
+      clusterId,
+      events: eventsBuffer.splice(0),
+      timestamp: new Date().toISOString(),
+    }
+    writeEventWithId('watch', JSON.stringify(payload))
+  }
+
   const onWatchEvent = (event: WatchEvent): void => {
+    if (event.resourceType === 'events') {
+      // Buffer K8s events and flush after 500ms of inactivity
+      eventsBuffer.push(event)
+      if (eventsDebounceTimer) clearTimeout(eventsDebounceTimer)
+      eventsDebounceTimer = setTimeout(flushEventsBuffer, EVENTS_DEBOUNCE_MS)
+      return
+    }
+
+    // All other resource types: immediate delivery (no batching)
     const payload: WatchEventBatch = {
       clusterId,
       events: [event],
@@ -223,6 +247,9 @@ export async function handleResourceStream(
   // 13. Cleanup on disconnect
   request.raw.on('close', () => {
     clearInterval(heartbeat)
+    // Clean up events debounce timer and discard buffered events (A3)
+    if (eventsDebounceTimer) clearTimeout(eventsDebounceTimer)
+    eventsBuffer.length = 0
     voyagerEmitter.off(`watch-event:${clusterId}`, onWatchEvent)
     voyagerEmitter.off(`watch-status:${clusterId}`, onWatchStatus)
     watchManager.unsubscribe(clusterId)
