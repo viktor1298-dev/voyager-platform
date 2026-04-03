@@ -21,7 +21,7 @@ export function WizardProviderTiles({ provider, onSelect }: WizardProviderTilesP
         const isSelected = provider === p.id
         const iconKey = resolveProviderIconKey(p.id)
         const iconConfig = PROVIDER_ICONS[iconKey]
-        const brandColor = iconConfig?.color ?? '#9CA3AF'
+        const brandColor = iconConfig?.color ?? PROVIDER_ICONS.kubeconfig.color
 
         return (
           <button
@@ -64,7 +64,7 @@ export function WizardProviderTiles({ provider, onSelect }: WizardProviderTilesP
               />
             )}
 
-            <ProviderLogo provider={p.id} size={24} />
+            <ProviderLogo provider={p.id} size={40} />
 
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">{p.label}</p>
@@ -91,6 +91,7 @@ export function WizardProviderTiles({ provider, onSelect }: WizardProviderTilesP
                     width={12}
                     height={12}
                     viewBox="0 0 24 24"
+                    className="text-white"
                     initial={reduced ? undefined : 'hidden'}
                     animate={reduced ? undefined : 'visible'}
                     exit={reduced ? undefined : 'exit'}
@@ -99,7 +100,7 @@ export function WizardProviderTiles({ provider, onSelect }: WizardProviderTilesP
                     <path
                       d="M5 13l4 4L19 7"
                       fill="none"
-                      stroke="#fff"
+                      stroke="currentColor"
                       strokeWidth={3}
                       strokeLinecap="round"
                       strokeLinejoin="round"

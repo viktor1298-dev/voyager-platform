@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
-import { Check, Circle, Loader2 } from 'lucide-react'
+import { Circle, Loader2 } from 'lucide-react'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { listContainerVariants, listItemVariants, DURATION } from '@/lib/animation-constants'
 import { SuccessCheck } from '@/components/animations/SuccessCheck'

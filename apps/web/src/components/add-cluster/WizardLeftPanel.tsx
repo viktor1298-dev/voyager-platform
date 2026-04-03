@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import {
+  DURATION,
   fadeVariants,
   slideUpVariants,
   listContainerVariants,
@@ -148,7 +149,7 @@ function Step2Content({ provider }: { provider: string }) {
   const iconCfg = PROVIDER_ICONS[iconKey]
   return (
     <>
-      <ProviderLogo provider={provider} size={48} layoutId="wizard-provider-logo" />
+      <ProviderLogo provider={provider} size={80} layoutId="wizard-provider-logo" />
       <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mt-3">
         {PROVIDER_SHORT_LABELS[provider] ?? 'Kubeconfig'}
       </h3>
@@ -197,7 +198,7 @@ function Step3Content({
                 reduced || isSuccess || isError
                   ? 'none'
                   : `wizard-ring-pulse 2s ease-in-out ${i * 0.4}s infinite`,
-              transition: 'border-color 0.3s ease',
+              transition: `border-color ${DURATION.slow}s ease`,
             }}
           />
         ))}
@@ -207,7 +208,7 @@ function Step3Content({
             inset: '42px',
             backgroundColor: `color-mix(in srgb, ${ringColor} 12%, transparent)`,
             border: `2px solid color-mix(in srgb, ${ringColor} 30%, transparent)`,
-            transition: 'all 0.3s ease',
+            transition: `all ${DURATION.slow}s ease`,
           }}
         >
           {isSuccess ? (

@@ -395,7 +395,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
             type="button"
             onClick={onCancel}
             aria-label="Close dialog"
-            className="flex items-center justify-center min-h-[44px] min-w-[44px] -m-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
+            className="flex items-center justify-center min-h-[44px] min-w-[44px] -m-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-card-hover)] transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
@@ -495,7 +495,7 @@ export function AddClusterWizard({ pending, onCancel, onSubmit }: AddClusterWiza
             aria-label={step === 1 ? 'Cancel wizard' : 'Go back to previous step'}
             type="button"
             onClick={step === 1 ? onCancel : () => setStep((s) => Math.max(1, s - 1))}
-            className="px-4 py-2 text-sm font-medium rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
+            className="px-4 py-2 text-sm font-medium rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card-hover)] transition-colors cursor-pointer"
           >
             {step === 1 ? 'Cancel' : 'Back'}
           </button>

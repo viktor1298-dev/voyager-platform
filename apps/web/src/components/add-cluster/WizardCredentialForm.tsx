@@ -210,10 +210,14 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
             onError={onUploadError}
           />
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
-              Or paste kubeconfig text <span className="text-red-400">*</span>
+            <label
+              htmlFor="wizard-kube-text"
+              className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+            >
+              Or paste kubeconfig text <span className="text-[var(--color-status-error)]">*</span>
             </label>
             <textarea
+              id="wizard-kube-text"
               rows={6}
               value={kubeText}
               onChange={(e) => onKubeText(e.target.value)}
@@ -223,7 +227,7 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
               className={inputClass}
             />
             {submitAttempted && !kubeFile && !kubeText.trim() && (
-              <p className="text-xs text-red-400 mt-1">
+              <p className="text-xs text-[var(--color-status-error)] mt-1">
                 Upload a kubeconfig file or paste the YAML content
               </p>
             )}
@@ -236,8 +240,8 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
         <div
           className="flex items-center gap-3 rounded-lg p-3 border text-sm"
           style={{
-            backgroundColor: `color-mix(in srgb, ${PROVIDER_ICONS[detectionResult.provider]?.color ?? '#9CA3AF'} 8%, transparent)`,
-            borderColor: `color-mix(in srgb, ${PROVIDER_ICONS[detectionResult.provider]?.color ?? '#9CA3AF'} 20%, transparent)`,
+            backgroundColor: `color-mix(in srgb, ${PROVIDER_ICONS[detectionResult.provider]?.color ?? PROVIDER_ICONS.kubeconfig.color} 8%, transparent)`,
+            borderColor: `color-mix(in srgb, ${PROVIDER_ICONS[detectionResult.provider]?.color ?? PROVIDER_ICONS.kubeconfig.color} 20%, transparent)`,
           }}
         >
           <ProviderLogo provider={detectionResult.provider} size={24} />
@@ -263,10 +267,14 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
       {provider === 'aws' && (
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
-              Access Key ID <span className="text-red-400">*</span>
+            <label
+              htmlFor="wizard-aws-access-key"
+              className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+            >
+              Access Key ID <span className="text-[var(--color-status-error)]">*</span>
             </label>
             <input
+              id="wizard-aws-access-key"
               value={awsAccessKey}
               onChange={(e) => onAwsAccessKey(e.target.value)}
               onFocus={applyFocusGlow}
@@ -278,14 +286,20 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
               className={inputClass}
             />
             {(touched.awsAccessKey || submitAttempted) && !awsAccessKey.trim() && (
-              <p className="text-xs text-red-400 mt-1">Access Key ID is required</p>
+              <p className="text-xs text-[var(--color-status-error)] mt-1">
+                Access Key ID is required
+              </p>
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
-              Secret Access Key <span className="text-red-400">*</span>
+            <label
+              htmlFor="wizard-aws-secret-key"
+              className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+            >
+              Secret Access Key <span className="text-[var(--color-status-error)]">*</span>
             </label>
             <input
+              id="wizard-aws-secret-key"
               type="password"
               value={awsSecretKey}
               onChange={(e) => onAwsSecretKey(e.target.value)}
@@ -298,14 +312,20 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
               className={inputClass}
             />
             {(touched.awsSecretKey || submitAttempted) && !awsSecretKey.trim() && (
-              <p className="text-xs text-red-400 mt-1">Secret Access Key is required</p>
+              <p className="text-xs text-[var(--color-status-error)] mt-1">
+                Secret Access Key is required
+              </p>
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
-              Region <span className="text-red-400">*</span>
+            <label
+              htmlFor="wizard-aws-region"
+              className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+            >
+              Region <span className="text-[var(--color-status-error)]">*</span>
             </label>
             <input
+              id="wizard-aws-region"
               value={awsRegion}
               onChange={(e) => onAwsRegion(e.target.value)}
               onFocus={applyFocusGlow}
@@ -317,14 +337,18 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
               className={inputClass}
             />
             {(touched.awsRegion || submitAttempted) && !awsRegion.trim() && (
-              <p className="text-xs text-red-400 mt-1">Region is required</p>
+              <p className="text-xs text-[var(--color-status-error)] mt-1">Region is required</p>
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
+            <label
+              htmlFor="wizard-aws-endpoint"
+              className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+            >
               Endpoint
             </label>
             <input
+              id="wizard-aws-endpoint"
               value={awsEndpoint}
               onChange={(e) => onAwsEndpoint(e.target.value)}
               onFocus={applyFocusGlow}
@@ -340,10 +364,14 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
       {provider === 'azure' && (
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
-              Subscription ID <span className="text-red-400">*</span>
+            <label
+              htmlFor="wizard-azure-subscription"
+              className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+            >
+              Subscription ID <span className="text-[var(--color-status-error)]">*</span>
             </label>
             <input
+              id="wizard-azure-subscription"
               value={azureSubscriptionId}
               onChange={(e) => onAzureSubscriptionId(e.target.value)}
               onFocus={applyFocusGlow}
@@ -355,14 +383,20 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
               className={inputClass}
             />
             {(touched.azureSubscriptionId || submitAttempted) && !azureSubscriptionId.trim() && (
-              <p className="text-xs text-red-400 mt-1">Subscription ID is required</p>
+              <p className="text-xs text-[var(--color-status-error)] mt-1">
+                Subscription ID is required
+              </p>
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
-              Resource Group <span className="text-red-400">*</span>
+            <label
+              htmlFor="wizard-azure-resource-group"
+              className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+            >
+              Resource Group <span className="text-[var(--color-status-error)]">*</span>
             </label>
             <input
+              id="wizard-azure-resource-group"
               value={azureResourceGroup}
               onChange={(e) => onAzureResourceGroup(e.target.value)}
               onFocus={applyFocusGlow}
@@ -374,14 +408,20 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
               className={inputClass}
             />
             {(touched.azureResourceGroup || submitAttempted) && !azureResourceGroup.trim() && (
-              <p className="text-xs text-red-400 mt-1">Resource Group is required</p>
+              <p className="text-xs text-[var(--color-status-error)] mt-1">
+                Resource Group is required
+              </p>
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
-              Cluster Name <span className="text-red-400">*</span>
+            <label
+              htmlFor="wizard-azure-cluster-name"
+              className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+            >
+              Cluster Name <span className="text-[var(--color-status-error)]">*</span>
             </label>
             <input
+              id="wizard-azure-cluster-name"
               value={azureClusterName}
               onChange={(e) => onAzureClusterName(e.target.value)}
               onFocus={applyFocusGlow}
@@ -393,7 +433,9 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
               className={inputClass}
             />
             {(touched.azureClusterName || submitAttempted) && !azureClusterName.trim() && (
-              <p className="text-xs text-red-400 mt-1">Cluster Name is required</p>
+              <p className="text-xs text-[var(--color-status-error)] mt-1">
+                Cluster Name is required
+              </p>
             )}
           </div>
         </div>
@@ -403,10 +445,14 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
       {provider === 'gke' && (
         <div className="space-y-3">
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
-              Service Account JSON <span className="text-red-400">*</span>
+            <label
+              htmlFor="wizard-gke-service-account"
+              className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+            >
+              Service Account JSON <span className="text-[var(--color-status-error)]">*</span>
             </label>
             <textarea
+              id="wizard-gke-service-account"
               rows={6}
               value={gkeServiceAccountJson}
               onChange={(e) => onGkeServiceAccountJson(e.target.value)}
@@ -420,14 +466,20 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
             />
             {(touched.gkeServiceAccountJson || submitAttempted) &&
               !gkeServiceAccountJson.trim() && (
-                <p className="text-xs text-red-400 mt-1">Service Account JSON is required</p>
+                <p className="text-xs text-[var(--color-status-error)] mt-1">
+                  Service Account JSON is required
+                </p>
               )}
           </div>
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
+            <label
+              htmlFor="wizard-gke-endpoint"
+              className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+            >
               Endpoint
             </label>
             <input
+              id="wizard-gke-endpoint"
               value={gkeEndpoint}
               onChange={(e) => onGkeEndpoint(e.target.value)}
               onFocus={applyFocusGlow}
@@ -461,10 +513,14 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
             onError={onUploadError}
           />
           <div>
-            <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
-              Endpoint <span className="text-red-400">*</span>
+            <label
+              htmlFor="wizard-minikube-endpoint"
+              className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+            >
+              Endpoint <span className="text-[var(--color-status-error)]">*</span>
             </label>
             <input
+              id="wizard-minikube-endpoint"
               value={minikubeEndpoint}
               onChange={(e) => onMinikubeEndpoint(e.target.value)}
               onFocus={applyFocusGlow}
@@ -476,18 +532,22 @@ export function WizardCredentialForm(props: WizardCredentialFormProps) {
               className={inputClass}
             />
             {(touched.minikubeEndpoint || submitAttempted) && !minikubeEndpoint.trim() && (
-              <p className="text-xs text-red-400 mt-1">Endpoint URL is required</p>
+              <p className="text-xs text-[var(--color-status-error)] mt-1">
+                Endpoint URL is required
+              </p>
             )}
           </div>
         </div>
       )}
 
       {/* ── Upload error ── */}
-      {uploadError && <p className="text-xs text-red-400">{uploadError}</p>}
+      {uploadError && <p className="text-xs text-[var(--color-status-error)]">{uploadError}</p>}
 
       {/* ── Validation hint ── */}
       {!step2Valid && !uploadError && (
-        <p className="text-xs text-red-400">Fill the required credential fields to continue.</p>
+        <p className="text-xs text-[var(--color-status-error)]">
+          Fill the required credential fields to continue.
+        </p>
       )}
     </div>
   )

@@ -73,10 +73,14 @@ export function WizardReview({
       {/* Environment + Name form */}
       <div className="grid gap-3.5 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
+          <label
+            htmlFor="wizard-environment"
+            className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+          >
             Environment
           </label>
           <select
+            id="wizard-environment"
             value={environment}
             onChange={(e) => onEnvironment(e.target.value as Environment)}
             className={inputClass}
@@ -88,10 +92,14 @@ export function WizardReview({
           </select>
         </div>
         <div>
-          <label className="mb-1.5 block text-xs text-[var(--color-text-secondary)]">
+          <label
+            htmlFor="wizard-cluster-name"
+            className="mb-1.5 block text-xs text-[var(--color-text-secondary)]"
+          >
             Cluster Name
           </label>
           <input
+            id="wizard-cluster-name"
             value={nameOverride}
             onChange={(e) => onNameOverride(e.target.value)}
             placeholder={`Default: ${suggestedName}`}
