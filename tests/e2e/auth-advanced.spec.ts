@@ -14,7 +14,9 @@ test.describe('Auth Advanced Flows', () => {
     await expect(page).toHaveURL(/\/login/)
   })
 
-  test('should redirect to login when accessing protected page without auth', async ({ browser }) => {
+  test('should redirect to login when accessing protected page without auth', async ({
+    browser,
+  }) => {
     const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
     const page = await context.newPage()
 
@@ -35,12 +37,17 @@ test.describe('Auth Advanced Flows', () => {
   test('should show validation errors on empty cluster form', async ({ page }) => {
     await login(page)
     await page.goto('/clusters')
-    await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('heading', { name: /^clusters$/i })).toBeVisible({
+      timeout: 15_000,
+    })
 
-    await page.getByRole('button', { name: /add cluster/i }).first().click()
-    await page.getByRole('button', { name: /next/i }).click()
+    await page
+      .getByRole('button', { name: /add cluster/i })
+      .first()
+      .click()
+    await page.getByRole('button', { name: 'Go to next step' }).click()
 
-    const nextButton = page.getByRole('button', { name: /next/i })
+    const nextButton = page.getByRole('button', { name: 'Go to next step' })
     await expect(nextButton).toBeDisabled()
     await expect(page.getByText(/fill the required credential fields to continue/i)).toBeVisible()
   })

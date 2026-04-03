@@ -17,10 +17,10 @@ test.describe('Clusters — CRUD Operations', () => {
     await expect(page.getByText(/choose provider/i)).toBeVisible()
     await expect(page.getByRole('radio', { name: /kubeconfig/i })).toBeChecked()
 
-    await page.getByRole('button', { name: /next/i }).click()
+    await page.getByRole('button', { name: 'Go to next step' }).click()
     await expect(page.getByText(/kubeconfig credentials/i)).toBeVisible()
 
-    await expect(page.getByRole('button', { name: /go to next step|next/i })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Go to next step' })).toBeDisabled()
     await expect(page.getByText(/fill the required credential fields to continue/i)).toBeVisible()
   })
 
