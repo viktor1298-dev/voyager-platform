@@ -24,7 +24,7 @@ import { validateClusterConnection } from '../lib/k8s-client-factory.js'
 import { parseCpuToNano, parseMemToBytes } from '../lib/k8s-units.js'
 import { normalizeProvider, VALID_PROVIDERS } from '../lib/providers.js'
 import { watchManager } from '../lib/watch-manager.js'
-import { performK8sHealthCheck } from './health.js'
+import { syncSingleCluster } from '../lib/watch-db-writer.js'
 import { adminProcedure, authorizedProcedure, protectedProcedure, router } from '../trpc.js'
 
 const isEncryptionEnabled = /^[0-9a-fA-F]{64}$/.test(K8S_CONFIG.ENCRYPTION_KEY)
@@ -863,32 +863,9 @@ export const clustersRouter = router({
         provider: input.provider,
       })
 
-      // Fire-and-forget: probe connectivity so the cluster transitions from
-      // 'unreachable' immediately instead of waiting for the 15s sync interval.
-      void (async () => {
-        try {
-          const result = await performK8sHealthCheck(created.id)
-          const updatePayload: Record<string, unknown> = {
-            healthStatus: result.status,
-            lastHealthCheck: new Date(),
-          }
-          if (result.status !== 'critical') {
-            updatePayload.status = 'active'
-            updatePayload.lastConnectedAt = new Date()
-          }
-          // Fetch K8s version (best-effort)
-          try {
-            const kc = await clusterClientPool.getClient(created.id)
-            const versionInfo = await kc.makeApiClient(k8s.VersionApi).getCode()
-            updatePayload.version = `v${versionInfo.major}.${versionInfo.minor}`
-          } catch {
-            // Version fetch is non-critical
-          }
-          await ctx.db.update(clusters).set(updatePayload).where(eq(clusters.id, created.id))
-        } catch {
-          // Non-critical — watch-db-writer will catch up on first SSE connection
-        }
-      })()
+      // Fire-and-forget: full sync (health + version + nodes) so the cluster
+      // shows correct data immediately instead of waiting for watch-db-writer.
+      void syncSingleCluster(created.id, created.name)
 
       return created
     }),

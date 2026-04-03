@@ -18,6 +18,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useOptimisticOptions } from '@/hooks/useOptimisticMutation'
 import { usePermission } from '@/hooks/usePermission'
 import { getClusterRouteSegment } from '@/components/cluster-route'
+import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { getClusterEnvironment, getClusterTags } from '@/lib/cluster-meta'
 import {
   normalizeLiveHealthStatus,
@@ -161,7 +162,9 @@ export default function ClustersPage() {
 
   const router = useRouter()
   const isAdmin = useIsAdmin()
-  const clusters = trpc.clusters.list.useQuery()
+  const clusters = trpc.clusters.list.useQuery(undefined, {
+    refetchInterval: DB_CLUSTER_REFETCH_MS,
+  })
   const liveHealth = trpc.health.status.useQuery({})
   const clusterQueryKey = [['clusters', 'list'], { type: 'query' }] as const
 
