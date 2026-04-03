@@ -57,9 +57,17 @@ export const usersRouter = router({
 
         return { success: true, userId: result?.user?.id }
       } catch (error) {
+        const msg = error instanceof Error ? error.message : ''
+        const lower = msg.toLowerCase()
+        if (lower.includes('user already exists') || lower.includes('email already')) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: `A user with email '${input.email}' already exists`,
+          })
+        }
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: error instanceof Error ? error.message : 'Failed to create user',
+          message: msg || 'Failed to create user',
         })
       }
     }),

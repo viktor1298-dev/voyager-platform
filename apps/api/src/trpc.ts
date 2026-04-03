@@ -1,11 +1,12 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
-import type { FastifyBaseLogger } from 'fastify'
 import { type Database, db } from '@voyager/db'
+import type { FastifyBaseLogger } from 'fastify'
 import type { OpenApiMeta } from 'trpc-to-openapi'
 import { z } from 'zod'
 import { auth } from './lib/auth.js'
 import { createAuthorizationService, type ObjectType, type Relation } from './lib/authorization.js'
+import { mapDbError } from './lib/error-handler.js'
 import { captureException } from './lib/sentry.js'
 
 export interface Context {
@@ -45,7 +46,13 @@ export async function createContext({ req, res }: CreateFastifyContextOptions): 
 }
 
 /** tRPC error codes that are client errors — don't report to Sentry */
-const CLIENT_ERROR_CODES = new Set(['UNAUTHORIZED', 'NOT_FOUND', 'BAD_REQUEST'])
+const CLIENT_ERROR_CODES = new Set([
+  'UNAUTHORIZED',
+  'NOT_FOUND',
+  'BAD_REQUEST',
+  'CONFLICT',
+  'FORBIDDEN',
+])
 
 const t = initTRPC
   .context<Context>()
@@ -72,6 +79,8 @@ export const publicProcedure = t.procedure.use(async ({ next }) => {
     return await next()
   } catch (error) {
     if (error instanceof TRPCError) throw error
+    const dbError = mapDbError(error)
+    if (dbError) throw dbError
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: error instanceof Error ? error.message : 'Unknown error',

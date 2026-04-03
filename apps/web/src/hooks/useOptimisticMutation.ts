@@ -1,7 +1,6 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -34,11 +33,12 @@ export function useOptimisticOptions<TData, TVariables>({
       queryClient.setQueryData<TData>(queryKey, (old) => updater(old, variables))
       return { previous }
     },
-    onError: (_err: unknown, _variables: TVariables, context: { previous?: TData } | undefined) => {
+    onError: (err: unknown, _variables: TVariables, context: { previous?: TData } | undefined) => {
       if (context?.previous !== undefined) {
         queryClient.setQueryData(queryKey, context.previous)
       }
-      toast.error(errorMessage)
+      const serverMessage = err instanceof Error && err.message ? err.message : undefined
+      toast.error(serverMessage || errorMessage)
     },
     onSuccess: () => {
       if (successMessage) toast.success(successMessage)
