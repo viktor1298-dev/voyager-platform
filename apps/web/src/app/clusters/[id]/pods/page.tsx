@@ -449,6 +449,84 @@ function PodSummary({
 // Namespace group with expandable cards
 // ---------------------------------------------------------------------------
 
+function VirtualizedPodList({
+  pods,
+  isAdmin,
+  onDeletePod,
+  onExecPod,
+  expandAll,
+  clusterId,
+  highlightPodKey,
+  highlightRef,
+}: {
+  pods: PodData[]
+  isAdmin: boolean
+  onDeletePod: (pod: PodData) => void
+  onExecPod: (pod: PodData) => void
+  expandAll: boolean
+  clusterId: string
+  highlightPodKey: string | null
+  highlightRef: React.RefObject<HTMLDivElement | null>
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const virtualizer = useVirtualizer({
+    count: pods.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 52,
+    overscan: 20,
+  })
+
+  return (
+    <div ref={scrollRef} className="overflow-auto" style={{ maxHeight: 'min(600px, 70vh)' }}>
+      <div
+        style={{
+          height: virtualizer.getTotalSize(),
+          position: 'relative',
+          width: '100%',
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualRow) => {
+          const pod = pods[virtualRow.index]
+          const podKey = `${pod.namespace}/${pod.name}`
+          const isHighlighted = highlightPodKey === podKey
+          return (
+            <div
+              key={podKey}
+              ref={virtualizer.measureElement}
+              data-index={virtualRow.index}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
+              <div ref={isHighlighted ? highlightRef : undefined}>
+                <ExpandableCard
+                  defaultExpanded={isHighlighted}
+                  expanded={expandAll || undefined}
+                  summary={
+                    <PodSummary
+                      pod={pod}
+                      isAdmin={isAdmin}
+                      onDeletePod={onDeletePod}
+                      onExecPod={onExecPod}
+                    />
+                  }
+                >
+                  <PodDetail pod={pod} clusterId={clusterId} />
+                </ExpandableCard>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function NamespacePodGroup({
   namespace,
   pods,
@@ -493,28 +571,41 @@ function NamespacePodGroup({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-1 space-y-1 pl-2">
-          {pods.map((pod) => {
-            const podKey = `${pod.namespace}/${pod.name}`
-            const isHighlighted = highlightPodKey === podKey
-            return (
-              <div key={podKey} ref={isHighlighted ? highlightRef : undefined} className="">
-                <ExpandableCard
-                  defaultExpanded={isHighlighted}
-                  expanded={expandAll || undefined}
-                  summary={
-                    <PodSummary
-                      pod={pod}
-                      isAdmin={isAdmin}
-                      onDeletePod={onDeletePod}
-                      onExecPod={onExecPod}
-                    />
-                  }
-                >
-                  <PodDetail pod={pod} clusterId={clusterId} />
-                </ExpandableCard>
-              </div>
-            )
-          })}
+          {pods.length > VIRTUALIZE_POD_THRESHOLD ? (
+            <VirtualizedPodList
+              pods={pods}
+              isAdmin={isAdmin}
+              onDeletePod={onDeletePod}
+              onExecPod={onExecPod}
+              expandAll={expandAll}
+              clusterId={clusterId}
+              highlightPodKey={highlightPodKey}
+              highlightRef={highlightRef}
+            />
+          ) : (
+            pods.map((pod) => {
+              const podKey = `${pod.namespace}/${pod.name}`
+              const isHighlighted = highlightPodKey === podKey
+              return (
+                <div key={podKey} ref={isHighlighted ? highlightRef : undefined} className="">
+                  <ExpandableCard
+                    defaultExpanded={isHighlighted}
+                    expanded={expandAll || undefined}
+                    summary={
+                      <PodSummary
+                        pod={pod}
+                        isAdmin={isAdmin}
+                        onDeletePod={onDeletePod}
+                        onExecPod={onExecPod}
+                      />
+                    }
+                  >
+                    <PodDetail pod={pod} clusterId={clusterId} />
+                  </ExpandableCard>
+                </div>
+              )
+            })
+          )}
         </div>
       </CollapsibleContent>
     </Collapsible>
