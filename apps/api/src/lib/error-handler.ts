@@ -67,20 +67,37 @@ const UNIQUE_CONSTRAINT_MESSAGES: Record<string, (value?: string) => string> = {
  * Returns null if the error is not a recognized database error — caller handles normally.
  *
  * Applied in publicProcedure catch-all so ALL routers benefit automatically.
+ *
+ * Drizzle v0.45 wraps pg errors in DrizzleQueryError — the original DatabaseError
+ * is stored in error.cause. We check both the error itself and its cause.
  */
 export function mapDbError(error: unknown): TRPCError | null {
-  if (!isPgDatabaseError(error)) return null
+  // Check the error directly, or unwrap Drizzle's DrizzleQueryError wrapper
+  // (DrizzleQueryError stores the original pg DatabaseError in error.cause)
+  let candidate: PgDatabaseError | null = null
+  if (isPgDatabaseError(error)) {
+    candidate = error
+  } else if (error instanceof Error) {
+    const cause = (error as { cause?: unknown }).cause
+    if (isPgDatabaseError(cause)) {
+      candidate = cause
+    }
+  }
+  if (!candidate) return null
+  const dbError = candidate
 
   // Unique constraint violation (23505)
-  if (error.code === '23505') {
-    const value = error.detail ? extractValueFromDetail(error.detail) : undefined
-    const messageFn = error.constraint ? UNIQUE_CONSTRAINT_MESSAGES[error.constraint] : undefined
+  if (dbError.code === '23505') {
+    const value = dbError.detail ? extractValueFromDetail(dbError.detail) : undefined
+    const messageFn = dbError.constraint
+      ? UNIQUE_CONSTRAINT_MESSAGES[dbError.constraint]
+      : undefined
     const message = messageFn ? messageFn(value) : 'This record already exists (duplicate value)'
     return new TRPCError({ code: 'CONFLICT', message })
   }
 
   // Foreign key violation (23503)
-  if (error.code === '23503') {
+  if (dbError.code === '23503') {
     return new TRPCError({
       code: 'BAD_REQUEST',
       message:
@@ -89,7 +106,7 @@ export function mapDbError(error: unknown): TRPCError | null {
   }
 
   // Other integrity constraint violations (class 23)
-  if (error.code.startsWith('23')) {
+  if (dbError.code.startsWith('23')) {
     return new TRPCError({
       code: 'BAD_REQUEST',
       message: 'Operation failed due to a data constraint',

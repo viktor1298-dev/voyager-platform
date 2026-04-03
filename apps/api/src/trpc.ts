@@ -59,6 +59,24 @@ const t = initTRPC
   .meta<OpenApiMeta>()
   .create({
     errorFormatter({ shape, error }) {
+      // Map database constraint violations to user-friendly messages.
+      // tRPC v11 wraps handler errors as TRPCError(INTERNAL_SERVER_ERROR) with the
+      // original error in error.cause — we check both the TRPCError.cause and the
+      // DrizzleQueryError.cause chain to find the pg DatabaseError.
+      const mapped = mapDbError(error.cause) ?? mapDbError((error.cause as Error)?.cause)
+      if (mapped) {
+        return {
+          ...shape,
+          message: mapped.message,
+          data: {
+            ...shape.data,
+            code: mapped.code,
+            httpStatus: 409,
+            stack: process.env.HIDE_STACK_TRACES === 'true' ? undefined : error.stack,
+          },
+        }
+      }
+
       // Report non-client errors to Sentry
       if (!CLIENT_ERROR_CODES.has(error.code)) {
         captureException(error)
@@ -79,8 +97,6 @@ export const publicProcedure = t.procedure.use(async ({ next }) => {
     return await next()
   } catch (error) {
     if (error instanceof TRPCError) throw error
-    const dbError = mapDbError(error)
-    if (dbError) throw dbError
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: error instanceof Error ? error.message : 'Unknown error',
