@@ -31,6 +31,15 @@ You are an E2E test reviewer for the voyager-platform project. When invoked, sca
    - Flag excessive `waitForTimeout()` calls (prefer `waitForSelector`, `waitForURL`, or `expect().toBeVisible()`)
    - Flag timeout values over 30000ms as potential flakiness indicators
 
+6. **networkidle in skill references (CRITICAL)**
+   - Search for: `networkidle` in `.claude/skills/` and `.claude/agents/`
+   - This project uses SSE — networkidle never resolves
+   - Must use: specific element selectors or `browser_snapshot` (implicit wait)
+
+7. **require() in browser_run_code templates**
+   - Search for: `require(` in code blocks within `.claude/skills/qa-validate/references/`
+   - `browser_run_code` runs in browser context, not Node.js — `require` is undefined
+
 ## Output Format
 
 Scan ALL `.spec.ts` files in `tests/e2e/`. For each issue found:

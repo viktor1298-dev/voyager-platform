@@ -17,11 +17,11 @@ test.describe('Multi-cluster flows (Phase D)', () => {
     const clusterName = `e2e-kube-${Date.now()}`;
 
     await openAddClusterWizard(page);
-    await page.getByRole('button', { name: /go to next step|next/i }).click();
+    await page.getByRole('button', { name: 'Go to next step' }).click();
 
     await page.getByPlaceholder(/apiVersion: v1/i).fill(`apiVersion: v1\nkind: Config\nclusters:\n- name: dev\n  cluster:\n    server: https://kubernetes.default.svc\n    insecure-skip-tls-verify: true\ncontexts:\n- name: dev\n  context:\n    cluster: dev\n    user: dev\ncurrent-context: dev\nusers:\n- name: dev\n  user:\n    token: test`);
 
-    await page.getByRole('button', { name: /go to next step|next/i }).click();
+    await page.getByRole('button', { name: 'Go to next step' }).click();
     await expect(page.getByText(/step 3\/4/i)).toBeVisible();
 
     const success = page.getByText(/connection test passed\. ready to continue\./i);
@@ -32,7 +32,7 @@ test.describe('Multi-cluster flows (Phase D)', () => {
       test.skip(true, 'Environment cannot validate kubeconfig connection right now');
     }
 
-    await page.getByRole('button', { name: /go to next step|next/i }).click();
+    await page.getByRole('button', { name: 'Go to next step' }).click();
     await expect(page.getByText(/step 4\/4/i)).toBeVisible();
     await page.getByPlaceholder(/name override/i).fill(clusterName);
     await page.getByRole('button', { name: /add cluster/i }).click();
@@ -72,10 +72,10 @@ test.describe('Multi-cluster flows (Phase D)', () => {
 
   test('E2E-3: Invalid kubeconfig → error message', async ({ page }) => {
     await openAddClusterWizard(page);
-    await page.getByRole('button', { name: /go to next step|next/i }).click();
+    await page.getByRole('button', { name: 'Go to next step' }).click();
 
     await page.getByPlaceholder(/apiVersion: v1/i).fill('not-a-valid-kubeconfig');
-    await page.getByRole('button', { name: /go to next step|next/i }).click();
+    await page.getByRole('button', { name: 'Go to next step' }).click();
 
     await expect(page.getByText(/step 3\/4/i)).toBeVisible();
     const errorAlert = page.locator('[role="alert"], .error-message, .toast-error, .MuiAlert-message, p.text-red-400').filter({ hasText: /failed|invalid|error|forbidden|unauthorized|unable|transform/i }).first();
@@ -142,7 +142,6 @@ test.describe('Multi-cluster flows (Phase D)', () => {
             break;
           }
         } catch {
-          continue;
         }
       }
     }
@@ -162,13 +161,13 @@ test.describe('Multi-cluster flows (Phase D)', () => {
     await openAddClusterWizard(page);
 
     await page.getByRole('radio', { name: /aws eks/i }).click();
-    await page.getByRole('button', { name: /go to next step|next/i }).click();
+    await page.getByRole('button', { name: 'Go to next step' }).click();
 
     await page.getByPlaceholder('AKIAIOSFODNN7EXAMPLE').fill('AKIAE2EEXAMPLE');
     await page.getByPlaceholder('Secret Access Key').fill('secret-test-value');
     await page.getByPlaceholder('us-east-1', { exact: true }).fill('us-west-2');
 
-    const next = page.getByRole('button', { name: /go to next step|next/i });
+    const next = page.getByRole('button', { name: 'Go to next step' });
     await expect(next).toBeEnabled();
     await next.click();
 

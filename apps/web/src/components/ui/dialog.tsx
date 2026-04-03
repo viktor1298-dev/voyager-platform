@@ -11,9 +11,10 @@ interface DialogProps {
   onClose: () => void
   children: ReactNode
   title?: string
+  size?: 'md' | 'xl'
 }
 
-export function Dialog({ open, onClose, children, title }: DialogProps) {
+export function Dialog({ open, onClose, children, title, size = 'md' }: DialogProps) {
   const overlayRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const reduced = useReducedMotion()
@@ -90,28 +91,35 @@ export function Dialog({ open, onClose, children, title }: DialogProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? titleId : undefined}
-            className="relative w-full max-w-lg max-w-[calc(100vw-2rem)] mx-4 rounded-xl border border-[var(--color-border)] p-4 sm:p-6 shadow-2xl"
+            className={[
+              'relative mx-4 rounded-xl border border-[var(--color-border)] shadow-2xl',
+              size === 'xl'
+                ? 'w-[min(960px,90vw)] p-0'
+                : 'w-full max-w-lg max-w-[calc(100vw-2rem)] p-4 sm:p-6',
+            ].join(' ')}
             style={{ background: 'var(--elevated)' }}
             variants={reduced ? undefined : dialogVariants}
             initial={reduced ? undefined : 'hidden'}
             animate={reduced ? undefined : 'visible'}
             exit={reduced ? undefined : 'exit'}
           >
-            <div className="flex items-center justify-between mb-4">
-              {title && (
-                <h2 id={titleId} className="text-lg font-bold text-[var(--color-text-primary)]">
-                  {title}
-                </h2>
-              )}
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Close dialog"
-                className="ml-auto flex items-center justify-center min-h-[44px] min-w-[44px] -m-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+            {size !== 'xl' && (
+              <div className="flex items-center justify-between mb-4">
+                {title && (
+                  <h2 id={titleId} className="text-lg font-bold text-[var(--color-text-primary)]">
+                    {title}
+                  </h2>
+                )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close dialog"
+                  className="ml-auto flex items-center justify-center min-h-[44px] min-w-[44px] -m-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-white/[0.06] transition-colors cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
             {children}
           </motion.div>
         </motion.div>

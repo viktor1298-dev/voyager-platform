@@ -21,8 +21,8 @@ Pick the template matching the URL, adapt selectors if needed, and run it.
 
 ```javascript
 async (page) => {
-  // Wait for initial data load
-  await page.waitForLoadState('networkidle')
+  // Wait for content to render (never use networkidle — SSE keeps connections alive)
+  await page.waitForSelector('[class*="card"], [class*="widget"], [class*="Card"]', { timeout: 10000 })
 
   const results = {}
 
@@ -70,7 +70,8 @@ async (page) => {
 
 ```javascript
 async (page) => {
-  await page.waitForLoadState('networkidle')
+  // Wait for table data to render (never use networkidle — SSE keeps connections alive)
+  await page.waitForSelector('table tbody tr, [role="row"]', { timeout: 10000 })
 
   const results = {}
 
@@ -117,7 +118,8 @@ async (page) => {
 
 ```javascript
 async (page) => {
-  await page.waitForLoadState('networkidle')
+  // Wait for cluster detail to render (never use networkidle — SSE keeps connections alive)
+  await page.waitForSelector('[role="tablist"], [class*="tab"]', { timeout: 10000 })
 
   const results = {}
 
@@ -160,7 +162,8 @@ async (page) => {
 
 ```javascript
 async (page) => {
-  await page.waitForLoadState('networkidle')
+  // Wait for login form to render (never use networkidle — SSE keeps connections alive)
+  await page.waitForSelector('input[type="email"], input[name="email"]', { timeout: 10000 })
 
   const results = {}
 
@@ -200,7 +203,8 @@ async (page) => {
 
 ```javascript
 async (page) => {
-  await page.waitForLoadState('networkidle')
+  // Wait for settings content to render (never use networkidle — SSE keeps connections alive)
+  await page.waitForSelector('input, select, textarea, [role="switch"], table', { timeout: 10000 })
 
   const results = {}
 
@@ -241,7 +245,8 @@ async (page) => {
 
 ```javascript
 async (page) => {
-  await page.waitForLoadState('networkidle')
+  // Wait for content to render (never use networkidle — SSE keeps connections alive)
+  await page.waitForSelector('main > div, [class*="content"]', { timeout: 10000 })
 
   const results = {}
 
@@ -304,7 +309,7 @@ async (page) => {
 ### Tips for Writing Assertions
 
 1. **Always use `.catch(() => fallback)`** on async locator methods — elements may not exist
-2. **Use `waitForLoadState('networkidle')`** before assertions to let data load
+2. **Use `waitForSelector()` with a content-specific selector** before assertions to let data load. Never use `networkidle` — SSE keeps connections alive and it will timeout.
 3. **Avoid CSS class-only selectors** — prefer role, text, or data-testid selectors
 4. **Check for absence of errors** as well as presence of content
 5. **Return structured objects** with named boolean fields — makes the Layer 5 report readable

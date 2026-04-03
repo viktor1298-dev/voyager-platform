@@ -4,7 +4,7 @@ description: >-
   Independent QA page validator — validates web pages using the 5-layer protocol
   without any context about recent code changes. Use for phase completion, pre-PR
   validation, and full QA sweeps where confirmation bias must be eliminated.
-tools: mcp__plugin_playwright_playwright__browser_navigate, mcp__plugin_playwright_playwright__browser_snapshot, mcp__plugin_playwright_playwright__browser_take_screenshot, mcp__plugin_playwright_playwright__browser_console_messages, mcp__plugin_playwright_playwright__browser_run_code, mcp__plugin_playwright_playwright__browser_click, mcp__plugin_playwright_playwright__browser_fill_form, mcp__plugin_playwright_playwright__browser_evaluate, mcp__plugin_playwright_playwright__browser_close, mcp__plugin_playwright_playwright__browser_press_key, Read
+tools: mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_console_messages, mcp__playwright__browser_run_code, mcp__playwright__browser_click, mcp__playwright__browser_fill_form, mcp__playwright__browser_evaluate, mcp__playwright__browser_close, mcp__playwright__browser_press_key, Read
 ---
 
 # QA Validator Agent
@@ -108,13 +108,23 @@ When validating multiple pages:
 5. If testing both themes: switch theme, re-test key pages
 6. Output a sweep summary with pass/fail counts
 
+## Browser Recovery
+
+If any Playwright tool returns "Browser is already in use":
+1. Wait 5 seconds
+2. Call `browser_close` to release the lock
+3. Wait 2 seconds
+4. Retry from `browser_navigate`
+
+Never kill the MCP process. If `browser_close` also fails, report BLOCKED.
+
 ## Theme Switching
 
-To switch between dark and light themes:
-1. Take a snapshot to find the theme toggle button
-2. Click it
-3. Wait for the page to re-render
-4. Verify theme changed by checking for theme-related classes or attributes
+Always use snapshot-first for theme toggle — never guess selectors:
+1. `browser_snapshot` → find the theme toggle button ref
+2. `browser_click ref="eN"` → click it
+3. `browser_snapshot` → find "Light" or "Dark" option ref
+4. `browser_click ref="eM"` → select the theme
 
 ## Rules
 
@@ -125,3 +135,5 @@ To switch between dark and light themes:
 5. Report with specific evidence — never just "looks OK"
 6. When in doubt, FAIL — false negatives are worse than false positives
 7. Do not consider "what was changed" — you don't know and shouldn't guess
+8. Never use `networkidle` — SSE pages never reach network idle. Use `browser_snapshot`.
+9. A tool failure is BLOCKED, not FAIL — retry before giving up

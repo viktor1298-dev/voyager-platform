@@ -50,7 +50,7 @@ export const PROVIDER_DETECTION_RULES: DetectionRule[] = [
   {
     provider: 'minikube',
     label: 'Minikube',
-    urlPatterns: [],
+    urlPatterns: ['192.168.49.', '192.168.99.'],
     execCommands: [],
     contextPatterns: ['minikube'],
   },
@@ -177,11 +177,11 @@ export function detectProviderFromKubeconfig(yaml: string): DetectionResult {
   }
 
   // Priority 3: Context/cluster name (medium confidence)
-  const namesToCheck = [parsed.contextName, parsed.clusterName].filter(Boolean)
+  const namesToCheck = [parsed.contextName, parsed.clusterName, parsed.userName].filter(Boolean)
   for (const name of namesToCheck) {
     for (const rule of PROVIDER_DETECTION_RULES) {
       for (const pattern of rule.contextPatterns) {
-        if (name === pattern || name.startsWith(pattern)) {
+        if (name.includes(pattern)) {
           return {
             provider: rule.provider,
             confidence: 'medium',

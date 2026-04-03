@@ -44,11 +44,11 @@ export function deriveHealthStatus(
 // ── Node Upsert (replicate node-sync.ts logic) ───────────────
 
 async function syncNodes(clusterId: string): Promise<void> {
-  const rawNodes = watchManager.getResources(clusterId, 'nodes') as k8s.V1Node[]
+  const rawNodes = (watchManager.getResources(clusterId, 'nodes') ?? []) as k8s.V1Node[]
   if (rawNodes.length === 0) return
 
   // Build pod-per-node map from watch data
-  const rawPods = watchManager.getResources(clusterId, 'pods') as k8s.V1Pod[]
+  const rawPods = (watchManager.getResources(clusterId, 'pods') ?? []) as k8s.V1Pod[]
   const podCountByNode = new Map<string, number>()
   for (const pod of rawPods) {
     const nodeName = pod.spec?.nodeName
@@ -122,7 +122,7 @@ async function syncNodes(clusterId: string): Promise<void> {
 // ── Event Insert (replicate event-sync.ts logic) ─────────────
 
 async function syncEvents(clusterId: string): Promise<void> {
-  const rawEvents = watchManager.getResources(clusterId, 'events') as k8s.CoreV1Event[]
+  const rawEvents = (watchManager.getResources(clusterId, 'events') ?? []) as k8s.CoreV1Event[]
   if (rawEvents.length === 0) return
 
   const eventValues = rawEvents
@@ -160,8 +160,8 @@ async function syncEvents(clusterId: string): Promise<void> {
 // ── Health Sync (replicate health-sync.ts logic) ─────────────
 
 async function syncClusterHealth(clusterId: string): Promise<void> {
-  const rawNodes = watchManager.getResources(clusterId, 'nodes') as k8s.V1Node[]
-  const rawPods = watchManager.getResources(clusterId, 'pods') as k8s.V1Pod[]
+  const rawNodes = (watchManager.getResources(clusterId, 'nodes') ?? []) as k8s.V1Node[]
+  const rawPods = (watchManager.getResources(clusterId, 'pods') ?? []) as k8s.V1Pod[]
   const now = new Date()
 
   const totalNodes = rawNodes.length
@@ -291,6 +291,15 @@ export function startWatchDbWriter(): void {
     }
     listeners.set(clusterId, listener)
     voyagerEmitter.on(eventName, listener)
+
+    // Seed dirtySet so the first runSync() picks up existing WatchManager cache.
+    // The db-writer registers AFTER watchManager.subscribe() completes, so all
+    // initial 'add' events have already fired — without seeding, the cluster's
+    // health/nodes/version never get written to PostgreSQL until the next K8s
+    // change event (which on a stable cluster may never come).
+    dirtySet.add(`${clusterId}:nodes`)
+    dirtySet.add(`${clusterId}:pods`)
+    dirtySet.add(`${clusterId}:events`)
   }
 
   voyagerEmitter.on('newListener', onNewListener)
@@ -307,6 +316,10 @@ export function startWatchDbWriter(): void {
     }
     listeners.set(clusterId, listener)
     voyagerEmitter.on(channel, listener)
+    // Seed initial sync (same rationale as onNewListener above)
+    dirtySet.add(`${clusterId}:nodes`)
+    dirtySet.add(`${clusterId}:pods`)
+    dirtySet.add(`${clusterId}:events`)
   }
 
   // Start periodic sync

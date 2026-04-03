@@ -136,3 +136,5 @@ Wait for both API and Web to be ready (API prints "Server listening on port 4001
 **Health check FAIL on web pages:** Web server may not be running. Start it with `pnpm --filter web dev` and re-run health check.
 
 **Redis OOM:** Unlikely in dev, but if it happens: `docker compose exec redis redis-cli FLUSHALL` then restart.
+
+**Wrong DB user:** The Docker container uses `voyager` (not `postgres`). Always use: `psql -U voyager -d voyager_dev`. Never use: `psql -U postgres` (will fail with "role does not exist").
