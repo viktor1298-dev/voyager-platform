@@ -9,7 +9,9 @@ export interface DetailTab {
   id: string
   label: string
   icon?: ReactNode
-  content: ReactNode
+  content?: ReactNode
+  /** Lazy mount — only called when this tab is active. Prefer over `content` for heavy components. */
+  renderContent?: () => ReactNode
 }
 
 interface DetailTabsProps {
@@ -96,7 +98,7 @@ export function DetailTabs({ id, tabs, defaultTab, actions }: DetailTabsProps) {
               exit={reducedMotion ? undefined : 'exit'}
               className="p-4"
             >
-              {activeTab.content}
+              {activeTab.renderContent ? activeTab.renderContent() : activeTab.content}
             </motion.div>
           )}
         </AnimatePresence>

@@ -45,7 +45,11 @@ import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { resolveResourceStatus } from '@/lib/resource-status'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { toast } from 'sonner'
+
+// Threshold: only virtualize when pod count in a namespace exceeds this
+const VIRTUALIZE_POD_THRESHOLD = 100
 
 interface ContainerData {
   name: string
@@ -278,7 +282,7 @@ function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
         id: 'logs',
         label: 'Logs',
         icon: <FileText className="h-3.5 w-3.5" />,
-        content: (
+        renderContent: () => (
           <PodLogViewer clusterId={clusterId} podName={pod.name} namespace={pod.namespace} />
         ),
       },
@@ -288,15 +292,15 @@ function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
               id: 'node',
               label: 'Node',
               icon: <Server className="h-3.5 w-3.5" />,
-              content: (
+              renderContent: () => (
                 <div className="space-y-2 p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
                     Scheduled Node
                   </p>
                   <RelatedResourceLink
                     tab="nodes"
-                    resourceKey={pod.nodeName}
-                    label={pod.nodeName}
+                    resourceKey={pod.nodeName!}
+                    label={pod.nodeName!}
                     icon={<Server className="h-3.5 w-3.5" />}
                   />
                 </div>
@@ -308,7 +312,7 @@ function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
         id: 'relations',
         label: 'Relations',
         icon: <GitFork className="h-3.5 w-3.5" />,
-        content: (
+        renderContent: () => (
           <RelationsTab
             clusterId={clusterId}
             kind="Pod"
@@ -321,7 +325,7 @@ function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
         id: 'yaml',
         label: 'YAML',
         icon: <FileText className="h-3.5 w-3.5" />,
-        content: (
+        renderContent: () => (
           <YamlViewer
             clusterId={clusterId}
             resourceType="pods"
@@ -334,7 +338,7 @@ function PodDetail({ pod, clusterId }: { pod: PodData; clusterId: string }) {
         id: 'diff',
         label: 'Diff',
         icon: <FileText className="h-3.5 w-3.5" />,
-        content: (
+        renderContent: () => (
           <ResourceDiff
             clusterId={clusterId}
             resourceType="pods"
