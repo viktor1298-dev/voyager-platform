@@ -37,7 +37,7 @@ const ENV_ORDER: ClusterEnvironment[] = ['prod', 'staging', 'dev']
 function getHealthGroup(status: string | null | undefined): HealthGroup {
   const s = (status ?? 'unknown').toLowerCase()
   if (s === 'healthy' || s === 'active' || s === 'ready') return 'healthy'
-  if (s === 'warning' || s === 'degraded') return 'degraded'
+  if (s === 'warning' || s === 'degraded' || s === 'unknown') return 'degraded'
   return 'critical'
 }
 

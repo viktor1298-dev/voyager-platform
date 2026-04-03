@@ -31,10 +31,10 @@ const STATUS_CONFIG: Record<StatusType, { label: string; classes: string; dotCol
     dotColor: 'bg-[var(--color-status-error)]',
   },
   unknown: {
-    label: 'Unknown',
+    label: 'Connecting...',
     classes:
-      'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] border border-[var(--color-border)]',
-    dotColor: 'bg-[var(--color-text-muted)]',
+      'bg-[var(--color-status-idle)]/10 text-[var(--color-status-idle)] border border-[var(--color-status-idle)]/30',
+    dotColor: 'bg-[var(--color-status-idle)]',
   },
 }
 

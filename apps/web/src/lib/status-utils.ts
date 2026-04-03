@@ -4,6 +4,7 @@ import { resolveResourceStatus } from './resource-status'
 export function getStatusColor(status: string): string {
   if (status === 'healthy') return 'var(--color-status-active)'
   if (status === 'warning') return 'var(--color-status-warning)'
+  if (status === 'unknown') return 'var(--color-status-idle)'
   return 'var(--color-status-error)'
 }
 
@@ -11,6 +12,7 @@ export function getStatusColor(status: string): string {
 export function getStatusDotClass(status: string): string {
   if (status === 'healthy') return 'bg-[var(--color-status-active)]'
   if (status === 'warning') return 'bg-[var(--color-status-warning)]'
+  if (status === 'unknown') return 'bg-[var(--color-status-idle)]'
   return 'bg-[var(--color-status-error)]'
 }
 
@@ -25,6 +27,7 @@ export function nodeStatusColor(status: string): string {
 export function getStatusGlow(status: string): string {
   if (status === 'healthy') return 'var(--glow-healthy)'
   if (status === 'warning') return 'var(--glow-warning)'
+  if (status === 'unknown') return 'var(--glow-healthy)'
   return 'var(--glow-degraded)'
 }
 
@@ -32,6 +35,7 @@ export function getStatusGlow(status: string): string {
 export function getStatusGlowHover(status: string): string {
   if (status === 'healthy') return 'var(--glow-healthy-hover)'
   if (status === 'warning') return 'var(--glow-warning-hover)'
+  if (status === 'unknown') return 'var(--glow-healthy-hover)'
   return 'var(--glow-degraded-hover)'
 }
 

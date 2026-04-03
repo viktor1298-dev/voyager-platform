@@ -12,12 +12,12 @@ export function healthBadgeVariant(status: LiveHealthStatus) {
   if (status === 'healthy') return 'success' as const
   if (status === 'degraded') return 'warning' as const
   if (status === 'error') return 'destructive' as const
-  return 'outline' as const
+  return 'secondary' as const
 }
 
 export function healthBadgeLabel(status: LiveHealthStatus) {
   if (status === 'healthy') return 'Healthy'
   if (status === 'degraded') return 'Degraded'
   if (status === 'error') return 'Error'
-  return 'Unknown'
+  return 'Connecting...'
 }

@@ -29,6 +29,9 @@ function getHealthLabel(status: string | null): { label: string; colorVar: strin
   if (s === 'warning' || s === 'degraded') {
     return { label: 'degraded', colorVar: 'var(--color-status-warning)' }
   }
+  if (s === 'unknown') {
+    return { label: 'connecting', colorVar: 'var(--color-status-idle)' }
+  }
   return { label: 'critical', colorVar: 'var(--color-status-error)' }
 }
 
@@ -39,7 +42,9 @@ function StatusDot({ status }: { status: string | null }) {
       ? 'animate-glow-warning'
       : label === 'critical'
         ? 'animate-glow-critical'
-        : ''
+        : label === 'connecting'
+          ? 'animate-pulse'
+          : ''
 
   return (
     <span
@@ -153,7 +158,7 @@ export function ClusterCard({
             </span>
           )}
           <span className="font-medium" style={{ color: healthColor }}>
-            ● {healthLabel}
+            ● {healthLabel === 'connecting' ? 'Connecting...' : healthLabel}
           </span>
         </div>
       </Link>

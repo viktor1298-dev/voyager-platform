@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useState } from 'react'
-import { AlertTriangle, CheckCircle2, HelpCircle, RefreshCw, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Loader2, RefreshCw, XCircle } from 'lucide-react'
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { trpc } from '@/lib/trpc'
@@ -56,12 +56,21 @@ export function ClusterHealthIndicator({
     [utils, clusterId, onCheck],
   )
 
-  if (!entry || entry.status === 'unknown') return null
+  if (!entry) return null
+
+  const iconSize = size === 'md' ? 'h-4 w-4' : 'h-3 w-3'
+
+  if (entry.status === 'unknown') {
+    return (
+      <span className="inline-flex items-center gap-1 shrink-0" role="status" aria-label="Health: Connecting">
+        <Loader2 className={`${iconSize} text-[var(--color-status-idle)] animate-spin`} aria-hidden="true" />
+      </span>
+    )
+  }
 
   const color = STATUS_COLORS[entry.status] ?? 'var(--color-text-dim)'
   const statusLabel = entry.status.charAt(0).toUpperCase() + entry.status.slice(1)
   const dotSize = size === 'md' ? 'h-2.5 w-2.5' : 'h-1.5 w-1.5'
-  const iconSize = size === 'md' ? 'h-4 w-4' : 'h-3 w-3'
 
   /** Fix #4: Icon alongside color dot for accessibility — not color-only */
   const HealthStatusIcon = () => {
@@ -73,9 +82,7 @@ export function ClusterHealthIndicator({
       case 'critical':
         return <XCircle className={`${iconSize} text-red-400`} aria-hidden="true" />
       default:
-        return (
-          <HelpCircle className={`${iconSize} text-[var(--color-text-dim)]`} aria-hidden="true" />
-        )
+        return <Loader2 className={`${iconSize} text-[var(--color-status-idle)] animate-spin`} aria-hidden="true" />
     }
   }
 

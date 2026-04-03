@@ -39,7 +39,7 @@ import {
   CheckCircle2,
   Database,
   Eye,
-  HelpCircle,
+  Loader2,
   Plus,
   Trash2,
   XCircle,
@@ -152,7 +152,7 @@ function HealthIcon({ status }: { status: string }) {
     case 'critical':
       return <XCircle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
     default:
-      return <HelpCircle className="h-3.5 w-3.5 text-[var(--color-text-dim)]" aria-hidden="true" />
+      return <Loader2 className="h-3.5 w-3.5 text-[var(--color-status-idle)] animate-spin" aria-hidden="true" />
   }
 }
 
