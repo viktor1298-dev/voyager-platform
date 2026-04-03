@@ -1,7 +1,18 @@
 'use client'
 
-import { useMemo } from 'react'
-import { Box, CircleCheck, Cpu, GitFork, HardDrive, MapPin, Server, Tag } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
+import {
+  Box,
+  ChevronDown,
+  CircleCheck,
+  Cpu,
+  GitFork,
+  HardDrive,
+  MapPin,
+  Server,
+  Tag,
+} from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import {
@@ -319,67 +330,232 @@ export default function NodesPage() {
       )}
 
       {!isLoading && !isEmpty && (
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-[var(--color-border)] text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-                <th className="text-left px-4 py-3">Name</th>
-                <th className="text-left px-3 py-3">Status</th>
-                <th className="text-left px-3 py-3">Role</th>
-                <th className="text-left px-3 py-3">Kubelet</th>
-                <th className="text-left px-3 py-3">CPU</th>
-                <th className="text-left px-3 py-3 min-w-[130px]">CPU %</th>
-                <th className="text-left px-3 py-3">Memory</th>
-                <th className="text-left px-3 py-3 min-w-[130px]">Mem %</th>
-                <th className="w-8" />
-              </tr>
-            </thead>
-            <tbody>
-              {nodes.map((node) => (
-                <ExpandableTableRow
-                  key={node.name}
-                  columnCount={8}
-                  cells={
-                    <>
-                      <td className="px-4 py-3">
-                        <span className="font-medium font-mono text-[var(--color-text-primary)]">
-                          {node.name}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3">
-                        <ResourceStatusBadge status={node.status} size="sm" />
-                      </td>
-                      <td className="px-3 py-3 text-[var(--color-text-muted)]">{node.role}</td>
-                      <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
-                        {node.kubeletVersion}
-                      </td>
-                      <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
-                        {node.cpuAllocatableMillis}m / {node.cpuCapacityMillis}m
-                      </td>
-                      <td className="px-3 py-3">
-                        <InlineBar value={node.cpuPercent} label="CPU" />
-                      </td>
-                      <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
-                        {node.memAllocatableMi}Mi / {node.memCapacityMi}Mi
-                      </td>
-                      <td className="px-3 py-3">
-                        <InlineBar value={node.memPercent} label="Memory" />
-                      </td>
-                    </>
-                  }
-                  detail={
-                    <NodeDetail
-                      node={node}
-                      podCount={podCountByNode.get(node.name) ?? 0}
-                      clusterId={resolvedId}
-                    />
-                  }
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <NodesTable nodes={nodes} podCountByNode={podCountByNode} clusterId={resolvedId} />
       )}
     </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Virtualized nodes table — uses div-based grid layout for virtual scrolling
+// ---------------------------------------------------------------------------
+
+const VIRTUALIZE_NODE_THRESHOLD = 50
+
+const nodeGridCols =
+  'minmax(180px,2fr) 90px 90px 100px minmax(100px,1fr) minmax(130px,1fr) minmax(100px,1fr) minmax(130px,1fr) 32px'
+
+function NodesTable({
+  nodes,
+  podCountByNode,
+  clusterId,
+}: {
+  nodes: LiveNode[]
+  podCountByNode: Map<string, number>
+  clusterId: string
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const virtualizer = useVirtualizer({
+    count: nodes.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 52,
+    overscan: 20,
+    enabled: nodes.length > VIRTUALIZE_NODE_THRESHOLD,
+  })
+
+  // For small lists, render the original table without virtualization
+  if (nodes.length <= VIRTUALIZE_NODE_THRESHOLD) {
+    return (
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
+        <table className="w-full text-[13px]">
+          <thead>
+            <tr className="border-b border-[var(--color-border)] text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              <th className="text-left px-4 py-3">Name</th>
+              <th className="text-left px-3 py-3">Status</th>
+              <th className="text-left px-3 py-3">Role</th>
+              <th className="text-left px-3 py-3">Kubelet</th>
+              <th className="text-left px-3 py-3">CPU</th>
+              <th className="text-left px-3 py-3 min-w-[130px]">CPU %</th>
+              <th className="text-left px-3 py-3">Memory</th>
+              <th className="text-left px-3 py-3 min-w-[130px]">Mem %</th>
+              <th className="w-8" />
+            </tr>
+          </thead>
+          <tbody>
+            {nodes.map((node) => (
+              <ExpandableTableRow
+                key={node.name}
+                columnCount={8}
+                cells={
+                  <>
+                    <td className="px-4 py-3">
+                      <span className="font-medium font-mono text-[var(--color-text-primary)]">
+                        {node.name}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <ResourceStatusBadge status={node.status} size="sm" />
+                    </td>
+                    <td className="px-3 py-3 text-[var(--color-text-muted)]">{node.role}</td>
+                    <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
+                      {node.kubeletVersion}
+                    </td>
+                    <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
+                      {node.cpuAllocatableMillis}m / {node.cpuCapacityMillis}m
+                    </td>
+                    <td className="px-3 py-3">
+                      <InlineBar value={node.cpuPercent} label="CPU" />
+                    </td>
+                    <td className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
+                      {node.memAllocatableMi}Mi / {node.memCapacityMi}Mi
+                    </td>
+                    <td className="px-3 py-3">
+                      <InlineBar value={node.memPercent} label="Memory" />
+                    </td>
+                  </>
+                }
+                detail={
+                  <NodeDetail
+                    node={node}
+                    podCount={podCountByNode.get(node.name) ?? 0}
+                    clusterId={clusterId}
+                  />
+                }
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  // Virtualized div-based grid layout for large node lists
+  return (
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] overflow-hidden">
+      {/* Header row */}
+      <div
+        className="grid border-b border-[var(--color-border)] text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]"
+        style={{ gridTemplateColumns: nodeGridCols }}
+      >
+        <div className="px-4 py-3">Name</div>
+        <div className="px-3 py-3">Status</div>
+        <div className="px-3 py-3">Role</div>
+        <div className="px-3 py-3">Kubelet</div>
+        <div className="px-3 py-3">CPU</div>
+        <div className="px-3 py-3">CPU %</div>
+        <div className="px-3 py-3">Memory</div>
+        <div className="px-3 py-3">Mem %</div>
+        <div />
+      </div>
+
+      {/* Virtualized body */}
+      <div ref={scrollRef} className="overflow-auto" style={{ maxHeight: 'min(700px, 75vh)' }}>
+        <div
+          style={{
+            height: virtualizer.getTotalSize(),
+            position: 'relative',
+            width: '100%',
+          }}
+        >
+          {virtualizer.getVirtualItems().map((virtualRow) => {
+            const node = nodes[virtualRow.index]
+            return (
+              <div
+                key={node.name}
+                ref={virtualizer.measureElement}
+                data-index={virtualRow.index}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                <VirtualNodeRow
+                  node={node}
+                  podCount={podCountByNode.get(node.name) ?? 0}
+                  clusterId={clusterId}
+                />
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Virtual node row — div-based grid that matches the header layout
+// ---------------------------------------------------------------------------
+
+function VirtualNodeRow({
+  node,
+  podCount,
+  clusterId,
+}: {
+  node: LiveNode
+  podCount: number
+  clusterId: string
+}) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  return (
+    <div className="border-b border-[var(--color-border)]/30">
+      <div
+        className={[
+          'grid cursor-pointer transition-colors duration-150 text-[13px] items-center',
+          isExpanded ? 'bg-[var(--color-accent)]/[0.03]' : 'hover:bg-white/[0.02]',
+        ].join(' ')}
+        style={{ gridTemplateColumns: nodeGridCols }}
+        onClick={() => setIsExpanded((prev) => !prev)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setIsExpanded((prev) => !prev)
+          }
+        }}
+        aria-expanded={isExpanded}
+      >
+        <div className="px-4 py-3">
+          <span className="font-medium font-mono text-[var(--color-text-primary)]">
+            {node.name}
+          </span>
+        </div>
+        <div className="px-3 py-3">
+          <ResourceStatusBadge status={node.status} size="sm" />
+        </div>
+        <div className="px-3 py-3 text-[var(--color-text-muted)]">{node.role}</div>
+        <div className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
+          {node.kubeletVersion}
+        </div>
+        <div className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
+          {node.cpuAllocatableMillis}m / {node.cpuCapacityMillis}m
+        </div>
+        <div className="px-3 py-3">
+          <InlineBar value={node.cpuPercent} label="CPU" />
+        </div>
+        <div className="px-3 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
+          {node.memAllocatableMi}Mi / {node.memCapacityMi}Mi
+        </div>
+        <div className="px-3 py-3">
+          <InlineBar value={node.memPercent} label="Memory" />
+        </div>
+        <div className="pr-3 text-right">
+          <ChevronDown
+            className={`h-3.5 w-3.5 text-[var(--color-text-muted)] transition-transform inline-block ${isExpanded ? 'rotate-180' : ''}`}
+          />
+        </div>
+      </div>
+      {isExpanded && (
+        <div className="border-t border-[var(--color-border)]/30 bg-[var(--color-accent)]/[0.01]">
+          <NodeDetail node={node} podCount={podCount} clusterId={clusterId} />
+        </div>
+      )}
+    </div>
   )
 }
