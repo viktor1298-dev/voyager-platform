@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { ExpandableCard } from '@/components/expandable'
 import { SearchFilterBar } from './SearchFilterBar'
 import { ResourceLoadingSkeleton } from './ResourceLoadingSkeleton'
@@ -21,6 +22,87 @@ export interface ResourcePageScaffoldProps<T> {
   emptyMessage?: string
   emptyDescription?: string
   flatList?: boolean
+}
+
+// Threshold: only virtualize when item count exceeds this
+const VIRTUALIZE_THRESHOLD = 100
+
+// ---------------------------------------------------------------------------
+// Virtualized item list rendered inside each NamespaceGroup (or flat)
+// ---------------------------------------------------------------------------
+
+function VirtualizedItemList<T>({
+  items,
+  getKey,
+  isHighlighted,
+  highlightRef,
+  expandAll,
+  renderSummary,
+  renderDetail,
+}: {
+  items: T[]
+  getKey: (item: T, index: number) => string
+  isHighlighted: (item: T) => boolean
+  highlightRef: React.RefObject<HTMLDivElement | null>
+  expandAll: boolean
+  renderSummary: (item: T) => ReactNode
+  renderDetail: (item: T) => ReactNode
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 52,
+    overscan: 20,
+  })
+
+  return (
+    <div ref={scrollRef} className="overflow-auto" style={{ maxHeight: 'min(600px, 70vh)' }}>
+      <div
+        style={{
+          height: virtualizer.getTotalSize(),
+          position: 'relative',
+          width: '100%',
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualRow) => {
+          const item = items[virtualRow.index]
+          const highlighted = isHighlighted(item)
+          return (
+            <div
+              key={getKey(item, virtualRow.index)}
+              ref={virtualizer.measureElement}
+              data-index={virtualRow.index}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
+              <div
+                ref={highlighted ? highlightRef : undefined}
+                className={
+                  highlighted
+                    ? 'ring-2 ring-[var(--color-accent)] rounded-xl transition-all duration-500'
+                    : ''
+                }
+              >
+                <ExpandableCard
+                  expanded={expandAll || highlighted || undefined}
+                  summary={renderSummary(item)}
+                >
+                  {renderDetail(item)}
+                </ExpandableCard>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 export function ResourcePageScaffold<T>({
@@ -93,6 +175,12 @@ export function ResourcePageScaffold<T>({
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]))
   }, [filteredItems, getNamespace, flatList, title])
 
+  // Whether any namespace group exceeds the virtualization threshold
+  const shouldVirtualize = useMemo(
+    () => grouped.some(([, nsItems]) => nsItems.length > VIRTUALIZE_THRESHOLD),
+    [grouped],
+  )
+
   // Loading state — show skeleton when explicitly loading OR when data hasn't arrived yet
   if (queryResult.isLoading || queryResult.data === undefined) {
     return <ResourceLoadingSkeleton label={`Loading ${title.toLowerCase()}...`} />
@@ -137,8 +225,20 @@ export function ResourcePageScaffold<T>({
         </div>
       ) : (
         <div className="space-y-2">
-          {flatList
-            ? // Flat list — no namespace grouping
+          {flatList ? (
+            shouldVirtualize ? (
+              // Flat list — virtualized
+              <VirtualizedItemList
+                items={filteredItems}
+                getKey={getKey}
+                isHighlighted={isHighlighted}
+                highlightRef={highlightRef}
+                expandAll={expandAll}
+                renderSummary={renderSummary}
+                renderDetail={renderDetail}
+              />
+            ) : (
+              // Flat list — not enough items to virtualize
               filteredItems.map((item, idx) => {
                 const highlighted = isHighlighted(item)
                 return (
@@ -160,15 +260,28 @@ export function ResourcePageScaffold<T>({
                   </div>
                 )
               })
-            : // Namespace-grouped
-              grouped.map(([namespace, nsItems]) => (
-                <NamespaceGroup
-                  key={namespace}
-                  namespace={namespace}
-                  count={nsItems.length}
-                  forceOpen={namespacesOpen ? undefined : false}
-                >
-                  {nsItems.map((item, idx) => {
+            )
+          ) : (
+            // Namespace-grouped
+            grouped.map(([namespace, nsItems]) => (
+              <NamespaceGroup
+                key={namespace}
+                namespace={namespace}
+                count={nsItems.length}
+                forceOpen={namespacesOpen ? undefined : false}
+              >
+                {nsItems.length > VIRTUALIZE_THRESHOLD ? (
+                  <VirtualizedItemList
+                    items={nsItems}
+                    getKey={getKey}
+                    isHighlighted={isHighlighted}
+                    highlightRef={highlightRef}
+                    expandAll={expandAll}
+                    renderSummary={renderSummary}
+                    renderDetail={renderDetail}
+                  />
+                ) : (
+                  nsItems.map((item, idx) => {
                     const highlighted = isHighlighted(item)
                     return (
                       <div
@@ -188,9 +301,11 @@ export function ResourcePageScaffold<T>({
                         </ExpandableCard>
                       </div>
                     )
-                  })}
-                </NamespaceGroup>
-              ))}
+                  })
+                )}
+              </NamespaceGroup>
+            ))
+          )}
         </div>
       )}
     </>
