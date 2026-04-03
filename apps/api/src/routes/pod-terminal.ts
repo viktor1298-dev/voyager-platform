@@ -128,7 +128,7 @@ export async function registerPodTerminalRoute(app: FastifyInstance): Promise<vo
     })
 
     socket.on('error', (err: Error) => {
-      app.log.error(`[pod-terminal] WebSocket error: ${err.message}`)
+      app.log.error({ err }, 'Pod terminal WebSocket error')
     })
   })
 }

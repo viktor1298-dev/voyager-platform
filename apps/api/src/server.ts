@@ -208,7 +208,7 @@ app.register(fastifyTRPCOpenApiPlugin, {
 app.register(async (instance) => {
   try {
     const spec = generateOpenApiSpec()
-    instance.log.info(`[OpenAPI] Generated spec with ${Object.keys(spec.paths ?? {}).length} paths`)
+    instance.log.info({ pathCount: Object.keys(spec.paths ?? {}).length }, 'OpenAPI spec generated')
 
     await instance.register(swagger, {
       mode: 'static',
@@ -224,7 +224,7 @@ app.register(async (instance) => {
       reply.send(spec)
     })
   } catch (error) {
-    instance.log.warn({ err: error }, '[OpenAPI] Swagger registration failed; /docs unavailable')
+    instance.log.warn({ err: error }, 'Swagger registration failed, /docs unavailable')
   }
 })
 

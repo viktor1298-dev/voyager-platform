@@ -15,15 +15,7 @@ const OTEL_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
 
 let sdk: NodeSDK | null = null
 
-// Telemetry initializes before Fastify boots, so use a lazy logger
-function log() {
-  try {
-    return createComponentLogger('telemetry')
-  } catch {
-    // Logger not yet initialized — fall back to console for early boot
-    return { info: console.log, warn: console.warn, error: console.error } as never
-  }
-}
+const log = createComponentLogger('telemetry')
 
 if (OTEL_ENDPOINT) {
   try {
@@ -49,13 +41,13 @@ if (OTEL_ENDPOINT) {
       ],
     })
     sdk.start()
-    log().info({ endpoint: OTEL_ENDPOINT }, 'OpenTelemetry SDK started')
+    log.info({ endpoint: OTEL_ENDPOINT }, 'OpenTelemetry SDK started')
   } catch (err) {
-    log().warn({ err }, 'Failed to start OpenTelemetry SDK')
+    log.warn({ err }, 'Failed to start OpenTelemetry SDK')
     sdk = null
   }
 } else {
-  log().info('OTEL_EXPORTER_OTLP_ENDPOINT not set — telemetry disabled')
+  log.info('OTEL_EXPORTER_OTLP_ENDPOINT not set — telemetry disabled')
 }
 
 export async function shutdownTelemetry(): Promise<void> {
