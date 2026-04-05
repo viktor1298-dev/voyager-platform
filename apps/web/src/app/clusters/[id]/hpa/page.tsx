@@ -17,6 +17,7 @@ const YamlViewer = dynamic(
 )
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -288,9 +289,10 @@ export default function HPAPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['hpa'] as const)
 
   const hpa = useClusterResources<HPAData>(resolvedId, 'hpa')
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'hpa')
   const isLoading = hpa.length === 0 && !snapshotsReady
 
   return (

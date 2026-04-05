@@ -25,6 +25,7 @@ const TopologyMap = dynamic(
 import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { trpc } from '@/lib/trpc'
 import { timeAgo } from '@/lib/time-utils'
@@ -257,6 +258,7 @@ export default function ClusterOverviewPage() {
   const utils = trpc.useUtils()
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['nodes', 'pods', 'events', 'namespaces'] as const)
 
   // Zustand store for live resource data
   const liveNodes = useClusterResources<Record<string, unknown>>(resolvedId, 'nodes')
@@ -264,7 +266,7 @@ export default function ClusterOverviewPage() {
   const livePods = useClusterResources<Record<string, unknown>>(resolvedId, 'pods')
   const liveNamespaces = useClusterResources<Record<string, unknown>>(resolvedId, 'namespaces')
   const connectionState = useConnectionState(resolvedId)
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'nodes')
   const effectiveIsLive = connectionState === 'connected' || connectionState === 'reconnecting'
 
   const [activeTab, setActiveTab] = useState(effectiveIsLive ? 'live' : 'stored')

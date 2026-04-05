@@ -16,6 +16,7 @@ const YamlViewer = dynamic(
 )
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { resolveResourceStatus } from '@/lib/resource-status'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
@@ -161,9 +162,10 @@ export default function NamespacesPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['namespaces'] as const)
 
   const namespaces = useClusterResources<NamespaceData>(resolvedId, 'namespaces')
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'namespaces')
   const isLoading = namespaces.length === 0 && !snapshotsReady
 
   return (

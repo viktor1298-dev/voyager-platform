@@ -17,6 +17,7 @@ const YamlViewer = dynamic(
 )
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -138,9 +139,10 @@ export default function ConfigMapsPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['configmaps'] as const)
 
   const configmaps = useClusterResources<ConfigMapData>(resolvedId, 'configmaps')
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'configmaps')
   const isLoading = configmaps.length === 0 && !snapshotsReady
 
   return (

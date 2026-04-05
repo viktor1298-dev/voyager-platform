@@ -9,6 +9,7 @@ import { EventsTimeline } from '@/components/events/EventsTimeline'
 import { ResourcePageScaffold } from '@/components/resource'
 import { severityColor } from '@/lib/status-utils'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -130,6 +131,7 @@ export default function EventsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['events'] as const)
 
   // Raw shape from resource mapper (SSE snapshot/watch)
   interface RawEvent {
@@ -147,7 +149,7 @@ export default function EventsPage() {
 
   const liveEventsRaw = useClusterResources<RawEvent>(resolvedId, 'events')
   const connectionState = useConnectionState(resolvedId)
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'events')
   const effectiveIsLive = connectionState === 'connected' || connectionState === 'reconnecting'
 
   const events: EventData[] = useMemo(() => {

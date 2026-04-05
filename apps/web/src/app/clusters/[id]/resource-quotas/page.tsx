@@ -8,6 +8,7 @@ import { SearchFilterBar, SectionLoadingSkeleton } from '@/components/resource'
 import { ResourceQuotaCard } from '@/components/quotas/ResourceQuotaCard'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 interface ResourceQuotaData {
@@ -68,10 +69,11 @@ export default function ResourceQuotasPage() {
 
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
+  useRequestResourceTypes(clusterId, ['resource-quotas'] as const)
 
   const quotas = useClusterResources<ResourceQuotaData>(clusterId, 'resource-quotas')
   const connectionState = useConnectionState(clusterId)
-  const snapshotsReady = useSnapshotsReady(clusterId)
+  const snapshotsReady = useSnapshotsReady(clusterId, 'resource-quotas')
 
   const [searchQuery, setSearchQuery] = useState('')
   const [namespacesOpen, setNamespacesOpen] = useState(true)

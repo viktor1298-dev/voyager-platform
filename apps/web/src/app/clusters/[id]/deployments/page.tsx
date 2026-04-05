@@ -35,6 +35,7 @@ const YamlViewer = dynamic(
   { ssr: false },
 )
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
@@ -350,9 +351,10 @@ export default function DeploymentsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['deployments'] as const)
 
   const deployments = useClusterResources<DeploymentDetail>(resolvedId, 'deployments')
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'deployments')
   const isLoading = deployments.length === 0 && !snapshotsReady
 
   return (

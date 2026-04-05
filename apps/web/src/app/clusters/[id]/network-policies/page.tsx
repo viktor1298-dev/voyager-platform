@@ -16,6 +16,7 @@ const NetworkPolicyGraph = dynamic(
   },
 )
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { SectionLoadingSkeleton } from '@/components/resource'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
@@ -58,11 +59,12 @@ export default function NetworkPoliciesPage() {
 
   const { id: routeSegment } = useParams<{ id: string }>()
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
+  useRequestResourceTypes(clusterId, ['network-policies'] as const)
   const [viewMode, setViewMode] = useState<ViewMode>('list')
 
   const policies = useClusterResources<PolicyItem>(clusterId, 'network-policies')
   const connectionState = useConnectionState(clusterId)
-  const snapshotsReady = useSnapshotsReady(clusterId)
+  const snapshotsReady = useSnapshotsReady(clusterId, 'network-policies')
 
   return (
     <div>

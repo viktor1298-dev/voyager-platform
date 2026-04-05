@@ -26,6 +26,7 @@ const YamlViewer = dynamic(
 )
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -295,9 +296,10 @@ export default function DaemonSetsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['daemonsets'] as const)
 
   const daemonsets = useClusterResources<DaemonSetData>(resolvedId, 'daemonsets')
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'daemonsets')
   const isLoading = daemonsets.length === 0 && !snapshotsReady
 
   return (

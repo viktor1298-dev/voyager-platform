@@ -16,6 +16,7 @@ const YamlViewer = dynamic(
   { ssr: false },
 )
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -253,9 +254,10 @@ export default function ServicesPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['services'] as const)
 
   const services = useClusterResources<ServiceDetail>(resolvedId, 'services')
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'services')
   const isLoading = services.length === 0 && !snapshotsReady
 
   return (

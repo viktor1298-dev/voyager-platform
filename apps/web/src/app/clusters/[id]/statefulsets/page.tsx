@@ -35,6 +35,7 @@ const YamlViewer = dynamic(
   { ssr: false },
 )
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
@@ -339,9 +340,10 @@ export default function StatefulSetsPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['statefulsets'] as const)
 
   const statefulsets = useClusterResources<StatefulSetData>(resolvedId, 'statefulsets')
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'statefulsets')
   const isLoading = statefulsets.length === 0 && !snapshotsReady
 
   return (

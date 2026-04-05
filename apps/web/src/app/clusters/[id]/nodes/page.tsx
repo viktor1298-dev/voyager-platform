@@ -26,6 +26,7 @@ import { TableLoadingSkeleton } from '@/components/resource'
 import { RelationsTab } from '@/components/resource/RelationsTab'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -257,10 +258,11 @@ export default function NodesPage() {
 
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['nodes'] as const)
 
   const sseNodes = useClusterResources<LiveNode>(resolvedId, 'nodes')
   const connectionState = useConnectionState(resolvedId)
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'nodes')
 
   // Fetch node metrics via tRPC (Metrics API is not watchable, SSE has no usage data)
   const nodesWithMetrics = trpc.nodes.listLive.useQuery(

@@ -17,6 +17,7 @@ const YamlViewer = dynamic(
 )
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -174,9 +175,10 @@ export default function CronJobsPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['cronjobs'] as const)
 
   const cronjobs = useClusterResources<CronJobData>(resolvedId, 'cronjobs')
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'cronjobs')
   const isLoading = cronjobs.length === 0 && !snapshotsReady
 
   return (

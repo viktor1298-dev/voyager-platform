@@ -17,6 +17,7 @@ const YamlViewer = dynamic(
 )
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -166,9 +167,10 @@ export default function SecretsPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['secrets'] as const)
 
   const secrets = useClusterResources<SecretData>(resolvedId, 'secrets')
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'secrets')
   const isLoading = secrets.length === 0 && !snapshotsReady
 
   return (

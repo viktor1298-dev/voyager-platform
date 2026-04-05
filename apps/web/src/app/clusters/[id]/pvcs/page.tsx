@@ -18,6 +18,7 @@ const YamlViewer = dynamic(
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
 import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { resolveResourceStatus } from '@/lib/resource-status'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -204,9 +205,10 @@ export default function PVCsPage() {
   const clusterId = getClusterIdFromRouteSegment(routeSegment)
   const dbCluster = trpc.clusters.get.useQuery({ id: clusterId })
   const resolvedId = dbCluster.data?.id ?? clusterId
+  useRequestResourceTypes(resolvedId, ['pvcs'] as const)
 
   const pvcs = useClusterResources<PVCData>(resolvedId, 'pvcs')
-  const snapshotsReady = useSnapshotsReady(resolvedId)
+  const snapshotsReady = useSnapshotsReady(resolvedId, 'pvcs')
   const isLoading = pvcs.length === 0 && !snapshotsReady
 
   return (
