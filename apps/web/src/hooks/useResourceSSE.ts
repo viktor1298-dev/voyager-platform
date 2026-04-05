@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import type { WatchEvent, WatchEventBatch, WatchStatusEvent } from '@voyager/types'
+import type { ResourceType, WatchEvent, WatchEventBatch, WatchStatusEvent } from '@voyager/types'
 import {
   SSE_CLIENT_HEARTBEAT_TIMEOUT_MS,
   SSE_INITIAL_RECONNECT_DELAY_MS,
@@ -27,7 +27,10 @@ export type { ConnectionState }
  * Placed once in the cluster layout -- all tabs get live updates for free.
  * Exposes connectionState for ConnectionStatusBadge to consume.
  */
-export function useResourceSSE(clusterId: string | null): { connectionState: ConnectionState } {
+export function useResourceSSE(
+  clusterId: string | null,
+  initialTypes?: readonly ResourceType[],
+): { connectionState: ConnectionState } {
   const connectionState = useConnectionState(clusterId ?? '')
   const eventSourceRef = useRef<EventSource | null>(null)
   const reconnectDelayRef = useRef(SSE_INITIAL_RECONNECT_DELAY_MS)
@@ -152,6 +155,8 @@ export function useResourceSSE(clusterId: string | null): { connectionState: Con
         if (e.lastEventId) lastEventIdRef.current = e.lastEventId
         try {
           const status: WatchStatusEvent = JSON.parse(e.data)
+          // 'ready' is a per-type informer event, not a connection state
+          if (status.state === 'ready') return
           setConnectionState(clusterId!, status.state as ConnectionState)
         } catch {
           /* ignore */
@@ -186,6 +191,9 @@ export function useResourceSSE(clusterId: string | null): { connectionState: Con
       let connectUrl = url
       if (lastEventIdRef.current) {
         connectUrl += `&lastEventId=${lastEventIdRef.current}`
+      }
+      if (initialTypes && initialTypes.length > 0) {
+        connectUrl += `&types=${initialTypes.join(',')}`
       }
       const es = new EventSource(connectUrl, { withCredentials: true })
       eventSourceRef.current = es
