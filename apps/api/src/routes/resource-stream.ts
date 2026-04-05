@@ -14,15 +14,15 @@ import {
   MAX_RESOURCE_CONNECTIONS_PER_CLUSTER,
   SSE_HEARTBEAT_INTERVAL_MS,
 } from '@voyager/config/sse'
-import { ConnectionLimiter, trackConnection } from '../lib/connection-tracker.js'
-import { createComponentLogger } from '../lib/logger.js'
 import { clusters, db } from '@voyager/db'
 import type { ResourceType, WatchEvent, WatchEventBatch, WatchStatusEvent } from '@voyager/types'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { auth } from '../lib/auth.js'
+import { ConnectionLimiter, trackConnection } from '../lib/connection-tracker.js'
 import { voyagerEmitter } from '../lib/event-emitter.js'
+import { createComponentLogger } from '../lib/logger.js'
 import { RESOURCE_DEFS, watchManager } from '../lib/watch-manager.js'
 
 const querySchema = z.object({

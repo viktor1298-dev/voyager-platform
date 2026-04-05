@@ -12,10 +12,10 @@
 import * as k8s from '@kubernetes/client-node'
 import {
   MAX_CONCURRENT_CLUSTER_WATCHES,
-  WATCH_RECONNECT_BASE_MS,
-  WATCH_RECONNECT_MAX_MS,
-  WATCH_RECONNECT_JITTER_RATIO,
   WATCH_HEARTBEAT_TIMEOUT_MS,
+  WATCH_RECONNECT_BASE_MS,
+  WATCH_RECONNECT_JITTER_RATIO,
+  WATCH_RECONNECT_MAX_MS,
 } from '@voyager/config/sse'
 import type { ResourceType, WatchEvent, WatchEventType } from '@voyager/types'
 import { clusterClientPool } from './cluster-client-pool.js'
@@ -232,10 +232,6 @@ function mapK8sEventToWatchType(k8sEvent: 'add' | 'update' | 'delete'): WatchEve
  *  Prevents cold cache on browser refresh — informers stay warm for 60s. */
 const UNSUBSCRIBE_GRACE_MS = 60_000
 
-/** Minimum interval between status events sent to SSE clients (ms).
- *  Prevents informer connect/error oscillation from flooding the browser. */
-const STATUS_THROTTLE_MS = 2_000
-
 /** How long a connection must be stable before resetting backoff to 0 (ms).
  *  Prevents backoff from resetting on brief connect-then-error cycles. */
 const STABLE_CONNECTION_MS = 10_000
@@ -245,35 +241,7 @@ export class WatchManager {
   private heartbeatTimers = new Map<string, NodeJS.Timeout>()
   private graceTimers = new Map<string, NodeJS.Timeout>()
   private generationCounter = 0
-  private lastStatusEmit = new Map<string, number>()
-  private pendingStatusTimers = new Map<string, NodeJS.Timeout>()
   private stableTimers = new Map<string, NodeJS.Timeout>()
-
-  /** Throttled status emit — coalesces rapid connect/reconnect oscillations */
-  private emitThrottledStatus(event: { clusterId: string; state: string; error?: string }): void {
-    const now = Date.now()
-    const last = this.lastStatusEmit.get(event.clusterId) ?? 0
-
-    // Clear any pending deferred emit
-    const pendingTimer = this.pendingStatusTimers.get(event.clusterId)
-    if (pendingTimer) clearTimeout(pendingTimer)
-
-    if (now - last >= STATUS_THROTTLE_MS) {
-      this.lastStatusEmit.set(event.clusterId, now)
-      voyagerEmitter.emitWatchStatus(event as Parameters<typeof voyagerEmitter.emitWatchStatus>[0])
-    } else {
-      // Defer: emit the latest state after the throttle window
-      const remaining = STATUS_THROTTLE_MS - (now - last)
-      const timer = setTimeout(() => {
-        this.pendingStatusTimers.delete(event.clusterId)
-        this.lastStatusEmit.set(event.clusterId, Date.now())
-        voyagerEmitter.emitWatchStatus(
-          event as Parameters<typeof voyagerEmitter.emitWatchStatus>[0],
-        )
-      }, remaining)
-      this.pendingStatusTimers.set(event.clusterId, timer)
-    }
-  }
 
   private resetHeartbeat(clusterId: string, type: ResourceType): void {
     const key = `${clusterId}:${type}`
@@ -327,7 +295,10 @@ export class WatchManager {
 
     // Check limit
     if (this.clusters.size >= MAX_CONCURRENT_CLUSTER_WATCHES) {
-      log.warn({ clusterId, limit: MAX_CONCURRENT_CLUSTER_WATCHES }, 'Max concurrent watches reached, skipping cluster')
+      log.warn(
+        { clusterId, limit: MAX_CONCURRENT_CLUSTER_WATCHES },
+        'Max concurrent watches reached, skipping cluster',
+      )
       return
     }
 
@@ -406,14 +377,22 @@ export class WatchManager {
       for (let i = 0; i < results.length; i++) {
         if (results[i].status === 'rejected') {
           log.warn(
-            { clusterId, resourceType: toStart[i].type, err: (results[i] as PromiseRejectedResult).reason },
+            {
+              clusterId,
+              resourceType: toStart[i].type,
+              err: (results[i] as PromiseRejectedResult).reason,
+            },
             'Failed to start informer',
           )
         }
       }
 
       log.info(
-        { clusterId, requested: toStart.length, started: results.filter((r) => r.status === 'fulfilled').length },
+        {
+          clusterId,
+          requested: toStart.length,
+          started: results.filter((r) => r.status === 'fulfilled').length,
+        },
         'On-demand informers started',
       )
     }
@@ -508,7 +487,10 @@ export class WatchManager {
       if (newCount <= 0) {
         // Per-type grace period — keep informer warm for 60s
         const graceKey = `${clusterId}:${type}`
-        log.info({ clusterId, resourceType: type, graceMs: UNSUBSCRIBE_GRACE_MS }, 'Last subscriber for type left, starting grace period')
+        log.info(
+          { clusterId, resourceType: type, graceMs: UNSUBSCRIBE_GRACE_MS },
+          'Last subscriber for type left, starting grace period',
+        )
         const timer = setTimeout(() => {
           this.graceTimers.delete(graceKey)
           this.teardownType(clusterId, type)
@@ -658,10 +640,6 @@ export class WatchManager {
       clearTimeout(timer)
     }
     this.stableTimers.clear()
-    for (const timer of this.pendingStatusTimers.values()) {
-      clearTimeout(timer)
-    }
-    this.pendingStatusTimers.clear()
     log.info('Stopped all informers for all clusters')
   }
 
@@ -685,12 +663,19 @@ export class WatchManager {
     // status on subscribe are emitted. This prevents the browser from flashing
     // "Reconnecting..." every few seconds due to normal informer error/reconnect cycles.
     if (attempt <= 3) {
-      log.warn({ clusterId, resourceType: type, attempt, delayMs: Math.round(delay + jitter), err }, 'Informer error, reconnecting')
+      log.warn(
+        { clusterId, resourceType: type, attempt, delayMs: Math.round(delay + jitter), err },
+        'Informer error, reconnecting',
+      )
     }
 
     setTimeout(() => {
       const current = this.clusters.get(clusterId)
-      if (current && current.generation === generation && ((current.typeSubscriberCount.get(type) ?? 0) > 0)) {
+      if (
+        current &&
+        current.generation === generation &&
+        (current.typeSubscriberCount.get(type) ?? 0) > 0
+      ) {
         const informer = current.informers.get(type)
         informer?.start().catch((startErr) => this.handleInformerError(clusterId, type, startErr))
       }

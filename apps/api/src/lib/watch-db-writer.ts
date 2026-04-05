@@ -5,20 +5,21 @@
  * Uses debounced periodic sync (not per-event writes) to avoid overwhelming the DB
  * during rolling deployments.
  */
-import { CoreV1Api, VersionApi } from '@kubernetes/client-node'
+
 import type * as k8s from '@kubernetes/client-node'
-import { clusters, db, events, nodes } from '@voyager/db'
-import { and, eq, notInArray, sql } from 'drizzle-orm'
-import { WATCH_DB_SYNC_INTERVAL_MS } from '@voyager/config/sse'
+import { CoreV1Api, VersionApi } from '@kubernetes/client-node'
 import { detectProviderFromKubeconfig } from '@voyager/config/providers'
+import { WATCH_DB_SYNC_INTERVAL_MS } from '@voyager/config/sse'
+import { clusters, db, events, nodes } from '@voyager/db'
 import type { ResourceType, WatchEvent, WatchStatusEvent } from '@voyager/types'
+import { and, eq, notInArray, sql } from 'drizzle-orm'
+import { K8S_CONFIG } from '../config/k8s.js'
 import { clusterClientPool } from './cluster-client-pool.js'
 import { decryptCredential } from './credential-crypto.js'
 import { voyagerEmitter } from './event-emitter.js'
 import { parseCpuToNano, parseMemToBytes } from './k8s-units.js'
 import { createComponentLogger } from './logger.js'
 import { watchManager } from './watch-manager.js'
-import { K8S_CONFIG } from '../config/k8s.js'
 
 const log = createComponentLogger('watch-db-writer')
 
@@ -229,7 +230,15 @@ async function syncClusterHealth(clusterId: string): Promise<void> {
           const detection = detectProviderFromKubeconfig(config.kubeconfig)
           if (detection.confidence !== 'none') {
             updatePayload.provider = detection.provider
-            log.info({ clusterId, provider: detection.provider, signal: detection.signal, confidence: detection.confidence }, 'Auto-detected provider for cluster')
+            log.info(
+              {
+                clusterId,
+                provider: detection.provider,
+                signal: detection.signal,
+                confidence: detection.confidence,
+              },
+              'Auto-detected provider for cluster',
+            )
           }
         }
       } catch {
@@ -481,7 +490,10 @@ export async function syncSingleCluster(clusterId: string, clusterName: string):
 
     // Fetch version, nodes, pods in parallel
     const [versionInfo, nodesRes, podsRes] = await Promise.all([
-      kc.makeApiClient(VersionApi).getCode().catch(() => null),
+      kc
+        .makeApiClient(VersionApi)
+        .getCode()
+        .catch(() => null),
       coreApi.listNode().catch(() => null),
       coreApi.listPodForAllNamespaces().catch(() => null),
     ])
@@ -520,9 +532,7 @@ export async function syncSingleCluster(clusterId: string, clusterName: string):
         const status = readyCondition?.status === 'True' ? 'Ready' : 'NotReady'
         const labels = node.metadata?.labels ?? {}
         const role =
-          labels['node-role.kubernetes.io/control-plane'] !== undefined
-            ? 'control-plane'
-            : 'worker'
+          labels['node-role.kubernetes.io/control-plane'] !== undefined ? 'control-plane' : 'worker'
 
         return {
           clusterId,
