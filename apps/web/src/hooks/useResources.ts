@@ -56,12 +56,24 @@ export function useConnectionState(clusterId: string): ConnectionState {
 }
 
 /**
- * Check if a cluster has received at least one SSE snapshot.
+ * Check if a specific resource type for a cluster has received at least one SSE snapshot.
  * Use to distinguish "connected but waiting for data" from "connected and data is empty".
  * Pages should show loading skeleton when connected && !snapshotsReady.
  */
-export function useSnapshotsReady(clusterId: string): boolean {
-  return useResourceStore(useCallback((s) => s.snapshotsReady.has(clusterId), [clusterId]))
+export function useSnapshotsReady(clusterId: string, type?: ResourceType): boolean {
+  return useResourceStore(
+    useCallback(
+      (s) => {
+        if (type) return s.snapshotsReady.has(`${clusterId}:${type}`)
+        // Backward compat: if no type, check if ANY type for this cluster is ready
+        for (const key of s.snapshotsReady) {
+          if (key.startsWith(`${clusterId}:`)) return true
+        }
+        return false
+      },
+      [clusterId, type],
+    ),
+  )
 }
 
 /**
