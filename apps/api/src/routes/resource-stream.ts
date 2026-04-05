@@ -189,15 +189,15 @@ export async function handleResourceStream(
     }
   }
 
-  // 8b. Register per-type ready listener — fires progressive snapshot when each informer completes initial LIST
+  // 8b. Register per-type ready listener — fires progressive snapshot when each informer completes initial LIST.
+  // No connectionTypes filter: types requested via tRPC resources.subscribe (page navigation)
+  // also need their snapshots pushed through this SSE connection.
   const onWatchReady = (event: WatchStatusEvent): void => {
     if (event.state !== 'ready' || !event.resourceType) return
-    if (!connectionTypes.has(event.resourceType)) return
     const def = RESOURCE_DEFS.find((d) => d.type === event.resourceType)
     if (!def) return
     const resources = watchManager.getResources(clusterId, def.type)
     // Send snapshot even for empty types — frontend needs the event to mark snapshotsReady
-    // (without this, pages for empty resource types show "Loading..." forever)
     const mapped = resources ? resources.map((obj) => def.mapper(obj, clusterId)) : []
     writeEventWithId('snapshot', JSON.stringify({ resourceType: def.type, items: mapped }))
   }
