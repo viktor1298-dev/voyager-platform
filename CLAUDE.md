@@ -150,9 +150,9 @@ Browser → Next.js (SSR/CSR) → tRPC Client (rewritten to API)
                                      useResourceSSE → Zustand store
 ```
 
-**Live data pipeline (Lens-style):** K8s Watch API → unified WatchManager (informer ObjectCache = in-memory store) → SSE pushes full transformed objects (`event: watch`) → `useResourceSSE` applies directly to Zustand resource store → components re-render. No polling, no refetch round-trips. 17 resource types. Update latency: <2s. Fallback to K8s API via `cached()` when watches not ready. Browser connects SSE **directly to API** (`NEXT_PUBLIC_API_URL`) — no Next.js proxy for SSE.
+**Live data pipeline (Lens-style, on-demand):** SSE connects instantly (<100ms) — `WatchManager.subscribe()` only validates KubeConfig (no informers). Each page declares its resource types via `useRequestResourceTypes()` hook → tRPC `resources.subscribe` → `WatchManager.ensureTypes()` starts only the requested informers in parallel (`Promise.allSettled`). Snapshots stream progressively as each informer's initial LIST completes. 17 resource types total but only active types run. Per-type ref counting with 60s grace period per type. Lens-style connection pre-check: `/version` probe before accepting a cluster — terminal network errors (`EHOSTUNREACH`, `ECONNREFUSED`) immediately emit `disconnected` without starting informers. Max 5 retry attempts per informer before giving up. Browser connects SSE **directly to API** (`NEXT_PUBLIC_API_URL`) — no Next.js proxy for SSE.
 
-**Instant load (Rancher-style):** On cluster page mount, `useCachedResources` calls `resources.snapshot` tRPC endpoint to seed Zustand store from WatchManager cache before SSE connects (~50ms). WatchManager keeps informers alive for 60s after last subscriber disconnects (grace period), so browser refresh gets instant cached data instead of cold start.
+**Instant load (Rancher-style):** On cluster page mount, `useCachedResources` calls `resources.snapshot` tRPC endpoint to seed Zustand store from WatchManager cache before SSE connects (~50ms). WatchManager keeps informers alive for 60s after last subscriber disconnects (per-type grace period), so browser refresh gets instant cached data instead of cold start.
 
 ### Centralized Config
 

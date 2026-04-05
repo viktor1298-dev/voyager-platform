@@ -88,12 +88,12 @@ All Redis cache keys are centralized in `lib/cache-keys.ts`. **Never construct c
 | Abstraction | File | Pattern |
 |-------------|------|---------|
 | **K8s Resource Routers** | `routers/{resource}.ts` | `watchManager.getResources()` for in-memory data (returns null if not ready → fallback to `cached()` K8s API call). 17 watched types + topology + clusters. Non-watched: yaml, helm, crds, rbac |
-| **Unified WatchManager** | `lib/watch-manager.ts` | Single manager for all 17 K8s resource types. Informer ObjectCache = in-memory store. Per-cluster persistent lifecycle with reference counting. `getResources()` returns null until informer initial list completes (prevents race condition). Exponential backoff reconnect on errors. **60s grace period** on last subscriber disconnect — prevents cold cache on browser refresh. |
-| **Resources Router** | `routers/resources.ts` | Generic `resources.snapshot` endpoint — returns all cached WatchManager data in one HTTP response for instant page load |
+| **Unified WatchManager** | `lib/watch-manager.ts` | On-demand informers for all 17 K8s resource types. `subscribe()` is lightweight (KubeConfig + `/version` pre-check only). `ensureTypes(clusterId, types)` starts only requested informers in parallel (`Promise.allSettled`). Per-type ref counting + 60s grace period per type. Lens-style connection pre-check rejects unreachable clusters immediately. Max 5 retries per informer before giving up (no infinite retry storm). `getResources()` returns null until informer initial list completes. |
+| **Resources Router** | `routers/resources.ts` | `resources.snapshot` (cached WatchManager data), `resources.subscribe` (start on-demand informers), `resources.unsubscribe` (release ref counts) |
 | **Resource Mappers** | `lib/resource-mappers.ts` | 17 shared mapper functions (K8s raw → frontend shape). Used by both tRPC routers and SSE events to guarantee identical data shapes. |
 | **Watch DB Writer** | `lib/watch-db-writer.ts` | Debounced periodic PostgreSQL sync from watch events. Syncs health status, node counts, events, and K8s server version (via VersionApi) to clusters table. |
 | **Cluster Client Pool** | `lib/cluster-client-pool.ts` | Lazy-loaded per-cluster K8s clients; caches KubeConfig, handles credential decryption |
-| **Resource Stream Route** | `routes/resource-stream.ts` | SSE `/api/resources/stream` — immediate flush (no batching), per-cluster persistent watches with shared replay buffer, socket-tracked connection limits |
+| **Resource Stream Route** | `routes/resource-stream.ts` | SSE `/api/resources/stream` — non-blocking connect, `types` query param for initial resource types, progressive per-type snapshots via `onWatchReady`, connection-scoped auto-cleanup on disconnect, socket-tracked connection limits |
 | **Event Emitter** | `lib/event-emitter.ts` | Decouples watchers from SSE (one watch, many consumers) |
 | **Metrics Stream Job** | `jobs/metrics-stream-job.ts` | Reference-counted K8s metrics polling — starts on first SSE subscriber |
 | **Metrics SSE Route** | `routes/metrics-stream.ts` | `/api/metrics/stream?clusterId=<uuid>` — live K8s metrics at 10-15s resolution |

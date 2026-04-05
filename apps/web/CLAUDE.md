@@ -46,6 +46,7 @@ src/
 │   ├── useMetricsData.ts      # Unified metrics — SSE for ≤15m, tRPC for ≥30m
 │   ├── useMetricsSSE.ts       # SSE connection with exponential backoff + visibility-aware
 │   ├── useResourceSSE.ts      # K8s Watch → adaptive-batched Zustand store updates (flush on 20 events OR 1s timer)
+│   ├── useRequestResourceTypes.ts # Per-page on-demand informer subscription (tRPC subscribe/unsubscribe)
 │   ├── useCachedResources.ts  # Rancher-style tRPC prefetch → seeds Zustand before SSE
 │   ├── useHelmReleases.ts     # Hybrid SSE + tRPC merge for Helm releases
 │   ├── useResources.ts        # Resource data access hook
@@ -141,7 +142,8 @@ src/
 
 | Abstraction | File | Pattern |
 |-------------|------|---------|
-| **useResourceSSE** | `hooks/useResourceSSE.ts` | Direct EventSource to API (`NEXT_PUBLIC_API_URL`), adaptive-batched Zustand store updates (flush on 20 events OR 1s timer), exponential backoff reconnect, client heartbeat dead-connection detection |
+| **useResourceSSE** | `hooks/useResourceSSE.ts` | Direct EventSource to API (`NEXT_PUBLIC_API_URL`), `initialTypes` param for SSE query string, guards `ready` status events from connection state, adaptive-batched Zustand store updates (flush on 20 events OR 1s timer), exponential backoff reconnect, client heartbeat dead-connection detection |
+| **useRequestResourceTypes** | `hooks/useRequestResourceTypes.ts` | Per-page on-demand informer subscription — calls tRPC `resources.subscribe` on mount, `resources.unsubscribe` on unmount. Each cluster page declares which resource types it needs. React strict mode safe. |
 | **useMetricsData** | `hooks/useMetricsData.ts` | SSE for ≤15m, tRPC for ≥30m — seamless switching |
 | **CrosshairProvider** | `components/metrics/CrosshairProvider.tsx` | RAF-throttled shared crosshair across 4 metric panels |
 | **Metrics Buffer** | `lib/metrics-buffer.ts` | Circular buffer (65 points) with time-based eviction |
@@ -156,7 +158,7 @@ src/
 | **EventsTimeline** | `components/events/EventsTimeline.tsx` | Horizontal swim lanes with resource-type grouping |
 | **ResourceStatusBadge** | `components/shared/ResourceStatusBadge.tsx` | Icon + bordered badge for K8s resource status — 8 categories (healthy/completed/transitional/draining/error/critical/fatal/unknown) with unique icons and animations |
 | **resource-status** | `lib/resource-status.ts` | Centralized status config map + `resolveResourceStatus()` resolver — single source of truth for status → color/icon/animation mapping |
-| **useCachedResources** | `hooks/useCachedResources.ts` | Rancher-style tRPC prefetch — seeds Zustand store from WatchManager cache before SSE connects |
+| **useCachedResources** | `hooks/useCachedResources.ts` | Rancher-style tRPC prefetch — seeds Zustand store from WatchManager cache before SSE connects. Per-type `snapshotsReady` guard skips types already delivered by SSE. |
 | **LiveTimeAgo** | `components/shared/LiveTimeAgo.tsx` | Self-updating age label (1s interval) — decouples time display from resource store re-renders |
 
 ## Adding a New Page
