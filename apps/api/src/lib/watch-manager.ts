@@ -236,6 +236,22 @@ const UNSUBSCRIBE_GRACE_MS = 60_000
  *  Prevents backoff from resetting on brief connect-then-error cycles. */
 const STABLE_CONNECTION_MS = 10_000
 
+/** Max consecutive failures before giving up on an informer for a resource type.
+ *  After this many failures, the informer stops retrying and emits 'disconnected'.
+ *  Lens-style: don't retry indefinitely against unreachable clusters. */
+const MAX_INFORMER_RETRIES = 5
+
+/** Network error codes that indicate the host is permanently unreachable.
+ *  These are not transient — retrying won't help until the network changes. */
+const TERMINAL_NETWORK_ERRORS = new Set([
+  'EHOSTUNREACH',
+  'ECONNREFUSED',
+  'ENOTFOUND',
+  'ETIMEDOUT',
+  'ENETUNREACH',
+  'CERT_HAS_EXPIRED',
+])
+
 export class WatchManager {
   private clusters = new Map<string, ClusterWatches>()
   private heartbeatTimers = new Map<string, NodeJS.Timeout>()
@@ -302,11 +318,32 @@ export class WatchManager {
       return
     }
 
-    // Create cluster entry with KubeConfig but no informers
+    // Create cluster entry with KubeConfig but no informers.
+    // Lens-style connection pre-check: probe /version before accepting the cluster.
+    // This prevents starting informers against unreachable endpoints.
     const generation = ++this.generationCounter
 
     try {
       const kc = await clusterClientPool.getClient(clusterId)
+
+      // Quick reachability probe — if this fails, the cluster is unreachable
+      try {
+        await kc.makeApiClient(k8s.VersionApi).getCode()
+      } catch (probeErr) {
+        const code = (probeErr as { code?: string }).code
+        if (code && TERMINAL_NETWORK_ERRORS.has(code)) {
+          log.warn({ clusterId, code }, 'Cluster unreachable (connection pre-check failed)')
+          voyagerEmitter.emitWatchStatus({
+            clusterId,
+            state: 'disconnected',
+            error: `Cluster unreachable: ${code}`,
+          })
+          return
+        }
+        // Non-terminal errors (e.g., 401/403) — cluster is reachable but may need auth refresh.
+        // Proceed with registration — informers handle auth errors with retry.
+        log.info({ clusterId, err: probeErr }, 'Connection pre-check warning (proceeding anyway)')
+      }
 
       const cluster: ClusterWatches = {
         informers: new Map(),
@@ -655,13 +692,48 @@ export class WatchManager {
 
     const attempt = (cluster.reconnectAttempts.get(type) ?? 0) + 1
     cluster.reconnectAttempts.set(type, attempt)
+
+    // Check for terminal network errors — don't retry, fail immediately
+    const errorCode = (err as { code?: string }).code
+    const isTerminal = errorCode != null && TERMINAL_NETWORK_ERRORS.has(errorCode)
+
+    // Lens-style: stop retrying after MAX_INFORMER_RETRIES or on terminal network errors
+    if (isTerminal || attempt >= MAX_INFORMER_RETRIES) {
+      log.error(
+        { clusterId, resourceType: type, attempt, errorCode, isTerminal },
+        'Informer giving up — terminal error or max retries reached',
+      )
+
+      // Stop and remove this informer
+      const informer = cluster.informers.get(type)
+      if (informer) {
+        try {
+          informer.stop()
+        } catch {
+          /* ignore */
+        }
+      }
+      cluster.informers.delete(type)
+      cluster.ready.delete(type)
+      this.clearHeartbeat(clusterId, type)
+
+      // If ALL informers for this cluster have failed, emit disconnected
+      if (cluster.informers.size === 0) {
+        voyagerEmitter.emitWatchStatus({
+          clusterId,
+          state: 'disconnected',
+          error: isTerminal
+            ? `Cluster unreachable: ${errorCode}`
+            : `All informers failed after ${MAX_INFORMER_RETRIES} retries`,
+        })
+        log.warn({ clusterId }, 'All informers failed — cluster marked disconnected')
+      }
+      return
+    }
+
     const delay = Math.min(WATCH_RECONNECT_BASE_MS * 2 ** (attempt - 1), WATCH_RECONNECT_MAX_MS)
     const jitter = delay * WATCH_RECONNECT_JITTER_RATIO * Math.random()
 
-    // Log but don't emit status events — individual informer reconnects are silent.
-    // Only cluster-level disconnected (all informers failed) or the initial connected
-    // status on subscribe are emitted. This prevents the browser from flashing
-    // "Reconnecting..." every few seconds due to normal informer error/reconnect cycles.
     if (attempt <= 3) {
       log.warn(
         { clusterId, resourceType: type, attempt, delayMs: Math.round(delay + jitter), err },
