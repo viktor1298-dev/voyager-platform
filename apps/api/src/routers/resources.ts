@@ -1,6 +1,13 @@
 import { z } from 'zod'
+import type { ResourceType } from '@voyager/types'
 import { protectedProcedure, router } from '../trpc.js'
 import { RESOURCE_DEFS, watchManager } from '../lib/watch-manager.js'
+
+const resourceTypeEnum = z.enum([
+  'pods', 'services', 'configmaps', 'secrets', 'pvcs', 'namespaces',
+  'events', 'nodes', 'deployments', 'statefulsets', 'daemonsets',
+  'jobs', 'cronjobs', 'hpa', 'ingresses', 'network-policies', 'resource-quotas',
+] as const)
 
 /**
  * Generic resources router — serves cached WatchManager data via HTTP.
@@ -25,5 +32,36 @@ export const resourcesRouter = router({
         }
       }
       return result
+    }),
+
+  /**
+   * Subscribe to specific resource types for a cluster.
+   * Starts informers on-demand and returns when they are ready (initial list complete).
+   */
+  subscribe: protectedProcedure
+    .input(z.object({
+      clusterId: z.string().uuid(),
+      types: z.array(resourceTypeEnum).min(1).max(17),
+    }))
+    .mutation(async ({ input }) => {
+      const ready = await watchManager.ensureTypes(
+        input.clusterId,
+        input.types as ResourceType[],
+      )
+      return { ready }
+    }),
+
+  /**
+   * Unsubscribe from specific resource types for a cluster.
+   * Decrements reference counts; informers stop after grace period when refs hit zero.
+   */
+  unsubscribe: protectedProcedure
+    .input(z.object({
+      clusterId: z.string().uuid(),
+      types: z.array(resourceTypeEnum).min(1).max(17),
+    }))
+    .mutation(({ input }) => {
+      watchManager.releaseTypes(input.clusterId, input.types as ResourceType[])
+      return { ok: true }
     }),
 })
