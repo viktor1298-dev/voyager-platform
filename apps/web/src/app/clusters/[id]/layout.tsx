@@ -16,8 +16,11 @@ import { ConnectionStatusBadge } from '@/components/ConnectionStatusBadge'
 import { useCachedResources } from '@/hooks/useCachedResources'
 import { useResourceSSE } from '@/hooks/useResourceSSE'
 import { useResourceTick } from '@/hooks/useResources'
+import type { ResourceType } from '@voyager/types'
 import { SYNC_INTERVAL_MS } from '@/config/constants'
 import { trpc } from '@/lib/trpc'
+
+const INITIAL_RESOURCE_TYPES: readonly ResourceType[] = ['nodes', 'pods', 'events', 'namespaces']
 
 export default function ClusterLayout({ children }: { children: React.ReactNode }) {
   const { id: routeSegment } = useParams<{ id: string }>()
@@ -26,7 +29,7 @@ export default function ClusterLayout({ children }: { children: React.ReactNode 
   // Instant cached data via HTTP (before SSE connects)
   useCachedResources(clusterId)
   // Real-time resource updates — SSE connection covers ALL tabs
-  const { connectionState } = useResourceSSE(clusterId)
+  const { connectionState } = useResourceSSE(clusterId, INITIAL_RESOURCE_TYPES)
   // Drive the global 5s tick that keeps relative time labels current
   useResourceTick()
 
