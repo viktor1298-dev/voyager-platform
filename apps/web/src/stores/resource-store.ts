@@ -50,10 +50,11 @@ export const useResourceStore = create<ResourceStoreState>()((set) => ({
       }
       const next = new Map(state.resources)
       next.set(key, innerMap)
-      // Mark cluster as having received snapshots
-      if (!state.snapshotsReady.has(clusterId)) {
+      // Mark cluster:type as having received snapshots
+      const readyKey = `${clusterId}:${type}`
+      if (!state.snapshotsReady.has(readyKey)) {
         const ready = new Set(state.snapshotsReady)
-        ready.add(clusterId)
+        ready.add(readyKey)
         return { resources: next, snapshotsReady: ready }
       }
       return { resources: next }
@@ -125,14 +126,14 @@ export const useResourceStore = create<ResourceStoreState>()((set) => ({
   clearCluster: (clusterId) =>
     set((state) => {
       const next = new Map(state.resources)
+      const ready = new Set(state.snapshotsReady)
       const prefix = `${clusterId}:`
       for (const key of state.resources.keys()) {
-        if (key.startsWith(prefix)) {
-          next.delete(key)
-        }
+        if (key.startsWith(prefix)) next.delete(key)
       }
-      const ready = new Set(state.snapshotsReady)
-      ready.delete(clusterId)
+      for (const key of state.snapshotsReady) {
+        if (key.startsWith(prefix)) ready.delete(key)
+      }
       return {
         resources: next,
         snapshotsReady: ready,
