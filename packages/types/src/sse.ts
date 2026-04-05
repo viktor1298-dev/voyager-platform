@@ -159,7 +159,7 @@ export interface WatchEventBatch {
 
 export interface WatchStatusEvent {
   clusterId: string
-  state: 'connected' | 'reconnecting' | 'disconnected' | 'initializing'
+  state: 'connected' | 'reconnecting' | 'disconnected' | 'initializing' | 'ready'
   resourceType?: ResourceType
   error?: string
 }
