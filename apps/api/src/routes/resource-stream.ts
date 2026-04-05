@@ -196,10 +196,10 @@ export async function handleResourceStream(
     const def = RESOURCE_DEFS.find((d) => d.type === event.resourceType)
     if (!def) return
     const resources = watchManager.getResources(clusterId, def.type)
-    if (resources && resources.length > 0) {
-      const mapped = resources.map((obj) => def.mapper(obj, clusterId))
-      writeEventWithId('snapshot', JSON.stringify({ resourceType: def.type, items: mapped }))
-    }
+    // Send snapshot even for empty types — frontend needs the event to mark snapshotsReady
+    // (without this, pages for empty resource types show "Loading..." forever)
+    const mapped = resources ? resources.map((obj) => def.mapper(obj, clusterId)) : []
+    writeEventWithId('snapshot', JSON.stringify({ resourceType: def.type, items: mapped }))
   }
   voyagerEmitter.on(`watch-status:${clusterId}`, onWatchReady)
 
@@ -218,10 +218,8 @@ export async function handleResourceStream(
         const def = RESOURCE_DEFS.find((d) => d.type === type)
         if (!def) continue
         const resources = watchManager.getResources(clusterId, def.type)
-        if (resources && resources.length > 0) {
-          const mapped = resources.map((obj) => def.mapper(obj, clusterId))
-          writeEventWithId('snapshot', JSON.stringify({ resourceType: def.type, items: mapped }))
-        }
+        const mapped = resources ? resources.map((obj) => def.mapper(obj, clusterId)) : []
+        writeEventWithId('snapshot', JSON.stringify({ resourceType: def.type, items: mapped }))
       }
     }
   }
