@@ -11,8 +11,7 @@ import { clusters, db, events, nodes } from '@voyager/db'
 import { and, eq, notInArray, sql } from 'drizzle-orm'
 import { WATCH_DB_SYNC_INTERVAL_MS } from '@voyager/config/sse'
 import { detectProviderFromKubeconfig } from '@voyager/config/providers'
-import type { WatchEvent } from '@voyager/types'
-import type { WatchStatusEvent } from '@voyager/types'
+import type { ResourceType, WatchEvent, WatchStatusEvent } from '@voyager/types'
 import { clusterClientPool } from './cluster-client-pool.js'
 import { decryptCredential } from './credential-crypto.js'
 import { voyagerEmitter } from './event-emitter.js'
@@ -331,17 +330,53 @@ export function startWatchDbWriter(): void {
     // transition from 'unreachable' to 'active' within seconds, not minutes.
     if (event.state === 'connected') {
       const cid = event.clusterId
+      // Self-subscribe to core types needed for health/node/event sync
+      watchManager
+        .ensureTypes(cid, ['nodes', 'pods', 'events'] as ResourceType[])
+        .catch((err) =>
+          log.warn({ clusterId: cid, err }, 'Failed to ensure core types for db-writer'),
+        )
+      // Track which core types are ready for this cluster
+      const coreReady = new Set<string>()
+      const coreTypes = ['nodes', 'pods', 'events']
+      let synced = false
+      const checkAndSync = (readyType: string) => {
+        coreReady.add(readyType)
+        if (!synced && coreTypes.every((t) => coreReady.has(t))) {
+          synced = true
+          // All core types ready — run initial sync
+          syncClusterHealth(cid).catch((err) =>
+            log.warn({ clusterId: cid, err }, 'Immediate health sync failed'),
+          )
+          syncNodes(cid).catch((err) =>
+            log.warn({ clusterId: cid, err }, 'Immediate node sync failed'),
+          )
+          syncEvents(cid).catch((err) =>
+            log.warn({ clusterId: cid, err }, 'Immediate event sync failed'),
+          )
+        }
+      }
+      // Check if any core types are already ready (warm from grace period)
+      for (const t of coreTypes) {
+        if (watchManager.getResources(cid, t as ResourceType) !== null) {
+          checkAndSync(t)
+        }
+      }
+      // Listen for remaining ready events
+      const readyHandler = (readyEvent: WatchStatusEvent) => {
+        if (
+          readyEvent.state === 'ready' &&
+          readyEvent.resourceType &&
+          coreTypes.includes(readyEvent.resourceType)
+        ) {
+          checkAndSync(readyEvent.resourceType)
+        }
+      }
+      voyagerEmitter.on(`watch-status:${cid}`, readyHandler)
+      // Clean up after 30s (all core types should be ready by then)
       setTimeout(() => {
-        syncClusterHealth(cid).catch((err) =>
-          log.warn({ clusterId: cid, err }, 'Immediate health sync failed'),
-        )
-        syncNodes(cid).catch((err) =>
-          log.warn({ clusterId: cid, err }, 'Immediate node sync failed'),
-        )
-        syncEvents(cid).catch((err) =>
-          log.warn({ clusterId: cid, err }, 'Immediate event sync failed'),
-        )
-      }, 3_000)
+        voyagerEmitter.off(`watch-status:${cid}`, readyHandler)
+      }, 30_000)
       return
     }
 
