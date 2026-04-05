@@ -17,7 +17,7 @@ import {
 import { ConnectionLimiter, trackConnection } from '../lib/connection-tracker.js'
 import { createComponentLogger } from '../lib/logger.js'
 import { clusters, db } from '@voyager/db'
-import type { WatchEvent, WatchEventBatch, WatchStatusEvent } from '@voyager/types'
+import type { ResourceType, WatchEvent, WatchEventBatch, WatchStatusEvent } from '@voyager/types'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
@@ -28,6 +28,7 @@ import { RESOURCE_DEFS, watchManager } from '../lib/watch-manager.js'
 const querySchema = z.object({
   clusterId: z.string().uuid(),
   lastEventId: z.coerce.number().int().positive().optional(),
+  types: z.string().optional(),
 })
 
 const log = createComponentLogger('resource-stream')
@@ -146,7 +147,7 @@ export async function handleResourceStream(
   }
   voyagerEmitter.on(`watch-status:${clusterId}`, onWatchStatus)
 
-  // 7. Subscribe to unified WatchManager (reference-counted informers)
+  // 7. Subscribe to unified WatchManager (lightweight — creates cluster entry, no informers)
   try {
     await watchManager.subscribe(clusterId)
   } catch (err) {
@@ -159,9 +160,13 @@ export async function handleResourceStream(
       JSON.stringify({ clusterId, state: 'disconnected', error: errorMsg }),
     )
     log.error({ clusterId, err }, 'WatchManager subscribe failed')
+    return
   }
 
-  // 8. Check Last-Event-ID for reconnect replay (CONN-01)
+  // Track types subscribed through this connection (for auto-cleanup on disconnect)
+  const connectionTypes = new Set<ResourceType>()
+
+  // 8. Check Last-Event-ID for reconnect replay (CONN-01) — BEFORE parsing types
   // Check both header (native EventSource auto-reconnect) and query param (custom reconnect)
   const lastEventIdHeader = request.headers['last-event-id']
   const lastEventId = lastEventIdHeader
@@ -184,8 +189,45 @@ export async function handleResourceStream(
     }
   }
 
-  if (!replayed) {
-    // Send full snapshot — either first connect or buffer overflow
+  // 8b. Register per-type ready listener — fires progressive snapshot when each informer completes initial LIST
+  const onWatchReady = (event: WatchStatusEvent): void => {
+    if (event.state !== 'ready' || !event.resourceType) return
+    if (!connectionTypes.has(event.resourceType)) return
+    const def = RESOURCE_DEFS.find((d) => d.type === event.resourceType)
+    if (!def) return
+    const resources = watchManager.getResources(clusterId, def.type)
+    if (resources && resources.length > 0) {
+      const mapped = resources.map((obj) => def.mapper(obj, clusterId))
+      writeEventWithId('snapshot', JSON.stringify({ resourceType: def.type, items: mapped }))
+    }
+  }
+  voyagerEmitter.on(`watch-status:${clusterId}`, onWatchReady)
+
+  // 9. Parse initial types from query param and start on-demand informers
+  const requestedTypes = parsed.data.types
+    ? (parsed.data.types.split(',').filter(Boolean) as ResourceType[])
+    : []
+
+  if (requestedTypes.length > 0) {
+    for (const t of requestedTypes) connectionTypes.add(t)
+    const alreadyReady = await watchManager.ensureTypes(clusterId, requestedTypes)
+
+    // Send immediate snapshots for types that were already cached (no need to wait for ready event)
+    if (!replayed) {
+      for (const type of alreadyReady) {
+        const def = RESOURCE_DEFS.find((d) => d.type === type)
+        if (!def) continue
+        const resources = watchManager.getResources(clusterId, def.type)
+        if (resources && resources.length > 0) {
+          const mapped = resources.map((obj) => def.mapper(obj, clusterId))
+          writeEventWithId('snapshot', JSON.stringify({ resourceType: def.type, items: mapped }))
+        }
+      }
+    }
+  }
+
+  // Backward compat: if NO types requested AND no replay, send snapshots for whatever's already cached
+  if (requestedTypes.length === 0 && !replayed) {
     for (const def of RESOURCE_DEFS) {
       await new Promise((resolve) => setImmediate(resolve)) // yield event loop between snapshots
       const resources = watchManager.getResources(clusterId, def.type)
@@ -196,7 +238,7 @@ export async function handleResourceStream(
     }
   }
 
-  // 9. Listen on watch-event:<clusterId> — immediate write for most types,
+  // 10. Listen on watch-event:<clusterId> — immediate write for most types,
   //    500ms debounce for 'events' to reduce SSE flooding during deployments (A3)
   const EVENTS_DEBOUNCE_MS = 500
   const eventsBuffer: WatchEvent[] = []
@@ -231,14 +273,14 @@ export async function handleResourceStream(
   }
   voyagerEmitter.on(`watch-event:${clusterId}`, onWatchEvent)
 
-  // 10. Send explicit connected status for already-subscribed clusters (reconnect case)
+  // 11. Send explicit connected status for already-subscribed clusters (reconnect case)
   // When this is a reconnect, subscribe() just increments the counter without emitting
   // any status event — the client needs to know the cluster is connected.
   if (watchManager.isConnected(clusterId)) {
     writeEventWithId('status', JSON.stringify({ clusterId, state: 'connected' }))
   }
 
-  // 12. Heartbeat keepalive (named event so client JavaScript can listen)
+  // 12. Heartbeat keepalive
   const heartbeat = setInterval(() => {
     try {
       reply.raw.write('event: heartbeat\ndata: \n\n')
@@ -255,7 +297,10 @@ export async function handleResourceStream(
     eventsBuffer.length = 0
     voyagerEmitter.off(`watch-event:${clusterId}`, onWatchEvent)
     voyagerEmitter.off(`watch-status:${clusterId}`, onWatchStatus)
-    watchManager.unsubscribe(clusterId)
+    voyagerEmitter.off(`watch-status:${clusterId}`, onWatchReady)
+    if (connectionTypes.size > 0) {
+      watchManager.releaseTypes(clusterId, [...connectionTypes])
+    }
     connectionLimiter.remove(clusterId, reply.raw)
     // D7: Clean up replay buffers when no more SSE connections exist for this cluster
     if (!connectionLimiter.has(clusterId)) {
