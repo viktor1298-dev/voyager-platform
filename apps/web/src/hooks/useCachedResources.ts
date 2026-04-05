@@ -29,12 +29,12 @@ export function useCachedResources(clusterId: string | null) {
   useEffect(() => {
     if (!data || !clusterId) return
     const store = useResourceStore.getState()
-    // Only seed if store doesn't already have data for this cluster
-    // (SSE snapshots take priority once connected)
-    if (store.snapshotsReady.has(clusterId)) return
 
     for (const [type, items] of Object.entries(data)) {
       if (Array.isArray(items) && items.length > 0) {
+        // Skip types already delivered by SSE (SSE data is fresher)
+        const readyKey = `${clusterId}:${type}`
+        if (store.snapshotsReady.has(readyKey)) continue
         store.setResources(clusterId, type as ResourceType, items)
       }
     }
