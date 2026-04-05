@@ -1,8 +1,13 @@
 /**
- * Unified WatchManager — manages per-cluster K8s informers with reference counting.
+ * Unified WatchManager — manages per-cluster K8s informers with on-demand reference counting.
  * Uses informer's built-in ObjectCache as in-memory store (D-07).
  * Replaces both ClusterWatchManager (3 types) and ResourceWatchManager (12 types)
- * with a single manager covering all 15 resource types (D-06).
+ * with a single manager covering all 17 resource types (D-06).
+ *
+ * On-demand pattern: subscribe() creates a lightweight cluster entry (no informers).
+ * Callers then use ensureTypes(clusterId, types) to start only the informers they need.
+ * Per-type reference counting + 60s grace period ensures informers stay warm across
+ * browser refreshes while unused types are cleaned up individually.
  */
 import * as k8s from '@kubernetes/client-node'
 import {
@@ -201,12 +206,15 @@ interface ClusterWatches {
     ResourceType,
     k8s.Informer<k8s.KubernetesObject> & k8s.ObjectCache<k8s.KubernetesObject>
   >
-  subscriberCount: number
+  /** Per-type subscriber count — each ensureTypes() call increments, releaseTypes() decrements */
+  typeSubscriberCount: Map<ResourceType, number>
   reconnectAttempts: Map<ResourceType, number>
   /** Set of resource types whose initial list has completed (informer cache is populated) */
   ready: Set<ResourceType>
   /** Generation counter — prevents stale error handlers from affecting new subscriptions */
   generation: number
+  /** Cached KubeConfig for this cluster — created once during subscribe() */
+  kc: k8s.KubeConfig
 }
 
 // ── WatchManager Class ────────────────────────────────────────
@@ -299,17 +307,21 @@ export class WatchManager {
     }
   }
 
+  /**
+   * Lightweight cluster registration — creates cluster entry and KubeConfig but starts NO informers.
+   * Callers must follow up with ensureTypes(clusterId, types) to start specific informers.
+   */
   async subscribe(clusterId: string): Promise<void> {
-    // Cancel pending grace-period teardown if a new subscriber arrives
-    const pendingGrace = this.graceTimers.get(clusterId)
-    if (pendingGrace) {
-      clearTimeout(pendingGrace)
-      this.graceTimers.delete(clusterId)
+    // Cancel pending per-type grace timers for this cluster
+    for (const [key, timer] of this.graceTimers) {
+      if (key.startsWith(`${clusterId}:`)) {
+        clearTimeout(timer)
+        this.graceTimers.delete(key)
+      }
     }
 
-    let cluster = this.clusters.get(clusterId)
-    if (cluster) {
-      cluster.subscriberCount++
+    // Already registered — nothing to do (subscriber counts are managed by ensureTypes/releaseTypes)
+    if (this.clusters.has(clusterId)) {
       return
     }
 
@@ -319,100 +331,25 @@ export class WatchManager {
       return
     }
 
-    // First subscriber — create informers
+    // Create cluster entry with KubeConfig but no informers
     const generation = ++this.generationCounter
-    cluster = {
-      informers: new Map(),
-      subscriberCount: 1,
-      reconnectAttempts: new Map(),
-      ready: new Set(),
-      generation,
-    }
-    this.clusters.set(clusterId, cluster)
-
-    voyagerEmitter.emitWatchStatus({
-      clusterId,
-      state: 'initializing',
-    })
 
     try {
       const kc = await clusterClientPool.getClient(clusterId)
 
-      for (const def of RESOURCE_DEFS) {
-        try {
-          const listFn = def.listFn(kc)
-          const informer = k8s.makeInformer(
-            kc,
-            def.apiPath,
-            listFn,
-          ) as k8s.Informer<k8s.KubernetesObject> & k8s.ObjectCache<k8s.KubernetesObject>
-
-          // Register event handlers
-          for (const k8sEvent of ['add', 'update', 'delete'] as const) {
-            informer.on(k8sEvent, (obj: k8s.KubernetesObject) => {
-              const mapped = def.mapper(obj, clusterId)
-              const watchEvent: WatchEvent = {
-                type: mapK8sEventToWatchType(k8sEvent),
-                resourceType: def.type,
-                object: mapped,
-              }
-              voyagerEmitter.emitWatchEvent(clusterId, watchEvent)
-              this.resetHeartbeat(clusterId, def.type)
-            })
-          }
-
-          // Error handler with exponential backoff reconnect
-          informer.on('error', (err: unknown) => {
-            this.handleInformerError(clusterId, def.type, err)
-          })
-
-          // Connect handler — mark ready, defer backoff reset until stable.
-          // Individual informer reconnects are silent — no status event emitted.
-          // This prevents per-informer error/reconnect oscillation from flashing
-          // "Reconnecting..." in the browser every few seconds.
-          informer.on('connect', () => {
-            const c = this.clusters.get(clusterId)
-            if (c) {
-              c.ready.add(def.type)
-              this.resetHeartbeat(clusterId, def.type)
-
-              const stableKey = `${clusterId}:${def.type}`
-              const existingStable = this.stableTimers.get(stableKey)
-              if (existingStable) clearTimeout(existingStable)
-              this.stableTimers.set(
-                stableKey,
-                setTimeout(() => {
-                  this.stableTimers.delete(stableKey)
-                  const current = this.clusters.get(clusterId)
-                  if (current) current.reconnectAttempts.set(def.type, 0)
-                }, STABLE_CONNECTION_MS),
-              )
-            }
-          })
-
-          await informer.start()
-          cluster.informers.set(def.type, informer)
-        } catch (err) {
-          // Individual informer failure doesn't stop others
-          log.warn({ clusterId, resourceType: def.type, err }, 'Failed to start informer')
-        }
+      const cluster: ClusterWatches = {
+        informers: new Map(),
+        typeSubscriberCount: new Map(),
+        reconnectAttempts: new Map(),
+        ready: new Set(),
+        generation,
+        kc,
       }
+      this.clusters.set(clusterId, cluster)
 
-      if (cluster.informers.size > 0) {
-        voyagerEmitter.emitWatchStatus({ clusterId, state: 'connected' })
-        log.info({ clusterId, started: cluster.informers.size, total: RESOURCE_DEFS.length }, 'Informers started for cluster')
-      } else {
-        // No informers started — clean up
-        this.clusters.delete(clusterId)
-        voyagerEmitter.emitWatchStatus({
-          clusterId,
-          state: 'disconnected',
-          error: 'No informers started',
-        })
-        log.error({ clusterId }, 'No informers started for cluster')
-      }
+      voyagerEmitter.emitWatchStatus({ clusterId, state: 'connected' })
+      log.info({ clusterId }, 'Cluster registered (no informers yet — use ensureTypes)')
     } catch (err) {
-      this.clusters.delete(clusterId)
       voyagerEmitter.emitWatchStatus({
         clusterId,
         state: 'disconnected',
@@ -422,59 +359,227 @@ export class WatchManager {
     }
   }
 
-  unsubscribe(clusterId: string): void {
+  /**
+   * Start informers for the requested types (if not already running) and increment per-type subscriber counts.
+   * Returns array of types that were already ready (caller can send snapshots immediately for these).
+   * New informers are started in parallel via Promise.allSettled().
+   */
+  async ensureTypes(clusterId: string, types: ResourceType[]): Promise<ResourceType[]> {
+    const cluster = this.clusters.get(clusterId)
+    if (!cluster) return []
+
+    const alreadyReady: ResourceType[] = []
+    const toStart: ResourceDef[] = []
+
+    for (const type of types) {
+      // Increment per-type subscriber count
+      const prev = cluster.typeSubscriberCount.get(type) ?? 0
+      cluster.typeSubscriberCount.set(type, prev + 1)
+
+      // Cancel per-type grace timer if pending
+      const graceKey = `${clusterId}:${type}`
+      const graceTimer = this.graceTimers.get(graceKey)
+      if (graceTimer) {
+        clearTimeout(graceTimer)
+        this.graceTimers.delete(graceKey)
+      }
+
+      // If informer already exists, skip starting — just check if ready
+      if (cluster.informers.has(type)) {
+        if (cluster.ready.has(type)) {
+          alreadyReady.push(type)
+        }
+        continue
+      }
+
+      // Find resource definition for this type
+      const def = RESOURCE_DEFS.find((d) => d.type === type)
+      if (def) toStart.push(def)
+    }
+
+    // Start new informers in parallel
+    if (toStart.length > 0) {
+      const results = await Promise.allSettled(
+        toStart.map((def) => this.startInformer(clusterId, def)),
+      )
+
+      for (let i = 0; i < results.length; i++) {
+        if (results[i].status === 'rejected') {
+          log.warn(
+            { clusterId, resourceType: toStart[i].type, err: (results[i] as PromiseRejectedResult).reason },
+            'Failed to start informer',
+          )
+        }
+      }
+
+      log.info(
+        { clusterId, requested: toStart.length, started: results.filter((r) => r.status === 'fulfilled').length },
+        'On-demand informers started',
+      )
+    }
+
+    return alreadyReady
+  }
+
+  /**
+   * Start a single informer for a resource type. Extracted from the old subscribe() loop.
+   */
+  private async startInformer(clusterId: string, def: ResourceDef): Promise<void> {
     const cluster = this.clusters.get(clusterId)
     if (!cluster) return
 
-    cluster.subscriberCount--
-    if (cluster.subscriberCount <= 0) {
-      // Grace period: keep informers warm for 60s so browser refresh gets instant cache.
-      // If a new subscriber arrives within the window, subscribe() cancels this timer.
-      log.info({ clusterId, graceMs: UNSUBSCRIBE_GRACE_MS }, 'Last subscriber left, starting grace period')
-      const timer = setTimeout(() => {
-        this.graceTimers.delete(clusterId)
-        this.teardownCluster(clusterId)
-      }, UNSUBSCRIBE_GRACE_MS)
-      this.graceTimers.set(clusterId, timer)
+    const listFn = def.listFn(cluster.kc)
+    const informer = k8s.makeInformer(
+      cluster.kc,
+      def.apiPath,
+      listFn,
+    ) as k8s.Informer<k8s.KubernetesObject> & k8s.ObjectCache<k8s.KubernetesObject>
+
+    // Register event handlers
+    for (const k8sEvent of ['add', 'update', 'delete'] as const) {
+      informer.on(k8sEvent, (obj: k8s.KubernetesObject) => {
+        const mapped = def.mapper(obj, clusterId)
+        const watchEvent: WatchEvent = {
+          type: mapK8sEventToWatchType(k8sEvent),
+          resourceType: def.type,
+          object: mapped,
+        }
+        voyagerEmitter.emitWatchEvent(clusterId, watchEvent)
+        this.resetHeartbeat(clusterId, def.type)
+      })
+    }
+
+    // Error handler with exponential backoff reconnect
+    informer.on('error', (err: unknown) => {
+      this.handleInformerError(clusterId, def.type, err)
+    })
+
+    // Connect handler — mark ready, emit per-type ready status, defer backoff reset until stable.
+    // Only emits 'ready' on FIRST connect (not reconnects) to avoid spamming the browser.
+    informer.on('connect', () => {
+      const c = this.clusters.get(clusterId)
+      if (c) {
+        const wasReady = c.ready.has(def.type)
+        c.ready.add(def.type)
+        this.resetHeartbeat(clusterId, def.type)
+
+        // Emit per-type ready status only on first connect (not reconnects)
+        if (!wasReady) {
+          voyagerEmitter.emitWatchStatus({
+            clusterId,
+            state: 'ready',
+            resourceType: def.type,
+          })
+        }
+
+        const stableKey = `${clusterId}:${def.type}`
+        const existingStable = this.stableTimers.get(stableKey)
+        if (existingStable) clearTimeout(existingStable)
+        this.stableTimers.set(
+          stableKey,
+          setTimeout(() => {
+            this.stableTimers.delete(stableKey)
+            const current = this.clusters.get(clusterId)
+            if (current) current.reconnectAttempts.set(def.type, 0)
+          }, STABLE_CONNECTION_MS),
+        )
+      }
+    })
+
+    await informer.start()
+    cluster.informers.set(def.type, informer)
+  }
+
+  /**
+   * Decrement per-type subscriber counts and start grace period for types reaching 0.
+   * Types with no remaining subscribers are torn down after UNSUBSCRIBE_GRACE_MS.
+   */
+  releaseTypes(clusterId: string, types: ResourceType[]): void {
+    const cluster = this.clusters.get(clusterId)
+    if (!cluster) return
+
+    for (const type of types) {
+      const count = cluster.typeSubscriberCount.get(type) ?? 0
+      if (count <= 0) continue
+
+      const newCount = count - 1
+      cluster.typeSubscriberCount.set(type, newCount)
+
+      if (newCount <= 0) {
+        // Per-type grace period — keep informer warm for 60s
+        const graceKey = `${clusterId}:${type}`
+        log.info({ clusterId, resourceType: type, graceMs: UNSUBSCRIBE_GRACE_MS }, 'Last subscriber for type left, starting grace period')
+        const timer = setTimeout(() => {
+          this.graceTimers.delete(graceKey)
+          this.teardownType(clusterId, type)
+        }, UNSUBSCRIBE_GRACE_MS)
+        this.graceTimers.set(graceKey, timer)
+      }
     }
   }
 
-  /** Immediately stop all informers for a cluster and clean up. */
-  private teardownCluster(clusterId: string): void {
+  /**
+   * Stop a single informer and clean up its timers.
+   * If no informers remain for the cluster, deletes the cluster entry entirely.
+   */
+  private teardownType(clusterId: string, type: ResourceType): void {
     const cluster = this.clusters.get(clusterId)
     if (!cluster) return
-    // If someone re-subscribed during grace period, don't tear down
-    if (cluster.subscriberCount > 0) return
 
-    // Delete entry FIRST so stale error handlers see no cluster
-    this.clusters.delete(clusterId)
+    // Don't tear down if someone re-subscribed during grace period
+    if ((cluster.typeSubscriberCount.get(type) ?? 0) > 0) return
 
-    // Clear heartbeat and stable-connection timers before stopping informers
-    for (const [type] of cluster.informers) {
-      this.clearHeartbeat(clusterId, type)
-      const stableKey = `${clusterId}:${type}`
-      const stableTimer = this.stableTimers.get(stableKey)
-      if (stableTimer) {
-        clearTimeout(stableTimer)
-        this.stableTimers.delete(stableKey)
-      }
-    }
-
-    // Stop all informers — abort in-flight HTTP requests
-    for (const [, informer] of cluster.informers) {
+    const informer = cluster.informers.get(type)
+    if (informer) {
       try {
         informer.stop()
       } catch {
         // Ignore stop errors
       }
+      cluster.informers.delete(type)
     }
 
-    // Invalidate cached KubeConfig so next subscribe gets a fresh HTTP agent.
-    // informer.stop() may corrupt the shared agent's connection pool.
-    clusterClientPool.invalidate(clusterId)
+    // Clear heartbeat and stable-connection timers
+    this.clearHeartbeat(clusterId, type)
+    const stableKey = `${clusterId}:${type}`
+    const stableTimer = this.stableTimers.get(stableKey)
+    if (stableTimer) {
+      clearTimeout(stableTimer)
+      this.stableTimers.delete(stableKey)
+    }
 
-    voyagerEmitter.emitWatchStatus({ clusterId, state: 'disconnected' })
-    log.info({ clusterId }, 'Stopped all informers for cluster (grace expired)')
+    cluster.ready.delete(type)
+    cluster.reconnectAttempts.delete(type)
+    cluster.typeSubscriberCount.delete(type)
+
+    log.info({ clusterId, resourceType: type }, 'Stopped informer for type (grace expired)')
+
+    // If no informers remain, remove the cluster entry entirely
+    if (cluster.informers.size === 0) {
+      this.clusters.delete(clusterId)
+      clusterClientPool.invalidate(clusterId)
+      voyagerEmitter.emitWatchStatus({ clusterId, state: 'disconnected' })
+      log.info({ clusterId }, 'All informers stopped, cluster entry removed')
+    }
+  }
+
+  /**
+   * Release ALL active types for the cluster.
+   * Collects types with subscriber count > 0 and calls releaseTypes() for them.
+   */
+  unsubscribe(clusterId: string): void {
+    const cluster = this.clusters.get(clusterId)
+    if (!cluster) return
+
+    // Collect all types that have active subscribers
+    const activeTypes: ResourceType[] = []
+    for (const [type, count] of cluster.typeSubscriberCount) {
+      if (count > 0) activeTypes.push(type)
+    }
+
+    if (activeTypes.length > 0) {
+      this.releaseTypes(clusterId, activeTypes)
+    }
   }
 
   /**
@@ -505,7 +610,11 @@ export class WatchManager {
 
   isWatching(clusterId: string): boolean {
     const cluster = this.clusters.get(clusterId)
-    return !!cluster && cluster.subscriberCount > 0
+    if (!cluster) return false
+    for (const count of cluster.typeSubscriberCount.values()) {
+      if (count > 0) return true
+    }
+    return false
   }
 
   /** True when the cluster has active informers (watches running and healthy) */
@@ -517,7 +626,11 @@ export class WatchManager {
   getActiveClusterIds(): string[] {
     return [...this.clusters.keys()].filter((id) => {
       const c = this.clusters.get(id)
-      return c && c.subscriberCount > 0
+      if (!c) return false
+      for (const count of c.typeSubscriberCount.values()) {
+        if (count > 0) return true
+      }
+      return false
     })
   }
 
@@ -577,7 +690,7 @@ export class WatchManager {
 
     setTimeout(() => {
       const current = this.clusters.get(clusterId)
-      if (current && current.generation === generation && current.subscriberCount > 0) {
+      if (current && current.generation === generation && ((current.typeSubscriberCount.get(type) ?? 0) > 0)) {
         const informer = current.informers.get(type)
         informer?.start().catch((startErr) => this.handleInformerError(clusterId, type, startErr))
       }
