@@ -90,7 +90,9 @@ export async function registerPodTerminalRoute(app: FastifyInstance): Promise<vo
           true, // tty
           (status) => {
             if (socket.readyState === 1) {
-              socket.close(1000, JSON.stringify(status))
+              // WebSocket close reason must be ≤123 bytes (RFC 6455 §5.5)
+              const reason = JSON.stringify(status).slice(0, 123)
+              socket.close(1000, reason)
             }
           },
         )
