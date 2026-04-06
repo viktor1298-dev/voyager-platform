@@ -139,7 +139,7 @@ export function ClusterCard({
             )}
             <span className="text-[11px] text-[var(--color-text-dim)] transition-colors group-hover:text-[var(--color-text-muted)]">
               {provider}
-              {version ? ` · v${version}` : ''}
+              {version ? ` · ${version}` : ''}
             </span>
           </div>
         </div>
