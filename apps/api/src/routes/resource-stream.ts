@@ -142,7 +142,9 @@ export async function handleResourceStream(
   reply.raw.write(':connected\n\n')
 
   // 6. Register status listener BEFORE subscribe so events during initialization aren't lost
+  // Filter out per-type informer events (ready, snapshot-ready) — only forward connection states
   const onWatchStatus = (event: WatchStatusEvent): void => {
+    if (event.state === 'ready' || event.state === 'snapshot-ready') return
     writeEventWithId('status', JSON.stringify(event))
   }
   voyagerEmitter.on(`watch-status:${clusterId}`, onWatchStatus)
