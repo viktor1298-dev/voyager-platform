@@ -52,6 +52,8 @@ export const clusters = pgTable(
     lastHealthCheck: timestamp('last_health_check', { withTimezone: true }),
     version: varchar('version', { length: 50 }),
     nodesCount: integer('nodes_count').notNull().default(0),
+    totalPods: integer('total_pods').notNull().default(0),
+    runningPods: integer('running_pods').notNull().default(0),
     credentialRef: varchar('credential_ref', { length: 255 }),
     isActive: boolean('is_active').default(true).notNull(),
     lastConnectedAt: timestamp('last_connected_at', { withTimezone: true }),

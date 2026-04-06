@@ -116,8 +116,8 @@ function DashboardContent() {
               ? c.status
               : null,
         nodeCount: c.nodeCount,
-        runningPods: 0, // DB-only clusters don't have live pod counts
-        totalPods: 0,
+        runningPods: typeof c.runningPods === 'number' ? c.runningPods : 0,
+        totalPods: typeof c.totalPods === 'number' ? c.totalPods : 0,
         source: 'db',
         environment: getClusterEnvironment(c.name, c.provider),
         tags: getClusterTags({ name: c.name, provider: c.provider, source: 'db' }),
@@ -131,8 +131,14 @@ function DashboardContent() {
     () => clusterList.reduce((sum, c) => sum + c.nodeCount, 0),
     [clusterList],
   )
-  const runningPods = liveData?.runningPods ?? 0
-  const totalPods = liveData?.totalPods ?? 0
+  const runningPods = useMemo(
+    () => clusterList.reduce((sum, c) => sum + c.runningPods, 0),
+    [clusterList],
+  )
+  const totalPods = useMemo(
+    () => clusterList.reduce((sum, c) => sum + c.totalPods, 0),
+    [clusterList],
+  )
   const warningEvents = liveData?.events.filter((e) => e.type === 'Warning').length ?? 0
 
   const healthCounts = useMemo(() => {

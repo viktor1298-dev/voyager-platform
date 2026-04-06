@@ -179,7 +179,7 @@ export const clustersRouter = router({
       z.array(
         clusterSchema
           .omit({ connectionConfig: true })
-          .extend({ hasCredentials: z.boolean(), nodeCount: z.number().int() }),
+          .extend({ hasCredentials: z.boolean(), nodeCount: z.number().int(), totalPods: z.number().int(), runningPods: z.number().int() }),
       ),
     )
     .query(async ({ ctx }) => {
@@ -198,6 +198,8 @@ export const clustersRouter = router({
           lastHealthCheck: clusters.lastHealthCheck,
           version: clusters.version,
           nodesCount: clusters.nodesCount,
+          totalPods: clusters.totalPods,
+          runningPods: clusters.runningPods,
           credentialRef: clusters.credentialRef,
           isActive: clusters.isActive,
           lastConnectedAt: clusters.lastConnectedAt,

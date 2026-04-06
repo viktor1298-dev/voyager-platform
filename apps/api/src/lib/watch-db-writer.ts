@@ -508,6 +508,8 @@ export async function syncSingleCluster(clusterId: string, clusterName: string):
     const updatePayload: Record<string, unknown> = {
       healthStatus,
       nodesCount: totalNodes,
+      totalPods,
+      runningPods,
       lastHealthCheck: now,
       lastConnectedAt: now,
       status: 'active',

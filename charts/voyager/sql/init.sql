@@ -104,6 +104,8 @@ CREATE TABLE IF NOT EXISTS clusters (
   last_connected_at TIMESTAMPTZ,
   version VARCHAR(50),
   nodes_count INTEGER NOT NULL DEFAULT 0,
+  total_pods INTEGER NOT NULL DEFAULT 0,
+  running_pods INTEGER NOT NULL DEFAULT 0,
   credential_ref VARCHAR(255),
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
