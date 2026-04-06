@@ -34,7 +34,7 @@ const YamlViewer = dynamic(
   () => import('@/components/resource/YamlViewer').then((m) => ({ default: m.YamlViewer })),
   { ssr: false },
 )
-import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
@@ -354,8 +354,7 @@ export default function DeploymentsPage() {
   useRequestResourceTypes(resolvedId, ['deployments'] as const)
 
   const deployments = useClusterResources<DeploymentDetail>(resolvedId, 'deployments')
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'deployments')
-  const isLoading = deployments.length === 0 && !snapshotsReady
+  const isLoading = useResourceLoading(resolvedId, 'deployments', deployments.length)
 
   return (
     <ResourcePageScaffold<DeploymentDetail>

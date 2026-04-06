@@ -16,7 +16,7 @@ const YamlViewer = dynamic(
   { ssr: false },
 )
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
-import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
@@ -178,8 +178,7 @@ export default function CronJobsPage() {
   useRequestResourceTypes(resolvedId, ['cronjobs'] as const)
 
   const cronjobs = useClusterResources<CronJobData>(resolvedId, 'cronjobs')
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'cronjobs')
-  const isLoading = cronjobs.length === 0 && !snapshotsReady
+  const isLoading = useResourceLoading(resolvedId, 'cronjobs', cronjobs.length)
 
   return (
     <ResourcePageScaffold<CronJobData>

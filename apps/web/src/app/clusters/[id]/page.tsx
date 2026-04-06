@@ -24,7 +24,7 @@ const TopologyMap = dynamic(
 )
 import { healthBadgeLabel, normalizeLiveHealthStatus } from '@/lib/cluster-status'
 import { nodeStatusColor, severityColor } from '@/lib/status-utils'
-import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useConnectionState, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { DB_CLUSTER_REFETCH_MS } from '@/lib/cluster-constants'
 import { trpc } from '@/lib/trpc'
@@ -266,7 +266,6 @@ export default function ClusterOverviewPage() {
   const livePods = useClusterResources<Record<string, unknown>>(resolvedId, 'pods')
   const liveNamespaces = useClusterResources<Record<string, unknown>>(resolvedId, 'namespaces')
   const connectionState = useConnectionState(resolvedId)
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'nodes')
   const effectiveIsLive = connectionState === 'connected' || connectionState === 'reconnecting'
 
   const [activeTab, setActiveTab] = useState(effectiveIsLive ? 'live' : 'stored')
@@ -281,7 +280,7 @@ export default function ClusterOverviewPage() {
     { staleTime: DB_CLUSTER_REFETCH_MS },
   )
 
-  const isLoading = !snapshotsReady && liveNodes.length === 0 && dbCluster.isLoading
+  const isLoading = useResourceLoading(resolvedId, 'nodes', liveNodes.length) && dbCluster.isLoading
 
   const lastConnectedAtRaw = (() => {
     const v = dbCluster.data?.lastConnectedAt

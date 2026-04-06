@@ -17,7 +17,7 @@ const YamlViewer = dynamic(
 )
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
-import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -182,8 +182,7 @@ export default function JobsPage() {
   useRequestResourceTypes(resolvedId, ['jobs'] as const)
 
   const jobs = useClusterResources<JobData>(resolvedId, 'jobs')
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'jobs')
-  const isLoading = jobs.length === 0 && !snapshotsReady
+  const isLoading = useResourceLoading(resolvedId, 'jobs', jobs.length)
 
   return (
     <ResourcePageScaffold<JobData>

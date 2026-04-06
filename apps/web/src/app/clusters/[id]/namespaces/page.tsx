@@ -15,7 +15,7 @@ const YamlViewer = dynamic(
   { ssr: false },
 )
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
-import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { resolveResourceStatus } from '@/lib/resource-status'
@@ -165,8 +165,7 @@ export default function NamespacesPage() {
   useRequestResourceTypes(resolvedId, ['namespaces'] as const)
 
   const namespaces = useClusterResources<NamespaceData>(resolvedId, 'namespaces')
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'namespaces')
-  const isLoading = namespaces.length === 0 && !snapshotsReady
+  const isLoading = useResourceLoading(resolvedId, 'namespaces', namespaces.length)
 
   return (
     <ResourcePageScaffold<NamespaceData>

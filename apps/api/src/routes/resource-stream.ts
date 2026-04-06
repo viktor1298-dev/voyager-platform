@@ -199,7 +199,8 @@ export async function handleResourceStream(
     const def = RESOURCE_DEFS.find((d) => d.type === event.resourceType)
     if (!def) return
     const resources = watchManager.getResources(clusterId, def.type)
-    const mapped = resources ? resources.map((obj) => def.mapper(obj, clusterId)) : []
+    if (resources === null) return // informer not ready — don't send empty snapshot
+    const mapped = resources.map((obj) => def.mapper(obj, clusterId))
     writeEventWithId('snapshot', JSON.stringify({ resourceType: def.type, items: mapped }))
   }
   voyagerEmitter.on(`watch-status:${clusterId}`, onSnapshotReady)
@@ -220,7 +221,8 @@ export async function handleResourceStream(
         const def = RESOURCE_DEFS.find((d) => d.type === type)
         if (!def) continue
         const resources = watchManager.getResources(clusterId, def.type)
-        const mapped = resources ? resources.map((obj) => def.mapper(obj, clusterId)) : []
+        if (resources === null) continue // informer not ready — don't send empty snapshot
+        const mapped = resources.map((obj) => def.mapper(obj, clusterId))
         writeEventWithId('snapshot', JSON.stringify({ resourceType: def.type, items: mapped }))
       }
     }

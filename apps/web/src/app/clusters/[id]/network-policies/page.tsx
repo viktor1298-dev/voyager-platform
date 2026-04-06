@@ -15,7 +15,7 @@ const NetworkPolicyGraph = dynamic(
     loading: () => <div className="h-[600px] animate-pulse rounded-xl bg-[var(--color-bg-card)]" />,
   },
 )
-import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useConnectionState, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { SectionLoadingSkeleton } from '@/components/resource'
@@ -64,7 +64,7 @@ export default function NetworkPoliciesPage() {
 
   const policies = useClusterResources<PolicyItem>(clusterId, 'network-policies')
   const connectionState = useConnectionState(clusterId)
-  const snapshotsReady = useSnapshotsReady(clusterId, 'network-policies')
+  const isLoading = useResourceLoading(clusterId, 'network-policies', policies.length)
 
   return (
     <div>
@@ -103,15 +103,15 @@ export default function NetworkPoliciesPage() {
         <NetworkPolicyGraph clusterId={clusterId} />
       ) : (
         <div>
-          {!snapshotsReady && policies.length === 0 && <SectionLoadingSkeleton sections={2} />}
+          {isLoading && <SectionLoadingSkeleton sections={2} />}
 
-          {connectionState === 'disconnected' && policies.length === 0 && (
+          {connectionState === 'disconnected' && policies.length === 0 && !isLoading && (
             <div className="text-sm text-[var(--color-text-muted)] text-center py-8">
               Failed to load network policies.
             </div>
           )}
 
-          {snapshotsReady && policies.length === 0 && connectionState !== 'disconnected' && (
+          {!isLoading && policies.length === 0 && connectionState !== 'disconnected' && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Network className="h-8 w-8 text-[var(--color-text-dim)] mb-3" />
               <p className="text-sm font-medium text-[var(--color-text-muted)]">

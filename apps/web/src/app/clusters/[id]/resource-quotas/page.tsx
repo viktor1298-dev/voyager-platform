@@ -7,7 +7,7 @@ import { getClusterIdFromRouteSegment } from '@/components/cluster-route'
 import { SearchFilterBar, SectionLoadingSkeleton } from '@/components/resource'
 import { ResourceQuotaCard } from '@/components/quotas/ResourceQuotaCard'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useConnectionState, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -73,7 +73,6 @@ export default function ResourceQuotasPage() {
 
   const quotas = useClusterResources<ResourceQuotaData>(clusterId, 'resource-quotas')
   const connectionState = useConnectionState(clusterId)
-  const snapshotsReady = useSnapshotsReady(clusterId, 'resource-quotas')
 
   const [searchQuery, setSearchQuery] = useState('')
   const [namespacesOpen, setNamespacesOpen] = useState(true)
@@ -97,7 +96,7 @@ export default function ResourceQuotasPage() {
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]))
   }, [filteredQuotas])
 
-  const isLoading = !snapshotsReady && quotas.length === 0
+  const isLoading = useResourceLoading(clusterId, 'resource-quotas', quotas.length)
 
   if (connectionState === 'disconnected' && quotas.length === 0) {
     return (

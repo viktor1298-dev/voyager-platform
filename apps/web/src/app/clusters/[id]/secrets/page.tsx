@@ -16,7 +16,7 @@ const YamlViewer = dynamic(
   { ssr: false },
 )
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
-import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -170,8 +170,7 @@ export default function SecretsPage() {
   useRequestResourceTypes(resolvedId, ['secrets'] as const)
 
   const secrets = useClusterResources<SecretData>(resolvedId, 'secrets')
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'secrets')
-  const isLoading = secrets.length === 0 && !snapshotsReady
+  const isLoading = useResourceLoading(resolvedId, 'secrets', secrets.length)
 
   return (
     <ResourcePageScaffold<SecretData>

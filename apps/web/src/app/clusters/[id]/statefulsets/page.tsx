@@ -34,7 +34,7 @@ const YamlViewer = dynamic(
   () => import('@/components/resource/YamlViewer').then((m) => ({ default: m.YamlViewer })),
   { ssr: false },
 )
-import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
@@ -343,8 +343,7 @@ export default function StatefulSetsPage() {
   useRequestResourceTypes(resolvedId, ['statefulsets'] as const)
 
   const statefulsets = useClusterResources<StatefulSetData>(resolvedId, 'statefulsets')
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'statefulsets')
-  const isLoading = statefulsets.length === 0 && !snapshotsReady
+  const isLoading = useResourceLoading(resolvedId, 'statefulsets', statefulsets.length)
 
   return (
     <ResourcePageScaffold<StatefulSetData>
