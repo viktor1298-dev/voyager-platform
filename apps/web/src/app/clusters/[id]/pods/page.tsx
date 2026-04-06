@@ -552,16 +552,17 @@ function NamespacePodGroup({
   namespacesOpen: boolean
 }) {
   const [internalOpen, setInternalOpen] = useState(true)
-  const open = namespacesOpen ? internalOpen : false
-  const setOpen = (v: boolean) => {
-    if (namespacesOpen) setInternalOpen(v)
-  }
+
+  // Sync fold/unfold command to internal state (command, not lock)
+  useEffect(() => {
+    setInternalOpen(namespacesOpen)
+  }, [namespacesOpen])
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
+    <Collapsible open={internalOpen} onOpenChange={setInternalOpen}>
       <CollapsibleTrigger className="flex w-full items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
         <ChevronDown
-          className={`h-3.5 w-3.5 text-[var(--color-text-dim)] transition-transform ${open ? '' : '-rotate-90'}`}
+          className={`h-3.5 w-3.5 text-[var(--color-text-dim)] transition-transform ${internalOpen ? '' : '-rotate-90'}`}
         />
         <span className="text-xs font-bold font-mono text-[var(--color-text-secondary)]">
           {namespace}
