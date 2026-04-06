@@ -7,7 +7,7 @@ import { Dialog } from '@/components/ui/dialog'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { cardHover, cardTap } from '@/lib/animation-constants'
-import { type WebhookRow, mockAdminApi } from '@/lib/mock-admin-api'
+import { trpc } from '@/lib/trpc'
 import type { ColumnDef } from '@tanstack/react-table'
 import { ChevronDown, ChevronUp, Copy, Link2, Plus, Trash2, Webhook } from 'lucide-react'
 import { motion } from 'motion/react'
@@ -24,7 +24,23 @@ const WEBHOOK_EVENTS = [
   'user.created',
 ] as const
 
-function formatDate(date: string | null) {
+type WebhookRow = {
+  id: string
+  name: string
+  url: string
+  events: string[]
+  enabled: boolean
+  lastTriggeredAt: string | Date | null
+  successRate: number
+  deliveries: Array<{
+    id: string
+    responseStatus: string | null
+    deliveredAt: string | Date
+    event: string
+  }>
+}
+
+function formatDate(date: string | Date | null) {
   if (!date) return '—'
   return new Date(date).toLocaleString('en-US', {
     month: 'short',
@@ -56,8 +72,6 @@ function WebhooksContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [webhooks, setWebhooks] = useState<WebhookRow[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [expandedWebhookId, setExpandedWebhookId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; url: string } | null>(null)
@@ -71,23 +85,28 @@ function WebhooksContent() {
     if (isAdmin === false) router.replace('/')
   }, [isAdmin, router])
 
-  useEffect(() => {
-    if (!isAdmin) return
-    let mounted = true
-    const run = async () => {
-      setIsLoading(true)
-      try {
-        const data = await mockAdminApi.webhooks.listWithDeliveries()
-        if (mounted) setWebhooks(data)
-      } finally {
-        if (mounted) setIsLoading(false)
-      }
-    }
-    void run()
-    return () => {
-      mounted = false
-    }
-  }, [isAdmin])
+  const webhooksQuery = trpc.webhooks.list.useQuery(undefined, { enabled: isAdmin === true })
+  const createMutation = trpc.webhooks.create.useMutation()
+  const deleteMutation = trpc.webhooks.delete.useMutation()
+
+  const webhooks: WebhookRow[] = useMemo(() => {
+    if (!webhooksQuery.data) return []
+    return webhooksQuery.data.map((w) => ({
+      id: w.id,
+      name: w.name,
+      url: w.url,
+      events: (w.events as string[]) ?? [],
+      enabled: w.enabled,
+      lastTriggeredAt: w.lastTriggeredAt,
+      successRate: w.successRate,
+      deliveries: (w.deliveries ?? []).map((d) => ({
+        id: d.id,
+        responseStatus: d.responseStatus,
+        deliveredAt: d.deliveredAt,
+        event: d.event,
+      })),
+    }))
+  }, [webhooksQuery.data])
 
   useEffect(() => {
     const onNew = () => setShowAdd(true)
@@ -127,13 +146,13 @@ function WebhooksContent() {
         ),
       },
       {
-        accessorKey: 'active',
+        accessorKey: 'enabled',
         header: 'Status',
         cell: ({ row }) => (
           <span
-            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.original.active ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}
+            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.original.enabled ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}
           >
-            {row.original.active ? 'Active' : 'Inactive'}
+            {row.original.enabled ? 'Active' : 'Inactive'}
           </span>
         ),
       },
@@ -244,7 +263,7 @@ function WebhooksContent() {
       <DataTable
         data={webhooks}
         columns={columns}
-        loading={isLoading}
+        loading={webhooksQuery.isLoading}
         searchable
         searchPlaceholder="Search webhooks…"
         emptyIcon={<Webhook className="h-10 w-10" />}
@@ -260,9 +279,9 @@ function WebhooksContent() {
                 {hook.url}
               </span>
               <span
-                className={`rounded-full px-2 py-0.5 text-xs ${hook.active ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}
+                className={`rounded-full px-2 py-0.5 text-xs ${hook.enabled ? 'bg-[var(--color-status-active)]/20 text-[var(--color-status-active)]' : 'bg-[var(--color-text-dim)]/10 text-[var(--color-text-dim)]'}`}
               >
-                {hook.active ? 'Active' : 'Inactive'}
+                {hook.enabled ? 'Active' : 'Inactive'}
               </span>
             </div>
             <p className="text-xs text-[var(--color-text-muted)]">{hook.events.join(', ')}</p>
@@ -289,12 +308,12 @@ function WebhooksContent() {
                     className="grid grid-cols-3 gap-2 rounded-md border border-[var(--color-border)]/70 bg-[var(--color-bg-surface)] px-3 py-2 text-xs"
                   >
                     <span className="text-[var(--color-text-secondary)]">
-                      Status: {d.statusCode}
+                      Status: {d.responseStatus}
                     </span>
                     <span className="text-[var(--color-text-muted)]">
-                      {formatDate(d.timestamp)}
+                      {formatDate(d.deliveredAt)}
                     </span>
-                    <span className="text-[var(--color-text-muted)]">Retry: {d.retryCount}</span>
+                    <span className="text-[var(--color-text-muted)]">{d.event}</span>
                   </div>
                 ))}
               </div>
@@ -324,9 +343,8 @@ function WebhooksContent() {
               return
             }
             try {
-              await mockAdminApi.webhooks.create({ url, events, secret, active })
-              const updated = await mockAdminApi.webhooks.listWithDeliveries()
-              setWebhooks(updated)
+              await createMutation.mutateAsync({ url, events, secret, active })
+              webhooksQuery.refetch()
               toast.success('Webhook created')
               setShowAdd(false)
               resetForm()
@@ -416,8 +434,8 @@ function WebhooksContent() {
         onConfirm={async () => {
           if (!deleteTarget) return
           try {
-            await mockAdminApi.webhooks.delete({ id: deleteTarget.id })
-            setWebhooks((prev) => prev.filter((item) => item.id !== deleteTarget.id))
+            await deleteMutation.mutateAsync({ id: deleteTarget.id })
+            webhooksQuery.refetch()
             toast.success('Webhook deleted')
             setDeleteTarget(null)
           } catch {

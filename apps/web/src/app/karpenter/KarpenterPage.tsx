@@ -12,13 +12,26 @@ import { PageTransition } from '@/components/animations'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { DataTable } from '@/components/DataTable'
 import { Badge } from '@/components/ui/badge'
-import {
-  type EC2NodeClass,
-  getKarpenterMetrics,
-  getMockEC2NodeClasses,
-  getMockNodePools,
-  type NodePool,
-} from '@/lib/mock-karpenter'
+export type NodePoolStatus = 'Ready' | 'Scaling' | 'Constrained'
+
+export type NodePool = {
+  id: string
+  name: string
+  status: NodePoolStatus
+  cpuLimit: number
+  memoryLimitGi: number
+  nodeCount: number
+  disruptionPolicy: 'WhenEmpty' | 'WhenUnderutilized' | 'Never'
+  workloads: string[]
+}
+
+export type EC2NodeClass = {
+  id: string
+  name: string
+  amiFamily: 'AL2' | 'Bottlerocket' | 'Ubuntu'
+  instanceTypes: string[]
+  subnets: string[]
+}
 import { getTRPCClient, trpc } from '@/lib/trpc'
 import { CardSkeleton } from '@/components/CardSkeleton'
 
@@ -48,7 +61,7 @@ function asStringArray(value: unknown): string[] {
 }
 
 function normalizeNodePools(input: unknown): NodePool[] {
-  if (!Array.isArray(input)) return getMockNodePools()
+  if (!Array.isArray(input)) return []
 
   const pools = input.map((item, index) => {
     const pool = asRecord(item)
@@ -71,11 +84,11 @@ function normalizeNodePools(input: unknown): NodePool[] {
     }
   })
 
-  return pools.length > 0 ? pools : getMockNodePools()
+  return pools
 }
 
 function normalizeNodeClasses(input: unknown): EC2NodeClass[] {
-  if (!Array.isArray(input)) return getMockEC2NodeClasses()
+  if (!Array.isArray(input)) return []
 
   const classes = input.map((item, index) => {
     const nodeClass = asRecord(item)
@@ -92,17 +105,16 @@ function normalizeNodeClasses(input: unknown): EC2NodeClass[] {
     }
   })
 
-  return classes.length > 0 ? classes : getMockEC2NodeClasses()
+  return classes
 }
 
 function normalizeMetrics(input: unknown) {
-  const fallback = getKarpenterMetrics()
   const metrics = asRecord(input)
 
   return {
-    nodesProvisioned: asNumber(metrics.nodesProvisioned, fallback.nodesProvisioned),
-    pendingPods: asNumber(metrics.pendingPods, fallback.pendingPods),
-    estimatedCostPerHour: asNumber(metrics.estimatedCostPerHour, fallback.estimatedCostPerHour),
+    nodesProvisioned: asNumber(metrics.nodesProvisioned, 0),
+    pendingPods: asNumber(metrics.pendingPods, 0),
+    estimatedCostPerHour: asNumber(metrics.estimatedCostPerHour, 0),
   }
 }
 
@@ -154,58 +166,59 @@ export default function KarpenterPage() {
       ?.id ??
     null
 
-  const nodePoolsFallback = useMemo(() => getMockNodePools(), [])
-  const nodeClassesFallback = useMemo(() => getMockEC2NodeClasses(), [])
+  const emptyPools: NodePool[] = useMemo(() => [], [])
+  const emptyClasses: EC2NodeClass[] = useMemo(() => [], [])
+  const emptyMetrics = useMemo(() => ({ nodesProvisioned: 0, pendingPods: 0, estimatedCostPerHour: 0 }), [])
 
   const nodePoolsQuery = useQuery({
     queryKey: ['karpenter', 'listNodePools', selectedClusterId],
     queryFn: async () => {
-      if (!selectedClusterId) return nodePoolsFallback
+      if (!selectedClusterId) return emptyPools
       try {
         const result = await trpcClient.query('karpenter.listNodePools', {
           clusterId: selectedClusterId,
         })
         return normalizeNodePools(result)
       } catch {
-        return nodePoolsFallback
+        return emptyPools
       }
     },
     enabled: !!selectedClusterId,
-    initialData: nodePoolsFallback,
+    initialData: emptyPools,
   })
 
   const nodeClassesQuery = useQuery({
     queryKey: ['karpenter', 'listEC2NodeClasses', selectedClusterId],
     queryFn: async () => {
-      if (!selectedClusterId) return nodeClassesFallback
+      if (!selectedClusterId) return emptyClasses
       try {
         const result = await trpcClient.query('karpenter.listEC2NodeClasses', {
           clusterId: selectedClusterId,
         })
         return normalizeNodeClasses(result)
       } catch {
-        return nodeClassesFallback
+        return emptyClasses
       }
     },
     enabled: !!selectedClusterId,
-    initialData: nodeClassesFallback,
+    initialData: emptyClasses,
   })
 
   const metricsQuery = useQuery({
     queryKey: ['karpenter', 'getMetrics', selectedClusterId],
     queryFn: async () => {
-      if (!selectedClusterId) return getKarpenterMetrics()
+      if (!selectedClusterId) return emptyMetrics
       try {
         const result = await trpcClient.query('karpenter.getMetrics', {
           clusterId: selectedClusterId,
         })
         return normalizeMetrics(result)
       } catch {
-        return getKarpenterMetrics()
+        return emptyMetrics
       }
     },
     enabled: !!selectedClusterId,
-    initialData: getKarpenterMetrics,
+    initialData: emptyMetrics,
   })
 
   const topologyQuery = useQuery({

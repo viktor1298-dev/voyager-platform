@@ -5,7 +5,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { motion } from 'motion/react'
 import { Plus, Users } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { DataTable } from '@/components/DataTable'
@@ -16,13 +16,8 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog } from '@/components/ui/dialog'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import {
-  getTeamMemberUserOptions,
-  mockAccessControlApi,
-  TEAM_ROLE_OPTIONS,
-  type Team,
-  type TeamRole,
-} from '@/lib/mock-access-control'
+import { type TeamRole, TEAM_ROLE_OPTIONS } from '@/lib/access-control'
+import { trpc } from '@/lib/trpc'
 
 const createTeamSchema = z.object({
   name: z.string().min(2, 'Team name is required'),
@@ -30,14 +25,27 @@ const createTeamSchema = z.object({
 })
 
 const teamRoles: TeamRole[] = TEAM_ROLE_OPTIONS
-const userOptions = getTeamMemberUserOptions()
 
-function formatDate(date: string) {
+function formatDate(date: string | Date) {
   return new Date(date).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   })
+}
+
+type TeamRow = {
+  id: string
+  name: string
+  description: string | null
+  createdAt: string | Date
+  members: Array<{
+    userId: string
+    name: string
+    email: string
+    role: TeamRole
+    avatar: string
+  }>
 }
 
 export const dynamic = 'force-dynamic'
@@ -48,50 +56,59 @@ export default function SettingsTeamsPage() {
 
   const isAdmin = useIsAdmin()
   const router = useRouter()
-  const [teams, setTeams] = useState<Team[]>([])
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
-  const [memberToAdd, setMemberToAdd] = useState('user-mai')
-  const [roleToAdd, setRoleToAdd] = useState<TeamRole>('member')
+
+  const teamsQuery = trpc.teams.list.useQuery(undefined, { enabled: isAdmin === true })
+  const usersQuery = trpc.users.list.useQuery(undefined, { enabled: isAdmin === true })
+  const createMutation = trpc.teams.create.useMutation()
+  const addMemberMutation = trpc.teams.addMember.useMutation()
+  const removeMemberMutation = trpc.teams.removeMember.useMutation()
 
   useEffect(() => {
     if (isAdmin === false) router.replace('/')
   }, [isAdmin, router])
 
   useEffect(() => {
-    if (!isAdmin) return
-    let mounted = true
-    const run = async () => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const data = await mockAccessControlApi.teams.list()
-        if (!mounted) return
-        setTeams(data)
-        setSelectedTeamId((prev) => prev ?? data[0]?.id ?? null)
-      } catch {
-        if (mounted) setError('Failed to load teams')
-      } finally {
-        if (mounted) setIsLoading(false)
-      }
+    if (teamsQuery.data && teamsQuery.data.length > 0 && !selectedTeamId) {
+      setSelectedTeamId(teamsQuery.data[0].id)
     }
-    void run()
-    return () => {
-      mounted = false
+  }, [teamsQuery.data, selectedTeamId])
+
+  const teams: TeamRow[] = useMemo(() => {
+    if (!teamsQuery.data) return []
+    return teamsQuery.data.map((team) => ({
+      id: team.id,
+      name: team.name,
+      description: team.description,
+      createdAt: team.createdAt,
+      members: (team as unknown as { members?: TeamRow['members'] }).members ?? [],
+    }))
+  }, [teamsQuery.data])
+
+  const userOptions = useMemo(() => {
+    if (!usersQuery.data) return []
+    return usersQuery.data.map((u) => ({ id: u.id, name: u.name }))
+  }, [usersQuery.data])
+
+  const [memberToAdd, setMemberToAdd] = useState('')
+  const [roleToAdd, setRoleToAdd] = useState<TeamRole>('member')
+
+  useEffect(() => {
+    if (userOptions.length > 0 && !memberToAdd) {
+      setMemberToAdd(userOptions[0].id)
     }
-  }, [isAdmin])
+  }, [userOptions, memberToAdd])
 
   const createForm = useForm({
     defaultValues: { name: '', description: '' },
     validators: { onChange: createTeamSchema },
     onSubmit: async ({ value }) => {
       try {
-        const created = await mockAccessControlApi.teams.create(value)
-        setTeams((prev) => [created, ...prev])
+        const created = await createMutation.mutateAsync(value)
         setSelectedTeamId(created.id)
         setShowCreate(false)
+        teamsQuery.refetch()
         toast.success('Team created')
       } catch {
         toast.error('Failed to create team')
@@ -101,7 +118,7 @@ export default function SettingsTeamsPage() {
 
   const selectedTeam = teams.find((team) => team.id === selectedTeamId) ?? null
 
-  const teamColumns = useMemo<ColumnDef<Team, unknown>[]>(
+  const teamColumns = useMemo<ColumnDef<TeamRow, unknown>[]>(
     () => [
       {
         accessorKey: 'name',
@@ -134,7 +151,7 @@ export default function SettingsTeamsPage() {
     [],
   )
 
-  const memberColumns = useMemo<ColumnDef<Team['members'][number], unknown>[]>(
+  const memberColumns = useMemo<ColumnDef<TeamRow['members'][number], unknown>[]>(
     () => [
       {
         accessorKey: 'name',
@@ -156,43 +173,9 @@ export default function SettingsTeamsPage() {
         accessorKey: 'role',
         header: 'Role',
         cell: ({ row }) => (
-          <select
-            aria-label={`Role for ${row.original.name}`}
-            value={row.original.role}
-            className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-2 py-1 text-xs"
-            onChange={async (event) => {
-              if (!selectedTeam) return
-              const role = event.target.value as TeamRole
-              try {
-                await mockAccessControlApi.teams.setMemberRole({
-                  teamId: selectedTeam.id,
-                  userId: row.original.userId,
-                  role,
-                })
-                setTeams((prev) =>
-                  prev.map((team) =>
-                    team.id === selectedTeam.id
-                      ? {
-                          ...team,
-                          members: team.members.map((member) =>
-                            member.userId === row.original.userId ? { ...member, role } : member,
-                          ),
-                        }
-                      : team,
-                  ),
-                )
-                toast.success('Team role updated')
-              } catch {
-                toast.error('Failed to update team role')
-              }
-            }}
-          >
-            {teamRoles.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
-            ))}
-          </select>
+          <span className="text-xs text-[var(--color-text-secondary)]">
+            {row.original.role}
+          </span>
         ),
       },
       {
@@ -205,22 +188,11 @@ export default function SettingsTeamsPage() {
             onClick={async () => {
               if (!selectedTeam) return
               try {
-                await mockAccessControlApi.teams.removeMember({
+                await removeMemberMutation.mutateAsync({
                   teamId: selectedTeam.id,
                   userId: row.original.userId,
                 })
-                setTeams((prev) =>
-                  prev.map((team) =>
-                    team.id === selectedTeam.id
-                      ? {
-                          ...team,
-                          members: team.members.filter(
-                            (member) => member.userId !== row.original.userId,
-                          ),
-                        }
-                      : team,
-                  ),
-                )
+                teamsQuery.refetch()
                 toast.success('Member removed')
               } catch {
                 toast.error('Failed to remove member')
@@ -232,7 +204,7 @@ export default function SettingsTeamsPage() {
         ),
       },
     ],
-    [selectedTeam],
+    [selectedTeam, removeMemberMutation, teamsQuery],
   )
 
   if (isAdmin === null)
@@ -251,7 +223,7 @@ export default function SettingsTeamsPage() {
 
   return (
     <div>
-      {error && <QueryError message={error} onRetry={() => window.location.reload()} />}
+      {teamsQuery.error && <QueryError message={teamsQuery.error.message} onRetry={() => teamsQuery.refetch()} />}
 
       <div className="mb-6 flex items-center justify-between">
         <div>
@@ -280,7 +252,7 @@ export default function SettingsTeamsPage() {
               columns={teamColumns}
               searchable
               searchPlaceholder="Search teams…"
-              loading={isLoading}
+              loading={teamsQuery.isLoading}
               onRowClick={(team) => setSelectedTeamId(team.id)}
               emptyIcon={<Users className="h-10 w-10" />}
               emptyTitle="No teams"
@@ -332,50 +304,51 @@ export default function SettingsTeamsPage() {
                 </div>
               </div>
 
-              <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_130px_auto]">
-                <select
-                  value={memberToAdd}
-                  onChange={(e) => setMemberToAdd(e.target.value)}
-                  className={inputClass}
-                >
-                  {userOptions.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={roleToAdd}
-                  onChange={(e) => setRoleToAdd(e.target.value as TeamRole)}
-                  className={inputClass}
-                >
-                  {teamRoles.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-white/[0.06] transition-colors duration-150"
-                  onClick={async () => {
-                    try {
-                      await mockAccessControlApi.teams.addMember({
-                        teamId: selectedTeam.id,
-                        userId: memberToAdd,
-                        role: roleToAdd,
-                      })
-                      const next = await mockAccessControlApi.teams.list()
-                      setTeams(next)
-                      toast.success('Member added')
-                    } catch {
-                      toast.error('Failed to add member')
-                    }
-                  }}
-                >
-                  Add member
-                </button>
-              </div>
+              {userOptions.length > 0 && (
+                <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_130px_auto]">
+                  <select
+                    value={memberToAdd}
+                    onChange={(e) => setMemberToAdd(e.target.value)}
+                    className={inputClass}
+                  >
+                    {userOptions.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={roleToAdd}
+                    onChange={(e) => setRoleToAdd(e.target.value as TeamRole)}
+                    className={inputClass}
+                  >
+                    {teamRoles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-white/[0.06] transition-colors duration-150"
+                    onClick={async () => {
+                      try {
+                        await addMemberMutation.mutateAsync({
+                          teamId: selectedTeam.id,
+                          userId: memberToAdd,
+                          role: roleToAdd,
+                        })
+                        teamsQuery.refetch()
+                        toast.success('Member added')
+                      } catch {
+                        toast.error('Failed to add member')
+                      }
+                    }}
+                  >
+                    Add member
+                  </button>
+                </div>
+              )}
 
               <DataTable
                 data={selectedTeam.members}

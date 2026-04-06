@@ -251,39 +251,6 @@ END $$;
 -- Multi-provider clusters (migration 0002) — columns now inlined in CREATE TABLE above
 -- migration 0011: credential_ref, is_active, last_connected_at also inlined above
 
--- Seed test cluster data (for E2E tests)
-INSERT INTO "clusters" (id, name, provider, status, version, nodes_count, environment, connection_config, health_status, created_at, updated_at)
-VALUES (
-  '550e8400-e29b-41d4-a716-446655440000',
-  'test-cluster-minikube',
-  'minikube'::"cluster_provider",
-  'healthy',
-  'v1.33.0',
-  1,
-  'development'::"cluster_environment",
-  '{"contextName": "minikube"}'::jsonb,
-  'healthy'::"cluster_health_status",
-  NOW(),
-  NOW()
-)
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO "clusters" (id, name, provider, status, version, nodes_count, environment, connection_config, health_status, created_at, updated_at)
-VALUES (
-  '550e8400-e29b-41d4-a716-446655440001',
-  'prod-cluster-eks',
-  'aws'::"cluster_provider",
-  'healthy',
-  'v1.32.0',
-  3,
-  'staging'::"cluster_environment",
-  '{"region": "us-east-1", "clusterName": "prod-eks-1"}'::jsonb,
-  'healthy'::"cluster_health_status",
-  NOW(),
-  NOW()
-)
-ON CONFLICT (id) DO NOTHING;
-
 -- RBAC Authorization (migration 0003)
 DO $$ BEGIN
  CREATE TYPE "public"."subject_type" AS ENUM('user', 'team', 'role');

@@ -11,16 +11,21 @@ import { Badge } from '@/components/ui/badge'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import {
-  getAllPrincipals,
   getRelationBadgeClass,
-  getResources,
-  mockAccessControlApi,
-  type AccessGrant,
   type PrincipalType,
   type Relation,
-} from '@/lib/mock-access-control'
+} from '@/lib/access-control'
+import { trpc } from '@/lib/trpc'
 
 const RELATIONS: Relation[] = ['owner', 'admin', 'editor', 'viewer']
+
+type GrantRow = {
+  id: string
+  principalId: string
+  principalType: string
+  relation: Relation
+  resourceId: string
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -29,39 +34,68 @@ export default function SettingsPermissionsPage() {
 
   const isAdmin = useIsAdmin()
   const router = useRouter()
-  const [grants, setGrants] = useState<AccessGrant[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [resourceId, setResourceId] = useState('cluster-production-eks')
-  const [principalId, setPrincipalId] = useState('team-platform')
+  const [resourceId, setResourceId] = useState('')
+  const [principalId, setPrincipalId] = useState('')
   const [principalType, setPrincipalType] = useState<PrincipalType>('team')
   const [relation, setRelation] = useState<Relation>('viewer')
-  const [revokeTarget, setRevokeTarget] = useState<AccessGrant | null>(null)
-  const [isGrantPending, setIsGrantPending] = useState(false)
-  const [isRevokePending, setIsRevokePending] = useState(false)
+  const [revokeTarget, setRevokeTarget] = useState<GrantRow | null>(null)
 
   useEffect(() => {
     if (isAdmin === false) router.replace('/')
   }, [isAdmin, router])
 
-  useEffect(() => {
-    if (!isAdmin) return
-    let mounted = true
-    const run = async () => {
-      setIsLoading(true)
-      const data = await mockAccessControlApi.permissions.listGrants()
-      if (mounted) {
-        setGrants(data)
-        setIsLoading(false)
-      }
-    }
-    void run()
-    return () => {
-      mounted = false
-    }
-  }, [isAdmin])
+  const clustersQuery = trpc.clusters.list.useQuery(undefined, { enabled: isAdmin === true })
+  const teamsQuery = trpc.teams.list.useQuery(undefined, { enabled: isAdmin === true })
+  const usersQuery = trpc.users.list.useQuery(undefined, { enabled: isAdmin === true })
+  const grantMutation = trpc.authorization.grant.useMutation()
+  const revokeMutation = trpc.authorization.revoke.useMutation()
 
-  const resources = getResources()
-  const principals = getAllPrincipals()
+  const resources = useMemo(
+    () => (clustersQuery.data ?? []).map((c) => ({ id: c.id, type: 'cluster' as const, name: c.name })),
+    [clustersQuery.data],
+  )
+
+  const principals = useMemo(() => {
+    const userPrincipals = (usersQuery.data ?? []).map((u) => ({
+      id: u.id,
+      type: 'user' as const,
+      name: u.name,
+    }))
+    const teamPrincipals = (teamsQuery.data ?? []).map((t) => ({
+      id: t.id,
+      type: 'team' as const,
+      name: t.name,
+    }))
+    return [...userPrincipals, ...teamPrincipals]
+  }, [usersQuery.data, teamsQuery.data])
+
+  useEffect(() => {
+    if (resources.length > 0 && !resourceId) setResourceId(resources[0].id)
+  }, [resources, resourceId])
+
+  useEffect(() => {
+    if (principals.length > 0 && !principalId) {
+      setPrincipalId(principals[0].id)
+      setPrincipalType(principals[0].type)
+    }
+  }, [principals, principalId])
+
+  const grantsQuery = trpc.authorization.listForResource.useQuery(
+    { object: { type: 'cluster', id: resourceId } },
+    { enabled: isAdmin === true && !!resourceId },
+  )
+
+  const grants: GrantRow[] = useMemo(() => {
+    if (!grantsQuery.data) return []
+    return (grantsQuery.data as unknown as Array<{ subjectType: string; subjectId: string; relation: string; objectId: string; objectType: string }>).map((g, i) => ({
+      id: `${g.subjectType}-${g.subjectId}-${g.relation}-${i}`,
+      principalId: g.subjectId,
+      principalType: g.subjectType,
+      relation: g.relation as Relation,
+      resourceId: g.objectId,
+    }))
+  }, [grantsQuery.data])
+
   const principalMap = useMemo(
     () => Object.fromEntries(principals.map((p) => [p.id, p])),
     [principals],
@@ -70,12 +104,8 @@ export default function SettingsPermissionsPage() {
     () => Object.fromEntries(resources.map((r) => [r.id, r])),
     [resources],
   )
-  const resourceGrants = useMemo(
-    () => grants.filter((g) => g.resourceId === resourceId),
-    [grants, resourceId],
-  )
 
-  const grantColumns = useMemo<ColumnDef<AccessGrant, unknown>[]>(
+  const grantColumns = useMemo<ColumnDef<GrantRow, unknown>[]>(
     () => [
       {
         id: 'principal',
@@ -114,7 +144,7 @@ export default function SettingsPermissionsPage() {
           <button
             type="button"
             className="rounded-md px-2 py-1 text-xs text-[var(--color-status-error)] hover:bg-red-500/12 disabled:cursor-not-allowed disabled:opacity-60 transition-colors duration-150"
-            disabled={isGrantPending || isRevokePending}
+            disabled={grantMutation.isPending || revokeMutation.isPending}
             onClick={() => setRevokeTarget(row.original)}
           >
             Revoke
@@ -122,7 +152,7 @@ export default function SettingsPermissionsPage() {
         ),
       },
     ],
-    [isGrantPending, isRevokePending, principalMap],
+    [grantMutation.isPending, revokeMutation.isPending, principalMap],
   )
 
   const matrixRows = principals.map((p) => {
@@ -203,7 +233,7 @@ export default function SettingsPermissionsPage() {
             setPrincipalType((next?.type ?? 'user') as PrincipalType)
           }}
           className={inputClass}
-          disabled={isGrantPending || isRevokePending}
+          disabled={grantMutation.isPending || revokeMutation.isPending}
         >
           {principals.map((p) => (
             <option key={p.id} value={p.id}>
@@ -216,7 +246,7 @@ export default function SettingsPermissionsPage() {
           value={resourceId}
           onChange={(e) => setResourceId(e.target.value)}
           className={inputClass}
-          disabled={isGrantPending || isRevokePending}
+          disabled={grantMutation.isPending || revokeMutation.isPending}
         >
           {resources.map((r) => (
             <option key={r.id} value={r.id}>
@@ -229,7 +259,7 @@ export default function SettingsPermissionsPage() {
           value={relation}
           onChange={(e) => setRelation(e.target.value as Relation)}
           className={inputClass}
-          disabled={isGrantPending || isRevokePending}
+          disabled={grantMutation.isPending || revokeMutation.isPending}
         >
           {RELATIONS.map((item) => (
             <option key={item} value={item}>
@@ -240,25 +270,23 @@ export default function SettingsPermissionsPage() {
         <button
           type="button"
           className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isGrantPending || isRevokePending}
+          disabled={grantMutation.isPending || revokeMutation.isPending}
           onClick={async () => {
             try {
-              setIsGrantPending(true)
-              await mockAccessControlApi.permissions.grant({
-                principalId,
-                principalType,
-                resourceId,
+              await grantMutation.mutateAsync({
+                subject: { type: principalType, id: principalId },
                 relation,
+                object: { type: 'cluster', id: resourceId },
               })
-              setGrants(await mockAccessControlApi.permissions.listGrants())
+              grantsQuery.refetch()
               toast.success('Permission granted')
-            } finally {
-              setIsGrantPending(false)
+            } catch {
+              toast.error('Failed to grant permission')
             }
           }}
         >
           <Shield className="h-4 w-4" />
-          {isGrantPending ? 'Granting…' : 'Grant'}
+          {grantMutation.isPending ? 'Granting…' : 'Grant'}
         </button>
       </div>
 
@@ -268,12 +296,12 @@ export default function SettingsPermissionsPage() {
         </h3>
         <div className="mb-3 flex items-center gap-2">
           <span className="text-xs text-[var(--color-table-meta)]">Selected resource:</span>
-          <Badge variant="outline">{resourceMap[resourceId]?.name}</Badge>
+          <Badge variant="outline">{resourceMap[resourceId]?.name ?? '—'}</Badge>
         </div>
         <DataTable
-          data={resourceGrants}
+          data={grants}
           columns={grantColumns}
-          loading={isLoading}
+          loading={grantsQuery.isLoading}
           emptyTitle="No permissions for this resource"
         />
       </section>
@@ -282,14 +310,13 @@ export default function SettingsPermissionsPage() {
         <h3 className="mb-3 text-sm font-semibold text-[var(--color-text-primary)]">
           Permission Matrix
         </h3>
-        {/* Zebra striping for dense matrix readability */}
         <div className="[&_tbody_tr:nth-child(even)]:bg-white/[0.02] dark:[&_tbody_tr:nth-child(even)]:bg-white/[0.03] [&_tbody_tr:nth-child(odd)]:bg-transparent">
           <DataTable
             data={matrixRows}
             columns={matrixColumns}
             searchable
             searchPlaceholder="Search users/teams…"
-            loading={isLoading}
+            loading={grantsQuery.isLoading}
           />
         </div>
       </section>
@@ -298,15 +325,18 @@ export default function SettingsPermissionsPage() {
         open={revokeTarget !== null}
         onClose={() => setRevokeTarget(null)}
         onConfirm={async () => {
-          if (!revokeTarget || isRevokePending) return
+          if (!revokeTarget || revokeMutation.isPending) return
           try {
-            setIsRevokePending(true)
-            await mockAccessControlApi.permissions.revoke({ grantId: revokeTarget.id })
-            setGrants((prev) => prev.filter((g) => g.id !== revokeTarget.id))
+            await revokeMutation.mutateAsync({
+              subject: { type: revokeTarget.principalType as 'user' | 'team' | 'role', id: revokeTarget.principalId },
+              relation: revokeTarget.relation,
+              object: { type: 'cluster', id: revokeTarget.resourceId },
+            })
+            grantsQuery.refetch()
             setRevokeTarget(null)
             toast.success('Permission revoked')
-          } finally {
-            setIsRevokePending(false)
+          } catch {
+            toast.error('Failed to revoke permission')
           }
         }}
         title="Revoke permission"
@@ -318,7 +348,7 @@ export default function SettingsPermissionsPage() {
         }
         confirmLabel="Revoke"
         variant="danger"
-        loading={isRevokePending}
+        loading={revokeMutation.isPending}
       />
     </div>
   )

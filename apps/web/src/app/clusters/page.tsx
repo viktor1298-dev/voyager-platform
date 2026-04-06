@@ -27,10 +27,9 @@ import {
   type LiveHealthStatus,
 } from '@/lib/cluster-status'
 import {
-  getBestRelationForUser,
   getRelationBadgeClass,
   type Relation,
-} from '@/lib/mock-access-control'
+} from '@/lib/access-control'
 import { getStatusDotClass } from '@/lib/status-utils'
 import { trpc } from '@/lib/trpc'
 import { useAuthStore } from '@/stores/auth'
@@ -204,13 +203,22 @@ export default function ClustersPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const [isClient, setIsClient] = useState(false)
   const currentUserId = useAuthStore((state) => state.user?.id)
+  const userRole = useAuthStore((state) => state.user?.role)
+
+  const permissionsQuery = trpc.authorization.listForUser.useQuery(
+    { userId: currentUserId ?? '' },
+    { enabled: !!currentUserId },
+  )
 
   const getPermissionForCluster = useCallback(
     (clusterId: string): Relation | null => {
       if (!currentUserId) return null
-      return getBestRelationForUser(currentUserId, clusterId)
+      if (userRole === 'admin') return 'owner'
+      const perms = permissionsQuery.data ?? []
+      const match = perms.find((p) => p.objectId === clusterId && p.objectType === 'cluster')
+      return (match?.relation as Relation) ?? null
     },
-    [currentUserId],
+    [currentUserId, userRole, permissionsQuery.data],
   )
 
   useEffect(() => {

@@ -591,7 +591,7 @@ function ClusterTable({
     for (const c of clusters) {
       if (
         live &&
-        ((c.name as string) === (live.name as string) || (c.name as string) === 'minikube-dev')
+        (c.name as string) === (live.name as string)
       )
         continue
       result.push({

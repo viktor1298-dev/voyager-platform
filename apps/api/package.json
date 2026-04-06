@@ -13,8 +13,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check src/",
     "start": "node dist/server.js",
-    "test": "vitest run",
-    "seed:admin": "tsx src/scripts/seed-admin.ts"
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",

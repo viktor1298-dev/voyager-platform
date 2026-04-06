@@ -103,7 +103,7 @@ function DashboardContent() {
       })
     }
     for (const c of dbClusters) {
-      if (liveData && (c.name === liveData.name || c.name === 'minikube-dev')) continue
+      if (liveData && c.name === liveData.name) continue
       list.push({
         id: c.id,
         name: c.name,
