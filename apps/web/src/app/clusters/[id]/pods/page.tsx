@@ -37,7 +37,7 @@ import { useTerminal } from '@/components/terminal/terminal-context'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
-import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useConnectionState, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { parseCpuMillicores, parseMemoryMi } from '@/lib/k8s-units'
 import { trpc } from '@/lib/trpc'
@@ -631,8 +631,7 @@ export default function PodsPage() {
 
   const pods = useClusterResources<PodData>(resolvedId, 'pods')
   const connectionState = useConnectionState(resolvedId)
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'pods')
-  const isLoading = pods.length === 0 && !snapshotsReady
+  const isLoading = useResourceLoading(resolvedId, 'pods', pods.length)
 
   const handleExecPod = useCallback(
     (pod: PodData) => {

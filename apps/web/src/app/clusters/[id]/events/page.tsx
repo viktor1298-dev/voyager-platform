@@ -8,7 +8,7 @@ import { DetailTabs } from '@/components/expandable'
 import { EventsTimeline } from '@/components/events/EventsTimeline'
 import { ResourcePageScaffold } from '@/components/resource'
 import { severityColor } from '@/lib/status-utils'
-import { useClusterResources, useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useConnectionState, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
@@ -149,7 +149,6 @@ export default function EventsPage() {
 
   const liveEventsRaw = useClusterResources<RawEvent>(resolvedId, 'events')
   const connectionState = useConnectionState(resolvedId)
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'events')
   const effectiveIsLive = connectionState === 'connected' || connectionState === 'reconnecting'
 
   const events: EventData[] = useMemo(() => {
@@ -166,7 +165,7 @@ export default function EventsPage() {
     }))
   }, [liveEventsRaw])
 
-  const isLoading = liveEventsRaw.length === 0 && !snapshotsReady
+  const isLoading = useResourceLoading(resolvedId, 'events', liveEventsRaw.length)
   const liveEvents = liveEventsRaw
   const isAutoRefreshing = effectiveIsLive
 

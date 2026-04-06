@@ -77,6 +77,22 @@ export function useSnapshotsReady(clusterId: string, type?: ResourceType): boole
 }
 
 /**
+ * Connection-aware loading check for resource pages.
+ * Returns true when a loading skeleton should be shown instead of empty state.
+ *
+ * Logic:
+ * - connected + snapshotsReady + empty data → false (genuinely empty cluster)
+ * - connected + !snapshotsReady + empty data → true (waiting for snapshot)
+ * - reconnecting/disconnected + empty data → true (data unavailable)
+ * - any state + data present → false (show data, stale during reconnect = D-01)
+ */
+export function useResourceLoading(clusterId: string, type: ResourceType, dataLength: number): boolean {
+  const snapshotsReady = useSnapshotsReady(clusterId, type)
+  const connectionState = useConnectionState(clusterId)
+  return dataLength === 0 && (!snapshotsReady || connectionState !== 'connected')
+}
+
+/**
  * Start the 5-second tick timer that drives relative time re-renders.
  * Place this ONCE in the cluster layout — it drives all useClusterResources consumers.
  * Without this, "3s ago" labels freeze until the next K8s event arrives.

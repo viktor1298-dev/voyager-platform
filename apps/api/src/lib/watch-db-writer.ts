@@ -163,7 +163,11 @@ async function syncEvents(clusterId: string): Promise<void> {
 // ── Health Sync (replicate health-sync.ts logic) ─────────────
 
 async function syncClusterHealth(clusterId: string): Promise<void> {
-  const rawNodes = (watchManager.getResources(clusterId, 'nodes') ?? []) as k8s.V1Node[]
+  // Guard: skip health derivation when informer data is unavailable (null = informer dead/restarting).
+  // Without this, null ?? [] treats "data unavailable" as "zero nodes" → false 'unreachable' status.
+  const rawNodesOrNull = watchManager.getResources(clusterId, 'nodes')
+  if (rawNodesOrNull === null) return // keep last known good health status in DB
+  const rawNodes = rawNodesOrNull as k8s.V1Node[]
   const rawPods = (watchManager.getResources(clusterId, 'pods') ?? []) as k8s.V1Pod[]
   const now = new Date()
 

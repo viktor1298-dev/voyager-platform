@@ -17,7 +17,7 @@ const YamlViewer = dynamic(
 )
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 import { ResourceStatusBadge } from '@/components/shared/ResourceStatusBadge'
-import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { resolveResourceStatus } from '@/lib/resource-status'
@@ -208,8 +208,7 @@ export default function PVCsPage() {
   useRequestResourceTypes(resolvedId, ['pvcs'] as const)
 
   const pvcs = useClusterResources<PVCData>(resolvedId, 'pvcs')
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'pvcs')
-  const isLoading = pvcs.length === 0 && !snapshotsReady
+  const isLoading = useResourceLoading(resolvedId, 'pvcs', pvcs.length)
 
   return (
     <ResourcePageScaffold<PVCData>

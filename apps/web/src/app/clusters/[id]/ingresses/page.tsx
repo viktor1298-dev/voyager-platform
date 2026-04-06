@@ -15,7 +15,7 @@ const YamlViewer = dynamic(
   () => import('@/components/resource/YamlViewer').then((m) => ({ default: m.YamlViewer })),
   { ssr: false },
 )
-import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
@@ -264,8 +264,7 @@ export default function IngressesPage() {
   useRequestResourceTypes(resolvedId, ['ingresses'] as const)
 
   const ingresses = useClusterResources<IngressData>(resolvedId, 'ingresses')
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'ingresses')
-  const isLoading = ingresses.length === 0 && !snapshotsReady
+  const isLoading = useResourceLoading(resolvedId, 'ingresses', ingresses.length)
 
   return (
     <ResourcePageScaffold<IngressData>

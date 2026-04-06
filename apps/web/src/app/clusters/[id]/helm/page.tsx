@@ -11,7 +11,7 @@ const HelmReleaseDetail = dynamic(
 )
 import { ResourcePageScaffold } from '@/components/resource'
 import { useHelmReleases, type HelmRelease } from '@/hooks/useHelmReleases'
-import { useSnapshotsReady } from '@/hooks/useResources'
+import { useConnectionState, useSnapshotsReady } from '@/hooks/useResources'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
 
@@ -78,7 +78,8 @@ export default function HelmReleasesPage() {
 
   const { releases, connectionState } = useHelmReleases(clusterId)
   const snapshotsReady = useSnapshotsReady(clusterId)
-  const isLoading = !snapshotsReady && releases.length === 0
+  const sseConnectionState = useConnectionState(clusterId)
+  const isLoading = releases.length === 0 && (!snapshotsReady || sseConnectionState !== 'connected')
 
   return (
     <ResourcePageScaffold<HelmRelease>

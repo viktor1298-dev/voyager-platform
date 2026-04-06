@@ -25,7 +25,7 @@ const YamlViewer = dynamic(
   { ssr: false },
 )
 import { LiveTimeAgo } from '@/components/shared/LiveTimeAgo'
-import { useClusterResources, useSnapshotsReady } from '@/hooks/useResources'
+import { useClusterResources, useResourceLoading } from '@/hooks/useResources'
 import { useRequestResourceTypes } from '@/hooks/useRequestResourceTypes'
 import { trpc } from '@/lib/trpc'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -299,8 +299,7 @@ export default function DaemonSetsPage() {
   useRequestResourceTypes(resolvedId, ['daemonsets'] as const)
 
   const daemonsets = useClusterResources<DaemonSetData>(resolvedId, 'daemonsets')
-  const snapshotsReady = useSnapshotsReady(resolvedId, 'daemonsets')
-  const isLoading = daemonsets.length === 0 && !snapshotsReady
+  const isLoading = useResourceLoading(resolvedId, 'daemonsets', daemonsets.length)
 
   return (
     <ResourcePageScaffold<DaemonSetData>

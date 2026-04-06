@@ -29,6 +29,9 @@ function getHealthLabel(status: string | null): { label: string; colorVar: strin
   if (s === 'warning' || s === 'degraded') {
     return { label: 'degraded', colorVar: 'var(--color-status-warning)' }
   }
+  if (s === 'unreachable') {
+    return { label: 'unreachable', colorVar: 'var(--color-status-error)' }
+  }
   if (s === 'unknown') {
     return { label: 'connecting', colorVar: 'var(--color-status-idle)' }
   }
