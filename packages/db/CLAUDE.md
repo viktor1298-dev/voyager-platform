@@ -55,5 +55,8 @@ pnpm db:seed        # Seed data (5 clusters, 37 nodes, 30 events)
 ### TimescaleDB Extension Required
 `init.sql` must include `CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;` — the `time_bucket()` function used by the metrics router depends on it. If missing, all metrics queries fail silently with empty results.
 
+### Rebuild `dist/` After Schema Changes
+`@voyager/db` exports from `dist/` (compiled JS). After adding/removing columns in `src/schema/`, run `pnpm --filter @voyager/db build` before restarting the API. Without this, Drizzle throws "Cannot convert undefined or null to object" because the API imports stale column definitions from `dist/`.
+
 ### Fresh Install = Empty DB
 After `helm install` with revision=1, the database is empty. Seed is required. Detection: `SELECT count(*) FROM users` returns 0.
