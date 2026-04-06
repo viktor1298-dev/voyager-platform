@@ -122,6 +122,7 @@ export function ResourcePageScaffold<T>({
   const [searchQuery, setSearchQuery] = useState('')
   const [expandAll, setExpandAll] = useState(false)
   const [namespacesOpen, setNamespacesOpen] = useState(true)
+  const [foldKey, setFoldKey] = useState(0)
   const searchParams = useSearchParams()
   const highlightRef = useRef<HTMLDivElement>(null)
 
@@ -210,7 +211,7 @@ export function ResourcePageScaffold<T>({
         onExpandAllToggle={() => setExpandAll((prev) => !prev)}
         searchPlaceholder={searchPlaceholder}
         namespacesOpen={flatList ? undefined : namespacesOpen}
-        onNamespacesToggle={flatList ? undefined : () => setNamespacesOpen((prev) => !prev)}
+        onNamespacesToggle={flatList ? undefined : () => { setNamespacesOpen((prev) => !prev); setFoldKey((k) => k + 1) }}
       />
 
       {filteredItems.length === 0 ? (
@@ -268,7 +269,8 @@ export function ResourcePageScaffold<T>({
                 key={namespace}
                 namespace={namespace}
                 count={nsItems.length}
-                forceOpen={namespacesOpen ? undefined : false}
+                forceOpen={namespacesOpen}
+                foldKey={foldKey}
               >
                 {nsItems.length > VIRTUALIZE_THRESHOLD ? (
                   <VirtualizedItemList

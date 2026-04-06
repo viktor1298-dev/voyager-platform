@@ -13,8 +13,10 @@ interface NamespaceGroupProps {
   count: number
   children: ReactNode
   defaultOpen?: boolean
-  /** Controlled open state — when defined, overrides internal state */
+  /** Target open state for fold/unfold all commands */
   forceOpen?: boolean
+  /** Incremented on each fold/unfold click — triggers the one-shot command */
+  foldKey?: number
 }
 
 export function NamespaceGroup({
@@ -23,13 +25,18 @@ export function NamespaceGroup({
   children,
   defaultOpen = true,
   forceOpen,
+  foldKey = 0,
 }: NamespaceGroupProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen)
 
-  // Sync forceOpen → internalOpen (fold/unfold all is a command, not a lock)
+  // Apply fold/unfold as a one-shot command (not a persistent lock).
+  // Watching foldKey ensures the effect fires only when the user clicks
+  // Fold/Unfold NS — individual namespace clicks are never overridden.
   useEffect(() => {
-    setInternalOpen(forceOpen ?? true)
-  }, [forceOpen])
+    if (foldKey > 0) {
+      setInternalOpen(forceOpen ?? true)
+    }
+  }, [foldKey])
   const reducedMotion = useReducedMotion()
 
   const springTransition = reducedMotion
