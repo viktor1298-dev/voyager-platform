@@ -502,8 +502,17 @@ export class WatchManager {
       }
     })
 
-    await informer.start()
+    // Register informer BEFORE start() so that when the `connect` event fires
+    // (during start()), onWatchReady can find it via getResources() and send a
+    // full snapshot instead of an empty one. Without this, the browser briefly
+    // shows "No X found" empty state instead of a loading skeleton.
     cluster.informers.set(def.type, informer)
+    try {
+      await informer.start()
+    } catch (err) {
+      cluster.informers.delete(def.type)
+      throw err
+    }
   }
 
   /**
