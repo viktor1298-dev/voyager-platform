@@ -155,8 +155,8 @@ export function useResourceSSE(
         if (e.lastEventId) lastEventIdRef.current = e.lastEventId
         try {
           const status: WatchStatusEvent = JSON.parse(e.data)
-          // 'ready' is a per-type informer event, not a connection state
-          if (status.state === 'ready') return
+          // 'ready' and 'snapshot-ready' are per-type informer events, not connection states
+          if (status.state === 'ready' || status.state === 'snapshot-ready') return
           setConnectionState(clusterId!, status.state as ConnectionState)
         } catch {
           /* ignore */

@@ -432,6 +432,19 @@ export class WatchManager {
         },
         'On-demand informers started',
       )
+
+      // Emit snapshot-ready for newly started types AFTER start() resolves.
+      // At this point the informer ObjectCache is populated (unlike the `connect`
+      // event which fires during start() before the cache is filled).
+      for (const def of toStart) {
+        if (cluster.ready.has(def.type)) {
+          voyagerEmitter.emitWatchStatus({
+            clusterId,
+            state: 'snapshot-ready' as WatchStatusEvent['state'],
+            resourceType: def.type,
+          })
+        }
+      }
     }
 
     return alreadyReady

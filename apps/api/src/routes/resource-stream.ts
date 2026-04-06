@@ -189,19 +189,18 @@ export async function handleResourceStream(
     }
   }
 
-  // 8b. Register per-type ready listener — fires progressive snapshot when each informer completes initial LIST.
-  // No connectionTypes filter: types requested via tRPC resources.subscribe (page navigation)
-  // also need their snapshots pushed through this SSE connection.
-  const onWatchReady = (event: WatchStatusEvent): void => {
-    if (event.state !== 'ready' || !event.resourceType) return
+  // 8b. Register per-type snapshot-ready listener — fires AFTER ensureTypes() resolves
+  // and the informer ObjectCache is populated. The old `ready`/`connect` event fires
+  // during informer.start() before the cache is filled, causing empty snapshots.
+  const onSnapshotReady = (event: WatchStatusEvent): void => {
+    if (event.state !== 'snapshot-ready' || !event.resourceType) return
     const def = RESOURCE_DEFS.find((d) => d.type === event.resourceType)
     if (!def) return
     const resources = watchManager.getResources(clusterId, def.type)
-    // Send snapshot even for empty types — frontend needs the event to mark snapshotsReady
     const mapped = resources ? resources.map((obj) => def.mapper(obj, clusterId)) : []
     writeEventWithId('snapshot', JSON.stringify({ resourceType: def.type, items: mapped }))
   }
-  voyagerEmitter.on(`watch-status:${clusterId}`, onWatchReady)
+  voyagerEmitter.on(`watch-status:${clusterId}`, onSnapshotReady)
 
   // 9. Parse initial types from query param and start on-demand informers
   const requestedTypes = parsed.data.types
@@ -212,9 +211,10 @@ export async function handleResourceStream(
     for (const t of requestedTypes) connectionTypes.add(t)
     const alreadyReady = await watchManager.ensureTypes(clusterId, requestedTypes)
 
-    // Send immediate snapshots for types that were already cached (no need to wait for ready event)
+    // Send snapshots for ALL requested types — ensureTypes() awaited start() so cache is populated.
+    // Previously only sent for alreadyReady, but newly started types also have data now.
     if (!replayed) {
-      for (const type of alreadyReady) {
+      for (const type of requestedTypes) {
         const def = RESOURCE_DEFS.find((d) => d.type === type)
         if (!def) continue
         const resources = watchManager.getResources(clusterId, def.type)
@@ -295,7 +295,7 @@ export async function handleResourceStream(
     eventsBuffer.length = 0
     voyagerEmitter.off(`watch-event:${clusterId}`, onWatchEvent)
     voyagerEmitter.off(`watch-status:${clusterId}`, onWatchStatus)
-    voyagerEmitter.off(`watch-status:${clusterId}`, onWatchReady)
+    voyagerEmitter.off(`watch-status:${clusterId}`, onSnapshotReady)
     if (connectionTypes.size > 0) {
       watchManager.releaseTypes(clusterId, [...connectionTypes])
     }
